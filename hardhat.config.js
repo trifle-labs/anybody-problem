@@ -19,6 +19,14 @@ module.exports = {
     ptau: "https://hermez.s3-eu-west-1.amazonaws.com/powersOfTau28_hez_final_15.ptau",
     circuits: [
       {
+        name: "approxSqrt",
+        // No protocol, so it defaults to groth16
+      },
+      {
+        name: "calculateForce",
+        // No protocol, so it defaults to groth16
+      },
+      {
         name: "division",
         // No protocol, so it defaults to groth16
       },
