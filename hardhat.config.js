@@ -19,7 +19,7 @@ module.exports = {
     ptau: "https://hermez.s3-eu-west-1.amazonaws.com/powersOfTau28_hez_final_15.ptau",
     circuits: [
       {
-        name: "approxSqrt",
+        name: "acceptableErrorOfMargin",
         // No protocol, so it defaults to groth16
       },
       {

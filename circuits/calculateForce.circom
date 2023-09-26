@@ -1,8 +1,6 @@
 pragma circom 2.1.0;
-// include "../node_modules/circomlib/circuits/mux1.circom";
-include "approxSqrt.circom";
-include "approxDiv.circom";
-include "absoluteValueSubtraction.circom";
+
+include "approxMath.circom";
 
 template CalculateForce() {
 /* // ORIGINAL JS VERSION
@@ -96,7 +94,7 @@ template CalculateForce() {
   acceptableErrorOfMargin.val1 <== distanceSquared;
   acceptableErrorOfMargin.val2 <== distance ** 2;
   // margin of error should be midpoint between squares
-  acceptableErrorOfMargin.marginOfError <== distance * 2; // TODO: confrim if +1 is needed
+  acceptableErrorOfMargin.marginOfError <== distance * 2; // TODO: confrim if (distance * 2) +1 is needed
   acceptableErrorOfMargin.out === 1;
 
   signal bodies_sum <== body1_radius + body2_radius;

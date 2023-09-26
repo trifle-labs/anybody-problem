@@ -1,17 +1,18 @@
 const hre = require("hardhat");
 const { assert } = require("chai");
 
-describe("approxSqrt circuit", () => {
+describe("acceptableErrorOfMargin circuit", () => {
   let circuit;
 
   const sampleInput = {
-    squared: "992744209590",
-    calculatedRoot: "996366",
+    val1: "992744209590",
+    val2: "992745205956",
+    marginOfError: "1992732"
   };
   const sanityCheck = true;
 
   before(async () => {
-    circuit = await hre.circuitTest.setup("approxSqrt");
+    circuit = await hre.circuitTest.setup("acceptableErrorOfMargin");
 
   });
 
@@ -25,9 +26,9 @@ describe("approxSqrt circuit", () => {
       sampleInput,
       sanityCheck
     );
-    assert.propertyVal(witness, "main.squared", sampleInput.squared);
-    assert.propertyVal(witness, "main.val1", sampleInput.calculatedRoot);
-    assert.propertyVal(witness, "main.val2", (sampleInput.calculatedRoot ** 2).toString())
+    assert.propertyVal(witness, "main.val1", sampleInput.val1);
+    assert.propertyVal(witness, "main.val2", sampleInput.val2);
+    assert.propertyVal(witness, "main.marginOfError", sampleInput.marginOfError);
     assert.propertyVal(witness, "main.out", "1");
   });
 
