@@ -30,6 +30,13 @@ function approxSqrt(n) {
 
 function approxDiv(dividend, divisor) {
 
+  var bitsDivident = 0;
+  var dividendCopy = dividend;
+  while(dividendCopy > 0) {
+    bitsDivident++;
+    dividendCopy = dividendCopy >> 1;
+  }
+
   // Create internal signals for our binary search
   var lowerBound, upperBound, midPoint, testProduct;
 
@@ -37,7 +44,7 @@ function approxDiv(dividend, divisor) {
   lowerBound = 0;
   upperBound = dividend;  // Assuming worst case where divisor = 1
 
-  for (var i = 0; i < 128; i++) {  // 32 iterations for 32-bit numbers as an example
+  for (var i = 0; i < bitsDivident; i++) {  // 32 iterations for 32-bit numbers as an example
       midPoint = (upperBound + lowerBound) >> 1;
       testProduct = midPoint * divisor;
 

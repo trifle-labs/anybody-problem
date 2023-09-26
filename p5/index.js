@@ -237,11 +237,13 @@ function calculateForce(body1, body2) {
 }
 
 function approxDiv(dividend, divisor) {
-  // log("dividend", dividend);
-  // log("divisor", divisor);
-  // signal input dividend;
-  // signal input divisor;
-  // signal output quotient;
+
+  var bitsDivident = 0n;
+  var dividendCopy = dividend;
+  while (dividendCopy > 0n) {
+    bitsDivident++;
+    dividendCopy = dividendCopy >> 1n;
+  }
 
   // Create internal signals for our binary search
   var lowerBound, upperBound, midPoint, testProduct;
@@ -250,7 +252,7 @@ function approxDiv(dividend, divisor) {
   lowerBound = 0n;
   upperBound = dividend;  // Assuming worst case where divisor = 1
 
-  for (var i = 0; i < 128; i++) {  // 32 iterations for 32-bit numbers as an example
+  for (var i = 0; i < bitsDivident; i++) {  // 32 iterations for 32-bit numbers as an example
     midPoint = (upperBound + lowerBound) >> 1n;
     testProduct = midPoint * divisor;
 
