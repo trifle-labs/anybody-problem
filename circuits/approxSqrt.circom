@@ -1,7 +1,7 @@
 pragma circom 2.1.0;
 include "../node_modules/circomlib/circuits/mux1.circom";
 include "../node_modules/circomlib/circuits/comparators.circom";
-
+include "absoluteValueSubtraction.circom";
 function approxSqrt(n) {
     if (n == 0) {
         return 0;
@@ -28,45 +28,23 @@ function approxSqrt(n) {
     return mid;
 }
 
-template AcceptableErrorOfMargin () {
-    signal input squared;
-    signal input calculatedRoot;
-    signal output result;
+template AcceptableErrorOfMargin (n) {
+    signal input val1;
+    signal input val2;
+    signal input marginOfError;
+    signal output out;
 
-    signal calculatedSquared <== calculatedRoot * calculatedRoot;
+  // The following is to ensure diff = Abs(val2 - val1)
+    component absoluteValueSubtraction = AbsoluteValueSubtraction(60);
+    absoluteValueSubtraction.in[0] <== val1;
+    absoluteValueSubtraction.in[1] <== val2;
 
-  // The following is to ensure diff = Abs(calculatedSquared - squared)
-
-  // "lessThanResult" = "calculatedSquared" is less than "squared"
-    component lessThan = LessThan(60); // TODO: test limits of squares
-    lessThan.in[0] <== calculatedSquared;
-    lessThan.in[1] <== squared;
-    signal lessThanResult <== lessThan.out; // lessThanResult = 1 if 
-
-    // "greaterValue" is "squared" if "calculatedSquared" is less than "squared" (lessThanResult)
-    component myMux = Mux1();
-    myMux.c[0] <== squared;
-    myMux.c[1] <== calculatedSquared;
-    myMux.s <== lessThanResult;
-    signal greaterValue <== myMux.out;
-
-    // "lesserValue" is "calculatedSquared" if "calculatedSquared" is less than "squared" (lessThanResult)
-    component myMux2 = Mux1();
-    myMux2.c[0] <== calculatedSquared;
-    myMux2.c[1] <== squared;
-    myMux2.s <== lessThanResult;
-    signal lesserValue <== myMux2.out;
-
+    signal diff <== absoluteValueSubtraction.out;
     // Now ensure that the diff is less than the margin of error
-    signal diff <== greaterValue - lesserValue;
-    // margin of error should be midpoint between squares, so root + 1
-    signal marginOfError <== calculatedRoot + 1;
-
-    // Should be maximum of the vectorLimiter squared which would be (10 * 10 ** 8) * (10 * 10 ** 8)
-    component lessThan2  = LessThan(60); // TODO: test the limits of this. 
+    component lessThan2  = LessThan(n);
     lessThan2.in[0] <== diff;
     lessThan2.in[1] <== marginOfError;
-    result <== lessThan2.out;
+    out <== lessThan2.out;
 }
 
-// component main { public [ squared, calculatedRoot ] } = AcceptableErrorOfMargin();
+// component main { public [ val1, val2 ] } = AcceptableErrorOfMargin();

@@ -29,11 +29,12 @@ describe("calculateForce circuit", () => {
       sampleInput,
       sanityCheck
     );
-    console.log({ witness })
+    // console.log({ witness })
+
     // assert.propertyVal(witness, "main.squared", sampleInput.squared);
     // assert.propertyVal(witness, "main.calculatedRoot", sampleInput.calculatedRoot);
     // assert.propertyVal(witness, "main.calculatedSquared", (sampleInput.calculatedRoot ** 2).toString())
-    // assert.propertyVal(witness, "main.result", "1");
+    // assert.propertyVal(witness, "main.out", "1");
   });
 
   it("has the correct output", async () => {
@@ -59,7 +60,7 @@ describe("calculateForce circuit", () => {
     while (out_forces[1] < 0n) {
       out_forces[1] += p
     }
-    console.log({ out_forces })
+    // console.log({ out_forces })
     const expected = { out_forces: [out_forces[0].toString(), out_forces[1].toString()] };
     const witness = await circuit.calculateWitness(sampleInput, sanityCheck);
     await circuit.assertOut(witness, expected);

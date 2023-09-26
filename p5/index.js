@@ -159,27 +159,26 @@ const scalingFactor = 10n ** 8n
 
 // Calculate the gravitational force between two bodies
 function calculateForce(body1, body2) {
-
-  console.log({ p })
+  // console.log({ p })
   const GScaled = BigInt(Math.floor(G * parseInt(scalingFactor)))
-  console.log({ GScaled })
+  // console.log({ GScaled })
 
   let minDistanceScaled = BigInt(minDistanceSquared) * scalingFactor ** 2n // when the original gets squared, the scaling factor gets squared
-  console.log({ minDistanceScaled })
+  // console.log({ minDistanceScaled })
 
   const position1 = body1.position
   const body1_position_x = BigInt(Math.floor(position1.x * parseInt(scalingFactor)))
-  console.log({ body1_position_x })
+  // console.log({ body1_position_x })
   const body1_position_y = BigInt(Math.floor(position1.y * parseInt(scalingFactor)))
-  console.log({ body1_position_y })
+  // console.log({ body1_position_y })
   const body1_radius = BigInt(Math.floor(body1.radius * parseInt(scalingFactor)))
 
 
   const position2 = body2.position
   const body2_position_x = BigInt(Math.floor(position2.x * parseInt(scalingFactor)))
-  console.log({ body2_position_x })
+  // console.log({ body2_position_x })
   const body2_position_y = BigInt(Math.floor(position2.y * parseInt(scalingFactor)))
-  console.log({ body2_position_y })
+  // console.log({ body2_position_y })
   const body2_radius = BigInt(Math.floor(body2.radius * parseInt(scalingFactor)))
 
 
@@ -188,81 +187,53 @@ function calculateForce(body1, body2) {
   const dxAbs = BigInt(Math.abs(parseInt(dx)))
   const dyAbs = BigInt(Math.abs(parseInt(dy)))
 
-  console.log({ dx, dy })
-  console.log({ dxAbs, dyAbs })
+  // console.log({ dx, dy })
+  // console.log({ dxAbs, dyAbs })
 
   const dxs = dx * dx
   const dys = dy * dy
-  console.log({ dxs, dys })
+  // console.log({ dxs, dys })
 
 
   let distanceSquared
   const unboundDistanceSquared = dxs + dys;
-  console.log({ unboundDistanceSquared })
+  // console.log({ unboundDistanceSquared })
   if (unboundDistanceSquared < minDistanceScaled) {
     distanceSquared = minDistanceScaled
   } else {
     distanceSquared = unboundDistanceSquared
   }
   let distance = sqrtApprox(distanceSquared)
-  console.log({ distance })
-  console.log({ distanceSquared })
+  // console.log({ distance })
+  // console.log({ distanceSquared })
 
 
   const bodies_sum = body1_radius + body2_radius
-  console.log({ bodies_sum })
+  // console.log({ bodies_sum })
 
 
   const distanceSquared_with_avg_denom = distanceSquared * 2n // NOTE: this is a result of moving division to the end of the calculation
-  console.log({ distanceSquared_with_avg_denom })
+  // console.log({ distanceSquared_with_avg_denom })
   const forceMag_numerator = GScaled * bodies_sum * scalingFactor // distancec should be divided by scaling factor but this preserves rounding with integer error
-  console.log({ forceMag_numerator })
-
-
-  // const numerator = G * ((body1.radius + body2.radius) / 2)
-  // let forceMagnituden = forceMag_numerator / distanceSquared_with_avg_denom; // this is part of the denominator from radius average
-  // console.log({ forceMagnituden })
-
-  // const forceMagnitude = numerator / distanceSq;
-  // const dx_mul_force = forceMagnituden * dx
-  // const dy_mul_force = forceMagnituden * dy
-
-  // if (dx_mul_force < 0n) {
-  //   console.log('dx_mul_force', dx_mul_force + p)
-  // }
-
-  // console.log({ dx_mul_force })
-  // console.log({ dy_mul_force })
-
-  // let forceXn = dx_mul_force / distance;
-  // let forceYn = dy_mul_force / distance;
-  // console.log({ forceXn, forceYn })
+  // console.log({ forceMag_numerator })
 
   const forceDenom = distanceSquared_with_avg_denom * distance
-  console.log({ forceDenom })
+  // console.log({ forceDenom })
 
   const forceXnum = dxAbs * forceMag_numerator
-  console.log({ forceXnum })
+  // console.log({ forceXnum })
   const forceXunsigned = approxDiv(forceXnum, forceDenom)
-  console.log({ forceXunsigned })
+  // console.log({ forceXunsigned })
   const forceX = dx < 0n ? -forceXunsigned : forceXunsigned
 
   const forceYnum = dyAbs * forceMag_numerator
-  console.log({ forceYnum })
+  // console.log({ forceYnum })
   const forceYunsigned = approxDiv(forceYnum, forceDenom)
-  console.log({ forceYunsigned })
+  // console.log({ forceYunsigned })
   const forceY = dy < 0n ? -forceYunsigned : forceYunsigned
-  console.log({ forceY })
+  // console.log({ forceY })
 
-  const forcen = [parseInt(forceX) / parseInt(scalingFactor), parseInt(forceY) / parseInt(scalingFactor)]
-
-  // if (!firstForce) {
-  //   checkNow--;
-  //   if (checkNow < 0) {
-  //     firstForce = true
-  //   }
-  // }
-  return forcen
+  return [parseInt(forceX) / parseInt(scalingFactor), parseInt(forceY) / parseInt(scalingFactor)]
 }
 
 function approxDiv(dividend, divisor) {

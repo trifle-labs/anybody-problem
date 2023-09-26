@@ -4,7 +4,7 @@ include "../node_modules/circomlib/circuits/comparators.circom";
 
 template AbsoluteValueSubtraction (n) {
     signal input in[2];
-    signal output result;
+    signal output out;
 
     // p = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
     // p_minus_one = 21888242871839275222246405745257275088548364400416034343698204186575808495616;
@@ -30,7 +30,7 @@ template AbsoluteValueSubtraction (n) {
     myMux2.s <== isZero.out;
     signal lesserValue <== myMux2.out;
 
-    result <== greaterValue - lesserValue;
+    out <== greaterValue - lesserValue;
 }
 
 // component main { public [ in ] } = AbsoluteValueSubtraction(252);

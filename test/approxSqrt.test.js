@@ -26,13 +26,13 @@ describe("approxSqrt circuit", () => {
       sanityCheck
     );
     assert.propertyVal(witness, "main.squared", sampleInput.squared);
-    assert.propertyVal(witness, "main.calculatedRoot", sampleInput.calculatedRoot);
-    assert.propertyVal(witness, "main.calculatedSquared", (sampleInput.calculatedRoot ** 2).toString())
-    assert.propertyVal(witness, "main.result", "1");
+    assert.propertyVal(witness, "main.val1", sampleInput.calculatedRoot);
+    assert.propertyVal(witness, "main.val2", (sampleInput.calculatedRoot ** 2).toString())
+    assert.propertyVal(witness, "main.out", "1");
   });
 
   it("has the correct output", async () => {
-    const expected = { result: 1 };
+    const expected = { out: 1 };
     const witness = await circuit.calculateWitness(sampleInput, sanityCheck);
     await circuit.assertOut(witness, expected);
   });
