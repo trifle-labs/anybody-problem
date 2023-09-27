@@ -18,10 +18,10 @@ const minRadius = 50
 const maxRadius = 100
 const position = "!static"
 const colorStyle = "!squiggle"
-const totalBodies = 3
+let totalBodies = 6
 console.log({ totalBodies })
-const outlines = true
-const clearBG = false
+const outlines = false
+const clearBG = "fade"
 
 
 let cs = [], ss = [], bs = [], bodies = []
@@ -48,6 +48,23 @@ function setup() {
   console.log({ seed })
   randomSeed(seed)
 
+
+  frameRate(fps)
+  createCanvas(windowWidth, windowWidth);
+  background(0);
+  prepBodies();
+  background("white")
+  colorMode(HSB, 360, 100, 100); // Use HSB color mode
+  line(0, 0, windowWidth, windowWidth)
+  line(windowWidth, 0, 0, windowWidth)
+  stroke("white")
+  if (!outlines) {
+    noStroke();
+  }
+  go()
+}
+
+function prepBodies() {
   const opac = 1
   for (let i = 0; i < totalBodies; i++) {
     let cc = randomColor()
@@ -55,10 +72,6 @@ function setup() {
     cc = `rgba(${cc.join(",")})`
     cs.push(cc)
   }
-
-  frameRate(fps)
-  createCanvas(windowWidth, windowWidth);
-  background(0);
   for (let i = 0; i < totalBodies; i++) {
     let s = randomPosition()
     ss.push(s)
@@ -67,7 +80,7 @@ function setup() {
     const body = {
       position: createVector(ss[i][0], ss[i][1]),
       velocity: createVector(0, 0),
-      radius: i * 25 + 50,//random(minRadius, maxRadius),
+      radius: (totalBodies - i) * 10 + 30,//random(minRadius, maxRadius),
     }
     bs.push(body)
     bodies.push({ body, c: cs[i] })
@@ -75,15 +88,6 @@ function setup() {
   bodies = bodies
     .sort((a, b) => b.body.radius - a.body.radius)
   console.log({ bodies })
-  background("white")
-  colorMode(HSB, 360, 100, 100); // Use HSB color mode
-  line(0, 0, width, width)
-  line(width, 0, 0, width)
-  stroke("white")
-  if (!outlines) {
-    noStroke();
-  }
-  go()
 }
 
 
@@ -91,10 +95,10 @@ function runComputation() {
 
   let accumulativeForces = [];
 
-  for (let i = 0; i < totalBodies; i++) {
+  for (let i = 0; i < bodies.length; i++) {
     const body = bodies[i].body
     let accumulativeForce = createVector(0, 0);
-    for (let j = 0; j < totalBodies; j++) {
+    for (let j = 0; j < bodies.length; j++) {
       if (i == j) continue
       const otherBody = bodies[j].body
       const force = calculateForce(body, otherBody)
@@ -118,7 +122,7 @@ function runComputation() {
     //   // checkCollision(body, otherBody);
     // }
   }
-  for (let i = 0; i < totalBodies; i++) {
+  for (let i = 0; i < bodies.length; i++) {
     const body = bodies[i].body
 
     body.velocity.add(accumulativeForces[i])//.mult(friction);
@@ -153,6 +157,29 @@ function runComputation() {
       body.position.set(body.position.x, bottomEdge)
     }
   }
+
+  for (let i = 0; i < missiles.length; i++) {
+    const missile = missiles[i]
+    missile.position.add(missile.velocity);
+    if (missile.position.x > rightEdge || missile.position.y < 0) {
+      missiles.splice(i, 1);
+    }
+    for (let j = 0; j < bodies.length; j++) {
+      const body = bodies[j].body
+      const distance = dist(missile.position.x, missile.position.y, body.position.x, body.position.y);
+      const minDist = (missile.radius + body.radius) / 4;
+      if (distance <= minDist) {
+        bodies.splice(j, 1)
+        missiles.splice(i, 1);
+      }
+    }
+  }
+
+  if (bodies.length == 0) {
+    totalBodies += 1
+    prepBodies()
+  }
+
 }
 
 const scalingFactor = 10n ** 8n
@@ -333,6 +360,23 @@ function checkCollision(body1, body2) {
   }
 }
 
+let missiles = []
+const body = document.getElementById("main")
+console.log({ document, body })
+body.addEventListener("click", function (e) {
+  if (missiles.length > 0) return
+  const x = e.clientX
+  const y = windowWidth - e.clientY
+  console.log({ x, y })
+  const body = {
+    position: createVector(0, windowWidth),
+    velocity: createVector(x, -y),
+    radius: 10,
+  }
+  body.velocity.limit(5);
+  missiles.push(body)
+})
+
 
 
 function draw() {
@@ -344,13 +388,14 @@ function draw() {
   noFill()
   // Set the background color with low opacity to create trails
   if (clearBG == "fade") {
-    background(255, 0.1)
+    background(255, 0.3)
   } else if (clearBG) {
     background(255)
     // background("white")
   }
 
   runComputation()
+
 
   for (let i = 0; i < bodies.length; i++) {
     const body = bodies[i].body
@@ -365,15 +410,52 @@ function draw() {
     fill(finalColor)
     ellipse(body.position.x, body.position.y, body.radius / 2, body.radius / 2);
   }
+
+  fill("black")
+  for (let i = 0; i < missiles.length; i++) {
+    const body = missiles[i]
+    ellipse(body.position.x, body.position.y, body.radius / 2, body.radius / 2);
+  }
+
+  // draw line between bottom left corner and direction towards mouse
+  stroke("rgba(200,200,200,0.5)");
+  strokeCap(SQUARE);
+  strokeWeight(10);
+
+  // Bottom left corner coordinates
+  let startX = 0;
+  let startY = height;
+
+  // Calculate direction from bottom left to mouse
+  let dirX = mouseX - startX;
+  let dirY = mouseY - startY;
+
+  // Calculate the length of the direction
+  let len = sqrt(dirX * dirX + dirY * dirY);
+
+  // If the length is not zero, scale the direction to have a length of 100
+  if (len != 0) {
+    dirX = (dirX / len) * 100;
+    dirY = (dirY / len) * 100;
+  }
+
+  // Draw the line
+  line(startX, startY, startX + dirX, startY + dirY);
+  strokeWeight(0);
+
+
   // noStroke()
   fill("white")
   // stroke("black")
   rect(0, 0, 50, 20);
   // stroke("black");
   fill("black")
-  text(preRun + n, 0, 10)
+  text(preRun + n + " (" + sec + ")", 0, 10)
   // noStroke();
 }
+
+let sec = 0
+setInterval(() => sec++, 1000);
 
 function randomColor() {
   const color = []
@@ -387,10 +469,10 @@ function randomColor() {
 }
 
 function randomPosition() {
-  const radiusDist = random(windowWidth / 4, windowWidth / 2)
+  const radiusDist = random(windowWidth / 2.1, windowWidth / 2)
   const randomDir = random(0, 360)
-  const x = (radiusDist * Math.cos(randomDir)) + (width / 2)
-  const y = radiusDist * Math.sin(randomDir) + (height / 2)
+  const x = (radiusDist * Math.cos(randomDir)) + (windowWidth / 2)
+  const y = radiusDist * Math.sin(randomDir) + (windowWidth / 2)
   return [x, y]
 }
 if (module) {
