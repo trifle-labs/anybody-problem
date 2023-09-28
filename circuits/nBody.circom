@@ -72,22 +72,34 @@ template Main() {
     new_bodies[0][3] <== vectorLimiterY.out;
 
 
-    // TODO: positionLimiter only checks over 1000, needs to check under 0 too
-
     // need to limit position so plane loops off edges
-    component positionLimiterX = Limiter(252); // TODO: confirm bits limit
+    component positionLimiterX = Limiter(37); // NOTE: position is limited to maxWidth + (2*maxVector) which should be under 37 bits
     // positionLimiter.x <== bodies[0][0] + vectorLimiter.limitedX;
-    positionLimiterX.in <== bodies[0][0] + vectorLimiterX.out;
-    positionLimiterX.limit <== windowWidth; // windowWidth
-    positionLimiterX.rather <== 0;
-    new_bodies[0][0] <== positionLimiterX.out;
+    positionLimiterX.in <== bodies[0][0] + vectorLimiterX.out + maxVector; // NOTE: adding maxVector ensures it is never negative
+    positionLimiterX.limit <== windowWidth + maxVector; // windowWidth
+    positionLimiterX.rather <== maxVector;
+    
 
-    component positionLimiterY = Limiter(252); // TODO: confirm bits limit
-    // positionLimiter.y <== bodies[0][1] + vectorLimiter.limitedY;
-    positionLimiterY.in <== bodies[0][1] + vectorLimiterY.out;
-    positionLimiterY.limit <== windowWidth; // windowWidth
-    positionLimiterY.rather <== 0;
-    new_bodies[0][1] <== positionLimiterY.out;
+    // NOTE: maxVector is still included, needs to be removed at end of calculation
+    component positionLowerLimiterX = LowerLimiter(37); // NOTE: position is limited to maxWidth + (2*maxVector) which should be under 37 bits
+    positionLowerLimiterX.in <== positionLimiterX.out;
+    positionLowerLimiterX.limit <== maxVector;
+    positionLowerLimiterX.rather <== windowWidth + maxVector;
+    new_bodies[0][0] <== positionLowerLimiterX.out - maxVector;
+
+
+    component positionLimiterY = Limiter(37);  // NOTE: position is limited to maxWidth + (2*maxVector) which should be under 37 bits
+    positionLimiterY.in <== bodies[0][1] + vectorLimiterY.out + maxVector; // NOTE: adding maxVector ensures it is never negative
+    positionLimiterY.limit <== windowWidth + maxVector; // windowWidth
+    positionLimiterY.rather <== maxVector;
+
+    // NOTE: maxVector is still included, needs to be removed at end of calculation
+    component positionLowerLimiterY = LowerLimiter(37); // NOTE: position is limited to maxWidth + (2*maxVector) which should be under 37 bits
+    positionLowerLimiterY.in <== positionLimiterY.out;
+    positionLowerLimiterY.limit <== maxVector;
+    positionLowerLimiterY.rather <== windowWidth + maxVector;
+    new_bodies[0][1] <== positionLowerLimiterY.out - maxVector;
+
 
 // Calculate change in body 1 wrt body 2
     component calculateForceComponent3 = CalculateForce();
@@ -112,19 +124,28 @@ template Main() {
     vectorLimiter2Y.rather <== maxVector;
     new_bodies[1][3] <== vectorLimiter2Y.out;
 
-    // TODO: positionLimiter2 only checks over 1000, needs to check under 0 too
-
     component positionLimiter2X = Limiter(252); // TODO: confirm bits limit
-    positionLimiter2X.in <== bodies[1][0] + vectorLimiter2X.out;
-    positionLimiter2X.limit <== windowWidth; // windowWidth
-    positionLimiter2X.rather <== 0;
-    new_bodies[1][0] <== positionLimiter2X.out;
+    positionLimiter2X.in <== bodies[1][0] + vectorLimiter2X.out + maxVector; // NOTE: adding maxVector ensures it is never negative
+    positionLimiter2X.limit <== windowWidth + maxVector; // windowWidth
+    positionLimiter2X.rather <== maxVector;
+
+    // NOTE: maxVector is still included, needs to be removed at end of calculation
+    component positionLowerLimiter2X = LowerLimiter(37); // NOTE: position is limited to maxWidth + (2*maxVector) which should be under 37 bits
+    positionLowerLimiter2X.in <== positionLimiter2X.out;
+    positionLowerLimiter2X.limit <== maxVector;
+    positionLowerLimiter2X.rather <== windowWidth + maxVector;
+    new_bodies[1][0] <== positionLowerLimiter2X.out - maxVector;
 
     component positionLimiter2Y = Limiter(252); // TODO: confirm bits limit
     positionLimiter2Y.in <== bodies[1][1] + vectorLimiter2Y.out;
     positionLimiter2Y.limit <== windowWidth; // windowWidth
     positionLimiter2Y.rather <== 0;
     new_bodies[1][1] <== positionLimiter2Y.out;
+
+    component positionLowerLimiter2Y = LowerLimiter(37); // NOTE: position is limited to maxWidth + (2*maxVector) which should be under 37 bits
+    positionLowerLimiter2Y.in <== positionLimiter2Y.out;
+    positionLowerLimiter2Y.limit <== maxVector;
+    positionLowerLimiter2Y.rather <== windowWidth + maxVector;
 
 
 // Calculate change in body 2
