@@ -29,17 +29,14 @@ function approxSqrt(n) {
 }
 
 function approxDiv(dividend, divisor) {
-
   var bitsDivident = 0;
   var dividendCopy = dividend;
   while(dividendCopy > 0) {
     bitsDivident++;
     dividendCopy = dividendCopy >> 1;
   }
-
   // Create internal signals for our binary search
   var lowerBound, upperBound, midPoint, testProduct;
-
   // Initialize our search space
   lowerBound = 0;
   upperBound = dividend;  // Assuming worst case where divisor = 1
@@ -47,7 +44,6 @@ function approxDiv(dividend, divisor) {
   for (var i = 0; i < bitsDivident; i++) {  // 32 iterations for 32-bit numbers as an example
       midPoint = (upperBound + lowerBound) >> 1;
       testProduct = midPoint * divisor;
-
       // Adjust our bounds based on the test product
       if (testProduct > dividend) {
           upperBound = midPoint;
@@ -59,6 +55,16 @@ function approxDiv(dividend, divisor) {
   // Output the midpoint as our approximated quotient after iterations
   return midPoint;
 }
+
+
+// var approxQuot = approxDiv(realNumerator, realDenominator);
+// approxNumerator = approxQuot * realDenominator;
+// diff = realNumerator - approxNumerator;
+// diff <= (realDenominator / 2) + 1;// +1 for odd number denominators
+// diff - 1 <== realDenominator / 2
+// (2 * diff) - 2 <== realDenominator
+// realDenominator <== (2 * diff) - 2
+
 
 template AcceptableErrorOfMargin (n) {
     signal input val1;

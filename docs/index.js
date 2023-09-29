@@ -1,4 +1,3 @@
-
 let body1, body2, body3, body4, c1, c2, c3, c4, s1, s2, s3, s4, bg
 const radius = 50;
 const G = 100; // Gravitational constant
@@ -33,7 +32,7 @@ var runIndex = 0
 function go() {
   while (keepSimulating) {
     runIndex++
-    runComputation()
+    bodies = runComputation(bodies)
 
     if (runIndex > preRun) {
       keepSimulating = false
@@ -97,7 +96,10 @@ function prepBodies() {
 }
 
 
-function runComputation() {
+function runComputation(bodies, p5) {
+  if (p5) {
+    createVector = p5.createVector.bind(this)
+  }
 
   let accumulativeForces = [];
 
@@ -199,7 +201,7 @@ function runComputation() {
 
     prepBodies()
   }
-
+  return bodies
 }
 
 function explosion(x, y) {
@@ -429,7 +431,7 @@ function draw() {
     // background("white")
   }
 
-  runComputation()
+  bodies = runComputation(bodies)
 
 
   for (let i = 0; i < allCopiesOfBodies.length; i++) {
@@ -592,6 +594,7 @@ if (module) {
   module.exports = {
     calculateForce,
     sqrtApprox,
-    scalingFactor
+    scalingFactor,
+    runComputation
   }
 }

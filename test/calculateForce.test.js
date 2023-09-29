@@ -1,6 +1,6 @@
 const hre = require("hardhat");
 const { assert } = require("chai");
-const { calculateForce, sqrtApprox, scalingFactor } = require("../p5/index.js");
+const { calculateForce, sqrtApprox, scalingFactor } = require("../docs/index.js");
 const p = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
 
 describe("calculateForce circuit", () => {

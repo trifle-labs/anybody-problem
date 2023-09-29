@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
-  "dependencies": {},
+  "dependencies": {
+    "p5": "^1.7.0"
+  },
   "devDependencies": {
     "chai": "^4.3.6",
     "circomlib": "^2.0.3",

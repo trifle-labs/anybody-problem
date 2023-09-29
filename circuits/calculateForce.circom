@@ -3,7 +3,13 @@ pragma circom 2.1.0;
 include "approxMath.circom";
 
 template CalculateForce() {
-/* // ORIGINAL JS VERSION
+/* 
+    // ORIGINAL JS VERSION
+
+    // To preserve precision in the actual circuit
+    // this calculation is rearranged with all multiplication first
+    // and division at the end
+
     const position1 = body1.position
     const position2 = body2.position
     let dx = position2.x - position1.x;
@@ -14,10 +20,12 @@ template CalculateForce() {
         distanceSq = minDistanceSquared
     }
     let distance = sqrt(distanceSq);
+
+    // NOTE: we're not using classic newtonian physics but rather simplified version
     let forceMagnitude = (GScaled * (body1.radius + body2.radius) / 2) / distanceSq;
     let forceX = forceMagnitude * (dx / distance);
     let forceY = forceMagnitude * (dy / distance);
-    return createVector(forceX, forceY); 
+    return createVector(forceX, forceY);
 */
 
   var scalingFactor = 10**8;
@@ -27,7 +35,6 @@ template CalculateForce() {
   signal input in_bodies[2][5];
   signal output out_forces[2];
 
-  // var minDistanceScaled // TODO: confirm whether this needs to be signal or var
   signal minDistanceScaled <== 200 * 200 * scalingFactor * scalingFactor; // NOTE: this is 200**2 so we have to square the scaling factor too
   // log("minDistanceScaled", minDistanceScaled);
   var body1_position_x = in_bodies[0][0];
@@ -42,7 +49,7 @@ template CalculateForce() {
   // log("body2_position_y", body2_position_y);
   var body2_radius = in_bodies[1][4];
 
-  signal dx <== body2_position_x - body1_position_x; // TODO: confirm this is the right way to do this
+  signal dx <== body2_position_x - body1_position_x;
 
   component absoluteValueSubtraction = AbsoluteValueSubtraction(60); // TODO: test limit
   absoluteValueSubtraction.in[0] <== body1_position_x;
@@ -77,7 +84,6 @@ template CalculateForce() {
   lessThan.in[0] <== unboundDistanceSquared;
   lessThan.in[1] <== minDistanceScaled;
 
-  // TODO: confirm this is the correct way to do mux (input 0 is returned when s == 0 and input 1 is returned when s == 1)
   // distanceSquared <== is_below_minimum ? minDistanceScaled : unboundDistanceSquared;
   component myMux = Mux1();
   myMux.c[0] <== unboundDistanceSquared;
@@ -112,8 +118,14 @@ template CalculateForce() {
   signal forceXnum <== dxAbs * forceMag_numerator;
   // log("forceXnum", forceXnum);
   signal forceXunsigned <-- approxDiv(forceXnum, forceDenom);
-  // TODO: constrain forceXunsigned so that the error is within acceptable bounds
   // log("forceXunsigned", forceXunsigned);
+
+  signal approxNumerator1 <== forceXunsigned * forceDenom;
+  component acceptableErrorOfMarginDiv1 = AcceptableErrorOfMargin(60);  // TODO: test the limits of this. 
+  acceptableErrorOfMarginDiv1.val1 <== forceXnum;
+  acceptableErrorOfMarginDiv1.val2 <== approxNumerator1;
+  acceptableErrorOfMarginDiv1.marginOfError <== forceDenom; // TODO: actually could be further reduced to (realDenom / 2) + 1 but then we're using division again
+  acceptableErrorOfMarginDiv1.out === 1;
 
   component isZero = IsZero();
   isZero.in <== dyAbs + dy;
@@ -124,12 +136,17 @@ template CalculateForce() {
   signal forceX <== myMux2.out;
   // log("forceX", forceX);
 
-
   signal forceYnum <== dyAbs * forceMag_numerator;
   // log("forceYnum", forceYnum);
   signal forceYunsigned <-- approxDiv(forceYnum, forceDenom);
-  // TODO: constrain forceYunsigned so that the error is within acceptable bounds
   // log("forceYunsigned", forceYunsigned);
+
+  signal approxNumerator2 <== forceYunsigned * forceDenom;
+  component acceptableErrorOfMarginDiv2 = AcceptableErrorOfMargin(60);  // TODO: test the limits of this. 
+  acceptableErrorOfMarginDiv2.val1 <== forceYnum;
+  acceptableErrorOfMarginDiv2.val2 <== approxNumerator2;
+  acceptableErrorOfMarginDiv2.marginOfError <== forceDenom; // TODO: actually could be further reduced to (realDenom / 2) + 1 but then we're using division again
+  acceptableErrorOfMarginDiv2.out === 1;
 
   component isZero2 = IsZero();
   isZero2.in <== dxAbs + dx;
@@ -140,7 +157,7 @@ template CalculateForce() {
   signal forceY <== myMux3.out;
   // log("forceY", forceY);
 
-  out_forces[0] <== forceX; // TODO: confirm whether these arrows can/should be swapped
+  out_forces[0] <== forceX;
   out_forces[1] <== forceY;
 }
 
