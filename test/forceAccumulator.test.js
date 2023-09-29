@@ -2,7 +2,7 @@ const hre = require("hardhat");
 const { assert } = require("chai");
 const { calculateForce, sqrtApprox, scalingFactor, runComputation } = require("../docs/index.js");
 const p = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
-const p5 = require('p5');
+const p5 = require('node-p5');
 describe("forceAccumulator circuit", () => {
   let circuit;
 

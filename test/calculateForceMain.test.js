@@ -3,7 +3,7 @@ const { assert } = require("chai");
 const { calculateForce, sqrtApprox, scalingFactor } = require("../docs/index.js");
 const p = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
 
-describe("calculateForce circuit", () => {
+describe("calculateForceMain circuit", () => {
   let circuit;
 
   const sampleInput = {
@@ -15,7 +15,7 @@ describe("calculateForce circuit", () => {
   const sanityCheck = true;
 
   before(async () => {
-    circuit = await hre.circuitTest.setup("calculateForce");
+    circuit = await hre.circuitTest.setup("calculateForceMain");
 
   });
 

@@ -23,7 +23,7 @@ module.exports = {
         // No protocol, so it defaults to groth16
       },
       {
-        name: "calculateForce",
+        name: "calculateForceMain",
         // No protocol, so it defaults to groth16
       },
       {

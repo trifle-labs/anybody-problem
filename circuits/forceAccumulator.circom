@@ -1,4 +1,4 @@
-pragma circom 2.1.4;
+pragma circom 2.1.0;
 
 include "limiter.circom";
 include "calculateForce.circom";

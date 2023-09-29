@@ -32,6 +32,9 @@ template CalculateForce() {
   var GScaled =  100 * scalingFactor; // TODO: these could be constrained, do they need to be?
   // log("GScaled", GScaled);
 
+    var divisionBits = 120; // TODO: test the limits of this. 
+
+
   signal input in_bodies[2][5];
   signal output out_forces[2];
 
@@ -120,8 +123,9 @@ template CalculateForce() {
   signal forceXunsigned <-- approxDiv(forceXnum, forceDenom);
   // log("forceXunsigned", forceXunsigned);
 
+
   signal approxNumerator1 <== forceXunsigned * forceDenom;
-  component acceptableErrorOfMarginDiv1 = AcceptableErrorOfMargin(60);  // TODO: test the limits of this. 
+  component acceptableErrorOfMarginDiv1 = AcceptableErrorOfMargin(divisionBits);  // TODO: test the limits of this. 
   acceptableErrorOfMarginDiv1.val1 <== forceXnum;
   acceptableErrorOfMarginDiv1.val2 <== approxNumerator1;
   acceptableErrorOfMarginDiv1.marginOfError <== forceDenom; // TODO: actually could be further reduced to (realDenom / 2) + 1 but then we're using division again
@@ -142,7 +146,7 @@ template CalculateForce() {
   // log("forceYunsigned", forceYunsigned);
 
   signal approxNumerator2 <== forceYunsigned * forceDenom;
-  component acceptableErrorOfMarginDiv2 = AcceptableErrorOfMargin(60);  // TODO: test the limits of this. 
+  component acceptableErrorOfMarginDiv2 = AcceptableErrorOfMargin(divisionBits);  // TODO: test the limits of this. 
   acceptableErrorOfMarginDiv2.val1 <== forceYnum;
   acceptableErrorOfMarginDiv2.val2 <== approxNumerator2;
   acceptableErrorOfMarginDiv2.marginOfError <== forceDenom; // TODO: actually could be further reduced to (realDenom / 2) + 1 but then we're using division again
@@ -161,7 +165,6 @@ template CalculateForce() {
   out_forces[1] <== forceY;
 }
 
-component main { public [ in_bodies ]} = CalculateForce();
 
 /* INPUT = {
     "in_bodies": [ ["82600000000", "4200000000", "-133000000", "-629000000", "10000000000"], ["36300000000", "65800000000", "-332000000", "374000000", "7500000000"] ]

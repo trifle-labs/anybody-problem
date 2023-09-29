@@ -2,8 +2,9 @@
   "name": "circuits",
   "version": "1.0.0",
   "main": "index.js",
-  "license": "MIT",
+  "license": "CC-NC-4.0",
   "dependencies": {
+    "node-p5": "^1.0.4",
     "p5": "^1.7.0"
   },
   "devDependencies": {

@@ -396,23 +396,25 @@ let missiles = []
 let missileCount = 0
 let thisLevelMissileCount = 0
 let explosions = []
-const body = document.getElementById("main")
-console.log({ document, body })
-body.addEventListener("click", function (e) {
-  if (missiles.length > 0 && !admin) return
-  thisLevelMissileCount++
-  missileCount++
-  const x = e.clientX
-  const y = windowWidth - e.clientY
-  console.log({ x, y })
-  const body = {
-    position: createVector(0, windowWidth),
-    velocity: createVector(x, -y),
-    radius: 10,
-  }
-  body.velocity.limit(5);
-  missiles.push(body)
-})
+if (typeof window !== "undefined") {
+  const body = document.getElementById("main")
+  console.log({ document, body })
+  body.addEventListener("click", function (e) {
+    if (missiles.length > 0 && !admin) return
+    thisLevelMissileCount++
+    missileCount++
+    const x = e.clientX
+    const y = windowWidth - e.clientY
+    console.log({ x, y })
+    const body = {
+      position: createVector(0, windowWidth),
+      velocity: createVector(x, -y),
+      radius: 10,
+    }
+    body.velocity.limit(5);
+    missiles.push(body)
+  })
+}
 
 let allCopiesOfBodies = []
 
