@@ -18,7 +18,7 @@ const minRadius = 50
 const maxRadius = 100
 const position = "!static"
 const colorStyle = "!squiggle"
-let totalBodies = 1
+let totalBodies = 3
 console.log({ totalBodies })
 const outlines = false
 const clearBG = true
@@ -554,11 +554,11 @@ function draw() {
   text("Total Frames: " + preRun + n, 0, 10)
   text("Total Time: " + secondsAsTime, 0, 20)
   text("Total Shots: " + missileCount, 0, 30)
-  text("Lvl " + (totalBodies) + " · " + thisLevelSecondsAsTime + " · " + (totalBodies - bodies.length) + "/" + totalBodies + " · " + thisLevelMissileCount + " shots", 0, 40)
+  text("Lvl " + (totalBodies - 2) + " - " + thisLevelSecondsAsTime + " - " + (totalBodies - bodies.length) + "/" + totalBodies + " - " + thisLevelMissileCount + " shots", 0, 40)
   for (let i = 0; i < allLevelSec.length; i++) {
     const prevLevel = allLevelSec[i]
     const prevLevelSecondsAsTime = new Date(prevLevel.thisLevelSec * 1000).toISOString().substr(14, 5)
-    text("Lvl " + (allLevelSec.length - i) + " · " + prevLevelSecondsAsTime + " · " + prevLevel.thisLevelMissileCount + " shots", 0, (i * 10) + 50)
+    text("Lvl " + (allLevelSec.length - i) + " - " + prevLevelSecondsAsTime + " - " + prevLevel.thisLevelMissileCount + " shots", 0, (i * 10) + 50)
   }
   // noStroke();
 }
