@@ -5,27 +5,33 @@ include "calculateForce.circom";
 
 // TODO:
 // √ confirm why circom interprets negative input differently than p-n (https://github.com/0xPARC/zkrepl/issues/11)
-// go through and make sure approximate square root is working ok
-// go through and make sure that decimals of 10^8 are properly accounted for in exponential equations
-// change js implementation to use square root approx function
+// √ go through and make sure approximate square root is working ok
+// √ go through and make sure that decimals of 10^8 are properly accounted for in exponential equations
+// √ change js implementation to use square root approx function
 // analyze risk here: initial thought is that valid proofs can be generated for slight variations of position. seems acceptable.
 // make change input array variable of n
 // make change in body variable of n
+  // make sure max n is used to bound the number of bits
 // generate and test prover for step of 1
 // configure as recursive proof, generate and test prover for step of n
+// TODO: define "types" for all the values and make sure they're within the acceptable ranges attached to those types.
+// This will help us restrict bits needed for each type
+// maybe can streamline the square root and division
+
+// TODO: use inverse square root instead of division
 
 // template calculateBodies(n) {
 //     signal input bodies[n][5];
 //     signal output new_bodies[n][5];
 
 //     for (var i = 0; i < n; i++) {
-//       // radius of body doesn't change
-//       new_bodies[i][4] <== bodies[i][4];
+//       for (var j  = i+1; j < n; j++)
+//         // radius of body doesn't change
+//         new_bodies[i][4] <== bodies[i][4];
 //     }
 // }
 
 template Main() {
-
     signal input bodies[3][5];
     signal output new_bodies[3][5];
     // [0] = position_x using 10^8 decimals
@@ -57,6 +63,8 @@ template Main() {
     
     signal body0_new_v_x <== bodies[0][2] + body0_1_v_x + body0_2_v_x;
     signal body0_new_v_y <== bodies[0][3] + body0_1_v_y + body0_2_v_y;
+
+    // TODO: need to square the vector before comparing it to the maxVector squared in order to remove the sign
 
     // need to limit vectors
     component vectorLimiterX = Limiter(252); // TODO: confirm bits limit

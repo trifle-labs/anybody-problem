@@ -13,15 +13,15 @@ let n = 0, img1
 const fps = 300
 const preRun = 0
 const p = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
-
+const admin = false
 const minRadius = 50
 const maxRadius = 100
 const position = "!static"
 const colorStyle = "!squiggle"
-let totalBodies = 6
+let totalBodies = 1
 console.log({ totalBodies })
 const outlines = false
-const clearBG = "fade"
+const clearBG = true
 
 
 let cs = [], ss = [], bs = [], bodies = []
@@ -44,7 +44,7 @@ function go() {
 }
 
 function setup() {
-  const seed = 32146.231332324038//random(0, 100000)
+  const seed = random(0, 100000)
   console.log({ seed })
   randomSeed(seed)
 
@@ -76,11 +76,17 @@ function prepBodies() {
     let s = randomPosition()
     ss.push(s)
   }
-  for (let i = 0; i < totalBodies; i++) {
+  // if (totalBodies.length > 10) {
+  //   alert("didn't account for this many bodies")
+  //   throw new Error("too many bodies")
+  // }
+  let maxSize = totalBodies < 10 ? 10 : totalBodies;
+  for (let i = 0; i < maxSize; i++) {
+    if (i >= totalBodies) break
     const body = {
       position: createVector(ss[i][0], ss[i][1]),
       velocity: createVector(0, 0),
-      radius: (totalBodies - i) * 10 + 30,//random(minRadius, maxRadius),
+      radius: (maxSize - i) * 10 + 10,//random(minRadius, maxRadius),
     }
     bs.push(body)
     bodies.push({ body, c: cs[i] })
@@ -170,16 +176,40 @@ function runComputation() {
       const minDist = (missile.radius + body.radius) / 4;
       if (distance <= minDist) {
         bodies.splice(j, 1)
+        // for (k = 0; k < allCopiesOfBodies.length; k++) {
+        //   const copyOfBodies = allCopiesOfBodies[k]
+        //   copyOfBodies.splice(j, 1)
+        // }
         missiles.splice(i, 1);
+        explosions.push(explosion(body.position.x, body.position.y))
+
       }
     }
   }
 
   if (bodies.length == 0) {
+    const level = {
+      thisLevelMissileCount,
+      thisLevelSec
+    }
+    allLevelSec.unshift(level)
+    thisLevelSec = 0
+    thisLevelMissileCount = 0
     totalBodies += 1
+
     prepBodies()
   }
 
+}
+
+function explosion(x, y) {
+  let bombs = []
+  for (let i = 0; i < 50; i++) {
+    bombs.push({
+      x, y, i
+    })
+  }
+  return bombs
 }
 
 const scalingFactor = 10n ** 8n
@@ -361,10 +391,15 @@ function checkCollision(body1, body2) {
 }
 
 let missiles = []
+let missileCount = 0
+let thisLevelMissileCount = 0
+let explosions = []
 const body = document.getElementById("main")
 console.log({ document, body })
 body.addEventListener("click", function (e) {
-  if (missiles.length > 0) return
+  if (missiles.length > 0 && !admin) return
+  thisLevelMissileCount++
+  missileCount++
   const x = e.clientX
   const y = windowWidth - e.clientY
   console.log({ x, y })
@@ -377,7 +412,7 @@ body.addEventListener("click", function (e) {
   missiles.push(body)
 })
 
-
+let allCopiesOfBodies = []
 
 function draw() {
   if (!showIt) return
@@ -397,6 +432,32 @@ function draw() {
   runComputation()
 
 
+  for (let i = 0; i < allCopiesOfBodies.length; i++) {
+    const copyOfBodies = allCopiesOfBodies[i]
+    for (let j = 0; j < copyOfBodies.length; j++) {
+      const body = copyOfBodies[j].body
+      const c = copyOfBodies[j].c
+      let finalColor
+      if (colorStyle == "squiggle") {
+        const hueColor = (parseInt(c.split(",")[1]) + n) % 360
+        finalColor = color(hueColor, 60, 100); // Saturation and brightness at 100 for pure spectral colors
+      } else {
+        finalColor = c
+      }
+      fill(finalColor)
+      push()
+      var angle = body.velocity.heading() + PI / 2;
+      var scalar = 0.3 * body.radius;
+      translate(body.position.x, body.position.y);
+      rotate(angle);
+      // rect(-scalar, -scalar, scalar * 2, scalar * 2);
+      triangle(-scalar, scalar, scalar, scalar, 0, -scalar);
+
+      pop()
+    }
+  }
+
+  const bodyCopies = []
   for (let i = 0; i < bodies.length; i++) {
     const body = bodies[i].body
     const c = bodies[i].c
@@ -407,14 +468,51 @@ function draw() {
     } else {
       finalColor = c
     }
+
+    // ellipse(body.position.x, body.position.y, body.radius / 2, body.radius / 2);
+    // rotate by velocity
+    push()
+    stroke("white");
+    strokeWeight(1);
     fill(finalColor)
-    ellipse(body.position.x, body.position.y, body.radius / 2, body.radius / 2);
+    var angle = body.velocity.heading() + PI / 2;
+    var scalar = 0.3 * body.radius;
+    translate(body.position.x, body.position.y);
+    rotate(angle);
+    triangle(-scalar, scalar, scalar, scalar, 0, -scalar);
+    pop()
+
+    const bodyCopy = {
+      body:
+      {
+        position: createVector(body.position.x, body.position.y),
+        velocity: createVector(body.velocity.x, body.velocity.y),
+        radius: body.radius
+      },
+      c: c
+    }
+    bodyCopies.push(bodyCopy)
+  }
+  allCopiesOfBodies.push(bodyCopies)
+  if (allCopiesOfBodies.length > 50) {
+    allCopiesOfBodies.shift()
   }
 
   fill("black")
   for (let i = 0; i < missiles.length; i++) {
     const body = missiles[i]
     ellipse(body.position.x, body.position.y, body.radius / 2, body.radius / 2);
+  }
+
+  for (let i = 0; i < explosions.length; i++) {
+    const explosion = explosions[i]
+    const bomb = explosion[0]
+    fill("rgba(255,0,0,0.5)")
+    ellipse(bomb.x, bomb.y, bomb.i * 2, bomb.i * 2);
+    explosion.shift()
+    if (explosion.length == 0) {
+      explosions.splice(i, 1)
+    }
   }
 
   // draw line between bottom left corner and direction towards mouse
@@ -450,12 +548,27 @@ function draw() {
   rect(0, 0, 50, 20);
   // stroke("black");
   fill("black")
-  text(preRun + n + " (" + sec + ")", 0, 10)
+  // convert totalSec to time
+  const secondsAsTime = new Date(totalSec * 1000).toISOString().substr(14, 5)
+  const thisLevelSecondsAsTime = new Date(thisLevelSec * 1000).toISOString().substr(14, 5)
+  text("Total Frames: " + preRun + n, 0, 10)
+  text("Total Time: " + secondsAsTime, 0, 20)
+  text("Total Shots: " + missileCount, 0, 30)
+  text("Lvl " + (totalBodies) + " · " + thisLevelSecondsAsTime + " · " + (totalBodies - bodies.length) + "/" + totalBodies + " · " + thisLevelMissileCount + " shots", 0, 40)
+  for (let i = 0; i < allLevelSec.length; i++) {
+    const prevLevel = allLevelSec[i]
+    const prevLevelSecondsAsTime = new Date(prevLevel.thisLevelSec * 1000).toISOString().substr(14, 5)
+    text("Lvl " + (allLevelSec.length - i) + " · " + prevLevelSecondsAsTime + " · " + prevLevel.thisLevelMissileCount + " shots", 0, (i * 10) + 50)
+  }
   // noStroke();
 }
-
-let sec = 0
-setInterval(() => sec++, 1000);
+let allLevelSec = []
+let totalSec = 0
+let thisLevelSec = 0
+setInterval(() => {
+  thisLevelSec++
+  totalSec++
+}, 1000);
 
 function randomColor() {
   const color = []
