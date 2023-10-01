@@ -95,10 +95,10 @@ template CalculateForce() {
   signal distanceSquared <== myMux.out;
 
   // NOTE: confirm this is correct
-  signal distance <-- approxSqrt(distanceSquared); // TODO: confirm this warning is OK because of constraint on next line
+  signal distance <-- approxSqrt(distanceSquared);
   // log("distance", distance);
   // log("distanceSquared", distanceSquared);
-  // Should be maximum of the vectorLimiter which would be (10 * 10 ** 8) * (10 * 10 ** 8)
+  // bits should be maximum of the vectorLimiter which would be (10 * 10 ** 8) * (10 * 10 ** 8) which is under 60 bits
   component acceptableErrorOfMargin = AcceptableErrorOfMargin(60);  // TODO: test the limits of this. 
   acceptableErrorOfMargin.val1 <== distanceSquared;
   acceptableErrorOfMargin.val2 <== distance ** 2;
@@ -122,8 +122,7 @@ template CalculateForce() {
   // log("forceXnum", forceXnum);
   signal forceXunsigned <-- approxDiv(forceXnum, forceDenom);
   // log("forceXunsigned", forceXunsigned);
-
-
+// NOTE: the following constraints the approxDiv to ensure it's within the acceptable error of margin
   signal approxNumerator1 <== forceXunsigned * forceDenom;
   component acceptableErrorOfMarginDiv1 = AcceptableErrorOfMargin(divisionBits);  // TODO: test the limits of this. 
   acceptableErrorOfMarginDiv1.val1 <== forceXnum;
@@ -144,7 +143,7 @@ template CalculateForce() {
   // log("forceYnum", forceYnum);
   signal forceYunsigned <-- approxDiv(forceYnum, forceDenom);
   // log("forceYunsigned", forceYunsigned);
-
+  // NOTE: the following constraints the approxDiv to ensure it's within the acceptable error of margin
   signal approxNumerator2 <== forceYunsigned * forceDenom;
   component acceptableErrorOfMarginDiv2 = AcceptableErrorOfMargin(divisionBits);  // TODO: test the limits of this. 
   acceptableErrorOfMarginDiv2.val1 <== forceYnum;

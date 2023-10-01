@@ -9,7 +9,7 @@ const minDistanceSquared = minDistance * minDistance
 const windowWidth = 1000
 const boundaryRadius = windowWidth / 2
 let n = 0, img1
-const fps = 300
+const fps = 100
 const preRun = 0
 const p = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
 const admin = false
@@ -48,6 +48,9 @@ function setup() {
   randomSeed(seed)
 
 
+  // ellipseMode(CENTER);
+  // rectMode(CENTER);
+
   frameRate(fps)
   createCanvas(windowWidth, windowWidth);
   background(0);
@@ -61,6 +64,7 @@ function setup() {
     noStroke();
   }
   go()
+  addListener()
 }
 
 function prepBodies() {
@@ -85,7 +89,7 @@ function prepBodies() {
     const body = {
       position: createVector(ss[i][0], ss[i][1]),
       velocity: createVector(0, 0),
-      radius: (maxSize - i) * 10 + 10,//random(minRadius, maxRadius),
+      radius: (maxSize - i) * 5 + 5,//random(minRadius, maxRadius),
     }
     bs.push(body)
     bodies.push({ body, c: cs[i] })
@@ -175,7 +179,7 @@ function runComputation(bodies, p5) {
     for (let j = 0; j < bodies.length; j++) {
       const body = bodies[j].body
       const distance = dist(missile.position.x, missile.position.y, body.position.x, body.position.y);
-      const minDist = (missile.radius + body.radius) / 4;
+      const minDist = body.radius / 2
       if (distance <= minDist) {
         bodies.splice(j, 1)
         // for (k = 0; k < allCopiesOfBodies.length; k++) {
@@ -267,7 +271,7 @@ function calculateForce(body1, body2) {
   // console.log({ distanceSquared })
 
 
-  const bodies_sum = body1_radius + body2_radius
+  const bodies_sum = (body1_radius + body2_radius) * 2n; // rducing original radiuses for visial purposes
   // console.log({ bodies_sum })
 
 
@@ -396,24 +400,25 @@ let missiles = []
 let missileCount = 0
 let thisLevelMissileCount = 0
 let explosions = []
-if (typeof window !== "undefined") {
-  const body = document.getElementById("main")
-  console.log({ document, body })
-  body.addEventListener("click", function (e) {
-    if (missiles.length > 0 && !admin) return
-    thisLevelMissileCount++
-    missileCount++
-    const x = e.clientX
-    const y = windowWidth - e.clientY
-    console.log({ x, y })
-    const body = {
-      position: createVector(0, windowWidth),
-      velocity: createVector(x, -y),
-      radius: 10,
-    }
-    body.velocity.limit(5);
-    missiles.push(body)
-  })
+function addListener() {
+  if (typeof window !== "undefined") {
+    const body = document.getElementsByClassName("p5Canvas")[0]
+    console.log({ document, body })
+    body.addEventListener("click", function (e) {
+      if (missiles.length > 0 && !admin) return
+      thisLevelMissileCount++
+      missileCount++
+      const x = e.offsetX
+      const y = e.offsetY
+      const body = {
+        position: createVector(0, windowWidth),
+        velocity: createVector(x, y - windowWidth),
+        radius: 10,
+      }
+      body.velocity.limit(5);
+      missiles.push(body)
+    })
+  }
 }
 
 let allCopiesOfBodies = []
@@ -450,13 +455,18 @@ function draw() {
       }
       fill(finalColor)
       push()
-      var angle = body.velocity.heading() + PI / 2;
-      var scalar = 0.3 * body.radius;
       translate(body.position.x, body.position.y);
+      var angle = body.velocity.heading() + PI / 2;
       rotate(angle);
-      // rect(-scalar, -scalar, scalar * 2, scalar * 2);
-      triangle(-scalar, scalar, scalar, scalar, 0, -scalar);
+      let x1 = body.radius * cos(PI / 6);
+      let y1 = body.radius * sin(PI / 6);
 
+      let x2 = body.radius * cos(PI / 6 + TWO_PI / 3);
+      let y2 = body.radius * sin(PI / 6 + TWO_PI / 3);
+
+      let x3 = body.radius * cos(PI / 6 + 2 * TWO_PI / 3);
+      let y3 = body.radius * sin(PI / 6 + 2 * TWO_PI / 3);
+      triangle(x1, y1, x2, y2, x3, y3);
       pop()
     }
   }
@@ -473,18 +483,33 @@ function draw() {
       finalColor = c
     }
 
-    // ellipse(body.position.x, body.position.y, body.radius / 2, body.radius / 2);
+
     // rotate by velocity
     push()
+    translate(body.position.x, body.position.y);
+    var angle = body.velocity.heading() + PI / 2;
+    rotate(angle);
+
+    strokeWeight(1)
+    stroke("white")
+    fill(finalColor)
+    // Calculate the vertices of the equilateral triangle
+    let x1 = body.radius * cos(PI / 6);
+    let y1 = body.radius * sin(PI / 6);
+
+    let x2 = body.radius * cos(PI / 6 + TWO_PI / 3);
+    let y2 = body.radius * sin(PI / 6 + TWO_PI / 3);
+
+    let x3 = body.radius * cos(PI / 6 + 2 * TWO_PI / 3);
+    let y3 = body.radius * sin(PI / 6 + 2 * TWO_PI / 3);
+
+    triangle(x1, y1, x2, y2, x3, y3);
+    pop()
+
     stroke("white");
     strokeWeight(1);
     fill(finalColor)
-    var angle = body.velocity.heading() + PI / 2;
-    var scalar = 0.3 * body.radius;
-    translate(body.position.x, body.position.y);
-    rotate(angle);
-    triangle(-scalar, scalar, scalar, scalar, 0, -scalar);
-    pop()
+    ellipse(body.position.x, body.position.y, body.radius, body.radius);
 
     const bodyCopy = {
       body:
