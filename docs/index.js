@@ -12,12 +12,12 @@ let n = 0, img1
 const fps = 300
 const preRun = 0
 const p = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
-const admin = false
+const admin = true
 const minRadius = 50
 const maxRadius = 100
 const position = "!static"
 const colorStyle = "!squiggle"
-let totalBodies = 1
+let totalBodies = 3
 console.log({ totalBodies })
 const outlines = false
 const clearBG = true
@@ -89,7 +89,7 @@ function prepBodies() {
     const body = {
       position: createVector(ss[i][0], ss[i][1]),
       velocity: createVector(0, 0),
-      radius: (maxSize - i) * 2 + 2,//random(minRadius, maxRadius),
+      radius: (maxSize - i) + 3,//random(minRadius, maxRadius),
     }
     bs.push(body)
     bodies.push({ body, c: cs[i] })
@@ -271,7 +271,7 @@ function calculateForce(body1, body2) {
   // console.log({ distanceSquared })
 
 
-  const bodies_sum = (body1_radius + body2_radius) * 4n; // reducing original radiuses for visial purposes so multiplying by 4
+  const bodies_sum = (body1_radius + body2_radius) * 10n; // reducing original radiuses for visial purposes so multiplying by 4 // TODO: update in circuit
   // console.log({ bodies_sum })
 
 
@@ -458,14 +458,14 @@ function draw() {
       translate(body.position.x, body.position.y);
       var angle = body.velocity.heading() + PI / 2;
       rotate(angle);
-      let x1 = body.radius * cos(PI / 6);
-      let y1 = body.radius * sin(PI / 6);
+      let x1 = body.radius * 4 * cos(PI / 6);
+      let y1 = body.radius * 4 * sin(PI / 6);
 
-      let x2 = body.radius * cos(PI / 6 + TWO_PI / 3);
-      let y2 = body.radius * sin(PI / 6 + TWO_PI / 3);
+      let x2 = body.radius * 4 * cos(PI / 6 + TWO_PI / 3);
+      let y2 = body.radius * 4 * sin(PI / 6 + TWO_PI / 3);
 
-      let x3 = body.radius * cos(PI / 6 + 2 * TWO_PI / 3);
-      let y3 = body.radius * sin(PI / 6 + 2 * TWO_PI / 3);
+      let x3 = body.radius * 4 * cos(PI / 6 + 2 * TWO_PI / 3);
+      let y3 = body.radius * 4 * sin(PI / 6 + 2 * TWO_PI / 3);
       triangle(x1, y1, x2, y2, x3, y3);
       pop()
     }
@@ -490,27 +490,35 @@ function draw() {
     var angle = body.velocity.heading() + PI / 2;
     rotate(angle);
 
-    strokeWeight(1)
-    stroke("white")
+    strokeWeight(0)
+    // stroke("white")
     fill(finalColor)
     // Calculate the vertices of the equilateral triangle
-    let x1 = body.radius / 2 * cos(PI / 6);
-    let y1 = body.radius / 2 * sin(PI / 6);
+    let x1 = body.radius * 4 * cos(PI / 6);
+    let y1 = body.radius * 4 * sin(PI / 6);
 
-    let x2 = body.radius / 2 * cos(PI / 6 + TWO_PI / 3);
-    let y2 = body.radius / 2 * sin(PI / 6 + TWO_PI / 3);
+    let x2 = body.radius * 4 * cos(PI / 6 + TWO_PI / 3);
+    let y2 = body.radius * 4 * sin(PI / 6 + TWO_PI / 3);
 
-    let x3 = body.radius / 2 * cos(PI / 6 + 2 * TWO_PI / 3);
-    let y3 = body.radius / 2 * sin(PI / 6 + 2 * TWO_PI / 3);
+    let x3 = body.radius * 4 * cos(PI / 6 + 2 * TWO_PI / 3);
+    let y3 = body.radius * 4 * sin(PI / 6 + 2 * TWO_PI / 3);
 
     triangle(x1, y1, x2, y2, x3, y3);
     pop()
 
     stroke("white");
     strokeWeight(1);
-    fill(finalColor)
+    fill("white")
     ellipse(body.position.x, body.position.y, body.radius * 4, body.radius * 4);
-
+    push()
+    translate(body.position.x, body.position.y);
+    var angle = body.velocity.heading() + PI / 2;
+    rotate(angle);
+    fill(finalColor)
+    ellipse(0, -body.radius, body.radius * 2, body.radius * 2);
+    fill("white")
+    ellipse(0, -body.radius / 2, body.radius, body.radius / 2);
+    pop()
     const bodyCopy = {
       body:
       {
@@ -536,7 +544,8 @@ function draw() {
   for (let i = 0; i < explosions.length; i++) {
     const explosion = explosions[i]
     const bomb = explosion[0]
-    fill("rgba(255,0,0,0.5)")
+    fill("red")
+    strokeWeight(0)
     ellipse(bomb.x, bomb.y, bomb.i * 2, bomb.i * 2);
     explosion.shift()
     if (explosion.length == 0) {
@@ -545,7 +554,7 @@ function draw() {
   }
 
   // draw line between bottom left corner and direction towards mouse
-  stroke("rgba(200,200,200,0.5)");
+  stroke("rgba(200,200,200,1)");
   strokeCap(SQUARE);
   strokeWeight(10);
 
