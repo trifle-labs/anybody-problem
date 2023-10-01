@@ -9,7 +9,7 @@ const minDistanceSquared = minDistance * minDistance
 const windowWidth = 1000
 const boundaryRadius = windowWidth / 2
 let n = 0, img1
-const fps = 100
+const fps = 300
 const preRun = 0
 const p = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
 const admin = false
@@ -17,7 +17,7 @@ const minRadius = 50
 const maxRadius = 100
 const position = "!static"
 const colorStyle = "!squiggle"
-let totalBodies = 3
+let totalBodies = 1
 console.log({ totalBodies })
 const outlines = false
 const clearBG = true
@@ -89,7 +89,7 @@ function prepBodies() {
     const body = {
       position: createVector(ss[i][0], ss[i][1]),
       velocity: createVector(0, 0),
-      radius: (maxSize - i) * 5 + 5,//random(minRadius, maxRadius),
+      radius: (maxSize - i) * 2 + 2,//random(minRadius, maxRadius),
     }
     bs.push(body)
     bodies.push({ body, c: cs[i] })
@@ -179,7 +179,7 @@ function runComputation(bodies, p5) {
     for (let j = 0; j < bodies.length; j++) {
       const body = bodies[j].body
       const distance = dist(missile.position.x, missile.position.y, body.position.x, body.position.y);
-      const minDist = body.radius / 2
+      const minDist = body.radius * 2
       if (distance <= minDist) {
         bodies.splice(j, 1)
         // for (k = 0; k < allCopiesOfBodies.length; k++) {
@@ -271,7 +271,7 @@ function calculateForce(body1, body2) {
   // console.log({ distanceSquared })
 
 
-  const bodies_sum = (body1_radius + body2_radius) * 2n; // rducing original radiuses for visial purposes
+  const bodies_sum = (body1_radius + body2_radius) * 4n; // reducing original radiuses for visial purposes so multiplying by 4
   // console.log({ bodies_sum })
 
 
@@ -494,14 +494,14 @@ function draw() {
     stroke("white")
     fill(finalColor)
     // Calculate the vertices of the equilateral triangle
-    let x1 = body.radius * cos(PI / 6);
-    let y1 = body.radius * sin(PI / 6);
+    let x1 = body.radius / 2 * cos(PI / 6);
+    let y1 = body.radius / 2 * sin(PI / 6);
 
-    let x2 = body.radius * cos(PI / 6 + TWO_PI / 3);
-    let y2 = body.radius * sin(PI / 6 + TWO_PI / 3);
+    let x2 = body.radius / 2 * cos(PI / 6 + TWO_PI / 3);
+    let y2 = body.radius / 2 * sin(PI / 6 + TWO_PI / 3);
 
-    let x3 = body.radius * cos(PI / 6 + 2 * TWO_PI / 3);
-    let y3 = body.radius * sin(PI / 6 + 2 * TWO_PI / 3);
+    let x3 = body.radius / 2 * cos(PI / 6 + 2 * TWO_PI / 3);
+    let y3 = body.radius / 2 * sin(PI / 6 + 2 * TWO_PI / 3);
 
     triangle(x1, y1, x2, y2, x3, y3);
     pop()
@@ -509,7 +509,7 @@ function draw() {
     stroke("white");
     strokeWeight(1);
     fill(finalColor)
-    ellipse(body.position.x, body.position.y, body.radius, body.radius);
+    ellipse(body.position.x, body.position.y, body.radius * 4, body.radius * 4);
 
     const bodyCopy = {
       body:
