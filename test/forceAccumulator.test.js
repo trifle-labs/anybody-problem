@@ -3,7 +3,7 @@ const { assert } = require("chai");
 const { calculateForce, sqrtApprox, scalingFactor, runComputation } = require("../docs/index.js");
 const p = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
 const p5 = require('node-p5');
-describe("forceAccumulator circuit", () => {
+describe("forceAccumulatorMain circuit", () => {
   let circuit;
 
   const sampleInput = {
@@ -16,7 +16,7 @@ describe("forceAccumulator circuit", () => {
   const sanityCheck = true;
 
   before(async () => {
-    circuit = await hre.circuitTest.setup("forceAccumulator");
+    circuit = await hre.circuitTest.setup("forceAccumulatorMain");
 
   });
 
@@ -71,7 +71,7 @@ describe("forceAccumulator circuit", () => {
       radius: parseInt(BigInt(sampleInput.bodies[2][4]) / scalingFactor)
     }
     const bodiesBefore = [body1, body2, body3]
-    const new_bodies = runComputation(bodiesBefore, p5).map(b => {
+    const out_bodies = runComputation(bodiesBefore, p5).map(b => {
       const bodyArray = []
       b.position.x = BigInt(b.position.x * parseInt(scalingFactor))
       b.position.y = BigInt(b.position.x * parseInt(scalingFactor))
@@ -87,8 +87,8 @@ describe("forceAccumulator circuit", () => {
       bodyArray.push(b.position.x, b.position.y, b.velocity.x, b.velocity.y, b.radius)
       return bodyArray.map(b => b.toString())
     })
-    console.log({ new_bodies })
-    const expected = { new_bodies };
+    console.log({ out_bodies })
+    const expected = { out_bodies };
     const witness = await circuit.calculateWitness(sampleInput, sanityCheck);
     await circuit.assertOut(witness, expected);
   });

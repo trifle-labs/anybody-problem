@@ -10,13 +10,15 @@ template StepState(n, steps) {
   signal output out_missile[5];
   signal output out_bodies[n][5];
 
-  out_bodies <== bodies;
+  component forceAccumulator[steps];
+  var tmp_bodies[n][5] = bodies;
 
   for (var i = 0; i < steps; i++) {
-    component forceAccumulator = ForceAccumulator(n);
-    forceAccumulator.bodies <== out_bodies;
-    out_bodies <== forceAccumulator.out_bodies;
+    forceAccumulator[i] = ForceAccumulator(n);
+    forceAccumulator[i].bodies <== tmp_bodies;
+    tmp_bodies = forceAccumulator[i].out_bodies;
   }
+  out_bodies <== tmp_bodies;
 
   component calculateMissile = CalculateMissile();
   calculateMissile.missile <== missile;

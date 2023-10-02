@@ -12,12 +12,12 @@ let n = 0, img1
 const fps = 300
 const preRun = 0
 const p = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
-const admin = true
+const admin = false
 const minRadius = 50
 const maxRadius = 100
 const position = "!static"
 const colorStyle = "!squiggle"
-let totalBodies = 3
+let totalBodies = 4
 console.log({ totalBodies })
 const outlines = false
 const clearBG = true
@@ -270,10 +270,8 @@ function calculateForce(body1, body2) {
   // console.log({ distance })
   // console.log({ distanceSquared })
 
-
-  const bodies_sum = (body1_radius + body2_radius) * 10n; // reducing original radiuses for visial purposes so multiplying by 4 // TODO: update in circuit
+  const bodies_sum = (body1_radius + body2_radius) * 4n; // TODO: reducing original radiuses for visial purposes so multiplying by 4 // TODO: update in 
   // console.log({ bodies_sum })
-
 
   const distanceSquared_with_avg_denom = distanceSquared * 2n // NOTE: this is a result of moving division to the end of the calculation
   // console.log({ distanceSquared_with_avg_denom })
@@ -517,7 +515,7 @@ function draw() {
     fill(finalColor)
     ellipse(0, -body.radius, body.radius * 2, body.radius * 2);
     fill("white")
-    ellipse(0, -body.radius / 2, body.radius, body.radius / 2);
+    // ellipse(0, -body.radius / 2, body.radius, body.radius / 2);
     pop()
     const bodyCopy = {
       body:

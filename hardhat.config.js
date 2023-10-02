@@ -27,7 +27,7 @@ module.exports = {
         // No protocol, so it defaults to groth16
       },
       {
-        name: "forceAccumulator",
+        name: "forceAccumulatorMain",
         // No protocol, so it defaults to groth16
       },
       {

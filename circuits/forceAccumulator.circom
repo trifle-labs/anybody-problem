@@ -20,10 +20,9 @@ include "calculateForce.circom";
   // maybe can streamline the square root and division
 
 template ForceAccumulator(totalBodies) {
-    // signal totalBodies <== 3;
-    // var totalBodies = 3;
-    signal input bodies[3][5];
-    signal output new_bodies[3][5];
+
+    signal input bodies[totalBodies][5];
+    signal output out_bodies[totalBodies][5];
     // [0] = position_x using 10^8 decimals
     // [1] = position_y using 10^8 decimals
     // [2] = vector_x using 10^8 decimals
@@ -33,71 +32,87 @@ template ForceAccumulator(totalBodies) {
     var maxVector = 1000000000; // using 10^8 decimals
     var windowWidth = 100000000000; // using 10^8 decimals
 
-    signal accumulated_body_forces[3][2];
+    var accumulated_body_forces[totalBodies][2];
 
+    var totalIterations = totalBodies * (totalBodies - 1) / 2;
+    component calculateForceComponent[totalIterations];
+    signal force_x[totalIterations];
+    signal force_y[totalIterations];
+
+    var ii = 0;
     for (var i = 0; i < totalBodies; i++) {
       // radius of body doesn't change
-      new_bodies[i][4] <== bodies[i][4];
+      out_bodies[i][4] <== bodies[i][4];
       for (var j  = i+1; j < totalBodies; j++) {
+        // var ii = i + j - 1;
         // calculate the force between i and j
-        component calculateForceComponent = CalculateForce();
-        calculateForceComponent.in_bodies[0] <== bodies[i];
-        calculateForceComponent.in_bodies[1] <== bodies[j];
-        signal force_x <== calculateForceComponent.out_forces[0];
-        signal force_y <== calculateForceComponent.out_forces[1];
+        calculateForceComponent[ii] = CalculateForce();
+        calculateForceComponent[ii].in_bodies[0] <== bodies[i];
+        calculateForceComponent[ii].in_bodies[1] <== bodies[j];
+        force_x[ii] <== calculateForceComponent[ii].out_forces[0];
+        force_y[ii] <== calculateForceComponent[ii].out_forces[1];
         // accumulate the value of the force on body i and body j
 
-        accumulated_body_forces[i][0] += force_x;
-        accumulated_body_forces[i][1] += force_y;
-        accumulated_body_forces[j][0] += force_x;
-        accumulated_body_forces[j][1] += force_y;
+        accumulated_body_forces[i][0] = accumulated_body_forces[i][0] + force_x[ii];
+        accumulated_body_forces[i][1] = accumulated_body_forces[i][1] + force_y[ii];
+        accumulated_body_forces[j][0] = accumulated_body_forces[j][0] + force_x[ii];
+        accumulated_body_forces[j][1] = accumulated_body_forces[j][1] + force_y[ii];
+        ii = ii + 1;
       }
     }
 
+    signal new_vector_x[totalBodies];
+    signal new_vector_y[totalBodies];
+    component vectorLimiterX[totalBodies];
+    component vectorLimiterY[totalBodies];
+    component positionLimiterX[totalBodies];
+    component positionLowerLimiterX[totalBodies];
+    component positionLimiterY[totalBodies];
+    component positionLowerLimiterY[totalBodies];
+
     for (var i = 0; i < totalBodies; i++) {
       // calculate the new vector for body i
-      signal new_vector_x <== bodies[i][2] + accumulated_body_forces[i][0];
-      signal new_vector_y <== bodies[i][3] + accumulated_body_forces[i][1];
+      new_vector_x[i] <== bodies[i][2] + accumulated_body_forces[i][0];
+      new_vector_y[i] <== bodies[i][3] + accumulated_body_forces[i][1];
 
       // limit the magnitude of the vector
-      component vectorLimiterX = Limiter(252); // TODO: confirm bits limit
-      vectorLimiterX.in <== new_vector_x;
-      vectorLimiterX.limit <== maxVector; // speedLimit
-      vectorLimiterX.rather <== maxVector;
-      new_bodies[i][2] <== vectorLimiterX.out;
-      component vectorLimiterY = Limiter(252); // TODO: confirm bits limit
-      vectorLimiterY.in <== new_vector_y;
-      vectorLimiterY.limit <== maxVector; // speedLimit
-      vectorLimiterY.rather <== maxVector;
-      new_bodies[i][3] <== vectorLimiterY.out;
+      vectorLimiterX[i] = Limiter(252); // TODO: confirm bits limit
+      vectorLimiterX[i].in <== new_vector_x[i];
+      vectorLimiterX[i].limit <== maxVector; // speedLimit
+      vectorLimiterX[i].rather <== maxVector;
+      out_bodies[i][2] <== vectorLimiterX[i].out;
+      vectorLimiterY[i] = Limiter(252); // TODO: confirm bits limit
+      vectorLimiterY[i].in <== new_vector_y[i];
+      vectorLimiterY[i].limit <== maxVector; // speedLimit
+      vectorLimiterY[i].rather <== maxVector;
+      out_bodies[i][3] <== vectorLimiterY[i].out;
 
       // need to limit position so plane loops off edges
-      component positionLimiterX = Limiter(37); // NOTE: position is limited to maxWidth + (2*maxVector) which should be under 37 bits
+      positionLimiterX[i] = Limiter(37); // NOTE: position is limited to maxWidth + (2*maxVector) which should be under 37 bits
       // positionLimiter.x <== bodies[0][0] + vectorLimiter.limitedX;
-      positionLimiterX.in <== bodies[i][0] + vectorLimiterX.out + maxVector; // NOTE: adding maxVector ensures it is never negative
-      positionLimiterX.limit <== windowWidth + maxVector; // windowWidth
-      positionLimiterX.rather <== maxVector;
+      positionLimiterX[i].in <== bodies[i][0] + vectorLimiterX[i].out + maxVector; // NOTE: adding maxVector ensures it is never negative
+      positionLimiterX[i].limit <== windowWidth + maxVector; // windowWidth
+      positionLimiterX[i].rather <== maxVector;
       // NOTE: maxVector is still included, needs to be removed at end of calculation
-      component positionLowerLimiterX = LowerLimiter(37); // NOTE: position is limited to maxWidth + (2*maxVector) which should be under 37 bits
-      positionLowerLimiterX.in <== positionLimiterX.out;
-      positionLowerLimiterX.limit <== maxVector;
-      positionLowerLimiterX.rather <== windowWidth + maxVector;
-      new_bodies[i][0] <== positionLowerLimiterX.out - maxVector;
+      positionLowerLimiterX[i] = LowerLimiter(37); // NOTE: position is limited to maxWidth + (2*maxVector) which should be under 37 bits
+      positionLowerLimiterX[i].in <== positionLimiterX[i].out;
+      positionLowerLimiterX[i].limit <== maxVector;
+      positionLowerLimiterX[i].rather <== windowWidth + maxVector;
+      out_bodies[i][0] <== positionLowerLimiterX[i].out - maxVector;
 
-      component positionLimiterY = Limiter(37);  // NOTE: position is limited to maxWidth + (2*maxVector) which should be under 37 bits
-      positionLimiterY.in <== bodies[i][1] + vectorLimiterY.out + maxVector; // NOTE: adding maxVector ensures it is never negative
-      positionLimiterY.limit <== windowWidth + maxVector; // windowWidth
-      positionLimiterY.rather <== maxVector;
+      positionLimiterY[i] = Limiter(37);  // NOTE: position is limited to maxWidth + (2*maxVector) which should be under 37 bits
+      positionLimiterY[i].in <== bodies[i][1] + vectorLimiterY[i].out + maxVector; // NOTE: adding maxVector ensures it is never negative
+      positionLimiterY[i].limit <== windowWidth + maxVector; // windowWidth
+      positionLimiterY[i].rather <== maxVector;
       // NOTE: maxVector is still included, needs to be removed at end of calculation
-      component positionLowerLimiterY = LowerLimiter(37); // NOTE: position is limited to maxWidth + (2*maxVector) which should be under 37 bits
-      positionLowerLimiterY.in <== positionLimiterY.out;
-      positionLowerLimiterY.limit <== maxVector;
-      positionLowerLimiterY.rather <== windowWidth + maxVector;
-      new_bodies[i][1] <== positionLowerLimiterY.out - maxVector;
+      positionLowerLimiterY[i] = LowerLimiter(37); // NOTE: position is limited to maxWidth + (2*maxVector) which should be under 37 bits
+      positionLowerLimiterY[i].in <== positionLimiterY[i].out;
+      positionLowerLimiterY[i].limit <== maxVector;
+      positionLowerLimiterY[i].rather <== windowWidth + maxVector;
+      out_bodies[i][1] <== positionLowerLimiterY[i].out - maxVector;
     }
 }
 
-component main { public [ bodies ]} = ForceAccumulator(3);
 
 /* INPUT = {
     "bodies": [

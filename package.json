@@ -2,7 +2,7 @@
   "name": "circuits",
   "version": "1.0.0",
   "main": "index.js",
-  "license": "CC-NC-4.0",
+  "license": "CC-BY-NC-4.0",
   "dependencies": {
     "node-p5": "^1.0.4",
     "p5": "^1.7.0"
@@ -20,6 +20,7 @@
   "scripts": {
     "circom:dev": "hardhat circom --deterministic --debug --verbose",
     "circom:prod": "hardhat circom --verbose",
-    "test": "hardhat test"
+    "test": "hardhat test",
+    "serve": "npx live-server docs"
   }
 }

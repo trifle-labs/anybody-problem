@@ -14,9 +14,9 @@ template Limiter(n) {
   lessThan.in[1] <== limit;
 
   component mux = Mux1();
-  mux.in[0] <== in;
-  mux.in[1] <== rather;
-  mux.sel <== lessThan.out;
+  mux.c[0] <== in;
+  mux.c[1] <== rather;
+  mux.s <== lessThan.out;
   out <== mux.out;
 }
 
@@ -31,8 +31,8 @@ template LowerLimiter(n) {
   lessThan.in[1] <== in;
 
   component mux = Mux1();
-  mux.in[0] <== in;
-  mux.in[1] <== rather;
-  mux.sel <== lessThan.out;
+  mux.c[0] <== in;
+  mux.c[1] <== rather;
+  mux.s <== lessThan.out;
   out <== mux.out;
 }

@@ -106,7 +106,7 @@ template CalculateForce() {
   acceptableErrorOfMargin.marginOfError <== distance * 2; // TODO: confrim if (distance * 2) +1 is needed
   acceptableErrorOfMargin.out === 1;
 
-  signal bodies_sum <== body1_radius + body2_radius;
+  signal bodies_sum <== (body1_radius + body2_radius) * 4; // TODO: confirm same as index.js
 
   // log("bodies_sum", bodies_sum);
 
