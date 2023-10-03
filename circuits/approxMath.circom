@@ -66,11 +66,12 @@ function approxDiv(dividend, divisor) {
 // realDenominator <== (2 * diff) - 2
 
 
-template AcceptableErrorOfMargin (n) {
+template AcceptableMarginOfError (n) {
     signal input val1;
     signal input val2;
     signal input marginOfError;
     signal output out;
+
 
   // The following is to ensure diff = Abs(val2 - val1)
     component absoluteValueSubtraction = AbsoluteValueSubtraction(n);
@@ -78,7 +79,7 @@ template AcceptableErrorOfMargin (n) {
     absoluteValueSubtraction.in[1] <== val2;
 
     // Now ensure that the diff is less than the margin of error
-    component lessThan2  = LessThan(n);
+    component lessThan2  = LessEqThan(n);
     lessThan2.in[0] <== absoluteValueSubtraction.out;
     lessThan2.in[1] <== marginOfError;
     out <== lessThan2.out;

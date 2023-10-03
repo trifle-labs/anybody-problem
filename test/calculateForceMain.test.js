@@ -16,6 +16,7 @@ describe("calculateForceMain circuit", () => {
 
   before(async () => {
     circuit = await hre.circuitTest.setup("calculateForceMain");
+    console.log({ circuit })
 
   });
 

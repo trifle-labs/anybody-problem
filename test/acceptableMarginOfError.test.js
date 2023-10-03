@@ -1,7 +1,7 @@
 const hre = require("hardhat");
 const { assert } = require("chai");
 
-describe("acceptableErrorOfMargin circuit", () => {
+describe("acceptableMarginOfError circuit", () => {
   let circuit;
 
   const sampleInput = {
@@ -12,7 +12,7 @@ describe("acceptableErrorOfMargin circuit", () => {
   const sanityCheck = true;
 
   before(async () => {
-    circuit = await hre.circuitTest.setup("acceptableErrorOfMargin");
+    circuit = await hre.circuitTest.setup("acceptableMarginOfError");
 
   });
 

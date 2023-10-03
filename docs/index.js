@@ -7,12 +7,14 @@ const vectorLimit = 10
 const minDistance = 200 // was 200 * 200
 const minDistanceSquared = minDistance * minDistance
 const windowWidth = 1000
+const rightEdge = windowWidth, topEdge = 0, leftEdge = 0, bottomEdge = windowWidth
+
 const boundaryRadius = windowWidth / 2
 let n = 0, img1
 const fps = 300
 const preRun = 0
 const p = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
-const admin = false
+const admin = true
 const minRadius = 50
 const maxRadius = 100
 const position = "!static"
@@ -32,7 +34,7 @@ var runIndex = 0
 function go() {
   while (keepSimulating) {
     runIndex++
-    bodies = runComputation(bodies)
+    bodies = runComputation(bodies, missiles)
 
     if (runIndex > preRun) {
       keepSimulating = false
@@ -100,9 +102,15 @@ function prepBodies() {
 }
 
 
-function runComputation(bodies, p5) {
+function runComputation(bodies, missiles, p5) {
   if (p5) {
-    createVector = p5.createVector.bind(this)
+    createVector = p5.createVector.bind(p5)
+    dist = p5.dist.bind(p5)
+    for (let i = 0; i < bodies.length; i++) {
+      const body = bodies[i].body
+      body.position = createVector(body.position.x, body.position.y)
+      body.velocity = createVector(body.velocity.x, body.velocity.y)
+    }
   }
 
   let accumulativeForces = [];
@@ -151,7 +159,6 @@ function runComputation(bodies, p5) {
   const xOffset = bodies[bodies.length - 1].body.position.x
   const yOffset = bodies[bodies.length - 1].body.position.y
 
-  let rightEdge = windowWidth, topEdge = 0, leftEdge = 0, bottomEdge = windowWidth
 
   for (let i = 0; i < bodies.length; i++) {
     const body = bodies[i].body
@@ -170,30 +177,11 @@ function runComputation(bodies, p5) {
     }
   }
 
-  for (let i = 0; i < missiles.length; i++) {
-    const missile = missiles[i]
-    missile.position.add(missile.velocity);
-    if (missile.position.x > rightEdge || missile.position.y < 0) {
-      missiles.splice(i, 1);
-    }
-    for (let j = 0; j < bodies.length; j++) {
-      const body = bodies[j].body
-      const distance = dist(missile.position.x, missile.position.y, body.position.x, body.position.y);
-      const minDist = body.radius * 2
-      if (distance <= minDist) {
-        bodies.splice(j, 1)
-        // for (k = 0; k < allCopiesOfBodies.length; k++) {
-        //   const copyOfBodies = allCopiesOfBodies[k]
-        //   copyOfBodies.splice(j, 1)
-        // }
-        missiles.splice(i, 1);
-        explosions.push(explosion(body.position.x, body.position.y))
+  var results = detectCollision(bodies, missiles);
+  bodies = results.bodies
+  missiles = results.missiles
 
-      }
-    }
-  }
-
-  if (bodies.length == 0) {
+  if (bodies.reduce((a, c) => a + c.body.radius, 0) == 0) {
     const level = {
       thisLevelMissileCount,
       thisLevelSec
@@ -206,6 +194,48 @@ function runComputation(bodies, p5) {
     prepBodies()
   }
   return bodies
+}
+
+function detectCollision(bodies, missiles, p5) {
+  if (p5) {
+    createVector = p5.createVector.bind(p5)
+    dist = p5.dist.bind(p5)
+    for (let i = 0; i < bodies.length; i++) {
+      const body = bodies[i].body
+      body.position = createVector(body.position.x, body.position.y)
+      body.velocity = createVector(body.velocity.x, body.velocity.y)
+    }
+  }
+
+  for (let i = 0; i < missiles.length; i++) {
+    const missile = missiles[i]
+    missile.position.add(missile.velocity);
+    if (missile.position.x > rightEdge || missile.position.y < 0) {
+      missiles.splice(i, 1);
+    }
+    for (let j = 0; j < bodies.length; j++) {
+      const body = bodies[j].body
+      const distance = dist(missile.position.x, missile.position.y, body.position.x, body.position.y);
+      const minDist = body.radius * 2
+      if (distance <= minDist) {
+        bodies[j].body.radius = 0
+        // bodies.splice(j, 1)
+        // for (k = 0; k < allCopiesOfBodies.length; k++) {
+        //   const copyOfBodies = allCopiesOfBodies[k]
+        //   copyOfBodies.splice(j, 1)
+        // }
+        missiles.splice(i, 1);
+        explosions.push(explosion(body.position.x, body.position.y))
+
+      }
+      console.log("bodies[j].body.position.x", bodies[j].body.position.x)
+      console.log("bodies[j].body.position.y", bodies[j].body.position.y)
+      console.log("bodeis[j].body.velocity.x", bodies[j].body.velocity.x)
+      console.log("bodeis[j].body.velocity.y", bodies[j].body.velocity.y)
+      console.log("bodies[j].body.radius", bodies[j].body.radius)
+    }
+  }
+  return { bodies, missiles }
 }
 
 function explosion(x, y) {
@@ -270,7 +300,7 @@ function calculateForce(body1, body2) {
   // console.log({ distance })
   // console.log({ distanceSquared })
 
-  const bodies_sum = (body1_radius + body2_radius) * 4n; // TODO: reducing original radiuses for visial purposes so multiplying by 4 // TODO: update in 
+  const bodies_sum = body1_radius == 0n || body2_radius == 0n ? 0n : (body1_radius + body2_radius) * 4n; // NOTE: this could be tweaked as a variable for "liveliness" of bodies
   // console.log({ bodies_sum })
 
   const distanceSquared_with_avg_denom = distanceSquared * 2n // NOTE: this is a result of moving division to the end of the calculation
@@ -436,7 +466,7 @@ function draw() {
     // background("white")
   }
 
-  bodies = runComputation(bodies)
+  bodies = runComputation(bodies, missiles)
 
 
   for (let i = 0; i < allCopiesOfBodies.length; i++) {
@@ -618,7 +648,7 @@ function randomColor() {
 }
 
 function randomPosition() {
-  const radiusDist = random(windowWidth / 2.1, windowWidth / 2)
+  const radiusDist = random(windowWidth * .47, windowWidth * .5)
   const randomDir = random(0, 360)
   const x = (radiusDist * Math.cos(randomDir)) + (windowWidth / 2)
   const y = radiusDist * Math.sin(randomDir) + (windowWidth / 2)
@@ -629,6 +659,7 @@ if (module) {
     calculateForce,
     sqrtApprox,
     scalingFactor,
-    runComputation
+    runComputation,
+    detectCollision
   }
 }

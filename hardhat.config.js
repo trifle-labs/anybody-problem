@@ -19,7 +19,23 @@ module.exports = {
     ptau: "https://hermez.s3-eu-west-1.amazonaws.com/powersOfTau28_hez_final_15.ptau",
     circuits: [
       {
-        name: "acceptableErrorOfMargin",
+        name: "nft",
+        // No protocol, so it defaults to groth16
+      },
+      {
+        name: "acceptableMarginOfError",
+        // No protocol, so it defaults to groth16
+      },
+      {
+        name: "detectCollisionMain",
+        // No protocol, so it defaults to groth16
+      },
+      {
+        name: "stepStateMain",
+        // No protocol, so it defaults to groth16
+      },
+      {
+        name: "getDistanceMain",
         // No protocol, so it defaults to groth16
       },
       {
@@ -28,6 +44,10 @@ module.exports = {
       },
       {
         name: "forceAccumulatorMain",
+        // No protocol, so it defaults to groth16
+      },
+      {
+        name: "absoluteValueSubtraction",
         // No protocol, so it defaults to groth16
       },
       {

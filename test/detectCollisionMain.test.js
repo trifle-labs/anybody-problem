@@ -1,23 +1,30 @@
 const hre = require("hardhat");
 const { assert } = require("chai");
-const { calculateForce, sqrtApprox, scalingFactor, runComputation } = require("../docs/index.js");
-const p = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
+const { calculateForce, sqrtApprox, scalingFactor, detectCollision } = require("../docs/index.js");
+const modp = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
 const p5 = require('node-p5');
-describe("forceAccumulatorMain circuit", () => {
-  let circuit;
+describe("detectCollisionMain circuit", () => {
+  let circuit, p
 
   const sampleInput = {
-    bodies: [
-      ["22600000000", "4200000000", "-133000000", "-629000000", "10000000000"],
+    "bodies": [
+      ["22600000000", "4200000000", "-1", "-629000000", "10000000000"],
       ["36300000000", "65800000000", "-332000000", "374000000", "7500000000"],
       ["67900000000", "50000000000", "229000000", "252000000", "5000000000"]
-    ]
+    ],
+    "missile": ["22600000000", "4200000000", "0", "0", "10000000000"]
   };
   const sanityCheck = true;
 
   before(async () => {
-    circuit = await hre.circuitTest.setup("forceAccumulatorMain");
-
+    console.log(hre.circom)
+    circuit = await hre.circuitTest.setup("detectCollisionMain");
+    function sketch(pp) {
+      p = pp
+      pp.setup = async () => { pp.noLoop() }
+      pp.draw = () => { }
+    }
+    p5.createSketch(sketch)
   });
 
   it("produces a witness with valid constraints", async () => {
@@ -45,7 +52,8 @@ describe("forceAccumulatorMain circuit", () => {
         y: parseInt(BigInt(sampleInput.bodies[0][1]) / scalingFactor)
       },
       velocity: {
-        x: 0, y: 0
+        x: parseInt(BigInt(sampleInput.bodies[0][2]) / scalingFactor),
+        y: parseInt(BigInt(sampleInput.bodies[0][3]) / scalingFactor)
       },
       radius: parseInt(BigInt(sampleInput.bodies[0][4]) / scalingFactor)
     }
@@ -55,33 +63,46 @@ describe("forceAccumulatorMain circuit", () => {
         y: parseInt(BigInt(sampleInput.bodies[1][1]) / scalingFactor)
       },
       velocity: {
-        x: 0, y: 0
+        x: parseInt(BigInt(sampleInput.bodies[1][2]) / scalingFactor),
+        y: parseInt(BigInt(sampleInput.bodies[1][3]) / scalingFactor)
       },
       radius: parseInt(BigInt(sampleInput.bodies[1][4]) / scalingFactor)
     }
-
     const body3 = {
       position: {
         x: parseInt(BigInt(sampleInput.bodies[2][0]) / scalingFactor),
         y: parseInt(BigInt(sampleInput.bodies[2][1]) / scalingFactor)
       },
       velocity: {
-        x: 0, y: 0
+        x: parseInt(BigInt(sampleInput.bodies[2][2]) / scalingFactor),
+        y: parseInt(BigInt(sampleInput.bodies[2][3]) / scalingFactor)
       },
       radius: parseInt(BigInt(sampleInput.bodies[2][4]) / scalingFactor)
     }
-    const bodiesBefore = [body1, body2, body3]
-    const out_bodies = runComputation(bodiesBefore, p5).map(b => {
+    const bodiesBefore = [{ body: body1 }, { body: body2 }, { body: body3 }]
+
+    const missiles = [{
+      position: p.createVector(parseFloat(BigInt(sampleInput.missile[0]) / scalingFactor), parseFloat(BigInt(sampleInput.missile[1]) / scalingFactor)),
+      velocity: p.createVector(parseFloat(BigInt(sampleInput.missile[2]) / scalingFactor), parseFloat(BigInt(sampleInput.missile[3]) / scalingFactor)),
+      radius: parseFloat(BigInt(sampleInput.missile[4]) / scalingFactor)
+    }]
+    let out_bodies = bodiesBefore;
+    // NOTE: 10 is number in detectCollisionMain.circom
+    const results = detectCollision(out_bodies, missiles, p)
+    out_bodies = results.bodies
+    console.log({ out_bodies })
+    out_bodies = out_bodies.map(body => {
+      const b = body.body
       const bodyArray = []
       b.position.x = BigInt(Math.floor(b.position.x * parseInt(scalingFactor)))
       b.position.y = BigInt(Math.floor(b.position.y * parseInt(scalingFactor)))
       b.velocity.x = BigInt(Math.floor(b.velocity.x * parseInt(scalingFactor)))
       while (b.velocity.x < 0n) {
-        b.velocity.x += p
+        b.velocity.x += modp
       }
       b.velocity.y = BigInt(Math.floor(b.velocity.y * parseInt(scalingFactor)))
       while (b.velocity.y < 0n) {
-        b.velocity.y += p
+        b.velocity.y += modp
       }
       b.radius = BigInt(b.radius * parseInt(scalingFactor))
       bodyArray.push(b.position.x, b.position.y, b.velocity.x, b.velocity.y, b.radius)
