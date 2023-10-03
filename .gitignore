@@ -10,7 +10,7 @@ artifacts
 /circuits/*.r1cs
 circuits/**.r1cs
 circuits/*.r1cs
-*.rc1s
+*.r1cs
 circuits/*.vkey.json
 circuits/*.wasm
 circuits/*.zkey
