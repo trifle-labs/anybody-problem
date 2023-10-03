@@ -99,14 +99,33 @@ template CalculateForce() {
   // log("distance", distance);
   // log("distanceSquared", distanceSquared);
   // bits should be maximum of the vectorLimiter which would be (10 * 10 ** 8) * (10 * 10 ** 8) which is under 60 bits
-  component acceptableErrorOfMargin = AcceptableErrorOfMargin(60);  // TODO: test the limits of this. 
-  acceptableErrorOfMargin.val1 <== distanceSquared;
-  acceptableErrorOfMargin.val2 <== distance ** 2;
+  component acceptableMarginOfError = AcceptableMarginOfError(60);  // TODO: test the limits of this. 
+  acceptableMarginOfError.val1 <== distanceSquared;
+  acceptableMarginOfError.val2 <== distance ** 2;
   // margin of error should be midpoint between squares
-  acceptableErrorOfMargin.marginOfError <== distance * 2; // TODO: confrim if (distance * 2) +1 is needed
-  acceptableErrorOfMargin.out === 1;
+  acceptableMarginOfError.marginOfError <== distance * 2; // TODO: confrim if (distance * 2) +1 is needed
+  acceptableMarginOfError.out === 1;
 
-  signal bodies_sum <== (body1_radius + body2_radius) * 4; // TODO: confirm same as index.js
+
+  signal bodies_sum_tmp <== (body1_radius + body2_radius) * 4; // NOTE: this could be tweaked as a variable for "liveliness" of bodies
+
+  // bodies_sum is 0 if either body1_radius or body2_radius is 0
+  component isZero = IsZero();
+  isZero.in <== body1_radius;
+
+  component myMux2 = Mux1();
+  myMux2.c[0] <== bodies_sum_tmp;
+  myMux2.c[1] <== 0;
+  myMux2.s <== isZero.out;
+
+  component isZero2 = IsZero();
+  isZero2.in <== body2_radius;
+
+  component myMux3 = Mux1();
+  myMux3.c[0] <== myMux2.out;
+  myMux3.c[1] <== 0;
+  myMux3.s <== isZero2.out;
+  signal bodies_sum <== myMux3.out;
 
   // log("bodies_sum", bodies_sum);
 
@@ -124,19 +143,19 @@ template CalculateForce() {
   // log("forceXunsigned", forceXunsigned);
 // NOTE: the following constraints the approxDiv to ensure it's within the acceptable error of margin
   signal approxNumerator1 <== forceXunsigned * forceDenom;
-  component acceptableErrorOfMarginDiv1 = AcceptableErrorOfMargin(divisionBits);  // TODO: test the limits of this. 
+  component acceptableErrorOfMarginDiv1 = AcceptableMarginOfError(divisionBits);  // TODO: test the limits of this. 
   acceptableErrorOfMarginDiv1.val1 <== forceXnum;
   acceptableErrorOfMarginDiv1.val2 <== approxNumerator1;
   acceptableErrorOfMarginDiv1.marginOfError <== forceDenom; // TODO: actually could be further reduced to (realDenom / 2) + 1 but then we're using division again
   acceptableErrorOfMarginDiv1.out === 1;
 
-  component isZero = IsZero();
-  isZero.in <== dyAbs + dy;
-  component myMux2 = Mux1();
-  myMux2.c[0] <== forceXunsigned * -1;
-  myMux2.c[1] <== forceXunsigned;
-  myMux2.s <== isZero.out;
-  signal forceX <== myMux2.out;
+  component isZero3 = IsZero();
+  isZero3.in <== dyAbs + dy;
+  component myMux4 = Mux1();
+  myMux4.c[0] <== forceXunsigned * -1;
+  myMux4.c[1] <== forceXunsigned;
+  myMux4.s <== isZero3.out;
+  signal forceX <== myMux4.out;
   // log("forceX", forceX);
 
   signal forceYnum <== dyAbs * forceMag_numerator;
@@ -145,19 +164,19 @@ template CalculateForce() {
   // log("forceYunsigned", forceYunsigned);
   // NOTE: the following constraints the approxDiv to ensure it's within the acceptable error of margin
   signal approxNumerator2 <== forceYunsigned * forceDenom;
-  component acceptableErrorOfMarginDiv2 = AcceptableErrorOfMargin(divisionBits);  // TODO: test the limits of this. 
+  component acceptableErrorOfMarginDiv2 = AcceptableMarginOfError(divisionBits);  // TODO: test the limits of this. 
   acceptableErrorOfMarginDiv2.val1 <== forceYnum;
   acceptableErrorOfMarginDiv2.val2 <== approxNumerator2;
   acceptableErrorOfMarginDiv2.marginOfError <== forceDenom; // TODO: actually could be further reduced to (realDenom / 2) + 1 but then we're using division again
   acceptableErrorOfMarginDiv2.out === 1;
 
-  component isZero2 = IsZero();
-  isZero2.in <== dxAbs + dx;
-  component myMux3 = Mux1();
-  myMux3.c[0] <== forceYunsigned * -1;
-  myMux3.c[1] <== forceYunsigned ;
-  myMux3.s <== isZero2.out;
-  signal forceY <== myMux3.out;
+  component isZero4 = IsZero();
+  isZero4.in <== dxAbs + dx;
+  component myMux5 = Mux1();
+  myMux5.c[0] <== forceYunsigned * -1;
+  myMux5.c[1] <== forceYunsigned ;
+  myMux5.s <== isZero4.out;
+  signal forceY <== myMux5.out;
   // log("forceY", forceY);
 
   out_forces[0] <== forceX;

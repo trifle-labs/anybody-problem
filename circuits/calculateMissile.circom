@@ -9,9 +9,9 @@ template CalculateMissile() {
   // [4] = radius using 10^8 decimals
   signal output out_missile[5];
 
-  out_missile[0] = missile[0] + missile[2];
-  out_missile[1] = missile[1] + missile[3];
-  out_missile[2] = missile[2];
-  out_missile[3] = missile[3];
-  out_missile[4] = missile[4];
+  out_missile[0] <== missile[0] + missile[2];
+  out_missile[1] <== missile[1] + missile[3];
+  out_missile[2] <== missile[2];
+  out_missile[3] <== missile[3];
+  out_missile[4] <== missile[4];
 }

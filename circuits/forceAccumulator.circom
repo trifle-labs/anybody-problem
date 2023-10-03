@@ -20,7 +20,6 @@ include "calculateForce.circom";
   // maybe can streamline the square root and division
 
 template ForceAccumulator(totalBodies) {
-
     signal input bodies[totalBodies][5];
     signal output out_bodies[totalBodies][5];
     // [0] = position_x using 10^8 decimals

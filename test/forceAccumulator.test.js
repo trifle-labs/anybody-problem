@@ -73,13 +73,13 @@ describe("forceAccumulatorMain circuit", () => {
     const bodiesBefore = [body1, body2, body3]
     const out_bodies = runComputation(bodiesBefore, p5).map(b => {
       const bodyArray = []
-      b.position.x = BigInt(b.position.x * parseInt(scalingFactor))
-      b.position.y = BigInt(b.position.x * parseInt(scalingFactor))
-      b.velocity.x = BigInt(b.velocity.x * parseInt(scalingFactor))
+      b.position.x = BigInt(Math.floor(b.position.x * parseInt(scalingFactor)))
+      b.position.y = BigInt(Math.floor(b.position.y * parseInt(scalingFactor)))
+      b.velocity.x = BigInt(Math.floor(b.velocity.x * parseInt(scalingFactor)))
       while (b.velocity.x < 0n) {
         b.velocity.x += p
       }
-      b.velocity.y = BigInt(b.velocity.y * parseInt(scalingFactor))
+      b.velocity.y = BigInt(Math.floor(b.velocity.y * parseInt(scalingFactor)))
       while (b.velocity.y < 0n) {
         b.velocity.y += p
       }
