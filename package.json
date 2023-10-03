@@ -12,7 +12,7 @@
     "circomlib": "^2.0.3",
     "circomlibjs": "^0.1.2",
     "hardhat": "^2.9.1",
-    "hardhat-circom": "^3.3.2"
+    "hardhat-circom": "git+ssh://git@github.com/okwme/hardhat-circom.git"
   },
   "engines": {
     "node": ">=16"

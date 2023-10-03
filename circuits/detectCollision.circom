@@ -1,4 +1,4 @@
-pragma circom 2.1.0;
+pragma circom 2.1.3;
 
 include "getDistance.circom";
 include "../node_modules/circomlib/circuits/mux1.circom";
