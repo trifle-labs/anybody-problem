@@ -5,11 +5,11 @@ include "../node_modules/circomlib/circuits/mux1.circom";
 
 template DetectCollision(totalBodies) {
   signal input bodies[totalBodies][5];
-  log("bodies[0][0]", bodies[0][0]);
-  log("bodies[0][1]", bodies[0][1]);
-  log("bodies[0][2]", bodies[0][2]);
-  log("bodies[0][3]", bodies[0][3]);
-  log("bodies[0][4]", bodies[0][4]);
+  // log("bodies[0][0]", bodies[0][0]);
+  // log("bodies[0][1]", bodies[0][1]);
+  // log("bodies[0][2]", bodies[0][2]);
+  // log("bodies[0][3]", bodies[0][3]);
+  // log("bodies[0][4]", bodies[0][4]);
   signal input missile[5];
   signal output out_bodies[totalBodies][5];
   signal output out_missile[5];

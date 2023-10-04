@@ -41,17 +41,17 @@ describe("calculateForceMain circuit", () => {
   it("has the correct output", async () => {
     const body1 = {
       position: {
-        x: parseInt(BigInt(sampleInput.in_bodies[0][0]) / scalingFactor),
-        y: parseInt(BigInt(sampleInput.in_bodies[0][1]) / scalingFactor)
+        x: parseFloat(BigInt(sampleInput.in_bodies[0][0]) / scalingFactor),
+        y: parseFloat(BigInt(sampleInput.in_bodies[0][1]) / scalingFactor)
       },
-      radius: parseInt(BigInt(sampleInput.in_bodies[0][4]) / scalingFactor)
+      radius: parseFloat(BigInt(sampleInput.in_bodies[0][4]) / scalingFactor)
     }
     const body2 = {
       position: {
-        x: parseInt(BigInt(sampleInput.in_bodies[1][0]) / scalingFactor),
-        y: parseInt(BigInt(sampleInput.in_bodies[1][1]) / scalingFactor)
+        x: parseFloat(BigInt(sampleInput.in_bodies[1][0]) / scalingFactor),
+        y: parseFloat(BigInt(sampleInput.in_bodies[1][1]) / scalingFactor)
       },
-      radius: parseInt(BigInt(sampleInput.in_bodies[1][4]) / scalingFactor)
+      radius: parseFloat(BigInt(sampleInput.in_bodies[1][4]) / scalingFactor)
     }
     const out_forces = calculateForce(body1, body2).map(v => BigInt(v * parseInt(scalingFactor)))
 

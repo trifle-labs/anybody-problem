@@ -8,7 +8,7 @@ describe("detectCollisionMain circuit", () => {
 
   const sampleInput = {
     "bodies": [
-      ["22600000000", "4200000000", "-1", "-629000000", "10000000000"],
+      ["22600000000", "4200000000", "-133000000", "-629000000", "10000000000"],
       ["36300000000", "65800000000", "-332000000", "374000000", "7500000000"],
       ["67900000000", "50000000000", "229000000", "252000000", "5000000000"]
     ],
@@ -48,36 +48,36 @@ describe("detectCollisionMain circuit", () => {
   it("has the correct output", async () => {
     const body1 = {
       position: {
-        x: parseInt(BigInt(sampleInput.bodies[0][0]) / scalingFactor),
-        y: parseInt(BigInt(sampleInput.bodies[0][1]) / scalingFactor)
+        x: parseFloat(sampleInput.bodies[0][0]) / (parseFloat(scalingFactor)),
+        y: parseFloat(sampleInput.bodies[0][1]) / (parseFloat(scalingFactor))
       },
       velocity: {
-        x: parseInt(BigInt(sampleInput.bodies[0][2]) / scalingFactor),
-        y: parseInt(BigInt(sampleInput.bodies[0][3]) / scalingFactor)
+        x: parseFloat(sampleInput.bodies[0][2]) / (parseFloat(scalingFactor)),
+        y: parseFloat(sampleInput.bodies[0][3]) / (parseFloat(scalingFactor))
       },
-      radius: parseInt(BigInt(sampleInput.bodies[0][4]) / scalingFactor)
+      radius: parseFloat(sampleInput.bodies[0][4]) / (parseFloat(scalingFactor))
     }
     const body2 = {
       position: {
-        x: parseInt(BigInt(sampleInput.bodies[1][0]) / scalingFactor),
-        y: parseInt(BigInt(sampleInput.bodies[1][1]) / scalingFactor)
+        x: parseFloat(sampleInput.bodies[1][0]) / (parseFloat(scalingFactor)),
+        y: parseFloat(sampleInput.bodies[1][1]) / (parseFloat(scalingFactor))
       },
       velocity: {
-        x: parseInt(BigInt(sampleInput.bodies[1][2]) / scalingFactor),
-        y: parseInt(BigInt(sampleInput.bodies[1][3]) / scalingFactor)
+        x: parseFloat(sampleInput.bodies[1][2]) / (parseFloat(scalingFactor)),
+        y: parseFloat(sampleInput.bodies[1][3]) / (parseFloat(scalingFactor))
       },
-      radius: parseInt(BigInt(sampleInput.bodies[1][4]) / scalingFactor)
+      radius: parseFloat(sampleInput.bodies[1][4]) / (parseFloat(scalingFactor))
     }
     const body3 = {
       position: {
-        x: parseInt(BigInt(sampleInput.bodies[2][0]) / scalingFactor),
-        y: parseInt(BigInt(sampleInput.bodies[2][1]) / scalingFactor)
+        x: parseFloat(sampleInput.bodies[2][0]) / (parseFloat(scalingFactor)),
+        y: parseFloat(sampleInput.bodies[2][1]) / (parseFloat(scalingFactor))
       },
       velocity: {
-        x: parseInt(BigInt(sampleInput.bodies[2][2]) / scalingFactor),
-        y: parseInt(BigInt(sampleInput.bodies[2][3]) / scalingFactor)
+        x: parseFloat(sampleInput.bodies[2][2]) / (parseFloat(scalingFactor)),
+        y: parseFloat(sampleInput.bodies[2][3]) / (parseFloat(scalingFactor))
       },
-      radius: parseInt(BigInt(sampleInput.bodies[2][4]) / scalingFactor)
+      radius: parseFloat(sampleInput.bodies[2][4]) / (parseFloat(scalingFactor))
     }
     const bodiesBefore = [{ body: body1 }, { body: body2 }, { body: body3 }]
 
@@ -90,17 +90,16 @@ describe("detectCollisionMain circuit", () => {
     // NOTE: 10 is number in detectCollisionMain.circom
     const results = detectCollision(out_bodies, missiles, p)
     out_bodies = results.bodies
-    console.log({ out_bodies })
     out_bodies = out_bodies.map(body => {
       const b = body.body
       const bodyArray = []
-      b.position.x = BigInt(Math.floor(b.position.x * parseInt(scalingFactor)))
-      b.position.y = BigInt(Math.floor(b.position.y * parseInt(scalingFactor)))
-      b.velocity.x = BigInt(Math.floor(b.velocity.x * parseInt(scalingFactor)))
+      b.position.x = BigInt(Math.floor(b.position.x * parseInt(scalingFactor))) % modp
+      b.position.y = BigInt(Math.floor(b.position.y * parseInt(scalingFactor))) % modp
+      b.velocity.x = BigInt(Math.floor(b.velocity.x * parseInt(scalingFactor))) % modp
       while (b.velocity.x < 0n) {
         b.velocity.x += modp
       }
-      b.velocity.y = BigInt(Math.floor(b.velocity.y * parseInt(scalingFactor)))
+      b.velocity.y = BigInt(Math.floor(b.velocity.y * parseInt(scalingFactor))) % modp
       while (b.velocity.y < 0n) {
         b.velocity.y += modp
       }

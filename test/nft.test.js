@@ -42,34 +42,34 @@ describe("nft circuit", () => {
   it("has the correct output", async () => {
     const body1 = {
       position: {
-        x: parseInt(BigInt(sampleInput.bodies[0][0]) / scalingFactor),
-        y: parseInt(BigInt(sampleInput.bodies[0][1]) / scalingFactor)
+        x: parseFloat(BigInt(sampleInput.bodies[0][0]) / scalingFactor),
+        y: parseFloat(BigInt(sampleInput.bodies[0][1]) / scalingFactor)
       },
       velocity: {
         x: 0, y: 0
       },
-      radius: parseInt(BigInt(sampleInput.bodies[0][4]) / scalingFactor)
+      radius: parseFloat(BigInt(sampleInput.bodies[0][4]) / scalingFactor)
     }
     const body2 = {
       position: {
-        x: parseInt(BigInt(sampleInput.bodies[1][0]) / scalingFactor),
-        y: parseInt(BigInt(sampleInput.bodies[1][1]) / scalingFactor)
+        x: parseFloat(BigInt(sampleInput.bodies[1][0]) / scalingFactor),
+        y: parseFloat(BigInt(sampleInput.bodies[1][1]) / scalingFactor)
       },
       velocity: {
         x: 0, y: 0
       },
-      radius: parseInt(BigInt(sampleInput.bodies[1][4]) / scalingFactor)
+      radius: parseFloat(BigInt(sampleInput.bodies[1][4]) / scalingFactor)
     }
 
     const body3 = {
       position: {
-        x: parseInt(BigInt(sampleInput.bodies[2][0]) / scalingFactor),
-        y: parseInt(BigInt(sampleInput.bodies[2][1]) / scalingFactor)
+        x: parseFloat(BigInt(sampleInput.bodies[2][0]) / scalingFactor),
+        y: parseFloat(BigInt(sampleInput.bodies[2][1]) / scalingFactor)
       },
       velocity: {
         x: 0, y: 0
       },
-      radius: parseInt(BigInt(sampleInput.bodies[2][4]) / scalingFactor)
+      radius: parseFloat(BigInt(sampleInput.bodies[2][4]) / scalingFactor)
     }
     const bodiesBefore = [body1, body2, body3]
     let out_bodies = bodiesBefore;

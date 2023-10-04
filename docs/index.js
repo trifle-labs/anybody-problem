@@ -14,12 +14,13 @@ let n = 0, img1
 const fps = 300
 const preRun = 0
 const p = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
-const admin = false
+const admin = true
 const minRadius = 50
 const maxRadius = 100
 const position = "!static"
 const colorStyle = "!squiggle"
-let totalBodies = 4
+let totalBodies = 3
+const initialBodies = totalBodies
 console.log({ totalBodies })
 const outlines = false
 const clearBG = true
@@ -70,6 +71,8 @@ function setup() {
 }
 
 function prepBodies() {
+  ss = []
+  cs = []
   const opac = 1
   for (let i = 0; i < totalBodies; i++) {
     let cc = randomColor()
@@ -196,6 +199,7 @@ function runComputation(bodies, missiles, p5) {
   return bodies
 }
 
+
 function detectCollision(bodies, missiles, p5) {
   if (p5) {
     createVector = p5.createVector.bind(p5)
@@ -218,14 +222,14 @@ function detectCollision(bodies, missiles, p5) {
       const distance = dist(missile.position.x, missile.position.y, body.position.x, body.position.y);
       const minDist = body.radius * 2
       if (distance <= minDist) {
-        bodies[j].body.radius = 0
         // bodies.splice(j, 1)
         // for (k = 0; k < allCopiesOfBodies.length; k++) {
         //   const copyOfBodies = allCopiesOfBodies[k]
         //   copyOfBodies.splice(j, 1)
         // }
         missiles.splice(i, 1);
-        explosions.push(explosion(body.position.x, body.position.y))
+        explosions.push(explosion(body.position.x, body.position.y, body.radius))
+        bodies[j].body.radius = 0
 
       }
       console.log("bodies[j].body.position.x", bodies[j].body.position.x)
@@ -238,11 +242,11 @@ function detectCollision(bodies, missiles, p5) {
   return { bodies, missiles }
 }
 
-function explosion(x, y) {
+function explosion(x, y, radius) {
   let bombs = []
-  for (let i = 0; i < 50; i++) {
+  for (let i = 0; i < 100; i++) {
     bombs.push({
-      x, y, i
+      x, y, i, radius
     })
   }
   return bombs
@@ -431,7 +435,6 @@ let explosions = []
 function addListener() {
   if (typeof window !== "undefined") {
     const body = document.getElementsByClassName("p5Canvas")[0]
-    console.log({ document, body })
     body.addEventListener("click", function (e) {
       if (missiles.length > 0 && !admin) return
       thisLevelMissileCount++
@@ -536,16 +539,14 @@ function draw() {
 
     stroke("white");
     strokeWeight(1);
-    fill("white")
-    ellipse(body.position.x, body.position.y, body.radius * 4, body.radius * 4);
+    // fill("white")
+    // ellipse(body.position.x, body.position.y, body.radius * 4, body.radius * 4);
     push()
     translate(body.position.x, body.position.y);
     var angle = body.velocity.heading() + PI / 2;
     rotate(angle);
-    fill(finalColor)
-    ellipse(0, -body.radius, body.radius * 2, body.radius * 2);
-    fill("white")
-    // ellipse(0, -body.radius / 2, body.radius, body.radius / 2);
+
+    drawCenter(0, 0, body.radius);
     pop()
     const bodyCopy = {
       body:
@@ -566,14 +567,20 @@ function draw() {
   fill("black")
   for (let i = 0; i < missiles.length; i++) {
     const body = missiles[i]
+    strokeWeight(0)
     ellipse(body.position.x, body.position.y, body.radius / 2, body.radius / 2);
+  }
+  if (explosions.length > 0) {
+    for (let i = 0; i < explosions.length; i++) {
+      const bomb = explosions[i][0]
+      drawCenter(bomb.x, bomb.y, bomb.radius)
+    }
   }
 
   for (let i = 0; i < explosions.length; i++) {
     const explosion = explosions[i]
     const bomb = explosion[0]
     fill("red")
-    strokeWeight(0)
     ellipse(bomb.x, bomb.y, bomb.i * 2, bomb.i * 2);
     explosion.shift()
     if (explosion.length == 0) {
@@ -627,6 +634,19 @@ function draw() {
     text("Lvl " + (allLevelSec.length - i) + " - " + prevLevelSecondsAsTime + " - " + prevLevel.thisLevelMissileCount + " shots", 0, (i * 10) + 50)
   }
   // noStroke();
+}
+
+function drawCenter(x, y, r) {
+  strokeWeight(0)
+  const max = 4
+  for (var i = 0; i < max; i++) {
+    if (i % 2 == 0) {
+      fill("white")
+    } else {
+      fill("red")
+    }
+    ellipse(x, y, r * (max - i))
+  }
 }
 let allLevelSec = []
 let totalSec = 0
