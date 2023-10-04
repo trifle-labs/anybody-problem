@@ -1,4 +1,4 @@
-pragma circom 2.1.2;
+pragma circom 2.1.3;
 
 include "getDistance.circom";
 

@@ -1,4 +1,4 @@
-pragma circom 2.1.0;
+pragma circom 2.1.3;
 
 include "forceAccumulator.circom";
 
@@ -18,4 +18,4 @@ template NFT(totalBodies, steps) {
   out_bodies <== tmp_bodies[steps];
 }
 
-component main { public [ bodies ]} = NFT(3, 10);
+component main { public [ bodies ]} = NFT(3, 1);

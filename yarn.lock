@@ -1659,10 +1659,10 @@ cipher-base@^1.0.0, cipher-base@^1.0.1, cipher-base@^1.0.3:
     inherits "^2.0.1"
     safe-buffer "^5.0.1"
 
-circom2@^0.2.12:
-  version "0.2.16"
-  resolved "https://registry.yarnpkg.com/circom2/-/circom2-0.2.16.tgz#8f2476636aa00734e61aec730a57894927978aac"
-  integrity sha512-ZFE14aXH0xrEf+HoB1brnV7ID1AKdz3j88R4y8JWYN05PoTozuoIBYT80WAspjj7GeelIk9GWLZYdgITF+YABg==
+circom2@0.2.12:
+  version "0.2.12"
+  resolved "https://registry.yarnpkg.com/circom2/-/circom2-0.2.12.tgz#f181aba597a6e9701db55553388b446568c40a95"
+  integrity sha512-wdqo95xngziM5aA0HV1gvK5ZZ4Hx+LjZOh846TnqQNZeizslxhTYFfOVkLnvHYTCC6zNBGzwjAiAEGKEYsw5Dw==
   dependencies:
     "@wasmer/wasi" "^0.12.0"
     is-typed-array "^1.1.8"
@@ -1698,6 +1698,12 @@ circom_runtime@0.1.21:
   integrity sha512-qTkud630B/GK8y76hnOaaS1aNuF6prfV0dTrkeRsiJKnlP1ryQbP2FWLgDOPqn6aKyaPlam+Z+DTbBhkEzh8dA==
   dependencies:
     ffjavascript "0.2.56"
+
+"circom_runtime@git+ssh://git@github.com/okwme/circom_runtime.git":
+  version "0.1.24"
+  resolved "git+ssh://git@github.com/okwme/circom_runtime.git#b1d8d568f881ed62f104cac46c6b1cfb1632df8a"
+  dependencies:
+    ffjavascript "0.2.60"
 
 circomlib@^2.0.3:
   version "2.0.5"
@@ -2260,6 +2266,15 @@ ffjavascript@0.2.56:
     wasmcurves "0.2.0"
     web-worker "^1.2.0"
 
+ffjavascript@0.2.60:
+  version "0.2.60"
+  resolved "https://registry.yarnpkg.com/ffjavascript/-/ffjavascript-0.2.60.tgz#4d8ae613d6bf4e98b3cc29ba10c626f5853854cf"
+  integrity sha512-T/9bnEL5xAZRDbQoEMf+pM9nrhK+C3JyZNmqiWub26EQorW7Jt+jR54gpqDhceA4Nj0YctPQwYnl8xa52/A26A==
+  dependencies:
+    wasmbuilder "0.0.16"
+    wasmcurves "0.2.2"
+    web-worker "^1.2.0"
+
 ffjavascript@^0.2.45, ffjavascript@^0.2.48:
   version "0.2.57"
   resolved "https://registry.yarnpkg.com/ffjavascript/-/ffjavascript-0.2.57.tgz#ba1be96015b2688192e49f2f4de2cc5150fd8594"
@@ -2587,16 +2602,16 @@ har-validator@~5.1.3:
     ajv "^6.12.3"
     har-schema "^2.0.0"
 
-"hardhat-circom@git+ssh://git@github.com/okwme/hardhat-circom.git":
+"hardhat-circom@git+ssh://git@github.com/okwme/hardhat-circom.git#1d00cc6602f935ec6109aa086ab5297b6983f912":
   version "3.3.2"
-  resolved "git+ssh://git@github.com/okwme/hardhat-circom.git#21f5051708d482d6e0e80db88d682d3ea3924e8c"
+  resolved "git+ssh://git@github.com/okwme/hardhat-circom.git#1d00cc6602f935ec6109aa086ab5297b6983f912"
   dependencies:
     "@phated/unionfs" "^4.5.0"
     bl "^6.0.0"
     camelcase "^6.3.0"
     circom "0.5.46"
-    circom2 "^0.2.12"
-    circom_runtime "0.1.21"
+    circom2 "0.2.12"
+    circom_runtime "git+ssh://git@github.com/okwme/circom_runtime.git"
     debug "^4.3.4"
     ffjavascript "0.2.56"
     memfs "^3.4.8"
@@ -4679,6 +4694,13 @@ wasmcurves@0.2.0:
   version "0.2.0"
   resolved "https://registry.yarnpkg.com/wasmcurves/-/wasmcurves-0.2.0.tgz#ccfc5a7d3778b6e0768b82a9336c80054f9bc0cf"
   integrity sha512-3e2rbxdujOwaod657gxgmdhZNn+i1qKdHO3Y/bK+8E7bV8ttV/fu5FO4/WLBACF375cK0QDLOP+65Na63qYuWA==
+  dependencies:
+    wasmbuilder "0.0.16"
+
+wasmcurves@0.2.2:
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/wasmcurves/-/wasmcurves-0.2.2.tgz#ca444f6a6f6e2a5cbe6629d98ff478a62b4ccb2b"
+  integrity sha512-JRY908NkmKjFl4ytnTu5ED6AwPD+8VJ9oc94kdq7h5bIwbj0L4TDJ69mG+2aLs2SoCmGfqIesMWTEJjtYsoQXQ==
   dependencies:
     wasmbuilder "0.0.16"
 

@@ -1,4 +1,4 @@
-pragma circom 2.1.0;
+pragma circom 2.1.3;
 
 include "forceAccumulator.circom";
 include "calculateMissile.circom";
