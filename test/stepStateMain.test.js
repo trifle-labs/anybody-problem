@@ -13,24 +13,14 @@ describe("stepStateMain circuit", () => {
       ["67900000000", "50000000000", "229000000", "252000000", "5000000000"]
     ],
     missiles: [
-      [0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0],
-      // [0, 0, 0, 0, 0],
-      // [0, 0, 0, 0, 0],
-      // [0, 0, 0, 0, 0],
-      // [0, 0, 0, 0, 0],
-      // [0, 0, 0, 0, 0],
-      // [0, 0, 0, 0, 0],
-      // [0, 0, 0, 0, 0],
-      // [0, 0, 0, 0, 0],
-      // [0, 0, 0, 0, 0],
+      ["1", "1", "1", "1", "1"],
+      ["1", "1", "1", "1", "1"]
     ]
   };
   const sanityCheck = true;
 
   before(async () => {
     circuit = await hre.circuitTest.setup("stepStateMain");
-    console.log({ circuit })
   });
 
   it("produces a witness with valid constraints", async () => {
@@ -87,7 +77,8 @@ describe("stepStateMain circuit", () => {
     let out_bodies = bodiesBefore;
     // NOTE: 10 is number in stepStateMain.circom
     for (let i = 0; i < 10; i++) {
-      out_bodies = runComputation(out_bodies, p5).map(b => {
+      const results = runComputation(out_bodies, p5)
+      const out_bodies = results.bodies.map(b => {
         const bodyArray = []
         b.position.x = BigInt(Math.floor(b.position.x * parseInt(scalingFactor)))
         b.position.y = BigInt(Math.floor(b.position.y * parseInt(scalingFactor)))

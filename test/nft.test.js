@@ -76,7 +76,8 @@ describe("nft circuit", () => {
     console.log('here?')
     // NOTE: 10 is number in nft.circom
     for (let i = 0; i < 10; i++) {
-      out_bodies = runComputation(out_bodies, p5).map(b => {
+      const results = runComputation(out_bodies, p5)
+      const out_bodies = results.bodies.map(b => {
         const bodyArray = []
         b.position.x = BigInt(Math.floor(b.position.x * parseInt(scalingFactor)))
         b.position.y = BigInt(Math.floor(b.position.y * parseInt(scalingFactor)))

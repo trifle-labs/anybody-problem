@@ -14,7 +14,7 @@ let n = 0, img1
 const fps = 300
 const preRun = 0
 const p = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
-const admin = true
+const admin = false
 const minRadius = 50
 const maxRadius = 100
 const position = "!static"
@@ -26,7 +26,7 @@ const outlines = false
 const clearBG = true
 
 
-let cs = [], ss = [], bs = [], bodies = []
+let cs = [], ss = [], bodies = []
 
 var showIt = false
 var keepSimulating = true
@@ -35,7 +35,9 @@ var runIndex = 0
 function go() {
   while (keepSimulating) {
     runIndex++
-    bodies = runComputation(bodies, missiles)
+    const results = runComputation(bodies, missiles)
+    bodies = results.bodies
+    missiles = results.missiles
 
     if (runIndex > preRun) {
       keepSimulating = false
@@ -57,7 +59,7 @@ function setup() {
   frameRate(fps)
   createCanvas(windowWidth, windowWidth);
   background(0);
-  prepBodies();
+  bodies = prepBodies();
   background("white")
   colorMode(HSB, 360, 100, 100); // Use HSB color mode
   line(0, 0, windowWidth, windowWidth)
@@ -73,6 +75,7 @@ function setup() {
 function prepBodies() {
   ss = []
   cs = []
+  bodies = []
   const opac = 1
   for (let i = 0; i < totalBodies; i++) {
     let cc = randomColor()
@@ -94,14 +97,14 @@ function prepBodies() {
     const body = {
       position: createVector(ss[i][0], ss[i][1]),
       velocity: createVector(0, 0),
-      radius: (maxSize - i) + 3,//random(minRadius, maxRadius),
+      radius: (maxSize - i) + 3,
+      c: cs[i]
     }
-    bs.push(body)
-    bodies.push({ body, c: cs[i] })
+    bodies.push(body)
   }
   bodies = bodies
-    .sort((a, b) => b.body.radius - a.body.radius)
-  console.log({ bodies })
+    .sort((a, b) => b.radius - a.radius)
+  return bodies
 }
 
 
@@ -110,7 +113,7 @@ function runComputation(bodies, missiles, p5) {
     createVector = p5.createVector.bind(p5)
     dist = p5.dist.bind(p5)
     for (let i = 0; i < bodies.length; i++) {
-      const body = bodies[i].body
+      const body = bodies[i]
       body.position = createVector(body.position.x, body.position.y)
       body.velocity = createVector(body.velocity.x, body.velocity.y)
     }
@@ -119,34 +122,18 @@ function runComputation(bodies, missiles, p5) {
   let accumulativeForces = [];
 
   for (let i = 0; i < bodies.length; i++) {
-    const body = bodies[i].body
+    const body = bodies[i]
     let accumulativeForce = createVector(0, 0);
     for (let j = 0; j < bodies.length; j++) {
       if (i == j) continue
-      const otherBody = bodies[j].body
+      const otherBody = bodies[j]
       const force = calculateForce(body, otherBody)
       accumulativeForce.add(createVector(force[0], force[1]))
     }
-    // console.log({ accumulativeForce })
     accumulativeForces[i] = accumulativeForce;
-    // body.velocity.add(accumulativeForce)//.mult(friction);
-    // if (Math.abs(body.velocity.x) > speedLimit) {
-    //   body.velocity.x = Math.abs(body.velocity.x) * body.velocity.x * speedLimit
-    // }
-    // if (Math.abs(body.velocity.y) > speedLimit) {
-    //   body.velocity.y = Math.abs(body.velocity.y) * body.velocity.y * speedLimit
-    // }
-    // body.velocity.limit(speedLimit);
-    // body.position.add(body.velocity);
-    // // Check for collisions with other bodies
-    // for (let j = 0; j < totalBodies; j++) {
-    //   if (i === j) continue;
-    //   const otherBody = bodies[j].body;
-    //   // checkCollision(body, otherBody);
-    // }
   }
   for (let i = 0; i < bodies.length; i++) {
-    const body = bodies[i].body
+    const body = bodies[i]
 
     body.velocity.add(accumulativeForces[i])//.mult(friction);
     if (Math.abs(body.velocity.x) > vectorLimit) {
@@ -159,12 +146,12 @@ function runComputation(bodies, missiles, p5) {
     body.position.add(body.velocity);
   }
 
-  const xOffset = bodies[bodies.length - 1].body.position.x
-  const yOffset = bodies[bodies.length - 1].body.position.y
+  const xOffset = bodies[bodies.length - 1].position.x
+  const yOffset = bodies[bodies.length - 1].position.y
 
 
   for (let i = 0; i < bodies.length; i++) {
-    const body = bodies[i].body
+    const body = bodies[i]
     if (position == "static") {
       body.position.set(body.position.x - xOffset + windowWidth / 2, body.position.y - yOffset + windowWidth / 2)
     }
@@ -184,7 +171,7 @@ function runComputation(bodies, missiles, p5) {
   bodies = results.bodies
   missiles = results.missiles
 
-  if (bodies.reduce((a, c) => a + c.body.radius, 0) == 0) {
+  if (bodies.reduce((a, c) => a + c.radius, 0) == 0) {
     const level = {
       thisLevelMissileCount,
       thisLevelSec
@@ -194,53 +181,130 @@ function runComputation(bodies, missiles, p5) {
     thisLevelMissileCount = 0
     totalBodies += 1
 
-    prepBodies()
+    bodies = prepBodies()
+  }
+  return { bodies, missiles }
+}
+
+function convertBodiesToBigInts(bodies) {
+  const bigBodies = []
+  for (let i = 0; i < bodies.length; i++) {
+    const body = bodies[i]
+    const newBody = { position: {}, velocity: {}, radius: null }
+    newBody.position.x = convertFloatToScaledBigInt(body.position.x)
+    newBody.position.y = convertFloatToScaledBigInt(body.position.y)
+    newBody.velocity.x = convertFloatToScaledBigInt(body.velocity.x)
+    // while (newBody.velocity.x < 0n) {
+    //   newBody.velocity.x += p
+    // }
+    newBody.velocity.y = convertFloatToScaledBigInt(body.velocity.y)
+    // while (newBody.velocity.y < 0n) {
+    //   newBody.velocity.y += p
+    // }
+    newBody.radius = convertFloatToScaledBigInt(body.radius)
+    if (body.c) {
+      newBody.c = body.c
+    }
+    bigBodies.push(newBody)
+  }
+  return bigBodies
+}
+
+function convertBigIntsToBodies(bigBodies) {
+  const bodies = []
+  for (let i = 0; i < bigBodies.length; i++) {
+    const body = bigBodies[i]
+    const newBody = { position: {}, velocity: {}, radius: null }
+    newBody.position.x = convertScaledBigIntToFloat(body.position.x)
+    newBody.position.y = convertScaledBigIntToFloat(body.position.y)
+    newBody.position = createVector(newBody.position.x, newBody.position.y)
+
+    newBody.velocity.x = convertScaledBigIntToFloat(body.velocity.x)
+    newBody.velocity.y = convertScaledBigIntToFloat(body.velocity.y)
+    newBody.velocity = createVector(newBody.velocity.x, newBody.velocity.y)
+
+    newBody.radius = convertScaledBigIntToFloat(body.radius)
+    if (body.c) {
+      newBody.c = body.c
+    }
+    bodies.push(newBody)
   }
   return bodies
 }
 
+function convertFloatToScaledBigInt(value) {
+  return BigInt(Math.floor(value * parseInt(scalingFactor)))
+  // let maybeNegative = BigInt(Math.floor(value * parseInt(scalingFactor))) % p
+  // while (maybeNegative < 0n) {
+  //   maybeNegative += p
+  // }
+  // return maybeNegative
+}
 
-function detectCollision(bodies, missiles, p5) {
-  if (p5) {
-    createVector = p5.createVector.bind(p5)
-    dist = p5.dist.bind(p5)
-    for (let i = 0; i < bodies.length; i++) {
-      const body = bodies[i].body
-      body.position = createVector(body.position.x, body.position.y)
-      body.velocity = createVector(body.velocity.x, body.velocity.y)
-    }
+function convertScaledBigIntToFloat(value) {
+  return parseFloat(value) / parseFloat(scalingFactor)
+}
+
+function approxDist(x1, y1, x2, y2) {
+  const absX = x1 > x2 ? x1 - x2 : x2 - x1
+  const absY = y1 > y2 ? y1 - y2 : y2 - y1
+  const dxs = absX * absX
+  const dys = absY * absY
+  const distanceSquared = dxs + dys
+  const distance = sqrtApprox(distanceSquared)
+  return distance
+}
+
+function detectCollisionBigInt(bodies, missiles) {
+  if (missiles.length == 0) {
+    return { bodies, missiles }
+  }
+  const missile = missiles[0]
+  missile.position.x += missile.velocity.x
+  missile.position.y += missile.velocity.y
+
+  if (missile.position.x > BigInt(rightEdge) * scalingFactor || missile.position.y < 0n) {
+    console.log('missile is off screen')
+    missile.radius = 0n
   }
 
-  for (let i = 0; i < missiles.length; i++) {
-    const missile = missiles[i]
-    missile.position.add(missile.velocity);
-    if (missile.position.x > rightEdge || missile.position.y < 0) {
-      missiles.splice(i, 1);
+  for (let j = 0; j < bodies.length; j++) {
+    const body = bodies[j]
+    const distance = approxDist(missile.position.x, missile.position.y, body.position.x, body.position.y);
+    // NOTE: this is to match the circuit. If the missile is gone, set minDist to 0
+    // Need to make sure comparison of distance is < and not <= for this to work
+    // because they may by chance be at the exact same coordinates and should still
+    // not trigger an explosion since the missile is already gone.
+    const minDist = missile.radius == 0n ? 0n : body.radius * 2n
+    if (distance < minDist) {
+      missile.radius = 0n;
+      console.log('missile hit')
+      explosions.push(explosion(convertScaledBigIntToFloat(body.position.x), convertScaledBigIntToFloat(body.position.y), convertScaledBigIntToFloat(body.radius)))
+      bodies[j].radius = 0n
     }
-    for (let j = 0; j < bodies.length; j++) {
-      const body = bodies[j].body
-      const distance = dist(missile.position.x, missile.position.y, body.position.x, body.position.y);
-      const minDist = body.radius * 2
-      if (distance <= minDist) {
-        // bodies.splice(j, 1)
-        // for (k = 0; k < allCopiesOfBodies.length; k++) {
-        //   const copyOfBodies = allCopiesOfBodies[k]
-        //   copyOfBodies.splice(j, 1)
-        // }
-        missiles.splice(i, 1);
-        explosions.push(explosion(body.position.x, body.position.y, body.radius))
-        bodies[j].body.radius = 0
-
-      }
-      console.log("bodies[j].body.position.x", bodies[j].body.position.x)
-      console.log("bodies[j].body.position.y", bodies[j].body.position.y)
-      console.log("bodeis[j].body.velocity.x", bodies[j].body.velocity.x)
-      console.log("bodeis[j].body.velocity.y", bodies[j].body.velocity.y)
-      console.log("bodies[j].body.radius", bodies[j].body.radius)
-    }
+  }
+  if (missile.radius == 0n) {
+    console.log('missile radius is 0')
+    missiles.splice(0, 1)
+  } else {
+    missiles[0] = missile
   }
   return { bodies, missiles }
 }
+
+function detectCollision(bodies, missiles, p5) {
+
+  let bigBodies = convertBodiesToBigInts(bodies)
+  const bigMissiles = convertBodiesToBigInts(missiles)
+
+  const { bodies: newBigBodies, missiles: newBigMissiles } = detectCollisionBigInt(bigBodies, bigMissiles)
+
+  bodies = convertBigIntsToBodies(newBigBodies)
+  missiles = convertBigIntsToBodies(newBigMissiles)
+
+  return { bodies, missiles }
+}
+
 
 function explosion(x, y, radius) {
   let bombs = []
@@ -436,11 +500,13 @@ function addListener() {
   if (typeof window !== "undefined") {
     const body = document.getElementsByClassName("p5Canvas")[0]
     body.addEventListener("click", function (e) {
+      console.log({ missiles })
       if (missiles.length > 0 && !admin) return
       thisLevelMissileCount++
       missileCount++
       const x = e.offsetX
       const y = e.offsetY
+      console.log({ x, y })
       const body = {
         position: createVector(0, windowWidth),
         velocity: createVector(x, y - windowWidth),
@@ -469,14 +535,15 @@ function draw() {
     // background("white")
   }
 
-  bodies = runComputation(bodies, missiles)
-
+  const results = runComputation(bodies, missiles)
+  bodies = results.bodies
+  missiles = results.missiles
 
   for (let i = 0; i < allCopiesOfBodies.length; i++) {
     const copyOfBodies = allCopiesOfBodies[i]
     for (let j = 0; j < copyOfBodies.length; j++) {
-      const body = copyOfBodies[j].body
-      const c = copyOfBodies[j].c
+      const body = copyOfBodies[j]
+      const c = body.c
       let finalColor
       if (colorStyle == "squiggle") {
         const hueColor = (parseInt(c.split(",")[1]) + n) % 360
@@ -504,8 +571,8 @@ function draw() {
 
   const bodyCopies = []
   for (let i = 0; i < bodies.length; i++) {
-    const body = bodies[i].body
-    const c = bodies[i].c
+    const body = bodies[i]
+    const c = body.c
     let finalColor
     if (colorStyle == "squiggle") {
       const hueColor = (parseInt(c.split(",")[1]) + n) % 360
@@ -549,12 +616,9 @@ function draw() {
     drawCenter(0, 0, body.radius);
     pop()
     const bodyCopy = {
-      body:
-      {
-        position: createVector(body.position.x, body.position.y),
-        velocity: createVector(body.velocity.x, body.velocity.y),
-        radius: body.radius
-      },
+      position: createVector(body.position.x, body.position.y),
+      velocity: createVector(body.velocity.x, body.velocity.y),
+      radius: body.radius,
       c: c
     }
     bodyCopies.push(bodyCopy)
@@ -680,6 +744,11 @@ if (module) {
     sqrtApprox,
     scalingFactor,
     runComputation,
-    detectCollision
+    detectCollision,
+    detectCollisionBigInt,
+    convertBigIntsToBodies,
+    convertBodiesToBigInts,
+    convertFloatToScaledBigInt,
+    convertScaledBigIntToFloat,
   }
 }

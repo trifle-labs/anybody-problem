@@ -71,7 +71,8 @@ describe("forceAccumulatorMain circuit", () => {
       radius: parseFloat(BigInt(sampleInput.bodies[2][4]) / scalingFactor)
     }
     const bodiesBefore = [body1, body2, body3]
-    const out_bodies = runComputation(bodiesBefore, p5).map(b => {
+    const results = runComputation(bodiesBefore, p5)
+    const out_bodies = results.bodies.map(b => {
       const bodyArray = []
       b.position.x = BigInt(Math.floor(b.position.x * parseInt(scalingFactor)))
       b.position.y = BigInt(Math.floor(b.position.y * parseInt(scalingFactor)))

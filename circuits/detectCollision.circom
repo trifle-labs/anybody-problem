@@ -7,6 +7,8 @@ template DetectCollision(totalBodies) {
   signal input bodies[totalBodies][5];
   // log("bodies[0][0]", bodies[0][0]);
   // log("bodies[0][1]", bodies[0][1]);
+  // log("-133000000  ", -133000000);
+  // log("-1          ", -1);
   // log("bodies[0][2]", bodies[0][2]);
   // log("bodies[0][3]", bodies[0][3]);
   // log("bodies[0][4]", bodies[0][4]);
@@ -59,11 +61,11 @@ template DetectCollision(totalBodies) {
     out_bodies[i][2] <== bodies[i][2];
     out_bodies[i][3] <== bodies[i][3];
     out_bodies[i][4] <== mux[i].out;
-    log("out_bodies[i][0]", out_bodies[i][0]);
-    log("out_bodies[i][1]", out_bodies[i][1]);
-    log("out_bodies[i][2]", out_bodies[i][2]);
-    log("out_bodies[i][3]", out_bodies[i][3]);
-    log("out_bodies[i][4]", out_bodies[i][4]);
+    // log("out_bodies[i][0]", out_bodies[i][0]);
+    // log("out_bodies[i][1]", out_bodies[i][1]);
+    // log("out_bodies[i][2]", out_bodies[i][2]);
+    // log("out_bodies[i][3]", out_bodies[i][3]);
+    // log("out_bodies[i][4]", out_bodies[i][4]);
 
     mux2[i] = Mux1();
     mux2[i].c[0] <== tmp_missiles[i][2];

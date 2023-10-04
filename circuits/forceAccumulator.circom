@@ -29,6 +29,7 @@ template ForceAccumulator(totalBodies) {
     // [4] = radius using 10^8 decimals
 
     var maxVector = 1000000000; // using 10^8 decimals
+    // NOTE: windowWidth appears in calculateMissile as well and needs to match
     var windowWidth = 100000000000; // using 10^8 decimals
 
     var accumulated_body_forces[totalBodies][2];
