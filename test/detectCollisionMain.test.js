@@ -46,14 +46,14 @@ describe("detectCollisionMain circuit", () => {
     for (let i = 0; i < sampleInput.bodies.length; i++) {
       bodiesBefore.push(convertScaledStringArrayToBody(sampleInput.bodies[i]))
     }
-    const missiles = convertScaledStringArrayToBody(sampleInput.missile)
+    const missiles = [convertScaledStringArrayToBody(sampleInput.missile)]
     console.log({ bodiesBefore, missiles })
-    const results = detectCollisionBigInt(bodiesBefore, [missiles])
+    const results = detectCollisionBigInt(bodiesBefore, missiles)
     console.log({ results })
-    const out_bodies = convertScaledBigIntBodyToArray(results.bodies)
+    const out_bodies = results.bodies.map(convertScaledBigIntBodyToArray)
     // TODO: make the missiles return empty radius at this point
     // remove the missile from the missiles array afterwards
-    const out_missile = convertScaledBigIntBodyToArray(results.missiles)
+    const out_missile = results.missiles.map(convertScaledBigIntBodyToArray)
     // console.log({ out_bodies })
     // console.log({ out_missile })
     const expected = { out_bodies, out_missile };

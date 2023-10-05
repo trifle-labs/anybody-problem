@@ -171,6 +171,10 @@ function runComputation(bodies, missiles, p5) {
   bodies = results.bodies
   missiles = results.missiles
 
+  if (missiles.length > 0 && missiles[0].radius == 0n) {
+    missiles.splice(0, 1)
+  }
+
   if (bodies.reduce((a, c) => a + c.radius, 0) == 0) {
     const level = {
       thisLevelMissileCount,
@@ -260,6 +264,7 @@ function detectCollisionBigInt(bodies, missiles) {
     return { bodies, missiles }
   }
   const missile = missiles[0]
+  console.log({ missile })
   missile.position.x += missile.velocity.x
   missile.position.y += missile.velocity.y
 
@@ -283,12 +288,8 @@ function detectCollisionBigInt(bodies, missiles) {
       bodies[j].radius = 0n
     }
   }
-  if (missile.radius == 0n) {
-    console.log('missile radius is 0')
-    missiles.splice(0, 1)
-  } else {
-    missiles[0] = missile
-  }
+
+  missiles[0] = missile
   return { bodies, missiles }
 }
 
