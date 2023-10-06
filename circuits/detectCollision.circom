@@ -8,7 +8,7 @@ template DetectCollision(totalBodies) {
   // log("bodies[0][0]", bodies[0][0]);
   // log("bodies[0][1]", bodies[0][1]);
   // log("-133000000  ", -133000000);
-  // log("-1          ", -1);
+  log("-1 (p-1)    ", -1);
   // log("bodies[0][2]", bodies[0][2]);
   // log("bodies[0][3]", bodies[0][3]);
   // log("bodies[0][4]", bodies[0][4]);

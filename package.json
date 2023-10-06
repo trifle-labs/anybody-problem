@@ -4,15 +4,13 @@
   "main": "index.js",
   "license": "CC-BY-NC-4.0",
   "dependencies": {
-    "node-p5": "^1.0.4",
-    "p5": "^1.7.0"
   },
   "devDependencies": {
     "chai": "^4.3.6",
     "circomlib": "^2.0.3",
     "circomlibjs": "^0.1.2",
-    "hardhat": "^2.9.1",
-    "hardhat-circom": "git+ssh://git@github.com/okwme/hardhat-circom.git#e056b67e52bdcfb9878d17845e04e87f1c87e9f2"
+    "hardhat": "2.12.2",
+    "hardhat-circom": "git+ssh://git@github.com/okwme/hardhat-circom.git#87f0dfd9bfe93643983edf27aa5d01ed6a94a32a"
   },
   "engines": {
     "node": ">=16"

@@ -21,6 +21,7 @@ describe("detectCollisionMain circuit", () => {
 
   before(async () => {
     circuit = await hre.circuitTest.setup("detectCollisionMain");
+    console.log({ modp })
   });
 
   it("produces a witness with valid constraints", async () => {
@@ -47,13 +48,11 @@ describe("detectCollisionMain circuit", () => {
       bodiesBefore.push(convertScaledStringArrayToBody(sampleInput.bodies[i]))
     }
     const missiles = [convertScaledStringArrayToBody(sampleInput.missile)]
-    console.log({ bodiesBefore, missiles })
+    // console.log({ bodiesBefore, missiles })
     const results = detectCollisionBigInt(bodiesBefore, missiles)
-    console.log({ results })
+    // console.log({ results })
     const out_bodies = results.bodies.map(convertScaledBigIntBodyToArray)
-    // TODO: make the missiles return empty radius at this point
-    // remove the missile from the missiles array afterwards
-    const out_missile = results.missiles.map(convertScaledBigIntBodyToArray)
+    const out_missile = results.missiles.map(convertScaledBigIntBodyToArray)[0]
     // console.log({ out_bodies })
     // console.log({ out_missile })
     const expected = { out_bodies, out_missile };
