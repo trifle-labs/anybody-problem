@@ -34,7 +34,7 @@ describe("detectCollisionMain circuit", () => {
       sampleInput,
       sanityCheck
     );
-    // console.log({ witness })
+    console.log({ witness })
 
     // assert.propertyVal(witness, "main.squared", sampleInput.squared);
     // assert.propertyVal(witness, "main.calculatedRoot", sampleInput.calculatedRoot);
@@ -60,34 +60,3 @@ describe("detectCollisionMain circuit", () => {
     await circuit.assertOut(witness, expected);
   });
 });
-
-function convertScaledStringArrayToBody(body) {
-  return {
-    position: {
-      x: BigInt(body[0]),
-      y: BigInt(body[1])
-    },
-    velocity: {
-      x: BigInt(body[2]),
-      y: BigInt(body[3])
-    },
-    radius: BigInt(body[4])
-  }
-}
-
-function convertScaledBigIntBodyToArray(b) {
-  const bodyArray = []
-  b.position.x = b.position.x % modp
-  b.position.y = b.position.y % modp
-  b.velocity.x = b.velocity.x % modp
-  while (b.velocity.x < 0n) {
-    b.velocity.x += modp
-  }
-  b.velocity.y = b.velocity.y % modp
-  while (b.velocity.y < 0n) {
-    b.velocity.y += modp
-  }
-  b.radius = b.radius % modp
-  bodyArray.push(b.position.x, b.position.y, b.velocity.x, b.velocity.y, b.radius)
-  return bodyArray.map(b => b.toString())
-}

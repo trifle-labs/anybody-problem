@@ -13,7 +13,7 @@ const boundaryRadius = windowWidth / 2
 let n = 0, img1
 const fps = 300
 const preRun = 0
-const p = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
+const prime = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
 const admin = false
 const minRadius = 50
 const maxRadius = 100
@@ -107,65 +107,77 @@ function prepBodies() {
   return bodies
 }
 
+function addVectors(v1, v2) {
+  return [v1[0] + v2[0], v1[1] + v2[1]]
+}
 
-function runComputation(bodies, missiles, p5) {
-  if (p5) {
-    createVector = p5.createVector.bind(p5)
-    dist = p5.dist.bind(p5)
-    for (let i = 0; i < bodies.length; i++) {
-      const body = bodies[i]
-      body.position = createVector(body.position.x, body.position.y)
-      body.velocity = createVector(body.velocity.x, body.velocity.y)
-    }
-  }
+function forceAccumulator(bodies) {
+  bodies = bodies.map(convertBodiesToBigInts)
+  bodies = forceAccumulatorBigInts(bodies)
+  bodies = bodies.map(convertBigIntsToBodies)
+  return bodies
+}
 
+function forceAccumulatorBigInts(bodies) {
+  const vectorLimitScaled = convertFloatToScaledBigInt(vectorLimit)
   let accumulativeForces = [];
 
   for (let i = 0; i < bodies.length; i++) {
     const body = bodies[i]
-    let accumulativeForce = createVector(0, 0);
+    let accumulativeForce = [0n, 0n];
     for (let j = 0; j < bodies.length; j++) {
       if (i == j) continue
       const otherBody = bodies[j]
-      const force = calculateForce(body, otherBody)
-      accumulativeForce.add(createVector(force[0], force[1]))
+      const force = calculateForceBigInt(body, otherBody)
+      accumulativeForce = addVectors(accumulativeForce, force)
     }
     accumulativeForces[i] = accumulativeForce;
   }
   for (let i = 0; i < bodies.length; i++) {
     const body = bodies[i]
-
-    body.velocity.add(accumulativeForces[i])//.mult(friction);
-    if (Math.abs(body.velocity.x) > vectorLimit) {
-      body.velocity.x = (Math.abs(body.velocity.x) / body.velocity.x) * vectorLimit
+    const body_velocity = addVectors([body.velocity.x, body.velocity.y], accumulativeForces[i])//.mult(friction);
+    body.velocity.x = body_velocity[0]
+    body.velocity.y = body_velocity[1]
+    const body_velocity_x_abs = body.velocity.x > 0n ? body.velocity.x : -1n * body.velocity.x
+    if (body_velocity_x_abs > vectorLimitScaled) {
+      body.velocity.x = (body_velocity_x_abs / body.velocity.x) * vectorLimitScaled
     }
-    if (Math.abs(body.velocity.y) > vectorLimit) {
-      body.velocity.y = (Math.abs(body.velocity.y) / body.velocity.y) * vectorLimit
+    const body_velocity_y_abs = body.velocity.y > 0n ? body.velocity.y : -1n * body.velocity.y
+    if (body_velocity_y_abs > vectorLimitScaled) {
+      body.velocity.y = (body_velocity_y_abs / body.velocity.y) * vectorLimitScaled
     }
     // body.velocity.limit(speedLimit);
-    body.position.add(body.velocity);
+    const body_position = addVectors([body.position.x, body.position.y], [body.velocity.x, body.velocity.y])
+    body.position.x = body_position[0]
+    body.position.y = body_position[1]
   }
 
-  const xOffset = bodies[bodies.length - 1].position.x
-  const yOffset = bodies[bodies.length - 1].position.y
-
-
+  // const xOffset = bodies[bodies.length - 1].position.x
+  // const yOffset = bodies[bodies.length - 1].position.y
+  const scaledWindowWidth = convertFloatToScaledBigInt(windowWidth)
   for (let i = 0; i < bodies.length; i++) {
     const body = bodies[i]
-    if (position == "static") {
-      body.position.set(body.position.x - xOffset + windowWidth / 2, body.position.y - yOffset + windowWidth / 2)
+    // if (position == "static") {
+    //   body.position = [body.position.x - xOffset + scaledWindowWidth / 2, body.position.y - yOffset + scaledWindowWidth / 2]
+    // }
+    if (body.position.x > scaledWindowWidth) {
+      body.position = [0, body.position.y]
+    } else if (body.position.x < 0) {
+      body.position = [scaledWindowWidth, body.position.y]
     }
-    if (body.position.x > rightEdge) {
-      body.position.set(leftEdge, body.position.y)
-    } else if (body.position.x < leftEdge) {
-      body.position.set(rightEdge, body.position.y)
-    }
-    if (body.position.y > bottomEdge) {
-      body.position.set(body.position.x, topEdge)
-    } else if (body.position.y < topEdge) {
-      body.position.set(body.position.x, bottomEdge)
+    if (body.position.y > scaledWindowWidth) {
+      body.position = [body.position.x, 0]
+    } else if (body.position.y < 0) {
+      body.position = [body.position.x, scaledWindowWidth]
     }
   }
+  return bodies
+}
+
+
+function runComputation(bodies, missiles) {
+
+  bodies = forceAccumulator(bodies);
 
   var results = detectCollision(bodies, missiles);
   bodies = results.bodies
@@ -319,8 +331,16 @@ function explosion(x, y, radius) {
 
 const scalingFactor = 10n ** 8n
 
-// Calculate the gravitational force between two bodies
 function calculateForce(body1, body2) {
+  const bodies = convertBodiesToBigInts([body1, body1])
+  body1 = bodies[0]
+  body2 = bodies[1]
+  const forces = calculateForceBigInt(body1, body2)
+  return [parseInt(forces[0]) / parseInt(scalingFactor), parseInt(forces[1]) / parseInt(scalingFactor)]
+}
+
+// Calculate the gravitational force between two bodies
+function calculateForceBigInt(body1, body2) {
   // console.log({ p })
   const GScaled = BigInt(Math.floor(G * parseInt(scalingFactor)))
   // console.log({ GScaled })
@@ -329,25 +349,25 @@ function calculateForce(body1, body2) {
   // console.log({ minDistanceScaled })
 
   const position1 = body1.position
-  const body1_position_x = BigInt(Math.floor(position1.x * parseInt(scalingFactor)))
+  const body1_position_x = position1.x
   // console.log({ body1_position_x })
-  const body1_position_y = BigInt(Math.floor(position1.y * parseInt(scalingFactor)))
+  const body1_position_y = position1.y
   // console.log({ body1_position_y })
-  const body1_radius = BigInt(Math.floor(body1.radius * parseInt(scalingFactor)))
+  const body1_radius = body1.radius
 
 
   const position2 = body2.position
-  const body2_position_x = BigInt(Math.floor(position2.x * parseInt(scalingFactor)))
+  const body2_position_x = position2.x
   // console.log({ body2_position_x })
-  const body2_position_y = BigInt(Math.floor(position2.y * parseInt(scalingFactor)))
+  const body2_position_y = position2.y
   // console.log({ body2_position_y })
-  const body2_radius = BigInt(Math.floor(body2.radius * parseInt(scalingFactor)))
+  const body2_radius = body2.radius
 
 
   let dx = body2_position_x - body1_position_x
   let dy = body2_position_y - body1_position_y
-  const dxAbs = BigInt(Math.abs(parseInt(dx)))
-  const dyAbs = BigInt(Math.abs(parseInt(dy)))
+  const dxAbs = dx > 0n ? dx : -1n * dx
+  const dyAbs = dy > 0n ? dy : -1n * dy
 
   // console.log({ dx, dy })
   // console.log({ dxAbs, dyAbs })
@@ -392,8 +412,7 @@ function calculateForce(body1, body2) {
   // console.log({ forceYunsigned })
   const forceY = dy < 0n ? -forceYunsigned : forceYunsigned
   // console.log({ forceY })
-
-  return [parseInt(forceX) / parseInt(scalingFactor), parseInt(forceY) / parseInt(scalingFactor)]
+  return [forceX, forceY]
 }
 
 function approxDiv(dividend, divisor) {
@@ -501,7 +520,6 @@ function addListener() {
   if (typeof window !== "undefined") {
     const body = document.getElementsByClassName("p5Canvas")[0]
     body.addEventListener("click", function (e) {
-      console.log({ missiles })
       if (missiles.length > 0 && !admin) return
       thisLevelMissileCount++
       missileCount++
@@ -739,8 +757,43 @@ function randomPosition() {
   const y = radiusDist * Math.sin(randomDir) + (windowWidth / 2)
   return [x, y]
 }
+
+function convertScaledStringArrayToBody(body) {
+  return {
+    position: {
+      x: BigInt(body[0]),
+      y: BigInt(body[1])
+    },
+    velocity: {
+      x: BigInt(body[2]),
+      y: BigInt(body[3])
+    },
+    radius: BigInt(body[4])
+  }
+}
+
+function convertScaledBigIntBodyToArray(b) {
+  const bodyArray = []
+  b.position.x = b.position.x % prime
+  b.position.y = b.position.y % prime
+  b.velocity.x = b.velocity.x % prime
+  while (b.velocity.x < 0n) {
+    b.velocity.x += prime
+  }
+  b.velocity.y = b.velocity.y % prime
+  while (b.velocity.y < 0n) {
+    b.velocity.y += prime
+  }
+  b.radius = b.radius % prime
+  bodyArray.push(b.position.x, b.position.y, b.velocity.x, b.velocity.y, b.radius)
+  return bodyArray.map(b => b.toString())
+}
+
+
 if (module) {
   module.exports = {
+    convertScaledStringArrayToBody,
+    convertScaledBigIntBodyToArray,
     calculateForce,
     sqrtApprox,
     scalingFactor,
@@ -751,5 +804,6 @@ if (module) {
     convertBodiesToBigInts,
     convertFloatToScaledBigInt,
     convertScaledBigIntToFloat,
+    forceAccumulatorBigInts,
   }
 }

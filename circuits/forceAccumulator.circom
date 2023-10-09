@@ -111,6 +111,22 @@ template ForceAccumulator(totalBodies) {
       positionLowerLimiterY[i].rather <== windowWidth + maxVector;
       out_bodies[i][1] <== positionLowerLimiterY[i].out - maxVector;
     }
+    log("out_bodies[0][0]", out_bodies[0][0]);
+    log("out_bodies[0][1]", out_bodies[0][1]);
+    log("out_bodies[0][2]", out_bodies[0][2]);
+    log("out_bodies[0][3]", out_bodies[0][3]);
+    log("out_bodies[0][4]", out_bodies[0][4]);
+    log("out_bodies[1][0]", out_bodies[1][0]);
+    log("out_bodies[1][1]", out_bodies[1][1]);
+    log("out_bodies[1][2]", out_bodies[1][2]);
+    log("out_bodies[1][3]", out_bodies[1][3]);
+    log("out_bodies[1][4]", out_bodies[1][4]);
+    log("out_bodies[2][0]", out_bodies[2][0]);
+    log("out_bodies[2][1]", out_bodies[2][1]);
+    log("out_bodies[2][2]", out_bodies[2][2]);
+    log("out_bodies[2][3]", out_bodies[2][3]);
+    log("out_bodies[2][4]", out_bodies[2][4]);
+
 }
 
 
