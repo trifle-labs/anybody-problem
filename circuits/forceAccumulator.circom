@@ -28,6 +28,7 @@ template ForceAccumulator(totalBodies) {
     // [3] = vector_y using 10^8 decimals
     // [4] = radius using 10^8 decimals
 
+
     var maxVector = 1000000000; // using 10^8 decimals
     // NOTE: windowWidth appears in calculateMissile as well and needs to match
     var windowWidth = 100000000000; // using 10^8 decimals
@@ -52,11 +53,11 @@ template ForceAccumulator(totalBodies) {
         force_x[ii] <== calculateForceComponent[ii].out_forces[0];
         force_y[ii] <== calculateForceComponent[ii].out_forces[1];
         // accumulate the value of the force on body i and body j
-
+        log("j", j, "force_x[ii]", force_x[ii]);
         accumulated_body_forces[i][0] = accumulated_body_forces[i][0] + force_x[ii];
         accumulated_body_forces[i][1] = accumulated_body_forces[i][1] + force_y[ii];
-        accumulated_body_forces[j][0] = accumulated_body_forces[j][0] + force_x[ii];
-        accumulated_body_forces[j][1] = accumulated_body_forces[j][1] + force_y[ii];
+        accumulated_body_forces[j][0] = accumulated_body_forces[j][0] - force_x[ii];
+        accumulated_body_forces[j][1] = accumulated_body_forces[j][1] - force_y[ii];
         ii = ii + 1;
       }
     }
@@ -74,6 +75,8 @@ template ForceAccumulator(totalBodies) {
       // calculate the new vector for body i
       new_vector_x[i] <== bodies[i][2] + accumulated_body_forces[i][0];
       new_vector_y[i] <== bodies[i][3] + accumulated_body_forces[i][1];
+      log(i, "accumulated_body_forces[i][0]", accumulated_body_forces[i][0]);
+      log(i, "new_vector_x[i][2]", new_vector_x[i]);
 
       // limit the magnitude of the vector
       vectorLimiterX[i] = Limiter(252); // TODO: confirm bits limit
@@ -110,22 +113,23 @@ template ForceAccumulator(totalBodies) {
       positionLowerLimiterY[i].limit <== maxVector;
       positionLowerLimiterY[i].rather <== windowWidth + maxVector;
       out_bodies[i][1] <== positionLowerLimiterY[i].out - maxVector;
+      log(i, "out_bodies[i][2]", out_bodies[i][2]);
     }
-    log("out_bodies[0][0]", out_bodies[0][0]);
-    log("out_bodies[0][1]", out_bodies[0][1]);
-    log("out_bodies[0][2]", out_bodies[0][2]);
-    log("out_bodies[0][3]", out_bodies[0][3]);
-    log("out_bodies[0][4]", out_bodies[0][4]);
-    log("out_bodies[1][0]", out_bodies[1][0]);
-    log("out_bodies[1][1]", out_bodies[1][1]);
-    log("out_bodies[1][2]", out_bodies[1][2]);
-    log("out_bodies[1][3]", out_bodies[1][3]);
-    log("out_bodies[1][4]", out_bodies[1][4]);
-    log("out_bodies[2][0]", out_bodies[2][0]);
-    log("out_bodies[2][1]", out_bodies[2][1]);
-    log("out_bodies[2][2]", out_bodies[2][2]);
-    log("out_bodies[2][3]", out_bodies[2][3]);
-    log("out_bodies[2][4]", out_bodies[2][4]);
+    // log("out_bodies[0][0]", out_bodies[0][0]);
+    // log("out_bodies[0][1]", out_bodies[0][1]);
+    // log("out_bodies[0][2]", out_bodies[0][2]);
+    // log("out_bodies[0][3]", out_bodies[0][3]);
+    // log("out_bodies[0][4]", out_bodies[0][4]);
+    // log("out_bodies[1][0]", out_bodies[1][0]);
+    // log("out_bodies[1][1]", out_bodies[1][1]);
+    // log("out_bodies[1][2]", out_bodies[1][2]);
+    // log("out_bodies[1][3]", out_bodies[1][3]);
+    // log("out_bodies[1][4]", out_bodies[1][4]);
+    // log("out_bodies[2][0]", out_bodies[2][0]);
+    // log("out_bodies[2][1]", out_bodies[2][1]);
+    // log("out_bodies[2][2]", out_bodies[2][2]);
+    // log("out_bodies[2][3]", out_bodies[2][3]);
+    // log("out_bodies[2][4]", out_bodies[2][4]);
 
 }
 

@@ -52,7 +52,7 @@ describe("forceAccumulatorMain circuit", () => {
     // console.dir({ bodies }, { depth: null })
 
     const out_bodies = forceAccumulatorBigInts(bodies).map(convertScaledBigIntBodyToArray)
-    console.log({ out_bodies })
+    // console.log({ out_bodies })
     const expected = { out_bodies };
     const witness = await circuit.calculateWitness(sampleInput, sanityCheck);
     await circuit.assertOut(witness, expected);

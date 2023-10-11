@@ -149,11 +149,13 @@ template CalculateForce() {
   acceptableErrorOfMarginDiv1.marginOfError <== forceDenom; // TODO: actually could be further reduced to (realDenom / 2) + 1 but then we're using division again
   acceptableErrorOfMarginDiv1.out === 1;
 
+  // if dxAbs + dx is 0, then forceX should be negative
   component isZero3 = IsZero();
-  isZero3.in <== dyAbs + dy;
+  isZero3.in <== dxAbs + dx;
+  // log("isZero3", dxAbs + dx, isZero3.out);
   component myMux4 = Mux1();
-  myMux4.c[0] <== forceXunsigned * -1;
-  myMux4.c[1] <== forceXunsigned;
+  myMux4.c[0] <== forceXunsigned;
+  myMux4.c[1] <== forceXunsigned * -1;
   myMux4.s <== isZero3.out;
   signal forceX <== myMux4.out;
   // log("forceX", forceX);
@@ -170,11 +172,12 @@ template CalculateForce() {
   acceptableErrorOfMarginDiv2.marginOfError <== forceDenom; // TODO: actually could be further reduced to (realDenom / 2) + 1 but then we're using division again
   acceptableErrorOfMarginDiv2.out === 1;
 
+  // if dyAbs + dy is 0, then forceY should be negative
   component isZero4 = IsZero();
-  isZero4.in <== dxAbs + dx;
+  isZero4.in <== dyAbs + dy;
   component myMux5 = Mux1();
-  myMux5.c[0] <== forceYunsigned * -1;
-  myMux5.c[1] <== forceYunsigned ;
+  myMux5.c[0] <== forceYunsigned;
+  myMux5.c[1] <== forceYunsigned * -1;
   myMux5.s <== isZero4.out;
   signal forceY <== myMux5.out;
   // log("forceY", forceY);
