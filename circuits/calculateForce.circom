@@ -100,8 +100,8 @@ template CalculateForce() {
   // log("distanceSquared", distanceSquared);
   // bits should be maximum of the vectorLimiter which would be (10 * 10 ** 8) * (10 * 10 ** 8) which is under 60 bits
   component acceptableMarginOfError = AcceptableMarginOfError(60);  // TODO: test the limits of this. 
-  acceptableMarginOfError.val1 <== distanceSquared;
-  acceptableMarginOfError.val2 <== distance ** 2;
+  acceptableMarginOfError.expected <== distance ** 2;
+  acceptableMarginOfError.actual <== distanceSquared;
   // margin of error should be midpoint between squares
   acceptableMarginOfError.marginOfError <== distance * 2; // TODO: confrim if (distance * 2) +1 is needed
   acceptableMarginOfError.out === 1;
@@ -144,8 +144,8 @@ template CalculateForce() {
 // NOTE: the following constraints the approxDiv to ensure it's within the acceptable error of margin
   signal approxNumerator1 <== forceXunsigned * forceDenom;
   component acceptableErrorOfMarginDiv1 = AcceptableMarginOfError(divisionBits);  // TODO: test the limits of this. 
-  acceptableErrorOfMarginDiv1.val1 <== forceXnum;
-  acceptableErrorOfMarginDiv1.val2 <== approxNumerator1;
+  acceptableErrorOfMarginDiv1.expected <== forceXnum;
+  acceptableErrorOfMarginDiv1.actual <== approxNumerator1;
   acceptableErrorOfMarginDiv1.marginOfError <== forceDenom; // TODO: actually could be further reduced to (realDenom / 2) + 1 but then we're using division again
   acceptableErrorOfMarginDiv1.out === 1;
 
@@ -167,8 +167,8 @@ template CalculateForce() {
   // NOTE: the following constraints the approxDiv to ensure it's within the acceptable error of margin
   signal approxNumerator2 <== forceYunsigned * forceDenom;
   component acceptableErrorOfMarginDiv2 = AcceptableMarginOfError(divisionBits);  // TODO: test the limits of this. 
-  acceptableErrorOfMarginDiv2.val1 <== forceYnum;
-  acceptableErrorOfMarginDiv2.val2 <== approxNumerator2;
+  acceptableErrorOfMarginDiv2.expected <== forceYnum;
+  acceptableErrorOfMarginDiv2.actual <== approxNumerator2;
   acceptableErrorOfMarginDiv2.marginOfError <== forceDenom; // TODO: actually could be further reduced to (realDenom / 2) + 1 but then we're using division again
   acceptableErrorOfMarginDiv2.out === 1;
 

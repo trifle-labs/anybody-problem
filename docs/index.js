@@ -21,7 +21,7 @@ const position = "!static"
 const colorStyle = "!squiggle"
 let totalBodies = 3
 const initialBodies = totalBodies
-console.log({ totalBodies })
+// console.log({ totalBodies })
 const outlines = false
 const clearBG = true
 
@@ -179,6 +179,33 @@ function forceAccumulatorBigInts(bodies) {
   return bodies
 }
 
+function runComputationBigInt(bodies, missiles) {
+  bodies = forceAccumulatorBigInts(bodies)
+  return detectCollisionBigInt(bodies, missiles)
+  // bodies = results.bodies
+  // missiles = results.missiles
+
+  // TODO: need to confirm missile array logic is consistent between circuit and js
+  // if (missiles.length > 0 && missiles[0].radius == 0n) {
+  //   missiles.splice(0, 1)
+  // }
+
+  // TODO: in future may need to include changing level in big int testing
+  // if (bodies.reduce((a, c) => a + c.radius, 0n) == 0n) {
+  //   const level = {
+  //     thisLevelMissileCount,
+  //     thisLevelSec
+  //   }
+  //   allLevelSec.unshift(level)
+  //   thisLevelSec = 0
+  //   thisLevelMissileCount = 0
+  //   totalBodies += 1
+
+  //   bodies = prepBodies()
+  // }
+  // return { bodies, missiles }
+
+}
 
 function runComputation(bodies, missiles) {
 
@@ -187,7 +214,7 @@ function runComputation(bodies, missiles) {
   bodies = results.bodies
   missiles = results.missiles
 
-  if (missiles.length > 0 && missiles[0].radius == 0n) {
+  if (missiles.length > 0 && missiles[0].radius == 0) {
     missiles.splice(0, 1)
   }
 
@@ -206,64 +233,6 @@ function runComputation(bodies, missiles) {
   return { bodies, missiles }
 }
 
-function convertBodiesToBigInts(bodies) {
-  const bigBodies = []
-  for (let i = 0; i < bodies.length; i++) {
-    const body = bodies[i]
-    const newBody = { position: {}, velocity: {}, radius: null }
-    newBody.position.x = convertFloatToScaledBigInt(body.position.x)
-    newBody.position.y = convertFloatToScaledBigInt(body.position.y)
-    newBody.velocity.x = convertFloatToScaledBigInt(body.velocity.x)
-    // while (newBody.velocity.x < 0n) {
-    //   newBody.velocity.x += p
-    // }
-    newBody.velocity.y = convertFloatToScaledBigInt(body.velocity.y)
-    // while (newBody.velocity.y < 0n) {
-    //   newBody.velocity.y += p
-    // }
-    newBody.radius = convertFloatToScaledBigInt(body.radius)
-    if (body.c) {
-      newBody.c = body.c
-    }
-    bigBodies.push(newBody)
-  }
-  return bigBodies
-}
-
-function convertBigIntsToBodies(bigBodies) {
-  const bodies = []
-  for (let i = 0; i < bigBodies.length; i++) {
-    const body = bigBodies[i]
-    const newBody = { position: {}, velocity: {}, radius: null }
-    newBody.position.x = convertScaledBigIntToFloat(body.position.x)
-    newBody.position.y = convertScaledBigIntToFloat(body.position.y)
-    newBody.position = createVector(newBody.position.x, newBody.position.y)
-
-    newBody.velocity.x = convertScaledBigIntToFloat(body.velocity.x)
-    newBody.velocity.y = convertScaledBigIntToFloat(body.velocity.y)
-    newBody.velocity = createVector(newBody.velocity.x, newBody.velocity.y)
-
-    newBody.radius = convertScaledBigIntToFloat(body.radius)
-    if (body.c) {
-      newBody.c = body.c
-    }
-    bodies.push(newBody)
-  }
-  return bodies
-}
-
-function convertFloatToScaledBigInt(value) {
-  return BigInt(Math.floor(value * parseInt(scalingFactor)))
-  // let maybeNegative = BigInt(Math.floor(value * parseInt(scalingFactor))) % p
-  // while (maybeNegative < 0n) {
-  //   maybeNegative += p
-  // }
-  // return maybeNegative
-}
-
-function convertScaledBigIntToFloat(value) {
-  return parseFloat(value) / parseFloat(scalingFactor)
-}
 
 function approxDist(x1, y1, x2, y2) {
   const absX = x1 > x2 ? x1 - x2 : x2 - x1
@@ -298,7 +267,7 @@ function detectCollisionBigInt(bodies, missiles) {
     const minDist = missile.radius == 0n ? 0n : body.radius * 2n
     if (distance < minDist) {
       missile.radius = 0n;
-      console.log('missile hit')
+      // console.log('missile hit')
       explosions.push(explosion(convertScaledBigIntToFloat(body.position.x), convertScaledBigIntToFloat(body.position.y), convertScaledBigIntToFloat(body.radius)))
       bodies[j].radius = 0n
     }
@@ -764,6 +733,20 @@ function randomPosition() {
   return [x, y]
 }
 
+function convertScaledStringArrayToFloat(body) {
+  return {
+    position: {
+      x: convertScaledBigIntToFloat(body[0]),
+      y: convertScaledBigIntToFloat(body[1])
+    },
+    velocity: {
+      x: convertScaledBigIntToFloat(body[2]),
+      y: convertScaledBigIntToFloat(body[3])
+    },
+    radius: convertScaledBigIntToFloat(body[4])
+  }
+}
+
 function convertScaledStringArrayToBody(body) {
   return {
     position: {
@@ -799,14 +782,76 @@ function convertBigIntToModP(v) {
 }
 
 
+function convertBodiesToBigInts(bodies) {
+  const bigBodies = []
+  for (let i = 0; i < bodies.length; i++) {
+    const body = bodies[i]
+    const newBody = { position: {}, velocity: {}, radius: null }
+    newBody.position.x = convertFloatToScaledBigInt(body.position.x)
+    newBody.position.y = convertFloatToScaledBigInt(body.position.y)
+    newBody.velocity.x = convertFloatToScaledBigInt(body.velocity.x)
+    // while (newBody.velocity.x < 0n) {
+    //   newBody.velocity.x += p
+    // }
+    newBody.velocity.y = convertFloatToScaledBigInt(body.velocity.y)
+    // while (newBody.velocity.y < 0n) {
+    //   newBody.velocity.y += p
+    // }
+    newBody.radius = convertFloatToScaledBigInt(body.radius)
+    if (body.c) {
+      newBody.c = body.c
+    }
+    bigBodies.push(newBody)
+  }
+  return bigBodies
+}
+
+function convertBigIntsToBodies(bigBodies) {
+  const bodies = []
+  for (let i = 0; i < bigBodies.length; i++) {
+    const body = bigBodies[i]
+    const newBody = { position: {}, velocity: {}, radius: null }
+    newBody.position.x = convertScaledBigIntToFloat(body.position.x)
+    newBody.position.y = convertScaledBigIntToFloat(body.position.y)
+    newBody.position = createVector(newBody.position.x, newBody.position.y)
+
+    newBody.velocity.x = convertScaledBigIntToFloat(body.velocity.x)
+    newBody.velocity.y = convertScaledBigIntToFloat(body.velocity.y)
+    newBody.velocity = createVector(newBody.velocity.x, newBody.velocity.y)
+
+    newBody.radius = convertScaledBigIntToFloat(body.radius)
+    if (body.c) {
+      newBody.c = body.c
+    }
+    bodies.push(newBody)
+  }
+  return bodies
+}
+
+function convertFloatToScaledBigInt(value) {
+  return BigInt(Math.floor(value * parseInt(scalingFactor)))
+  // let maybeNegative = BigInt(Math.floor(value * parseInt(scalingFactor))) % p
+  // while (maybeNegative < 0n) {
+  //   maybeNegative += p
+  // }
+  // return maybeNegative
+}
+
+function convertScaledBigIntToFloat(value) {
+  return parseFloat(value) / parseFloat(scalingFactor)
+}
+
+
 if (module) {
   module.exports = {
     convertScaledStringArrayToBody,
+    convertScaledStringArrayToFloat,
     convertScaledBigIntBodyToArray,
     calculateForce,
     sqrtApprox,
     scalingFactor,
     runComputation,
+    runComputationBigInt,
     detectCollision,
     detectCollisionBigInt,
     convertBigIntsToBodies,

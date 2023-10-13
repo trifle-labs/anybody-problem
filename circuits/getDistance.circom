@@ -29,8 +29,8 @@ template GetDistance(n) {
   distance <-- approxSqrt(distanceSquared);
   // bits should be maximum of the vectorLimiter which would be (10 * 10 ** 8) * (10 * 10 ** 8) which is under 60 bits
   component acceptableMarginOfError = AcceptableMarginOfError(n);  // TODO: test the limits of this. 
-  acceptableMarginOfError.val1 <== distanceSquared;
-  acceptableMarginOfError.val2 <== distance ** 2;
+  acceptableMarginOfError.expected <== distanceSquared;
+  acceptableMarginOfError.actual <== distance ** 2;
   // margin of error should be midpoint between squares
   acceptableMarginOfError.marginOfError <== distance * 2; // TODO: confrim if (distance * 2) +1 is needed
   acceptableMarginOfError.out === 1;

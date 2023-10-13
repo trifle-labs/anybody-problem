@@ -53,7 +53,7 @@ template ForceAccumulator(totalBodies) {
         force_x[ii] <== calculateForceComponent[ii].out_forces[0];
         force_y[ii] <== calculateForceComponent[ii].out_forces[1];
         // accumulate the value of the force on body i and body j
-        log("j", j, "force_x[ii]", force_x[ii]);
+        // log("j", j, "force_x[ii]", force_x[ii]);
         accumulated_body_forces[i][0] = accumulated_body_forces[i][0] + force_x[ii];
         accumulated_body_forces[i][1] = accumulated_body_forces[i][1] + force_y[ii];
         accumulated_body_forces[j][0] = accumulated_body_forces[j][0] - force_x[ii];
@@ -75,8 +75,8 @@ template ForceAccumulator(totalBodies) {
       // calculate the new vector for body i
       new_vector_x[i] <== bodies[i][2] + accumulated_body_forces[i][0];
       new_vector_y[i] <== bodies[i][3] + accumulated_body_forces[i][1];
-      log(i, "accumulated_body_forces[i][0]", accumulated_body_forces[i][0]);
-      log(i, "new_vector_x[i][2]", new_vector_x[i]);
+      // log(i, "accumulated_body_forces[i][0]", accumulated_body_forces[i][0]);
+      // log(i, "new_vector_x[i][2]", new_vector_x[i]);
 
       // limit the magnitude of the vector
       vectorLimiterX[i] = Limiter(252); // TODO: confirm bits limit
@@ -113,7 +113,7 @@ template ForceAccumulator(totalBodies) {
       positionLowerLimiterY[i].limit <== maxVector;
       positionLowerLimiterY[i].rather <== windowWidth + maxVector;
       out_bodies[i][1] <== positionLowerLimiterY[i].out - maxVector;
-      log(i, "out_bodies[i][2]", out_bodies[i][2]);
+      // log(i, "out_bodies[i][2]", out_bodies[i][2]);
     }
     // log("out_bodies[0][0]", out_bodies[0][0]);
     // log("out_bodies[0][1]", out_bodies[0][1]);

@@ -57,26 +57,17 @@ function approxDiv(dividend, divisor) {
 }
 
 
-// var approxQuot = approxDiv(realNumerator, realDenominator);
-// approxNumerator = approxQuot * realDenominator;
-// diff = realNumerator - approxNumerator;
-// diff <= (realDenominator / 2) + 1;// +1 for odd number denominators
-// diff - 1 <== realDenominator / 2
-// (2 * diff) - 2 <== realDenominator
-// realDenominator <== (2 * diff) - 2
-
-
 template AcceptableMarginOfError (n) {
-    signal input val1;
-    signal input val2;
+    signal input expected;
+    signal input actual;
     signal input marginOfError;
     signal output out;
 
 
-  // The following is to ensure diff = Abs(val2 - val1)
+  // The following is to ensure diff = Abs(actual - expected)
     component absoluteValueSubtraction = AbsoluteValueSubtraction(n);
-    absoluteValueSubtraction.in[0] <== val1;
-    absoluteValueSubtraction.in[1] <== val2;
+    absoluteValueSubtraction.in[0] <== expected;
+    absoluteValueSubtraction.in[1] <== actual;
 
     // Now ensure that the diff is less than the margin of error
     component lessThan2  = LessEqThan(n);

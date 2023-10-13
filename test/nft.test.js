@@ -1,8 +1,17 @@
+
+
 const hre = require("hardhat");
 const { assert } = require("chai");
-const { calculateForce, sqrtApprox, scalingFactor, runComputation } = require("../docs/index.js");
+const {
+  calculateForce,
+  sqrtApprox,
+  scalingFactor,
+  convertScaledStringArrayToBody,
+  convertScaledBigIntBodyToArray,
+  forceAccumulatorBigInts
+} = require("../docs/index.js");
 const p = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
-const p5 = require('node-p5');
+
 describe("nft circuit", () => {
   let circuit;
 
@@ -16,9 +25,8 @@ describe("nft circuit", () => {
   const sanityCheck = true;
 
   before(async () => {
-    console.log('before')
     circuit = await hre.circuitTest.setup("nft");
-    console.log('circuit setup')
+
   });
 
   it("produces a witness with valid constraints", async () => {
@@ -40,61 +48,13 @@ describe("nft circuit", () => {
   });
 
   it("has the correct output", async () => {
-    const body1 = {
-      position: {
-        x: parseFloat(BigInt(sampleInput.bodies[0][0]) / scalingFactor),
-        y: parseFloat(BigInt(sampleInput.bodies[0][1]) / scalingFactor)
-      },
-      velocity: {
-        x: 0, y: 0
-      },
-      radius: parseFloat(BigInt(sampleInput.bodies[0][4]) / scalingFactor)
-    }
-    const body2 = {
-      position: {
-        x: parseFloat(BigInt(sampleInput.bodies[1][0]) / scalingFactor),
-        y: parseFloat(BigInt(sampleInput.bodies[1][1]) / scalingFactor)
-      },
-      velocity: {
-        x: 0, y: 0
-      },
-      radius: parseFloat(BigInt(sampleInput.bodies[1][4]) / scalingFactor)
-    }
-
-    const body3 = {
-      position: {
-        x: parseFloat(BigInt(sampleInput.bodies[2][0]) / scalingFactor),
-        y: parseFloat(BigInt(sampleInput.bodies[2][1]) / scalingFactor)
-      },
-      velocity: {
-        x: 0, y: 0
-      },
-      radius: parseFloat(BigInt(sampleInput.bodies[2][4]) / scalingFactor)
-    }
-    const bodiesBefore = [body1, body2, body3]
-    let out_bodies = bodiesBefore;
-    console.log('here?')
-    // NOTE: 10 is number in nft.circom
+    let bodies = sampleInput.bodies.map(convertScaledStringArrayToBody)
+    // console.dir({ bodies }, { depth: null })
     for (let i = 0; i < 10; i++) {
-      const results = runComputation(out_bodies, p5)
-      const out_bodies = results.bodies.map(b => {
-        const bodyArray = []
-        b.position.x = BigInt(Math.floor(b.position.x * parseInt(scalingFactor)))
-        b.position.y = BigInt(Math.floor(b.position.y * parseInt(scalingFactor)))
-        b.velocity.x = BigInt(Math.floor(b.velocity.x * parseInt(scalingFactor)))
-        while (b.velocity.x < 0n) {
-          b.velocity.x += p
-        }
-        b.velocity.y = BigInt(Math.floor(b.velocity.y * parseInt(scalingFactor)))
-        while (b.velocity.y < 0n) {
-          b.velocity.y += p
-        }
-        b.radius = BigInt(b.radius * parseInt(scalingFactor))
-        bodyArray.push(b.position.x, b.position.y, b.velocity.x, b.velocity.y, b.radius)
-        return bodyArray.map(b => b.toString())
-      })
+      bodies = forceAccumulatorBigInts(bodies)
     }
-    console.log({ out_bodies })
+    const out_bodies = bodies.map(convertScaledBigIntBodyToArray)
+    // console.log({ out_bodies })
     const expected = { out_bodies };
     const witness = await circuit.calculateWitness(sampleInput, sanityCheck);
     await circuit.assertOut(witness, expected);

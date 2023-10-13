@@ -18,4 +18,4 @@ template NFT(totalBodies, steps) {
   out_bodies <== tmp_bodies[steps];
 }
 
-component main { public [ bodies ]} = NFT(3, 1);
+component main { public [ bodies ]} = NFT(3, 10);

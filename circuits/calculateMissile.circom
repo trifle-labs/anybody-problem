@@ -30,7 +30,7 @@ template CalculateMissile() {
 
   // TODO: confirm the max vector of missiles (may change frequently)
   var maxVector = 1000000000; // using 10^8 decimals
-  log("maxVector", maxVector);
+  // log("maxVector", maxVector);
   // NOTE: windowWidth appears in forceAccumulator as well and needs to match
   var windowWidth = 100000000000; // using 10^8 decimals
 

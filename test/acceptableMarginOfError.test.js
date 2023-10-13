@@ -5,8 +5,8 @@ describe("acceptableMarginOfError circuit", () => {
   let circuit;
 
   const sampleInput = {
-    val1: "992744209590",
-    val2: "992745205956",
+    expected: "992744209590",
+    actual: "992745205956",
     marginOfError: "1992732"
   };
   const sanityCheck = true;
@@ -26,8 +26,8 @@ describe("acceptableMarginOfError circuit", () => {
       sampleInput,
       sanityCheck
     );
-    assert.propertyVal(witness, "main.val1", sampleInput.val1);
-    assert.propertyVal(witness, "main.val2", sampleInput.val2);
+    assert.propertyVal(witness, "main.expected", sampleInput.expected);
+    assert.propertyVal(witness, "main.actual", sampleInput.actual);
     assert.propertyVal(witness, "main.marginOfError", sampleInput.marginOfError);
     assert.propertyVal(witness, "main.out", "1");
   });

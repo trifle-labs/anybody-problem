@@ -16,18 +16,10 @@ module.exports = {
   },
   circom: {
     inputBasePath: "./circuits",
-    ptau: "https://hermez.s3-eu-west-1.amazonaws.com/powersOfTau28_hez_final_15.ptau",
+    ptau: "https://hermez.s3-eu-west-1.amazonaws.com/powersOfTau28_hez_final_20.ptau",
     circuits: [
       {
-        name: "lowerLimiterMain",
-        // No protocol, so it defaults to groth16
-      },
-      {
-        name: "limiterMain",
-        // No protocol, so it defaults to groth16
-      },
-      {
-        name: "nft",
+        name: "absoluteValueSubtraction",
         // No protocol, so it defaults to groth16
       },
       {
@@ -35,19 +27,11 @@ module.exports = {
         // No protocol, so it defaults to groth16
       },
       {
-        name: "detectCollisionMain",
-        // No protocol, so it defaults to groth16
-      },
-      {
-        name: "stepStateMain",
-        // No protocol, so it defaults to groth16
-      },
-      {
-        name: "getDistanceMain",
-        // No protocol, so it defaults to groth16
-      },
-      {
         name: "calculateForceMain",
+        // No protocol, so it defaults to groth16
+      },
+      {
+        name: "detectCollisionMain",
         // No protocol, so it defaults to groth16
       },
       {
@@ -55,23 +39,39 @@ module.exports = {
         // No protocol, so it defaults to groth16
       },
       {
-        name: "absoluteValueSubtraction",
+        name: "getDistanceMain",
         // No protocol, so it defaults to groth16
       },
       {
-        name: "division",
+        name: "limiterMain",
         // No protocol, so it defaults to groth16
       },
       {
-        name: "simple-polynomial",
-        // Generate PLONK
-        protocol: "plonk",
+        name: "lowerLimiterMain",
+        // No protocol, so it defaults to groth16
       },
       {
-        name: "hash",
-        // Explicitly generate groth16
-        protocol: "groth16",
+        name: "nft",
+        // No protocol, so it defaults to groth16
       },
+      {
+        name: "stepStateMain",
+        // No protocol, so it defaults to groth16
+      },
+      // {
+      //   name: "division",
+      //   // No protocol, so it defaults to groth16
+      // },
+      // {
+      //   name: "simple-polynomial",
+      //   // Generate PLONK
+      //   protocol: "plonk",
+      // },
+      // {
+      //   name: "hash",
+      //   // Explicitly generate groth16
+      //   protocol: "groth16",
+      // },
     ],
   },
 };

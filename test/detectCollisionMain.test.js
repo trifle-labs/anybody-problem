@@ -1,9 +1,9 @@
 const hre = require("hardhat");
 const { assert } = require("chai");
 const {
-  calculateForce, sqrtApprox, scalingFactor, detectCollision,
-  detectCollisionBigInt, convertBigIntsToBodies, convertBodiesToBigInts,
-  convertFloatToScaledBigInt, convertScaledBigIntToFloat
+  detectCollisionBigInt,
+  convertScaledStringArrayToBody,
+  convertScaledBigIntBodyToArray
 } = require("../docs/index.js");
 const modp = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
 describe("detectCollisionMain circuit", () => {
@@ -21,7 +21,6 @@ describe("detectCollisionMain circuit", () => {
 
   before(async () => {
     circuit = await hre.circuitTest.setup("detectCollisionMain");
-    console.log({ modp })
   });
 
   it("produces a witness with valid constraints", async () => {
@@ -34,7 +33,6 @@ describe("detectCollisionMain circuit", () => {
       sampleInput,
       sanityCheck
     );
-    console.log({ witness })
 
     // assert.propertyVal(witness, "main.squared", sampleInput.squared);
     // assert.propertyVal(witness, "main.calculatedRoot", sampleInput.calculatedRoot);
