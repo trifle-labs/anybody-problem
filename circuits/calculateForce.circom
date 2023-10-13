@@ -100,8 +100,8 @@ template CalculateForce() {
   // log("distanceSquared", distanceSquared);
   // bits should be maximum of the vectorLimiter which would be (10 * 10 ** 8) * (10 * 10 ** 8) which is under 60 bits
   component acceptableMarginOfError = AcceptableMarginOfError(60);  // TODO: test the limits of this. 
-  acceptableMarginOfError.val1 <== distanceSquared;
-  acceptableMarginOfError.val2 <== distance ** 2;
+  acceptableMarginOfError.expected <== distance ** 2;
+  acceptableMarginOfError.actual <== distanceSquared;
   // margin of error should be midpoint between squares
   acceptableMarginOfError.marginOfError <== distance * 2; // TODO: confrim if (distance * 2) +1 is needed
   acceptableMarginOfError.out === 1;
@@ -144,16 +144,18 @@ template CalculateForce() {
 // NOTE: the following constraints the approxDiv to ensure it's within the acceptable error of margin
   signal approxNumerator1 <== forceXunsigned * forceDenom;
   component acceptableErrorOfMarginDiv1 = AcceptableMarginOfError(divisionBits);  // TODO: test the limits of this. 
-  acceptableErrorOfMarginDiv1.val1 <== forceXnum;
-  acceptableErrorOfMarginDiv1.val2 <== approxNumerator1;
+  acceptableErrorOfMarginDiv1.expected <== forceXnum;
+  acceptableErrorOfMarginDiv1.actual <== approxNumerator1;
   acceptableErrorOfMarginDiv1.marginOfError <== forceDenom; // TODO: actually could be further reduced to (realDenom / 2) + 1 but then we're using division again
   acceptableErrorOfMarginDiv1.out === 1;
 
+  // if dxAbs + dx is 0, then forceX should be negative
   component isZero3 = IsZero();
-  isZero3.in <== dyAbs + dy;
+  isZero3.in <== dxAbs + dx;
+  // log("isZero3", dxAbs + dx, isZero3.out);
   component myMux4 = Mux1();
-  myMux4.c[0] <== forceXunsigned * -1;
-  myMux4.c[1] <== forceXunsigned;
+  myMux4.c[0] <== forceXunsigned;
+  myMux4.c[1] <== forceXunsigned * -1;
   myMux4.s <== isZero3.out;
   signal forceX <== myMux4.out;
   // log("forceX", forceX);
@@ -165,16 +167,17 @@ template CalculateForce() {
   // NOTE: the following constraints the approxDiv to ensure it's within the acceptable error of margin
   signal approxNumerator2 <== forceYunsigned * forceDenom;
   component acceptableErrorOfMarginDiv2 = AcceptableMarginOfError(divisionBits);  // TODO: test the limits of this. 
-  acceptableErrorOfMarginDiv2.val1 <== forceYnum;
-  acceptableErrorOfMarginDiv2.val2 <== approxNumerator2;
+  acceptableErrorOfMarginDiv2.expected <== forceYnum;
+  acceptableErrorOfMarginDiv2.actual <== approxNumerator2;
   acceptableErrorOfMarginDiv2.marginOfError <== forceDenom; // TODO: actually could be further reduced to (realDenom / 2) + 1 but then we're using division again
   acceptableErrorOfMarginDiv2.out === 1;
 
+  // if dyAbs + dy is 0, then forceY should be negative
   component isZero4 = IsZero();
-  isZero4.in <== dxAbs + dx;
+  isZero4.in <== dyAbs + dy;
   component myMux5 = Mux1();
-  myMux5.c[0] <== forceYunsigned * -1;
-  myMux5.c[1] <== forceYunsigned ;
+  myMux5.c[0] <== forceYunsigned;
+  myMux5.c[1] <== forceYunsigned * -1;
   myMux5.s <== isZero4.out;
   signal forceY <== myMux5.out;
   // log("forceY", forceY);

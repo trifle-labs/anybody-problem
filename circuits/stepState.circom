@@ -67,5 +67,5 @@ template StepState(totalBodies, steps) {
       tmp_missile[i + 1][j] <== mux[i].out[j];
     }
   }
-  out_bodies <== tmp_bodies[steps - 1];
+  out_bodies <== tmp_bodies[steps];
 }
