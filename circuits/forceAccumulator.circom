@@ -19,23 +19,29 @@ include "calculateForce.circom";
   // This will help us restrict bits needed for each type
   // maybe can streamline the square root and division
 
-template ForceAccumulator(totalBodies) {
+template ForceAccumulator(totalBodies) { // max 10 = maxBits: 4
     signal input bodies[totalBodies][5];
     signal output out_bodies[totalBodies][5];
-    // [0] = position_x using 10^8 decimals
-    // [1] = position_y using 10^8 decimals
-    // [2] = vector_x using 10^8 decimals
-    // [3] = vector_y using 10^8 decimals
-    // [4] = radius using 10^8 decimals
+    // [0] = position_x | maxBits: 37 = windowWidthScaled
+    // [1] = position_y | maxBits: 37 = windowWidthScaled
+    // [2] = vector_x   | maxBits: 254 = negative values are possible
+    // [3] = vector_y   | maxBits: 254 = negative values are possible
+    // [4] = radius     | maxBits: 31 = numBits(13 * scalingFactor)
 
+    // NOTE: scalingFactorFactor appears in calculateMissile, calculateForce as well
+    var scalingFactorFactor = 8; // maxBits: 4
+    var scalingFactor = 10**scalingFactorFactor; // maxBits: 27
 
-    var maxVector = 1000000000; // using 10^8 decimals
-    // NOTE: windowWidth appears in calculateMissile as well and needs to match
-    var windowWidth = 100000000000; // using 10^8 decimals
+    var maxVector = 10; // maxBits: 4
+    var maxVectorScaled = 10 * scalingFactor; // maxBits: 31
+
+    // NOTE: windowWidth appears in calculateMissile, calculateForce, forceAccumulator as well and needs to match
+    var windowWidth = 1000; // maxBits: 10
+    var windowWidthScaled = windowWidth * scalingFactor; // maxBits: 37
 
     var accumulated_body_forces[totalBodies][2];
 
-    var totalIterations = totalBodies * (totalBodies - 1) / 2;
+    var totalIterations = totalBodies * (totalBodies - 1) / 2; // maxBits: 7
     component calculateForceComponent[totalIterations];
     signal force_x[totalIterations];
     signal force_y[totalIterations];
@@ -81,38 +87,38 @@ template ForceAccumulator(totalBodies) {
       // limit the magnitude of the vector
       vectorLimiterX[i] = Limiter(252); // TODO: confirm bits limit
       vectorLimiterX[i].in <== new_vector_x[i];
-      vectorLimiterX[i].limit <== maxVector; // speedLimit
-      vectorLimiterX[i].rather <== maxVector;
+      vectorLimiterX[i].limit <== maxVectorScaled; // speedLimit
+      vectorLimiterX[i].rather <== maxVectorScaled;
       out_bodies[i][2] <== vectorLimiterX[i].out;
       vectorLimiterY[i] = Limiter(252); // TODO: confirm bits limit
       vectorLimiterY[i].in <== new_vector_y[i];
-      vectorLimiterY[i].limit <== maxVector; // speedLimit
-      vectorLimiterY[i].rather <== maxVector;
+      vectorLimiterY[i].limit <== maxVectorScaled; // speedLimit
+      vectorLimiterY[i].rather <== maxVectorScaled;
       out_bodies[i][3] <== vectorLimiterY[i].out;
 
       // need to limit position so plane loops off edges
-      positionLimiterX[i] = Limiter(37); // NOTE: position is limited to maxWidth + (2*maxVector) which should be under 37 bits
+      positionLimiterX[i] = Limiter(37); // NOTE: position is limited to maxWidth + (2*maxVectorScaled) which should be under 37 bits
       // positionLimiter.x <== bodies[0][0] + vectorLimiter.limitedX;
-      positionLimiterX[i].in <== bodies[i][0] + vectorLimiterX[i].out + maxVector; // NOTE: adding maxVector ensures it is never negative
-      positionLimiterX[i].limit <== windowWidth + maxVector; // windowWidth
-      positionLimiterX[i].rather <== maxVector;
-      // NOTE: maxVector is still included, needs to be removed at end of calculation
-      positionLowerLimiterX[i] = LowerLimiter(37); // NOTE: position is limited to maxWidth + (2*maxVector) which should be under 37 bits
+      positionLimiterX[i].in <== bodies[i][0] + vectorLimiterX[i].out + maxVectorScaled; // NOTE: adding maxVectorScaled ensures it is never negative
+      positionLimiterX[i].limit <== windowWidthScaled + maxVectorScaled; // windowWidthScaled
+      positionLimiterX[i].rather <== maxVectorScaled;
+      // NOTE: maxVectorScaled is still included, needs to be removed at end of calculation
+      positionLowerLimiterX[i] = LowerLimiter(37); // NOTE: position is limited to maxWidth + (2*maxVectorScaled) which should be under 37 bits
       positionLowerLimiterX[i].in <== positionLimiterX[i].out;
-      positionLowerLimiterX[i].limit <== maxVector;
-      positionLowerLimiterX[i].rather <== windowWidth + maxVector;
-      out_bodies[i][0] <== positionLowerLimiterX[i].out - maxVector;
+      positionLowerLimiterX[i].limit <== maxVectorScaled;
+      positionLowerLimiterX[i].rather <== windowWidthScaled + maxVectorScaled;
+      out_bodies[i][0] <== positionLowerLimiterX[i].out - maxVectorScaled;
 
-      positionLimiterY[i] = Limiter(37);  // NOTE: position is limited to maxWidth + (2*maxVector) which should be under 37 bits
-      positionLimiterY[i].in <== bodies[i][1] + vectorLimiterY[i].out + maxVector; // NOTE: adding maxVector ensures it is never negative
-      positionLimiterY[i].limit <== windowWidth + maxVector; // windowWidth
-      positionLimiterY[i].rather <== maxVector;
-      // NOTE: maxVector is still included, needs to be removed at end of calculation
-      positionLowerLimiterY[i] = LowerLimiter(37); // NOTE: position is limited to maxWidth + (2*maxVector) which should be under 37 bits
+      positionLimiterY[i] = Limiter(37);  // NOTE: position is limited to maxWidth + (2*maxVectorScaled) which should be under 37 bits
+      positionLimiterY[i].in <== bodies[i][1] + vectorLimiterY[i].out + maxVectorScaled; // NOTE: adding maxVectorScaled ensures it is never negative
+      positionLimiterY[i].limit <== windowWidthScaled + maxVectorScaled; // windowWidthScaled
+      positionLimiterY[i].rather <== maxVectorScaled;
+      // NOTE: maxVectorScaled is still included, needs to be removed at end of calculation
+      positionLowerLimiterY[i] = LowerLimiter(37); // NOTE: position is limited to maxWidth + (2*maxVectorScaled) which should be under 37 bits
       positionLowerLimiterY[i].in <== positionLimiterY[i].out;
-      positionLowerLimiterY[i].limit <== maxVector;
-      positionLowerLimiterY[i].rather <== windowWidth + maxVector;
-      out_bodies[i][1] <== positionLowerLimiterY[i].out - maxVector;
+      positionLowerLimiterY[i].limit <== maxVectorScaled;
+      positionLowerLimiterY[i].rather <== windowWidthScaled + maxVectorScaled;
+      out_bodies[i][1] <== positionLowerLimiterY[i].out - maxVectorScaled;
       // log(i, "out_bodies[i][2]", out_bodies[i][2]);
     }
     // log("out_bodies[0][0]", out_bodies[0][0]);

@@ -10,13 +10,13 @@ template GetDistance(n) {
   signal output distance;
 
   // signal dx <== x2 - x1;
-  component absoluteValueSubtraction = AbsoluteValueSubtraction(n); // TODO: test limit
+  component absoluteValueSubtraction = AbsoluteValueSubtraction(n);
   absoluteValueSubtraction.in[0] <== x1;
   absoluteValueSubtraction.in[1] <== x2;
   signal dxAbs <== absoluteValueSubtraction.out;
 
   // signal dy <== y2 - y1;
-  component absoluteValueSubtraction2 = AbsoluteValueSubtraction(n); // TODO: test limit
+  component absoluteValueSubtraction2 = AbsoluteValueSubtraction(n);
   absoluteValueSubtraction2.in[0] <== y1;
   absoluteValueSubtraction2.in[1] <== y2;
   signal dyAbs <== absoluteValueSubtraction2.out;
@@ -28,7 +28,7 @@ template GetDistance(n) {
   // NOTE: confirm this is correct
   distance <-- approxSqrt(distanceSquared);
   // bits should be maximum of the vectorLimiter which would be (10 * 10 ** 8) * (10 * 10 ** 8) which is under 60 bits
-  component acceptableMarginOfError = AcceptableMarginOfError(n);  // TODO: test the limits of this. 
+  component acceptableMarginOfError = AcceptableMarginOfError(n);
   acceptableMarginOfError.expected <== distanceSquared;
   acceptableMarginOfError.actual <== distance ** 2;
   // margin of error should be midpoint between squares

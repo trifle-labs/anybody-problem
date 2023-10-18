@@ -195,9 +195,9 @@ Currently the project is targeting [powersOfTau28_hez_final_20.ptau](https://git
 | stepState(2, 1) | 3,293 |
 | stepState(2, 10) | 32,930 |
 | stepState(2, 100) | 329,300 |
-| stepState(3, 1) | 6,157 |
-| stepState(3, 10) | 61,570 |
-| stepState(3, 100) | 615,700 |
+| stepState(3, 1) | 7,653 |
+| stepState(3, 10) | 76,530 |
+| stepState(3, 100) | 765,300 |
 | stepState(4, 1) | 9,863 |
 | stepState(4, 10) | 98,630 |
 | stepState(4, 100) | 986,300 |
