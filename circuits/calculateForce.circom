@@ -1,6 +1,7 @@
 pragma circom 2.1.6;
 
 include "approxMath.circom";
+include "helpers.circom";
 
 template CalculateForce() {
 /* 
@@ -46,28 +47,30 @@ template CalculateForce() {
   var GScaled =  Gravity * scalingFactor; // maxBits: 34
   // log("GScaled", GScaled);
 
-  signal input in_bodies[2][5];
-  signal output out_forces[2];
+  signal input in_bodies[2][7];
+  signal output out_forces[2][2]; // type is an array where [n][v] such that n is whether
+  // the vector is negative or not (0 not negative, 1 is negative) and v is the absolute
+  // value of the vector, with maxBit: xxx
 
  // NOTE: this is 200**2 so we have to square the scaling factor too
   signal minDistanceScaled <== (minDistance ** 2) * (scalingFactor ** 2); // maxBits: 69
   // NOTE: minDistanceScaled is maximum of 
   // log("minDistanceScaled", minDistanceScaled);
-  var body1_position_x = in_bodies[0][0]; // maxBits: 37 = windowWidthScaled
+  var body1_position_x = getX(in_bodies[0]); // maxBits: 37 = windowWidthScaled
   // log("body1_position_x", body1_position_x);
-  var body1_position_y = in_bodies[0][1]; // maxBits: 37 = windowWidthScaled
+  var body1_position_y = getY(in_bodies[0]); // maxBits: 37 = windowWidthScaled
   // log("body1_position_y", body1_position_y);
 
   // NOTE: maximum radius currently 13
-  var body1_radius = in_bodies[0][4]; // maxBits: 31 = numBits(13 * scalingFactor)
+  var body1_radius = getMass(in_bodies[0]); // maxBits: 31 = numBits(13 * scalingFactor)
 
-  var body2_position_x = in_bodies[1][0]; // maxBits: 37 = windowWidthScaled
+  var body2_position_x = getX(in_bodies[1]); // maxBits: 37 = windowWidthScaled
   // log("body2_position_x", body2_position_x);
-  var body2_position_y = in_bodies[1][1]; // maxBits: 37 = windowWidthScaled
+  var body2_position_y = getY(in_bodies[1]); // maxBits: 37 = windowWidthScaled
   // log("body2_position_y", body2_position_y);
   
   // NOTE: maximum radius currently 13
-  var body2_radius = in_bodies[1][4]; // maxBits: 31 = numBits(13 * scalingFactor)
+  var body2_radius = getMass(in_bodies[1]); // maxBits: 31 = numBits(13 * scalingFactor)
 
   signal dx <== body2_position_x - body1_position_x; // maxBits: 254 because it can be negative
 
@@ -178,12 +181,14 @@ template CalculateForce() {
   // NOTE: isZero handles overflow bit values correctly
   isZero3.in <== dxAbs + dx; // maxBits: 255 = max(37, 254) + 1
   // log("isZero3", dxAbs + dx, isZero3.out);
-  component myMux4 = Mux1();
-  myMux4.c[0] <== forceXunsigned; // maxBits: 132
-  myMux4.c[1] <== forceXunsigned * -1; // maxBits: 254
-  myMux4.s <== isZero3.out;
-  signal forceX <== myMux4.out; // maxBits: 254
+  // component myMux4 = Mux1();
+  // myMux4.c[0] <== forceXunsigned; // maxBits: 132
+  // myMux4.c[1] <== forceXunsigned * -1; // maxBits: 254
+  // myMux4.s <== isZero3.out;
+  // signal forceX <== myMux4.out; // maxBits: 254
   // log("forceX", forceX);
+  out_forces[0][0] <== isZero3.out; // isZero is 1 when dx is negative
+  out_forces[0][1] <== forceXunsigned; // maxBits 132
 
   signal forceYnum <== dyAbs * forceMag_numerator; // maxBits: 132 = 37 + 95
   // log("forceYnum", forceYnum);
@@ -201,15 +206,17 @@ template CalculateForce() {
   component isZero4 = IsZero();
     // NOTE: isZero handles overflow bit values correctly
   isZero4.in <== dyAbs + dy; // maxBits: 255 = max(37, 254) + 1
-  component myMux5 = Mux1();
-  myMux5.c[0] <== forceYunsigned; // maxBits: 132
-  myMux5.c[1] <== forceYunsigned * -1; // maxBits: 254
-  myMux5.s <== isZero4.out;
-  signal forceY <== myMux5.out; // maxBits: 254
+  // component myMux5 = Mux1();
+  // myMux5.c[0] <== forceYunsigned; // maxBits: 132
+  // myMux5.c[1] <== forceYunsigned * -1; // maxBits: 254
+  // myMux5.s <== isZero4.out;
+  // signal forceY <== myMux5.out; // maxBits: 254
   // log("forceY", forceY);
+  out_forces[1][0] <== isZero4.out;
+  out_forces[1][1] <== forceYunsigned; // maxBits 132
 
-  out_forces[0] <== forceX; // maxBits: 254
-  out_forces[1] <== forceY; // maxBits: 254
+  // out_forces[0] <== forceX; // maxBits: 254
+  // out_forces[1] <== forceY; // maxBits: 254
 }
 
 

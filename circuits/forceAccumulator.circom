@@ -2,6 +2,7 @@ pragma circom 2.1.6;
 
 include "limiter.circom";
 include "calculateForce.circom";
+include "helpers.circom";
 
 // TODO:
 // √ confirm why circom interprets negative input differently than p-n (https://github.com/0xPARC/zkrepl/issues/11)
@@ -20,13 +21,13 @@ include "calculateForce.circom";
   // maybe can streamline the square root and division
 
 template ForceAccumulator(totalBodies) { // max 10 = maxBits: 4
-    signal input bodies[totalBodies][5];
-    signal output out_bodies[totalBodies][5];
-    // [0] = position_x | maxBits: 37 = windowWidthScaled
-    // [1] = position_y | maxBits: 37 = windowWidthScaled
-    // [2] = vector_x   | maxBits: 254 = negative values are possible
-    // [3] = vector_y   | maxBits: 254 = negative values are possible
-    // [4] = radius     | maxBits: 31 = numBits(13 * scalingFactor)
+    signal input bodies[totalBodies][7];
+    signal output out_bodies[totalBodies][7];
+    // [0] = position_x       | maxBits: 37 = windowWidthScaled
+    // [1] = position_y       | maxBits: 37 = windowWidthScaled
+    // [[2],[3]] = vector_x   | maxBits: 133= 2 * maxVectorScaled = 1 + 132
+    // [[4],[5]] = vector_y   | maxBits: 133 = 2 * maxVectorScaled = 1 + 132
+    // [6] = radius           | maxBits: 31 = numBits(13 * scalingFactor)
 
     // NOTE: scalingFactorFactor appears in calculateMissile, calculateForce as well
     var scalingFactorFactor = 8; // maxBits: 4
@@ -39,31 +40,47 @@ template ForceAccumulator(totalBodies) { // max 10 = maxBits: 4
     var windowWidth = 1000; // maxBits: 10
     var windowWidthScaled = windowWidth * scalingFactor; // maxBits: 37
 
-    var accumulated_body_forces[totalBodies][2];
 
     var totalIterations = totalBodies * (totalBodies - 1) / 2; // maxBits: 7
     component calculateForceComponent[totalIterations];
-    signal force_x[totalIterations];
-    signal force_y[totalIterations];
+    signal force_x[totalIterations][2]; // maxBits: 132
+    signal force_y[totalIterations][2]; // maxBits: 132
+    signal accumulated_body_forces[totalIterations + 1][totalBodies][2];
+    component mux[totalIterations * 2];
 
     var ii = 0;
     for (var i = 0; i < totalBodies; i++) {
       // radius of body doesn't change
-      out_bodies[i][4] <== bodies[i][4];
+      out_bodies[i][6] <== getMass(bodies[i]);
       for (var j  = i+1; j < totalBodies; j++) {
         // var ii = i + j - 1;
         // calculate the force between i and j
         calculateForceComponent[ii] = CalculateForce();
         calculateForceComponent[ii].in_bodies[0] <== bodies[i];
         calculateForceComponent[ii].in_bodies[1] <== bodies[j];
-        force_x[ii] <== calculateForceComponent[ii].out_forces[0];
-        force_y[ii] <== calculateForceComponent[ii].out_forces[1];
+        force_x[ii] <== calculateForceComponent[ii].out_forces[0]; // maxBits: 132
+        force_y[ii] <== calculateForceComponent[ii].out_forces[1]; // maxBits: 132
         // accumulate the value of the force on body i and body j
         // log("j", j, "force_x[ii]", force_x[ii]);
-        accumulated_body_forces[i][0] = accumulated_body_forces[i][0] + force_x[ii];
-        accumulated_body_forces[i][1] = accumulated_body_forces[i][1] + force_y[ii];
-        accumulated_body_forces[j][0] = accumulated_body_forces[j][0] - force_x[ii];
-        accumulated_body_forces[j][1] = accumulated_body_forces[j][1] - force_y[ii];
+
+        mux[ii] = MultiMux1(2);
+        mux[ii].c[0][0] <== accumulated_body_forces[ii][i][0] + force_x[ii][1];
+        mux[ii].c[0][1] <== accumulated_body_forces[ii][i][0] - force_x[ii][1];
+        mux[ii].c[1][0] <== accumulated_body_forces[ii][j][0] - force_x[ii][1];
+        mux[ii].c[1][1] <== accumulated_body_forces[ii][j][0] + force_x[ii][1];
+        mux[ii].s <== force_x[ii][0];
+        accumulated_body_forces[ii + 1][i][0] <== mux[ii].out[0];
+        accumulated_body_forces[ii + 1][j][0] <== mux[ii].out[1];
+
+        mux[totalIterations + ii] = MultiMux1(2);
+        mux[ii].c[0][0] <== accumulated_body_forces[ii][i][1] + force_y[ii][1];
+        mux[ii].c[0][1] <== accumulated_body_forces[ii][i][1] - force_y[ii][1];
+        mux[ii].c[1][0] <== accumulated_body_forces[ii][j][1] - force_y[ii][1];
+        mux[ii].c[1][1] <== accumulated_body_forces[ii][j][1] + force_y[ii][1];
+        mux[ii].s <== force_y[ii][0];
+        accumulated_body_forces[ii + 1][i][1] <== mux[ii].out[0];
+        accumulated_body_forces[ii + 1][j][1] <== mux[ii].out[1];
+
         ii = ii + 1;
       }
     }
