@@ -103,23 +103,23 @@ template AbsoluteValueSubtraction (n) {
     out <== greaterValue - lesserValue;
 }
 
-// TODO: Confirm this doesn't work because most_positive_number is too large for LessThan circuit
-template AbsoluteValue() {
-  signal input in;
-  signal output out;
-  signal most_positive_number <== 10944121435919637611123202872628637544274182200208017171849102093287904247808;
-  // p = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
-  // p_minus_one = 21888242871839275222246405745257275088548364400416034343698204186575808495616;
+// NOTE: This isn't an efficient system because LessThan has max 252 bits, which could be overridden but still not ideal
+// template AbsoluteValue() {
+//   signal input in;
+//   signal output out;
+//   signal most_positive_number <== 10944121435919637611123202872628637544274182200208017171849102093287904247808;
+//   // p = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
+//   // p_minus_one = 21888242871839275222246405745257275088548364400416034343698204186575808495616;
 
-  component lessThan = LessThan(252); // TODO: confirm this is necessary for most_positive_number
-  lessThan.in[0] <== in;
-  lessThan.in[1] <== most_positive_number;
+//   component lessThan = LessThan(252); // TODO: confirm this is necessary for most_positive_number
+//   lessThan.in[0] <== in;
+//   lessThan.in[1] <== most_positive_number;
 
-  component myMux = Mux1();
-  myMux.c[0] <== in * -1;
-  myMux.c[1] <== in; // TODO: confirm whether cheaper to do p - in using p as signal
-  myMux.s <== lessThan.out;
+//   component myMux = Mux1();
+//   myMux.c[0] <== in * -1;
+//   myMux.c[1] <== in; // TODO: confirm whether cheaper to do p - in using p as signal
+//   myMux.s <== lessThan.out;
 
-  out <== myMux.out;
-}
+//   out <== myMux.out;
+// }
 

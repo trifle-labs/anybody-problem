@@ -17,20 +17,20 @@ describe("forceAccumulatorMain circuit", () => {
 
   const sampleInput = {
     bodies: [
-      ["22600000000", "4200000000", "-133000000", "-629000000", "10000000000"],
-      ["36300000000", "65800000000", "-332000000", "374000000", "7500000000"],
-      ["67900000000", "50000000000", "229000000", "252000000", "5000000000"]
-    ]
+      ["226000", "42000", "8670", "3710", "100000"],
+      ["363000", "658000", "6680", "13740", "75000"],
+      ["679000", "500000", "12290", "12520", "50000"]
+    ],
   };
   const sanityCheck = true;
 
   before(async () => {
     circuit = await hre.circuitTest.setup("forceAccumulatorMain");
-
   });
 
   it("produces a witness with valid constraints", async () => {
     const witness = await circuit.calculateWitness(sampleInput, sanityCheck);
+    console.log(`| forceAccumulator(3) | ${witness.length} |`)
     await circuit.checkConstraints(witness);
   });
 

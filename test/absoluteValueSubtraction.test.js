@@ -22,6 +22,7 @@ describe("absoluteValueSubtraction circuit", () => {
 
   it("produces a witness with valid constraints", async () => {
     const witness = await circuit.calculateWitness(sampleInput[0].in, sanityCheck);
+    console.log(`| absoluteValueSubtraction(252) | ${witness.length} |`)
     await circuit.checkConstraints(witness);
   });
 

@@ -172,35 +172,16 @@ Currently the project is targeting [powersOfTau28_hez_final_20.ptau](https://git
 
 | Circuit | Non-Linear Constraints |
 |---------|-------------|
-| absoluteValueSubtraction(252) | 257 |
-| acceptableMarginOfError(60) | 126 |
-| calculateForce() | 842 |
-| detectCollision(3) | 1,548 |
-| forceAccumulator(3) | 4,518 |
-| getDistance(252) | 1,026 |
-| limiter(252) | 254 |
-| lowerLimiter(252) | 254 |
-| nft(2, 1) | 2,170 |
-| nft(2, 10) | 21,700 |
-| nft(2, 100) | 217,000 |
-| nft(3, 1) | 4,518 |
-| nft(3, 10) | 45,180 |
-| nft(3, 100) | 451,800 |
-| nft(4, 1) | 7708 |
-| nft(4, 10) | 77,080 |
-| nft(4, 100) | 770,800 |
-| nft(5, 1) | 11,740 |
-| nft(5, 10) | 117,400 |
-| nft(5, 100) | 1,174,000 |
-| stepState(2, 1) | 3,293 |
-| stepState(2, 10) | 32,930 |
-| stepState(2, 100) | 329,300 |
-| stepState(3, 1) | 6,157 |
-| stepState(3, 10) | 61,570 |
-| stepState(3, 100) | 615,700 |
-| stepState(4, 1) | 9,863 |
-| stepState(4, 10) | 98,630 |
-| stepState(4, 100) | 986,300 |
+| absoluteValueSubtraction(252) | 259 |
+| acceptableMarginOfError(60) | 128 |
+| calculateForce() | 717 |
+| detectCollision(3) | 526 |
+| forceAccumulator(3) | 2821 |
+| getDistance(20) | 142 |
+| limiter(252) | 257 |
+| lowerLimiter(252) | 257 |
+| nft(3, 10) | 28039 |
+| stepState(3, 10) | 33891 |
 
 # built using circom-starter
 

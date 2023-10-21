@@ -5,10 +5,10 @@ describe("getDistanceMain circuit", () => {
   let circuit;
 
   const sampleInput = {
-    x1: "1300000000",
-    y1: "700000000",
-    x2: "400000000",
-    y2: "200000000",
+    x1: "13000",
+    y1: "7000",
+    x2: "4000",
+    y2: "2000",
   };
   const sanityCheck = true;
 
@@ -18,6 +18,7 @@ describe("getDistanceMain circuit", () => {
 
   it("produces a witness with valid constraints", async () => {
     const witness = await circuit.calculateWitness(sampleInput, sanityCheck);
+    console.log(`| getDistance(20) | ${witness.length} |`)
     await circuit.checkConstraints(witness);
   });
 
@@ -36,7 +37,7 @@ describe("getDistanceMain circuit", () => {
   });
 
   it("has the correct output", async () => {
-    const expected = { distance: 1029563015 }; // should be 900000000 but 1029563015 is within margin of error
+    const expected = { distance: 10295 }; // should be 9000 but 10295 is within margin of error
     const witness = await circuit.calculateWitness(sampleInput, sanityCheck);
     await circuit.assertOut(witness, expected);
   });

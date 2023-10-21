@@ -12,7 +12,7 @@ const rightEdge = windowWidth, topEdge = 0, leftEdge = 0, bottomEdge = windowWid
 const boundaryRadius = windowWidth / 2
 let n = 0, img1
 const fps = 300
-const preRun = 0
+const preRun = 10000
 const prime = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
 const admin = false
 const minRadius = 50
@@ -300,7 +300,7 @@ function explosion(x, y, radius) {
   return bombs
 }
 
-const scalingFactor = 10n ** 8n
+const scalingFactor = 10n ** 3n
 
 function calculateForce(body1, body2) {
   const bodies = convertBodiesToBigInts([body1, body1])
@@ -734,40 +734,43 @@ function randomPosition() {
 }
 
 function convertScaledStringArrayToFloat(body) {
+  const maxVectorScaled = convertFloatToScaledBigInt(vectorLimit)
   return {
     position: {
       x: convertScaledBigIntToFloat(body[0]),
       y: convertScaledBigIntToFloat(body[1])
     },
     velocity: {
-      x: convertScaledBigIntToFloat(body[2]),
-      y: convertScaledBigIntToFloat(body[3])
+      x: convertScaledBigIntToFloat(body[2]) - maxVectorScaled,
+      y: convertScaledBigIntToFloat(body[3]) - maxVectorScaled
     },
     radius: convertScaledBigIntToFloat(body[4])
   }
 }
 
 function convertScaledStringArrayToBody(body) {
+  const maxVectorScaled = convertFloatToScaledBigInt(vectorLimit)
   return {
     position: {
       x: BigInt(body[0]),
       y: BigInt(body[1])
     },
     velocity: {
-      x: BigInt(body[2]),
-      y: BigInt(body[3])
+      x: BigInt(body[2]) - maxVectorScaled,
+      y: BigInt(body[3]) - maxVectorScaled
     },
     radius: BigInt(body[4])
   }
 }
 
 function convertScaledBigIntBodyToArray(b) {
+  const maxVectorScaled = convertFloatToScaledBigInt(vectorLimit)
   const bodyArray = []
   bodyArray.push(
     convertBigIntToModP(b.position.x),
     convertBigIntToModP(b.position.y),
-    convertBigIntToModP(b.velocity.x),
-    convertBigIntToModP(b.velocity.y),
+    convertBigIntToModP(b.velocity.x + maxVectorScaled),
+    convertBigIntToModP(b.velocity.y + maxVectorScaled),
     convertBigIntToModP(b.radius)
   )
   return bodyArray.map(b => b.toString())
@@ -784,19 +787,14 @@ function convertBigIntToModP(v) {
 
 function convertBodiesToBigInts(bodies) {
   const bigBodies = []
+  const maxVectorScaled = convertFloatToScaledBigInt(vectorLimit)
   for (let i = 0; i < bodies.length; i++) {
     const body = bodies[i]
     const newBody = { position: {}, velocity: {}, radius: null }
     newBody.position.x = convertFloatToScaledBigInt(body.position.x)
     newBody.position.y = convertFloatToScaledBigInt(body.position.y)
-    newBody.velocity.x = convertFloatToScaledBigInt(body.velocity.x)
-    // while (newBody.velocity.x < 0n) {
-    //   newBody.velocity.x += p
-    // }
-    newBody.velocity.y = convertFloatToScaledBigInt(body.velocity.y)
-    // while (newBody.velocity.y < 0n) {
-    //   newBody.velocity.y += p
-    // }
+    newBody.velocity.x = convertFloatToScaledBigInt(body.velocity.x)// + maxVectorScaled
+    newBody.velocity.y = convertFloatToScaledBigInt(body.velocity.y)// + maxVectorScaled
     newBody.radius = convertFloatToScaledBigInt(body.radius)
     if (body.c) {
       newBody.c = body.c
@@ -849,6 +847,8 @@ if (module) {
     convertScaledBigIntBodyToArray,
     calculateForce,
     sqrtApprox,
+    approxDiv,
+    vectorLimit,
     scalingFactor,
     runComputation,
     runComputationBigInt,

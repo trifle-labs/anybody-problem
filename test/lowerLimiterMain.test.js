@@ -38,6 +38,7 @@ describe("lowerLimiterMain circuit", () => {
 
   it("produces a witness with valid constraints", async () => {
     const witness = await circuit.calculateWitness(sampleInputs[0].sampleInput, sanityCheck);
+    console.log(`| lowerLimiter(252) | ${witness.length} |`)
     await circuit.checkConstraints(witness);
   });
 
