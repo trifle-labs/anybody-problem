@@ -181,7 +181,7 @@ Currently the project is targeting [powersOfTau28_hez_final_20.ptau](https://git
 | limiter(252) | 257 |
 | lowerLimiter(252) | 257 |
 | nft(3, 10) | 28039 |
-| stepState(3, 10) | 33891 |
+| stepState(3, 10) | 33531 |
 
 # built using circom-starter
 

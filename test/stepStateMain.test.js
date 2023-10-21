@@ -19,7 +19,7 @@ describe("stepStateMain circuit", () => {
       ["679000", "500000", "12290", "12520", "50000"]
     ],
 
-    // NOTE: need to have array of 11 when step = 10 because missiles need to be n + 1
+    // NOTE: need to have array of 2 when step = 1 because missiles need to be n + 1
     missiles: [
       ["226000", "42000", "10000", "10000", "100000"],
       ["0", "0", "0", "0", "0"],
@@ -40,9 +40,11 @@ describe("stepStateMain circuit", () => {
     circuit = await hre.circuitTest.setup("stepStateMain");
   });
 
+  const steps = 10
+
   it("produces a witness with valid constraints", async () => {
     const witness = await circuit.calculateWitness(sampleInput, sanityCheck);
-    console.log(`| stepState(3, 10) | ${witness.length} |`)
+    console.log(`| stepState(3, ${steps}) | ${witness.length} |`)
     await circuit.checkConstraints(witness);
   });
 
@@ -51,7 +53,7 @@ describe("stepStateMain circuit", () => {
       sampleInput,
       sanityCheck
     );
-    // console.log({ witness })
+    console.dir({ witness: witness._labels }, { depth: null })
 
     // assert.propertyVal(witness, "main.squared", sampleInput.squared);
     // assert.propertyVal(witness, "main.calculatedRoot", sampleInput.calculatedRoot);
@@ -64,13 +66,13 @@ describe("stepStateMain circuit", () => {
     let missiles = sampleInput.missiles.map(convertScaledStringArrayToBody)
     // console.dir({ bodies }, { depth: null })
     // console.dir({ missiles }, { depth: null })
-    for (let i = 0; i < 10; i++) {
+
+    for (let i = 0; i < steps; i++) {
       const results = runComputationBigInt(bodies, missiles)
       bodies = results.bodies
       missiles = results.missiles
     }
     const out_bodies = bodies.map(convertScaledBigIntBodyToArray)
-    // console.log({ out_bodies })
     const expected = { out_bodies };
     const witness = await circuit.calculateWitness(sampleInput, sanityCheck);
     await circuit.assertOut(witness, expected);

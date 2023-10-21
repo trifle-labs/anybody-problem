@@ -4,15 +4,15 @@ include "getDistance.circom";
 include "../node_modules/circomlib/circuits/mux1.circom";
 
 template DetectCollision(totalBodies) {
-  signal input bodies[totalBodies][5];
-  signal input missile[5];
-  signal output out_bodies[totalBodies][5];
-  signal output out_missile[5];
+  signal input bodies[totalBodies][3]; // only storing x, y and radius as 0, 1, 2
+  signal input missile[3]; // only storing x, y and radius as 0, 1, 2
+  signal output out_bodies[totalBodies][3]; // only storing x, y and radius as 0, 1, 2
+  signal output out_missile[3]; // only storing x, y and radius as 0, 1, 2
 
   signal tmp_missiles[totalBodies + 1][3]; // only storing x, y and radius as 0, 1, 2
   tmp_missiles[0][0] <== missile[0];
   tmp_missiles[0][1] <== missile[1];
-  tmp_missiles[0][2] <== missile[4];
+  tmp_missiles[0][2] <== missile[2];
 
   component getDistance[totalBodies];
   component isZero[totalBodies];
@@ -36,7 +36,7 @@ template DetectCollision(totalBodies) {
 
     // if there is no missile (isZeroOut == 1), then set distanceMin to 0. Even if they are exact same coordinates the distance will be 0 and 0 < 0 is false
     distanceMinMux[i] = Mux1();
-    distanceMinMux[i].c[0] <== bodies[i][4] * 2; // maxBits: 15 = numBits(2 * 13 * scalingFactor) (maxNum: 26_000)
+    distanceMinMux[i].c[0] <== bodies[i][2] * 2; // maxBits: 15 = numBits(2 * 13 * scalingFactor) (maxNum: 26_000)
     distanceMinMux[i].c[1] <== 0;
     distanceMinMux[i].s <== isZero[i].out;
 
@@ -45,19 +45,15 @@ template DetectCollision(totalBodies) {
     lessThan[i].in[1] <== distanceMinMux[i].out; // maxBits: 15 (maxNum: 26_000)
 
     mux[i] = Mux1();
-    mux[i].c[0] <== bodies[i][4]; // maxBits: 14 = numBits(13 * scalingFactor) (maxNum: 13_000)
+    mux[i].c[0] <== bodies[i][2]; // maxBits: 14 = numBits(13 * scalingFactor) (maxNum: 13_000)
     mux[i].c[1] <== 0;
     mux[i].s <== lessThan[i].out;
     out_bodies[i][0] <== bodies[i][0];
     out_bodies[i][1] <== bodies[i][1];
-    out_bodies[i][2] <== bodies[i][2];
-    out_bodies[i][3] <== bodies[i][3];
-    out_bodies[i][4] <== mux[i].out;
+    out_bodies[i][2] <== mux[i].out;
     // log("out_bodies[i][0]", out_bodies[i][0]);
     // log("out_bodies[i][1]", out_bodies[i][1]);
     // log("out_bodies[i][2]", out_bodies[i][2]);
-    // log("out_bodies[i][3]", out_bodies[i][3]);
-    // log("out_bodies[i][4]", out_bodies[i][4]);
 
     mux2[i] = Mux1();
     mux2[i].c[0] <== tmp_missiles[i][2];
@@ -71,7 +67,5 @@ template DetectCollision(totalBodies) {
 
   out_missile[0] <== tmp_missiles[totalBodies - 1][0]; // last iteration's x
   out_missile[1] <== tmp_missiles[totalBodies - 1][1]; // last iteration's y
-  out_missile[2] <== missile[2]; // original x velocity
-  out_missile[3] <== missile[3]; // original y velocity
-  out_missile[4] <== tmp_missiles[totalBodies - 1][2]; // last iteration's radius
+  out_missile[2] <== tmp_missiles[totalBodies - 1][2]; // last iteration's radius
 }
