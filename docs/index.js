@@ -11,8 +11,8 @@ const rightEdge = windowWidth, topEdge = 0, leftEdge = 0, bottomEdge = windowWid
 
 const boundaryRadius = windowWidth / 2
 let n = 0, img1
-const fps = 300
-const preRun = 10000
+const fps = 30
+const preRun = 0
 const prime = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
 const admin = false
 const minRadius = 50
@@ -180,7 +180,9 @@ function forceAccumulatorBigInts(bodies) {
 }
 
 function runComputationBigInt(bodies, missiles) {
+  // console.dir({ 'bodies': bodies }, { depth: null })
   bodies = forceAccumulatorBigInts(bodies)
+  // console.dir({ 'bodies': bodies }, { depth: null })
   return detectCollisionBigInt(bodies, missiles)
   // bodies = results.bodies
   // missiles = results.missiles
