@@ -53,7 +53,7 @@ describe("stepStateMain circuit", () => {
       sampleInput,
       sanityCheck
     );
-    console.dir({ witness: witness._labels }, { depth: null })
+    // console.dir({ witness: witness._labels }, { depth: null })
 
     // assert.propertyVal(witness, "main.squared", sampleInput.squared);
     // assert.propertyVal(witness, "main.calculatedRoot", sampleInput.calculatedRoot);
