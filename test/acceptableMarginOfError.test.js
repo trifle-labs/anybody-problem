@@ -18,6 +18,7 @@ describe("acceptableMarginOfError circuit", () => {
 
   it("produces a witness with valid constraints", async () => {
     const witness = await circuit.calculateWitness(sampleInput, sanityCheck);
+    console.log(`| acceptableMarginOfError(60) | ${witness.length} |`)
     await circuit.checkConstraints(witness);
   });
 

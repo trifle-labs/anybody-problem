@@ -172,16 +172,16 @@ Currently the project is targeting [powersOfTau28_hez_final_20.ptau](https://git
 
 | Circuit | Non-Linear Constraints |
 |---------|-------------|
-| absoluteValueSubtraction(252) | 257 |
-| acceptableMarginOfError(60) | 126 |
-| calculateForce() | 1,340 |
-| detectCollision(3) | 1,548 |
-| forceAccumulator(3) | 6,012 |
-| getDistance(252) | 1,026 |
-| limiter(252) | 254 |
-| lowerLimiter(252) | 254 |
-| nft(3, 10) | 60,120 |
-| stepState(3, 10) | 76,530 |
+| absoluteValueSubtraction(252) | 259 |
+| acceptableMarginOfError(60) | 128 |
+| calculateForce() | 717 |
+| detectCollision(3) | 526 |
+| forceAccumulator(3) | 2821 |
+| getDistance(20) | 142 |
+| limiter(252) | 257 |
+| lowerLimiter(252) | 257 |
+| nft(3, 10) | 28039 |
+| stepState(3, 10) | 33891 |
 
 # built using circom-starter
 

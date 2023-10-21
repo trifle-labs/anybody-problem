@@ -7,11 +7,11 @@ function getY(body) {
   return body[1];
 }
 function getVx(body) {
-  return [body[2], body[3]];
+  return body[2];
 }
 function getVy(body) {
-  return [body[4], body[5]];
+  return body[3];
 }
 function getMass(body) {
-  return body[6];
+  return body[4];
 }
