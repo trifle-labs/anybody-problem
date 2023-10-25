@@ -33,56 +33,76 @@ template CalculateForce() {
   // NOTE: scalingFactorFactor appears in calculateMissile, forceAccumulator as well
   var scalingFactorFactor = 3; // maxBits: 2
   var scalingFactor = 10**scalingFactorFactor; // maxBits: 10 (maxNum: 1_000)
-  
+  var scalingFactorMaxBits = maxBits(scalingFactor);
+
   var Gravity = 100; // maxBits: 7
+  var GScaled =  Gravity * scalingFactor; // maxBits: 17 (maxNum: 100_000)
+  var GScaledMaxBits = maxBits(GScaled);
+
+  var maxRadius = 13;
+  var maxRadiusScaled = 13 * scalingFactor; // maxBits: 14 (maxNum: 13_000)
+  var maxRadiusScaledMaxBits = maxBits(maxRadiusScaled);
+
   var minDistance = 200; // maxBits: 8
+  var minDistanceMaxBits = maxBits(minDistance);
 
 
   // NOTE: windowWidth appears in calculateMissile, forceAccumulator as well and needs to match
   var windowWidth = 1000; // maxBits: 10
   var windowWidthScaled = windowWidth * scalingFactor; // maxBits: 20 (maxNum: 1_000_000)
+  var windowWidthScaledMaxBits = maxBits(windowWidthScaled);
 
-  var GScaled =  Gravity * scalingFactor; // maxBits: 17 (maxNum: 100_000)
   // log("GScaled", GScaled);
 
   signal input in_bodies[2][5];
+  var in_bodiesPositionXMaxBits = windowWidthScaledMaxBits;
   signal output out_forces[2][2]; // maxBit: 64 (maxNum: 10_400_000_000_000_000_000)
   // type is an array where [n][v] such that n is whether the vector is negative or not 
   // (0 not negative, 1 is negative) and v is the absolute value of the vector
 
  // NOTE: this is 200**2 so we have to square the scaling factor too
   signal minDistanceScaled <== (minDistance ** 2) * (scalingFactor ** 2); // maxBits: 36 (maxNum: 40_000_000_000)
+  var minDistanceScaledMax = (minDistance**2) * (scalingFactor**2);
+  var minDistanceScaledMaxBits = maxBits(minDistanceScaledMax);
   // NOTE: minDistanceScaled is maximum of 
   // log("minDistanceScaled", minDistanceScaled);
   var body1_position_x = getX(in_bodies[0]); // maxBits: 20 (maxNum: 1_000_000) = windowWidthScaled
+  var body1_position_xMaxBits = windowWidthScaledMaxBits;
   // log("body1_position_x", body1_position_x);
   var body1_position_y = getY(in_bodies[0]); // maxBits: 20 (maxNum: 1_000_000) = windowWidthScaled
+  var body1_position_yMaxBits = windowWidthScaledMaxBits;
   // log("body1_position_y", body1_position_y);
 
   // NOTE: maximum radius currently 13
   var body1_radius = getMass(in_bodies[0]); // maxBits: 14 = numBits(13 * scalingFactor) (maxNum: 13_000)
-
+  var body1_radiusMaxBits = maxRadiusScaledMaxBits;
   var body2_position_x = getX(in_bodies[1]); // maxBits: 20 (maxNum: 1_000_000) = windowWidthScaled
+  var body2_position_xMaxBits = windowWidthScaledMaxBits;
   // log("body2_position_x", body2_position_x);
   var body2_position_y = getY(in_bodies[1]); // maxBits: 20 (maxNum: 1_000_000) = windowWidthScaled
+  var body2_position_yMaxBits = windowWidthScaledMaxBits;
   // log("body2_position_y", body2_position_y);
   
   // NOTE: maximum radius currently 13
   var body2_radius = getMass(in_bodies[1]); // maxBits: 14 = numBits(13 * scalingFactor) (maxNum: 13_000)
+  var body2_radiusMaxBits = maxRadiusScaledMaxBits;
 
   signal dx <== body2_position_x - body1_position_x; // maxBits: 254 because it can be negative
 
-  component absoluteValueSubtraction = AbsoluteValueSubtraction(20);
+  var max = getBiggest([body1_position_xMaxBits, body2_position_xMaxBits], 2);
+  component absoluteValueSubtraction = AbsoluteValueSubtraction(max);
   absoluteValueSubtraction.in[0] <== body1_position_x; // maxBits: 20 (maxNum: 1_000_000)
   absoluteValueSubtraction.in[1] <== body2_position_x; // maxBits: 20 (maxNum: 1_000_000)
   signal dxAbs <== absoluteValueSubtraction.out; // maxBits: 20 (maxNum: 1_000_000)
+  var dxAbsMax = windowWidthScaled;
 
   signal dy <== body2_position_y - body1_position_y; // maxBits: 254 because it can be negative
-  component absoluteValueSubtraction2 = AbsoluteValueSubtraction(20);
+  var max2 = getBiggest([body1_position_yMaxBits, body2_position_yMaxBits], 2);
+  component absoluteValueSubtraction2 = AbsoluteValueSubtraction(max2);
   absoluteValueSubtraction2.in[0] <== body1_position_y; // maxBits: 20 (maxNum: 1_000_000)
   absoluteValueSubtraction2.in[1] <== body2_position_y; // maxBits: 20 (maxNum: 1_000_000)
   signal dyAbs <== absoluteValueSubtraction2.out; // maxBits: 20 (maxNum: 1_000_000)
-
+  var dyAbsMax = windowWidthScaled;
   // log("dx", dx);
   // log("dy", dy);
 
@@ -91,13 +111,22 @@ template CalculateForce() {
   // log("dyAbs", dyAbs);
 
   signal dxs <== dxAbs * dxAbs; // maxBits: 40 = 20 * 2 (maxNum: 1_000_000_000_000)
+  var dxsMax = dxAbsMax * dxAbsMax;
+  var dxsMaxBits = maxBits(dxsMax);
+
   // log("dxs", dxs);
   signal dys <== dyAbs * dyAbs; // maxBits: 40 = 20 * 2 (maxNum: 1_000_000_000_000)
+  var dysMax = dyAbsMax * dyAbsMax;
+  var dysMaxBits = maxBits(dysMax);
+
   // log("dys", dys);
   signal unboundDistanceSquared <== dxs + dys; // maxBits: 41 = 40 + 1 (maxNum: 2_000_000_000_000)
+  var unboundDistanceSquaredMax = dxsMax + dysMax;
+  var unboundDistanceSquaredMaxBits = maxBits(unboundDistanceSquaredMax);
   // log("unboundDistanceSquared", unboundDistanceSquared);
 
-  component lessThan = LessThan(41);
+  var max3 = getBiggest([unboundDistanceSquaredMaxBits, minDistanceScaledMaxBits], 2);
+  component lessThan = LessThan(max3);
   lessThan.in[0] <== unboundDistanceSquared; // maxBits: 41: (maxNum: 2_000_000_000_000)
   lessThan.in[1] <== minDistanceScaled; // maxBits: 36 (maxNum: 40_000_000_000)
 
@@ -106,21 +135,58 @@ template CalculateForce() {
   myMux.c[1] <== minDistanceScaled; // maxBits: 36 (maxNum: 40_000_000_000)
   myMux.s <== lessThan.out;
   signal distanceSquared <== myMux.out; // maxBits: 41 (maxNum: 2_000_000_000_000)
+  
+  signal approxSqrtResults[3];
+  approxSqrtResults <-- approxSqrt(distanceSquared);
+  // approxSqrtResults[0] = lo
+  // approxSqrtResults[1] = mid
+  // approxSqrtResults[2] = hi
+  signal distance <-- approxSqrtResults[1];
+  var distanceResults[3];
+  distanceResults = approxSqrt(unboundDistanceSquaredMax);
+  var distanceMax = distanceResults[1];
+  var distanceMaxBits = maxBits(distanceMax);
 
-  // NOTE: confirm this is correct
-  // NOTE: squre root should require half as many bits as the input
-  // TODO: confirm that 2 bit more is enough for the margin of error of distance * 2
-  signal distance <-- approxSqrt(distanceSquared); // maxBits: 21 (maxNum: 1_414_214) ~= 41 / 2 + 2
-  // log("distance", distance);
-  // log("distanceSquared", distanceSquared);
-  // bits should be maximum of the vectorLimiter which would be (10 * 10 ** 8) * (10 * 10 ** 8) which is under 60 bits
-  component acceptableMarginOfError = AcceptableMarginOfError(41);
-  acceptableMarginOfError.expected <== distance ** 2; // maxBits: 41 (maxNum: 2_000_001_237_796) ~= 21 * 2
-  acceptableMarginOfError.actual <== distanceSquared; // maxBits: 41
-  // margin of error should be midpoint between squares
-  acceptableMarginOfError.marginOfError <== distance * 2; // maxBits: 22 (maxNum: 2_828_428)
-  acceptableMarginOfError.out === 1;
+  component isPerfect = IsZero();
+  isPerfect.in <== (distance**2) - distanceSquared;
+  signal perfectSquare <== isPerfect.out;
+  // log("isPerfect", isPerfect.out);
 
+  // perfectSquare is true, absDiff = 0
+  // OR
+  // if lo - mid == 0, absDiff = mid**2 - actual
+  // if hi - mid == 0, absDiff = actual - mid**2
+  component isZeroDiff2 = IsZero();
+  isZeroDiff2.in <== approxSqrtResults[0] - approxSqrtResults[1]; // lo - mid
+
+  // need to constrain that if isZeroDiff2 is not 0 then hi - mid is 0
+  component isZeroDiff3 = IsZero();
+  isZeroDiff3.in <== approxSqrtResults[2] - approxSqrtResults[1]; // hi - mid
+
+  // one must be true;
+  isZeroDiff2.out + isZeroDiff3.out === 1;
+
+  component diffMux = Mux1();
+  diffMux.c[0] <== (approxSqrtResults[1] ** 2) - distanceSquared; // mid**2 - actual
+  diffMux.c[1] <== distanceSquared - (approxSqrtResults[1] ** 2); // actual - mid**2
+  diffMux.s <== isZeroDiff2.out;
+  signal imperfectDiff <== diffMux.out;
+
+  // difference is 0 if perfect square is true
+  component diffMux2 = Mux1();
+  diffMux2.c[0] <== imperfectDiff;
+  diffMux2.c[1] <== 0;
+  diffMux2.s <== perfectSquare;
+  signal diff <== diffMux2.out;
+
+  var distanceMaxSquaredMax = distanceMax**2;
+  var distanceMaxSquaredMaxBits = maxBits(distanceMaxSquaredMax);
+  log(distanceMaxSquaredMaxBits, " is 22 (distanceMaxSquaredMaxBits)");
+  component lessThan2 = LessEqThan(distanceMaxSquaredMaxBits);
+  lessThan2.in[0] <== diff;
+  lessThan2.in[1] <== distance*2; // maxBits: 22 (maxNum: 2_828_428)
+  // diff must be less than distance*2 as the acceptable margin of error
+  lessThan2.out === 1;
 
  // NOTE: this could be tweaked as a variable for "liveliness" of bodies
   signal bodies_sum_tmp <== (body1_radius + body2_radius) * 4; // maxBits: 17 (maxNum: 104_000)

@@ -433,12 +433,14 @@ function sqrtApprox(n) {
   var lo = 0n;
   var hi = n >> 1n;
   var mid, midSquared;
-
+  // console.log({ lo, hi })
   while (lo <= hi) {
     mid = (lo + hi) >> 1n; // multiplication by multiplicative inverse is not what we want so we use >>
+    // console.log({ lo, mid, hi })
     // TODO: Make more accurate by checking if lo + hi is odd or even before bit shifting
     midSquared = (mid * mid);
     if (midSquared == n) {
+      console.log(`final perfect`, { lo, mid, hi })
       return mid; // Exact square root found
     } else if (midSquared < n) {
       lo = mid + 1n; // Adjust lower bound
@@ -448,6 +450,7 @@ function sqrtApprox(n) {
   }
   // If we reach here, no exact square root was found.
   // return the closest approximation
+  console.log(`final approx`, { lo, mid, hi })
   return mid;
 }
 

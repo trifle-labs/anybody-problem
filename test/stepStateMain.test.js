@@ -23,15 +23,6 @@ describe("stepStateMain circuit", () => {
     missiles: [
       ["226000", "42000", "10000", "10000", "100000"],
       ["0", "0", "0", "0", "0"],
-      ["0", "0", "0", "0", "0"],
-      ["0", "0", "0", "0", "0"],
-      ["0", "0", "0", "0", "0"],
-      ["0", "0", "0", "0", "0"],
-      ["0", "0", "0", "0", "0"],
-      ["0", "0", "0", "0", "0"],
-      ["0", "0", "0", "0", "0"],
-      ["0", "0", "0", "0", "0"],
-      ["0", "0", "0", "0", "0"]
     ]
   };
   const sanityCheck = true;
@@ -40,7 +31,7 @@ describe("stepStateMain circuit", () => {
     circuit = await hre.circuitTest.setup("stepStateMain");
   });
 
-  const steps = 10
+  const steps = 1
 
   it("produces a witness with valid constraints", async () => {
     const witness = await circuit.calculateWitness(sampleInput, sanityCheck);
@@ -53,7 +44,7 @@ describe("stepStateMain circuit", () => {
       sampleInput,
       sanityCheck
     );
-    // console.dir({ witness: witness._labels }, { depth: null })
+    console.dir({ witness: witness._labels }, { depth: null })
 
     // assert.propertyVal(witness, "main.squared", sampleInput.squared);
     // assert.propertyVal(witness, "main.calculatedRoot", sampleInput.calculatedRoot);

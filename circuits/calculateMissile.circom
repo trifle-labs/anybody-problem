@@ -51,21 +51,21 @@ template CalculateMissile() {
   // position X is only going to increase from 0 to windowWidthScaled
   // it needs to be kept less than windowWidthScaled
   // can return 0 if it exceeds and use this information to remove the missile
-  component positionLimiterX = Limiter(20);
-  positionLimiterX.in <== new_pos[0] + maxVectorScaled; // maxBits: 20 (maxNum: 1_020_000)
-  positionLimiterX.limit <== windowWidthScaled + maxVectorScaled; // maxBits: 20 (maxNum: 1_010_000)
-  positionLimiterX.rather <== 0;
+  component calcMissilePositionLimiterX = Limiter(20);
+  calcMissilePositionLimiterX.in <== new_pos[0] + maxVectorScaled; // maxBits: 20 (maxNum: 1_020_000)
+  calcMissilePositionLimiterX.limit <== windowWidthScaled + maxVectorScaled; // maxBits: 20 (maxNum: 1_010_000)
+  calcMissilePositionLimiterX.rather <== 0;
 
   // This is for the radius of the missile
   // If it went off screen in the x direction the radius should go to 0
   // if not then we want to use the real radius until it's checked
   // on the y dimension
-  component isZeroX = IsZero();
-  isZeroX.in <== positionLimiterX.out;
+  component calcMissileIsZeroX = IsZero();
+  calcMissileIsZeroX.in <== calcMissilePositionLimiterX.out;
   component muxX = Mux1();
   muxX.c[0] <== in_missile[4];
   muxX.c[1] <== 0;
-  muxX.s <== isZeroX.out;
+  muxX.s <== calcMissileIsZeroX.out;
 
   // Since the plane goes from 0 to windowWidthScaled on the y axis from top to bottom
   // the missile will approach 0 after starting at windowWidthScaled

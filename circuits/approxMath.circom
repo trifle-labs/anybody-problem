@@ -4,7 +4,7 @@ include "../node_modules/circomlib/circuits/comparators.circom";
 
 function approxSqrt(n) {
     if (n == 0) {
-        return 0;
+        return [0,0,0];
     }
 
     var lo = 0;
@@ -16,7 +16,7 @@ function approxSqrt(n) {
         // TODO: Make more accurate by checking if lo + hi is odd or even before bit shifting
         midSquared = (mid * mid);
         if (midSquared == n) {
-            return mid; // Exact square root found
+            return [lo,mid,hi]; // Exact square root found
         } else if (midSquared < n) {
             lo = mid + 1; // Adjust lower bound
         } else {
@@ -25,7 +25,7 @@ function approxSqrt(n) {
     }
     // If we reach here, no exact square root was found.
     // return the closest approximation
-    return mid;
+    return [lo, mid, hi];
 }
 
 function approxDiv(dividend, divisor) {
@@ -55,6 +55,26 @@ function approxDiv(dividend, divisor) {
   // Output the midpoint as our approximated quotient after iterations
   return midPoint;
 }
+
+
+// template AbsoulteValueSubtraction(maxDiffMaxBits) {
+//   signal input in[2];
+//   signal input maxDiff;
+//   signal output out;
+
+//   signal diffA = in[0] - in[1];
+//   signal diffAOffset = diffA + maxDiff;
+
+//   signal diffB = in[1] - in[0];
+//   signal diffBOffset <== diffB + maxDiff;
+
+//   diffAOffset - diffBOffset - in[0]
+
+//   signal isZero = IsZero();
+
+
+
+// }
 
 
 template AcceptableMarginOfError (n) {
