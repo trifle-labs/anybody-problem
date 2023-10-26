@@ -23,6 +23,12 @@ template StepState(totalBodies, steps) {
   component isZero[steps];
 
   for (var i = 0; i < steps; i++) {
+    // log("tmp_body[0][0]", tmp_body[0][0]);
+    // log("tmp_body[0][1]", tmp_body[0][1]);
+    // log("tmp_body[0][2]", tmp_body[0][2]);
+    // log("tmp_body[0][3]", tmp_body[0][3]);
+    // log("tmp_body[0][4]", tmp_body[0][4]);
+
     forceAccumulator[i] = ForceAccumulator(totalBodies);
     forceAccumulator[i].bodies <== tmp_body;
     // TODO: check whether constraints can be reduced by only calculating position since 

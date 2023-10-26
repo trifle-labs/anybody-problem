@@ -1,5 +1,6 @@
 const hre = require("hardhat");
 const { assert } = require("chai");
+const { calculateTime } = require("../docs/index.js");
 
 describe("getDistanceMain circuit", () => {
   let circuit;
@@ -18,7 +19,10 @@ describe("getDistanceMain circuit", () => {
 
   it("produces a witness with valid constraints", async () => {
     const witness = await circuit.calculateWitness(sampleInput, sanityCheck);
-    console.log(`| getDistance(20) | ${witness.length} |`)
+    const inputs = Object.keys(sampleInput).length
+    const perStep = witness.length - inputs
+    const secRounded = calculateTime(perStep)
+    console.log(`| getDistance(20) | ${perStep} | ${secRounded} |`)
     await circuit.checkConstraints(witness);
   });
 

@@ -1,6 +1,7 @@
 const hre = require("hardhat");
 const { assert } = require("chai");
 
+const { calculateTime } = require("../docs/index.js");
 describe("lowerLimiterMain circuit", () => {
   let circuit;
 
@@ -38,7 +39,10 @@ describe("lowerLimiterMain circuit", () => {
 
   it("produces a witness with valid constraints", async () => {
     const witness = await circuit.calculateWitness(sampleInputs[0].sampleInput, sanityCheck);
-    console.log(`| lowerLimiter(252) | ${witness.length} |`)
+    const inputs = Object.keys(sampleInputs[0].sampleInput).length
+    const perStep = witness.length - inputs
+    const secRounded = calculateTime(perStep)
+    console.log(`| lowerLimiter(252) | ${perStep} | ${secRounded}|`)
     await circuit.checkConstraints(witness);
   });
 

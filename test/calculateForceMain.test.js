@@ -1,6 +1,12 @@
 const hre = require("hardhat");
 const { assert } = require("chai");
-const { calculateForceBigInt, convertFloatToScaledBigInt, vectorLimit, convertBigIntToModP, convertScaledStringArrayToBody } = require("../docs/index.js");
+const {
+  calculateTime,
+  calculateForceBigInt,
+  convertBigIntToModP,
+  convertScaledStringArrayToBody
+} = require("../docs/index.js");
+
 const p = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
 
 describe("calculateForceMain circuit", () => {
@@ -41,7 +47,11 @@ describe("calculateForceMain circuit", () => {
 
   it("produces a witness with valid constraints", async () => {
     const witness = await circuit.calculateWitness(sampleInputs[0], sanityCheck);
-    console.log(`| calculateForce() | ${witness.length} |`)
+    // get the number of inputs
+    const inputs = sampleInputs[0].in_bodies.length * sampleInputs[0].in_bodies[0].length
+    const perStep = witness.length - inputs
+    const secRounded = calculateTime(perStep)
+    console.log(`| calculateForce() | ${perStep} | ${secRounded} |`)
     await circuit.checkConstraints(witness);
   });
 
