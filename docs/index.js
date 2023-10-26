@@ -507,7 +507,7 @@ function addListener() {
         velocity: createVector(x, y - windowWidth),
         radius: 10,
       }
-      body.velocity.limit(5);
+      body.velocity.limit(10);
       missiles.push(body)
     })
   }
