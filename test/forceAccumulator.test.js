@@ -3,9 +3,7 @@
 const hre = require("hardhat");
 const { assert } = require("chai");
 const {
-  calculateForce,
-  sqrtApprox,
-  scalingFactor,
+  calculateTime,
   convertScaledStringArrayToBody,
   convertScaledBigIntBodyToArray,
   forceAccumulatorBigInts
@@ -30,7 +28,10 @@ describe("forceAccumulatorMain circuit", () => {
 
   it("produces a witness with valid constraints", async () => {
     const witness = await circuit.calculateWitness(sampleInput, sanityCheck);
-    console.log(`| forceAccumulator(3) | ${witness.length} |`)
+    const inputs = sampleInput.bodies.length * sampleInput.bodies[0].length
+    const perStep = witness.length - inputs
+    const secRounded = calculateTime(perStep)
+    console.log(`| forceAccumulator(3) | ${perStep} | ${secRounded} |`)
     await circuit.checkConstraints(witness);
   });
 

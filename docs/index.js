@@ -242,7 +242,7 @@ function approxDist(x1, y1, x2, y2) {
   const dxs = absX * absX
   const dys = absY * absY
   const distanceSquared = dxs + dys
-  const distance = sqrtApprox(distanceSquared)
+  const distance = approxSqrt(distanceSquared)
   return distance
 }
 
@@ -359,7 +359,7 @@ function calculateForceBigInt(body1, body2) {
   } else {
     distanceSquared = unboundDistanceSquared
   }
-  let distance = sqrtApprox(distanceSquared)
+  let distance = approxSqrt(distanceSquared)
   // console.log({ distance })
   // console.log({ distanceSquared })
 
@@ -390,42 +390,38 @@ function calculateForceBigInt(body1, body2) {
   return [forceX, forceY]
 }
 
+
 function approxDiv(dividend, divisor) {
   if (dividend == 0n) {
     return 0n
   }
-  var bitsDivident = 0n;
-  var dividendCopy = dividend;
-  while (dividendCopy > 0n) {
-    bitsDivident++;
-    dividendCopy = dividendCopy >> 1n;
-  }
 
   // Create internal signals for our binary search
-  var lowerBound, upperBound, midPoint, testProduct;
+  var lo, hi, mid, testProduct;
 
   // Initialize our search space
-  lowerBound = 0n;
-  upperBound = dividend;  // Assuming worst case where divisor = 1
+  lo = 0n;
+  hi = dividend;  // Assuming worst case where divisor = 1
 
-  for (var i = 0; i < bitsDivident; i++) {  // 32 iterations for 32-bit numbers as an example
-    midPoint = (upperBound + lowerBound) >> 1n;
-    testProduct = midPoint * divisor;
+  while (lo < hi) {  // 32 iterations for 32-bit numbers as an example
+    mid = (hi + lo + 1n) >> 1n;
+    testProduct = mid * divisor;
 
     // Adjust our bounds based on the test product
     if (testProduct > dividend) {
-      upperBound = midPoint;
+      hi = mid - 1n;
     } else {
-      lowerBound = midPoint;
+      lo = mid;
     }
   }
-
-  // Output the midpoint as our approximated quotient after iterations
-  // quotient <== midPoint;
-  return midPoint;
+  // console.log({ lo, mid, hi })
+  // Output the lo as our approximated quotient after iterations
+  // quotient <== lo;
+  return lo;
 }
 
-function sqrtApprox(n) {
+
+function approxSqrt(n) {
   // console.log({ n })
   if (n == 0n) {
     return 0n;
@@ -440,7 +436,7 @@ function sqrtApprox(n) {
     // TODO: Make more accurate by checking if lo + hi is odd or even before bit shifting
     midSquared = (mid * mid);
     if (midSquared == n) {
-      console.log(`final perfect`, { lo, mid, hi })
+      // console.log(`final perfect`, { lo, mid, hi })
       return mid; // Exact square root found
     } else if (midSquared < n) {
       lo = mid + 1n; // Adjust lower bound
@@ -450,7 +446,7 @@ function sqrtApprox(n) {
   }
   // If we reach here, no exact square root was found.
   // return the closest approximation
-  console.log(`final approx`, { lo, mid, hi })
+  // console.log(`final approx`, { lo, mid, hi })
   return mid;
 }
 
@@ -845,14 +841,22 @@ function convertScaledBigIntToFloat(value) {
 }
 
 
+function calculateTime(constraints, steps = 1) {
+  const totalSteps = steps * 1_000_000 / constraints
+  const fps = 25
+  const sec = totalSteps / fps
+  return Math.round(sec * 100) / 100
+}
+
 if (module) {
   module.exports = {
     convertScaledStringArrayToBody,
     convertScaledStringArrayToFloat,
     convertScaledBigIntBodyToArray,
     calculateForce,
-    sqrtApprox,
+    approxSqrt,
     approxDiv,
+    calculateTime,
     vectorLimit,
     scalingFactor,
     runComputation,

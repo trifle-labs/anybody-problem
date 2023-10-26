@@ -1,6 +1,8 @@
 pragma circom 2.1.6;
 include "../node_modules/circomlib/circuits/mux1.circom";
 include "../node_modules/circomlib/circuits/comparators.circom";
+include "../node_modules/circomlib/circuits/gates.circom";
+include "helpers.circom";
 
 function approxSqrt(n) {
     if (n == 0) {
@@ -28,53 +30,138 @@ function approxSqrt(n) {
     return [lo, mid, hi];
 }
 
+
 function approxDiv(dividend, divisor) {
-  var bitsDivident = 0;
-  var dividendCopy = dividend;
-  while(dividendCopy > 0) {
-    bitsDivident++;
-    dividendCopy = dividendCopy >> 1;
+  if (dividend == 0) {
+    return 0;
   }
+
   // Create internal signals for our binary search
-  var lowerBound, upperBound, midPoint, testProduct;
+  var lo, hi, mid, testProduct;
+
   // Initialize our search space
-  lowerBound = 0;
-  upperBound = dividend;  // Assuming worst case where divisor = 1
+  lo = 0;
+  hi = dividend;  // Assuming worst case where divisor = 1
 
-  for (var i = 0; i < bitsDivident; i++) {  // 32 iterations for 32-bit numbers as an example
-      midPoint = (upperBound + lowerBound) >> 1;
-      testProduct = midPoint * divisor;
-      // Adjust our bounds based on the test product
-      if (testProduct > dividend) {
-          upperBound = midPoint;
-      } else {
-          lowerBound = midPoint;
-      }
+  while (lo < hi) {  // 32 iterations for 32-bit numbers as an example
+    mid = (hi + lo + 1) >> 1;
+    testProduct = mid * divisor;
+
+    // Adjust our bounds based on the test product
+    if (testProduct > dividend) {
+      hi = mid - 1;
+    } else {
+      lo = mid;
+    }
   }
-
-  // Output the midpoint as our approximated quotient after iterations
-  return midPoint;
+  // Output the lo as our approximated quotient after iterations
+  // quotient <== lo;
+  return lo;
 }
 
+template Div() {
+  signal input dividend;
+  signal input divisor;
+  signal output quotient;
 
-// template AbsoulteValueSubtraction(maxDiffMaxBits) {
-//   signal input in[2];
-//   signal input maxDiff;
-//   signal output out;
+  quotient <-- approxDiv(dividend, divisor); // maxBits: 64 (maxNum: 10_400_000_000_000_000_000)
 
-//   signal diffA = in[0] - in[1];
-//   signal diffAOffset = diffA + maxDiff;
+// NOTE: the following constraints the approxDiv to ensure it's within the acceptable error of margin
+  signal approxNumerator1 <== quotient * divisor; // maxBits: 126 (maxNum: 58_831_302_400_000_000_000_000_000_000_000_000_000)
+  
+  // NOTE: approxDiv always rounds down so the approximate quotient will always be less
+  // than the actual quotient.
+  signal diff <== dividend - quotient;
+  // log("diff    ", diff);
+  // log("dividend", dividend);
+  // log("divisor", divisor);
+  // log("quotient", quotient);
 
-//   signal diffB = in[1] - in[0];
-//   signal diffBOffset <== diffB + maxDiff;
+  component lessThan = LessThan(64); // forceXnum; // maxBits: 64
+  lessThan.in[0] <== diff;
+  lessThan.in[1] <== dividend;
+  // log("lessThan", lessThan.out, "\n");
 
-//   diffAOffset - diffBOffset - in[0]
+  component isZero = IsZero();
+  isZero.in <== dividend;
 
-//   signal isZero = IsZero();
+  component xor = XOR();
+  xor.a <== isZero.out;
+  xor.b <== lessThan.out;
+  xor.out === 1;
+}
 
+template Sqrt(unboundDistanceSquaredMax) {
+    signal input squaredValue;
+    signal output root;
+  signal approxSqrtResults[3];
+  approxSqrtResults <-- approxSqrt(squaredValue);
+  // approxSqrtResults[0] = lo
+  // approxSqrtResults[1] = mid
+  // approxSqrtResults[2] = hi
+  // log("squaredValue", squaredValue);
+  // log("approxSqrtResults[0]", approxSqrtResults[0]);
+  // log("approxSqrtResults[1]", approxSqrtResults[1]);
+  // log("approxSqrtResults[2]", approxSqrtResults[2]);
+  root <-- approxSqrtResults[1];
 
+  var distanceResults[3];
+  distanceResults = approxSqrt(unboundDistanceSquaredMax);
+  var distanceMax = distanceResults[1]; // maxNum = 1414214n
+  var distanceMaxBits = maxBits(distanceMax);
 
-// }
+  component isPerfect = IsZero();
+  isPerfect.in <== (root**2) - squaredValue;
+  // signal perfectSquare <== isPerfect.out;
+  // log("isPerfect", isPerfect.out);
+
+  // perfectSquare is true, absDiff = 0
+  // OR
+  // if lo - mid == 0, absDiff = mid**2 - actual
+  // if hi - mid == 0, absDiff = actual - mid**2
+  component isZeroDiff2 = IsZero();
+  isZeroDiff2.in <== approxSqrtResults[0] - approxSqrtResults[1]; // lo - mid
+
+  // need to constrain that if isZeroDiff2 is not 0 then hi - mid is 0
+  component isZeroDiff3 = IsZero();
+  isZeroDiff3.in <== approxSqrtResults[2] - approxSqrtResults[1]; // hi - mid
+
+  // firstCondition is XOR
+  // (isZeroDiff2 == 1 AND isZeroDiff3 == 0) OR (isZeroDiff2 == 0 AND isZeroDiff3 == 1)
+  // secondCondition
+  // OR (isPerfect = 1)
+
+  component firstCondition = XOR();
+  firstCondition.a <== isZeroDiff2.out;
+  firstCondition.b <== isZeroDiff3.out;
+
+  // one must be true;
+  component secondCondition = OR();
+  secondCondition.a <== firstCondition.out;
+  secondCondition.b <== isPerfect.out;
+  secondCondition.out === 1;
+
+  component diffMux = Mux1();
+  diffMux.c[0] <== (approxSqrtResults[1] ** 2) - squaredValue; // mid**2 - actual
+  diffMux.c[1] <== squaredValue - (approxSqrtResults[1] ** 2); // actual - mid**2
+  diffMux.s <== isZeroDiff2.out;
+  signal imperfectDiff <== diffMux.out;
+
+  // difference is 0 if perfect square is true
+  component diffMux2 = Mux1();
+  diffMux2.c[0] <== imperfectDiff;
+  diffMux2.c[1] <== 0;
+  diffMux2.s <== isPerfect.out;
+  signal diff <== diffMux2.out;
+
+  var distanceMaxDoubleMax = distanceMax*2; // maxNum: 2,828,428
+  var distanceMaxSquaredMaxBits = maxBits(distanceMaxDoubleMax); // maxBits: 22
+  component lessThan2 = LessEqThan(distanceMaxSquaredMaxBits);
+  lessThan2.in[0] <== diff;
+  lessThan2.in[1] <== root*2; // maxBits: 22 (maxNum: 2_828_428)
+  // diff must be less than root*2 as the acceptable margin of error
+  lessThan2.out === 1;
+}
 
 
 template AcceptableMarginOfError (n) {
@@ -82,7 +169,6 @@ template AcceptableMarginOfError (n) {
     signal input actual;
     signal input marginOfError;
     signal output out;
-
 
   // The following is to ensure diff = Abs(actual - expected)
     component absoluteValueSubtraction = AbsoluteValueSubtraction(n);
@@ -100,7 +186,7 @@ template AbsoluteValueSubtraction (n) {
     signal input in[2];
     signal output out;
 
-    component lessThan = LessThan(n); // TODO: test limits of squares
+    component lessThan = LessThan(n);
     lessThan.in[0] <== in[0];
     lessThan.in[1] <== in[1];
     signal lessThanResult <== lessThan.out;

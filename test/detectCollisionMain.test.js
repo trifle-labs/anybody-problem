@@ -1,6 +1,7 @@
 const hre = require("hardhat");
 const { assert } = require("chai");
 const {
+  calculateTime,
   detectCollisionBigInt,
   convertScaledStringArrayToBody,
   convertScaledBigIntBodyToArray
@@ -31,7 +32,10 @@ describe("detectCollisionMain circuit", () => {
 
   it("produces a witness with valid constraints", async () => {
     const witness = await circuit.calculateWitness(sampleInput, sanityCheck);
-    console.log(`| detectCollision(3) | ${witness.length} |`)
+    const inputs = sampleInput.bodies.length * sampleInput.bodies[0].length + sampleInput.missile.length
+    const perStep = witness.length - inputs
+    const secRounded = calculateTime(perStep)
+    console.log(`| detectCollision(3) | ${perStep} | ${secRounded} |`)
     await circuit.checkConstraints(witness);
   });
 

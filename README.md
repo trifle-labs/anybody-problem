@@ -170,18 +170,18 @@ You should see something like:
 
 Currently the project is targeting [powersOfTau28_hez_final_20.ptau](https://github.com/iden3/snarkjs/blob/master/README.md#7-prepare-phase-2) which has a limit of 1MM constraints. Below is a table of the number of constraints used by each circuit.
 
-| Circuit | Non-Linear Constraints |
-|---------|-------------|
-| absoluteValueSubtraction(252) | 259 |
-| acceptableMarginOfError(60) | 128 |
-| calculateForce() | 717 |
-| detectCollision(3) | 510 |
-| forceAccumulator(3) | 2821 |
-| getDistance(20) | 142 |
-| limiter(252) | 257 |
-| lowerLimiter(252) | 257 |
-| nft(3, 10) | 28039 |
-| stepState(3, 10) | 33531 |
+| Circuit | Non-Linear Constraints | seconds at 25fps under 1MM constraints |
+|---------|-------------|---------------------------------------------------|
+| absoluteValueSubtraction(252) | 257 | 155.64 |
+| acceptableMarginOfError(60) | 125 | 320 |
+| calculateForce() | 279 | 143.37 |
+| detectCollision(3) | 348 | 114.94 |
+| forceAccumulator(3) | 1522 | 26.28 |
+| getDistance(20) | 88 | 454.55 |
+| limiter(252) | 254 | 157.48|
+| lowerLimiter(252) | 254 | 157.48|
+| nft(3, 10) | 15184 | 26.34 |
+| stepState(3, 10) | 19121 | 20.92 |
 
 # built using circom-starter
 

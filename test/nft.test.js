@@ -3,9 +3,7 @@
 const hre = require("hardhat");
 const { assert } = require("chai");
 const {
-  calculateForce,
-  sqrtApprox,
-  scalingFactor,
+  calculateTime,
   convertScaledStringArrayToBody,
   convertScaledBigIntBodyToArray,
   forceAccumulatorBigInts
@@ -23,7 +21,7 @@ describe("nft circuit", () => {
     ]
   };
   const sanityCheck = true;
-
+  const steps = 10;
   before(async () => {
     circuit = await hre.circuitTest.setup("nft");
 
@@ -31,7 +29,10 @@ describe("nft circuit", () => {
 
   it("produces a witness with valid constraints", async () => {
     const witness = await circuit.calculateWitness(sampleInput, sanityCheck);
-    console.log(`| nft(3, 10) | ${witness.length} |`)
+    const inputs = sampleInput.bodies.length * sampleInput.bodies[0].length
+    const perStep = witness.length - inputs
+    const secRounded = calculateTime(perStep, steps)
+    console.log(`| nft(3, 10) | ${perStep} | ${secRounded} |`)
     await circuit.checkConstraints(witness);
   });
 
@@ -51,7 +52,7 @@ describe("nft circuit", () => {
   it("has the correct output", async () => {
     let bodies = sampleInput.bodies.map(convertScaledStringArrayToBody)
     // console.dir({ bodies }, { depth: null })
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < steps; i++) {
       bodies = forceAccumulatorBigInts(bodies)
     }
     const out_bodies = bodies.map(convertScaledBigIntBodyToArray)

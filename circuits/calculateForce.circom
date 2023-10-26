@@ -134,59 +134,18 @@ template CalculateForce() {
   myMux.c[0] <== unboundDistanceSquared; // maxBits: 41 (maxNum: 2_000_000_000_000)
   myMux.c[1] <== minDistanceScaled; // maxBits: 36 (maxNum: 40_000_000_000)
   myMux.s <== lessThan.out;
-  signal distanceSquared <== myMux.out; // maxBits: 41 (maxNum: 2_000_000_000_000)
   
-  signal approxSqrtResults[3];
-  approxSqrtResults <-- approxSqrt(distanceSquared);
-  // approxSqrtResults[0] = lo
-  // approxSqrtResults[1] = mid
-  // approxSqrtResults[2] = hi
-  signal distance <-- approxSqrtResults[1];
+  signal distanceSquared <== myMux.out; // maxBits: 41 (maxNum: 2_000_000_000_000)
+
+  component sqrt = Sqrt(unboundDistanceSquaredMax);
+  sqrt.squaredValue <== distanceSquared; // maxBits: 41 (maxNum: 2_000_000_000_000)
+  signal distance <== sqrt.root;
+
+
   var distanceResults[3];
   distanceResults = approxSqrt(unboundDistanceSquaredMax);
-  var distanceMax = distanceResults[1];
+  var distanceMax = distanceResults[1]; // maxNum = 1_414_214
   var distanceMaxBits = maxBits(distanceMax);
-
-  component isPerfect = IsZero();
-  isPerfect.in <== (distance**2) - distanceSquared;
-  signal perfectSquare <== isPerfect.out;
-  // log("isPerfect", isPerfect.out);
-
-  // perfectSquare is true, absDiff = 0
-  // OR
-  // if lo - mid == 0, absDiff = mid**2 - actual
-  // if hi - mid == 0, absDiff = actual - mid**2
-  component isZeroDiff2 = IsZero();
-  isZeroDiff2.in <== approxSqrtResults[0] - approxSqrtResults[1]; // lo - mid
-
-  // need to constrain that if isZeroDiff2 is not 0 then hi - mid is 0
-  component isZeroDiff3 = IsZero();
-  isZeroDiff3.in <== approxSqrtResults[2] - approxSqrtResults[1]; // hi - mid
-
-  // one must be true;
-  isZeroDiff2.out + isZeroDiff3.out === 1;
-
-  component diffMux = Mux1();
-  diffMux.c[0] <== (approxSqrtResults[1] ** 2) - distanceSquared; // mid**2 - actual
-  diffMux.c[1] <== distanceSquared - (approxSqrtResults[1] ** 2); // actual - mid**2
-  diffMux.s <== isZeroDiff2.out;
-  signal imperfectDiff <== diffMux.out;
-
-  // difference is 0 if perfect square is true
-  component diffMux2 = Mux1();
-  diffMux2.c[0] <== imperfectDiff;
-  diffMux2.c[1] <== 0;
-  diffMux2.s <== perfectSquare;
-  signal diff <== diffMux2.out;
-
-  var distanceMaxSquaredMax = distanceMax**2;
-  var distanceMaxSquaredMaxBits = maxBits(distanceMaxSquaredMax);
-  log(distanceMaxSquaredMaxBits, " is 22 (distanceMaxSquaredMaxBits)");
-  component lessThan2 = LessEqThan(distanceMaxSquaredMaxBits);
-  lessThan2.in[0] <== diff;
-  lessThan2.in[1] <== distance*2; // maxBits: 22 (maxNum: 2_828_428)
-  // diff must be less than distance*2 as the acceptable margin of error
-  lessThan2.out === 1;
 
  // NOTE: this could be tweaked as a variable for "liveliness" of bodies
   signal bodies_sum_tmp <== (body1_radius + body2_radius) * 4; // maxBits: 17 (maxNum: 104_000)
@@ -224,15 +183,11 @@ template CalculateForce() {
 
   signal forceXnum <== dxAbs * forceMag_numerator; // maxBits: 64 (maxNum: 10_400_000_000_000_000_000)
   // log("forceXnum", forceXnum);
-  signal forceXunsigned <-- approxDiv(forceXnum, forceDenom); // maxBits: 64 (maxNum: 10_400_000_000_000_000_000)
-  // log("forceXunsigned", forceXunsigned);
-// NOTE: the following constraints the approxDiv to ensure it's within the acceptable error of margin
-  signal approxNumerator1 <== forceXunsigned * forceDenom; // maxBits: 126 (maxNum: 58_831_302_400_000_000_000_000_000_000_000_000_000)
-  component acceptableMarginOfErrorDiv1 = AcceptableMarginOfError(126);
-  acceptableMarginOfErrorDiv1.expected <== forceXnum; // maxBits: 64
-  acceptableMarginOfErrorDiv1.actual <== approxNumerator1; // maxBits: 126
-  acceptableMarginOfErrorDiv1.marginOfError <== forceDenom; // TODO: actually could be further reduced to (realDenom / 2) + 1 but then we're using division again
-  acceptableMarginOfErrorDiv1.out === 1;
+  component div1 = Div();
+  div1.dividend <== forceXnum;
+  div1.divisor <== forceDenom;
+  signal forceXunsigned <== div1.quotient;
+  
 
   // if dxAbs + dx is 0, then forceX should be negative
   component isZero3 = IsZero();
@@ -244,15 +199,13 @@ template CalculateForce() {
 
   signal forceYnum <== dyAbs * forceMag_numerator; // maxBits:64 (maxNum: 10_400_000_000_000_000_000)
   // log("forceYnum", forceYnum);
-  signal forceYunsigned <-- approxDiv(forceYnum, forceDenom); // maxBits: 64 (maxNum: 10_400_000_000_000_000_000)
-  // log("forceYunsigned", forceYunsigned);
-  // NOTE: the following constraints the approxDiv to ensure it's within the acceptable error of margin
-  signal approxNumerator2 <== forceYunsigned * forceDenom; // maxBits: 126 (maxNum: 58_831_302_400_000_000_000_000_000_000_000_000_000)
-  component acceptableMarginOfErrorDiv2 = AcceptableMarginOfError(126);
-  acceptableMarginOfErrorDiv2.expected <== forceYnum; // maxBits: 64
-  acceptableMarginOfErrorDiv2.actual <== approxNumerator2; // maxBits: 126
-  acceptableMarginOfErrorDiv2.marginOfError <== forceDenom; // TODO: actually could be further reduced to (realDenom / 2) + 1 but then we're using division again
-  acceptableMarginOfErrorDiv2.out === 1;
+
+  // // NOTE: the following component uses approxDiv then ensures it's within an
+  // acceptable margin of error
+  component div2 = Div();
+  div2.dividend <== forceYnum;
+  div2.divisor <== forceDenom;
+  signal forceYunsigned <== div2.quotient;
 
   // if dyAbs + dy is 0, then forceY should be negative
   component isZero4 = IsZero();

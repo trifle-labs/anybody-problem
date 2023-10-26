@@ -3,6 +3,7 @@
 const hre = require("hardhat");
 const { assert } = require("chai");
 const {
+  calculateTime,
   runComputationBigInt,
   convertScaledStringArrayToBody,
   convertScaledBigIntBodyToArray,
@@ -23,6 +24,15 @@ describe("stepStateMain circuit", () => {
     missiles: [
       ["226000", "42000", "10000", "10000", "100000"],
       ["0", "0", "0", "0", "0"],
+      ["0", "0", "0", "0", "0"],
+      ["0", "0", "0", "0", "0"],
+      ["0", "0", "0", "0", "0"],
+      ["0", "0", "0", "0", "0"],
+      ["0", "0", "0", "0", "0"],
+      ["0", "0", "0", "0", "0"],
+      ["0", "0", "0", "0", "0"],
+      ["0", "0", "0", "0", "0"],
+      ["0", "0", "0", "0", "0"],
     ]
   };
   const sanityCheck = true;
@@ -31,11 +41,14 @@ describe("stepStateMain circuit", () => {
     circuit = await hre.circuitTest.setup("stepStateMain");
   });
 
-  const steps = 1
+  const steps = sampleInput.missiles.length - 1
 
   it("produces a witness with valid constraints", async () => {
     const witness = await circuit.calculateWitness(sampleInput, sanityCheck);
-    console.log(`| stepState(3, ${steps}) | ${witness.length} |`)
+    const inputs = sampleInput.bodies.length * sampleInput.bodies[0].length + sampleInput.missiles.length * sampleInput.missiles[0].length
+    const perStep = witness.length - inputs
+    const secRounded = calculateTime(perStep, steps)
+    console.log(`| stepState(3, ${steps}) | ${perStep} | ${secRounded} |`)
     await circuit.checkConstraints(witness);
   });
 
@@ -44,7 +57,7 @@ describe("stepStateMain circuit", () => {
       sampleInput,
       sanityCheck
     );
-    console.dir({ witness: witness._labels }, { depth: null })
+    // console.dir({ witness: witness._labels }, { depth: null })
 
     // assert.propertyVal(witness, "main.squared", sampleInput.squared);
     // assert.propertyVal(witness, "main.calculatedRoot", sampleInput.calculatedRoot);
@@ -59,6 +72,7 @@ describe("stepStateMain circuit", () => {
     // console.dir({ missiles }, { depth: null })
 
     for (let i = 0; i < steps; i++) {
+      // console.dir({ 'bodies[0]': bodies[0] }, { depth: null })
       const results = runComputationBigInt(bodies, missiles)
       bodies = results.bodies
       missiles = results.missiles
