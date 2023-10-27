@@ -42,11 +42,16 @@ contract NFT is Verifier, ERC721, Ownable {
         commits[msg.sender] = block.number + 1;
     }
 
-    function mint(uint256 blockNumber) public {
-        require(commits[msg.sender] == blockNumber, "Invalid commit");
-        commits[msg.sender] = 0;
-        bodies.push(generateBody(blockNumber));
-        _mint(msg.sender, bodies.length);
+    function mint() public {
+        uint256 blockNumber = commits[msg.sender];
+        // if user waited too long to mint, restart process
+        if (block.number - 256 > blockNumber) {
+            commit();
+        } else {
+            commits[msg.sender] = 0;
+            bodies.push(generateBody(blockNumber));
+            _mint(msg.sender, bodies.length);
+        }
     }
 
     function generateBody(
