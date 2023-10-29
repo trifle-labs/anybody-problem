@@ -1,13 +1,12 @@
 pragma solidity ^0.8.0;
 
 import "./Metadata.sol";
-import "./NftVerifier.sol";
+import "./NftVerifierI.sol";
 import "./Trigonometry.sol";
-// import "./node_modules/solidity-trigonometry/Trigonometry.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract NFT is Verifier, ERC721, Ownable {
+contract NFT is ERC721, Ownable {
     // array of Body
     uint256[5][3][] public bodies;
     // 3 bodies
@@ -16,12 +15,15 @@ contract NFT is Verifier, ERC721, Ownable {
     uint256[] public steps;
     uint256 constant PROOF_STEP = 10;
     address public metadata;
+    address public verifier;
     mapping(address => uint256) commits;
 
     constructor(
-        address metadata_
-    ) Ownable(msg.sender) ERC721("Anybody Problem", "ANY") {
+        address metadata_,
+        address verifier_
+    ) ERC721("Anybody Problem", "ANY") {
         metadata = metadata_;
+        verifier = verifier_;
     }
 
     function tokenURI(
@@ -34,21 +36,35 @@ contract NFT is Verifier, ERC721, Ownable {
         return steps[tokenId - 1];
     }
 
+    function getBody(
+        uint256 tokenId
+    ) public view returns (uint256[5][3] memory) {
+        return bodies[tokenId - 1];
+    }
+
     function setMetadata(address metadata_) public onlyOwner {
         metadata = metadata_;
+    }
+
+    function setVerifier(address verifier_) public onlyOwner {
+        verifier = verifier_;
     }
 
     function commit() public {
         commits[msg.sender] = block.number + 1;
     }
 
+    function clearCommit() public {
+        commits[msg.sender] = 0;
+    }
+
     function mint() public {
         uint256 blockNumber = commits[msg.sender];
         // if user waited too long to mint, restart process
-        if (block.number - 256 > blockNumber) {
+        if (block.number > 256 && block.number - 256 > blockNumber) {
             commit();
         } else {
-            commits[msg.sender] = 0;
+            clearCommit();
             bodies.push(generateBody(blockNumber));
             _mint(msg.sender, bodies.length);
         }
@@ -66,30 +82,32 @@ contract NFT is Verifier, ERC721, Ownable {
         bytes32 rand = keccak256(abi.encodePacked(blockhash(blockNumber)));
 
         for (uint256 i = 0; i < 3; i++) {
+            // rand = keccak256(abi.encodePacked(rand));
+            // uint256 radiusDist = randomRange(
+            //     (windowWidth * 47) / 100,
+            //     (windowWidth * 55) / 100,
+            //     rand
+            // );
+            // rand = keccak256(abi.encodePacked(rand));
+            // uint256 randomDir = randomRange(0, 360, rand);
+
+            rand = keccak256(abi.encodePacked(rand));
             uint256 x = randomRange(0, windowWidth, rand);
             rand = keccak256(abi.encodePacked(rand));
             uint256 y = randomRange(0, windowWidth, rand);
-            rand = keccak256(abi.encodePacked(rand));
-            uint256 dist = randomRange(
-                (windowWidth * 47) / 100,
-                (windowWidth * 55) / 100,
-                rand
-            );
-            rand = keccak256(abi.encodePacked(rand));
-            uint256 angle = randomRange(0, 360, rand);
-            uint256 vx = uint256(
-                int256(positionOffset) +
-                    (int256(dist) * Trigonometry.cos(angle)) /
-                    int256(scalingFactor)
-            );
-            uint256 vy = uint256(
-                int256(positionOffset) +
-                    (int256(dist) * Trigonometry.sin(angle)) /
-                    int256(scalingFactor)
-            );
+            // uint256 x = uint256(
+            //     int256(positionOffset) +
+            //         (int256(radiusDist) * Trigonometry.cos(randomDir)) +
+            //         int256(windowWidth / 2)
+            // );
+            // uint256 y = uint256(
+            //     int256(positionOffset) +
+            //         (int256(radiusDist) * Trigonometry.sin(randomDir)) +
+            //         int256(windowWidth / 2)
+            // );
 
             uint256 r = (maxRadius - i) * scalingFactor;
-            body[i] = [x, y, vx, vy, r];
+            body[i] = [x, y, 0, 0, r];
         }
 
         return body;
@@ -124,5 +142,14 @@ contract NFT is Verifier, ERC721, Ownable {
             }
         }
         steps[index] += PROOF_STEP;
+    }
+
+    function verifyProof(
+        uint[2] memory a,
+        uint[2][2] memory b,
+        uint[2] memory c,
+        uint[30] memory input
+    ) internal view returns (bool) {
+        return IVerifier(verifier).verifyProof(a, b, c, input);
     }
 }

@@ -7,15 +7,13 @@ template NFT(totalBodies, steps) {
   signal output out_bodies[totalBodies][5];
   
   component forceAccumulator[steps];
-  signal tmp_bodies[steps + 1][totalBodies][5]; // TODO: check savings if radius is removed from signal
-  tmp_bodies[0] <== bodies;
-
+  var tmp_bodies[totalBodies][5] = bodies; // TODO: check savings if radius is removed from signal
   for (var i = 0; i < steps; i++) {
     forceAccumulator[i] = ForceAccumulator(totalBodies);
-    forceAccumulator[i].bodies <== tmp_bodies[i];
-    tmp_bodies[i + 1] <== forceAccumulator[i].out_bodies;
+    forceAccumulator[i].bodies <== tmp_bodies;
+    tmp_bodies = forceAccumulator[i].out_bodies;
   }
-  out_bodies <== tmp_bodies[steps];
+  out_bodies <== tmp_bodies;
 }
 
-component main { public [ bodies ]} = NFT(3, 10);
+component main { public [ bodies ]} = NFT(3, 100);

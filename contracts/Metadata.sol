@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 /// @dev The updateable and replaceable metadata contract
 
 contract Metadata is Ownable {
-    constructor() Ownable(msg.sender) {}
+    constructor() {}
 
     string public baseURI = "https://";
 
