@@ -12,7 +12,12 @@ const {
   convertScaledBigIntBodyToArray,
   forceAccumulatorBigInts
 } = require("../docs/index.js");
+
+
 const p = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
+const steps = 100;
+
+
 
 describe("nft circuit", () => {
   let circuit;
@@ -25,7 +30,10 @@ describe("nft circuit", () => {
     ]
   };
   const sanityCheck = true;
-  const steps = 100;
+
+
+
+
   before(async () => {
     circuit = await hre.circuitTest.setup("nft");
   });
@@ -44,7 +52,7 @@ describe("nft circuit", () => {
       sampleInput,
       sanityCheck
     );
-    // console.log({ witness })
+    console.log({ witness })
 
     // assert.propertyVal(witness, "main.squared", sampleInput.squared);
     // assert.propertyVal(witness, "main.calculatedRoot", sampleInput.calculatedRoot);
@@ -52,7 +60,7 @@ describe("nft circuit", () => {
     // assert.propertyVal(witness, "main.out", "1");
   });
 
-  it("has the correct output", async () => {
+  it.only("has the correct output", async () => {
     let bodies = sampleInput.bodies.map(convertScaledStringArrayToBody)
     // console.dir({ bodies }, { depth: null })
     for (let i = 0; i < steps; i++) {
@@ -65,7 +73,7 @@ describe("nft circuit", () => {
     await circuit.assertOut(witness, expected);
   });
 
-  it.only("NftVerifier.sol works", async () => {
+  it("NftVerifier.sol works", async () => {
     const NftVerifier = await ethers.getContractFactory("contracts/NftVerifier.sol:Verifier");
     const nftVerifier = await NftVerifier.deploy();
     await nftVerifier.deployed();

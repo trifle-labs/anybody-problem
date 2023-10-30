@@ -24,7 +24,7 @@
     "ethereum-waffle": "*",
     "ethers": "^5.7.0",
     "hardhat": "2.12.2",
-    "hardhat-circom": "git+ssh://git@github.com/okwme/hardhat-circom.git#87f0dfd9bfe93643983edf27aa5d01ed6a94a32a",
+    "hardhat-circom": "git+ssh://git@github.com/okwme/hardhat-circom.git#514bf05c8aa1b5864484eb1e257c0df6053553f2",
     "hardhat-contract-sizer": "*",
     "hardhat-gas-reporter": "*"
   },

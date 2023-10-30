@@ -77,7 +77,7 @@ template Div() {
   // log("divisor", divisor);
   // log("quotient", quotient);
 
-  component lessThan = LessThan(64); // forceXnum; // maxBits: 64
+  component lessThan = LessEqThan(64); // forceXnum; // maxBits: 64
   lessThan.in[0] <== diff;
   lessThan.in[1] <== dividend;
   // log("lessThan", lessThan.out, "\n");
