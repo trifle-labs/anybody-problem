@@ -15,7 +15,7 @@ const {
 
 
 const p = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
-const steps = 100;
+const steps = 617;
 
 
 
@@ -38,12 +38,12 @@ describe("nft circuit", () => {
     circuit = await hre.circuitTest.setup("nft");
   });
 
-  it("produces a witness with valid constraints", async () => {
+  it.only("produces a witness with valid constraints", async () => {
     const witness = await circuit.calculateWitness(sampleInput, sanityCheck);
     const inputs = sampleInput.bodies.length * sampleInput.bodies[0].length
     const perStep = witness.length - inputs
     const secRounded = calculateTime(perStep, steps)
-    console.log(`| nft(3, 10) | ${perStep} | ${secRounded} |`)
+    console.log(`| nft(3, ${steps}) | ${perStep} | ${secRounded} |`)
     await circuit.checkConstraints(witness);
   });
 
@@ -60,7 +60,7 @@ describe("nft circuit", () => {
     // assert.propertyVal(witness, "main.out", "1");
   });
 
-  it.only("has the correct output", async () => {
+  it("has the correct output", async () => {
     let bodies = sampleInput.bodies.map(convertScaledStringArrayToBody)
     // console.dir({ bodies }, { depth: null })
     for (let i = 0; i < steps; i++) {

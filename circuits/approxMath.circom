@@ -85,10 +85,10 @@ template Div() {
   component isZero = IsZero();
   isZero.in <== dividend;
 
-  component xor = XOR();
-  xor.a <== isZero.out;
-  xor.b <== lessThan.out;
-  xor.out === 1;
+  component or = OR();
+  or.a <== isZero.out;
+  or.b <== lessThan.out;
+  or.out === 1;
 }
 
 template Sqrt(unboundDistanceSquaredMax) {
