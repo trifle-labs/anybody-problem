@@ -77,7 +77,7 @@ template Div() {
   // log("divisor", divisor);
   // log("quotient", quotient);
 
-  component lessThan = LessThan(64); // forceXnum; // maxBits: 64
+  component lessThan = LessEqThan(64); // forceXnum; // maxBits: 64
   lessThan.in[0] <== diff;
   lessThan.in[1] <== dividend;
   // log("lessThan", lessThan.out, "\n");
@@ -85,10 +85,10 @@ template Div() {
   component isZero = IsZero();
   isZero.in <== dividend;
 
-  component xor = XOR();
-  xor.a <== isZero.out;
-  xor.b <== lessThan.out;
-  xor.out === 1;
+  component or = OR();
+  or.a <== isZero.out;
+  or.b <== lessThan.out;
+  or.out === 1;
 }
 
 template Sqrt(unboundDistanceSquaredMax) {

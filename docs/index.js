@@ -19,7 +19,7 @@ const minRadius = 50
 const maxRadius = 100
 const position = "!static"
 const colorStyle = "!squiggle"
-let totalBodies = 3
+let totalBodies = 6
 const initialBodies = totalBodies
 // console.log({ totalBodies })
 const outlines = false
@@ -499,16 +499,17 @@ function addListener() {
       if (missiles.length > 0 && !admin) return
       thisLevelMissileCount++
       missileCount++
-      const x = e.offsetX
-      const y = e.offsetY
+      const actualWidth = body.offsetWidth
+      const x = e.offsetX * windowWidth / actualWidth
+      const y = e.offsetY * windowWidth / actualWidth
       console.log({ x, y })
-      const body = {
+      const b = {
         position: createVector(0, windowWidth),
         velocity: createVector(x, y - windowWidth),
         radius: 10,
       }
-      body.velocity.limit(10);
-      missiles.push(body)
+      b.velocity.limit(10);
+      missiles.push(b)
     })
   }
 }

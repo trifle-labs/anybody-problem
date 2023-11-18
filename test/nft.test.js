@@ -1,14 +1,23 @@
 
 
 const hre = require("hardhat");
-const { assert } = require("chai");
+const { ethers } = require("hardhat");
+const { exportCallDataGroth16 } = require("../utils/utils");
+const { mine } = require("@nomicfoundation/hardhat-network-helpers");
+
+const { assert, expect } = require("chai");
 const {
   calculateTime,
   convertScaledStringArrayToBody,
   convertScaledBigIntBodyToArray,
   forceAccumulatorBigInts
 } = require("../docs/index.js");
+
+
 const p = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
+const steps = 617;
+
+
 
 describe("nft circuit", () => {
   let circuit;
@@ -21,18 +30,20 @@ describe("nft circuit", () => {
     ]
   };
   const sanityCheck = true;
-  const steps = 10;
+
+
+
+
   before(async () => {
     circuit = await hre.circuitTest.setup("nft");
-
   });
 
-  it("produces a witness with valid constraints", async () => {
+  it.only("produces a witness with valid constraints", async () => {
     const witness = await circuit.calculateWitness(sampleInput, sanityCheck);
     const inputs = sampleInput.bodies.length * sampleInput.bodies[0].length
     const perStep = witness.length - inputs
     const secRounded = calculateTime(perStep, steps)
-    console.log(`| nft(3, 10) | ${perStep} | ${secRounded} |`)
+    console.log(`| nft(3, ${steps}) | ${perStep} | ${secRounded} |`)
     await circuit.checkConstraints(witness);
   });
 
@@ -41,7 +52,7 @@ describe("nft circuit", () => {
       sampleInput,
       sanityCheck
     );
-    // console.log({ witness })
+    console.log({ witness })
 
     // assert.propertyVal(witness, "main.squared", sampleInput.squared);
     // assert.propertyVal(witness, "main.calculatedRoot", sampleInput.calculatedRoot);
@@ -61,4 +72,76 @@ describe("nft circuit", () => {
     const witness = await circuit.calculateWitness(sampleInput, sanityCheck);
     await circuit.assertOut(witness, expected);
   });
+
+  it("NftVerifier.sol works", async () => {
+    const NftVerifier = await ethers.getContractFactory("contracts/NftVerifier.sol:Verifier");
+    const nftVerifier = await NftVerifier.deploy();
+    await nftVerifier.deployed();
+
+    let dataResult = await exportCallDataGroth16(
+      sampleInput,
+      "./circuits/nft.wasm",
+      "./circuits/nft.zkey"
+    );
+    let result = await nftVerifier.verifyProof(
+      dataResult.a,
+      dataResult.b,
+      dataResult.c,
+      dataResult.Input
+    );
+    assert.equal(result, true);
+  })
+
+
+  it("nft.sol works", async () => {
+    const NftVerifier = await ethers.getContractFactory("contracts/NftVerifier.sol:Verifier");
+    const nftVerifier = await NftVerifier.deploy();
+    await nftVerifier.deployed();
+
+    const Metadata = await ethers.getContractFactory("Metadata");
+    const metadata = await Metadata.deploy();
+    await metadata.deployed();
+
+    const Nft = await ethers.getContractFactory("NFT");
+    const nft = await Nft.deploy(metadata.address, nftVerifier.address);
+    await nft.deployed();
+
+    console.log(`committing...`)
+    await expect(nft.commit())
+      .to.not.be.reverted;
+
+    const blockBefore = await ethers.provider.getBlock();
+    console.log(`waiting one block`)
+    await mine();
+    const blockAfter = await ethers.provider.getBlock();
+
+    // make sure block incremented by 1
+    assert.equal(blockAfter.number, blockBefore.number + 1);
+
+    console.log(`minting...`)
+
+    await expect(nft.mint())
+      .to.not.be.reverted;
+    block = await ethers.provider.getBlock();
+    console.log({ block: block.number })
+
+    const body = await nft.getBody(1);
+    console.log({ body })
+
+    // let dataResult = await exportCallDataGroth16(
+    //   sampleInput,
+    //   "./circuits/nft.wasm",
+    //   "./circuits/nft.zkey"
+    // );
+    // let result = await nftVerifier.verifyProof(
+    //   dataResult.a,
+    //   dataResult.b,
+    //   dataResult.c,
+    //   dataResult.Input
+    // );
+    // assert.equal(result, true);
+  })
+
+
+
 });
