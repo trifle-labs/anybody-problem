@@ -10,7 +10,7 @@ fi
 
 
 # Compile the circuit
-circom circuits/${CIRCUIT}.circom --r1cs --wasm --sym --c
+~/.cargo/bin/circom circuits/${CIRCUIT}.circom --r1cs --wasm --sym --c
 
 echo "done generating the .wasm"
 

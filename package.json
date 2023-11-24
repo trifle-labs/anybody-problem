@@ -4,6 +4,7 @@
   "license": "CC-BY-NC-4.0",
   "main": "index.js",
   "scripts": {
+    "circom": "./utils/basic_circom.sh",
     "circom:dev": "hardhat circom --deterministic --debug --verbose",
     "circom:prod": "hardhat circom --verbose",
     "serve": "npx live-server docs",

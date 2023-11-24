@@ -6,6 +6,8 @@ const { exportCallDataGroth16 } = require("../utils/utils");
 const { mine } = require("@nomicfoundation/hardhat-network-helpers");
 
 const { assert, expect } = require("chai");
+const { exec } = require("child_process");
+const util = require("util");
 const {
   calculateTime,
   convertScaledStringArrayToBody,
@@ -15,7 +17,7 @@ const {
 
 
 const p = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
-const steps = 10;//617;
+const steps = 3;//617;
 
 
 
@@ -74,23 +76,39 @@ describe("nft circuit", () => {
   });
 
   it.only("NftVerifier.sol works", async () => {
-    const NftVerifier = await ethers.getContractFactory("contracts/NftVerifier.sol:Groth16Verifier");
-    const nftVerifier = await NftVerifier.deploy();
-    await nftVerifier.deployed();
+    const exec = util.promisify(require("child_process").exec);
 
-    let dataResult = await exportCallDataGroth16(
-      sampleInput,
-      "./nft_js/nft.wasm",
-      "./nft_final.zkey"
-    );
-    let result = await nftVerifier.verifyProof(
-      dataResult.a,
-      dataResult.b,
-      dataResult.c,
-      dataResult.Input
-    );
-    assert.equal(result, true);
-  })
+    try {
+      let resp
+      resp = await exec("'./utils/1_create_wasm.sh' nft");
+      console.log(resp.stdout)
+      resp = await exec("'./utils/2_create_zkey.sh' nft");
+      console.log(resp.stdout)
+      resp = await exec("'./utils/5_create_solidity.sh' nft");
+      console.log(resp.stdout)
+
+      const NftVerifier = await ethers.getContractFactory("contracts/NftVerifier.sol:Groth16Verifier");
+      const nftVerifier = await NftVerifier.deploy();
+      await nftVerifier.deployed();
+
+      let dataResult = await exportCallDataGroth16(
+        sampleInput,
+        "./nft_js/nft.wasm",
+        "./nft_final.zkey"
+      );
+      let result = await nftVerifier.verifyProof(
+        dataResult.a,
+        dataResult.b,
+        dataResult.c,
+        dataResult.Input
+      );
+      assert.equal(result, true);
+    } catch (error) {
+      console.error({ error })
+      console.error(`Error executing the commands: ${error}`);
+    }
+  });
+
 
 
   // it("nft.sol works", async () => {

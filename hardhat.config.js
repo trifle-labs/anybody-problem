@@ -4,12 +4,43 @@ require("hardhat-gas-reporter");
 require("hardhat-contract-sizer");
 require("dotenv").config();
 require("@nomiclabs/hardhat-etherscan");
+// const util = require("util");
 
+
+// // Import necessary modules
+// const { task } = require("hardhat/config");
+
+// // Define a new task or extend the existing 'test' task
+// task("test", "Runs custom commands before tests", async (taskArgs, hre, runSuper) => {
+//   console.log({ taskArgs })
+//   // Your custom command or function call
+//   console.log("Running custom circom command before tests...");
+
+//   const exec = util.promisify(require("child_process").exec);
+
+//   if (taskArgs.testFiles.length == 0) {
+
+//   }
+
+//   try {
+//     let resp
+//     resp = await exec("'./utils/1_create_wasm.sh' nft");
+//     console.log(resp.stdout)
+//     resp = await exec("'./utils/2_create_zkey.sh' nft");
+//     console.log(resp.stdout)
+//     resp = await exec("'./utils/5_create_solidity.sh' nft");
+//     console.log(resp.stdout)
+//   } catch (error) {
+//     console.error(`Error executing the commands: ${error}`);
+//   }
+//   // Then run the original test task
+//   await runSuper(taskArgs);
+// });
 
 /**
  * @type import('hardhat/config').HardhatUserConfig
  */
-module.exports = {
+const config = {
   mocha: {
     timeout: 100_000_000
   },
@@ -114,3 +145,6 @@ module.exports = {
     ],
   },
 };
+
+
+module.exports = config

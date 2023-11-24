@@ -13,7 +13,7 @@ contract NFT is ERC721, Ownable {
     // bodies[0] = [body1, body2, body3]
     // bodies[0][0] = [pos_x, pos_y, vec_x, vec_y, radius]
     uint256[] public steps;
-    uint256 constant PROOF_STEP = 10;
+    uint256 constant PROOF_STEP = 617;
     address public metadata;
     address public verifier;
     mapping(address => uint256) commits;
