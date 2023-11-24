@@ -1,7 +1,7 @@
 pragma solidity ^0.8.0;
 
 import "./Metadata.sol";
-import "./NftVerifierI.sol";
+import "./NftVerifier.sol";
 import "./Trigonometry.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -150,6 +150,6 @@ contract NFT is ERC721, Ownable {
         uint[2] memory c,
         uint[30] memory input
     ) internal view returns (bool) {
-        return IVerifier(verifier).verifyProof(a, b, c, input);
+        return Groth16Verifier(verifier).verifyProof(a, b, c, input);
     }
 }
