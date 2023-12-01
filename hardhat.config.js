@@ -1,25 +1,56 @@
-require("hardhat-circom");
-require("@nomiclabs/hardhat-waffle");
-require("hardhat-gas-reporter");
-require("hardhat-contract-sizer");
-require("dotenv").config();
-require("@nomiclabs/hardhat-etherscan");
+require('hardhat-circom')
+require('@nomiclabs/hardhat-waffle')
+require('hardhat-gas-reporter')
+require('hardhat-contract-sizer')
+require('dotenv').config()
+require('@nomiclabs/hardhat-etherscan')
+// const util = require("util");
 
+
+// // Import necessary modules
+// const { task } = require("hardhat/config");
+
+// // Define a new task or extend the existing 'test' task
+// task("test", "Runs custom commands before tests", async (taskArgs, hre, runSuper) => {
+//   console.log({ taskArgs })
+//   // Your custom command or function call
+//   console.log("Running custom circom command before tests...");
+
+//   const exec = util.promisify(require("child_process").exec);
+
+//   if (taskArgs.testFiles.length == 0) {
+
+//   }
+
+//   try {
+//     let resp
+//     resp = await exec("'./utils/1_create_wasm.sh' nft");
+//     console.log(resp.stdout)
+//     resp = await exec("'./utils/2_create_zkey.sh' nft");
+//     console.log(resp.stdout)
+//     resp = await exec("'./utils/5_create_solidity.sh' nft");
+//     console.log(resp.stdout)
+//   } catch (error) {
+//     console.error(`Error executing the commands: ${error}`);
+//   }
+//   // Then run the original test task
+//   await runSuper(taskArgs);
+// });
 
 /**
  * @type import('hardhat/config').HardhatUserConfig
  */
-module.exports = {
+const config = {
   mocha: {
     timeout: 100_000_000
   },
   solidity: {
     compilers: [
       {
-        version: "0.6.11",
+        version: '0.6.11',
       },
       {
-        version: "0.8.15",
+        version: '0.8.15',
         settings: {
           viaIR: false,
           optimizer: { enabled: true, runs: 200 },
@@ -36,10 +67,10 @@ module.exports = {
     },
   },
   gasReporter: {
-    currency: "EUR",
+    currency: 'EUR',
     gasPrice: 42,
-    url: "http://localhost:8545",
-    coinmarketcap: "38b60711-0559-45f4-8bda-e72f446c8278",
+    url: 'http://localhost:8545',
+    coinmarketcap: '38b60711-0559-45f4-8bda-e72f446c8278',
     enabled: true,
   },
   etherscan: {
@@ -54,47 +85,47 @@ module.exports = {
     strict: true,
   },
   circom: {
-    inputBasePath: "./circuits",
-    ptau: "https://hermez.s3-eu-west-1.amazonaws.com/powersOfTau28_hez_final_20.ptau",
+    inputBasePath: './circuits',
+    ptau: 'https://hermez.s3-eu-west-1.amazonaws.com/powersOfTau28_hez_final_20.ptau',
     circuits: [
       {
-        name: "absoluteValueSubtraction",
+        name: 'absoluteValueSubtraction',
         // No protocol, so it defaults to groth16
       },
       {
-        name: "acceptableMarginOfError",
+        name: 'acceptableMarginOfError',
         // No protocol, so it defaults to groth16
       },
       {
-        name: "calculateForceMain",
+        name: 'calculateForceMain',
         // No protocol, so it defaults to groth16
       },
       {
-        name: "detectCollisionMain",
+        name: 'detectCollisionMain',
         // No protocol, so it defaults to groth16
       },
       {
-        name: "forceAccumulatorMain",
+        name: 'forceAccumulatorMain',
         // No protocol, so it defaults to groth16
       },
       {
-        name: "getDistanceMain",
+        name: 'getDistanceMain',
         // No protocol, so it defaults to groth16
       },
       {
-        name: "limiterMain",
+        name: 'limiterMain',
         // No protocol, so it defaults to groth16
       },
       {
-        name: "lowerLimiterMain",
+        name: 'lowerLimiterMain',
         // No protocol, so it defaults to groth16
       },
       {
-        name: "nft",
+        name: 'nftTest',
         // No protocol, so it defaults to groth16
       },
       {
-        name: "stepStateMain",
+        name: 'stepStateTest',
         // No protocol, so it defaults to groth16
       },
       // {
@@ -113,4 +144,7 @@ module.exports = {
       // },
     ],
   },
-};
+}
+
+
+module.exports = config

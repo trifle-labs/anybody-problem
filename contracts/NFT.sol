@@ -1,7 +1,8 @@
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import "./Metadata.sol";
-import "./NftVerifierI.sol";
+import "./NftVerifier_617.sol";
 import "./Trigonometry.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -13,7 +14,7 @@ contract NFT is ERC721, Ownable {
     // bodies[0] = [body1, body2, body3]
     // bodies[0][0] = [pos_x, pos_y, vec_x, vec_y, radius]
     uint256[] public steps;
-    uint256 constant PROOF_STEP = 10;
+    uint256 constant PROOF_STEP = 617;
     address public metadata;
     address public verifier;
     mapping(address => uint256) commits;
@@ -73,43 +74,30 @@ contract NFT is ERC721, Ownable {
     function generateBody(
         uint256 blockNumber
     ) internal view returns (uint256[5][3] memory) {
+        // uint256 positionOffset = 100 * scalingFactor;
+        bytes32 rand = getRand(blockNumber);
+        return getRandomValues(rand);
+    }
+
+    function getRand(uint256 blockNumber) public view returns (bytes32) {
+        return keccak256(abi.encodePacked(blockhash(blockNumber)));
+    }
+
+    function getRandomValues(
+        bytes32 rand
+    ) public pure returns (uint256[5][3] memory) {
         uint256[5][3] memory body;
         uint256 scalingFactor = 3 ** 10;
         uint256 windowWidth = 1000 * scalingFactor;
         uint256 maxRadius = 13;
-        uint256 positionOffset = 100 * scalingFactor;
-
-        bytes32 rand = keccak256(abi.encodePacked(blockhash(blockNumber)));
-
         for (uint256 i = 0; i < 3; i++) {
-            // rand = keccak256(abi.encodePacked(rand));
-            // uint256 radiusDist = randomRange(
-            //     (windowWidth * 47) / 100,
-            //     (windowWidth * 55) / 100,
-            //     rand
-            // );
-            // rand = keccak256(abi.encodePacked(rand));
-            // uint256 randomDir = randomRange(0, 360, rand);
-
             rand = keccak256(abi.encodePacked(rand));
             uint256 x = randomRange(0, windowWidth, rand);
             rand = keccak256(abi.encodePacked(rand));
             uint256 y = randomRange(0, windowWidth, rand);
-            // uint256 x = uint256(
-            //     int256(positionOffset) +
-            //         (int256(radiusDist) * Trigonometry.cos(randomDir)) +
-            //         int256(windowWidth / 2)
-            // );
-            // uint256 y = uint256(
-            //     int256(positionOffset) +
-            //         (int256(radiusDist) * Trigonometry.sin(randomDir)) +
-            //         int256(windowWidth / 2)
-            // );
-
             uint256 r = (maxRadius - i) * scalingFactor;
             body[i] = [x, y, 0, 0, r];
         }
-
         return body;
     }
 
@@ -150,6 +138,6 @@ contract NFT is ERC721, Ownable {
         uint[2] memory c,
         uint[30] memory input
     ) internal view returns (bool) {
-        return IVerifier(verifier).verifyProof(a, b, c, input);
+        return Groth16Verifier(verifier).verifyProof(a, b, c, input);
     }
 }

@@ -198,6 +198,8 @@ By providing configuration containing your Phase 1 Powers of Tau and circuits, t
 
 See the source projects for full documentation and configuration
 
+# Circom + Contracts setup
+
 ## Install
 
 `yarn` to install dependencies
@@ -213,3 +215,26 @@ To build a single circuit during development, you can use the `--circuit` CLI pa
 ## Production builds
 
 `yarn circom:prod` for production builds (using `Date.now()` as entropy)
+
+# Webapp setup
+```
+yarn install
+```
+
+### Compiles and hot-reloads for development
+```
+yarn serve
+```
+
+### Compiles and minifies for production
+```
+yarn build
+```
+
+### Lints and fixes files
+```
+yarn lint
+```
+
+### Customize configuration
+See [Configuration Reference](https://cli.vuejs.org/config/).
