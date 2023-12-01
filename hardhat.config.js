@@ -1,9 +1,9 @@
-require("hardhat-circom");
-require("@nomiclabs/hardhat-waffle");
-require("hardhat-gas-reporter");
-require("hardhat-contract-sizer");
-require("dotenv").config();
-require("@nomiclabs/hardhat-etherscan");
+require('hardhat-circom')
+require('@nomiclabs/hardhat-waffle')
+require('hardhat-gas-reporter')
+require('hardhat-contract-sizer')
+require('dotenv').config()
+require('@nomiclabs/hardhat-etherscan')
 // const util = require("util");
 
 
@@ -47,10 +47,10 @@ const config = {
   solidity: {
     compilers: [
       {
-        version: "0.6.11",
+        version: '0.6.11',
       },
       {
-        version: "0.8.15",
+        version: '0.8.15',
         settings: {
           viaIR: false,
           optimizer: { enabled: true, runs: 200 },
@@ -67,10 +67,10 @@ const config = {
     },
   },
   gasReporter: {
-    currency: "EUR",
+    currency: 'EUR',
     gasPrice: 42,
-    url: "http://localhost:8545",
-    coinmarketcap: "38b60711-0559-45f4-8bda-e72f446c8278",
+    url: 'http://localhost:8545',
+    coinmarketcap: '38b60711-0559-45f4-8bda-e72f446c8278',
     enabled: true,
   },
   etherscan: {
@@ -85,47 +85,47 @@ const config = {
     strict: true,
   },
   circom: {
-    inputBasePath: "./circuits",
-    ptau: "https://hermez.s3-eu-west-1.amazonaws.com/powersOfTau28_hez_final_20.ptau",
+    inputBasePath: './circuits',
+    ptau: 'https://hermez.s3-eu-west-1.amazonaws.com/powersOfTau28_hez_final_20.ptau',
     circuits: [
       {
-        name: "absoluteValueSubtraction",
+        name: 'absoluteValueSubtraction',
         // No protocol, so it defaults to groth16
       },
       {
-        name: "acceptableMarginOfError",
+        name: 'acceptableMarginOfError',
         // No protocol, so it defaults to groth16
       },
       {
-        name: "calculateForceMain",
+        name: 'calculateForceMain',
         // No protocol, so it defaults to groth16
       },
       {
-        name: "detectCollisionMain",
+        name: 'detectCollisionMain',
         // No protocol, so it defaults to groth16
       },
       {
-        name: "forceAccumulatorMain",
+        name: 'forceAccumulatorMain',
         // No protocol, so it defaults to groth16
       },
       {
-        name: "getDistanceMain",
+        name: 'getDistanceMain',
         // No protocol, so it defaults to groth16
       },
       {
-        name: "limiterMain",
+        name: 'limiterMain',
         // No protocol, so it defaults to groth16
       },
       {
-        name: "lowerLimiterMain",
+        name: 'lowerLimiterMain',
         // No protocol, so it defaults to groth16
       },
       {
-        name: "nft",
+        name: 'nftTest',
         // No protocol, so it defaults to groth16
       },
       {
-        name: "stepStateMain",
+        name: 'stepStateTest',
         // No protocol, so it defaults to groth16
       },
       // {
@@ -144,7 +144,7 @@ const config = {
       // },
     ],
   },
-};
+}
 
 
 module.exports = config

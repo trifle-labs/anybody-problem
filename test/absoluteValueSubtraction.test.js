@@ -1,40 +1,40 @@
-const hre = require("hardhat");
-const { assert } = require("chai");
-const { calculateTime } = require("../docs/index.js");
+const hre = require('hardhat')
+// const { assert } = require('chai')
+const { calculateTime } = require('../docs/index.js')
 
-describe("absoluteValueSubtraction circuit", () => {
-  let circuit;
+describe('absoluteValueSubtraction circuit', () => {
+  let circuit
 
   const sampleInput = [
     {
-      in: { in: ["13", "3"] },
-      out: { out: "10" }
+      in: { in: ['13', '3'] },
+      out: { out: '10' }
     },
     {
-      in: { in: ["3", "13"] },
-      out: { out: "10" }
+      in: { in: ['3', '13'] },
+      out: { out: '10' }
     }
   ]
-  const sanityCheck = true;
+  const sanityCheck = true
 
   before(async () => {
-    circuit = await hre.circuitTest.setup("absoluteValueSubtraction");
-  });
+    circuit = await hre.circuitTest.setup('absoluteValueSubtraction')
+  })
 
-  it("produces a witness with valid constraints", async () => {
-    const witness = await circuit.calculateWitness(sampleInput[0].in, sanityCheck);
+  it('produces a witness with valid constraints', async () => {
+    const witness = await circuit.calculateWitness(sampleInput[0].in, sanityCheck)
     const inputs = sampleInput[0].in.in.length
     const perStep = witness.length - inputs
     const secRounded = calculateTime(perStep)
     console.log(`| absoluteValueSubtraction(252) | ${perStep} | ${secRounded} |`)
-    await circuit.checkConstraints(witness);
-  });
+    await circuit.checkConstraints(witness)
+  })
 
-  it("has expected witness values", async () => {
-    const witness = await circuit.calculateLabeledWitness(
-      sampleInput[0].in,
-      sanityCheck
-    );
+  it('has expected witness values', async () => {
+    // const witness = await circuit.calculateLabeledWitness(
+    //   sampleInput[0].in,
+    //   sanityCheck
+    // )
     // console.log({ witness })
 
     // assert.propertyVal(witness, "main.x1", sampleInput.x1);
@@ -44,13 +44,13 @@ describe("absoluteValueSubtraction circuit", () => {
     // assert.propertyVal(witness, "main.y1", undefined);
     // assert.propertyVal(witness, "main.y2", undefined);
     // assert.propertyVal(witness, "main.out", "3");
-  });
+  })
 
-  it("has the correct output", async () => {
+  it('has the correct output', async () => {
     for (let i = 0; i < sampleInput.length; i++) {
-      const expected = sampleInput[i].out;
-      const witness = await circuit.calculateWitness(sampleInput[i].in, sanityCheck);
-      await circuit.assertOut(witness, expected);
+      const expected = sampleInput[i].out
+      const witness = await circuit.calculateWitness(sampleInput[i].in, sanityCheck)
+      await circuit.assertOut(witness, expected)
     }
-  });
-});
+  })
+})

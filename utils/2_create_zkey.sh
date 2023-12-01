@@ -60,7 +60,7 @@ echo "Elapsed time since last command: $ELAPSED_TIME seconds"
 
 echo "----- Export the verification key -----"
 # Export the verification key
-snarkjs zkey export verificationkey ${CIRCUIT}_final.zkey verification_key.json
+snarkjs zkey export verificationkey ${CIRCUIT}_final.zkey ${CIRCUIT}_verification_key.json
 
 
 CURRENT_TIME=$(date +%s)

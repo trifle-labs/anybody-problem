@@ -92,23 +92,25 @@ template Div() {
 }
 
 template Sqrt(unboundDistanceSquaredMax) {
-    signal input squaredValue;
-    signal output root;
+  signal input squaredValue;
+  signal output root;
   signal approxSqrtResults[3];
   approxSqrtResults <-- approxSqrt(squaredValue);
   // approxSqrtResults[0] = lo
   // approxSqrtResults[1] = mid
   // approxSqrtResults[2] = hi
-  // log("squaredValue", squaredValue);
-  // log("approxSqrtResults[0]", approxSqrtResults[0]);
-  // log("approxSqrtResults[1]", approxSqrtResults[1]);
-  // log("approxSqrtResults[2]", approxSqrtResults[2]);
+  log("squaredValue", squaredValue);
+  log("approxSqrtResults[0]", approxSqrtResults[0]);
+  log("approxSqrtResults[1]", approxSqrtResults[1]);
+  log("approxSqrtResults[2]", approxSqrtResults[2]);
   root <-- approxSqrtResults[1];
 
   var distanceResults[3];
   distanceResults = approxSqrt(unboundDistanceSquaredMax);
   var distanceMax = distanceResults[1]; // maxNum = 1414214n
   var distanceMaxBits = maxBits(distanceMax);
+
+  log("root**2", root**2);
 
   component isPerfect = IsZero();
   isPerfect.in <== (root**2) - squaredValue;
@@ -141,12 +143,26 @@ template Sqrt(unboundDistanceSquaredMax) {
   secondCondition.b <== isPerfect.out;
   secondCondition.out === 1;
 
+
+  log("isZeroDiff2.out", isZeroDiff2.out);
+  log("isZeroDiff3.out", isZeroDiff3.out);
+  log("firstCondition.out", firstCondition.out);
+
+  log("isPerfect.out", isPerfect.out);
+
+
+  log("squaredValue", squaredValue );
+  log("(approxSqrtResults[1] ** 2)", (approxSqrtResults[1] ** 2));
+
+  log("(approxSqrtResults[1] ** 2) - squaredValue",  (approxSqrtResults[1] ** 2) - squaredValue);
+  log("squaredValue - (approxSqrtResults[1] ** 2)", squaredValue - (approxSqrtResults[1] ** 2));
+
   component diffMux = Mux1();
   diffMux.c[0] <== (approxSqrtResults[1] ** 2) - squaredValue; // mid**2 - actual
   diffMux.c[1] <== squaredValue - (approxSqrtResults[1] ** 2); // actual - mid**2
-  diffMux.s <== isZeroDiff2.out;
+  diffMux.s <== isZeroDiff3.out;
   signal imperfectDiff <== diffMux.out;
-
+  log("imperfectDiff", imperfectDiff);
   // difference is 0 if perfect square is true
   component diffMux2 = Mux1();
   diffMux2.c[0] <== imperfectDiff;
@@ -156,6 +172,9 @@ template Sqrt(unboundDistanceSquaredMax) {
 
   var distanceMaxDoubleMax = distanceMax*2; // maxNum: 2,828,428
   var distanceMaxSquaredMaxBits = maxBits(distanceMaxDoubleMax); // maxBits: 22
+  log("distanceMaxSquaredMaxBits", distanceMaxSquaredMaxBits);
+  log("diff", diff);
+  log("root*2", root*2);
   component lessThan2 = LessEqThan(distanceMaxSquaredMaxBits);
   lessThan2.in[0] <== diff;
   lessThan2.in[1] <== root*2; // maxBits: 22 (maxNum: 2_828_428)
