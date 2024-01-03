@@ -19,8 +19,8 @@ const minRadius = 50
 const maxRadius = 100
 const position = "!static"
 const colorStyle = "!squiggle"
-let totalBodies = 6
-const initialBodies = totalBodies
+let totalBodies = 3
+// const initialBodies = totalBodies
 // console.log({ totalBodies })
 const outlines = false
 const clearBG = true
@@ -68,6 +68,7 @@ function setup() {
     noStroke();
   }
   go()
+  window.initialBodies = convertBodiesToBigInts(bodies).map(convertScaledBigIntBodyToArray)
   addListener()
 }
 
@@ -849,7 +850,7 @@ function calculateTime(constraints, steps = 1) {
   return Math.round(sec * 100) / 100
 }
 
-if (module) {
+if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     convertScaledStringArrayToBody,
     convertScaledStringArrayToFloat,

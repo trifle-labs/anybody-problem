@@ -80,12 +80,12 @@ describe("nft circuit", () => {
 
     try {
       let resp
-      resp = await exec("'./utils/1_create_wasm.sh' nft");
-      console.log(resp.stdout)
-      resp = await exec("'./utils/2_create_zkey.sh' nft");
-      console.log(resp.stdout)
-      resp = await exec("'./utils/5_create_solidity.sh' nft");
-      console.log(resp.stdout)
+      // resp = await exec("'./utils/1_create_wasm.sh' nft");
+      // console.log(resp.stdout)
+      // resp = await exec("'./utils/2_create_zkey.sh' nft");
+      // console.log(resp.stdout)
+      // resp = await exec("'./utils/5_create_solidity.sh' nft");
+      // console.log(resp.stdout)
 
       const NftVerifier = await ethers.getContractFactory("contracts/NftVerifier.sol:Groth16Verifier");
       const nftVerifier = await NftVerifier.deploy();
