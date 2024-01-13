@@ -22,7 +22,3 @@ template NFT(totalBodies, steps) {
   out_bodies <== tmp_bodies;
 }
 
-<<<<<<< HEAD
-component main { public [ bodies ]} = NFT(3, 617); // 617
-=======
->>>>>>> 19a7e9ea56d04238607bea1e529102c51107d3c2
