@@ -670,7 +670,7 @@ class Anybody extends EventEmitter {
       // this.p.rect(0, 0, 50, 20)
       this.p.fill(this.getNotGrey())
       this.p.textAlign(this.p.RIGHT) // Right-align the text
-      this.p.text(this.frames, 45, 15) // Adjust the x-coordinate to align the text
+      // this.p.text(this.frames, 45, 15) // Adjust the x-coordinate to align the text
     } else {
       this.p.fill('white')
       this.p.rect(0, 0, 50, 20)
@@ -794,30 +794,31 @@ class Anybody extends EventEmitter {
         // this.bodiesGraphic.stroke(this.getBW())
         // this.bodiesGraphic.stroke('white')
         this.bodiesGraphic.fill(finalColor)
-        this.bodiesGraphic.ellipse(body.position.x, body.position.y, body.radius * 4, body.radius * 4)
+        const radius = body.radius * 4
+        this.bodiesGraphic.ellipse(body.position.x, body.position.y, radius, radius)
         let looped = false, loopX = body.position.x, loopY = body.position.y
-        const loopGap = body.radius * 4
+        const loopGap = radius
         if (body.position.x > this.windowWidth - loopGap) {
           looped = true
           loopX = body.position.x - this.windowWidth
-          this.bodiesGraphic.ellipse(loopX, body.position.y, body.radius * 4, body.radius * 4)
+          this.bodiesGraphic.ellipse(loopX, body.position.y, radius, radius)
         } else if (body.position.x < loopGap) {
           looped = true
           loopX = body.position.x + this.windowWidth
-          this.bodiesGraphic.ellipse(loopX, body.position.y, body.radius * 4, body.radius * 4)
+          this.bodiesGraphic.ellipse(loopX, body.position.y, radius, radius)
         }
         if (body.position.y < this.windowHeight - loopGap) {
           looped = true
           loopY = body.position.y + this.windowHeight
-          this.bodiesGraphic.ellipse(body.position.x, loopY, body.radius * 4, body.radius * 4)
+          this.bodiesGraphic.ellipse(body.position.x, loopY, radius, radius)
         } else if (body.position.y > loopGap) {
           looped = true
           loopY = body.position.y - this.windowHeight
-          this.bodiesGraphic.ellipse(body.position.x, loopY, body.radius * 4, body.radius * 4)
+          this.bodiesGraphic.ellipse(body.position.x, loopY, radius, radius)
 
         }
         if (looped) {
-          this.bodiesGraphic.ellipse(loopX, loopY, body.radius * 4, body.radius * 4)
+          this.bodiesGraphic.ellipse(loopX, loopY, radius, radius)
         }
 
         // const eyes = this.getAngledImage(body)

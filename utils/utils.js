@@ -22,9 +22,20 @@ async function exportCallDataGroth16(input, wasmPath, zkeyPath) {
     Input.push(argv[i])
   }
 
-  return { a, b, c, Input }
+  return { a, b, c, Input, proof: _proof, publicSignals: _publicSignals }
+}
+
+async function verify(verificationPath, publicSignals, proof) {
+
+  const vkey = await fetch(verificationPath).then(function (res) {
+    return res.json()
+  })
+
+
+  const res = await groth16.verify(vkey, publicSignals, proof)
+  return res
 }
 
 module.exports = {
-  exportCallDataGroth16,
+  exportCallDataGroth16, verify
 }

@@ -6,12 +6,18 @@
 const steps = 487
 import p5 from 'p5'
 import { Anybody } from '../anybody'
-const { exportCallDataGroth16 } = require('../../utils/utils')
+const { exportCallDataGroth16, verify } = require('../../utils/utils')
 export default {
   name: 'P5Sketch',
+  data() {
+    return {
+      startTime: null
+    }
+  },
   mounted() {
     this.createSketch()
   },
+  
   beforeUnmount() {
     this.sketch && this.sketch.remove()
     this.anybody = null
@@ -23,6 +29,12 @@ export default {
     onFinished(data) {
       console.log(`finished at ${data}`)
       console.log(this.anybody.missileInits)
+      const endTime = Date.now()
+      const difference = endTime - this.startTime
+      const minutes = Math.floor((difference % 3600000) / 60000)
+      const seconds = Math.floor((difference % 60000) / 1000)
+      const milliseconds = difference % 1000
+      console.log(`reached ${steps} steps in ${minutes} minutes, ${seconds} seconds, ${milliseconds} milliseconds`)
       const missiles = Array.from({ length: steps + 1 })
       for (let i = 0; i < missiles.length; i++) {
         for(let j = 0; j < this.anybody.missileInits.length; j++) {
@@ -68,18 +80,23 @@ export default {
       console.log(`Time taken: ${minutes} minutes, ${seconds} seconds, ${milliseconds} milliseconds`)
       console.log({dataResult})
       console.log({bodies: this.anybody.bodies})
+
+      const res = await verify('verification_key.json', dataResult.publicSignals, dataResult.proof)
+      console.log({res})
+
     },
     createSketch() {
+      this.startTime = Date.now()
       const sketch = (p) => {
         p.setup = () => {
           this.anybody = new Anybody(p, {
-            // seed: 4178n,
+            // seed: 4492n,
             totalBodies: 3,
-            mode: 'game',
+            mode: 'nft',
             stopEvery: steps,//487,
           })
-          this.anybody.on('finished', this.onFinished)
-          this.anybody.on('paused', this.onPaused)
+          this.anybody.on('finished', (data) => this.onFinished(data))
+          this.anybody.on('paused', (data) => this.onPaused(data))
         }
         p.draw = () => {
           this.anybody.draw()
