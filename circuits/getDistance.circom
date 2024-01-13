@@ -32,7 +32,10 @@ template GetDistance(n) {
   signal dys <== dyAbs * dyAbs; // maxBits: 40 = 20 * 2 (maxNum: 1_000_000_000_000)
   signal distanceSquared <== dxs + dys; // maxBits: 41 = 40 + 1 (maxNum: 2_000_000_000_000)
   var distanceSquaredMax = dxsMax + dxsMax;
-
+  log("dys", dys);
+  log("dxs", dxs);
+  log("distanceSquared", distanceSquared);
+  log("distanceSquaredMax", distanceSquaredMax);
   component sqrt = Sqrt(distanceSquaredMax);
   sqrt.squaredValue <== distanceSquared;
   distance <== sqrt.root;

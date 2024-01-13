@@ -24,6 +24,10 @@ template DetectCollision(totalBodies) {
 
   // loop through all bodies and get distance between missile and body
   for (var i = 0; i < totalBodies; i++) {
+    log("body x1", bodies[i][0]);
+    log("body y1", bodies[i][1]);
+    log("missile x2", tmp_missiles[i][0]);
+    log("missile y2", tmp_missiles[i][1]);
     getDistance[i] = GetDistance(20); // n = 20 but inside GetDistance n = 2 * n + 1 and returns maxBits 21
     getDistance[i].x1 <== bodies[i][0]; // maxBits: 20 (maxNum: 1_000_000) = windowWidthScaled
     getDistance[i].y1 <== bodies[i][1]; // maxBits: 20 (maxNum: 1_000_000) = windowWidthScaled

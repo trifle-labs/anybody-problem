@@ -1,7 +1,8 @@
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import "./Metadata.sol";
-import "./NftVerifier.sol";
+import "./NftVerifier_617.sol";
 import "./Trigonometry.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -73,43 +74,30 @@ contract NFT is ERC721, Ownable {
     function generateBody(
         uint256 blockNumber
     ) internal view returns (uint256[5][3] memory) {
+        // uint256 positionOffset = 100 * scalingFactor;
+        bytes32 rand = getRand(blockNumber);
+        return getRandomValues(rand);
+    }
+
+    function getRand(uint256 blockNumber) public view returns (bytes32) {
+        return keccak256(abi.encodePacked(blockhash(blockNumber)));
+    }
+
+    function getRandomValues(
+        bytes32 rand
+    ) public pure returns (uint256[5][3] memory) {
         uint256[5][3] memory body;
         uint256 scalingFactor = 3 ** 10;
         uint256 windowWidth = 1000 * scalingFactor;
         uint256 maxRadius = 13;
-        uint256 positionOffset = 100 * scalingFactor;
-
-        bytes32 rand = keccak256(abi.encodePacked(blockhash(blockNumber)));
-
         for (uint256 i = 0; i < 3; i++) {
-            // rand = keccak256(abi.encodePacked(rand));
-            // uint256 radiusDist = randomRange(
-            //     (windowWidth * 47) / 100,
-            //     (windowWidth * 55) / 100,
-            //     rand
-            // );
-            // rand = keccak256(abi.encodePacked(rand));
-            // uint256 randomDir = randomRange(0, 360, rand);
-
             rand = keccak256(abi.encodePacked(rand));
             uint256 x = randomRange(0, windowWidth, rand);
             rand = keccak256(abi.encodePacked(rand));
             uint256 y = randomRange(0, windowWidth, rand);
-            // uint256 x = uint256(
-            //     int256(positionOffset) +
-            //         (int256(radiusDist) * Trigonometry.cos(randomDir)) +
-            //         int256(windowWidth / 2)
-            // );
-            // uint256 y = uint256(
-            //     int256(positionOffset) +
-            //         (int256(radiusDist) * Trigonometry.sin(randomDir)) +
-            //         int256(windowWidth / 2)
-            // );
-
             uint256 r = (maxRadius - i) * scalingFactor;
             body[i] = [x, y, 0, 0, r];
         }
-
         return body;
     }
 
