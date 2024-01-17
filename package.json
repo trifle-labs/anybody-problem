@@ -2,7 +2,7 @@
   "name": "anybody-problem",
   "version": "1.0.0",
   "scripts": {
-    "serve": "vue-cli-service serve",
+    "serve": "vue-cli-service serve --inspect-brk",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
     "circom": "./utils/basic_circom.sh",
@@ -70,10 +70,22 @@
       "before": "readonly"
     },
     "rules": {
-      "indent": ["error", 2],
-      "linebreak-style": ["error", "unix"],
-      "quotes": ["error", "single"],
-      "semi": ["error", "never"]
+      "indent": [
+        "error",
+        2
+      ],
+      "linebreak-style": [
+        "error",
+        "unix"
+      ],
+      "quotes": [
+        "error",
+        "single"
+      ],
+      "semi": [
+        "error",
+        "never"
+      ]
     }
   },
   "browserslist": [

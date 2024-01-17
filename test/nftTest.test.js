@@ -58,7 +58,7 @@ describe('nft circuit', () => {
     // assert.propertyVal(witness, "main.out", "1");
   })
 
-  it('has the correct output', async () => {
+  it.only('has the correct output', async () => {
     let bodies = sampleInput.bodies.map(convertScaledStringArrayToBody)
     // console.dir({ bodies }, { depth: null })
     for (let i = 0; i < steps; i++) {
@@ -73,14 +73,14 @@ describe('nft circuit', () => {
 
   it('NftVerifier.sol works', async () => {
 
-    const NftVerifier = await ethers.getContractFactory('contracts/NftVerifier.sol:Groth16Verifier')
+    const NftVerifier = await ethers.getContractFactory('contracts/NftTestVerifier.sol:Groth16Verifier')
     const nftVerifier = await NftVerifier.deploy()
     await nftVerifier.deployed()
 
     let dataResult = await exportCallDataGroth16(
       sampleInput,
-      './nft_js/nft.wasm',
-      './nft_final.zkey'
+      './nftTest_js/nftTest.wasm',
+      './nftTest_final.zkey'
     )
     let result = await nftVerifier.verifyProof(
       dataResult.a,

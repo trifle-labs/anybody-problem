@@ -29,14 +29,14 @@ elif [ -f ${PTAU_PATH2}${PTAU}.ptau ]; then
     PTAU_PATH=${PTAU_PATH2}${PTAU}.ptau
 else
     echo "----- Downloading powersOfTau28_hez_final_${PTAU}.ptau -----"
-    wget -P ./ptau https://hermez.s3-eu-west-1.amazonaws.com/powersOfTau28_hez_final_${PTAU}.ptau
+    curl -o ./ptau/powersOfTau28_hez_final_${PTAU}.ptau https://hermez.s3-eu-west-1.amazonaws.com/powersOfTau28_hez_final_${PTAU}.ptau
     PTAU_PATH=${PTAU_PATH2}${PTAU}.ptau
 fi
 
 
 echo "----- Generate .zkey file -----"
 # Generate a .zkey file that will contain the proving and verification keys together with all phase 2 contributions
-snarkjs groth16 setup ${CIRCUIT}.r1cs ${PTAU_PATH} ${CIRCUIT}_0000.zkey
+node --max-old-space-size=8192 $(which snarkjs) groth16 setup ${CIRCUIT}.r1cs ${PTAU_PATH} ${CIRCUIT}_0000.zkey
 
 
 CURRENT_TIME=$(date +%s)

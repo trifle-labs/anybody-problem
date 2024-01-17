@@ -24,14 +24,20 @@ contracts/*Verifier.sol
 *_proof.json
 *_public.json
 
+**.ptau
 proof.json
 public.json
 verification_key.json
 *_verification_key.json
+# !public/*_verification_key.json
 *Verifier.sol
 *.sym
+
+# Ignore all .zkey files except those inside the public folder
 *.zkey
+# !public/*.zkey
 *.wasm
+# !public/*.wasm
 parameters.txt
 /dist
 

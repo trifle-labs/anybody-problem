@@ -72,6 +72,7 @@ class Anybody extends EventEmitter {
     this.missileInits = []
     this.bodies = []
     this.bodyInits = []
+    this.bodyFinal = []
     this.allCopiesOfBodies = []
     this.missileCount = 0
     this.frames = 0
@@ -91,9 +92,7 @@ class Anybody extends EventEmitter {
     this.generateBodies()
     // const vectorLimitScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
     this.bodyInits = this.convertBodiesToBigInts(this.bodies).map(b => {
-      console.log({ b })
       b = this.convertScaledBigIntBodyToArray(b)
-      console.log({ b })
       b[2] = (BigInt(b[2])).toString()
       b[3] = (BigInt(b[3])).toString()
       return b
@@ -170,10 +169,12 @@ class Anybody extends EventEmitter {
     }
   }
 
-  setPause() {
-    this.paused = !this.paused
+  setPause(newPauseState = !this.paused) {
+    this.paused = newPauseState
     this.justPaused = true
-    this.emit('paused', this.paused)
+    if (newPauseState) {
+      this.emit('paused', this.paused)
+    }
   }
 
 
@@ -187,13 +188,12 @@ class Anybody extends EventEmitter {
       this.missiles.splice(0, 1)
     }
 
-    if (this.bodies.reduce((a, c) => a + c.radius, 0) == 0) {
+    if (this.mode == 'game' && this.bodies.reduce((a, c) => a + c.radius, 0) == 0) {
       // this.nextLevel()
       // this.paused = true
       if (!this.finished) {
-        this.emit('finished', this.frames)
+        this.finish()
       }
-      this.finished = true
     }
     return { bodies: this.bodies, missiles: this.missiles }
   }
@@ -438,11 +438,15 @@ class Anybody extends EventEmitter {
     for (let i = 0; i < bigBodies.length; i++) {
       const body = bigBodies[i]
       const newBody = { position: {}, velocity: {}, radius: null }
+      newBody.px = body.position.x
       newBody.position.x = this.convertScaledBigIntToFloat(body.position.x)
+      newBody.py = body.position.y
       newBody.position.y = this.convertScaledBigIntToFloat(body.position.y)
       newBody.position = this.createVector(newBody.position.x, newBody.position.y)
 
+      newBody.vx = body.velocity.x
       newBody.velocity.x = this.convertScaledBigIntToFloat(body.velocity.x)
+      newBody.vy = body.velocity.y
       newBody.velocity.y = this.convertScaledBigIntToFloat(body.velocity.y)
       newBody.velocity = this.createVector(newBody.velocity.x, newBody.velocity.y)
 
@@ -474,10 +478,11 @@ class Anybody extends EventEmitter {
     for (let i = 0; i < bodies.length; i++) {
       const body = bodies[i]
       const newBody = { position: {}, velocity: {}, radius: null }
-      newBody.position.x = this.convertFloatToScaledBigInt(body.position.x)
-      newBody.position.y = this.convertFloatToScaledBigInt(body.position.y)
-      newBody.velocity.x = this.convertFloatToScaledBigInt(body.velocity.x)// + maxVectorScaled
-      newBody.velocity.y = this.convertFloatToScaledBigInt(body.velocity.y)// + maxVectorScaled
+
+      newBody.position.x = body.px || this.convertFloatToScaledBigInt(body.position.x)
+      newBody.position.y = body.py || this.convertFloatToScaledBigInt(body.position.y)
+      newBody.velocity.x = body.vx || this.convertFloatToScaledBigInt(body.velocity.x)// + maxVectorScaled
+      newBody.velocity.y = body.vy || this.convertFloatToScaledBigInt(body.velocity.y)// + maxVectorScaled
       newBody.radius = this.convertFloatToScaledBigInt(body.radius)
       if (body.c) {
         newBody.c = body.c
@@ -533,12 +538,26 @@ class Anybody extends EventEmitter {
     missiles[0] = missile
     return { bodies, missiles }
   }
-
+  finish() {
+    // this.finished = true
+    // this.setPause(true)
+    this.bodyFinal = this.convertBodiesToBigInts(this.bodies).map(b => {
+      // console.log({ b })
+      b = this.convertScaledBigIntBodyToArray(b)
+      // console.log({ b })
+      b[2] = (BigInt(b[2])).toString()
+      b[3] = (BigInt(b[3])).toString()
+      return b
+    })
+    this.emit('finished', { bodyInits: JSON.parse(JSON.stringify(this.bodyInits)), bodyFinal: JSON.parse(JSON.stringify(this.bodyFinal)) })
+    this.bodyInits = JSON.parse(JSON.stringify(this.bodyFinal))
+    this.bodyFinal = []
+    // this.setPause(false)
+  }
 
   draw() {
     if (!this.paused && this.frames % this.stopEvery == 0 && !this.justPaused && this.frames !== 0) {
-      this.setPause()
-      this.emit('finished')
+      this.finish()
     } else {
       this.justPaused = false
     }
@@ -670,7 +689,7 @@ class Anybody extends EventEmitter {
       // this.p.rect(0, 0, 50, 20)
       this.p.fill(this.getNotGrey())
       this.p.textAlign(this.p.RIGHT) // Right-align the text
-      // this.p.text(this.frames, 45, 15) // Adjust the x-coordinate to align the text
+      this.p.text(this.frames, 45, 15) // Adjust the x-coordinate to align the text
     } else {
       this.p.fill('white')
       this.p.rect(0, 0, 50, 20)
@@ -767,7 +786,7 @@ class Anybody extends EventEmitter {
       this.bodiesGraphic = this.p.createGraphics(this.windowWidth, this.windowHeight)
     }
     // this.bodiesGraphic.clear()
-    if (this.mode == 'nft') this.drawBorder()
+    // if (this.mode == 'nft') this.drawBorder()
     this.bodiesGraphic.strokeWeight(1)
     const bodyCopies = []
     for (let i = 0; i < this.bodies.length; i++) {
@@ -1020,7 +1039,7 @@ class Anybody extends EventEmitter {
       const body = {
         position: this.createVector(ss[i][0], ss[i][1]),
         velocity: this.createVector(0, 0),
-        radius: (maxSize - i * 1) + 3,
+        radius: (maxSize - i * 3) + 12,
         c: cs[i]
       }
       bodies.push(body)
@@ -1057,7 +1076,7 @@ class Anybody extends EventEmitter {
   }
 
   prepareP5() {
-    this.p.frameRate(30)
+    this.p.frameRate(60)
     this.p.createCanvas(this.windowWidth, this.windowWidth)
     this.p.background('white')
   }
