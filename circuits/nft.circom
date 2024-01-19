@@ -11,9 +11,9 @@ template NFT(totalBodies, steps) {
   for (var i = 0; i < steps; i++) {
     // log("i-------------", i);
     // for (var j = 0; j < 3; j++) {
-      // for (var k = 0; k < 5; k++) {
-        // log("tmp_bodes", j, k, tmp_bodies[j][k]);
-      // }
+    //   for (var k = 0; k < 5; k++) {
+    //     log("tmp_bodes", j, k, tmp_bodies[j][k]);
+    //   }
     // }
     forceAccumulator[i] = ForceAccumulator(totalBodies);
     forceAccumulator[i].bodies <== tmp_bodies;

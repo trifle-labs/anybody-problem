@@ -27,8 +27,7 @@ echo "Elapsed time since last command: $ELAPSED_TIME seconds"
 # # Generate and print parameters of call
 # snarkjs generatecall | tee parameters.txt
 
-
-CURRENT_TIME=$(date +%s)
-ELAPSED_TIME=$(($CURRENT_TIME - $START_TIME))
-START_TIME=$(date +%s)
-echo "Elapsed time since last command: $ELAPSED_TIME seconds"
+# CURRENT_TIME=$(date +%s)
+# ELAPSED_TIME=$(($CURRENT_TIME - $START_TIME))
+# START_TIME=$(date +%s)
+# echo "Elapsed time since last command: $ELAPSED_TIME seconds"

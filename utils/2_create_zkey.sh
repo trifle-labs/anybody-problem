@@ -67,3 +67,4 @@ CURRENT_TIME=$(date +%s)
 ELAPSED_TIME=$(($CURRENT_TIME - $START_TIME))
 START_TIME=$(date +%s)
 echo "Elapsed time since last command: $ELAPSED_TIME seconds"
+

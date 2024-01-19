@@ -125,6 +125,10 @@ const config = {
         // No protocol, so it defaults to groth16
       },
       {
+        name: 'nftProd',
+        // No protocol, so it defaults to groth16
+      },
+      {
         name: 'stepStateTest',
         // No protocol, so it defaults to groth16
       },

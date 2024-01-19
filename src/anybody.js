@@ -27,7 +27,8 @@ class Anybody extends EventEmitter {
       chunk: 1,
       mute: true,
       freeze: false,
-      stopEvery: 0
+      stopEvery: 0,
+      util: false
     }
 
     // Merge the default options with the provided options
@@ -52,13 +53,14 @@ class Anybody extends EventEmitter {
     this.mute = mergedOptions.mute
     this.freeze = mergedOptions.freeze
     this.stopEvery = mergedOptions.stopEvery
+    this.util = mergedOptions.util
 
     // Add other constructor logic here
     this.p = p
-    this.prepareP5()
+    !this.util && this.prepareP5()
     this.clearValues()
-    this.init()
-    this.audio()
+    !this.util && this.init()
+    !this.util && this.audio()
   }
 
   // run whenever the class should be reset
@@ -79,6 +81,7 @@ class Anybody extends EventEmitter {
     this.showIt = true
     this.paused = false
     this.justStopped = false
+    this.bgColor = null
   }
 
   // run once at initilization
@@ -91,15 +94,15 @@ class Anybody extends EventEmitter {
     this.rng = new Prando(this.seed.toString(16))
     this.generateBodies()
     // const vectorLimitScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
+    this.addListener()
+    this.startTick()
+    this.runSteps(this.preRun)
     this.bodyInits = this.convertBodiesToBigInts(this.bodies).map(b => {
       b = this.convertScaledBigIntBodyToArray(b)
       b[2] = (BigInt(b[2])).toString()
       b[3] = (BigInt(b[3])).toString()
       return b
     })
-    this.addListener()
-    this.startTick()
-    this.runSteps(this.preRun)
     this.paintAtOnce(this.paintSteps)
     if (this.freeze) {
       this.paused = true
@@ -170,6 +173,10 @@ class Anybody extends EventEmitter {
   }
 
   setPause(newPauseState = !this.paused) {
+    if (typeof newPauseState !== 'boolean') {
+      newPauseState = !this.paused
+    }
+    console.log('pause clicked', newPauseState)
     this.paused = newPauseState
     this.justPaused = true
     if (newPauseState) {
@@ -253,7 +260,7 @@ class Anybody extends EventEmitter {
 
 
   forceAccumulatorBigInts(bodies) {
-    // console.dir({ bodies: bodies.map(convertScaledBigIntBodyToArray) }, { depth: null })
+    // console.dir({ bodies: bodies.map(this.convertScaledBigIntBodyToArray.bind(this)) }, { depth: null })
     const vectorLimitScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
     let accumulativeForces = []
     for (let i = 0; i < bodies.length; i++) {
@@ -576,7 +583,7 @@ class Anybody extends EventEmitter {
 
     this.playSounds()
     this.drawBg()
-    this.drawBodyTrails()
+    // this.drawBodyTrails()
     this.drawBodies()
 
     if (this.mode == 'game') {
@@ -591,16 +598,20 @@ class Anybody extends EventEmitter {
   drawBodyOutlines() {
     for (let i = 0; i < this.bodies.length; i++) {
       const body = this.bodies[i]
+      const radius = body.radius * 4 + this.radiusMultiplyer
+
       this.p.stroke(this.getGrey())
       this.p.stroke('black')
       this.p.strokeWeight(1)
       this.p.color('rgba(0,0,0,0)')
-      this.p.ellipse(body.position.x, body.position.y, body.radius * 4, body.radius * 4)
+      this.p.ellipse(body.position.x, body.position.y, radius, radius)
     }
   }
   drawBg() {
     if (this.mode == 'nft') {
-      this.p.background(this.getGrey())
+      this.p.background(this.bgColor)
+      // this.p.background(this.convertColor(this.bgColor, false))
+      // this.p.background(this.getGrey())
       return
     }
     // Set the background color with low opacity to create trails
@@ -687,9 +698,9 @@ class Anybody extends EventEmitter {
       this.p.noStroke()
       this.p.fill('white')
       // this.p.rect(0, 0, 50, 20)
-      this.p.fill(this.getNotGrey())
+      this.p.fill(this.getGrey())
       this.p.textAlign(this.p.RIGHT) // Right-align the text
-      this.p.text(this.frames, 45, 15) // Adjust the x-coordinate to align the text
+      this.p.text(this.preRun + this.frames, 45, 15) // Adjust the x-coordinate to align the text
     } else {
       this.p.fill('white')
       this.p.rect(0, 0, 50, 20)
@@ -781,6 +792,15 @@ class Anybody extends EventEmitter {
     this.p.image(this.bodiesGraphic, 0, 0)
   }
 
+  convertColor(c, isGrey = true) {
+    const cc = c.replace('rgba(', '').replace(')', '')
+    const r = parseInt(cc.split(',')[0]) + Math.floor((isGrey ? this.getGrey() : this.getNotGrey()) / 2)
+    const g = parseInt(cc.split(',')[1]) + Math.floor((isGrey ? this.getGrey() : this.getNotGrey()) / 2)
+    const b = parseInt(cc.split(',')[2]) + Math.floor((isGrey ? this.getGrey() : this.getNotGrey()) / 2)
+    return [r, g, b]
+    // this.bodiesGraphic.color(r, g, b)
+  }
+
   drawBodies(attachToCanvas = true) {
     if (!this.bodiesGraphic) {
       this.bodiesGraphic = this.p.createGraphics(this.windowWidth, this.windowHeight)
@@ -790,7 +810,7 @@ class Anybody extends EventEmitter {
     this.bodiesGraphic.strokeWeight(1)
     const bodyCopies = []
     for (let i = 0; i < this.bodies.length; i++) {
-      const body = this.bodies[i]
+      const body = this.bodies.sort((a, b) => b.radius - a.radius)[i]
       const c = body.c
       let finalColor
       if (this.colorStyle == 'squiggle') {
@@ -798,12 +818,7 @@ class Anybody extends EventEmitter {
         finalColor = this.bodiesGraphic.color(hueColor, 60, 100) // Saturation and brightness at 100 for pure spectral colors
       } else if (this.mode == 'nft') {
         // console.log(c)
-        const cc = c.replace('rgba(', '').replace(')', '')
-        const r = parseInt(cc.split(',')[0]) + this.getNotGrey() / 2
-        const g = parseInt(cc.split(',')[1]) + this.getNotGrey() / 2
-        const b = parseInt(cc.split(',')[2]) + this.getNotGrey() / 2
-        // console.log({ r, g, b })
-        finalColor = this.bodiesGraphic.color(r, g, b)
+        finalColor = c//this.convertColor(c)
       } else {
         finalColor = c
       }
@@ -813,7 +828,7 @@ class Anybody extends EventEmitter {
         // this.bodiesGraphic.stroke(this.getBW())
         // this.bodiesGraphic.stroke('white')
         this.bodiesGraphic.fill(finalColor)
-        const radius = body.radius * 4
+        const radius = body.radius * 4 + this.radiusMultiplyer
         this.bodiesGraphic.ellipse(body.position.x, body.position.y, radius, radius)
         let looped = false, loopX = body.position.x, loopY = body.position.y
         const loopGap = radius
@@ -1003,12 +1018,24 @@ class Anybody extends EventEmitter {
     }
   }
 
+  colorArrayToTxt(cc) {
+    const opac = 1
+    // let cc = baseColor.map(c => c + start + (chunk * i))
+    cc.push(opac)
+    cc = `rgba(${cc.join(',')})`
+    return cc
+  }
+
   generateBodies() {
     const ss = []
     const cs = []
     const bodies = []
-    const opac = 1
 
+    this.radiusMultiplyer = this.random(10, 200)
+    console.log({ radiusMultiplyer: this.radiusMultiplyer })
+
+    const startingRadius = 10//this.random(20, 40)
+    console.log({ startingRadius })
     // const baseColor = this.randomColor(0, 200)
 
     // const range = 100
@@ -1017,13 +1044,10 @@ class Anybody extends EventEmitter {
     // const totalChunks = this.totalBodies
     // const chunk = range / totalChunks
 
+    this.bgColor = this.colorArrayToTxt(this.randomColor(0, 200))
 
     for (let i = 0; i < this.totalBodies; i++) {
-      let cc = this.randomColor(0, 200)
-      // let cc = baseColor.map(c => c + start + (chunk * i))
-      cc.push(opac)
-      cc = `rgba(${cc.join(',')})`
-      cs.push(cc)
+      cs.push(this.colorArrayToTxt(this.randomColor(0, 200)))
     }
 
     for (let i = 0; i < this.totalBodies; i++) {
@@ -1036,10 +1060,12 @@ class Anybody extends EventEmitter {
     let maxSize = this.totalBodies < 10 ? 10 : this.totalBodies
     for (let i = 0; i < maxSize; i++) {
       if (i >= this.totalBodies) break
+      const radius = (maxSize - i * 5) + startingRadius
+      // console.log({ radius })
       const body = {
         position: this.createVector(ss[i][0], ss[i][1]),
         velocity: this.createVector(0, 0),
-        radius: (maxSize - i * 3) + 12,
+        radius,
         c: cs[i]
       }
       bodies.push(body)

@@ -8,15 +8,13 @@ const { mine } = require('@nomicfoundation/hardhat-network-helpers')
 
 const { assert, expect } = require('chai')
 const {
+  Anybody,
   calculateTime,
-  convertScaledStringArrayToBody,
-  convertScaledBigIntBodyToArray,
-  forceAccumulatorBigInts
-} = require('../docs/index.js')
+} = require('../src/anybody.js')
 
 
 // const p = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
-const steps = 10
+const steps = 20
 
 
 
@@ -24,10 +22,15 @@ describe('nft circuit', () => {
   let circuit
   // NOTE: velocities are offset by 10_000 to avoid negative numbers
   const sampleInput = {
+    // bodies: [
+    //   ['326000', '42000', '8670', '3710', '100000'],
+    //   ['363000', '658000', '6680', '13740', '75000'],
+    //   ['679000', '500000', '12290', '12520', '50000']
+    // ]
     bodies: [
-      ['326000', '42000', '8670', '3710', '100000'],
-      ['363000', '658000', '6680', '13740', '75000'],
-      ['679000', '500000', '12290', '12520', '50000']
+      ['398373', '267883', '6242', '12902', '22000'],
+      ['422862', '259630', '11563', '6653', '19000'],
+      ['129399', '999959', '12195', '10445', '16000']
     ]
   }
   const sanityCheck = true
@@ -59,12 +62,13 @@ describe('nft circuit', () => {
   })
 
   it.only('has the correct output', async () => {
-    let bodies = sampleInput.bodies.map(convertScaledStringArrayToBody)
+    const anybody = new Anybody(null, { util: true })
+    let bodies = sampleInput.bodies.map(anybody.convertScaledStringArrayToBody.bind(anybody))
     // console.dir({ bodies }, { depth: null })
     for (let i = 0; i < steps; i++) {
-      bodies = forceAccumulatorBigInts(bodies)
+      bodies = anybody.forceAccumulatorBigInts(bodies)
     }
-    const out_bodies = bodies.map(convertScaledBigIntBodyToArray)
+    const out_bodies = bodies.map(anybody.convertScaledBigIntBodyToArray.bind(anybody))
     // console.log({ out_bodies })
     const expected = { out_bodies }
     const witness = await circuit.calculateWitness(sampleInput, sanityCheck)

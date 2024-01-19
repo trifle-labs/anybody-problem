@@ -221,9 +221,8 @@ template ForceAccumulator(totalBodies) { // max 10 = maxBits: 4
       positionLowerLimiterX[i] = LowerLimiter(20);
       positionLowerLimiterX[i].in <== positionLimiterX[i].out; // maxBits: 20 (maxNum: 1_020_000)
       positionLowerLimiterX[i].limit <== maxVectorScaled; // maxBits: 14 (maxNum: 10_000)
-      positionLowerLimiterX[i].rather <== windowWidthScaled + maxVectorScaled; // maxBits: 20 (maxNum: 1_010_000)
+      positionLowerLimiterX[i].rather <== maxVectorScaled; // maxBits: 20 (maxNum: 1_010_000)
       out_bodies[i][0] <== positionLowerLimiterX[i].out - maxVectorScaled;
-
 
       // NOTE: same as above
       positionLimiterY[i] = Limiter(20);
@@ -235,7 +234,7 @@ template ForceAccumulator(totalBodies) { // max 10 = maxBits: 4
       positionLowerLimiterY[i] = LowerLimiter(20);
       positionLowerLimiterY[i].in <== positionLimiterY[i].out; // maxBits: 20 (maxNum: 1_020_000)
       positionLowerLimiterY[i].limit <== maxVectorScaled; // maxBits: 14 (maxNum: 10_000)
-      positionLowerLimiterY[i].rather <== windowWidthScaled + maxVectorScaled; // maxBits: 20 (maxNum: 1_010_000)
+      positionLowerLimiterY[i].rather <== maxVectorScaled; // maxBits: 20 (maxNum: 1_010_000)
       out_bodies[i][1] <== positionLowerLimiterY[i].out - maxVectorScaled;
     }
     // log("out_bodies[0][0]", out_bodies[0][0]);
