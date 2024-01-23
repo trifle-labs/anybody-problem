@@ -6,7 +6,7 @@
     <div v-for="proof, i in proofs" :key="proof.a">
         <button :disabled="!proof.complete" onclick="verify(i)">Sync</button>
         {{ proof.complete ? '✅' : '⏳' }}
-          {{steps + steps * i}} ticks 
+          Tick {{steps + steps * i}}
     </div>
   </div>
 </div>
@@ -68,13 +68,13 @@ export default {
     },
     async  prove(bodies, finalBodies) {
       // this.proofs.push({})
-      console.log({bodies, finalBodies})
+      // console.log({bodies, finalBodies})
       // const timeStart = Date.now()
       // console.log('proving')
       const sampleInput = {
         bodies
       }
-      const circuit = isTest ? 'nftTest' : 'nftProd'    
+      const circuit = isTest ? 'nft_3_20' : 'nftProd'    
       this.proofs.push({sampleInput, circuit, finalBodies})
 
       if (this.proofs.length !== 1) return
@@ -88,7 +88,7 @@ export default {
         const dataResult = e.data
         console.log({dataResult})
         const finalBodies = dataResult.finalBodies
-        console.log({finalBodies})
+        // console.log({finalBodies})
         // const timeEnd = Date.now()
         // const difference = timeEnd - timeStart
   
@@ -127,8 +127,8 @@ export default {
       const sketch = (p) => {
         p.setup = () => {
           this.anybody = new Anybody(p, {
-            preRun: 10_000,
-            // seed: 5629n, // NOTE: this seed diverges after 4 proofs
+            // preRun: 480,
+            // seed: 94n, // NOTE: this seed diverges after 4 proofs
             totalBodies: 3,
             mode: 'nft',
             stopEvery: steps,//487,

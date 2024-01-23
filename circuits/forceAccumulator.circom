@@ -116,8 +116,13 @@ template ForceAccumulator(totalBodies) { // max 10 = maxBits: 4
     component positionLowerLimiterX[totalBodies];
     component positionLimiterY[totalBodies];
     component positionLowerLimiterY[totalBodies];
+    component isZeroX[totalBodies];
+    component muxX[totalBodies];
+    component isZeroY[totalBodies];
+    component muxY[totalBodies];
 
     for (var i = 0; i < totalBodies; i++) {
+      // log("!!!!!!!!!!");
       // log("i-i-i-i-i", i);
       // log("accumulated_body_forces_x", i, accumulated_body_forces[i][0]);
       // log("accumulated_body_forces_y", i, accumulated_body_forces[i][1]);
@@ -129,7 +134,9 @@ template ForceAccumulator(totalBodies) { // max 10 = maxBits: 4
       */
       new_vector_x[i] <== bodies[i][2] + accumulated_body_forces[i][0]; // maxBits: 70 (maxNum: 936_000_000_000_000_020_000) = (2 * maximum_accumulated_possible) + (2 * maxVector)
       new_vector_y[i] <== bodies[i][3] + accumulated_body_forces[i][1]; // maxBits: 70 (maxNum: 936_000_000_000_000_020_000) = (2 * maximum_accumulated_possible) + (2 * maxVector)
-
+      // log("bodies[i][2]", bodies[i][2]);
+      // log("accumulated_body_forces[i][0]", accumulated_body_forces[i][0]);
+      // log("new_vector_x[i]", new_vector_x[i]);
       // limit the magnitude of the vector
       /* 
       NOTE: vectorLimitX needs to be limited by maxVectorScaled. However because new_vector_x
@@ -213,29 +220,67 @@ template ForceAccumulator(totalBodies) { // max 10 = maxBits: 4
       maxVectorScaled will need to be removed from the final position value
       */
       positionLimiterX[i] = Limiter(20);
-      positionLimiterX[i].in <== bodies[i][0] + out_bodies[i][2] - maxVectorScaled + maxVectorScaled; // maxBits: 20 (maxNum: 1_020_000)
+      positionLimiterX[i].in <== bodies[i][0] + out_bodies[i][2]; // maxBits: 20 (maxNum: 1_020_000)
       positionLimiterX[i].limit <== windowWidthScaled + maxVectorScaled; // maxBits: 20 (maxNum: 1_010_000)
       positionLimiterX[i].rather <== maxVectorScaled; // maxBits: 14 (maxNum: 10_000)
 
       // NOTE: maxVectorScaled is still included, needs to be removed at end of lowerLimiter
       positionLowerLimiterX[i] = LowerLimiter(20);
-      positionLowerLimiterX[i].in <== positionLimiterX[i].out; // maxBits: 20 (maxNum: 1_020_000)
+      positionLowerLimiterX[i].in <== bodies[i][0] + out_bodies[i][2]; // maxBits: 20 (maxNum: 1_020_000)
       positionLowerLimiterX[i].limit <== maxVectorScaled; // maxBits: 14 (maxNum: 10_000)
-      positionLowerLimiterX[i].rather <== maxVectorScaled; // maxBits: 20 (maxNum: 1_010_000)
-      out_bodies[i][0] <== positionLowerLimiterX[i].out - maxVectorScaled;
+      positionLowerLimiterX[i].rather <== windowWidthScaled + maxVectorScaled; // maxBits: 20 (maxNum: 1_010_000)
+      // out_bodies[i][0] <== positionLowerLimiterX[i].out;
+    
+      isZeroX[i]  = IsZero();
+      isZeroX[i].in <== positionLimiterX[i].in - positionLimiterX[i].out;
+      // log("bodies[i][0]", bodies[i][0]);
+      // log("out_bodies[i][2]", out_bodies[i][2]);
+      // log("bodies[i][0] + out_bodies[i][2]", bodies[i][0] + out_bodies[i][2]);
+      // log("positionLimiterX[i].in", positionLimiterX[i].in);
+      // log("positionLimiterX[i].out", positionLimiterX[i].out);
+
+
+      // log("positionLowerLimiterX[i].in", positionLowerLimiterX[i].in);
+      // log("positionLowerLimiterX[i].out", positionLowerLimiterX[i].out);
+      // log("positionLowerLimiterX[i].out - maxVectorScaled", positionLowerLimiterX[i].out - maxVectorScaled);
+
+      // log("isZeroX[i].out", isZeroX[i].out);
+      muxX[i] = Mux1();
+      muxX[i].c[0] <== positionLimiterX[i].out - maxVectorScaled;
+      muxX[i].c[1] <== positionLowerLimiterX[i].out - maxVectorScaled;
+      muxX[i].s <== isZeroX[i].out;
+  
+      // if positionLimiterX.out !== positionLimiterX.in, then out_bodies[i][0] <== positionLimiterX.out
+      // else, out_bodies[i][0] <== positionLowerLimiterX.out
+      out_bodies[i][0] <== muxX[i].out;
+  
+
 
       // NOTE: same as above
       positionLimiterY[i] = Limiter(20);
-      positionLimiterY[i].in <== bodies[i][1] + out_bodies[i][3] - maxVectorScaled + maxVectorScaled; // maxBits: 20 (maxNum: 1_020_000)
+      positionLimiterY[i].in <== bodies[i][1] + out_bodies[i][3]; // maxBits: 20 (maxNum: 1_020_000)
       positionLimiterY[i].limit <== windowWidthScaled + maxVectorScaled; // maxBits: 20 (maxNum: 1_010_000)
       positionLimiterY[i].rather <== maxVectorScaled; // maxBits: 14 (maxNum: 10_000)
 
       // NOTE: maxVectorScaled is still included, needs to be removed at end of calculation
       positionLowerLimiterY[i] = LowerLimiter(20);
-      positionLowerLimiterY[i].in <== positionLimiterY[i].out; // maxBits: 20 (maxNum: 1_020_000)
+      positionLowerLimiterY[i].in <== bodies[i][1] + out_bodies[i][3]; // maxBits: 20 (maxNum: 1_020_000)
       positionLowerLimiterY[i].limit <== maxVectorScaled; // maxBits: 14 (maxNum: 10_000)
-      positionLowerLimiterY[i].rather <== maxVectorScaled; // maxBits: 20 (maxNum: 1_010_000)
-      out_bodies[i][1] <== positionLowerLimiterY[i].out - maxVectorScaled;
+      positionLowerLimiterY[i].rather <== windowWidthScaled + maxVectorScaled; // maxBits: 20 (maxNum: 1_010_000)
+      // out_bodies[i][1] <== positionLowerLimiterY[i].out;
+
+          
+      isZeroY[i]  = IsZero();
+      isZeroY[i].in <== positionLimiterY[i].in - positionLimiterY[i].out;
+
+      muxY[i] = Mux1();
+      muxY[i].c[0] <== positionLimiterY[i].out - maxVectorScaled;
+      muxY[i].c[1] <== positionLowerLimiterY[i].out - maxVectorScaled;
+      muxY[i].s <== isZeroY[i].out;
+  
+      // if positionLimiterX.out !== positionLimiterX.in, then out_bodies[i][0] <== positionLimiterX.out
+      // else, out_bodies[i][0] <== positionLowerLimiterX.out
+      out_bodies[i][1] <== muxY[i].out;
     }
     // log("out_bodies[0][0]", out_bodies[0][0]);
     // log("out_bodies[0][1]", out_bodies[0][1]);

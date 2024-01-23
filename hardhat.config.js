@@ -150,5 +150,12 @@ const config = {
   },
 }
 
+for (let i = 3; i < 11; i++) {
+  config.circom.circuits.push({
+    name: `nft_${i}_20`,
+    // No protocol, so it defaults to groth16
+  })
+}
+
 
 module.exports = config

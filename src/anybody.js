@@ -275,9 +275,13 @@ class Anybody extends EventEmitter {
         accumulativeForces[j] = _addVectors(accumulativeForces[j], [-force[0], -force[1]])
       }
     }
+    // console.log({ vectorLimitScaled })
     for (let i = 0; i < bodies.length; i++) {
       const body = bodies[i]
       const body_velocity = _addVectors([body.velocity.x, body.velocity.y], accumulativeForces[i])//.mult(friction);
+      // console.log('body.velocity.x', body.velocity.x)
+      // console.log('accumulativeForces[i][0]', accumulativeForces[i][0])
+      // console.log('body_velocity[0]', body_velocity[0])
       body.velocity.x = body_velocity[0]
       body.velocity.y = body_velocity[1]
       const body_velocity_x_abs = body.velocity.x > 0n ? body.velocity.x : -1n * body.velocity.x
@@ -290,6 +294,10 @@ class Anybody extends EventEmitter {
       }
       // body.velocity.limit(speedLimit);
       const body_position = _addVectors([body.position.x, body.position.y], [body.velocity.x, body.velocity.y])
+      // console.log('unlimited new position of x = ', body.position.x)
+      // console.log('body.position.x', body.position.x)
+      // console.log('body.velocity.x', body.velocity.x)
+      // console.log('body_position[0]', body_position[0])
       body.position.x = body_position[0]
       body.position.y = body_position[1]
     }
@@ -806,7 +814,7 @@ class Anybody extends EventEmitter {
       this.bodiesGraphic = this.p.createGraphics(this.windowWidth, this.windowHeight)
     }
     // this.bodiesGraphic.clear()
-    // if (this.mode == 'nft') this.drawBorder()
+    if (this.mode == 'nft') this.drawBorder()
     this.bodiesGraphic.strokeWeight(1)
     const bodyCopies = []
     for (let i = 0; i < this.bodies.length; i++) {
@@ -818,13 +826,22 @@ class Anybody extends EventEmitter {
         finalColor = this.bodiesGraphic.color(hueColor, 60, 100) // Saturation and brightness at 100 for pure spectral colors
       } else if (this.mode == 'nft') {
         // console.log(c)
-        finalColor = c//this.convertColor(c)
+        // finalColor = c
+        finalColor = this.convertColor(c)
       } else {
         finalColor = c
       }
 
       if (this.mode == 'nft') {
-        this.bodiesGraphic.noStroke()
+        if (i % 3 == 0) {
+          this.bodiesGraphic.stroke('black')
+        } else if (i % 2 == 0) {
+          this.bodiesGraphic.stroke('white')
+        } else {
+          this.bodiesGraphic.noStroke()
+
+        }
+        // this.bodiesGraphic.noStroke()
         // this.bodiesGraphic.stroke(this.getBW())
         // this.bodiesGraphic.stroke('white')
         this.bodiesGraphic.fill(finalColor)
@@ -922,7 +939,7 @@ class Anybody extends EventEmitter {
     if (!this.eyes) {
       this.eyes = this.p.loadImage('/eyes-3.png')
     }
-    const size = 3
+    const size = 6
     graphic.image(this.eyes, -body.radius * (size / 2), -body.radius * (size / 2), body.radius * size, body.radius * size)
 
     graphic.pop()
