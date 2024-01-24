@@ -37,7 +37,7 @@ contract Ticks is ERC20, Ownable {
     }
 
     function mint(address to, uint256 amount) public {
-        require(msg.sender == bodies, "Only Bodies can mint");
+        require(msg.sender == problems, "Only Problems can mint");
         _mint(to, amount);
     }
 }

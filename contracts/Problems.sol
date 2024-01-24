@@ -14,6 +14,8 @@ import {Groth16Verifier as Groth16Verifier10} from "./Nft_10_20Verifier.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./Bodies.sol";
+import "./Ticks.sol";
+import "./Solver.sol";
 
 contract Problems is ERC721, Ownable {
     uint256 public problemSupply;
@@ -28,6 +30,7 @@ contract Problems is ERC721, Ownable {
 
     struct Body {
         uint256 bodyId;
+        uint256 bodyIndex;
         uint256 px;
         uint256 py;
         uint256 vx;
@@ -39,40 +42,51 @@ contract Problems is ERC721, Ownable {
     struct Problem {
         bytes32 seed;
         uint256 bodies;
-        Body[10] bodyData;
-        uint256 ticks;
-    }
-
-    struct Verifier {
-        address verifier;
+        mapping(uint256 => Body) bodyData;
+        uint256[10] bodyIds;
         uint256 ticks;
     }
 
     mapping(uint256 => Problem) public problems;
-    Verifier[7] public verifiers;
+
+    // mapping is body count to ticks to address
+    mapping(uint256 => mapping(uint256 => address)) public verifiers;
 
     uint256 public constant scalingFactor = 3 ** 10;
     uint256 public constant windowWidth = 1000 * scalingFactor;
     uint256 public constant maxRadius = 13;
 
+    event bodyAdded(
+        uint256 problemId,
+        uint256 tick,
+        uint256 px,
+        uint256 py,
+        uint256 radius,
+        bytes32 seed
+    );
+
+    event bodyRemoved(
+        uint256 problemId,
+        uint256 tick,
+        uint256 bodyId,
+        bytes32 seed
+    );
+
     constructor(
         address wallet_,
         address metadata_,
-        address[7] memory verifiers_,
-        uint256 verifiersTicks
+        address[] memory verifiers_,
+        uint256[] memory verifiersTicks,
+        uint256[] memory verifiersBodies
     ) ERC721("Anybody Problem", "ANY") {
         require(wallet_ != address(0), "Invalid wallet");
         require(metadata_ != address(0), "Invalid metadata");
-        require(verifiersTicks > 0, "Invalid verifier ticks");
         wallet = wallet_;
         metadata = metadata_;
         for (uint256 i = 0; i < verifiers_.length; i++) {
+            require(verifiersTicks[i] > 0, "Invalid verifier ticks");
             require(verifiers_[i] != address(0), "Invalid verifier");
-            Verifier memory verifier = Verifier({
-                verifier: verifiers_[i],
-                ticks: verifiersTicks
-            });
-            verifiers[i] = verifier;
+            verifiers[verifiersBodies[i]][verifiersTicks[i]] = verifiers_[i];
         }
     }
 
@@ -86,26 +100,24 @@ contract Problems is ERC721, Ownable {
         price = price_;
     }
 
-    function updateMetadata(address metadata_) public onlyOwner {
-        metadata = metadata_;
-    }
-
     function updateVerifier(
         uint256 index,
         address verifier_,
+        uint256 verifierBodies,
         uint256 verifierTicks
     ) public onlyOwner {
-        verifiers[index] = Verifier({
-            verifier: verifier_,
-            ticks: verifierTicks
-        });
+        verifiers[verifierBodies][verifierTicks] = verifier_;
     }
 
-    function updateBodies(address bodies_) public onlyOwner {
+    function updateMetadataAddress(address metadata_) public onlyOwner {
+        metadata = metadata_;
+    }
+
+    function updateBodiesAddress(address bodies_) public onlyOwner {
         bodies = bodies_;
     }
 
-    function updateTicks(address ticks_) public onlyOwner {
+    function updateTicksAddress(address ticks_) public onlyOwner {
         ticks = ticks_;
     }
 
@@ -121,27 +133,93 @@ contract Problems is ERC721, Ownable {
         problemSupply++;
         _mint(msg.sender, problemSupply);
 
-        Body[10] memory bodyData;
         for (uint256 i = 0; i < 3; i++) {
             uint256 bodyId = Bodies(bodies).mintAndBurn(
                 msg.sender,
                 problemSupply
             );
-            bytes32 bodySeed = Bodies(bodies).seeds(bodyId);
-            bodyData[i] = getRandomValues(bodyId, bodySeed, i);
+            _addBody(problemSupply, bodyId);
+            // bytes32 bodySeed = Bodies(bodies).seeds(bodyId);
+            // problems[problemSupply].bodyData[bodyId] = getRandomValues(
+            //     bodyId,
+            //     bodySeed,
+            //     i
+            // );
+            // problems[problemSupply].bodyIds[i] = bodyId;
         }
-        problems[problemSupply] = Problem({
-            seed: generateSeed(problemSupply),
-            bodies: 3,
-            bodyData: bodyData,
-            ticks: 0
-        });
+        problems[problemSupply].seed = generateSeed(problemSupply);
+        problems[problemSupply].bodies = 3;
+    }
+
+    function mintBody(uint256 problemId) public {
+        require(ownerOf(problemId) == msg.sender, "Not owner");
+        uint256 bodyId = Bodies(bodies).mintAndBurn(msg.sender, problemId);
+        _addBody(problemId, bodyId);
+    }
+
+    function addBody(uint256 problemId, uint256 bodyId) public {
+        require(ownerOf(problemId) == msg.sender, "Not owner");
+        require(Bodies(bodies).ownerOf(bodyId) == msg.sender, "Not owner");
+        Bodies(bodies).burn(bodyId);
+        _addBody(problemId, bodyId);
+    }
+
+    function removeBody(uint256 problemId, uint256 bodyId) public {
+        require(ownerOf(problemId) == msg.sender, "Not owner");
+        Bodies(bodies).problemMint(msg.sender, bodyId);
+        emit bodyRemoved(
+            problemId,
+            problems[problemId].ticks,
+            bodyId,
+            problems[problemId].seed
+        );
+        uint256 bodyIndex = problems[problemId].bodyData[bodyId].bodyIndex;
+        problems[problemId].bodies--;
+        problems[problemId].bodyIds = removeElement(
+            problems[problemId].bodyIds,
+            bodyIndex
+        );
+        delete problems[problemId].bodyData[bodyId];
+    }
+
+    function removeElement(
+        uint256[10] memory array,
+        uint256 index
+    ) internal pure returns (uint256[10] memory) {
+        for (uint256 i = index; i < array.length - 1; i++) {
+            array[i] = array[i + 1];
+        }
+        delete array[array.length - 1];
+        return array;
+    }
+
+    function _addBody(uint256 problemId, uint256 bodyId) internal {
+        bytes32 bodySeed = Bodies(bodies).seeds(bodyId);
+        uint256 tick = problems[problemId].ticks;
+        Body memory bodyData;
+        uint256 i = problems[problemId].bodies;
+        bodyData = getRandomValues(bodyId, bodySeed, i);
+        problems[problemId].bodyData[bodyId] = bodyData;
+        problems[problemId].bodyIds[i] = bodyId;
+        problems[problemId].bodies++;
+        emit bodyAdded(
+            problemId,
+            tick,
+            bodyData.px,
+            bodyData.py,
+            bodyData.radius,
+            bodySeed
+        );
     }
 
     function getRand(uint256 blockNumber) public view returns (bytes32) {
         return keccak256(abi.encodePacked(blockhash(blockNumber)));
     }
 
+    // NOTE: this function uses i as input for radius, which means it's possible
+    // for an owner to remove a body at index 0 and add back with a greater index
+    // the greater index may collide with the index originally used or another body
+    // the result is that there may be bodies with the same radius which is acceptable
     function getRandomValues(
         uint256 bodyId,
         bytes32 seed,
@@ -160,6 +238,7 @@ contract Problems is ERC721, Ownable {
         body.px = x;
         body.py = y;
         body.radius = r;
+        body.bodyIndex = i;
 
         return body;
     }
@@ -174,6 +253,7 @@ contract Problems is ERC721, Ownable {
 
     function solveProblem(
         uint256 problemId,
+        uint256 tickCount,
         uint[2] memory a,
         uint[2][2] memory b,
         uint[2] memory c,
@@ -182,11 +262,11 @@ contract Problems is ERC721, Ownable {
         uint256 numberOfBodies = problems[problemId].bodies;
         uint256 numberOfInputs = numberOfBodies * 5 * 2;
         require(input.length == numberOfInputs, "Invalid input length");
-        Verifier memory verifier = verifiers[numberOfBodies - 3];
+        address verifier = verifiers[numberOfBodies][tickCount];
 
         if (numberOfBodies == 3) {
             require(
-                Groth16Verifier3(verifier.verifier).verifyProof(
+                Groth16Verifier3(verifier).verifyProof(
                     a,
                     b,
                     c,
@@ -196,7 +276,7 @@ contract Problems is ERC721, Ownable {
             );
         } else if (numberOfBodies == 4) {
             require(
-                Groth16Verifier4(verifier.verifier).verifyProof(
+                Groth16Verifier4(verifier).verifyProof(
                     a,
                     b,
                     c,
@@ -206,7 +286,7 @@ contract Problems is ERC721, Ownable {
             );
         } else if (numberOfBodies == 5) {
             require(
-                Groth16Verifier5(verifier.verifier).verifyProof(
+                Groth16Verifier5(verifier).verifyProof(
                     a,
                     b,
                     c,
@@ -216,7 +296,7 @@ contract Problems is ERC721, Ownable {
             );
         } else if (numberOfBodies == 6) {
             require(
-                Groth16Verifier6(verifier.verifier).verifyProof(
+                Groth16Verifier6(verifier).verifyProof(
                     a,
                     b,
                     c,
@@ -226,7 +306,7 @@ contract Problems is ERC721, Ownable {
             );
         } else if (numberOfBodies == 7) {
             require(
-                Groth16Verifier7(verifier.verifier).verifyProof(
+                Groth16Verifier7(verifier).verifyProof(
                     a,
                     b,
                     c,
@@ -236,7 +316,7 @@ contract Problems is ERC721, Ownable {
             );
         } else if (numberOfBodies == 8) {
             require(
-                Groth16Verifier8(verifier.verifier).verifyProof(
+                Groth16Verifier8(verifier).verifyProof(
                     a,
                     b,
                     c,
@@ -246,7 +326,7 @@ contract Problems is ERC721, Ownable {
             );
         } else if (numberOfBodies == 9) {
             require(
-                Groth16Verifier9(verifier.verifier).verifyProof(
+                Groth16Verifier9(verifier).verifyProof(
                     a,
                     b,
                     c,
@@ -256,7 +336,7 @@ contract Problems is ERC721, Ownable {
             );
         } else if (numberOfBodies == 10) {
             require(
-                Groth16Verifier10(verifier.verifier).verifyProof(
+                Groth16Verifier10(verifier).verifyProof(
                     a,
                     b,
                     c,
@@ -268,8 +348,9 @@ contract Problems is ERC721, Ownable {
             revert("Invalid number of bodies");
         }
 
-        Problem memory problem = problems[problemId];
-        problem.ticks += verifier.ticks;
+        Problem storage problem = problems[problemId];
+        problem.ticks += tickCount;
+        Ticks(ticks).mint(msg.sender, tickCount);
 
         for (uint256 i = 0; i < numberOfBodies; i++) {
             // px
@@ -327,8 +408,6 @@ contract Problems is ERC721, Ownable {
                 5 * numberOfBodies + i * numberOfBodies + 4
             ];
         }
-
-        problems[problemId] = problem;
     }
 
     function convertTo30(

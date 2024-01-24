@@ -81,4 +81,8 @@ contract Bodies is ERC721, Ownable {
     function burn(uint256 bodyID) public onlyProblems {
         _burn(bodyID);
     }
+
+    function problemMint(address owner, uint256 bodyId) public onlyProblems {
+        _mint(msg.sender, bodyId);
+    }
 }
