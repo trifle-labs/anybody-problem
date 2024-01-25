@@ -22,7 +22,7 @@ import { Anybody } from '../anybody'
 // const proofWorker = require('../proof.worker.js')
 const worker = new Worker('proof.worker.js')
 // import TimerPopup from './TimerPopup.vue'
-const {  verify } = require('../../utils/utils')
+const {  verify } = require('../../scripts/circuits')
 // import { useWebWorkerFn } from '@vueuse/core'
 
 export default {

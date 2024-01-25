@@ -5,20 +5,38 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract Ticks is ERC20, Ownable {
-    address problems;
-    address bodies;
+    address public solver;
+    address payable public problems;
+    address public bodies;
 
-    constructor(address problems_, address bodies_) ERC20("Ticks", "TICK") {
-        updateProblems(problems_);
-        updateBodies(bodies_);
+    modifier onlySolver() {
+        require(msg.sender == solver, "Only Solver can call");
+        _;
     }
 
-    function updateProblems(address problems_) public onlyOwner {
+    modifier onlyBodies() {
+        require(msg.sender == bodies, "Only Bodies can call");
+        _;
+    }
+
+    constructor(
+        address payable problems_,
+        address bodies_
+    ) ERC20("Ticks", "TICK") {
+        updateProblemsAddress(problems_);
+        updateBodiesAddress(bodies_);
+    }
+
+    function updateProblemsAddress(address payable problems_) public onlyOwner {
         problems = problems_;
     }
 
-    function updateBodies(address bodies_) public onlyOwner {
+    function updateBodiesAddress(address bodies_) public onlyOwner {
         bodies = bodies_;
+    }
+
+    function updateSolverAddress(address solver_) public onlyOwner {
+        solver = solver_;
     }
 
     function allowance(
@@ -31,13 +49,11 @@ contract Ticks is ERC20, Ownable {
         return super.allowance(owner, spender);
     }
 
-    function burn(address from, uint256 amount) public {
-        require(msg.sender == bodies, "Only Bodies can burn");
+    function burn(address from, uint256 amount) public onlyBodies {
         _burn(from, amount);
     }
 
-    function mint(address to, uint256 amount) public {
-        require(msg.sender == problems, "Only Problems can mint");
+    function mint(address to, uint256 amount) public onlySolver {
         _mint(to, amount);
     }
 }

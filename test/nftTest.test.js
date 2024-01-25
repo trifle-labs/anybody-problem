@@ -3,7 +3,7 @@
 const { describe, before, it } = require('mocha')
 const hre = require('hardhat')
 const { ethers } = require('hardhat')
-const { exportCallDataGroth16 } = require('../utils/utils')
+const { exportCallDataGroth16 } = require('../scripts/circuits')
 const { mine } = require('@nomicfoundation/hardhat-network-helpers')
 
 const { assert, expect } = require('chai')

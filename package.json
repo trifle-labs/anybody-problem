@@ -8,7 +8,9 @@
     "circom": "./utils/basic_circom.sh",
     "circom:dev": "hardhat circom --deterministic --debug --verbose",
     "circom:prod": "hardhat circom --verbose",
-    "test": "hardhat test"
+    "test": "hardhat test",
+    "chain": "hardhat node"
+    
   },
   "main": "index.js",
   "dependencies": {
@@ -72,8 +74,10 @@
     "rules": {
       "indent": [
         "error",
-        2
+        2,
+        { "SwitchCase": 1 }
       ],
+
       "linebreak-style": [
         "error",
         "unix"

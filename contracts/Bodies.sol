@@ -6,8 +6,10 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./Ticks.sol";
 import "./Problems.sol";
 
+// import "hardhat/console.sol";
+
 contract Bodies is ERC721, Ownable {
-    address public problems;
+    address payable public problems;
     address public ticks;
     mapping(uint256 => bytes32) public seeds;
     uint256 public counter;
@@ -24,6 +26,7 @@ contract Bodies is ERC721, Ownable {
         100_000_000, //9th body
         1_000_000_000 // 10th body
     ];
+    // problemId to tickPrice index
     mapping(uint256 => uint256) public problemPriceLevels;
 
     modifier onlyProblems() {
@@ -31,15 +34,21 @@ contract Bodies is ERC721, Ownable {
         _;
     }
 
-    constructor(address problems_) ERC721("Bodies", "BOD") {
-        updateProblems(problems_);
+    constructor(address payable problems_) ERC721("Bodies", "BOD") {
+        updateProblemsAddress(problems_);
     }
 
-    function updateProblems(address problems_) public onlyOwner {
+    fallback() external {
+        revert("no fallback function");
+    }
+
+    // TODO: add metadata
+
+    function updateProblemsAddress(address payable problems_) public onlyOwner {
         problems = problems_;
     }
 
-    function updateTicks(address ticks_) public onlyOwner {
+    function updateTicksAddress(address ticks_) public onlyOwner {
         ticks = ticks_;
     }
 
@@ -70,6 +79,7 @@ contract Bodies is ERC721, Ownable {
         address owner,
         uint256 problemId
     ) public onlyProblems returns (uint256) {
+        // NOTE: Problems already confirms this token exists and is owned by the owner
         processPayment(owner, problemId);
         counter++;
         seeds[counter] = generateSeed(counter);
@@ -83,6 +93,6 @@ contract Bodies is ERC721, Ownable {
     }
 
     function problemMint(address owner, uint256 bodyId) public onlyProblems {
-        _mint(msg.sender, bodyId);
+        _mint(owner, bodyId);
     }
 }
