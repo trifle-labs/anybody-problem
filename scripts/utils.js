@@ -229,7 +229,35 @@ const getParsedEventLogs = (receipt, contract, eventName) => {
 }
 
 
+const mintProblem = async (signers, deployedContracts, acct) => {
+  const [owner] = signers
+  acct = acct || owner
+  const { Problems: problems } = deployedContracts
+  await problems.updatePaused(false)
+  await problems.updateStartDate(0)
+  const tx = await problems.connect(acct)['mint()']({ value: correctPrice })
+  const receipt = await tx.wait()
+  const problemId = getParsedEventLogs(receipt, problems, 'Transfer')[0].args.tokenId
+  return { problemId }
+}
+
+const prepareMintBody = async (signers, deployedContracts, problemId, acct) => {
+  const [owner] = signers
+  acct = acct || owner
+  const { Ticks: ticks, Bodies: bodies } = deployedContracts
+  const tickPriceIndex = await bodies.problemPriceLevels(problemId)
+  const decimals = await bodies.decimals()
+  const tickPrice = await bodies.tickPrice(tickPriceIndex)
+  const tickPriceWithDecimals = tickPrice.mul(decimals)
+  await ticks.updateSolverAddress(owner.address)
+  await ticks.mint(acct.address, tickPriceWithDecimals)
+}
+
+
 module.exports = {
+
+  prepareMintBody,
+  mintProblem,
   getParsedEventLogs,
   decodeUri,
   initContracts,

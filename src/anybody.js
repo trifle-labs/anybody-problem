@@ -9,6 +9,8 @@ class Anybody extends EventEmitter {
   constructor(p, options = {}) {
     super()
     const defaultOptions = {
+      inputData: null,
+      bodyData: null,
       // Add default properties and their initial values here
       totalBodies: 3,
       seed: null,
@@ -35,7 +37,9 @@ class Anybody extends EventEmitter {
     const mergedOptions = { ...defaultOptions, ...options }
 
     // Assign the merged options to the instance properties
-    this.totalBodies = mergedOptions.totalBodies
+    this.inputData = mergedOptions.inputData
+    this.bodyData = mergedOptions.bodyData
+    this.startingBodies = mergedOptions.totalBodies
     this.seed = mergedOptions.seed
     this.windowWidth = mergedOptions.windowWidth
     this.windowHeight = mergedOptions.windowHeight
@@ -59,7 +63,8 @@ class Anybody extends EventEmitter {
     this.p = p
     !this.util && this.prepareP5()
     this.clearValues()
-    !this.util && this.init()
+    this.init()
+    !this.util && this.start()
     !this.util && this.audio()
   }
 
@@ -94,19 +99,26 @@ class Anybody extends EventEmitter {
     this.rng = new Prando(this.seed.toString(16))
     this.generateBodies()
     // const vectorLimitScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
+    this.storeInits()
+  }
+
+  start() {
     this.addListener()
     this.startTick()
     this.runSteps(this.preRun)
+    this.paintAtOnce(this.paintSteps)
+    if (this.freeze) {
+      this.paused = true
+    }
+  }
+
+  storeInits() {
     this.bodyInits = this.convertBodiesToBigInts(this.bodies).map(b => {
       b = this.convertScaledBigIntBodyToArray(b)
       b[2] = (BigInt(b[2])).toString()
       b[3] = (BigInt(b[3])).toString()
       return b
     })
-    this.paintAtOnce(this.paintSteps)
-    if (this.freeze) {
-      this.paused = true
-    }
   }
 
   audio() {
@@ -245,7 +257,7 @@ class Anybody extends EventEmitter {
     this.allLevelSec.unshift(level)
     this.thisLevelSec = 0
     this.thisLevelMissileCount = 0
-    this.totalBodies += 1
+    this.startingBodies += 1
     this.missiles = []
     this.bodies = []
     this.generateBodies()
@@ -556,6 +568,14 @@ class Anybody extends EventEmitter {
   finish() {
     // this.finished = true
     // this.setPause(true)
+    this.calculateBodyFinal()
+    this.emit('finished', { bodyInits: JSON.parse(JSON.stringify(this.bodyInits)), bodyFinal: JSON.parse(JSON.stringify(this.bodyFinal)) })
+    this.bodyInits = JSON.parse(JSON.stringify(this.bodyFinal))
+    this.bodyFinal = []
+    // this.setPause(false)
+  }
+
+  calculateBodyFinal() {
     this.bodyFinal = this.convertBodiesToBigInts(this.bodies).map(b => {
       // console.log({ b })
       b = this.convertScaledBigIntBodyToArray(b)
@@ -564,10 +584,6 @@ class Anybody extends EventEmitter {
       b[3] = (BigInt(b[3])).toString()
       return b
     })
-    this.emit('finished', { bodyInits: JSON.parse(JSON.stringify(this.bodyInits)), bodyFinal: JSON.parse(JSON.stringify(this.bodyFinal)) })
-    this.bodyInits = JSON.parse(JSON.stringify(this.bodyFinal))
-    this.bodyFinal = []
-    // this.setPause(false)
   }
 
   draw() {
@@ -719,7 +735,7 @@ class Anybody extends EventEmitter {
       this.p.text('Total Frames: ' + this.preRun + this.frames, 50, 10) // Adjust the x-coordinate to align the text
       this.p.text('Total Time: ' + secondsAsTime, 50, 20) // Adjust the x-coordinate to align the text
       this.p.text('Total Shots: ' + this.missileCount, 50, 30) // Adjust the x-coordinate to align the text
-      this.p.text('Lvl ' + (this.totalBodies - 2) + ' - ' + thisLevelSecondsAsTime + ' - ' + (this.totalBodies - this.bodies.length) + '/' + this.totalBodies + ' - ' + this.thisLevelMissileCount + ' shots', 50, 40) // Adjust the x-coordinate to align the text
+      this.p.text('Lvl ' + (this.startingBodies - 2) + ' - ' + thisLevelSecondsAsTime + ' - ' + (this.startingBodies - this.bodies.length) + '/' + this.startingBodies + ' - ' + this.thisLevelMissileCount + ' shots', 50, 40) // Adjust the x-coordinate to align the text
       for (let i = 0; i < this.allLevelSec.length; i++) {
         const prevLevel = this.allLevelSec[i]
         const prevLevelSecondsAsTime = new Date(prevLevel.thisLevelSec * 1000).toISOString().substr(14, 5)
@@ -814,7 +830,7 @@ class Anybody extends EventEmitter {
       this.bodiesGraphic = this.p.createGraphics(this.windowWidth, this.windowHeight)
     }
     // this.bodiesGraphic.clear()
-    if (this.mode == 'nft') this.drawBorder()
+    // if (this.mode == 'nft') this.drawBorder()
     this.bodiesGraphic.strokeWeight(1)
     const bodyCopies = []
     for (let i = 0; i < this.bodies.length; i++) {
@@ -846,6 +862,7 @@ class Anybody extends EventEmitter {
         // this.bodiesGraphic.stroke('white')
         this.bodiesGraphic.fill(finalColor)
         const radius = body.radius * 4 + this.radiusMultiplyer
+
         this.bodiesGraphic.ellipse(body.position.x, body.position.y, radius, radius)
         let looped = false, loopX = body.position.x, loopY = body.position.y
         const loopGap = radius
@@ -1044,39 +1061,67 @@ class Anybody extends EventEmitter {
   }
 
   generateBodies() {
+
+    if (this.inputData) {
+      this.bodies = this.convertBigIntsToBodies(this.inputData.map(this.convertScaledStringArrayToBody.bind(this)))
+      this.bgColor = this.colorArrayToTxt(this.randomColor(0, 200))
+      this.radiusMultiplyer = this.random(10, 200)
+      for (let i = 0; i < this.startingBodies; i++) {
+        this.bodies[i].c = this.colorArrayToTxt(this.randomColor(0, 200))
+      }
+      return
+    }
+    if (this.bodyData) {
+      this.bgColor = this.colorArrayToTxt(this.randomColor(0, 200))
+      this.radiusMultiplyer = this.random(10, 200)
+
+      // TODO: ensure bodyData is valid and format is correct
+      this.bodies = this.bodyData.map(b => {
+        const seed = b.seed
+        const bodyRNG = new Prando(seed.toString(16))
+        return {
+          position: this.createVector(b.px.toNumber() / parseInt(this.scalingFactor), b.py.toNumber() / parseInt(this.scalingFactor)),
+          velocity: this.createVector(b.vx.toNumber() - this.vectorLimit * parseInt(this.scalingFactor), b.vy.toNumber() - this.vectorLimit * parseInt(this.scalingFactor)),
+          radius: b.radius.toNumber() / parseInt(this.scalingFactor),
+          c: this.colorArrayToTxt(this.randomColor(0, 200, bodyRNG))
+        }
+      })
+      console.dir({ bodies: this.bodies }, { depth: null })
+      this.startingBodies = this.bodies.length
+      return
+    }
     const ss = []
     const cs = []
     const bodies = []
 
     this.radiusMultiplyer = this.random(10, 200)
-    console.log({ radiusMultiplyer: this.radiusMultiplyer })
 
     const startingRadius = 10//this.random(20, 40)
-    console.log({ startingRadius })
+
     // const baseColor = this.randomColor(0, 200)
 
     // const range = 100
     // const midRange = range / 2
     // const start = 0 - midRange
-    // const totalChunks = this.totalBodies
+    // const totalChunks = this.startingBodies
     // const chunk = range / totalChunks
 
     this.bgColor = this.colorArrayToTxt(this.randomColor(0, 200))
 
-    for (let i = 0; i < this.totalBodies; i++) {
+    for (let i = 0; i < this.startingBodies; i++) {
       cs.push(this.colorArrayToTxt(this.randomColor(0, 200)))
     }
 
-    for (let i = 0; i < this.totalBodies; i++) {
+    for (let i = 0; i < this.startingBodies; i++) {
       let s = this.randomPosition()
       ss.push(s)
     }
-    if (this.totalBodies.length > 10) {
+    if (this.startingBodies.length > 10) {
       throw new Error('too many bodies')
     }
-    let maxSize = this.totalBodies < 10 ? 10 : this.totalBodies
+    let maxSize = this.startingBodies < 10 ? 10 : this.startingBodies
     for (let i = 0; i < maxSize; i++) {
-      if (i >= this.totalBodies) break
+      if (i >= this.startingBodies) break
       const radius = (maxSize - i * 5) + startingRadius
       // console.log({ radius })
       const body = {
@@ -1087,25 +1132,30 @@ class Anybody extends EventEmitter {
       }
       bodies.push(body)
     }
+
+
     this.bodies = bodies
       .sort((a, b) => b.radius - a.radius)
   }
 
   createVector(x, y) {
-    return this.p.createVector(x, y)
-    // return { x, y }
+    if (this.p) {
+      return this.p.createVector(x, y)
+    } else {
+      return { x, y }
+    }
   }
 
-  random(min, max) {
-    return this.rng.nextInt(min, max)
+  random(min, max, rng = this.rng) {
+    return rng.nextInt(min, max)
     // return Math.floor(Math.random() * (upper - lower + 1)) + lower;
   }
 
-  randomColor(min = 0, max = 255) {
+  randomColor(min = 0, max = 255, rng = this.rng) {
     const color = []
     // let c = Math.floor(random(0, 255))
     for (let i = 0; i < 3; i++) {
-      let c = this.random(min, max)
+      let c = this.random(min, max, rng)
       color.push(c)
     }
     return color
@@ -1132,7 +1182,6 @@ class Anybody extends EventEmitter {
     const actualWidth = body.offsetWidth
     const x = e.offsetX * this.windowWidth / actualWidth
     const y = e.offsetY * this.windowWidth / actualWidth
-    console.log({ x, y })
     const radius = 10
 
     const b = {

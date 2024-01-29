@@ -27,6 +27,7 @@ contract Problems is ERC721, Ownable {
 
     struct Body {
         uint256 bodyId;
+        uint256 bodyStyle;
         uint256 bodyIndex;
         uint256 px;
         uint256 py;
@@ -48,12 +49,15 @@ contract Problems is ERC721, Ownable {
     // mapping is body count to ticks to address
     mapping(uint256 => mapping(uint256 => address)) public verifiers;
 
+    uint256 public constant maxVector = 10;
     uint256 public constant scalingFactor = 10 ** 3;
     uint256 public constant windowWidth = 1000 * scalingFactor;
     uint256 public constant maxRadius = 13;
 
     event bodyAdded(
         uint256 problemId,
+        uint256 bodyId,
+        uint256 bodyStyle,
         uint256 tick,
         uint256 px,
         uint256 py,
@@ -194,7 +198,7 @@ contract Problems is ERC721, Ownable {
 
     function mintBody(uint256 problemId) public {
         require(!paused, "Paused");
-        require(ownerOf(problemId) == msg.sender, "Not owner");
+        require(ownerOf(problemId) == msg.sender, "Not problem owner");
         require(
             problems[problemId].bodyCount < 10,
             "Cannot have more than 10 bodies"
@@ -206,8 +210,8 @@ contract Problems is ERC721, Ownable {
 
     function addBody(uint256 problemId, uint256 bodyId) public {
         require(!paused, "Paused");
-        require(ownerOf(problemId) == msg.sender, "Not owner");
-        require(Bodies(bodies).ownerOf(bodyId) == msg.sender, "Not owner");
+        require(ownerOf(problemId) == msg.sender, "Not problem owner");
+        require(Bodies(bodies).ownerOf(bodyId) == msg.sender, "Not body owner");
         require(
             problems[problemId].bodyCount < 10,
             "Cannot have more than 10 bodies"
@@ -219,7 +223,7 @@ contract Problems is ERC721, Ownable {
 
     function removeBody(uint256 problemId, uint256 bodyId) public {
         require(!paused, "Paused");
-        require(ownerOf(problemId) == msg.sender, "Not owner");
+        require(ownerOf(problemId) == msg.sender, "Not problem owner");
         require(
             problems[problemId].bodyCount > 3,
             "Cannot have less than 3 bodies"
@@ -253,14 +257,17 @@ contract Problems is ERC721, Ownable {
 
     function _addBody(uint256 problemId, uint256 bodyId, uint256 i) internal {
         bytes32 bodySeed = Bodies(bodies).seeds(bodyId);
+        uint256 bodyStyle = Bodies(bodies).styles(bodyId);
         uint256 tickCount = problems[problemId].tickCount;
         Body memory bodyData;
-        bodyData = getRandomValues(bodyId, bodySeed, i);
+        bodyData = getRandomValues(bodyId, bodySeed, bodyStyle, i);
         problems[problemId].bodyData[bodyId] = bodyData;
         problems[problemId].bodyIds[i] = bodyId;
         problems[problemId].bodyCount++;
         emit bodyAdded(
             problemId,
+            bodyId,
+            bodyStyle,
             tickCount,
             bodyData.px,
             bodyData.py,
@@ -280,6 +287,7 @@ contract Problems is ERC721, Ownable {
     function getRandomValues(
         uint256 bodyId,
         bytes32 seed,
+        uint256 bodyStyle,
         uint256 i
     ) public pure returns (Body memory) {
         Body memory body;
@@ -293,8 +301,11 @@ contract Problems is ERC721, Ownable {
         uint256 r = (maxRadius - i) * scalingFactor;
 
         body.bodyId = bodyId;
+        body.bodyStyle = bodyStyle;
         body.px = x;
         body.py = y;
+        body.vx = maxVector * scalingFactor;
+        body.vy = maxVector * scalingFactor;
         body.radius = r;
         body.bodyIndex = i;
 

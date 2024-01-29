@@ -11,7 +11,10 @@ import "./Problems.sol";
 contract Bodies is ERC721, Ownable {
     address payable public problems;
     address public ticks;
+    // bodyId to seed
     mapping(uint256 => bytes32) public seeds;
+    // bodyId to styleId
+    mapping(uint256 => uint256) public styles;
     uint256 public counter;
     uint256 public constant decimals = 10 ** 18;
     uint256[10] public tickPrice = [
@@ -33,6 +36,12 @@ contract Bodies is ERC721, Ownable {
         require(msg.sender == problems, "Only Problems can call");
         _;
     }
+
+    event Upgrade(
+        uint256 indexed persistBodyId,
+        uint256 indexed burnBodyId,
+        uint256 indexed styleId
+    );
 
     constructor(address payable problems_) ERC721("Bodies", "BOD") {
         updateProblemsAddress(problems_);
@@ -59,6 +68,7 @@ contract Bodies is ERC721, Ownable {
 
     function processPayment(address from, uint256 problemId) internal {
         uint256 problemPriceLevel = problemPriceLevels[problemId];
+        require(problemPriceLevel < 10, "Problem already minted 10 bodies");
         uint256 problemPrice = tickPrice[problemPriceLevel] * decimals;
         problemPriceLevels[problemId]++;
         Ticks(ticks).burn(from, problemPrice);
@@ -67,7 +77,7 @@ contract Bodies is ERC721, Ownable {
     function mint(uint256 problemId) public {
         require(
             Problems(problems).ownerOf(problemId) == msg.sender,
-            "Not owner"
+            "Not problem owner"
         );
         processPayment(msg.sender, problemId);
         counter++;
@@ -86,6 +96,19 @@ contract Bodies is ERC721, Ownable {
         emit Transfer(address(0), owner, counter);
         emit Transfer(owner, address(0), counter);
         return counter;
+    }
+
+    function upgrade(uint256 persistBodyId, uint256 burnBodyId) public {
+        require(ownerOf(persistBodyId) == msg.sender, "Not persistBody owner");
+        require(ownerOf(burnBodyId) == msg.sender, "Not burnBody owner");
+        require(persistBodyId != burnBodyId, "Same body");
+        require(
+            styles[persistBodyId] == styles[burnBodyId],
+            "Different styles"
+        );
+        _burn(burnBodyId);
+        styles[persistBodyId]++;
+        emit Upgrade(persistBodyId, burnBodyId, styles[persistBodyId]);
     }
 
     function burn(uint256 bodyID) public onlyProblems {

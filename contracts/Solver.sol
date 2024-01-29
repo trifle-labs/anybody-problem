@@ -20,9 +20,19 @@ contract Solver is Ownable {
     address payable public problems;
     address public ticks;
 
+    event Solved(
+        uint256 indexed problemId,
+        uint256 indexed previousTickCount,
+        uint256 indexed tickCount
+    );
+
     constructor(address payable problems_, address ticks_) {
         problems = problems_;
         ticks = ticks_;
+    }
+
+    fallback() external {
+        revert("no fallback function");
     }
 
     function updateProblemsAddress(address payable problems_) public onlyOwner {
@@ -145,6 +155,8 @@ contract Solver is Ownable {
         );
         Ticks(ticks).mint(msg.sender, tickCount);
 
+        uint256 traits = 5;
+
         for (uint256 i = 0; i < numberOfBodies; i++) {
             uint256 bodyId = bodyIds[i];
             Problems.Body memory bodyData = Problems(problems)
@@ -152,52 +164,41 @@ contract Solver is Ownable {
 
             // px
             // confirm previously stored values were used as input to the proof
-            require(
-                bodyData.px == input[i * numberOfBodies + 0],
-                "Invalid position"
-            );
+            uint256 pxIndex = traits * numberOfBodies + i * traits + 0;
+            require(bodyData.px == input[pxIndex], "Invalid position x");
             // update stored values
-            bodyData.px = input[5 * numberOfBodies + i * numberOfBodies + 0];
+            bodyData.px = input[i * numberOfBodies + 0];
 
             // py
             // confirm previously stored values were used as input to the proof
-            require(
-                bodyData.py == input[i * numberOfBodies + 1],
-                "Invalid position"
-            );
+            uint256 pyIndex = traits * numberOfBodies + i * traits + 1;
+            require(bodyData.py == input[pyIndex], "Invalid position y");
             // update stored values
-            bodyData.py = input[5 * numberOfBodies + i * numberOfBodies + 1];
+            bodyData.py = input[i * numberOfBodies + 1];
 
             // vx
             // confirm previously stored values were used as input to the proof
-            require(
-                bodyData.vx == input[i * numberOfBodies + 2],
-                "Invalid position"
-            );
+            uint256 vxIndex = traits * numberOfBodies + i * traits + 2;
+            require(bodyData.vx == input[vxIndex], "Invalid vector x");
             // update stored values
-            bodyData.vx = input[5 * numberOfBodies + i * numberOfBodies + 2];
+            bodyData.vx = input[i * numberOfBodies + 2];
 
             // vy
             // confirm previously stored values were used as input to the proof
-            require(
-                bodyData.vy == input[i * numberOfBodies + 3],
-                "Invalid position"
-            );
+            uint256 vyIndex = traits * numberOfBodies + i * traits + 3;
+            require(bodyData.vy == input[vyIndex], "Invalid vector y");
             // update stored values
-            bodyData.vy = input[5 * numberOfBodies + i * numberOfBodies + 3];
+            bodyData.vy = input[i * numberOfBodies + 3];
 
             // radius
             // confirm previously stored values were used as input to the proof
-            require(
-                bodyData.radius == input[i * numberOfBodies + 4],
-                "Invalid position"
-            );
+            uint256 radiusIndex = traits * numberOfBodies + i * traits + 4;
+            require(bodyData.radius == input[radiusIndex], "Invalid radius");
             // update stored values
-            bodyData.radius = input[
-                5 * numberOfBodies + i * numberOfBodies + 4
-            ];
+            bodyData.radius = input[i * numberOfBodies + 4];
             Problems(problems).updateProblemBody(problemId, bodyId, bodyData);
         }
+        emit Solved(problemId, previousTickCount, tickCount);
     }
 
     function convertTo30(
