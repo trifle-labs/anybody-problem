@@ -8,5 +8,6 @@ module.exports = {
     'Nft_8_20Verifier.sol',
     'Nft_9_20Verifier.sol',
     'Nft_10_20Verifier.sol'
-  ]
+  ],
+  istanbulFolder: 'docs'
 }
