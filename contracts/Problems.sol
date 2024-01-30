@@ -41,13 +41,14 @@ contract Problems is ERC721, Ownable {
     struct Problem {
         bytes32 seed;
         uint256 bodyCount;
+        uint256 bodiesProduced;
         mapping(uint256 => Body) bodyData;
         uint256[10] bodyIds;
         uint256 tickCount;
     }
 
     mapping(uint256 => Problem) public problems;
-    // mapping is body count to ticks to address
+    // mapping is body count to tocks to address
     mapping(uint256 => mapping(uint256 => address)) public verifiers;
 
     uint256 public constant maxVector = 10;
@@ -103,14 +104,10 @@ contract Problems is ERC721, Ownable {
         wallet = msg.sender;
         metadata = metadata_;
         for (uint256 i = 0; i < verifiers_.length; i++) {
-            require(verifiersTicks[i] > 0, "Invalid verifier ticks");
+            require(verifiersTicks[i] > 0, "Invalid verifier tocks");
             require(verifiers_[i] != address(0), "Invalid verifier");
             verifiers[verifiersBodies[i]][verifiersTicks[i]] = verifiers_[i];
         }
-    }
-
-    fallback() external payable {
-        mint();
     }
 
     receive() external payable {
@@ -191,7 +188,7 @@ contract Problems is ERC721, Ownable {
                 recipient,
                 problemSupply
             );
-            _addBody(problemSupply, bodyId, i);
+            _addBody(problemSupply, bodyId, i, 1);
         }
         problems[problemSupply].seed = generateSeed(problemSupply);
         problems[problemSupply].bodyCount = 3;
@@ -206,7 +203,7 @@ contract Problems is ERC721, Ownable {
         );
         uint256 bodyId = Bodies(bodies).mintAndBurn(msg.sender, problemId);
         uint256 i = problems[problemId].bodyCount;
-        _addBody(problemId, bodyId, i);
+        _addBody(problemId, bodyId, i, 1);
     }
 
     function addBody(uint256 problemId, uint256 bodyId) public {
@@ -219,7 +216,7 @@ contract Problems is ERC721, Ownable {
         );
         Bodies(bodies).burn(bodyId);
         uint256 i = problems[problemId].bodyCount;
-        _addBody(problemId, bodyId, i);
+        _addBody(problemId, bodyId, i, 0);
     }
 
     function removeBody(uint256 problemId, uint256 bodyId) public {
@@ -256,7 +253,12 @@ contract Problems is ERC721, Ownable {
         return array;
     }
 
-    function _addBody(uint256 problemId, uint256 bodyId, uint256 i) internal {
+    function _addBody(
+        uint256 problemId,
+        uint256 bodyId,
+        uint256 i,
+        uint256 incrementBodiesProduced
+    ) internal {
         bytes32 bodySeed = Bodies(bodies).seeds(bodyId);
         uint256 bodyStyle = Bodies(bodies).styles(bodyId);
         uint256 tickCount = problems[problemId].tickCount;
@@ -265,6 +267,7 @@ contract Problems is ERC721, Ownable {
         problems[problemId].bodyData[bodyId] = bodyData;
         problems[problemId].bodyIds[i] = bodyId;
         problems[problemId].bodyCount++;
+        problems[problemId].bodiesProduced += incrementBodiesProduced;
         emit bodyAdded(
             problemId,
             bodyId,
@@ -277,9 +280,9 @@ contract Problems is ERC721, Ownable {
         );
     }
 
-    function getRand(uint256 blockNumber) public view returns (bytes32) {
-        return keccak256(abi.encodePacked(blockhash(blockNumber)));
-    }
+    // function getRand(uint256 blockNumber) public view returns (bytes32) {
+    //     return keccak256(abi.encodePacked(blockhash(blockNumber)));
+    // }
 
     // NOTE: this function uses i as input for radius, which means it's possible
     // for an owner to remove a body at index 0 and add back with a greater index

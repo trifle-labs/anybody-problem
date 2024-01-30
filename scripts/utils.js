@@ -51,7 +51,7 @@ const getPathAddress = async (name) => {
 const initContracts = async () => {
   const [owner] = await hre.ethers.getSigners()
 
-  const contractNames = ['Problems', 'Bodies', 'Ticks', 'Solver', 'Metadata']
+  const contractNames = ['Problems', 'Bodies', 'Tocks', 'Solver', 'Metadata']
   for (let i = 3; i <= 10; i++) {
     contractNames.push(`Nft_${i}_20Verifier.sol`)
   }
@@ -92,15 +92,15 @@ const deployContracts = async () => {
   // Metadata (no args)
   // Problems (metadata.address, address[10] verifiers)
   // Bodies(problems.address)
-  // Ticks (problems.address, bodies.address)
-  // Solver (problems.address, ticks.address)
+  // Tocks (problems.address, bodies.address)
+  // Solver (problems.address, tocks.address)
 
   // Problems.updateBodies(bodies.address)
   // Problems.updateSolver(solver.address)
 
-  // Bodies.updateTicks(ticks.address)
+  // Bodies.updateTocks(tocks.address)
 
-  // Ticks.updateSolver(solver.address)
+  // Tocks.updateSolver(solver.address)
 
   const returnObject = {}
   const verifiers = []
@@ -144,21 +144,21 @@ const deployContracts = async () => {
   returnObject['Bodies'] = bodies
   !testing && log(`Bodies deployed at ${bodiesAddress} with problemsAddress ${problemsAddress} and metadataAddress ${metadataAddress}`)
 
-  // deploy Ticks
-  const Ticks = await hre.ethers.getContractFactory('Ticks')
-  const ticks = await Ticks.deploy(problemsAddress, bodiesAddress)
-  await ticks.deployed()
-  const ticksAddress = ticks.address
-  returnObject['Ticks'] = ticks
-  !testing && log(`Ticks deployed at ${ticksAddress} with problemsAddress ${problemsAddress} and bodiesAddress ${bodiesAddress}`)
+  // deploy Tocks
+  const Tocks = await hre.ethers.getContractFactory('Tocks')
+  const tocks = await Tocks.deploy(problemsAddress, bodiesAddress)
+  await tocks.deployed()
+  const tocksAddress = tocks.address
+  returnObject['Tocks'] = tocks
+  !testing && log(`Tocks deployed at ${tocksAddress} with problemsAddress ${problemsAddress} and bodiesAddress ${bodiesAddress}`)
 
   // deploy Solver
   const Solver = await hre.ethers.getContractFactory('Solver')
-  const solver = await Solver.deploy(problemsAddress, ticksAddress)
+  const solver = await Solver.deploy(problemsAddress, tocksAddress)
   await solver.deployed()
   const solverAddress = solver.address
   returnObject['Solver'] = solver
-  !testing && log(`Solver deployed at ${solverAddress} with problemsAddress ${problemsAddress} and ticksAddress ${ticksAddress}`)
+  !testing && log(`Solver deployed at ${solverAddress} with problemsAddress ${problemsAddress} and tocksAddress ${tocksAddress}`)
 
   // configure Problems
   await problems.updateBodiesAddress(bodiesAddress)
@@ -167,12 +167,12 @@ const deployContracts = async () => {
   !testing && log(`Problems configured with solverAddress ${solverAddress}`)
 
   // configure Bodies
-  await bodies.updateTicksAddress(ticksAddress)
-  !testing && log(`Bodies configured with ticksAddress ${ticksAddress}`)
+  await bodies.updateTocksAddress(tocksAddress)
+  !testing && log(`Bodies configured with tocksAddress ${tocksAddress}`)
 
-  // configure Ticks
-  await ticks.updateSolverAddress(solverAddress)
-  !testing && log(`Ticks configured with solverAddress ${solverAddress}`)
+  // configure Tocks
+  await tocks.updateSolverAddress(solverAddress)
+  !testing && log(`Tocks configured with solverAddress ${solverAddress}`)
 
 
   // verify contract if network ID is mainnet goerli or sepolia
@@ -192,12 +192,12 @@ const deployContracts = async () => {
         constructorArguments: [problemsAddress],
       },
       {
-        name: 'Ticks',
+        name: 'Tocks',
         constructorArguments: [problemsAddress, bodiesAddress],
       },
       {
         name: 'Solver',
-        constructorArguments: [problemsAddress, ticksAddress],
+        constructorArguments: [problemsAddress, tocksAddress],
       },
     ]
 
@@ -244,13 +244,13 @@ const mintProblem = async (signers, deployedContracts, acct) => {
 const prepareMintBody = async (signers, deployedContracts, problemId, acct) => {
   const [owner] = signers
   acct = acct || owner
-  const { Ticks: ticks, Bodies: bodies } = deployedContracts
-  const tickPriceIndex = await bodies.problemPriceLevels(problemId)
+  const { Tocks: tocks, Bodies: bodies } = deployedContracts
+  const tockPriceIndex = await bodies.problemPriceLevels(problemId)
   const decimals = await bodies.decimals()
-  const tickPrice = await bodies.tickPrice(tickPriceIndex)
-  const tickPriceWithDecimals = tickPrice.mul(decimals)
-  await ticks.updateSolverAddress(owner.address)
-  await ticks.mint(acct.address, tickPriceWithDecimals)
+  const tockPrice = await bodies.tockPrice(tockPriceIndex)
+  const tockPriceWithDecimals = tockPrice.mul(decimals)
+  await tocks.updateSolverAddress(owner.address)
+  await tocks.mint(acct.address, tockPriceWithDecimals)
 }
 
 

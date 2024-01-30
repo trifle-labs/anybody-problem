@@ -1,18 +1,20 @@
 const { expect } = require('chai')
 const { ethers } = require('hardhat')
+// const { describe, it } = require('mocha')
+
 const { deployContracts, correctPrice, getParsedEventLogs, prepareMintBody, mintProblem } = require('../scripts/utils.js')
+
 // let tx
 describe('Bodies Tests', function () {
   this.timeout(50000000)
-
-  it('has the correct bodies, ticks addresses', async () => {
+  it('has the correct bodies, tocks addresses', async () => {
 
     const deployedContracts = await deployContracts()
 
     const { Bodies: bodies } = deployedContracts
 
     for (const [name, contract] of Object.entries(deployedContracts)) {
-      if (name === 'Problems' || name === 'Ticks') {
+      if (name === 'Problems' || name === 'Tocks') {
         const functionName = name.toLowerCase()
         let storedAddress = await bodies[`${functionName}()`]()
         const actualAddress = contract.address
@@ -25,37 +27,37 @@ describe('Bodies Tests', function () {
     const [, addr1] = await ethers.getSigners()
     const { Bodies: bodies } = await deployContracts()
 
-    await expect(bodies.connect(addr1).updateTickPrice(0, 0))
+    await expect(bodies.connect(addr1).updateTockPrice(0, 0))
       .to.be.revertedWith('Ownable: caller is not the owner')
 
     await expect(bodies.connect(addr1).updateProblemsAddress(addr1.address))
       .to.be.revertedWith('Ownable: caller is not the owner')
 
-    await expect(bodies.connect(addr1).updateTicksAddress(addr1.address))
+    await expect(bodies.connect(addr1).updateTocksAddress(addr1.address))
       .to.be.revertedWith('Ownable: caller is not the owner')
 
-    await expect(bodies.updateTickPrice(0, 0))
+    await expect(bodies.updateTockPrice(0, 0))
       .to.not.be.reverted
 
     await expect(bodies.updateProblemsAddress(addr1.address))
       .to.not.be.reverted
 
-    await expect(bodies.updateTicksAddress(addr1.address))
+    await expect(bodies.updateTocksAddress(addr1.address))
       .to.not.be.reverted
   })
 
-  it('updates tick price correctly', async () => {
+  it('updates tock price correctly', async () => {
     const { Bodies: bodies } = await deployContracts()
-    const tickPriceIndex = 0
+    const tockPriceIndex = 0
     const newPrice = 1000
-    const oldPrice = await bodies.tickPrice(tickPriceIndex)
+    const oldPrice = await bodies.tockPrice(tockPriceIndex)
     expect(oldPrice.toNumber()).to.not.equal(newPrice)
-    await bodies.updateTickPrice(tickPriceIndex, newPrice)
-    const updatedPrice = await bodies.tickPrice(tickPriceIndex)
+    await bodies.updateTockPrice(tockPriceIndex, newPrice)
+    const updatedPrice = await bodies.tockPrice(tockPriceIndex)
     expect(updatedPrice.toNumber()).to.equal(newPrice)
 
     const outOfRangeIndex = 10
-    await expect(bodies.updateTickPrice(outOfRangeIndex, newPrice))
+    await expect(bodies.updateTockPrice(outOfRangeIndex, newPrice))
       .to.be.revertedWith('Invalid index')
 
   })
@@ -137,21 +139,21 @@ describe('Bodies Tests', function () {
     }
   })
 
-  it('mints a new body after receiving Ticks', async () => {
+  it('mints a new body after receiving Tocks', async () => {
     const [owner, acct1] = await ethers.getSigners()
-    const { Ticks: ticks, Bodies: bodies, Problems: problems } = await deployContracts()
+    const { Tocks: tocks, Bodies: bodies, Problems: problems } = await deployContracts()
     await problems.updatePaused(false)
     await problems.updateStartDate(0)
     await problems.connect(acct1)['mint()']({ value: correctPrice })
     const problemId = await problems.problemSupply()
 
-    await ticks.updateSolverAddress(owner.address)
+    await tocks.updateSolverAddress(owner.address)
 
-    const tickPriceIndex = await bodies.problemPriceLevels(problemId)
+    const tockPriceIndex = await bodies.problemPriceLevels(problemId)
     // NOTE: purposefully forgot to multiply by decimals here
-    const tickPrice = await bodies.tickPrice(tickPriceIndex)
+    const tockPrice = await bodies.tockPrice(tockPriceIndex)
 
-    await ticks.mint(acct1.address, tickPrice)
+    await tocks.mint(acct1.address, tockPrice)
 
     let promise = bodies.connect(acct1).mint(problemId)
 
@@ -159,12 +161,12 @@ describe('Bodies Tests', function () {
       .to.be.revertedWith('ERC20: burn amount exceeds balance')
 
     const decimals = await bodies.decimals()
-    const updatedPrice = tickPrice.mul(decimals)
-    const difference = updatedPrice.sub(tickPrice)
-    await ticks.mint(acct1.address, difference)
+    const updatedPrice = tockPrice.mul(decimals)
+    const difference = updatedPrice.sub(tockPrice)
+    await tocks.mint(acct1.address, difference)
 
-    const tickBalance = await ticks.balanceOf(acct1.address)
-    expect(tickBalance).to.equal(updatedPrice)
+    const tockBalance = await tocks.balanceOf(acct1.address)
+    expect(tockBalance).to.equal(updatedPrice)
 
     promise = bodies.connect(acct1).mint(problemId)
     await expect(promise)
@@ -190,9 +192,9 @@ describe('Bodies Tests', function () {
     const seed = await bodies.seeds(tokenId)
     expect(seed).to.not.equal(0)
 
-    // all ticks were spent
-    const tickBalanceAfter = await ticks.balanceOf(acct1.address)
-    expect(tickBalanceAfter).to.equal(0)
+    // all tocks were spent
+    const tockBalanceAfter = await tocks.balanceOf(acct1.address)
+    expect(tockBalanceAfter).to.equal(0)
   })
 
   it('fails when you try to mint a body for a problem you do not own', async () => {
@@ -242,8 +244,11 @@ describe('Bodies Tests', function () {
     expect(tickCount).to.equal(0)
 
     const scalingFactor = await problems.scalingFactor()
+    const maxVector = await problems.maxVector()
     const maxRadius = await problems.maxRadius()
     const windowWidth = await problems.windowWidth()
+
+    const initialVelocity = maxVector.mul(scalingFactor)
 
     const bodyIDs = await problems.getProblemBodyIds(problemId)
     let smallestRadius = maxRadius.mul(scalingFactor)
@@ -263,8 +268,8 @@ describe('Bodies Tests', function () {
 
       expect(px).to.not.equal(py)
 
-      expect(vx).to.equal(0)
-      expect(vy).to.equal(0)
+      expect(vx).to.equal(initialVelocity)
+      expect(vy).to.equal(initialVelocity)
 
       expect(radius).to.not.equal(0)
       expect(radius.lte(maxRadius.mul(scalingFactor))).to.be.true

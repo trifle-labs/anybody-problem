@@ -1,21 +1,22 @@
 const { expect } = require('chai')
 const { ethers } = require('hardhat')
+// const { describe, it } = require('mocha')
 const { Anybody } = require('../src/anybody.js')
 const { deployContracts, mintProblem } = require('../scripts/utils.js')
-const { exportCallDataGroth16 } = require('../scripts/circuits')
+const { exportCallDataGroth16 } = require('../scripts/circuits.js')
 
 // let tx
 describe('Solver Tests', function () {
   this.timeout(50000000)
 
-  it('has the correct problems, ticks addresses', async () => {
+  it('has the correct problems, tocks addresses', async () => {
 
     const deployedContracts = await deployContracts()
 
     const { Solver: solver } = deployedContracts
 
     for (const [name, contract] of Object.entries(deployedContracts)) {
-      if (name === 'Problems' || name === 'Ticks') {
+      if (name === 'Problems' || name === 'Tocks') {
         const functionName = name.toLowerCase()
         let storedAddress = await solver[`${functionName}()`]()
         const actualAddress = contract.address
@@ -31,13 +32,13 @@ describe('Solver Tests', function () {
     await expect(solver.connect(addr1).updateProblemsAddress(addr1.address))
       .to.be.revertedWith('Ownable: caller is not the owner')
 
-    await expect(solver.connect(addr1).updateTicksAddress(addr1.address))
+    await expect(solver.connect(addr1).updateTocksAddress(addr1.address))
       .to.be.revertedWith('Ownable: caller is not the owner')
 
     await expect(solver.updateProblemsAddress(addr1.address))
       .to.not.be.reverted
 
-    await expect(solver.updateTicksAddress(addr1.address))
+    await expect(solver.updateTocksAddress(addr1.address))
       .to.not.be.reverted
   })
 
@@ -51,14 +52,14 @@ describe('Solver Tests', function () {
       .to.be.revertedWith('no fallback function')
   })
 
-  it.only('creates a proof for 3 bodies', async () => {
+  it('creates a proof for 3 bodies', async () => {
 
     const proofLength = 20
 
     const signers = await ethers.getSigners()
     const [owner] = signers
     const deployedContracts = await deployContracts()
-    const { Problems: problems, Solver: solver, Ticks: ticks } = deployedContracts
+    const { Problems: problems, Solver: solver, Tocks: tocks } = deployedContracts
     const { problemId } = await mintProblem(signers, deployedContracts)
     // await prepareMintBody(signers, deployedContracts, problemId)
     // await bodies.mint(problemId)
@@ -73,6 +74,8 @@ describe('Solver Tests', function () {
       const body = await problems.getProblemBodyData(problemId, bodyId)
       bodyData.push(body)
     }
+
+
     const anybody = new Anybody(null, {
       bodyData,
       seed: problemSeed,
@@ -84,7 +87,6 @@ describe('Solver Tests', function () {
     anybody.calculateBodyFinal()
 
     const bodyFinal = anybody.bodyFinal
-
     const dataResult = await exportCallDataGroth16(
       inputData,
       './public/nft_3_20.wasm',
@@ -105,7 +107,6 @@ describe('Solver Tests', function () {
       }
     }
 
-
     await expect(solver.solveProblem(problemId, proofLength, dataResult.a, dataResult.b, dataResult.c, dataResult.Input))
       .to.emit(solver, 'Solved')
       .withArgs(problemId, tickCount, proofLength)
@@ -123,16 +124,21 @@ describe('Solver Tests', function () {
       expect(radius).to.equal(bodyFinal[i][4].toString())
     }
 
-    // confirm ticks have been incremented by correct amount
+    // confirm tocks have been incremented by correct amount
     const { tickCount: newTickCount } = await problems.problems(problemId)
     expect(newTickCount).to.equal(tickCount + proofLength)
 
-
-    // user earned new balance in Ticks token
-    const balance = await ticks.balanceOf(owner.address)
+    // user earned new balance in Tocks token
+    const balance = await tocks.balanceOf(owner.address)
     expect(balance).to.equal(proofLength)
-
   })
+
+  it.skip('creates multiple proofs in a row', async () => { })
+  it.skip('creates proofs for multiple bodies', async () => { })
+  it.skip('adds a body, removes a body, creates a proof', async () => { })
+  it.skip('adds two bodies, removes first body, creates a proof', async () => { })
+
+
 
 
 

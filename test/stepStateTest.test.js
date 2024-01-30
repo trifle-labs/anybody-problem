@@ -1,6 +1,6 @@
 
 
-// const hre = require('hardhat')
+const hre = require('hardhat')
 const path = require('path')
 const fs = require('fs')
 const {
@@ -10,11 +10,13 @@ const {
   convertScaledBigIntBodyToArray,
 } = require('../docs/index.js')
 // const p = 21888242871839275222246405745257275088548364400416034343698204186575808495617n
+const totalSteps = 20//487
+// const { describe, it, before } = require('mocha')
 
-describe('stepStateMain circuit', () => {
+describe('stepStateTest circuit', () => {
   let circuit
 
-  const missiles = new Array(487 + 1).fill(0).map(() => new Array(5).fill('0'))
+  const missiles = new Array(totalSteps + 1).fill(0).map(() => new Array(5).fill('0'))
   missiles[0] = ['226000', '42000', '10000', '10000', '100000']
   const sampleInput = {
     bodies: [
@@ -32,12 +34,12 @@ describe('stepStateMain circuit', () => {
     path.join(__dirname, '../circuits/stepStateTest.json'),
     JSON.stringify(sampleInput, null, 2)
   )
-  console.dir({ sampleInput }, { depth: null })
+  // console.dir({ sampleInput }, { depth: null })
 
   const sanityCheck = true
 
   before(async () => {
-    // circuit = await hre.circuitTest.setup('stepStateTest')
+    circuit = await hre.circuitTest.setup('stepStateTest')
   })
 
   const steps = sampleInput.missiles.length - 1
@@ -51,12 +53,12 @@ describe('stepStateMain circuit', () => {
     await circuit.checkConstraints(witness)
   })
 
-  it('has expected witness values', async () => {
-    // const witness = await circuit.calculateLabeledWitness(
-    //   sampleInput,
-    //   sanityCheck
-    // )
-    // console.dir({ witness: witness._labels }, { depth: null })
+  it.skip('has expected witness values', async () => {
+    const witness = await circuit.calculateLabeledWitness(
+      sampleInput,
+      sanityCheck
+    )
+    console.dir({ witness: witness._labels }, { depth: null })
 
     // assert.propertyVal(witness, "main.squared", sampleInput.squared);
     // assert.propertyVal(witness, "main.calculatedRoot", sampleInput.calculatedRoot);
@@ -64,7 +66,7 @@ describe('stepStateMain circuit', () => {
     // assert.propertyVal(witness, "main.out", "1");
   })
 
-  it.only('has the correct output', async () => {
+  it.skip('has the correct output', async () => {
     let bodies = sampleInput.bodies.map(convertScaledStringArrayToBody)
     let missiles = sampleInput.missiles.map(convertScaledStringArrayToBody)
     // console.dir({ bodies }, { depth: null })

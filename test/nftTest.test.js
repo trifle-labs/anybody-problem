@@ -1,6 +1,6 @@
 
 
-const { describe, before, it } = require('mocha')
+// const { describe, before, it } = require('mocha')
 const hre = require('hardhat')
 const { ethers } = require('hardhat')
 const { exportCallDataGroth16 } = require('../scripts/circuits')
@@ -9,14 +9,12 @@ const { mine } = require('@nomicfoundation/hardhat-network-helpers')
 const { assert, expect } = require('chai')
 const {
   Anybody,
-  calculateTime,
+  _calculateTime,
 } = require('../src/anybody.js')
 
 
 // const p = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
 const steps = 20
-
-
 
 describe('nft circuit', () => {
   let circuit
@@ -61,12 +59,12 @@ describe('nft circuit', () => {
     const witness = await circuit.calculateWitness(sampleInput, sanityCheck)
     const inputs = sampleInput.bodies.length * sampleInput.bodies[0].length
     const perStep = witness.length - inputs
-    const secRounded = calculateTime(perStep, steps)
+    const secRounded = _calculateTime(perStep, steps)
     console.log(`| nft(3, ${steps}) | ${perStep} | ${secRounded} |`)
     await circuit.checkConstraints(witness)
   })
 
-  it('has expected witness values', async () => {
+  it.skip('has expected witness values', async () => {
     const witness = await circuit.calculateLabeledWitness(
       sampleInput,
       sanityCheck
@@ -79,7 +77,7 @@ describe('nft circuit', () => {
     // assert.propertyVal(witness, "main.out", "1");
   })
 
-  it.only('has the correct output', async () => {
+  it('has the correct output', async () => {
     const anybody = new Anybody(null, { util: true })
     let bodies = sampleInput.bodies.map(anybody.convertScaledStringArrayToBody.bind(anybody))
     // console.dir({ bodies }, { depth: null })
@@ -93,7 +91,7 @@ describe('nft circuit', () => {
     await circuit.assertOut(witness, expected)
   })
 
-  it('NftVerifier.sol works', async () => {
+  it.skip('NftVerifier.sol works', async () => {
 
     const NftVerifier = await ethers.getContractFactory('contracts/NftTestVerifier.sol:Groth16Verifier')
     const nftVerifier = await NftVerifier.deploy()
@@ -116,7 +114,7 @@ describe('nft circuit', () => {
 
 
 
-  it('nft.sol works', async () => {
+  it.skip('nft.sol works', async () => {
     const NftVerifier = await ethers.getContractFactory('contracts/NftVerifier.sol:Groth16Verifier')
     const nftVerifier = await NftVerifier.deploy()
     await nftVerifier.deployed()

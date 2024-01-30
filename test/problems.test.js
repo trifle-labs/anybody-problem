@@ -1,18 +1,20 @@
 const { expect } = require('chai')
 const { ethers } = require('hardhat')
-const { deployContracts, correctPrice, splitterAddress } = require('../scripts/utils.js')
+// const { describe, it } = require('mocha')
+
+const { deployContracts, correctPrice, splitterAddress, getParsedEventLogs, prepareMintBody, mintProblem } = require('../scripts/utils.js')
 let tx
 describe('Problem Tests', function () {
   this.timeout(50000000)
 
-  it('has the correct verifiers metadata, bodies, ticks, solver addresses', async () => {
+  it('has the correct verifiers metadata, bodies, tocks, solver addresses', async () => {
 
     const deployedContracts = await deployContracts()
 
     const { Problems: problems } = deployedContracts
     for (const [name, contract] of Object.entries(deployedContracts)) {
       if (name === 'Problems') continue
-      if (name === 'Ticks') continue
+      if (name === 'Tocks') continue
       let storedAddress
       if (name.indexOf('Verifier') > -1) {
         const bodyCount = name.split('_')[1]
@@ -84,6 +86,67 @@ describe('Problem Tests', function () {
 
     await expect(problems.updateWalletAddress(addr1.address))
       .to.not.be.reverted
+
+  })
+
+  it('onlySolver functions are really only Solver', async () => {
+    const [owner, addr1] = await ethers.getSigners()
+    const { Problems: problems } = await deployContracts()
+
+    const { problemId } = await mintProblem([addr1], { Problems: problems }, addr1)
+    await problems.updateSolverAddress(owner.address)
+
+    await expect(problems.connect(addr1).updateProblemBodyCount(problemId, 1))
+      .to.be.revertedWith('Only Solver can call')
+    const newBodyCount = 1
+    await expect(problems.updateProblemBodyCount(problemId, newBodyCount))
+      .to.not.be.reverted
+    const { bodyCount } = await problems.problems(problemId)
+    expect(bodyCount).to.equal(newBodyCount)
+
+    const newBodyIds = [9, 8, 7, 6, 5, 4, 3, 2, 1, 1111]
+    await expect(problems.connect(addr1).updateProblemBodyIds(problemId, newBodyIds))
+      .to.be.revertedWith('Only Solver can call')
+    await expect(problems.updateProblemBodyIds(problemId, newBodyIds))
+      .to.not.be.reverted
+    const returnedBodyIds = await problems.getProblemBodyIds(problemId)
+    for (let i = 0; i < newBodyIds.length; i++) {
+      expect(returnedBodyIds[i]).to.equal(newBodyIds[i])
+    }
+
+    const newTickCount = 999
+    await expect(problems.connect(addr1).updateProblemTickCount(problemId, newTickCount))
+      .to.be.revertedWith('Only Solver can call')
+    await expect(problems.updateProblemTickCount(problemId, newTickCount))
+      .to.not.be.reverted
+    const { tickCount } = await problems.problems(problemId)
+    expect(tickCount).to.equal(newTickCount)
+
+    const newBodyData = {
+      bodyId: 8,
+      bodyStyle: 9,
+      bodyIndex: 10,
+      px: 11,
+      py: 12,
+      vx: 13,
+      vy: 14,
+      radius: 15,
+      seed: '0x' + (666).toString(16).padStart(64, '0')
+    }
+    await expect(problems.connect(addr1).updateProblemBody(problemId, 1, newBodyData))
+      .to.be.revertedWith('Only Solver can call')
+    await expect(problems.updateProblemBody(problemId, 0, newBodyData))
+      .to.not.be.reverted
+    const bodyData = await problems.getProblemBodyData(problemId, 0)
+    expect(bodyData.bodyId).to.equal(newBodyData.bodyId)
+    expect(bodyData.bodyStyle).to.equal(newBodyData.bodyStyle)
+    expect(bodyData.bodyIndex).to.equal(newBodyData.bodyIndex)
+    expect(bodyData.px).to.equal(newBodyData.px)
+    expect(bodyData.py).to.equal(newBodyData.py)
+    expect(bodyData.vx).to.equal(newBodyData.vx)
+    expect(bodyData.vy).to.equal(newBodyData.vy)
+    expect(bodyData.radius).to.equal(newBodyData.radius)
+    expect(bodyData.seed).to.equal(newBodyData.seed)
 
   })
 
@@ -224,6 +287,9 @@ describe('Problem Tests', function () {
     await problems.updatePaused(false)
     await problems.updateStartDate(0)
 
+    await expect(addr2.sendTransaction({ to: problems.address, value: 0 }))
+      .to.be.revertedWith('Invalid price')
+
     const correctPrice = await problems.price()
     // send ether to an address
     await expect(addr2.sendTransaction({ to: problems.address, value: correctPrice }))
@@ -315,16 +381,20 @@ describe('Problem Tests', function () {
     await problems['mint()']({ value: correctPrice })
     const problemId = await problems.problemSupply()
     const problem = await problems.problems(problemId)
-    const { seed, bodyCount, tickCount } = problem
+    const { seed, bodyCount, tickCount, bodiesProduced } = problem
     expect(parseInt(seed, 16)).to.not.equal(0)
     expect(bodyCount).to.equal(3)
+    expect(bodiesProduced).to.equal(3)
     expect(tickCount).to.equal(0)
 
     const scalingFactor = await problems.scalingFactor()
+    const maxVector = await problems.maxVector()
     const maxRadius = await problems.maxRadius()
     const windowWidth = await problems.windowWidth()
 
     const bodyIDs = await problems.getProblemBodyIds(problemId)
+
+    const initialVelocity = maxVector.mul(scalingFactor)
     for (let i = 0; i < bodyCount; i++) {
       const currentBodyId = bodyIDs[i]
       const bodyData = await problems.getProblemBodyData(problemId, currentBodyId)
@@ -341,14 +411,67 @@ describe('Problem Tests', function () {
 
       expect(px).to.not.equal(py)
 
-      expect(vx).to.equal(0)
-      expect(vy).to.equal(0)
+      expect(vx).to.equal(initialVelocity)
+      expect(vy).to.equal(initialVelocity)
 
       expect(radius).to.not.equal(0)
       expect(radius.lte(maxRadius.mul(scalingFactor))).to.be.true
 
       expect(seed).to.not.equal(0)
     }
+  })
+
+  it('mints a body via mintBody', async () => {
+    const signers = await ethers.getSigners()
+    // const [, acct1] = signers
+    const deployedContracts = await deployContracts()
+    const { Bodies: bodies, Problems: problems } = deployedContracts
+    const { problemId } = await mintProblem(signers, deployedContracts)
+
+    const scalingFactor = await problems.scalingFactor()
+    const maxVector = await problems.maxVector()
+    const maxRadius = await problems.maxRadius()
+    const windowWidth = await problems.windowWidth()
+    const initialVelocity = maxVector.mul(scalingFactor)
+
+    const bodyIds = await problems.getProblemBodyIds(problemId)
+    const { bodyCount } = await problems.problems(problemId)
+    await prepareMintBody(signers, deployedContracts, problemId)
+    const tx = await problems.mintBody(problemId)
+    const receipt = await tx.wait()
+    const newBodyId = getParsedEventLogs(receipt, bodies, 'Transfer')[0].args.tokenId
+    const { bodyCount: newBodyCount } = await problems.problems(problemId)
+    expect(newBodyCount).to.equal(bodyCount.add(1))
+
+    const newBodyIds = await problems.getProblemBodyIds(problemId)
+    for (let i = 0; i < newBodyCount; i++) {
+      const newBodyId = newBodyIds[i]
+      const oldBodyId = i >= bodyCount ? newBodyId : bodyIds[i]
+      expect(newBodyId).to.equal(oldBodyId)
+    }
+
+    const bodyData = await problems.getProblemBodyData(problemId, newBodyId)
+    const { bodyId, bodyIndex, px, py, vx, vy, radius, seed } = bodyData
+
+    expect(bodyId).to.equal(newBodyId)
+    expect(bodyIndex).to.equal(newBodyCount.sub(1))
+
+    expect(px).to.not.equal(0)
+    expect(px.lt(windowWidth)).to.be.true
+
+    expect(py).to.not.equal(0)
+    expect(py.lt(windowWidth)).to.be.true
+
+    expect(px).to.not.equal(py)
+
+    expect(vx).to.equal(initialVelocity)
+    expect(vy).to.equal(initialVelocity)
+
+    expect(radius).to.not.equal(0)
+    expect(radius.lte(maxRadius.mul(scalingFactor))).to.be.true
+
+    expect(seed).to.not.equal(0)
+
   })
 
 

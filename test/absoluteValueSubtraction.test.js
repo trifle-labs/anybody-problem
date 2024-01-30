@@ -1,7 +1,12 @@
 const hre = require('hardhat')
 // const { assert } = require('chai')
-const { calculateTime } = require('../docs/index.js')
 
+const {
+  _calculateTime,
+} = require('../src/anybody.js')
+
+// const { describe, it, before } = require('mocha')
+console.log('Test absoluteValueSubtraction circuit')
 describe('absoluteValueSubtraction circuit', () => {
   let circuit
 
@@ -25,17 +30,17 @@ describe('absoluteValueSubtraction circuit', () => {
     const witness = await circuit.calculateWitness(sampleInput[0].in, sanityCheck)
     const inputs = sampleInput[0].in.in.length
     const perStep = witness.length - inputs
-    const secRounded = calculateTime(perStep)
+    const secRounded = _calculateTime(perStep)
     console.log(`| absoluteValueSubtraction(252) | ${perStep} | ${secRounded} |`)
     await circuit.checkConstraints(witness)
   })
 
-  it('has expected witness values', async () => {
-    // const witness = await circuit.calculateLabeledWitness(
-    //   sampleInput[0].in,
-    //   sanityCheck
-    // )
-    // console.log({ witness })
+  it.skip('has expected witness values', async () => {
+    const witness = await circuit.calculateLabeledWitness(
+      sampleInput[0].in,
+      sanityCheck
+    )
+    console.log({ witness })
 
     // assert.propertyVal(witness, "main.x1", sampleInput.x1);
     // assert.propertyVal(witness, "main.x2", sampleInput.x2);

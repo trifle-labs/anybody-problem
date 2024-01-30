@@ -12,7 +12,7 @@
         },
         {
           "internalType": "address",
-          "name": "ticks_",
+          "name": "tocks_",
           "type": "address"
         }
       ],
@@ -80,7 +80,7 @@
         },
         {
           "internalType": "uint256",
-          "name": "tickCount",
+          "name": "tockCount",
           "type": "uint256"
         },
         {
@@ -111,7 +111,7 @@
     },
     {
       "inputs": [],
-      "name": "ticks",
+      "name": "tocks",
       "outputs": [
         {
           "internalType": "address",
@@ -152,11 +152,11 @@
       "inputs": [
         {
           "internalType": "address",
-          "name": "ticks_",
+          "name": "tocks_",
           "type": "address"
         }
       ],
-      "name": "updateTicksAddress",
+      "name": "updateTocksAddress",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"

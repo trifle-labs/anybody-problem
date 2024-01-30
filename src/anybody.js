@@ -464,7 +464,7 @@ class Anybody extends EventEmitter {
     const bodies = []
     for (let i = 0; i < bigBodies.length; i++) {
       const body = bigBodies[i]
-      const newBody = { position: {}, velocity: {}, radius: null }
+      const newBody = { bodyIndex: i, position: {}, velocity: {}, radius: null }
       newBody.px = body.position.x
       newBody.position.x = this.convertScaledBigIntToFloat(body.position.x)
       newBody.py = body.position.y
@@ -576,7 +576,7 @@ class Anybody extends EventEmitter {
   }
 
   calculateBodyFinal() {
-    this.bodyFinal = this.convertBodiesToBigInts(this.bodies).map(b => {
+    this.bodyFinal = this.convertBodiesToBigInts(this.bodies.sort((a, b) => a.bodyIndex - b.bodyIndex)).map(b => {
       // console.log({ b })
       b = this.convertScaledBigIntBodyToArray(b)
       // console.log({ b })
@@ -834,7 +834,8 @@ class Anybody extends EventEmitter {
     this.bodiesGraphic.strokeWeight(1)
     const bodyCopies = []
     for (let i = 0; i < this.bodies.length; i++) {
-      const body = this.bodies.sort((a, b) => b.radius - a.radius)[i]
+      // const body = this.bodies.sort((a, b) => b.radius - a.radius)[i]
+      const body = this.bodies[i]
       const c = body.c
       let finalColor
       if (this.colorStyle == 'squiggle') {
@@ -1068,6 +1069,7 @@ class Anybody extends EventEmitter {
       this.radiusMultiplyer = this.random(10, 200)
       for (let i = 0; i < this.startingBodies; i++) {
         this.bodies[i].c = this.colorArrayToTxt(this.randomColor(0, 200))
+        this.bodies[i].bodyIndex = i
       }
       return
     }
@@ -1080,6 +1082,7 @@ class Anybody extends EventEmitter {
         const seed = b.seed
         const bodyRNG = new Prando(seed.toString(16))
         return {
+          index: b.bodyIndex,
           position: this.createVector(b.px.toNumber() / parseInt(this.scalingFactor), b.py.toNumber() / parseInt(this.scalingFactor)),
           velocity: this.createVector(b.vx.toNumber() - this.vectorLimit * parseInt(this.scalingFactor), b.vy.toNumber() - this.vectorLimit * parseInt(this.scalingFactor)),
           radius: b.radius.toNumber() / parseInt(this.scalingFactor),
@@ -1125,6 +1128,7 @@ class Anybody extends EventEmitter {
       const radius = (maxSize - i * 5) + startingRadius
       // console.log({ radius })
       const body = {
+        bodyIndex: i,
         position: this.createVector(ss[i][0], ss[i][1]),
         velocity: this.createVector(0, 0),
         radius,
@@ -1135,7 +1139,7 @@ class Anybody extends EventEmitter {
 
 
     this.bodies = bodies
-      .sort((a, b) => b.radius - a.radius)
+    // .sort((a, b) => b.radius - a.radius)
   }
 
   createVector(x, y) {

@@ -4,6 +4,8 @@ require('hardhat-gas-reporter')
 require('hardhat-contract-sizer')
 require('dotenv').config()
 require('@nomiclabs/hardhat-etherscan')
+require('solidity-coverage')
+
 // const util = require("util");
 
 
@@ -52,7 +54,7 @@ const config = {
       {
         version: '0.8.15',
         settings: {
-          viaIR: true,
+          // viaIR: true,
           optimizer: { enabled: true, runs: 200 },
         },
       },

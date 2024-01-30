@@ -17,7 +17,7 @@
         },
         {
           "internalType": "uint256[]",
-          "name": "verifiersTicks",
+          "name": "verifiersTocks",
           "type": "uint256[]"
         },
         {
@@ -135,7 +135,7 @@
         {
           "indexed": false,
           "internalType": "uint256",
-          "name": "tick",
+          "name": "tock",
           "type": "uint256"
         },
         {
@@ -178,7 +178,7 @@
         {
           "indexed": false,
           "internalType": "uint256",
-          "name": "tick",
+          "name": "tock",
           "type": "uint256"
         },
         {
@@ -641,7 +641,7 @@
         },
         {
           "internalType": "uint256",
-          "name": "tickCount",
+          "name": "tockCount",
           "type": "uint256"
         }
       ],
@@ -1004,7 +1004,7 @@
         },
         {
           "internalType": "uint256",
-          "name": "tickCount",
+          "name": "tockCount",
           "type": "uint256"
         }
       ],
@@ -1040,7 +1040,7 @@
         },
         {
           "internalType": "uint256",
-          "name": "verifierTicks",
+          "name": "verifierTocks",
           "type": "uint256"
         }
       ],

@@ -1,6 +1,9 @@
 const hre = require('hardhat')
 const { assert } = require('chai')
-const { calculateTime } = require('../docs/index.js')
+const {
+  _calculateTime,
+} = require('../src/anybody.js')
+// const { describe, it, before } = require('mocha')
 
 describe('acceptableMarginOfError circuit', () => {
   let circuit
@@ -22,7 +25,7 @@ describe('acceptableMarginOfError circuit', () => {
     // get the number of inputs
     const inputs = Object.keys(sampleInput).length
     const perStep = witness.length - inputs
-    const secRounded = calculateTime(perStep)
+    const secRounded = _calculateTime(perStep)
     console.log(`| acceptableMarginOfError(60) | ${perStep} | ${secRounded} |`)
     await circuit.checkConstraints(witness)
   })

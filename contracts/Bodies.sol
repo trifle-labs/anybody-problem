@@ -3,21 +3,21 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./Ticks.sol";
+import "./Tocks.sol";
 import "./Problems.sol";
 
 // import "hardhat/console.sol";
 
 contract Bodies is ERC721, Ownable {
     address payable public problems;
-    address public ticks;
+    address public tocks;
     // bodyId to seed
     mapping(uint256 => bytes32) public seeds;
     // bodyId to styleId
     mapping(uint256 => uint256) public styles;
     uint256 public counter;
     uint256 public constant decimals = 10 ** 18;
-    uint256[10] public tickPrice = [
+    uint256[10] public tockPrice = [
         0, // 1st body
         0, // 2nd body
         0, // 3rd body
@@ -29,7 +29,7 @@ contract Bodies is ERC721, Ownable {
         100_000_000, //9th body
         1_000_000_000 // 10th body
     ];
-    // problemId to tickPrice index
+    // problemId to tockPrice index
     mapping(uint256 => uint256) public problemPriceLevels;
 
     modifier onlyProblems() {
@@ -53,17 +53,17 @@ contract Bodies is ERC721, Ownable {
 
     // TODO: add metadata
 
-    function updateTickPrice(uint256 index, uint256 price) public onlyOwner {
+    function updateTockPrice(uint256 index, uint256 price) public onlyOwner {
         require(index < 10, "Invalid index");
-        tickPrice[index] = price;
+        tockPrice[index] = price;
     }
 
     function updateProblemsAddress(address payable problems_) public onlyOwner {
         problems = problems_;
     }
 
-    function updateTicksAddress(address ticks_) public onlyOwner {
-        ticks = ticks_;
+    function updateTocksAddress(address tocks_) public onlyOwner {
+        tocks = tocks_;
     }
 
     function generateSeed(uint256 tokenId) public view returns (bytes32) {
@@ -74,9 +74,9 @@ contract Bodies is ERC721, Ownable {
     function processPayment(address from, uint256 problemId) internal {
         uint256 problemPriceLevel = problemPriceLevels[problemId];
         require(problemPriceLevel < 10, "Problem already minted 10 bodies");
-        uint256 problemPrice = tickPrice[problemPriceLevel] * decimals;
+        uint256 problemPrice = tockPrice[problemPriceLevel] * decimals;
         problemPriceLevels[problemId]++;
-        Ticks(ticks).burn(from, problemPrice);
+        Tocks(tocks).burn(from, problemPrice);
     }
 
     function mint(uint256 problemId) public {
