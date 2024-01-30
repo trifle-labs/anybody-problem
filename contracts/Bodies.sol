@@ -53,6 +53,11 @@ contract Bodies is ERC721, Ownable {
 
     // TODO: add metadata
 
+    function updateTickPrice(uint256 index, uint256 price) public onlyOwner {
+        require(index < 10, "Invalid index");
+        tickPrice[index] = price;
+    }
+
     function updateProblemsAddress(address payable problems_) public onlyOwner {
         problems = problems_;
     }

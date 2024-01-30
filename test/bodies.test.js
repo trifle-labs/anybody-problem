@@ -25,17 +25,39 @@ describe('Bodies Tests', function () {
     const [, addr1] = await ethers.getSigners()
     const { Bodies: bodies } = await deployContracts()
 
+    await expect(bodies.connect(addr1).updateTickPrice(0, 0))
+      .to.be.revertedWith('Ownable: caller is not the owner')
+
     await expect(bodies.connect(addr1).updateProblemsAddress(addr1.address))
       .to.be.revertedWith('Ownable: caller is not the owner')
 
     await expect(bodies.connect(addr1).updateTicksAddress(addr1.address))
       .to.be.revertedWith('Ownable: caller is not the owner')
 
+    await expect(bodies.updateTickPrice(0, 0))
+      .to.not.be.reverted
+
     await expect(bodies.updateProblemsAddress(addr1.address))
       .to.not.be.reverted
 
     await expect(bodies.updateTicksAddress(addr1.address))
       .to.not.be.reverted
+  })
+
+  it('updates tick price correctly', async () => {
+    const { Bodies: bodies } = await deployContracts()
+    const tickPriceIndex = 0
+    const newPrice = 1000
+    const oldPrice = await bodies.tickPrice(tickPriceIndex)
+    expect(oldPrice.toNumber()).to.not.equal(newPrice)
+    await bodies.updateTickPrice(tickPriceIndex, newPrice)
+    const updatedPrice = await bodies.tickPrice(tickPriceIndex)
+    expect(updatedPrice.toNumber()).to.equal(newPrice)
+
+    const outOfRangeIndex = 10
+    await expect(bodies.updateTickPrice(outOfRangeIndex, newPrice))
+      .to.be.revertedWith('Invalid index')
+
   })
 
 

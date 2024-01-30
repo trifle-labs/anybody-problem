@@ -167,35 +167,35 @@ contract Solver is Ownable {
             uint256 pxIndex = traits * numberOfBodies + i * traits + 0;
             require(bodyData.px == input[pxIndex], "Invalid position x");
             // update stored values
-            bodyData.px = input[i * numberOfBodies + 0];
+            bodyData.px = input[i * traits + 0];
 
             // py
             // confirm previously stored values were used as input to the proof
             uint256 pyIndex = traits * numberOfBodies + i * traits + 1;
             require(bodyData.py == input[pyIndex], "Invalid position y");
             // update stored values
-            bodyData.py = input[i * numberOfBodies + 1];
+            bodyData.py = input[i * traits + 1];
 
             // vx
             // confirm previously stored values were used as input to the proof
             uint256 vxIndex = traits * numberOfBodies + i * traits + 2;
             require(bodyData.vx == input[vxIndex], "Invalid vector x");
             // update stored values
-            bodyData.vx = input[i * numberOfBodies + 2];
+            bodyData.vx = input[i * traits + 2];
 
             // vy
             // confirm previously stored values were used as input to the proof
             uint256 vyIndex = traits * numberOfBodies + i * traits + 3;
             require(bodyData.vy == input[vyIndex], "Invalid vector y");
             // update stored values
-            bodyData.vy = input[i * numberOfBodies + 3];
+            bodyData.vy = input[i * traits + 3];
 
             // radius
             // confirm previously stored values were used as input to the proof
             uint256 radiusIndex = traits * numberOfBodies + i * traits + 4;
             require(bodyData.radius == input[radiusIndex], "Invalid radius");
             // update stored values
-            bodyData.radius = input[i * numberOfBodies + 4];
+            bodyData.radius = input[i * traits + 4];
             Problems(problems).updateProblemBody(problemId, bodyId, bodyData);
         }
         emit Solved(problemId, previousTickCount, tickCount);

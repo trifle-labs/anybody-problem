@@ -150,7 +150,7 @@ class Anybody extends EventEmitter {
       if (runIndex > n) {
         keepSimulating = false
         this.showIt = true
-        n > 0 && console.log(`${n.toLocaleString()} runs`)
+        // n > 0 && console.log(`${n.toLocaleString()} runs`)
       } else {
         const results = this.step(this.bodies, this.missiles)
         this.bodies = results.bodies
@@ -1086,7 +1086,7 @@ class Anybody extends EventEmitter {
           c: this.colorArrayToTxt(this.randomColor(0, 200, bodyRNG))
         }
       })
-      console.dir({ bodies: this.bodies }, { depth: null })
+      // console.dir({ bodies: this.bodies }, { depth: null })
       this.startingBodies = this.bodies.length
       return
     }

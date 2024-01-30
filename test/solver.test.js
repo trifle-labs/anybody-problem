@@ -56,9 +56,9 @@ describe('Solver Tests', function () {
     const proofLength = 20
 
     const signers = await ethers.getSigners()
-    // const [, acct1] = signers
+    const [owner] = signers
     const deployedContracts = await deployContracts()
-    const { Problems: problems, Solver: solver } = deployedContracts
+    const { Problems: problems, Solver: solver, Ticks: ticks } = deployedContracts
     const { problemId } = await mintProblem(signers, deployedContracts)
     // await prepareMintBody(signers, deployedContracts, problemId)
     // await bodies.mint(problemId)
@@ -109,9 +109,28 @@ describe('Solver Tests', function () {
     await expect(solver.solveProblem(problemId, proofLength, dataResult.a, dataResult.b, dataResult.c, dataResult.Input))
       .to.emit(solver, 'Solved')
       .withArgs(problemId, tickCount, proofLength)
+    // console.log({ bodyFinal })
+    // confirm new values are stored correctly
+    for (let i = 0; i < bodyCount; i++) {
+      const bodyId = bodyIds[i]
+      const bodyData = await problems.getProblemBodyData(problemId, bodyId)
+      // console.log({ bodyData })
+      const { px, py, vx, vy, radius } = bodyData
+      expect(px).to.equal(bodyFinal[i][0].toString())
+      expect(py).to.equal(bodyFinal[i][1].toString())
+      expect(vx).to.equal(bodyFinal[i][2].toString())
+      expect(vy).to.equal(bodyFinal[i][3].toString())
+      expect(radius).to.equal(bodyFinal[i][4].toString())
+    }
 
-    // TODO: confirm new values are stored correctly
     // confirm ticks have been incremented by correct amount
+    const { tickCount: newTickCount } = await problems.problems(problemId)
+    expect(newTickCount).to.equal(tickCount + proofLength)
+
+
+    // user earned new balance in Ticks token
+    const balance = await ticks.balanceOf(owner.address)
+    expect(balance).to.equal(proofLength)
 
   })
 

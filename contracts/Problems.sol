@@ -25,6 +25,7 @@ contract Problems is ERC721, Ownable {
 
     uint256 public price = 0.01 ether;
 
+    // TODO: confirm bodyIndex matches anybody.js for proof generation
     struct Body {
         uint256 bodyId;
         uint256 bodyStyle;
