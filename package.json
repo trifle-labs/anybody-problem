@@ -8,7 +8,9 @@
     "circom": "./utils/basic_circom.sh",
     "circom:dev": "hardhat circom --deterministic --debug --verbose",
     "circom:prod": "hardhat circom --verbose",
-    "test": "hardhat test"
+    "sol-test": "hardhat test test/problems.test.js test/bodies.test.js test/solver.test.js",
+    "test": "hardhat test",
+    "chain": "hardhat node"
   },
   "main": "index.js",
   "dependencies": {
@@ -41,7 +43,8 @@
     "hardhat": "2.12.2",
     "hardhat-circom": "git+ssh://git@github.com/okwme/hardhat-circom.git#514bf05c8aa1b5864484eb1e257c0df6053553f2",
     "hardhat-contract-sizer": "*",
-    "hardhat-gas-reporter": "*"
+    "hardhat-gas-reporter": "*",
+    "solidity-coverage": "^0.8.6"
   },
   "eslintConfig": {
     "root": true,
@@ -72,7 +75,10 @@
     "rules": {
       "indent": [
         "error",
-        2
+        2,
+        {
+          "SwitchCase": 1
+        }
       ],
       "linebreak-style": [
         "error",

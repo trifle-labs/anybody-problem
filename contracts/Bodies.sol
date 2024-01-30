@@ -3,16 +3,21 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./Ticks.sol";
+import "./Tocks.sol";
 import "./Problems.sol";
 
+// import "hardhat/console.sol";
+
 contract Bodies is ERC721, Ownable {
-    address public problems;
-    address public ticks;
+    address payable public problems;
+    address public tocks;
+    // bodyId to seed
     mapping(uint256 => bytes32) public seeds;
+    // bodyId to styleId
+    mapping(uint256 => uint256) public styles;
     uint256 public counter;
     uint256 public constant decimals = 10 ** 18;
-    uint256[10] public tickPrice = [
+    uint256[10] public tockPrice = [
         0, // 1st body
         0, // 2nd body
         0, // 3rd body
@@ -24,6 +29,7 @@ contract Bodies is ERC721, Ownable {
         100_000_000, //9th body
         1_000_000_000 // 10th body
     ];
+    // problemId to tockPrice index
     mapping(uint256 => uint256) public problemPriceLevels;
 
     modifier onlyProblems() {
@@ -31,16 +37,33 @@ contract Bodies is ERC721, Ownable {
         _;
     }
 
-    constructor(address problems_) ERC721("Bodies", "BOD") {
-        updateProblems(problems_);
+    event Upgrade(
+        uint256 indexed persistBodyId,
+        uint256 indexed burnBodyId,
+        uint256 indexed styleId
+    );
+
+    constructor(address payable problems_) ERC721("Bodies", "BOD") {
+        updateProblemsAddress(problems_);
     }
 
-    function updateProblems(address problems_) public onlyOwner {
+    fallback() external {
+        revert("no fallback function");
+    }
+
+    // TODO: add metadata
+
+    function updateTockPrice(uint256 index, uint256 price) public onlyOwner {
+        require(index < 10, "Invalid index");
+        tockPrice[index] = price;
+    }
+
+    function updateProblemsAddress(address payable problems_) public onlyOwner {
         problems = problems_;
     }
 
-    function updateTicks(address ticks_) public onlyOwner {
-        ticks = ticks_;
+    function updateTocksAddress(address tocks_) public onlyOwner {
+        tocks = tocks_;
     }
 
     function generateSeed(uint256 tokenId) public view returns (bytes32) {
@@ -50,15 +73,16 @@ contract Bodies is ERC721, Ownable {
 
     function processPayment(address from, uint256 problemId) internal {
         uint256 problemPriceLevel = problemPriceLevels[problemId];
-        uint256 problemPrice = tickPrice[problemPriceLevel] * decimals;
+        require(problemPriceLevel < 10, "Problem already minted 10 bodies");
+        uint256 problemPrice = tockPrice[problemPriceLevel] * decimals;
         problemPriceLevels[problemId]++;
-        Ticks(ticks).burn(from, problemPrice);
+        Tocks(tocks).burn(from, problemPrice);
     }
 
     function mint(uint256 problemId) public {
         require(
             Problems(problems).ownerOf(problemId) == msg.sender,
-            "Not owner"
+            "Not problem owner"
         );
         processPayment(msg.sender, problemId);
         counter++;
@@ -70,6 +94,7 @@ contract Bodies is ERC721, Ownable {
         address owner,
         uint256 problemId
     ) public onlyProblems returns (uint256) {
+        // NOTE: Problems already confirms this token exists and is owned by the owner
         processPayment(owner, problemId);
         counter++;
         seeds[counter] = generateSeed(counter);
@@ -78,7 +103,24 @@ contract Bodies is ERC721, Ownable {
         return counter;
     }
 
+    function upgrade(uint256 persistBodyId, uint256 burnBodyId) public {
+        require(ownerOf(persistBodyId) == msg.sender, "Not persistBody owner");
+        require(ownerOf(burnBodyId) == msg.sender, "Not burnBody owner");
+        require(persistBodyId != burnBodyId, "Same body");
+        require(
+            styles[persistBodyId] == styles[burnBodyId],
+            "Different styles"
+        );
+        _burn(burnBodyId);
+        styles[persistBodyId]++;
+        emit Upgrade(persistBodyId, burnBodyId, styles[persistBodyId]);
+    }
+
     function burn(uint256 bodyID) public onlyProblems {
         _burn(bodyID);
+    }
+
+    function problemMint(address owner, uint256 bodyId) public onlyProblems {
+        _mint(owner, bodyId);
     }
 }

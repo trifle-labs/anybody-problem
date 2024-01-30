@@ -22,7 +22,7 @@ import { Anybody } from '../anybody'
 // const proofWorker = require('../proof.worker.js')
 const worker = new Worker('proof.worker.js')
 // import TimerPopup from './TimerPopup.vue'
-const {  verify } = require('../../utils/utils')
+const {  verify } = require('../../scripts/circuits')
 // import { useWebWorkerFn } from '@vueuse/core'
 
 export default {
@@ -132,6 +132,12 @@ export default {
             totalBodies: 3,
             mode: 'nft',
             stopEvery: steps,//487,
+            seed: 1n,
+            inputData: [
+              [ '616000', '599000', '10000', '10000', '13000' ],
+              [ '257000', '602000', '10000', '10000', '12000' ],
+              [ '98000', '901000', '10000', '10000', '11000' ]
+            ]
           })
           this.anybody.on('finished', (data) => this.onFinished(data))
           this.anybody.on('paused', (data) => this.onPaused(data))

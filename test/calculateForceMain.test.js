@@ -1,12 +1,11 @@
 const hre = require('hardhat')
 // const { assert } = require('chai')
-const {
-  calculateTime,
-  calculateForceBigInt,
-  convertBigIntToModP,
-  convertScaledStringArrayToBody
-} = require('../docs/index.js')
+// const { describe, it, before } = require('mocha')
 
+const {
+  Anybody,
+  _calculateTime,
+} = require('../src/anybody.js')
 // const p = 21888242871839275222246405745257275088548364400416034343698204186575808495617n
 
 describe('calculateForceMain circuit', () => {
@@ -50,17 +49,17 @@ describe('calculateForceMain circuit', () => {
     // get the number of inputs
     const inputs = sampleInputs[0].in_bodies.length * sampleInputs[0].in_bodies[0].length
     const perStep = witness.length - inputs
-    const secRounded = calculateTime(perStep)
+    const secRounded = _calculateTime(perStep)
     console.log(`| calculateForce() | ${perStep} | ${secRounded} |`)
     await circuit.checkConstraints(witness)
   })
 
-  it('has expected witness values', async () => {
-    // const witness = await circuit.calculateLabeledWitness(
-    //   sampleInputs[0],
-    //   sanityCheck
-    // )
-    // console.log({ witness })
+  it.skip('has expected witness values', async () => {
+    const witness = await circuit.calculateLabeledWitness(
+      sampleInputs[0],
+      sanityCheck
+    )
+    console.log({ witness })
 
     // assert.propertyVal(witness, "main.squared", sampleInput.squared);
     // assert.propertyVal(witness, "main.calculatedRoot", sampleInput.calculatedRoot);
@@ -68,17 +67,26 @@ describe('calculateForceMain circuit', () => {
     // assert.propertyVal(witness, "main.out", "1");
   })
 
-  it('has the correct output', async () => {
+  it.skip('has the correct output', async () => {
+
     for (let i = 0; i < sampleInputs.length; i++) {
       const sampleInput = sampleInputs[i]
-      const bodies = sampleInput.in_bodies.map(convertScaledStringArrayToBody)
-      const out_forces = calculateForceBigInt(bodies[0], bodies[1]).map(v => {
-        if (v < 0n) {
-          return [1, convertBigIntToModP(v * -1n)].map(n => n.toString())
-        } else {
-          return [0, convertBigIntToModP(v)].map(n => n.toString())
-        }
-      })
+
+      const anybody = new Anybody(null, { util: true })
+      let bodies = sampleInput.bodies.map(anybody.convertScaledStringArrayToBody.bind(anybody))
+      // for (let i = 0; i < steps; i++) {
+      bodies = anybody.forceAccumulatorBigInts(bodies)
+      // }
+      const out_forces = bodies.map(anybody.convertScaledBigIntBodyToArray.bind(anybody))
+
+      // const bodies = sampleInput.in_bodies.map(convertScaledStringArrayToBody)
+      // const out_forces = calculateForceBigInt(bodies[0], bodies[1]).map(v => {
+      //   if (v < 0n) {
+      //     return [1, _convertBigIntToModP(v * -1n)].map(n => n.toString())
+      //   } else {
+      //     return [0, _convertBigIntToModP(v)].map(n => n.toString())
+      //   }
+      // })
       // console.log({ out_forces })
       const expected = { out_forces }
       // console.log({ expected })

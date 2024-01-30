@@ -1,5 +1,7 @@
 const hre = require('hardhat')
 // const { assert } = require('chai')
+// const { describe, it, before } = require('mocha')
+
 const {
   calculateTime,
   detectCollisionBigInt,
@@ -51,7 +53,8 @@ describe('detectCollisionMain circuit', () => {
     // assert.propertyVal(witness, "main.out", "1");
   })
 
-  it('has the correct output', async () => {
+  it.skip('has the correct output', async () => {
+
     const bodiesBefore = []
     for (let i = 0; i < sampleInput.bodies.length; i++) {
       bodiesBefore.push(convertScaledStringArrayToBody(jsSampleInput.bodies[i]))

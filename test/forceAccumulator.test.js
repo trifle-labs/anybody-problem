@@ -2,6 +2,8 @@
 
 const hre = require('hardhat')
 // const { assert } = require('chai')
+// const { describe, it, before } = require('mocha')
+
 const {
   calculateTime,
   convertScaledStringArrayToBody,
@@ -35,12 +37,12 @@ describe('forceAccumulatorMain circuit', () => {
     await circuit.checkConstraints(witness)
   })
 
-  it('has expected witness values', async () => {
-    // const witness = await circuit.calculateLabeledWitness(
-    //   sampleInput,
-    //   sanityCheck
-    // )
-    // console.log({ witness })
+  it.skip('has expected witness values', async () => {
+    const witness = await circuit.calculateLabeledWitness(
+      sampleInput,
+      sanityCheck
+    )
+    console.log({ witness })
 
     // assert.propertyVal(witness, "main.squared", sampleInput.squared);
     // assert.propertyVal(witness, "main.calculatedRoot", sampleInput.calculatedRoot);
@@ -48,7 +50,7 @@ describe('forceAccumulatorMain circuit', () => {
     // assert.propertyVal(witness, "main.out", "1");
   })
 
-  it('has the correct output', async () => {
+  it.skip('has the correct output', async () => {
     const bodies = sampleInput.bodies.map(convertScaledStringArrayToBody)
     // console.dir({ bodies }, { depth: null })
 

@@ -4,6 +4,8 @@ require('hardhat-gas-reporter')
 require('hardhat-contract-sizer')
 require('dotenv').config()
 require('@nomiclabs/hardhat-etherscan')
+require('solidity-coverage')
+
 // const util = require("util");
 
 
@@ -52,7 +54,7 @@ const config = {
       {
         version: '0.8.15',
         settings: {
-          viaIR: false,
+          // viaIR: true,
           optimizer: { enabled: true, runs: 200 },
         },
       },
@@ -63,7 +65,7 @@ const config = {
       gasPrice: 10_000_000_000,
       blockGasLimit: 30_000_000,
       chainId: 12345,
-      // loggingEnabled: true
+      // loggingEnabled: false
     },
   },
   gasReporter: {
@@ -150,7 +152,7 @@ const config = {
   },
 }
 
-for (let i = 3; i < 11; i++) {
+for (let i = 3; i <= 10; i++) {
   config.circom.circuits.push({
     name: `nft_${i}_20`,
     // No protocol, so it defaults to groth16
