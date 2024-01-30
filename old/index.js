@@ -1,7 +1,7 @@
 let body1, body2, body3, body4, c1, c2, c3, c4, s1, s2, s3, s4, bg
-const radius = 50;
-const G = 100; // Gravitational constant
-const friction = 1; // Damping factor for friction
+const radius = 50
+const G = 100 // Gravitational constant
+const friction = 1 // Damping factor for friction
 const speedLimit = 10
 const vectorLimit = 10
 const minDistance = 200 // was 200 * 200
@@ -13,12 +13,12 @@ const boundaryRadius = windowWidth / 2
 let n = 0, img1
 const fps = 30
 const preRun = 0
-const prime = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
+const prime = 21888242871839275222246405745257275088548364400416034343698204186575808495617n
 const admin = false
 const minRadius = 50
 const maxRadius = 100
-const position = "!static"
-const colorStyle = "!squiggle"
+const position = '!static'
+const colorStyle = '!squiggle'
 let totalBodies = 3
 // const initialBodies = totalBodies
 // console.log({ totalBodies })
@@ -56,16 +56,16 @@ function setup() {
   // rectMode(CENTER);
 
   frameRate(fps)
-  createCanvas(windowWidth, windowWidth);
-  background(0);
-  bodies = prepBodies();
-  background("white")
-  colorMode(HSB, 360, 100, 100); // Use HSB color mode
+  createCanvas(windowWidth, windowWidth)
+  background(0)
+  bodies = prepBodies()
+  background('white')
+  colorMode(HSB, 360, 100, 100) // Use HSB color mode
   line(0, 0, windowWidth, windowWidth)
   line(windowWidth, 0, 0, windowWidth)
-  stroke("white")
+  stroke('white')
   if (!outlines) {
-    noStroke();
+    noStroke()
   }
   go()
   window.initialBodies = convertBodiesToBigInts(bodies).map(convertScaledBigIntBodyToArray)
@@ -80,7 +80,7 @@ function prepBodies() {
   for (let i = 0; i < totalBodies; i++) {
     let cc = randomColor()
     cc.push(opac)
-    cc = `rgba(${cc.join(",")})`
+    cc = `rgba(${cc.join(',')})`
     cs.push(cc)
   }
   for (let i = 0; i < totalBodies; i++) {
@@ -91,7 +91,7 @@ function prepBodies() {
   //   alert("didn't account for this many bodies")
   //   throw new Error("too many bodies")
   // }
-  let maxSize = totalBodies < 10 ? 10 : totalBodies;
+  let maxSize = totalBodies < 10 ? 10 : totalBodies
   for (let i = 0; i < maxSize; i++) {
     if (i >= totalBodies) break
     const body = {
@@ -121,11 +121,11 @@ function forceAccumulator(bodies) {
 function forceAccumulatorBigInts(bodies) {
   // console.dir({ bodies: bodies.map(convertScaledBigIntBodyToArray) }, { depth: null })
   const vectorLimitScaled = convertFloatToScaledBigInt(vectorLimit)
-  let accumulativeForces = [];
+  let accumulativeForces = []
   for (let i = 0; i < bodies.length; i++) {
     accumulativeForces.push([0n, 0n])
   }
-  let ii = 0;
+  let ii = 0
   for (let i = 0; i < bodies.length; i++) {
     const body = bodies[i]
     for (let j = i + 1; j < bodies.length; j++) {
@@ -212,8 +212,8 @@ function runComputationBigInt(bodies, missiles) {
 
 function runComputation(bodies, missiles) {
 
-  bodies = forceAccumulator(bodies);
-  var results = detectCollision(bodies, missiles);
+  bodies = forceAccumulator(bodies)
+  var results = detectCollision(bodies, missiles)
   bodies = results.bodies
   missiles = results.missiles
 
@@ -262,14 +262,14 @@ function detectCollisionBigInt(bodies, missiles) {
 
   for (let j = 0; j < bodies.length; j++) {
     const body = bodies[j]
-    const distance = approxDist(missile.position.x, missile.position.y, body.position.x, body.position.y);
+    const distance = approxDist(missile.position.x, missile.position.y, body.position.x, body.position.y)
     // NOTE: this is to match the circuit. If the missile is gone, set minDist to 0
     // Need to make sure comparison of distance is < and not <= for this to work
     // because they may by chance be at the exact same coordinates and should still
     // not trigger an explosion since the missile is already gone.
     const minDist = missile.radius == 0n ? 0n : body.radius * 2n
     if (distance < minDist) {
-      missile.radius = 0n;
+      missile.radius = 0n
       // console.log('missile hit')
       explosions.push(explosion(convertScaledBigIntToFloat(body.position.x), convertScaledBigIntToFloat(body.position.y), convertScaledBigIntToFloat(body.radius)))
       bodies[j].radius = 0n
@@ -353,7 +353,7 @@ function calculateForceBigInt(body1, body2) {
 
 
   let distanceSquared
-  const unboundDistanceSquared = dxs + dys;
+  const unboundDistanceSquared = dxs + dys
   // console.log({ unboundDistanceSquared })
   if (unboundDistanceSquared < minDistanceScaled) {
     distanceSquared = minDistanceScaled
@@ -364,7 +364,7 @@ function calculateForceBigInt(body1, body2) {
   // console.log({ distance })
   // console.log({ distanceSquared })
 
-  const bodies_sum = body1_radius == 0n || body2_radius == 0n ? 0n : (body1_radius + body2_radius) * 4n; // NOTE: this could be tweaked as a variable for "liveliness" of bodies
+  const bodies_sum = body1_radius == 0n || body2_radius == 0n ? 0n : (body1_radius + body2_radius) * 4n // NOTE: this could be tweaked as a variable for "liveliness" of bodies
   // console.log({ bodies_sum })
 
   const distanceSquared_with_avg_denom = distanceSquared * 2n // NOTE: this is a result of moving division to the end of the calculation
@@ -398,94 +398,94 @@ function approxDiv(dividend, divisor) {
   }
 
   // Create internal signals for our binary search
-  var lo, hi, mid, testProduct;
+  var lo, hi, mid, testProduct
 
   // Initialize our search space
-  lo = 0n;
-  hi = dividend;  // Assuming worst case where divisor = 1
+  lo = 0n
+  hi = dividend  // Assuming worst case where divisor = 1
 
   while (lo < hi) {  // 32 iterations for 32-bit numbers as an example
-    mid = (hi + lo + 1n) >> 1n;
-    testProduct = mid * divisor;
+    mid = (hi + lo + 1n) >> 1n
+    testProduct = mid * divisor
 
     // Adjust our bounds based on the test product
     if (testProduct > dividend) {
-      hi = mid - 1n;
+      hi = mid - 1n
     } else {
-      lo = mid;
+      lo = mid
     }
   }
   // console.log({ lo, mid, hi })
   // Output the lo as our approximated quotient after iterations
   // quotient <== lo;
-  return lo;
+  return lo
 }
 
 
 function approxSqrt(n) {
   // console.log({ n })
   if (n == 0n) {
-    return 0n;
+    return 0n
   }
-  var lo = 0n;
-  var hi = n >> 1n;
-  var mid, midSquared;
+  var lo = 0n
+  var hi = n >> 1n
+  var mid, midSquared
   // console.log({ lo, hi })
   while (lo <= hi) {
-    mid = (lo + hi) >> 1n; // multiplication by multiplicative inverse is not what we want so we use >>
+    mid = (lo + hi) >> 1n // multiplication by multiplicative inverse is not what we want so we use >>
     // console.log({ lo, mid, hi })
     // TODO: Make more accurate by checking if lo + hi is odd or even before bit shifting
-    midSquared = (mid * mid);
+    midSquared = (mid * mid)
     if (midSquared == n) {
       // console.log(`final perfect`, { lo, mid, hi })
-      return mid; // Exact square root found
+      return mid // Exact square root found
     } else if (midSquared < n) {
-      lo = mid + 1n; // Adjust lower bound
+      lo = mid + 1n // Adjust lower bound
     } else {
-      hi = mid - 1n; // Adjust upper bound
+      hi = mid - 1n // Adjust upper bound
     }
   }
   // If we reach here, no exact square root was found.
   // return the closest approximation
   // console.log(`final approx`, { lo, mid, hi })
-  return mid;
+  return mid
 }
 
 
 function checkCollision(body1, body2) {
-  const distance = dist(body1.position.x, body1.position.y, body2.position.x, body2.position.y);
-  const minDist = (body1.radius + body2.radius) / 4;
+  const distance = dist(body1.position.x, body1.position.y, body2.position.x, body2.position.y)
+  const minDist = (body1.radius + body2.radius) / 4
 
   if (distance < minDist) {
     // Calculate collision response
-    const angle = atan2(body2.position.y - body1.position.y, body2.position.x - body1.position.x);
-    const overlap = minDist - distance;
+    const angle = atan2(body2.position.y - body1.position.y, body2.position.x - body1.position.x)
+    const overlap = minDist - distance
 
-    const totalMass = body1.radius ** 2 + body2.radius ** 2;
-    const overlapRatio1 = body2.radius / totalMass;
-    const overlapRatio2 = body1.radius / totalMass;
+    const totalMass = body1.radius ** 2 + body2.radius ** 2
+    const overlapRatio1 = body2.radius / totalMass
+    const overlapRatio2 = body1.radius / totalMass
 
-    const deltaX = -cos(angle) * overlap;
-    const deltaY = -sin(angle) * overlap;
+    const deltaX = -cos(angle) * overlap
+    const deltaY = -sin(angle) * overlap
 
-    body1.position.x -= deltaX * overlapRatio1;
-    body1.position.y -= deltaY * overlapRatio1;
-    body2.position.x += deltaX * overlapRatio2;
-    body2.position.y += deltaY * overlapRatio2;
+    body1.position.x -= deltaX * overlapRatio1
+    body1.position.y -= deltaY * overlapRatio1
+    body2.position.x += deltaX * overlapRatio2
+    body2.position.y += deltaY * overlapRatio2
 
     // Update velocities
-    const angle1 = atan2(body1.velocity.y, body1.velocity.x);
-    const angle2 = atan2(body2.velocity.y, body2.velocity.x);
-    const speed1 = body1.velocity.mag();
-    const speed2 = body2.velocity.mag();
+    const angle1 = atan2(body1.velocity.y, body1.velocity.x)
+    const angle2 = atan2(body2.velocity.y, body2.velocity.x)
+    const speed1 = body1.velocity.mag()
+    const speed2 = body2.velocity.mag()
 
-    const newVelX1 = cos(angle1) * speed2;
-    const newVelY1 = sin(angle1) * speed2;
-    const newVelX2 = cos(angle2) * speed1;
-    const newVelY2 = sin(angle2) * speed1;
+    const newVelX1 = cos(angle1) * speed2
+    const newVelY1 = sin(angle1) * speed2
+    const newVelX2 = cos(angle2) * speed1
+    const newVelY2 = sin(angle2) * speed1
 
-    body1.velocity.set(newVelX1, newVelY1);
-    body2.velocity.set(newVelX2, newVelY2);
+    body1.velocity.set(newVelX1, newVelY1)
+    body2.velocity.set(newVelX2, newVelY2)
   }
 }
 
@@ -494,9 +494,9 @@ let missileCount = 0
 let thisLevelMissileCount = 0
 let explosions = []
 function addListener() {
-  if (typeof window !== "undefined") {
-    const body = document.getElementsByClassName("p5Canvas")[0]
-    body.addEventListener("click", function (e) {
+  if (typeof window !== 'undefined') {
+    const body = document.getElementsByClassName('p5Canvas')[0]
+    body.addEventListener('click', function (e) {
       if (missiles.length > 0 && !admin) return
       thisLevelMissileCount++
       missileCount++
@@ -509,7 +509,7 @@ function addListener() {
         velocity: createVector(x, y - windowWidth),
         radius: 10,
       }
-      b.velocity.limit(10);
+      b.velocity.limit(10)
       missiles.push(b)
     })
   }
@@ -525,7 +525,7 @@ function draw() {
   }
   noFill()
   // Set the background color with low opacity to create trails
-  if (clearBG == "fade") {
+  if (clearBG == 'fade') {
     background(255, 0.3)
   } else if (clearBG) {
     background(255)
@@ -542,26 +542,26 @@ function draw() {
       const body = copyOfBodies[j]
       const c = body.c
       let finalColor
-      if (colorStyle == "squiggle") {
-        const hueColor = (parseInt(c.split(",")[1]) + n) % 360
-        finalColor = color(hueColor, 60, 100); // Saturation and brightness at 100 for pure spectral colors
+      if (colorStyle == 'squiggle') {
+        const hueColor = (parseInt(c.split(',')[1]) + n) % 360
+        finalColor = color(hueColor, 60, 100) // Saturation and brightness at 100 for pure spectral colors
       } else {
         finalColor = c
       }
       fill(finalColor)
       push()
-      translate(body.position.x, body.position.y);
-      var angle = body.velocity.heading() + PI / 2;
-      rotate(angle);
-      let x1 = body.radius * 4 * cos(PI / 6);
-      let y1 = body.radius * 4 * sin(PI / 6);
+      translate(body.position.x, body.position.y)
+      var angle = body.velocity.heading() + PI / 2
+      rotate(angle)
+      let x1 = body.radius * 4 * cos(PI / 6)
+      let y1 = body.radius * 4 * sin(PI / 6)
 
-      let x2 = body.radius * 4 * cos(PI / 6 + TWO_PI / 3);
-      let y2 = body.radius * 4 * sin(PI / 6 + TWO_PI / 3);
+      let x2 = body.radius * 4 * cos(PI / 6 + TWO_PI / 3)
+      let y2 = body.radius * 4 * sin(PI / 6 + TWO_PI / 3)
 
-      let x3 = body.radius * 4 * cos(PI / 6 + 2 * TWO_PI / 3);
-      let y3 = body.radius * 4 * sin(PI / 6 + 2 * TWO_PI / 3);
-      triangle(x1, y1, x2, y2, x3, y3);
+      let x3 = body.radius * 4 * cos(PI / 6 + 2 * TWO_PI / 3)
+      let y3 = body.radius * 4 * sin(PI / 6 + 2 * TWO_PI / 3)
+      triangle(x1, y1, x2, y2, x3, y3)
       pop()
     }
   }
@@ -571,9 +571,9 @@ function draw() {
     const body = bodies[i]
     const c = body.c
     let finalColor
-    if (colorStyle == "squiggle") {
-      const hueColor = (parseInt(c.split(",")[1]) + n) % 360
-      finalColor = color(hueColor, 60, 100); // Saturation and brightness at 100 for pure spectral colors
+    if (colorStyle == 'squiggle') {
+      const hueColor = (parseInt(c.split(',')[1]) + n) % 360
+      finalColor = color(hueColor, 60, 100) // Saturation and brightness at 100 for pure spectral colors
     } else {
       finalColor = c
     }
@@ -581,36 +581,36 @@ function draw() {
 
     // rotate by velocity
     push()
-    translate(body.position.x, body.position.y);
-    var angle = body.velocity.heading() + PI / 2;
-    rotate(angle);
+    translate(body.position.x, body.position.y)
+    var angle = body.velocity.heading() + PI / 2
+    rotate(angle)
 
     strokeWeight(0)
     // stroke("white")
     fill(finalColor)
     // Calculate the vertices of the equilateral triangle
-    let x1 = body.radius * 4 * cos(PI / 6);
-    let y1 = body.radius * 4 * sin(PI / 6);
+    let x1 = body.radius * 4 * cos(PI / 6)
+    let y1 = body.radius * 4 * sin(PI / 6)
 
-    let x2 = body.radius * 4 * cos(PI / 6 + TWO_PI / 3);
-    let y2 = body.radius * 4 * sin(PI / 6 + TWO_PI / 3);
+    let x2 = body.radius * 4 * cos(PI / 6 + TWO_PI / 3)
+    let y2 = body.radius * 4 * sin(PI / 6 + TWO_PI / 3)
 
-    let x3 = body.radius * 4 * cos(PI / 6 + 2 * TWO_PI / 3);
-    let y3 = body.radius * 4 * sin(PI / 6 + 2 * TWO_PI / 3);
+    let x3 = body.radius * 4 * cos(PI / 6 + 2 * TWO_PI / 3)
+    let y3 = body.radius * 4 * sin(PI / 6 + 2 * TWO_PI / 3)
 
-    triangle(x1, y1, x2, y2, x3, y3);
+    triangle(x1, y1, x2, y2, x3, y3)
     pop()
 
-    stroke("white");
-    strokeWeight(1);
+    stroke('white')
+    strokeWeight(1)
     // fill("white")
     // ellipse(body.position.x, body.position.y, body.radius * 4, body.radius * 4);
     push()
-    translate(body.position.x, body.position.y);
-    var angle = body.velocity.heading() + PI / 2;
-    rotate(angle);
+    translate(body.position.x, body.position.y)
+    var angle = body.velocity.heading() + PI / 2
+    rotate(angle)
 
-    drawCenter(0, 0, body.radius);
+    drawCenter(0, 0, body.radius)
     pop()
     const bodyCopy = {
       position: createVector(body.position.x, body.position.y),
@@ -625,11 +625,11 @@ function draw() {
     allCopiesOfBodies.shift()
   }
 
-  fill("black")
+  fill('black')
   for (let i = 0; i < missiles.length; i++) {
     const body = missiles[i]
     strokeWeight(0)
-    ellipse(body.position.x, body.position.y, body.radius / 2, body.radius / 2);
+    ellipse(body.position.x, body.position.y, body.radius / 2, body.radius / 2)
   }
   if (explosions.length > 0) {
     for (let i = 0; i < explosions.length; i++) {
@@ -641,8 +641,8 @@ function draw() {
   for (let i = 0; i < explosions.length; i++) {
     const explosion = explosions[i]
     const bomb = explosion[0]
-    fill("red")
-    ellipse(bomb.x, bomb.y, bomb.i * 2, bomb.i * 2);
+    fill('red')
+    ellipse(bomb.x, bomb.y, bomb.i * 2, bomb.i * 2)
     explosion.shift()
     if (explosion.length == 0) {
       explosions.splice(i, 1)
@@ -650,49 +650,49 @@ function draw() {
   }
 
   // draw line between bottom left corner and direction towards mouse
-  stroke("rgba(200,200,200,1)");
-  strokeCap(SQUARE);
-  strokeWeight(10);
+  stroke('rgba(200,200,200,1)')
+  strokeCap(SQUARE)
+  strokeWeight(10)
 
   // Bottom left corner coordinates
-  let startX = 0;
-  let startY = height;
+  let startX = 0
+  let startY = height
 
   // Calculate direction from bottom left to mouse
-  let dirX = mouseX - startX;
-  let dirY = mouseY - startY;
+  let dirX = mouseX - startX
+  let dirY = mouseY - startY
 
   // Calculate the length of the direction
-  let len = sqrt(dirX * dirX + dirY * dirY);
+  let len = sqrt(dirX * dirX + dirY * dirY)
 
   // If the length is not zero, scale the direction to have a length of 100
   if (len != 0) {
-    dirX = (dirX / len) * 100;
-    dirY = (dirY / len) * 100;
+    dirX = (dirX / len) * 100
+    dirY = (dirY / len) * 100
   }
 
   // Draw the line
-  line(startX, startY, startX + dirX, startY + dirY);
-  strokeWeight(0);
+  line(startX, startY, startX + dirX, startY + dirY)
+  strokeWeight(0)
 
 
   // noStroke()
-  fill("white")
+  fill('white')
   // stroke("black")
-  rect(0, 0, 50, 20);
+  rect(0, 0, 50, 20)
   // stroke("black");
-  fill("black")
+  fill('black')
   // convert totalSec to time
   const secondsAsTime = new Date(totalSec * 1000).toISOString().substr(14, 5)
   const thisLevelSecondsAsTime = new Date(thisLevelSec * 1000).toISOString().substr(14, 5)
-  text("Total Frames: " + preRun + n, 0, 10)
-  text("Total Time: " + secondsAsTime, 0, 20)
-  text("Total Shots: " + missileCount, 0, 30)
-  text("Lvl " + (totalBodies - 2) + " - " + thisLevelSecondsAsTime + " - " + (totalBodies - bodies.length) + "/" + totalBodies + " - " + thisLevelMissileCount + " shots", 0, 40)
+  text('Total Frames: ' + preRun + n, 0, 10)
+  text('Total Time: ' + secondsAsTime, 0, 20)
+  text('Total Shots: ' + missileCount, 0, 30)
+  text('Lvl ' + (totalBodies - 2) + ' - ' + thisLevelSecondsAsTime + ' - ' + (totalBodies - bodies.length) + '/' + totalBodies + ' - ' + thisLevelMissileCount + ' shots', 0, 40)
   for (let i = 0; i < allLevelSec.length; i++) {
     const prevLevel = allLevelSec[i]
     const prevLevelSecondsAsTime = new Date(prevLevel.thisLevelSec * 1000).toISOString().substr(14, 5)
-    text("Lvl " + (allLevelSec.length - i) + " - " + prevLevelSecondsAsTime + " - " + prevLevel.thisLevelMissileCount + " shots", 0, (i * 10) + 50)
+    text('Lvl ' + (allLevelSec.length - i) + ' - ' + prevLevelSecondsAsTime + ' - ' + prevLevel.thisLevelMissileCount + ' shots', 0, (i * 10) + 50)
   }
   // noStroke();
 }
@@ -702,9 +702,9 @@ function drawCenter(x, y, r) {
   const max = 4
   for (var i = 0; i < max; i++) {
     if (i % 2 == 0) {
-      fill("white")
+      fill('white')
     } else {
-      fill("red")
+      fill('red')
     }
     ellipse(x, y, r * (max - i))
   }
@@ -715,7 +715,7 @@ let thisLevelSec = 0
 setInterval(() => {
   thisLevelSec++
   totalSec++
-}, 1000);
+}, 1000)
 
 function randomColor() {
   const color = []
