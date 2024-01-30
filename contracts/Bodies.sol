@@ -22,12 +22,12 @@ contract Bodies is ERC721, Ownable {
         0, // 2nd body
         0, // 3rd body
         1_000, // 4th body
-        10_000, // 5th body
-        100_000, // 6th body
-        1_000_000, // 7th body
-        10_000_000, // 8th body
-        100_000_000, //9th body
-        1_000_000_000 // 10th body
+        5_000, // 5th body
+        25_000, // 6th body
+        125_000, // 7th body
+        625_000, // 8th body
+        3_125_000, //9th body
+        15_625_000 // 10th body
     ];
     // problemId to tockPrice index
     mapping(uint256 => uint256) public problemPriceLevels;
@@ -67,8 +67,8 @@ contract Bodies is ERC721, Ownable {
     }
 
     function generateSeed(uint256 tokenId) public view returns (bytes32) {
-        return
-            keccak256(abi.encodePacked(tokenId, blockhash(block.number - 1)));
+        // TODO: add back blockhash
+        return keccak256(abi.encodePacked(tokenId)); //blockhash(block.number - 1)));
     }
 
     function processPayment(address from, uint256 problemId) internal {

@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./Bodies.sol";
 import "./Solver.sol";
 
-// import "hardhat/console.sol";
+import "hardhat/console.sol";
 
 contract Problems is ERC721, Ownable {
     bool public paused;
@@ -157,8 +157,8 @@ contract Problems is ERC721, Ownable {
     }
 
     function generateSeed(uint256 tokenId) internal view returns (bytes32) {
-        return
-            keccak256(abi.encodePacked(tokenId, blockhash(block.number - 1)));
+        // TODO: add back blockhash
+        return keccak256(abi.encodePacked(tokenId)); //, blockhash(block.number - 1)));
     }
 
     function mint() public payable {
@@ -280,10 +280,6 @@ contract Problems is ERC721, Ownable {
         );
     }
 
-    // function getRand(uint256 blockNumber) public view returns (bytes32) {
-    //     return keccak256(abi.encodePacked(blockhash(blockNumber)));
-    // }
-
     // NOTE: this function uses i as input for radius, which means it's possible
     // for an owner to remove a body at index 0 and add back with a greater index
     // the greater index may collide with the index originally used or another body
@@ -292,8 +288,8 @@ contract Problems is ERC721, Ownable {
         uint256 bodyId,
         bytes32 seed,
         uint256 bodyStyle,
-        uint256 i
-    ) public pure returns (Body memory) {
+        uint256 i /*TODO: add back: pure*/
+    ) public view returns (Body memory) {
         Body memory body;
         body.seed = seed;
 
@@ -301,9 +297,11 @@ contract Problems is ERC721, Ownable {
         uint256 x = randomRange(0, windowWidth, rand);
         rand = keccak256(abi.encodePacked(rand));
         uint256 y = randomRange(0, windowWidth, rand);
-        // TODO: update so it matches JS
+        // TODO: update radius so it matches JS
         uint256 r = (maxRadius - i) * scalingFactor;
 
+        // console.log("maxVectorScaled");
+        // console.log(maxVector * scalingFactor);
         body.bodyId = bodyId;
         body.bodyStyle = bodyStyle;
         body.px = x;

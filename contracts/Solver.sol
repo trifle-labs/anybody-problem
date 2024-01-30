@@ -15,6 +15,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "./Problems.sol";
 import "./Tocks.sol";
+import "hardhat/console.sol";
 
 contract Solver is Ownable {
     address payable public problems;
@@ -23,14 +24,14 @@ contract Solver is Ownable {
     uint256[10] public bodyBoost = [
         0, // 1st body
         0, // 2nd body
-        0, // 3rd body
-        1, // 4th body
-        2, // 5th body
-        3, // 6th body
-        4, // 7th body
-        5, // 8th body
-        6, //9th body
-        7 // 10th body
+        3, // 3rd body
+        4, // 4th body
+        5, // 5th body
+        6, // 6th body
+        7, // 7th body
+        8, // 8th body
+        9, //9th body
+        10 // 10th body
     ];
 
     event Solved(
@@ -166,7 +167,8 @@ contract Solver is Ownable {
             problemId,
             previousTickCount + tickCount
         );
-        Tocks(tocks).mint(msg.sender, tickCount);
+
+        Tocks(tocks).mint(msg.sender, tickCount * bodyBoost[bodyCount]);
 
         // uint256 traits = 5;
         Problems.Body memory bodyData;
@@ -179,6 +181,9 @@ contract Solver is Ownable {
             // px
             // confirm previously stored values were used as input to the proof
             // uint256 pxIndex = 5 * numberOfBodies + i * 5 + 0;
+            // console.log("px");
+            // console.log(bodyData.px);
+            // console.log(input[5 * numberOfBodies + i * 5 + 0]);
             require(
                 bodyData.px == input[5 * numberOfBodies + i * 5 + 0],
                 "Invalid position x"
@@ -199,6 +204,10 @@ contract Solver is Ownable {
             // vx
             // confirm previously stored values were used as input to the proof
             // uint256 vxIndex = 5 * numberOfBodies + i * 5 + 2;
+            // console.log("vx");
+            // console.log(bodyData.vx);
+            // console.log(input[5 * numberOfBodies + i * 5 + 2]);
+            // console.log(input[i * 5 + 2]);
             require(
                 bodyData.vx == input[5 * numberOfBodies + i * 5 + 2],
                 "Invalid vector x"

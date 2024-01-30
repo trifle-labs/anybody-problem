@@ -3,6 +3,8 @@ const ethers = require('ethers')
 const hre = require('hardhat')
 const path = require('node:path')
 const fs = require('fs').promises
+const { Anybody } = require('../src/anybody.js')
+const { exportCallDataGroth16 } = require('../scripts/circuits.js')
 
 const correctPrice = ethers.utils.parseEther('0.01')
 // TODO: change this to the splitter address
@@ -253,9 +255,54 @@ const prepareMintBody = async (signers, deployedContracts, problemId, acct) => {
   await tocks.mint(acct.address, tockPriceWithDecimals)
 }
 
+const generateAndSubmitProof = async (expect, deployedContracts, problemId, bodyCount, ticksRun, bodyData) => {
+  const { Problems: problems, Solver: solver } = deployedContracts
+  const { seed: problemSeed } = await problems.problems(problemId)
+  // console.log({ bodyData })
+  // const bodyDataMapped = Object.fromEntries(
+  //   Object.entries(bodyData).map(([key, value]) => [key, value.map(v => (v._isBigNumber ? v.toString() : v))])
+  // )
+  // console.dir({ bodyDataMapped }, { depth: null })
+  const anybody = new Anybody(null, {
+    bodyData,
+    seed: problemSeed,
+    util: true,
+  })
+
+  const inputData = { bodies: anybody.bodyInits }
+  // console.dir({ inputData }, { depth: null })
+  anybody.runSteps(ticksRun)
+  anybody.calculateBodyFinal()
+
+  const bodyFinal = anybody.bodyFinal
+  // console.dir({ bodyFinal }, { depth: null })
+  const dataResult = await exportCallDataGroth16(
+    inputData,
+    `./public/nft_${bodyCount}_${ticksRun}.wasm`,
+    `./public/nft_${bodyCount}_${ticksRun}_final.zkey`
+  )
+  // console.dir({ bodyData, inputData, bodyFinal, dataResult }, { depth: null })
+  for (let i = 0; i < dataResult.Input.length; i++) {
+    if (i < dataResult.Input.length / 2) {
+      const bodyIndex = Math.floor(i / 5)
+      const body = bodyFinal[bodyIndex]
+      const bodyDataIndex = i - bodyIndex * 5
+      expect(dataResult.Input[i]).to.equal(body[bodyDataIndex].toString())
+    } else {
+      const bodyIndex = Math.floor((i - dataResult.Input.length / 2) / 5)
+      const body = inputData.bodies[bodyIndex]
+      const bodyDataIndex = i - dataResult.Input.length / 2 - bodyIndex * 5
+      expect(dataResult.Input[i]).to.equal(body[bodyDataIndex].toString())
+    }
+  }
+
+  const tx = await solver.solveProblem(problemId, ticksRun, dataResult.a, dataResult.b, dataResult.c, dataResult.Input)
+  return { tx, bodyFinal }
+}
+
 
 module.exports = {
-
+  generateAndSubmitProof,
   prepareMintBody,
   mintProblem,
   getParsedEventLogs,

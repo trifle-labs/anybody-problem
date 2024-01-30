@@ -1,9 +1,7 @@
 const { expect } = require('chai')
 const { ethers } = require('hardhat')
 // const { describe, it } = require('mocha')
-const { Anybody } = require('../src/anybody.js')
-const { deployContracts, mintProblem } = require('../scripts/utils.js')
-const { exportCallDataGroth16 } = require('../scripts/circuits.js')
+const { deployContracts, mintProblem, getParsedEventLogs, generateAndSubmitProof } = require('../scripts/utils.js')
 
 // let tx
 describe('Solver Tests', function () {
@@ -54,17 +52,12 @@ describe('Solver Tests', function () {
 
   it('creates a proof for 3 bodies', async () => {
 
-    const proofLength = 20
+    const ticksRun = 20
 
     const signers = await ethers.getSigners()
-    const [owner] = signers
     const deployedContracts = await deployContracts()
     const { Problems: problems, Solver: solver, Tocks: tocks } = deployedContracts
     const { problemId } = await mintProblem(signers, deployedContracts)
-    // await prepareMintBody(signers, deployedContracts, problemId)
-    // await bodies.mint(problemId)
-
-    const { seed: problemSeed } = await problems.problems(problemId)
 
     const bodyData = []
     const { bodyCount, tickCount } = await problems.problems(problemId)
@@ -75,42 +68,21 @@ describe('Solver Tests', function () {
       bodyData.push(body)
     }
 
+    const { tx, bodyFinal } = await generateAndSubmitProof(expect, deployedContracts, problemId, bodyCount, ticksRun, bodyData)
 
-    const anybody = new Anybody(null, {
-      bodyData,
-      seed: problemSeed,
-      util: true,
-    })
-
-    const inputData = { bodies: anybody.bodyInits }
-    anybody.runSteps(proofLength)
-    anybody.calculateBodyFinal()
-
-    const bodyFinal = anybody.bodyFinal
-    const dataResult = await exportCallDataGroth16(
-      inputData,
-      './public/nft_3_20.wasm',
-      './public/nft_3_20_final.zkey'
-    )
-    // console.dir({ bodyData, inputData, bodyFinal, dataResult }, { depth: null })
-    for (let i = 0; i < dataResult.Input.length; i++) {
-      if (i < dataResult.Input.length / 2) {
-        const bodyIndex = Math.floor(i / 5)
-        const body = bodyFinal[bodyIndex]
-        const bodyDataIndex = i - bodyIndex * 5
-        expect(dataResult.Input[i]).to.equal(body[bodyDataIndex].toString())
-      } else {
-        const bodyIndex = Math.floor((i - dataResult.Input.length / 2) / 5)
-        const body = inputData.bodies[bodyIndex]
-        const bodyDataIndex = i - dataResult.Input.length / 2 - bodyIndex * 5
-        expect(dataResult.Input[i]).to.equal(body[bodyDataIndex].toString())
-      }
-    }
-
-    await expect(solver.solveProblem(problemId, proofLength, dataResult.a, dataResult.b, dataResult.c, dataResult.Input))
+    await expect(tx)
       .to.emit(solver, 'Solved')
-      .withArgs(problemId, tickCount, proofLength)
-    // console.log({ bodyFinal })
+      .withArgs(problemId, tickCount, ticksRun)
+    const receipt = await tx.wait()
+
+    // user earned new balance in Tocks token
+    const tockCount = getParsedEventLogs(receipt, tocks, 'Transfer')[0].args.value
+    const { bodyCount: newBodyCount } = await problems.problems(problemId)
+    const boostAmount = await solver.bodyBoost(newBodyCount)
+    const expectedTockCount = ticksRun * boostAmount
+    expect(tockCount).to.equal(expectedTockCount)
+    expect(tockCount.gt(0)).to.equal(true)
+
     // confirm new values are stored correctly
     for (let i = 0; i < bodyCount; i++) {
       const bodyId = bodyIds[i]
@@ -124,16 +96,74 @@ describe('Solver Tests', function () {
       expect(radius).to.equal(bodyFinal[i][4].toString())
     }
 
-    // confirm tocks have been incremented by correct amount
+    // confirm tickCount has been incremented by correct amount
     const { tickCount: newTickCount } = await problems.problems(problemId)
-    expect(newTickCount).to.equal(tickCount + proofLength)
-
-    // user earned new balance in Tocks token
-    const balance = await tocks.balanceOf(owner.address)
-    expect(balance).to.equal(proofLength)
+    expect(newTickCount).to.equal(tickCount + ticksRun)
   })
 
-  it.skip('creates multiple proofs in a row', async () => { })
+  it('creates multiple proofs in a row', async () => {
+
+    const ticksRun = 20
+
+    const signers = await ethers.getSigners()
+    const deployedContracts = await deployContracts()
+    const { Problems: problems, Solver: solver, Tocks: tocks } = deployedContracts
+    const { problemId } = await mintProblem(signers, deployedContracts)
+
+    const { bodyCount, tickCount } = await problems.problems(problemId)
+
+    const totalTicks = 2 * ticksRun
+    let totalTockCount = 0, runningTickCount = tickCount
+    for (let i = 0; i < totalTicks; i += ticksRun) {
+
+      const bodyData = []
+      const bodyIds = await problems.getProblemBodyIds(problemId)
+      for (let j = 0; j < bodyCount; j++) {
+        const bodyId = bodyIds[j]
+        const body = await problems.getProblemBodyData(problemId, bodyId)
+        bodyData.push(body)
+      }
+
+      // console.log({ bodyData })
+      const { tx, bodyFinal } = await generateAndSubmitProof(expect, deployedContracts, problemId, bodyCount, ticksRun, bodyData)
+      // console.log({ bodyFinal })
+      await expect(tx)
+        .to.emit(solver, 'Solved')
+        .withArgs(problemId, runningTickCount, ticksRun)
+      const receipt = await tx.wait()
+      runningTickCount = parseInt(runningTickCount) + parseInt(ticksRun)
+
+      // user earned new balance in Tocks token
+      const tockCount = getParsedEventLogs(receipt, tocks, 'Transfer')[0].args.value
+      totalTockCount += tockCount.toNumber()
+      const { bodyCount: newBodyCount } = await problems.problems(problemId)
+      const boostAmount = await solver.bodyBoost(newBodyCount)
+      const expectedTockCount = boostAmount.mul(ticksRun)
+      expect(tockCount).to.equal(expectedTockCount)
+
+      // confirm new values are stored correctly
+      for (let j = 0; j < bodyCount; j++) {
+        const bodyId = bodyIds[j]
+        const body = await problems.getProblemBodyData(problemId, bodyId)
+        const { px, py, vx, vy, radius } = body
+        expect(px).to.equal(bodyFinal[j][0].toString())
+        expect(py).to.equal(bodyFinal[j][1].toString())
+        expect(vx).to.equal(bodyFinal[j][2].toString())
+        expect(vy).to.equal(bodyFinal[j][3].toString())
+        expect(radius).to.equal(bodyFinal[j][4].toString())
+      }
+    }
+
+    const tockBalance = await tocks.balanceOf(signers[0].address)
+    expect(tockBalance).to.equal(totalTockCount)
+
+
+
+    // confirm tickCount has been incremented by correct amount
+    const { tickCount: newTickCount } = await problems.problems(problemId)
+    expect(newTickCount).to.equal(runningTickCount)
+
+  })
   it.skip('creates proofs for multiple bodies', async () => { })
   it.skip('adds a body, removes a body, creates a proof', async () => { })
   it.skip('adds two bodies, removes first body, creates a proof', async () => { })

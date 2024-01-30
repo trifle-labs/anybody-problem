@@ -113,12 +113,18 @@ class Anybody extends EventEmitter {
   }
 
   storeInits() {
+    // console.log('storeInits')
+    // console.dir({ bodies: this.bodies }, { depth: null })
     this.bodyInits = this.convertBodiesToBigInts(this.bodies).map(b => {
+      // console.log({ b1: b })
       b = this.convertScaledBigIntBodyToArray(b)
+      // console.log({ b2: b })
+
       b[2] = (BigInt(b[2])).toString()
       b[3] = (BigInt(b[3])).toString()
       return b
     })
+    // console.dir({ bodyInits: this.bodyInits }, { depth: null })
   }
 
   audio() {
@@ -436,11 +442,13 @@ class Anybody extends EventEmitter {
   convertScaledBigIntBodyToArray(b) {
     const maxVectorScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
     const bodyArray = []
+    const noNegativeVelocityX = b.velocity.x + maxVectorScaled
+    const noNegativeVelocityY = b.velocity.y + maxVectorScaled
     bodyArray.push(
       _convertBigIntToModP(b.position.x),
       _convertBigIntToModP(b.position.y),
-      _convertBigIntToModP(b.velocity.x + maxVectorScaled),
-      _convertBigIntToModP(b.velocity.y + maxVectorScaled),
+      _convertBigIntToModP(noNegativeVelocityX),
+      _convertBigIntToModP(noNegativeVelocityY),
       _convertBigIntToModP(b.radius)
     )
     return bodyArray.map(b => b.toString())
@@ -500,20 +508,26 @@ class Anybody extends EventEmitter {
   }
 
   convertBodiesToBigInts(bodies) {
+    // console.log('convertBodiesToBigInts')
     const bigBodies = []
-    // const maxVectorScaled = this.convertFloatToScaledBigInt(vectorLimit)
+    // const maxVectorScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
     for (let i = 0; i < bodies.length; i++) {
       const body = bodies[i]
+      // console.log({ body })
       const newBody = { position: {}, velocity: {}, radius: null }
 
       newBody.position.x = body.px || this.convertFloatToScaledBigInt(body.position.x)
       newBody.position.y = body.py || this.convertFloatToScaledBigInt(body.position.y)
-      newBody.velocity.x = body.vx || this.convertFloatToScaledBigInt(body.velocity.x)// + maxVectorScaled
-      newBody.velocity.y = body.vy || this.convertFloatToScaledBigInt(body.velocity.y)// + maxVectorScaled
+      newBody.velocity.x = body.vx || this.convertFloatToScaledBigInt(body.velocity.x)
+      newBody.velocity.y = body.vy || this.convertFloatToScaledBigInt(body.velocity.y)
       newBody.radius = this.convertFloatToScaledBigInt(body.radius)
       if (body.c) {
         newBody.c = body.c
       }
+      if (body.bodyIndex) {
+        newBody.bodyIndex = body.bodyIndex
+      }
+      // console.log({ newBody })
       bigBodies.push(newBody)
     }
     return bigBodies
@@ -570,16 +584,18 @@ class Anybody extends EventEmitter {
     // this.setPause(true)
     this.calculateBodyFinal()
     this.emit('finished', { bodyInits: JSON.parse(JSON.stringify(this.bodyInits)), bodyFinal: JSON.parse(JSON.stringify(this.bodyFinal)) })
+    // console.log('FINISH????????????????????????????????????????')
     this.bodyInits = JSON.parse(JSON.stringify(this.bodyFinal))
     this.bodyFinal = []
     // this.setPause(false)
   }
 
   calculateBodyFinal() {
-    this.bodyFinal = this.convertBodiesToBigInts(this.bodies.sort((a, b) => a.bodyIndex - b.bodyIndex)).map(b => {
-      // console.log({ b })
+    // const maxVectorScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
+    this.bodies.sort((a, b) => a.bodyIndex - b.bodyIndex)
+    const bodiesAsBigInts = this.convertBodiesToBigInts(this.bodies)
+    this.bodyFinal = bodiesAsBigInts.map(b => {
       b = this.convertScaledBigIntBodyToArray(b)
-      // console.log({ b })
       b[2] = (BigInt(b[2])).toString()
       b[3] = (BigInt(b[3])).toString()
       return b
@@ -1064,7 +1080,11 @@ class Anybody extends EventEmitter {
   generateBodies() {
 
     if (this.inputData) {
-      this.bodies = this.convertBigIntsToBodies(this.inputData.map(this.convertScaledStringArrayToBody.bind(this)))
+      // console.dir({ inputData: this.inputData }, { depth: null })
+      const step1 = this.inputData.map(this.convertScaledStringArrayToBody.bind(this))
+      // console.dir({ step1 }, { depth: null })
+      this.bodies = this.convertBigIntsToBodies(step1)
+      // console.dir({ bodies: this.bodies })
       this.bgColor = this.colorArrayToTxt(this.randomColor(0, 200))
       this.radiusMultiplyer = this.random(10, 200)
       for (let i = 0; i < this.startingBodies; i++) {
@@ -1076,20 +1096,22 @@ class Anybody extends EventEmitter {
     if (this.bodyData) {
       this.bgColor = this.colorArrayToTxt(this.randomColor(0, 200))
       this.radiusMultiplyer = this.random(10, 200)
-
-      // TODO: ensure bodyData is valid and format is correct
       this.bodies = this.bodyData.map(b => {
         const seed = b.seed
         const bodyRNG = new Prando(seed.toString(16))
+        const px = b.px.toNumber() / parseInt(this.scalingFactor)
+        const py = b.py.toNumber() / parseInt(this.scalingFactor)
+        const vx = (b.vx.toNumber() - this.vectorLimit * parseInt(this.scalingFactor)) / parseInt(this.scalingFactor)
+        const vy = (b.vy.toNumber() - this.vectorLimit * parseInt(this.scalingFactor)) / parseInt(this.scalingFactor)
+        const radius = b.radius.toNumber() / parseInt(this.scalingFactor)
         return {
           index: b.bodyIndex,
-          position: this.createVector(b.px.toNumber() / parseInt(this.scalingFactor), b.py.toNumber() / parseInt(this.scalingFactor)),
-          velocity: this.createVector(b.vx.toNumber() - this.vectorLimit * parseInt(this.scalingFactor), b.vy.toNumber() - this.vectorLimit * parseInt(this.scalingFactor)),
-          radius: b.radius.toNumber() / parseInt(this.scalingFactor),
+          position: this.createVector(px, py),
+          velocity: this.createVector(vx, vy),
+          radius: radius,
           c: this.colorArrayToTxt(this.randomColor(0, 200, bodyRNG))
         }
       })
-      // console.dir({ bodies: this.bodies }, { depth: null })
       this.startingBodies = this.bodies.length
       return
     }
@@ -1126,7 +1148,6 @@ class Anybody extends EventEmitter {
     for (let i = 0; i < maxSize; i++) {
       if (i >= this.startingBodies) break
       const radius = (maxSize - i * 5) + startingRadius
-      // console.log({ radius })
       const body = {
         bodyIndex: i,
         position: this.createVector(ss[i][0], ss[i][1]),
@@ -1136,7 +1157,6 @@ class Anybody extends EventEmitter {
       }
       bodies.push(body)
     }
-
 
     this.bodies = bodies
     // .sort((a, b) => b.radius - a.radius)

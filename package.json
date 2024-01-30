@@ -5,7 +5,7 @@
     "serve": "vue-cli-service serve --inspect-brk",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
-    "circom": "./utils/basic_circom.sh",
+    "circom": "./scripts/basic_circom.sh",
     "circom:dev": "hardhat circom --deterministic --debug --verbose",
     "circom:prod": "hardhat circom --verbose",
     "sol-test": "hardhat test test/problems.test.js test/bodies.test.js test/solver.test.js",
@@ -72,6 +72,9 @@
       "describe": "readonly",
       "before": "readonly"
     },
+    "ignorePatterns": [
+      "/old/index.js"
+    ],
     "rules": {
       "indent": [
         "error",
