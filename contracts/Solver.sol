@@ -21,17 +21,18 @@ contract Solver is Ownable {
     address payable public problems;
     address public tocks;
 
-    uint256[10] public bodyBoost = [
+    uint256[11] public bodyBoost = [
+        0, // 0th body, just for easier indexing
         0, // 1st body
         0, // 2nd body
-        3, // 3rd body
-        4, // 4th body
-        5, // 5th body
-        6, // 6th body
-        7, // 7th body
-        8, // 8th body
-        9, //9th body
-        10 // 10th body
+        1, // 3rd body
+        2, // 4th body
+        3, // 5th body
+        5, // 6th body
+        8, // 7th body
+        13, // 8th body
+        21, //9th body
+        34 // 10th body
     ];
 
     event Solved(
@@ -218,6 +219,13 @@ contract Solver is Ownable {
             // vy
             // confirm previously stored values were used as input to the proof
             // uint256 vyIndex = 5 * numberOfBodies + i * 5 + 3;
+            // console.log("vy");
+            // console.log("current:");
+            // console.log(bodyData.vy);
+            // console.log("submitted starting point:");
+            // console.log(input[5 * numberOfBodies + i * 5 + 3]);
+            // console.log("new value:");
+            // console.log(input[i * 5 + 3]);
             require(
                 bodyData.vy == input[5 * numberOfBodies + i * 5 + 3],
                 "Invalid vector y"

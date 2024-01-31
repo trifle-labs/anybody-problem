@@ -119,9 +119,9 @@ class Anybody extends EventEmitter {
       // console.log({ b1: b })
       b = this.convertScaledBigIntBodyToArray(b)
       // console.log({ b2: b })
-
       b[2] = (BigInt(b[2])).toString()
       b[3] = (BigInt(b[3])).toString()
+      // console.log({ vy_b: b[3] })
       return b
     })
     // console.dir({ bodyInits: this.bodyInits }, { depth: null })
@@ -496,7 +496,8 @@ class Anybody extends EventEmitter {
 
 
   convertFloatToScaledBigInt(value) {
-    return BigInt(Math.floor(value * parseInt(this.scalingFactor)))
+    // changed from Math.floor to Math.round, TODO: look here in case there's rounding error
+    return BigInt(Math.round(value * parseInt(this.scalingFactor)))
     // let maybeNegative = BigInt(Math.floor(value * parseInt(scalingFactor))) % p
     // while (maybeNegative < 0n) {
     //   maybeNegative += p

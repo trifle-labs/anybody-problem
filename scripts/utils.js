@@ -246,42 +246,59 @@ const mintProblem = async (signers, deployedContracts, acct) => {
 const prepareMintBody = async (signers, deployedContracts, problemId, acct) => {
   const [owner] = signers
   acct = acct || owner
-  const { Tocks: tocks, Bodies: bodies } = deployedContracts
+  const { Tocks: tocks, Bodies: bodies, Solver: solver } = deployedContracts
   const tockPriceIndex = await bodies.problemPriceLevels(problemId)
   const decimals = await bodies.decimals()
   const tockPrice = await bodies.tockPrice(tockPriceIndex)
   const tockPriceWithDecimals = tockPrice.mul(decimals)
   await tocks.updateSolverAddress(owner.address)
-  await tocks.mint(acct.address, tockPriceWithDecimals)
+  const tx = await tocks.mint(acct.address, tockPriceWithDecimals)
+  await tocks.updateSolverAddress(solver.address)
+  return { tx }
 }
 
-const generateAndSubmitProof = async (expect, deployedContracts, problemId, bodyCount, ticksRun, bodyData) => {
-  const { Problems: problems, Solver: solver } = deployedContracts
-  const { seed: problemSeed } = await problems.problems(problemId)
-  // console.log({ bodyData })
-  // const bodyDataMapped = Object.fromEntries(
-  //   Object.entries(bodyData).map(([key, value]) => [key, value.map(v => (v._isBigNumber ? v.toString() : v))])
-  // )
-  // console.dir({ bodyDataMapped }, { depth: null })
+
+const generateProof = async (seed, bodyCount, ticksRun, bodyData) => {
   const anybody = new Anybody(null, {
     bodyData,
-    seed: problemSeed,
+    seed,
     util: true,
   })
 
   const inputData = { bodies: anybody.bodyInits }
-  // console.dir({ inputData }, { depth: null })
   anybody.runSteps(ticksRun)
   anybody.calculateBodyFinal()
 
   const bodyFinal = anybody.bodyFinal
-  // console.dir({ bodyFinal }, { depth: null })
+  // const startTime = Date.now()
   const dataResult = await exportCallDataGroth16(
     inputData,
     `./public/nft_${bodyCount}_${ticksRun}.wasm`,
     `./public/nft_${bodyCount}_${ticksRun}_final.zkey`
   )
-  // console.dir({ bodyData, inputData, bodyFinal, dataResult }, { depth: null })
+  // bodyCount = bodyCount.toNumber()
+  // const endTime = Date.now()
+  // const difference = endTime - startTime
+  // const differenceInReadableText = `${Math.floor(difference / 60_000)}m ${Math.floor(difference / 1000)}s ${difference % 1000}ms`
+  // console.log(`Generated proof in ${differenceInReadableText} for ${ticksRun} ticks with ${bodyCount} bodies`)
+  // const tickRate = ticksRun / (difference / 1000)
+  // console.log(`Tick rate: ${tickRate.toFixed(2)} ticks/s`)
+  // const tickRatePerBody = tickRate / bodyCount
+  // console.log(`Tick rate per body: ${tickRatePerBody.toFixed(2)} ticks/s`)
+  // const boostAmount = await solver.bodyBoost(bodyCount)
+  // const tockRate = boostAmount * tickRate
+  // console.log(`Tock rate: ${tockRate.toFixed(2)} tocks/s`)
+  // const tockRatePerBody = tockRate / bodyCount
+  // console.log(`Tock rate per body: ${tockRatePerBody.toFixed(2)} tocks/s`)
+  return { inputData, bodyFinal, dataResult }
+}
+
+const generateAndSubmitProof = async (expect, deployedContracts, problemId, bodyCount, ticksRun, bodyData) => {
+  const { Problems: problems, Solver: solver } = deployedContracts
+  const { seed } = await problems.problems(problemId)
+
+  const { inputData, bodyFinal, dataResult } = await generateProof(seed, bodyCount, ticksRun, bodyData)
+
   for (let i = 0; i < dataResult.Input.length; i++) {
     if (i < dataResult.Input.length / 2) {
       const bodyIndex = Math.floor(i / 5)

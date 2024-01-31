@@ -1,7 +1,7 @@
 const { expect } = require('chai')
 const { ethers } = require('hardhat')
 // const { describe, it } = require('mocha')
-const { deployContracts, mintProblem, getParsedEventLogs, generateAndSubmitProof } = require('../scripts/utils.js')
+const { deployContracts, mintProblem, getParsedEventLogs, prepareMintBody, generateAndSubmitProof } = require('../scripts/utils.js')
 
 // let tx
 describe('Solver Tests', function () {
@@ -164,7 +164,105 @@ describe('Solver Tests', function () {
     expect(newTickCount).to.equal(runningTickCount)
 
   })
-  it.skip('creates proofs for multiple bodies', async () => { })
+  it.only('creates proofs for multiple bodies', async () => {
+
+    const ticksRun = 20
+
+    const signers = await ethers.getSigners()
+    const deployedContracts = await deployContracts()
+    const { Problems: problems, Solver: solver, Tocks: tocks, Bodies: bodies } = deployedContracts
+    const { problemId } = await mintProblem(signers, deployedContracts)
+
+    const { bodyCount, tickCount } = await problems.problems(problemId)
+
+    const initialBodyCount = bodyCount
+    let totalTockCount = 0, runningTickCount = tickCount
+    const totalBodies = 10 - bodyCount
+    // make a proof for each body quantity
+    // mint enough tocks to mint and add a new body before next loop
+    for (let i = 0; i <= totalBodies; i++) {
+      const { bodyCount } = await problems.problems(problemId)
+      expect(bodyCount).to.equal(initialBodyCount.add(i))
+      const bodyData = []
+      const bodyIds = await problems.getProblemBodyIds(problemId)
+      for (let j = 0; j < bodyCount; j++) {
+        const bodyId = bodyIds[j]
+        const body = await problems.getProblemBodyData(problemId, bodyId)
+        bodyData.push(body)
+      }
+      // console.log({ bodyData })
+      let { tx, bodyFinal } = await generateAndSubmitProof(expect, deployedContracts, problemId, bodyCount, ticksRun, bodyData)
+      // console.log({ bodyFinal })
+      await expect(tx)
+        .to.emit(solver, 'Solved')
+        .withArgs(problemId, runningTickCount, ticksRun)
+      let receipt = await tx.wait()
+      runningTickCount = parseInt(runningTickCount) + parseInt(ticksRun)
+
+      // user earned new balance in Tocks token
+      const tockCount = getParsedEventLogs(receipt, tocks, 'Transfer')[0].args.value
+
+      totalTockCount = tockCount.add(totalTockCount)
+      const boostAmount = await solver.bodyBoost(bodyCount)
+      const expectedTockCount = boostAmount.mul(ticksRun)
+      expect(tockCount).to.equal(expectedTockCount)
+
+      // confirm new values are stored correctly
+      for (let j = 0; j < bodyCount; j++) {
+        const bodyId = bodyIds[j]
+        const body = await problems.getProblemBodyData(problemId, bodyId)
+        const { px, py, vx, vy, radius } = body
+        expect(px).to.equal(bodyFinal[j][0].toString())
+        expect(py).to.equal(bodyFinal[j][1].toString())
+        expect(vx).to.equal(bodyFinal[j][2].toString())
+        expect(vy).to.equal(bodyFinal[j][3].toString())
+        expect(radius).to.equal(bodyFinal[j][4].toString())
+      }
+
+      // add new body
+      if (bodyCount.lt(10)) {
+        let { tx } = await prepareMintBody(signers, deployedContracts, problemId)
+        receipt = await tx.wait()
+        const additionalTock = getParsedEventLogs(receipt, tocks, 'Transfer')[0].args.value
+        totalTockCount = additionalTock.add(totalTockCount)
+        const decimals = await bodies.decimals()
+        const bodyCost = await bodies.tockPrice(bodyCount)
+        const bodyCostDecimals = bodyCost.mul(decimals)
+        tx = await problems.mintBody(problemId)
+        receipt = await tx.wait()
+        const bodyId = getParsedEventLogs(receipt, bodies, 'Transfer')[0].args.tokenId
+        await expect(tx)
+          .to.emit(bodies, 'Transfer')
+          .withArgs(ethers.constants.AddressZero, signers[0].address, bodyId)
+        const tockPaid = getParsedEventLogs(receipt, tocks, 'Transfer')[0].args.value
+        expect(tockPaid).to.equal(bodyCostDecimals)
+      }
+    }
+    await expect(prepareMintBody(signers, deployedContracts, problemId))
+      .to.be.reverted
+    await tocks.updateSolverAddress(signers[0].address)
+    await tocks.mint(signers[0].address, (15_625_000n * (10n ** 18n)).toString())
+    await tocks.updateSolverAddress(solver.address)
+
+    await expect(problems.mintBody(problemId))
+      .to.be.revertedWith('Cannot have more than 10 bodies')
+
+    await expect(bodies.mint(problemId))
+      .to.be.revertedWith('Problem already minted 10 bodies')
+  })
+
+  it('has the correct body boost amount', async () => {
+    const deployedContracts = await deployContracts()
+    const { Solver: solver } = deployedContracts
+    for (let i = 1; i <= 10; i++) {
+      const boostAmount = await solver.bodyBoost(i)
+      if (i < 3) {
+        expect(boostAmount.eq(0)).to.equal(true)
+      } else {
+        expect(boostAmount.eq(i)).to.equal(true)
+      }
+    }
+  })
   it.skip('adds a body, removes a body, creates a proof', async () => { })
   it.skip('adds two bodies, removes first body, creates a proof', async () => { })
 
