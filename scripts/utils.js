@@ -3,6 +3,8 @@ const ethers = require('ethers')
 const hre = require('hardhat')
 const path = require('node:path')
 const fs = require('fs').promises
+const { Anybody } = require('../src/anybody.js')
+const { exportCallDataGroth16 } = require('../scripts/circuits.js')
 
 const correctPrice = ethers.utils.parseEther('0.01')
 // TODO: change this to the splitter address
@@ -238,24 +240,86 @@ const mintProblem = async (signers, deployedContracts, acct) => {
   const tx = await problems.connect(acct)['mint()']({ value: correctPrice })
   const receipt = await tx.wait()
   const problemId = getParsedEventLogs(receipt, problems, 'Transfer')[0].args.tokenId
-  return { problemId }
+  return { receipt, problemId }
 }
 
 const prepareMintBody = async (signers, deployedContracts, problemId, acct) => {
   const [owner] = signers
   acct = acct || owner
-  const { Tocks: tocks, Bodies: bodies } = deployedContracts
+  const { Tocks: tocks, Bodies: bodies, Solver: solver } = deployedContracts
   const tockPriceIndex = await bodies.problemPriceLevels(problemId)
   const decimals = await bodies.decimals()
   const tockPrice = await bodies.tockPrice(tockPriceIndex)
   const tockPriceWithDecimals = tockPrice.mul(decimals)
   await tocks.updateSolverAddress(owner.address)
-  await tocks.mint(acct.address, tockPriceWithDecimals)
+  const tx = await tocks.mint(acct.address, tockPriceWithDecimals)
+  await tocks.updateSolverAddress(solver.address)
+  return { tx }
+}
+
+
+const generateProof = async (seed, bodyCount, ticksRun, bodyData) => {
+  const anybody = new Anybody(null, {
+    bodyData,
+    seed,
+    util: true,
+  })
+
+  const inputData = { bodies: anybody.bodyInits }
+  anybody.runSteps(ticksRun)
+  anybody.calculateBodyFinal()
+
+  const bodyFinal = anybody.bodyFinal
+  // const startTime = Date.now()
+  const dataResult = await exportCallDataGroth16(
+    inputData,
+    `./public/nft_${bodyCount}_${ticksRun}.wasm`,
+    `./public/nft_${bodyCount}_${ticksRun}_final.zkey`
+  )
+  // bodyCount = bodyCount.toNumber()
+  // const endTime = Date.now()
+  // const difference = endTime - startTime
+  // const differenceInReadableText = `${Math.floor(difference / 60_000)}m ${Math.floor(difference / 1000)}s ${difference % 1000}ms`
+  // console.log(`Generated proof in ${differenceInReadableText} for ${ticksRun} ticks with ${bodyCount} bodies`)
+  // const tickRate = ticksRun / (difference / 1000)
+  // console.log(`Tick rate: ${tickRate.toFixed(2)} ticks/s`)
+  // const tickRatePerBody = tickRate / bodyCount
+  // console.log(`Tick rate per body: ${tickRatePerBody.toFixed(2)} ticks/s`)
+  // const boostAmount = await solver.bodyBoost(bodyCount)
+  // const tockRate = boostAmount * tickRate
+  // console.log(`Tock rate: ${tockRate.toFixed(2)} tocks/s`)
+  // const tockRatePerBody = tockRate / bodyCount
+  // console.log(`Tock rate per body: ${tockRatePerBody.toFixed(2)} tocks/s`)
+  return { inputData, bodyFinal, dataResult }
+}
+
+const generateAndSubmitProof = async (expect, deployedContracts, problemId, bodyCount, ticksRun, bodyData) => {
+  const { Problems: problems, Solver: solver } = deployedContracts
+  const { seed } = await problems.problems(problemId)
+
+  const { inputData, bodyFinal, dataResult } = await generateProof(seed, bodyCount, ticksRun, bodyData)
+
+  for (let i = 0; i < dataResult.Input.length; i++) {
+    if (i < dataResult.Input.length / 2) {
+      const bodyIndex = Math.floor(i / 5)
+      const body = bodyFinal[bodyIndex]
+      const bodyDataIndex = i - bodyIndex * 5
+      expect(dataResult.Input[i]).to.equal(body[bodyDataIndex].toString())
+    } else {
+      const bodyIndex = Math.floor((i - dataResult.Input.length / 2) / 5)
+      const body = inputData.bodies[bodyIndex]
+      const bodyDataIndex = i - dataResult.Input.length / 2 - bodyIndex * 5
+      expect(dataResult.Input[i]).to.equal(body[bodyDataIndex].toString())
+    }
+  }
+
+  const tx = await solver.solveProblem(problemId, ticksRun, dataResult.a, dataResult.b, dataResult.c, dataResult.Input)
+  return { tx, bodyFinal }
 }
 
 
 module.exports = {
-
+  generateAndSubmitProof,
   prepareMintBody,
   mintProblem,
   getParsedEventLogs,

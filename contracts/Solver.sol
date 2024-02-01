@@ -15,22 +15,24 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "./Problems.sol";
 import "./Tocks.sol";
+import "hardhat/console.sol";
 
 contract Solver is Ownable {
     address payable public problems;
     address public tocks;
 
-    uint256[10] public bodyBoost = [
+    uint256[11] public bodyBoost = [
+        0, // 0th body, just for easier indexing
         0, // 1st body
         0, // 2nd body
-        0, // 3rd body
-        1, // 4th body
-        2, // 5th body
-        3, // 6th body
-        4, // 7th body
-        5, // 8th body
-        6, //9th body
-        7 // 10th body
+        1, // 3rd body
+        2, // 4th body
+        4, // 5th body
+        8, // 6th body
+        16, // 7th body
+        32, // 8th body
+        64, //9th body
+        128 // 10th body
     ];
 
     event Solved(
@@ -166,7 +168,8 @@ contract Solver is Ownable {
             problemId,
             previousTickCount + tickCount
         );
-        Tocks(tocks).mint(msg.sender, tickCount);
+
+        Tocks(tocks).mint(msg.sender, tickCount * bodyBoost[bodyCount]);
 
         // uint256 traits = 5;
         Problems.Body memory bodyData;
@@ -179,6 +182,9 @@ contract Solver is Ownable {
             // px
             // confirm previously stored values were used as input to the proof
             // uint256 pxIndex = 5 * numberOfBodies + i * 5 + 0;
+            // console.log("px");
+            // console.log(bodyData.px);
+            // console.log(input[5 * numberOfBodies + i * 5 + 0]);
             require(
                 bodyData.px == input[5 * numberOfBodies + i * 5 + 0],
                 "Invalid position x"
@@ -199,6 +205,10 @@ contract Solver is Ownable {
             // vx
             // confirm previously stored values were used as input to the proof
             // uint256 vxIndex = 5 * numberOfBodies + i * 5 + 2;
+            // console.log("vx");
+            // console.log(bodyData.vx);
+            // console.log(input[5 * numberOfBodies + i * 5 + 2]);
+            // console.log(input[i * 5 + 2]);
             require(
                 bodyData.vx == input[5 * numberOfBodies + i * 5 + 2],
                 "Invalid vector x"
@@ -209,6 +219,13 @@ contract Solver is Ownable {
             // vy
             // confirm previously stored values were used as input to the proof
             // uint256 vyIndex = 5 * numberOfBodies + i * 5 + 3;
+            // console.log("vy");
+            // console.log("current:");
+            // console.log(bodyData.vy);
+            // console.log("submitted starting point:");
+            // console.log(input[5 * numberOfBodies + i * 5 + 3]);
+            // console.log("new value:");
+            // console.log(input[i * 5 + 3]);
             require(
                 bodyData.vy == input[5 * numberOfBodies + i * 5 + 3],
                 "Invalid vector y"
