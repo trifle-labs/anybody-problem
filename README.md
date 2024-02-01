@@ -185,6 +185,58 @@ Currently the project is targeting [powersOfTau28_hez_final_20.ptau](https://git
 | nft_3_20 | 33_060 | |
 | nft_4_20 | 55_480 | |
 
+### Tick to Tock Body Boost Chart
+
+```
+Generated proof in 0m 3s 121ms for 20 ticks with 3 bodies
+Tick rate: 6.41 ticks/s
+Tick rate per body: 2.14 ticks/s
+Tock rate: 6.41 tocks/s
+Tock rate per body: 2.14 tocks/s
+
+Generated proof in 0m 3s 894ms for 20 ticks with 4 bodies
+Tick rate: 5.14 ticks/s
+Tick rate per body: 1.28 ticks/s
+Tock rate: 10.27 tocks/s
+Tock rate per body: 2.57 tocks/s
+
+Generated proof in 0m 6s 701ms for 20 ticks with 5 bodies
+Tick rate: 2.98 ticks/s
+Tick rate per body: 0.60 ticks/s
+Tock rate: 11.94 tocks/s
+Tock rate per body: 2.39 tocks/s
+
+Generated proof in 0m 7s 910ms for 20 ticks with 6 bodies
+Tick rate: 2.53 ticks/s
+Tick rate per body: 0.42 ticks/s
+Tock rate: 20.23 tocks/s
+Tock rate per body: 3.37 tocks/s
+
+Generated proof in 0m 12s 961ms for 20 ticks with 7 bodies
+Tick rate: 1.54 ticks/s
+Tick rate per body: 0.22 ticks/s
+Tock rate: 24.69 tocks/s
+Tock rate per body: 3.53 tocks/s
+
+Generated proof in 0m 14s 497ms for 20 ticks with 8 bodies
+Tick rate: 1.38 ticks/s
+Tick rate per body: 0.17 ticks/s
+Tock rate: 44.15 tocks/s
+Tock rate per body: 5.52 tocks/s
+
+Generated proof in 0m 16s 339ms for 20 ticks with 9 bodies
+Tick rate: 1.22 ticks/s
+Tick rate per body: 0.14 ticks/s
+Tock rate: 78.34 tocks/s
+Tock rate per body: 8.70 tocks/s
+
+Generated proof in 0m 25s 522ms for 20 ticks with 10 bodies
+Tick rate: 0.78 ticks/s
+Tick rate per body: 0.08 ticks/s
+Tock rate: 100.31 tocks/s
+Tock rate per body: 10.03 tocks/s
+```
+
 
 # built using circom-starter
 

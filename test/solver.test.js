@@ -164,7 +164,7 @@ describe('Solver Tests', function () {
     expect(newTickCount).to.equal(runningTickCount)
 
   })
-  it.only('creates proofs for multiple bodies', async () => {
+  it('creates proofs for multiple bodies', async () => {
 
     const ticksRun = 20
 
@@ -259,11 +259,91 @@ describe('Solver Tests', function () {
       if (i < 3) {
         expect(boostAmount.eq(0)).to.equal(true)
       } else {
-        expect(boostAmount.eq(i)).to.equal(true)
+        const boosted = 2 ** (i - 3)
+        expect(boostAmount.eq(boosted)).to.equal(true)
       }
     }
   })
-  it.skip('adds a body, removes a body, creates a proof', async () => { })
+  it('adds a body, removes a body, creates a proof', async () => {
+    const ticksRun = 20
+    const signers = await ethers.getSigners()
+    const deployedContracts = await deployContracts()
+    const { Problems: problems, Bodies: bodies, Solver: solver } = deployedContracts
+    let { problemId, receipt } = await mintProblem(signers, deployedContracts)
+    let bodyIds = await getParsedEventLogs(receipt, bodies, 'Transfer')
+    // make bodyIds array unique
+    bodyIds = [...new Set(bodyIds.map(body => body.args.tokenId.toNumber()))]
+    expect(bodyIds.length).to.equal(3)
+    await prepareMintBody(signers, deployedContracts, problemId)
+    let tx = await problems.mintBody(problemId)
+    receipt = await tx.wait()
+    const newBodyId = await getParsedEventLogs(receipt, bodies, 'Transfer')[0].args.tokenId
+
+    const removedBodyId = bodyIds[0]
+    await expect(problems.removeBody(problemId, removedBodyId))
+      .to.not.be.reverted
+
+    await expect(problems.removeBody(problemId, bodyIds[1]))
+      .to.be.revertedWith('Cannot have less than 3 bodies')
+
+    let { bodyCount } = await problems.problems(problemId)
+    expect(bodyCount).to.equal(3)
+    let bodyData = []
+    let newBodyIds = await problems.getProblemBodyIds(problemId)
+    for (let j = 0; j < bodyCount; j++) {
+      const bodyId = newBodyIds[j]
+      const body = await problems.getProblemBodyData(problemId, bodyId)
+      bodyData.push(body)
+    }
+    // console.log({ bodyData })
+    ({ tx } = await generateAndSubmitProof(expect, deployedContracts, problemId, bodyCount, ticksRun, bodyData))
+    // console.log({ bodyFinal })
+    await expect(tx)
+      .to.emit(solver, 'Solved')
+      .withArgs(problemId, 0, ticksRun)
+
+    await expect(problems.addBody(problemId, removedBodyId))
+      .to.not.be.reverted
+
+    const { bodyCount: newBodyCount } = await problems.problems(problemId)
+    expect(newBodyCount).to.equal(4)
+
+    bodyData = []
+    newBodyIds = await problems.getProblemBodyIds(problemId)
+    for (let j = 0; j < newBodyCount; j++) {
+      const bodyId = newBodyIds[j]
+      const body = await problems.getProblemBodyData(problemId, bodyId)
+      bodyData.push(body)
+    }
+    // console.log({ bodyData })
+    ({ tx } = await generateAndSubmitProof(expect, deployedContracts, problemId, newBodyCount, ticksRun, bodyData))
+
+    await expect(tx)
+      .to.emit(solver, 'Solved')
+      .withArgs(problemId, ticksRun, ticksRun)
+
+    const problemBodyIds = await problems.getProblemBodyIds(problemId)
+    expect(problemBodyIds[0]).to.equal(2)
+    expect(problemBodyIds[1]).to.equal(3)
+    expect(problemBodyIds[2]).to.equal(newBodyId)
+    expect(problemBodyIds[3]).to.equal(removedBodyId)
+
+    bodyData = []
+    const wrongBodyIds = [
+      1, 2, 3, 4
+    ]
+    for (let j = 0; j < newBodyCount; j++) {
+      const bodyId = wrongBodyIds[j]
+      const body = await problems.getProblemBodyData(problemId, bodyId)
+      bodyData.push(body)
+    }
+    try {
+      await generateAndSubmitProof(expect, deployedContracts, problemId, newBodyCount, ticksRun, bodyData)
+      expect.fail('should have reverted')
+    } catch (e) {
+      expect(e).to.be.an('error')
+    }
+  })
   it.skip('adds two bodies, removes first body, creates a proof', async () => { })
 
 

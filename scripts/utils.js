@@ -240,7 +240,7 @@ const mintProblem = async (signers, deployedContracts, acct) => {
   const tx = await problems.connect(acct)['mint()']({ value: correctPrice })
   const receipt = await tx.wait()
   const problemId = getParsedEventLogs(receipt, problems, 'Transfer')[0].args.tokenId
-  return { problemId }
+  return { receipt, problemId }
 }
 
 const prepareMintBody = async (signers, deployedContracts, problemId, acct) => {

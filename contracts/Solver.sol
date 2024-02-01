@@ -27,12 +27,12 @@ contract Solver is Ownable {
         0, // 2nd body
         1, // 3rd body
         2, // 4th body
-        3, // 5th body
-        5, // 6th body
-        8, // 7th body
-        13, // 8th body
-        21, //9th body
-        34 // 10th body
+        4, // 5th body
+        8, // 6th body
+        16, // 7th body
+        32, // 8th body
+        64, //9th body
+        128 // 10th body
     ];
 
     event Solved(
