@@ -131,8 +131,8 @@ export default {
             // seed: 94n, // NOTE: this seed diverges after 4 proofs
             totalBodies: 3,
             mode: 'nft',
-            stopEvery: steps,//487,
-            seed: 1n,
+            stopEvery: 0,//steps,//487,
+            // seed: 1n,
             // inputData: [
             //   [ '616000', '599000', '10000', '10000', '13000' ],
             //   [ '257000', '602000', '10000', '10000', '12000' ],
