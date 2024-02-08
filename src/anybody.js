@@ -890,7 +890,7 @@ class Anybody extends EventEmitter {
     // this.bodiesGraphic.color(r, g, b)
   }
 
-  drawBody(x, y, v, radius, c) {
+  async drawBody(x, y, v, radius, c) {
 
     this.bodiesGraphic.fill(c)
     // this.bodiesGraphic.ellipse(x, y, radius, radius)
@@ -899,12 +899,23 @@ class Anybody extends EventEmitter {
     this.bodiesGraphic.translate(x, y)
     var angle = v.heading() + this.p.PI / 2
     this.bodiesGraphic.rotate(angle)
-    const eyeOffsetX = radius / 5
-    const eyeOffsetY = radius / 12
-    this.bodiesGraphic.fill('rgba(0,0,0,0.8)')
-    this.bodiesGraphic.ellipse(- eyeOffsetX, - eyeOffsetY, radius / 7, radius / 5)
-    this.bodiesGraphic.ellipse(eyeOffsetX, - eyeOffsetY, radius / 7, radius / 5)
-    this.bodiesGraphic.ellipse(0, + eyeOffsetY, radius / 7, radius / 7)
+    // const eyeOffsetX = radius / 5
+    // const eyeOffsetY = radius / 12
+    this.bodiesGraphic.fill('rgba(0,0,0,0.3)')
+    // this.bodiesGraphic.filter(this.p.BLUR)
+    // this.bodiesGraphic.ellipse(- eyeOffsetX, - eyeOffsetY, radius / 7, radius / 5)
+    // this.bodiesGraphic.ellipse(eyeOffsetX, - eyeOffsetY, radius / 7, radius / 5)
+    // this.bodiesGraphic.ellipse(0, + eyeOffsetY, radius / 7, radius / 7)
+
+    if (!this.face) {
+      this.face = await new Promise((resolve) => {
+        this.p.loadImage('/3.png', (img) => {
+          resolve(img)
+        })
+      })
+    }
+    this.bodiesGraphic.image(this.face, 0, - radius / 3, radius / 3, radius / 3)
+
     this.bodiesGraphic.pop()
 
 
@@ -1246,7 +1257,7 @@ class Anybody extends EventEmitter {
   }
 
   colorArrayToTxt(cc) {
-    const opac = 1
+    const opac = 0.4
     // let cc = baseColor.map(c => c + start + (chunk * i))
     cc.push(opac)
     cc = `rgba(${cc.join(',')})`
@@ -1361,9 +1372,9 @@ class Anybody extends EventEmitter {
 
   randomColor(min = 0, max = 255, rng = this.rng) {
     const color = []
-    // let c = Math.floor(this.random(min, max, rng))
+    let c = Math.floor(this.random(min, max, rng))
     for (let i = 0; i < 3; i++) {
-      let c = this.random(min, max, rng)
+      // let c = this.random(min, max, rng)
       color.push(c)
     }
     return color
