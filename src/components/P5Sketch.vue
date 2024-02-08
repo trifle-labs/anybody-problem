@@ -32,7 +32,7 @@ export default {
   // },
   data() {
     return {
-      anybody: null,
+      // anybody: null,
       startTime: null,
       proofs: [],
       steps
@@ -41,8 +41,15 @@ export default {
   mounted() {
     this.createSketch()
   },
-  
-  beforeUnmount() {
+  onDeactivated() {
+    console.log('deactivated')
+  },
+  onUnmounted() {
+    console.log('onUnmounted')
+
+  },
+  onBeforeUnmount() {
+    console.log('unmounting!!!!!!!!')
     // this.sketch && this.sketch.remove()
     // anybody = null
   },
@@ -129,10 +136,11 @@ export default {
           anybody = new Anybody(p, {
             // preRun: 480,
             // seed: 94n, // NOTE: this seed diverges after 4 proofs
-            totalBodies: 3,
+            totalBodies: 6,
             mode: 'nft',
+            // freeze: true,
             stopEvery: 0,//steps,//487,
-            seed: 1n,
+            // seed: 1n,
             // inputData: [
             //   [ '616000', '599000', '10000', '10000', '13000' ],
             //   [ '257000', '602000', '10000', '10000', '12000' ],
@@ -146,7 +154,7 @@ export default {
           anybody.draw()
         }
       }
-      this.sketch = new p5(sketch, this.$refs.p5Container)
+      new p5(sketch, this.$refs.p5Container)
     }
   }
   // Your component options go here
