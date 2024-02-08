@@ -650,7 +650,20 @@ class Anybody extends EventEmitter {
   }
   drawBg() {
     if (this.mode == 'nft') {
-      this.p.background(this.bgColor)
+      // this.p.background(this.bgColor)
+      this.p.background('white')
+      this.p.stroke('darkgrey')
+      this.p.strokeWeight(1)
+      const totalLines = 6
+      for (let i = 1; i < totalLines; i++) {
+        if (i % 5 == 0) {
+          this.p.strokeWeight(3)
+        } else {
+          this.p.strokeWeight(1)
+        }
+        this.p.line(i * (this.windowWidth / totalLines), 0, i * (this.windowWidth / totalLines), this.windowHeight)
+        this.p.line(0, i * (this.windowHeight / totalLines), this.windowWidth, i * (this.windowHeight / totalLines))
+      }
       // this.p.background(this.convertColor(this.bgColor, false))
       // this.p.background(this.getGrey())
       return
@@ -850,7 +863,7 @@ class Anybody extends EventEmitter {
 
   async drawBodies(attachToCanvas = true) {
     if (!this.bodiesGraphic) {
-      this.bodiesGraphic = this.p.createGraphics(this.windowWidth, this.windowHeight)
+      this.bodiesGraphic = this.p//this.p.createGraphics(this.windowWidth, this.windowHeight)
     }
     // this.bodiesGraphic.clear()
     // if (this.mode == 'nft') this.drawBorder()
@@ -881,6 +894,7 @@ class Anybody extends EventEmitter {
           this.bodiesGraphic.noStroke()
 
         }
+        this.bodiesGraphic.noStroke()
         // this.bodiesGraphic.noStroke()
         // this.bodiesGraphic.stroke(this.getBW())
         // this.bodiesGraphic.stroke('white')
@@ -916,12 +930,13 @@ class Anybody extends EventEmitter {
 
         if (!this.face) {
           this.face = await new Promise((resolve) => {
-            this.p.loadImage('/3.png', (img) => {
+            this.p.loadImage('/2.png', (img) => {
+              console.log('loaded')
               resolve(img)
             })
           })
         }
-        this.bodiesGraphic.image(this.face, 0, - radius / 3, radius / 3, radius / 3)
+        this.bodiesGraphic.image(this.face, body.position.x - radius / 8, body.position.y - radius / 3, radius / 2, radius / 2)
 
 
         // const eyes = this.getAngledImage(body)
@@ -1036,7 +1051,6 @@ class Anybody extends EventEmitter {
   }
 
   drawBodyTrails() {
-    if (this.mode == 'nft') return
     for (let i = 0; i < this.allCopiesOfBodies.length; i++) {
       const copyOfBodies = this.allCopiesOfBodies[i]
       for (let j = 0; j < copyOfBodies.length; j++) {
