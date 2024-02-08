@@ -848,7 +848,7 @@ class Anybody extends EventEmitter {
     // this.bodiesGraphic.color(r, g, b)
   }
 
-  drawBodies(attachToCanvas = true) {
+  async drawBodies(attachToCanvas = true) {
     if (!this.bodiesGraphic) {
       this.bodiesGraphic = this.p.createGraphics(this.windowWidth, this.windowHeight)
     }
@@ -912,6 +912,17 @@ class Anybody extends EventEmitter {
         if (looped) {
           this.bodiesGraphic.ellipse(loopX, loopY, radius, radius)
         }
+
+
+        if (!this.face) {
+          this.face = await new Promise((resolve) => {
+            this.p.loadImage('/3.png', (img) => {
+              resolve(img)
+            })
+          })
+        }
+        this.bodiesGraphic.image(this.face, 0, - radius / 3, radius / 3, radius / 3)
+
 
         // const eyes = this.getAngledImage(body)
         // this.bodiesGraphic.image(eyes, 0, 0)
