@@ -651,6 +651,7 @@ class Anybody extends EventEmitter {
   }
   async drawBg() {
     if (this.mode == 'nft') {
+      /*
       if (!this.bgGenerated) {
         console.log('again')
 
@@ -692,7 +693,23 @@ class Anybody extends EventEmitter {
       // this.p.filter(this.p.BLUR, false)
       this.p.image(this.bgGenerated, 0, 0, this.windowWidth, this.windowHeight)
       // this.p.background(this.bgColor)
-
+      return
+    }
+    */
+      // this.p.background(this.bgColor)
+      this.p.background('white')
+      this.p.stroke('darkgrey')
+      this.p.strokeWeight(1)
+      const totalLines = 6
+      for (let i = 1; i < totalLines; i++) {
+        if (i % 5 == 0) {
+          this.p.strokeWeight(3)
+        } else {
+          this.p.strokeWeight(1)
+        }
+        this.p.line(i * (this.windowWidth / totalLines), 0, i * (this.windowWidth / totalLines), this.windowHeight)
+        this.p.line(0, i * (this.windowHeight / totalLines), this.windowWidth, i * (this.windowHeight / totalLines))
+      }
       // this.p.background(this.convertColor(this.bgColor, false))
       // this.p.background(this.getGrey())
       return
@@ -890,6 +907,7 @@ class Anybody extends EventEmitter {
     // this.bodiesGraphic.color(r, g, b)
   }
 
+
   async drawBody(x, y, v, radius, c) {
 
     this.bodiesGraphic.fill(c)
@@ -913,6 +931,7 @@ class Anybody extends EventEmitter {
           resolve(img)
         })
       })
+
     }
     this.bodiesGraphic.image(this.face, 0, - radius / 3, radius / 3, radius / 3)
 
@@ -957,6 +976,7 @@ class Anybody extends EventEmitter {
         // } else {
         //   this.bodiesGraphic.noStroke()
         // }
+
         // this.bodiesGraphic.noStroke()
         // this.bodiesGraphic.stroke(this.getBW())
         // this.bodiesGraphic.stroke('white')
@@ -995,6 +1015,18 @@ class Anybody extends EventEmitter {
           this.drawBody(loopX, loopY, body.velocity, radius, finalColor)
           // this.bodiesGraphic.ellipse(loopX, loopY, body.velocity, radius, radius)
         }
+
+
+        if (!this.face) {
+          this.face = await new Promise((resolve) => {
+            this.p.loadImage('/2.png', (img) => {
+              console.log('loaded')
+              resolve(img)
+            })
+          })
+        }
+        this.bodiesGraphic.image(this.face, body.position.x - radius / 8, body.position.y - radius / 3, radius / 2, radius / 2)
+
 
         // const eyes = this.getAngledImage(body)
         // this.bodiesGraphic.image(eyes, 0, 0)
@@ -1196,7 +1228,6 @@ class Anybody extends EventEmitter {
   }
 
   drawBodyTrails() {
-    // if (this.mode == 'nft') return
     for (let i = 0; i < this.allCopiesOfBodies.length; i++) {
       const copyOfBodies = this.allCopiesOfBodies[i]
       for (let j = 0; j < copyOfBodies.length; j++) {
