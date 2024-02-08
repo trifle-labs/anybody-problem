@@ -70,6 +70,7 @@ class Anybody extends EventEmitter {
 
   // run whenever the class should be reset
   clearValues() {
+    this.tailLength = 20
     this.thisLevelMissileCount = 0
     this.thisLevelSec = 0
     this.totalSec = 0
@@ -603,7 +604,7 @@ class Anybody extends EventEmitter {
     })
   }
 
-  draw() {
+  async draw() {
     if (!this.paused && this.frames % this.stopEvery == 0 && !this.justPaused && this.frames !== 0) {
       this.finish()
     } else {
@@ -623,7 +624,7 @@ class Anybody extends EventEmitter {
     this.missiles = results.missiles || []
 
     this.playSounds()
-    this.drawBg()
+    await this.drawBg()
     this.drawBodyTrails()
     this.drawBodies()
 
@@ -648,9 +649,50 @@ class Anybody extends EventEmitter {
       this.p.ellipse(body.position.x, body.position.y, radius, radius)
     }
   }
-  drawBg() {
+  async drawBg() {
     if (this.mode == 'nft') {
-      this.p.background(this.bgColor)
+      if (!this.bgGenerated) {
+        console.log('again')
+
+        // bg gradient
+
+        this.bgGenerated = this.p.createGraphics(this.windowWidth, this.windowHeight)
+        // this.bgGenerated.background(this.bgColor)
+
+        // this.img = this.p.createGraphics(this.windowWidth, this.windowHeight)
+        // this.img.fill('red')
+        // this.img.ellipse(this.windowWidth / 2, this.windowHeight / 2, this.windowWidth, this.windowHeight)
+
+        this.img = await new Promise((resolve) => {
+          this.p.loadImage('/bg-2-blur.png', (img) => {
+            resolve(img)
+          })
+        })
+        // console.log('promise returned')
+        this.bgGenerated.image(this.img, 0, 0, this.windowWidth, this.windowHeight)
+
+        for (let r = this.windowWidth; r > 0; r -= 20) {
+          // let gradient = this.p.map(r, 0, this.windowWidth * 3, 0.01, 0)
+          // console.log({ gradient })
+          // this.bgGenerated.fill('rgba(0,0,0,0.01)')
+          // this.bgGenerated.noStroke()
+          // this.bgGenerated.ellipse(this.windowWidth / 2, this.windowHeight / 2, r, r)
+        }
+        // for (let r = this.windowWidth; r > 0; r--) {
+        //   let gradient = this.p.map(r, 0, this.windowWidth, 0, 255)
+        //   this.bgGenerated.fill(gradient)
+        //   this.bgGenerated.noStroke()
+        //   this.bgGenerated.ellipse(this.windowWidth / 2, this.windowHeight / 2, r * 2, r * 2)
+        // }
+
+
+
+
+      }
+      // this.p.filter(this.p.BLUR, false)
+      this.p.image(this.bgGenerated, 0, 0, this.windowWidth, this.windowHeight)
+      // this.p.background(this.bgColor)
+
       // this.p.background(this.convertColor(this.bgColor, false))
       // this.p.background(this.getGrey())
       return
@@ -736,12 +778,18 @@ class Anybody extends EventEmitter {
 
   drawScore() {
     if (this.mode == 'nft') {
+      this.accumulateFrameRate += this.p.frameRate()
+      if (this.frames % 10 == 0) {
+        this.averageFrameRate = this.accumulateFrameRate / 10
+        this.accumulateFrameRate = 0
+      }
       this.p.noStroke()
       this.p.fill('white')
       // this.p.rect(0, 0, 50, 20)
-      this.p.fill(this.getGrey())
+      // this.p.fill(this.getNotGrey())
       this.p.textAlign(this.p.RIGHT) // Right-align the text
       this.p.text(this.preRun + this.frames, 45, 15) // Adjust the x-coordinate to align the text
+      this.p.text(this.averageFrameRate?.toFixed(2), 45, 35)
     } else {
       this.p.fill('white')
       this.p.rect(0, 0, 50, 20)
@@ -845,15 +893,15 @@ class Anybody extends EventEmitter {
   drawBody(x, y, v, radius, c) {
 
     this.bodiesGraphic.fill(c)
-    this.bodiesGraphic.ellipse(x, y, radius, radius)
+    // this.bodiesGraphic.ellipse(x, y, radius, radius)
 
     this.bodiesGraphic.push()
     this.bodiesGraphic.translate(x, y)
     var angle = v.heading() + this.p.PI / 2
     this.bodiesGraphic.rotate(angle)
     const eyeOffsetX = radius / 5
-    const eyeOffsetY = radius / 8
-    this.bodiesGraphic.fill('black')
+    const eyeOffsetY = radius / 12
+    this.bodiesGraphic.fill('rgba(0,0,0,0.8)')
     this.bodiesGraphic.ellipse(- eyeOffsetX, - eyeOffsetY, radius / 7, radius / 5)
     this.bodiesGraphic.ellipse(eyeOffsetX, - eyeOffsetY, radius / 7, radius / 5)
     this.bodiesGraphic.ellipse(0, + eyeOffsetY, radius / 7, radius / 7)
@@ -864,12 +912,13 @@ class Anybody extends EventEmitter {
   }
 
   drawBodies(attachToCanvas = true) {
+    this.p.noStroke()
     // if (!this.bodiesGraphic) {
     this.bodiesGraphic = this.p//.createGraphics(this.windowWidth, this.windowHeight)
     // }
     // this.bodiesGraphic.clear()
     // if (this.mode == 'nft') this.drawBorder()
-    this.bodiesGraphic.strokeWeight(1)
+    // this.bodiesGraphic.strokeWeight(1)
     const bodyCopies = []
     for (let i = 0; i < this.bodies.length; i++) {
       // const body = this.bodies.sort((a, b) => b.radius - a.radius)[i]
@@ -883,7 +932,7 @@ class Anybody extends EventEmitter {
         // console.log(c)
         // finalColor = c
 
-        finalColor = c.replace('0.5', '1')//this.convertColor(c)
+        finalColor = this.convertColor(c)
 
       } else {
         finalColor = c
@@ -948,10 +997,10 @@ class Anybody extends EventEmitter {
         radius: body.radius,
         c: c
       }
-      bodyCopies.push(bodyCopy)
+      this.frames % 1 == 0 && bodyCopies.push(bodyCopy)
     }
     this.allCopiesOfBodies.push(bodyCopies)
-    if (this.allCopiesOfBodies.length > 40) {
+    if (this.allCopiesOfBodies.length > this.tailLength) {
       this.allCopiesOfBodies.shift()
     }
 
@@ -1060,10 +1109,18 @@ class Anybody extends EventEmitter {
       this.drawTails[id].fill(finalColor)
 
       this.drawTails[id].beginShape()
-      this.drawTails[id].vertex(radius, 0)
-      this.drawTails[id].vertex(0, 0)
+      // this.drawTails[id].vertex(radius, 0)
+      // this.drawTails[id].vertex(0, 0)
 
+      // this.p.arc(0, 0, radius, radius, this.p.PI, 2 * this.p.PI)
+      const arcResolution = 20
 
+      for (let j = 0; j < arcResolution; j++) {
+        const ang = this.p.map(j, 0, arcResolution, 0, this.p.PI)
+        const ax = radius / 2 + this.p.cos(ang) * radius / 2
+        const ay = (2 * radius / 2 + -1 * this.p.sin(ang) * radius / 2)
+        this.drawTails[id].vertex(ax, ay)
+      }
 
 
 
@@ -1075,10 +1132,9 @@ class Anybody extends EventEmitter {
       // let heightChanger = radius / 10
       // const bumpHeightMax = radius / 5
       // const bumpHeightMin = radius / 8
-      const startY = 0//radius / 4
+      const startY = radius * 1
       // this.drawTails[id].push()
       let remaindingWidth = radius
-      const arcResolution = 10
       for (let i = 0; i < bumps; i++) {
         let bumpWidth = radius / bumps
         // bumpHeight += heightChanger
@@ -1112,7 +1168,7 @@ class Anybody extends EventEmitter {
 
     // this.drawTails[id].push()
     // this.drawTails[id].translate(x, y)
-    var angle = v.heading() + this.drawTails[id].PI / 2
+    var angle = v.heading() + this.p.PI / 2
     // this.drawTails[id].rotate(angle)
     // this.drawTails[id].fill(finalColor)
     // this.drawTails[id].fill('rgba(255,0,0,1)')
@@ -1121,7 +1177,7 @@ class Anybody extends EventEmitter {
     this.p.push()
     this.p.translate(x, y)
     this.p.rotate(angle)
-    this.p.image(this.drawTails[id], -radius / 2, 0)
+    this.p.image(this.drawTails[id], -radius / 2, -radius)
     this.p.pop()
 
 
@@ -1140,7 +1196,7 @@ class Anybody extends EventEmitter {
           const hueColor = (parseInt(c.split(',')[1]) + this.frames) % 360
           finalColor = this.p.color(hueColor, 60, 100) // Saturation and brightness at 100 for pure spectral colors
         } else {
-          finalColor = c
+          finalColor = c//this.convertColor(c)
         }
         this.p.fill(finalColor)
         if (this.mode == 'nft') {
@@ -1150,7 +1206,7 @@ class Anybody extends EventEmitter {
           this.p.push()
           this.p.translate(body.position.x, body.position.y)
           this.p.rotate(body.velocity.heading() + this.p.PI / 2)
-          this.p.arc(0, 0, radius, radius, this.p.PI, 2 * this.p.PI)
+          // this.p.arc(0, 0, radius, radius, this.p.PI, 2 * this.p.PI)
           this.p.pop()
           // if (i == 0) {
           this.drawTail(body.position.x, body.position.y, body.velocity, radius, finalColor)
@@ -1190,7 +1246,7 @@ class Anybody extends EventEmitter {
   }
 
   colorArrayToTxt(cc) {
-    const opac = 0.5
+    const opac = 1
     // let cc = baseColor.map(c => c + start + (chunk * i))
     cc.push(opac)
     cc = `rgba(${cc.join(',')})`
@@ -1198,6 +1254,8 @@ class Anybody extends EventEmitter {
   }
 
   generateBodies() {
+
+
 
     if (this.inputData) {
       // console.dir({ inputData: this.inputData }, { depth: null })
@@ -1239,9 +1297,10 @@ class Anybody extends EventEmitter {
     const cs = []
     const bodies = []
 
-    this.radiusMultiplyer = this.random(10, 200)
+    this.radiusMultiplyer = 100//this.random(10, 50)
 
-    const startingRadius = 10//this.random(20, 40)
+
+    const startingRadius = 2//this.random(20, 40)
 
     // const baseColor = this.randomColor(0, 200)
 
@@ -1251,7 +1310,7 @@ class Anybody extends EventEmitter {
     // const totalChunks = this.startingBodies
     // const chunk = range / totalChunks
 
-    this.bgColor = this.colorArrayToTxt(this.randomColor(0, 10))
+    this.bgColor = this.colorArrayToTxt(this.randomColor(0, 100))
 
     for (let i = 0; i < this.startingBodies; i++) {
       cs.push(this.colorArrayToTxt(this.randomColor(100, 200)))
@@ -1264,10 +1323,15 @@ class Anybody extends EventEmitter {
     if (this.startingBodies.length > 10) {
       throw new Error('too many bodies')
     }
-    let maxSize = this.startingBodies < 10 ? 10 : this.startingBodies
+    let maxSize = (this.startingBodies < 10 ? 10 : this.startingBodies)
     for (let i = 0; i < maxSize; i++) {
       if (i >= this.startingBodies) break
-      const radius = (maxSize - i * 5) + startingRadius
+
+      // const j = i
+      // const j = this.random(0, 2)
+      const j = Math.floor(this.random(0, 9) / 3)
+      const radius = (j) * 5 + startingRadius
+      console.log({ radius })
       const body = {
         bodyIndex: i,
         position: this.createVector(ss[i][0], ss[i][1]),
@@ -1297,9 +1361,9 @@ class Anybody extends EventEmitter {
 
   randomColor(min = 0, max = 255, rng = this.rng) {
     const color = []
-    let c = Math.floor(this.random(min, max, rng))
+    // let c = Math.floor(this.random(min, max, rng))
     for (let i = 0; i < 3; i++) {
-      // let c = this.random(min, max, rng)
+      let c = this.random(min, max, rng)
       color.push(c)
     }
     return color
