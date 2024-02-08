@@ -24,7 +24,7 @@ const worker = new Worker('proof.worker.js')
 // import TimerPopup from './TimerPopup.vue'
 const {  verify } = require('../../scripts/circuits')
 // import { useWebWorkerFn } from '@vueuse/core'
-
+let anybody
 export default {
   name: 'P5Sketch',
   // components: {
@@ -44,7 +44,7 @@ export default {
   
   beforeUnmount() {
     // this.sketch && this.sketch.remove()
-    // this.anybody = null
+    // anybody = null
   },
   methods: {
     verify(){//i) {
@@ -81,7 +81,7 @@ export default {
 
       // console.dir(sampleInput, {depth: null})
       worker.postMessage({sampleInput, circuit, finalBodies, index: this.proofs.length - 1})
-      // this.anybody.setPause(false)
+      // anybody.setPause(false)
 
       worker.onmessage = async (e) => {
         console.log('Message received from worker', {data: e.data})
@@ -126,7 +126,7 @@ export default {
       this.startTime = Date.now()
       const sketch = (p) => {
         p.setup = () => {
-          this.anybody = new Anybody(p, {
+          anybody = new Anybody(p, {
             // preRun: 480,
             // seed: 94n, // NOTE: this seed diverges after 4 proofs
             totalBodies: 3,
@@ -139,11 +139,11 @@ export default {
             //   [ '98000', '901000', '10000', '10000', '11000' ]
             // ]
           })
-          this.anybody.on('finished', (data) => this.onFinished(data))
-          this.anybody.on('paused', (data) => this.onPaused(data))
+          anybody.on('finished', (data) => this.onFinished(data))
+          anybody.on('paused', (data) => this.onPaused(data))
         }
         p.draw = () => {
-          this.anybody.draw()
+          anybody.draw()
         }
       }
       this.sketch = new p5(sketch, this.$refs.p5Container)

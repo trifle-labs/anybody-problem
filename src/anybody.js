@@ -736,12 +736,18 @@ class Anybody extends EventEmitter {
 
   drawScore() {
     if (this.mode == 'nft') {
+      this.runningFrameRate += this.p.frameRate()
+      if (this.frames % 10 == 0) {
+        this.averageFrameRate = this.runningFrameRate / 10
+        this.runningFrameRate = 0
+      }
       this.p.noStroke()
       this.p.fill('white')
       // this.p.rect(0, 0, 50, 20)
       this.p.fill(this.getGrey())
       this.p.textAlign(this.p.RIGHT) // Right-align the text
       this.p.text(this.preRun + this.frames, 45, 15) // Adjust the x-coordinate to align the text
+      this.p.text(this.averageFrameRate?.toFixed(2), 45, 30) // Adjust the x-coordinate to align the text
     } else {
       this.p.fill('white')
       this.p.rect(0, 0, 50, 20)
