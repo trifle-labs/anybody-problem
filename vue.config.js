@@ -1,6 +1,9 @@
 const { defineConfig } = require('@vue/cli-service')
 module.exports = defineConfig({
   transpileDependencies: false,
+  devServer: {
+    hot: false, // Disable HMR
+  },
   // chainWebpack: config => {
   //   // Add a rule for worker files
   //   config.module

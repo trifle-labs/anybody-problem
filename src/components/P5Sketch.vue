@@ -13,7 +13,7 @@
 </template>
 
 <script>
-const isTest = false
+const isTest = true
 const steps = isTest ? 20 : 500
 import p5 from 'p5'
 import { Anybody } from '../anybody'
@@ -136,7 +136,7 @@ export default {
           anybody = new Anybody(p, {
             // preRun: 480,
             // seed: 94n, // NOTE: this seed diverges after 4 proofs
-            totalBodies: 6,
+            totalBodies: 5,
             mode: 'nft',
             // freeze: true,
             stopEvery: 0,//steps,//487,
