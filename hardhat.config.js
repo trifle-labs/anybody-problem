@@ -54,7 +54,7 @@ const config = {
       {
         version: '0.8.15',
         settings: {
-          // viaIR: true,
+          viaIR: true,
           optimizer: { enabled: true, runs: 200 },
         },
       },

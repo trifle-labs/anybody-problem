@@ -4,7 +4,7 @@
   <div id="canvas" ref="p5Container"></div>
   <div id="proofs">
     <div v-for="proof, i in proofs" :key="proof.a">
-        <button :disabled="!proof.complete" onclick="verify(i)">Sync</button>
+        <button :disabled="!proof.complete || !readyToSubmit(i)" onclick="verify(i)">{{ buttonText(i) }}</button>
         {{ proof.complete ? '✅' : '⏳' }}
           Tick {{steps + steps * i}}
     </div>
@@ -24,7 +24,7 @@ const worker = new Worker('proof.worker.js')
 // import TimerPopup from './TimerPopup.vue'
 const {  verify } = require('../../scripts/circuits')
 // import { useWebWorkerFn } from '@vueuse/core'
-let anybody
+
 export default {
   name: 'P5Sketch',
   // components: {
@@ -54,12 +54,38 @@ export default {
     // anybody = null
   },
   methods: {
+    buttonText(i) {
+      const proof = this.proofs[i]
+      if (proof.submitted) {
+        return 'Done'
+      } else if (proof.complete && !this.readyToSubmit(i)) {
+        return 'Wait'
+      } else if (proof.complete) {
+        return 'Submit'
+      } else {
+        return 'Proving'
+      }
+    },
+    readyToSubmit(i) {
+      if (i == 0){
+        console.log({i}, true)
+        return true
+      }
+      const result = !this.proofs[i].submitted && this.proofs[i - 1].submitted
+      console.log({i}, result)
+      return result
+    },
     verify(){//i) {
       // const proof = this.proofs[i]
       // console.log('prove proof', {proof})
     },
     onPaused(){//data) {
       // console.log('paused triggered!', {data})
+    },
+    onStart(data) {
+      console.log('on start event received')
+      const bodyInits = data.bodyInits
+      this.prove(bodyInits, false)
     },
     onFinished(data) {
       // console.log('finished steps')
@@ -73,6 +99,8 @@ export default {
       // console.log(`reached ${steps} steps in ${minutes} minutes, ${seconds} seconds, ${milliseconds} milliseconds`)
       this.prove(bodyInits, bodyFinal)
     },
+
+
     async  prove(bodies, finalBodies) {
       // this.proofs.push({})
       // console.log({bodies, finalBodies})
@@ -81,8 +109,9 @@ export default {
       const sampleInput = {
         bodies
       }
-      const circuit = isTest ? 'nft_3_20' : 'nftProd'    
-      this.proofs.push({sampleInput, circuit, finalBodies})
+      const circuit = isTest ? 'nft_3_20' : 'nftProd'
+
+      this.proofs.push({sampleInput, circuit, finalBodies, submitted: false, complete: false})
 
       if (this.proofs.length !== 1) return
 
@@ -104,12 +133,16 @@ export default {
         // const milliseconds = difference % 1000
         // console.log(`Time taken: ${minutes} minutes, ${seconds} seconds, ${milliseconds} milliseconds`)
         // console.log({dataResult})
-        finalBodies.flat().map((v, i) => {
-          if (v != dataResult.publicSignals[i]) {
-            console.error({v, publicSignal: dataResult.publicSignals[i], i})
-            throw new Error(`proof generated does not verify results. Mismatch at index ${i}`)
-          }
-        })
+
+        // finalBodies can equal false and it will be skipped
+        if (finalBodies !== false) {
+          finalBodies.flat().map((v, i) => {
+            if (v != dataResult.publicSignals[i]) {
+              console.error({v, publicSignal: dataResult.publicSignals[i], i})
+              throw new Error(`proof generated does not verify results. Mismatch at index ${i}`)
+            }
+          })
+        }
         this.proofs[dataResult.index] = dataResult
 
         const res = await verify(`${circuit}_verification_key.json`, dataResult.publicSignals, dataResult.proof)
@@ -133,25 +166,27 @@ export default {
       this.startTime = Date.now()
       const sketch = (p) => {
         p.setup = () => {
-          anybody = new Anybody(p, {
+          window.anybody = new Anybody(p, {
             // preRun: 480,
             // seed: 94n, // NOTE: this seed diverges after 4 proofs
-            totalBodies: 5,
+            totalBodies: 3,
             mode: 'nft',
             // freeze: true,
-            stopEvery: 0,//steps,//487,
-            // seed: 1n,
+            stopEvery: steps,//487,
+            optimistic: true,
+            seed: 1n,
             // inputData: [
             //   [ '616000', '599000', '10000', '10000', '13000' ],
             //   [ '257000', '602000', '10000', '10000', '12000' ],
             //   [ '98000', '901000', '10000', '10000', '11000' ]
             // ]
           })
-          anybody.on('finished', (data) => this.onFinished(data))
-          anybody.on('paused', (data) => this.onPaused(data))
+          window.anybody.on('started', (data) => this.onStart(data))
+          window.anybody.on('finished', (data) => this.onFinished(data))
+          window.anybody.on('paused', (data) => this.onPaused(data))
         }
         p.draw = () => {
-          anybody.draw()
+          window.anybody.draw()
         }
       }
       new p5(sketch, this.$refs.p5Container)

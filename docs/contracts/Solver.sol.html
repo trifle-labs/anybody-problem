@@ -1,0 +1,1097 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for contracts/Solver.sol</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../prettify.css" />
+    <link rel="stylesheet" href="../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../index.html">all files</a> / <a href="index.html">contracts/</a> Solver.sol
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>0/59</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>0/48</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>0/13</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>0/70</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line low'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253
+254
+255
+256
+257
+258
+259
+260
+261
+262
+263
+264
+265
+266
+267
+268
+269
+270
+271
+272
+273
+274
+275
+276
+277
+278
+279
+280
+281
+282
+283
+284
+285
+286
+287
+288
+289
+290
+291
+292
+293
+294
+295
+296
+297
+298
+299
+300
+301
+302
+303
+304
+305
+306
+307
+308
+309
+310
+311
+312
+313
+314
+315
+316
+317
+318
+319
+320
+321
+322
+323
+324
+325
+326
+327
+328
+329
+330
+331
+332
+333
+334
+335
+336
+337
+338
+339
+340
+341
+342
+343
+344
+345</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// SPDX-License-Identifier: MIT
+&nbsp;
+pragma solidity ^0.8.0;
+&nbsp;
+import {Groth16Verifier as Groth16Verifier3} from "./Nft_3_20Verifier.sol";
+import {Groth16Verifier as Groth16Verifier4} from "./Nft_4_20Verifier.sol";
+import {Groth16Verifier as Groth16Verifier5} from "./Nft_5_20Verifier.sol";
+import {Groth16Verifier as Groth16Verifier6} from "./Nft_6_20Verifier.sol";
+import {Groth16Verifier as Groth16Verifier7} from "./Nft_7_20Verifier.sol";
+import {Groth16Verifier as Groth16Verifier8} from "./Nft_8_20Verifier.sol";
+import {Groth16Verifier as Groth16Verifier9} from "./Nft_9_20Verifier.sol";
+import {Groth16Verifier as Groth16Verifier10} from "./Nft_10_20Verifier.sol";
+&nbsp;
+import "@openzeppelin/contracts/access/Ownable.sol";
+&nbsp;
+import "./Problems.sol";
+import "./Tocks.sol";
+import "hardhat/console.sol";
+&nbsp;
+contract Solver is Ownable {
+    address payable public problems;
+    address public tocks;
+&nbsp;
+    uint256[11] public bodyBoost = [
+        0, // 0th body, just for easier indexing
+        0, // 1st body
+        0, // 2nd body
+        1, // 3rd body
+        2, // 4th body
+        4, // 5th body
+        8, // 6th body
+        16, // 7th body
+        32, // 8th body
+        64, //9th body
+        128 // 10th body
+    ];
+&nbsp;
+    event Solved(
+        uint256 indexed problemId,
+        uint256 indexed previousTickCount,
+        uint256 indexed tickCount
+    );
+&nbsp;
+<span class="fstat-no" title="function not covered" >    constructor(address payable problems_, address tocks_) {</span>
+        problems = problems_;
+        tocks = tocks_;
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    fallback() external {</span>
+<span class="cstat-no" title="statement not covered" >        revert("no fallback function")</span>;
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function updateProblemsAddress(address payable problems_) public onlyOwner {</span>
+        problems = problems_;
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function updateTocksAddress(address tocks_) public onlyOwner {</span>
+        tocks = tocks_;
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function solveProblem(</span>
+        uint256 problemId,
+        uint256 tickCount,
+        uint[2] memory a,
+        uint[2][2] memory b,
+        uint[2] memory c,
+        uint[] memory input
+    ) public {
+<span class="cstat-no" title="statement not covered" >        (, uint256 bodyCount, , uint256 previousTickCount) = Problems(problems)</span>
+            .problems(problemId);
+<span class="cstat-no" title="statement not covered" >        uint256 numberOfBodies = bodyCount;</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        uint256 numberOfInputs = numberOfBodies * 5 * 2;</span>
+<span class="cstat-no" title="statement not covered" >        require(input.length == numberOfInputs, "Invalid input length")</span>;
+<span class="cstat-no" title="statement not covered" >        address verifier = Problems(problems).verifiers(</span>
+            numberOfBodies,
+            tickCount
+        );
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        if (numberOfBodies == 3) {</span>
+<span class="cstat-no" title="statement not covered" >            require(</span>
+                Groth16Verifier3(verifier).verifyProof(
+                    a,
+                    b,
+                    c,
+                    convertTo30(input)
+                ),
+                "Invalid 3 body proof"
+            );
+        } else <span class="cstat-no" title="statement not covered" >if (numberOfBodies == 4) {</span>
+<span class="cstat-no" title="statement not covered" >            require(</span>
+                Groth16Verifier4(verifier).verifyProof(
+                    a,
+                    b,
+                    c,
+                    convertTo40(input)
+                ),
+                "Invalid 4 body proof"
+            );
+        } else <span class="cstat-no" title="statement not covered" >if (numberOfBodies == 5) {</span>
+<span class="cstat-no" title="statement not covered" >            require(</span>
+                Groth16Verifier5(verifier).verifyProof(
+                    a,
+                    b,
+                    c,
+                    convertTo50(input)
+                ),
+                "Invalid 5 body proof"
+            );
+        } else <span class="cstat-no" title="statement not covered" >if (numberOfBodies == 6) {</span>
+<span class="cstat-no" title="statement not covered" >            require(</span>
+                Groth16Verifier6(verifier).verifyProof(
+                    a,
+                    b,
+                    c,
+                    convertTo60(input)
+                ),
+                "Invalid 6 body proof"
+            );
+        } else <span class="cstat-no" title="statement not covered" >if (numberOfBodies == 7) {</span>
+<span class="cstat-no" title="statement not covered" >            require(</span>
+                Groth16Verifier7(verifier).verifyProof(
+                    a,
+                    b,
+                    c,
+                    convertTo70(input)
+                ),
+                "Invalid 7 body proof"
+            );
+        } else <span class="cstat-no" title="statement not covered" >if (numberOfBodies == 8) {</span>
+<span class="cstat-no" title="statement not covered" >            require(</span>
+                Groth16Verifier8(verifier).verifyProof(
+                    a,
+                    b,
+                    c,
+                    convertTo80(input)
+                ),
+                "Invalid 8 body proof"
+            );
+        } else <span class="cstat-no" title="statement not covered" >if (numberOfBodies == 9) {</span>
+<span class="cstat-no" title="statement not covered" >            require(</span>
+                Groth16Verifier9(verifier).verifyProof(
+                    a,
+                    b,
+                    c,
+                    convertTo90(input)
+                ),
+                "Invalid 9 body proof"
+            );
+        } else <span class="cstat-no" title="statement not covered" >if (numberOfBodies == 10) {</span>
+<span class="cstat-no" title="statement not covered" >            require(</span>
+                Groth16Verifier10(verifier).verifyProof(
+                    a,
+                    b,
+                    c,
+                    convertTo100(input)
+                ),
+                "Invalid 10 body proof"
+            );
+        } else {
+<span class="cstat-no" title="statement not covered" >            revert("Invalid number of bodies")</span>;
+        }
+<span class="cstat-no" title="statement not covered" >        uint256[10] memory bodyIds = Problems(problems).getProblemBodyIds(</span>
+            problemId
+        );
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        Problems(problems).updateProblemTickCount(</span>
+            problemId,
+            previousTickCount + tickCount
+        );
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        Tocks(tocks).mint(msg.sender, tickCount * bodyBoost[bodyCount])</span>;
+&nbsp;
+        // uint256 traits = 5;
+<span class="cstat-no" title="statement not covered" >        Problems.Body memory bodyData;</span>
+<span class="cstat-no" title="statement not covered" >        for (uint256 i = 0; i &lt; numberOfBodies; i++) {</span>
+            bodyData = Problems(problems).getProblemBodyData(
+                problemId,
+                bodyIds[i]
+            );
+&nbsp;
+            // px
+            // confirm previously stored values were used as input to the proof
+            // uint256 pxIndex = 5 * numberOfBodies + i * 5 + 0;
+            // console.log("px");
+            // console.log(bodyData.px);
+            // console.log(input[5 * numberOfBodies + i * 5 + 0]);
+<span class="cstat-no" title="statement not covered" >            require(</span>
+                bodyData.px == input[5 * numberOfBodies + i * 5 + 0],
+                "Invalid position x"
+            );
+            // update stored values
+            bodyData.px = input[i * 5 + 0];
+&nbsp;
+            // py
+            // confirm previously stored values were used as input to the proof
+            // uint256 pyIndex = 5 * numberOfBodies + i * 5 + 1;
+<span class="cstat-no" title="statement not covered" >            require(</span>
+                bodyData.py == input[5 * numberOfBodies + i * 5 + 1],
+                "Invalid position y"
+            );
+            // update stored values
+            bodyData.py = input[i * 5 + 1];
+&nbsp;
+            // vx
+            // confirm previously stored values were used as input to the proof
+            // uint256 vxIndex = 5 * numberOfBodies + i * 5 + 2;
+            // console.log("vx");
+            // console.log(bodyData.vx);
+            // console.log(input[5 * numberOfBodies + i * 5 + 2]);
+            // console.log(input[i * 5 + 2]);
+<span class="cstat-no" title="statement not covered" >            require(</span>
+                bodyData.vx == input[5 * numberOfBodies + i * 5 + 2],
+                "Invalid vector x"
+            );
+            // update stored values
+            bodyData.vx = input[i * 5 + 2];
+&nbsp;
+            // vy
+            // confirm previously stored values were used as input to the proof
+            // uint256 vyIndex = 5 * numberOfBodies + i * 5 + 3;
+            // console.log("vy");
+            // console.log("current:");
+            // console.log(bodyData.vy);
+            // console.log("submitted starting point:");
+            // console.log(input[5 * numberOfBodies + i * 5 + 3]);
+            // console.log("new value:");
+            // console.log(input[i * 5 + 3]);
+<span class="cstat-no" title="statement not covered" >            require(</span>
+                bodyData.vy == input[5 * numberOfBodies + i * 5 + 3],
+                "Invalid vector y"
+            );
+            // update stored values
+            bodyData.vy = input[i * 5 + 3];
+&nbsp;
+            // radius
+            // confirm previously stored values were used as input to the proof
+            // uint256 radiusIndex = 5 * numberOfBodies + i * 5 + 4;
+<span class="cstat-no" title="statement not covered" >            require(</span>
+                bodyData.radius == input[5 * numberOfBodies + i * 5 + 4],
+                "Invalid radius"
+            );
+            // update stored values
+            bodyData.radius = input[i * 5 + 4];
+<span class="cstat-no" title="statement not covered" >            Problems(problems).updateProblemBody(</span>
+                problemId,
+                bodyIds[i],
+                bodyData
+            );
+        }
+<span class="cstat-no" title="statement not covered" >        emit Solved(problemId, previousTickCount, tickCount);</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function convertTo30(</span>
+        uint[] memory input
+    ) internal pure returns (uint[30] memory) {
+<span class="cstat-no" title="statement not covered" >        uint[30] memory input_;</span>
+<span class="cstat-no" title="statement not covered" >        for (uint256 i = 0; i &lt; 30; i++) {</span>
+            input_[i] = input[i];
+        }
+<span class="cstat-no" title="statement not covered" >        return input_;</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function convertTo40(</span>
+        uint[] memory input
+    ) internal pure returns (uint[40] memory) {
+<span class="cstat-no" title="statement not covered" >        uint[40] memory input_;</span>
+<span class="cstat-no" title="statement not covered" >        for (uint256 i = 0; i &lt; 40; i++) {</span>
+            input_[i] = input[i];
+        }
+<span class="cstat-no" title="statement not covered" >        return input_;</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function convertTo50(</span>
+        uint[] memory input
+    ) internal pure returns (uint[50] memory) {
+<span class="cstat-no" title="statement not covered" >        uint[50] memory input_;</span>
+<span class="cstat-no" title="statement not covered" >        for (uint256 i = 0; i &lt; 50; i++) {</span>
+            input_[i] = input[i];
+        }
+<span class="cstat-no" title="statement not covered" >        return input_;</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function convertTo60(</span>
+        uint[] memory input
+    ) internal pure returns (uint[60] memory) {
+<span class="cstat-no" title="statement not covered" >        uint[60] memory input_;</span>
+<span class="cstat-no" title="statement not covered" >        for (uint256 i = 0; i &lt; 60; i++) {</span>
+            input_[i] = input[i];
+        }
+<span class="cstat-no" title="statement not covered" >        return input_;</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function convertTo70(</span>
+        uint[] memory input
+    ) internal pure returns (uint[70] memory) {
+<span class="cstat-no" title="statement not covered" >        uint[70] memory input_;</span>
+<span class="cstat-no" title="statement not covered" >        for (uint256 i = 0; i &lt; 70; i++) {</span>
+            input_[i] = input[i];
+        }
+<span class="cstat-no" title="statement not covered" >        return input_;</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function convertTo80(</span>
+        uint[] memory input
+    ) internal pure returns (uint[80] memory) {
+<span class="cstat-no" title="statement not covered" >        uint[80] memory input_;</span>
+<span class="cstat-no" title="statement not covered" >        for (uint256 i = 0; i &lt; 80; i++) {</span>
+            input_[i] = input[i];
+        }
+<span class="cstat-no" title="statement not covered" >        return input_;</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function convertTo90(</span>
+        uint[] memory input
+    ) internal pure returns (uint[90] memory) {
+<span class="cstat-no" title="statement not covered" >        uint[90] memory input_;</span>
+<span class="cstat-no" title="statement not covered" >        for (uint256 i = 0; i &lt; 90; i++) {</span>
+            input_[i] = input[i];
+        }
+<span class="cstat-no" title="statement not covered" >        return input_;</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function convertTo100(</span>
+        uint[] memory input
+    ) internal pure returns (uint[100] memory) {
+<span class="cstat-no" title="statement not covered" >        uint[100] memory input_;</span>
+<span class="cstat-no" title="statement not covered" >        for (uint256 i = 0; i &lt; 100; i++) {</span>
+            input_[i] = input[i];
+        }
+<span class="cstat-no" title="statement not covered" >        return input_;</span>
+    }
+&nbsp;
+    // function convertToN(
+    //     uint[] memory input,
+    //     uint256 n
+    // ) internal pure returns (uint[n] memory) {
+    //     uint[n] memory input_;
+    //     for (uint256 i = 0; i &lt; n; i++) {
+    //         input_[i] = input[i];
+    //     }
+    //     return input_;
+    // }
+}
+&nbsp;</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Tue Feb 13 2024 17:53:06 GMT+0100 (Central European Standard Time)
+</div>
+</div>
+<script src="../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../sorter.js"></script>
+</body>
+</html>

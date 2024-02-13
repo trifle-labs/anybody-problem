@@ -2,7 +2,7 @@ const hre = require('hardhat')
 // const { assert } = require('chai')
 // const { describe, it, before } = require('mocha')
 
-const { calculateTime } = require('../old/index.js')
+const { calculateTime } = require('../docs/index.js')
 
 describe('limiterMain circuit', () => {
   let circuit

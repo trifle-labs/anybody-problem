@@ -54,7 +54,8 @@ contract Problems is ERC721, Ownable {
     uint256 public constant maxVector = 10;
     uint256 public constant scalingFactor = 10 ** 3;
     uint256 public constant windowWidth = 1000 * scalingFactor;
-    uint256 public constant maxRadius = 13;
+    // uint256 public constant maxRadius = 13;
+    uint256 public constant startingRadius = 2;
 
     event bodyAdded(
         uint256 problemId,
@@ -288,17 +289,27 @@ contract Problems is ERC721, Ownable {
         uint256 bodyId,
         bytes32 seed,
         uint256 bodyStyle,
-        uint256 i /*TODO: add back: pure*/
-    ) public view returns (Body memory) {
+        uint256 i
+    ) public pure returns (Body memory) {
         Body memory body;
         body.seed = seed;
 
         bytes32 rand = keccak256(abi.encodePacked(seed, i));
         uint256 x = randomRange(0, windowWidth, rand);
+
         rand = keccak256(abi.encodePacked(rand));
         uint256 y = randomRange(0, windowWidth, rand);
-        // TODO: update radius so it matches JS
-        uint256 r = (maxRadius - i) * scalingFactor;
+
+        rand = keccak256(abi.encodePacked(rand));
+        // console.log("rand");
+        // console.logBytes32(rand);
+        uint256 randRadius = randomRange(0, 3, rand);
+        // console.log("randRadius");
+        // console.log(randRadius);
+        randRadius = (randRadius) * 5 + startingRadius;
+        // console.log("randRadius");
+        // console.log(randRadius);
+        uint256 r = randRadius * scalingFactor;
 
         // console.log("maxVectorScaled");
         // console.log(maxVector * scalingFactor);

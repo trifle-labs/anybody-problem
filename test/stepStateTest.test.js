@@ -8,7 +8,7 @@ const {
   runComputationBigInt,
   convertScaledStringArrayToBody,
   convertScaledBigIntBodyToArray,
-} = require('../old/index.js')
+} = require('../docs/index.js')
 // const p = 21888242871839275222246405745257275088548364400416034343698204186575808495617n
 const totalSteps = 20//487
 // const { describe, it, before } = require('mocha')

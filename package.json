@@ -14,6 +14,7 @@
   },
   "main": "index.js",
   "dependencies": {
+    "base64-sol": "^1.1.0",
     "core-js": "^3.8.3",
     "p5": "^1.8.0",
     "prando": "^6.0.1",
@@ -73,7 +74,7 @@
       "before": "readonly"
     },
     "ignorePatterns": [
-      "/old/index.js"
+      "/docs/index.js"
     ],
     "rules": {
       "indent": [

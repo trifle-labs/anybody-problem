@@ -389,7 +389,10 @@ describe('Problem Tests', function () {
 
     const scalingFactor = await problems.scalingFactor()
     const maxVector = await problems.maxVector()
-    const maxRadius = await problems.maxRadius()
+    const startingRadius = await problems.startingRadius()
+    const maxRadius = ethers.BigNumber.from(3 * 5).add(startingRadius)
+
+
     const windowWidth = await problems.windowWidth()
 
     const bodyIDs = await problems.getProblemBodyIds(problemId)
@@ -430,7 +433,10 @@ describe('Problem Tests', function () {
 
     const scalingFactor = await problems.scalingFactor()
     const maxVector = await problems.maxVector()
-    const maxRadius = await problems.maxRadius()
+    const startingRadius = await problems.startingRadius()
+    const maxRadius = ethers.BigNumber.from(3 * 5).add(startingRadius)
+
+
     const windowWidth = await problems.windowWidth()
     const initialVelocity = maxVector.mul(scalingFactor)
 

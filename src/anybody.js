@@ -33,7 +33,8 @@ class Anybody extends EventEmitter {
       mute: true,
       freeze: false,
       stopEvery: 0,
-      util: false
+      util: false,
+      optimistic: false,
     }
 
     // Merge the default options with the provided options
@@ -61,6 +62,7 @@ class Anybody extends EventEmitter {
     this.freeze = mergedOptions.freeze
     this.stopEvery = mergedOptions.stopEvery
     this.util = mergedOptions.util
+    this.optimistic = mergedOptions.optimistic
 
     // Add other constructor logic here
     this.p = p
@@ -595,11 +597,18 @@ class Anybody extends EventEmitter {
     missiles[0] = missile
     return { bodies, missiles }
   }
+
+  started() {
+    this.emit('started', { bodyInits: JSON.parse(JSON.stringify(this.bodyInits)) })
+  }
+
   finish() {
     // this.finished = true
     // this.setPause(true)
     this.calculateBodyFinal()
-    this.emit('finished', { bodyInits: JSON.parse(JSON.stringify(this.bodyInits)), bodyFinal: JSON.parse(JSON.stringify(this.bodyFinal)) })
+    if (!this.optimistic) {
+      this.emit('finished', { bodyInits: JSON.parse(JSON.stringify(this.bodyInits)), bodyFinal: JSON.parse(JSON.stringify(this.bodyFinal)) })
+    }
     // console.log('FINISH????????????????????????????????????????')
     this.bodyInits = JSON.parse(JSON.stringify(this.bodyFinal))
     this.bodyFinal = []
@@ -619,8 +628,17 @@ class Anybody extends EventEmitter {
   }
 
   async draw() {
-    if (!this.paused && this.frames % this.stopEvery == 0 && !this.justPaused && this.frames !== 0) {
-      this.finish()
+    const isNotFirstFrame = this.frames !== 0
+    const notPaused = !this.paused
+    const framesIsAtStopEveryInterval = this.frames % this.stopEvery == 0
+    const didNotJustPause = !this.justPaused
+    if (isNotFirstFrame && notPaused && framesIsAtStopEveryInterval && didNotJustPause) {
+      if (didNotJustPause) {
+        this.finish()
+      }
+      if (this.optimistic) {
+        this.started()
+      }
     } else {
       this.justPaused = false
     }
@@ -886,7 +904,7 @@ class Anybody extends EventEmitter {
         this.accumulateFrameRate = 0
       }
       this.p.noStroke()
-      this.p.fill('black')
+      this.p.fill('white')
       // this.p.rect(0, 0, 50, 20)
       // this.p.fill(this.getNotGrey())
       this.p.textAlign(this.p.RIGHT) // Right-align the text
@@ -1521,9 +1539,8 @@ class Anybody extends EventEmitter {
 
       // const j = i
       // const j = this.random(0, 2)
-      const j = Math.floor(this.random(0, 9) / 3)
+      const j = Math.floor(this.random(0, 3))
       const radius = (j) * 5 + startingRadius
-      console.log({ radius })
       const body = {
         bodyIndex: i,
         position: this.createVector(ss[i][0], ss[i][1]),

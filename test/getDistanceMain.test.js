@@ -1,6 +1,6 @@
 const hre = require('hardhat')
 // const { assert } = require('chai')
-const { calculateTime } = require('../old/index.js')
+const { calculateTime } = require('../docs/index.js')
 // const { describe, it, before } = require('mocha')
 
 describe('getDistanceMain circuit', () => {

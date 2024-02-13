@@ -50,8 +50,11 @@ const getPathAddress = async (name) => {
   return savePath
 }
 
-const initContracts = async () => {
-  const [owner] = await hre.ethers.getSigners()
+const initContracts = async (getSigners = true) => {
+  let owner
+  if (getSigners) {
+    ([owner] = await hre.ethers.getSigners())
+  }
 
   const contractNames = ['Problems', 'Bodies', 'Tocks', 'Solver', 'Metadata']
   for (let i = 3; i <= 10; i++) {
@@ -63,7 +66,11 @@ const initContracts = async () => {
   for (let i = 0; i < contractNames.length; i++) {
     const address = JSON.parse(await readData(await getPathAddress(contractNames[i])))['address']
     const abi = JSON.parse(await readData(await getPathABI(contractNames[i])))['abi']
-    returnObject[contractNames[i]] = new ethers.Contract(address, abi, owner)
+    if (getSigners) {
+      returnObject[contractNames[i]] = new ethers.Contract(address, abi, owner)
+    } else {
+      returnObject[contractNames[i]] = new ethers.Contract(address, abi)
+    }
   }
 
   return returnObject
@@ -161,6 +168,10 @@ const deployContracts = async () => {
   const solverAddress = solver.address
   returnObject['Solver'] = solver
   !testing && log(`Solver deployed at ${solverAddress} with problemsAddress ${problemsAddress} and tocksAddress ${tocksAddress}`)
+
+  // configure Metadata
+  await metadata.updateProblemsAddress(problemsAddress)
+  !testing && log(`Metadata configured with problemsAddress ${problemsAddress}`)
 
   // configure Problems
   await problems.updateBodiesAddress(bodiesAddress)
