@@ -84,7 +84,19 @@ contract Metadata is Ownable {
     }
 
     function getHTML(uint256 tokenId) public view returns (string memory) {
-        return "<html><body>: )</body></html>";
+        return
+            string(
+                abi.encodePacked(
+                    "data:text/html;base64,",
+                    Base64.encode(
+                        abi.encodePacked(
+                            "<html><body><img src='",
+                            getSVG(tokenId),
+                            "'></body></html>"
+                        )
+                    )
+                )
+            );
     }
 
     /// @dev function to generate a SVG String
