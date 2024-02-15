@@ -44,7 +44,7 @@ async function copyABI(name, contractName) {
     __dirname,
     '..',
     'contractData',
-    'ABI-' + String(networkinfo['name']) + `-${name}.json`
+    'ABI-' + String(networkinfo['chainId']) + `-${name}.json`
   )
   await copyContractABI(pathname, copy)
   console.log('-- OK')
@@ -58,7 +58,7 @@ async function saveAddress(contract, name) {
     __dirname,
     '..',
     'contractData',
-    String(networkinfo['name']) + '-' + String(name) + '.json'
+    String(networkinfo['chainId']) + '-' + String(name) + '.json'
   )
   var objToWrite = {
     address: newAddress,
@@ -68,6 +68,8 @@ async function saveAddress(contract, name) {
 }
 
 async function main() {
+  const [deployer] = await hre.ethers.getSigners()
+  console.log({ deployer: deployer.address })
   console.log('Deploy to chain:')
   console.log(await hre.ethers.provider.getNetwork())
   const deployedContracts = await deployContracts()

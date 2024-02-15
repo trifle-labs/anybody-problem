@@ -67,6 +67,12 @@ const config = {
       chainId: 12345,
       // loggingEnabled: false
     },
+    formatest: {
+      // url: 'https://sepolia.infura.io/v3/' + process.env.INFURA_API_KEY,
+      url: 'https://rpc.sketchpad-1.forma.art/',
+      accounts: { mnemonic: process.env.deploymentKey },
+      gasPrice: 1_000_000_000, // 1 GWEI
+    },
   },
   gasReporter: {
     currency: 'EUR',
