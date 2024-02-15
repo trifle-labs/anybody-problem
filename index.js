@@ -13,11 +13,11 @@ const Tocks = require('./contractData/80085-Tocks.json')
 
 const Anybody = require('./src/anybody.js')
 const circuits = require('./scripts/circuits')
-const utils = require('./scripts/utils')
+// const utils = require('./scripts/utils')
 
 module.exports = {
   circuits,
-  utils,
+  // utils,
   Anybody,
   Problems: {
     abi: ProblemsABI,
