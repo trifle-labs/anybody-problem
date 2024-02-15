@@ -21,7 +21,7 @@ contract Problems is ERC721, Ownable {
     address public solver;
     address public metadata;
 
-    address public wallet;
+    address public proceedRecipient;
 
     uint256 public price = 0.01 ether;
 
@@ -84,7 +84,7 @@ contract Problems is ERC721, Ownable {
         require(solver != address(0), "Not initialized");
         require(bodies != address(0), "Not initialized");
         require(metadata != address(0), "Not initialized");
-        require(wallet != address(0), "Not initialized");
+        require(proceedRecipient != address(0), "Not initialized");
         _;
     }
 
@@ -102,7 +102,7 @@ contract Problems is ERC721, Ownable {
         uint256[] memory verifiersBodies
     ) ERC721("Anybody Problem", "ANY") {
         require(metadata_ != address(0), "Invalid metadata");
-        wallet = msg.sender;
+        proceedRecipient = msg.sender;
         metadata = metadata_;
         for (uint256 i = 0; i < verifiers_.length; i++) {
             require(verifiersTicks[i] > 0, "Invalid verifier tocks");
@@ -153,8 +153,10 @@ contract Problems is ERC721, Ownable {
         bodies = bodies_;
     }
 
-    function updateWalletAddress(address wallet_) public onlyOwner {
-        wallet = wallet_;
+    function updateProceedRecipientAddress(
+        address proceedRecipient_
+    ) public onlyOwner {
+        proceedRecipient = proceedRecipient_;
     }
 
     function generateSeed(uint256 tokenId) internal view returns (bytes32) {
@@ -174,9 +176,11 @@ contract Problems is ERC721, Ownable {
         require(!paused, "Paused");
         require(block.timestamp >= startDate, "Not started");
         require(msg.value == quantity * price, "Invalid price");
-        // (bool sent, bytes memory data) = wallet.call{value: msg.value}("");
-        (bool sent, bytes memory data) = wallet.call{value: msg.value}("");
-        emit EthMoved(wallet, sent, data, msg.value);
+        // (bool sent, bytes memory data) = proceedRecipient.call{value: msg.value}("");
+        (bool sent, bytes memory data) = proceedRecipient.call{
+            value: msg.value
+        }("");
+        emit EthMoved(proceedRecipient, sent, data, msg.value);
         for (uint256 i = 0; i < quantity; i++) {
             _internalMint(recipient);
         }

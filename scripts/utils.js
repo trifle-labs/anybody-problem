@@ -8,7 +8,7 @@ const { exportCallDataGroth16 } = require('../scripts/circuits.js')
 
 const correctPrice = ethers.utils.parseEther('0.01')
 // TODO: change this to the splitter address
-const splitterAddress = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266'
+// const splitterAddress = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266'
 
 const testJson = (tJson) => {
   try {
@@ -342,6 +342,6 @@ module.exports = {
   readData,
   testJson,
   correctPrice,
-  splitterAddress
+  // splitterAddress
 }
 
