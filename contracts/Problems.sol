@@ -163,17 +163,27 @@ contract Problems is ERC721, Ownable {
     }
 
     function mint() public payable {
-        mint(msg.sender);
+        mint(msg.sender, 1);
     }
 
-    function mint(address recipient) public payable initialized {
+    function mint(
+        address recipient,
+        uint256 quantity
+    ) public payable initialized {
+        require(quantity <= 5, "Max 5");
         require(!paused, "Paused");
         require(block.timestamp >= startDate, "Not started");
-        require(msg.value == price, "Invalid price");
+        require(msg.value == quantity * price, "Invalid price");
         // (bool sent, bytes memory data) = wallet.call{value: msg.value}("");
         (bool sent, bytes memory data) = wallet.call{value: msg.value}("");
         emit EthMoved(wallet, sent, data, msg.value);
-        _internalMint(recipient);
+        for (uint256 i = 0; i < quantity; i++) {
+            _internalMint(recipient);
+        }
+    }
+
+    function mint(address recipient) public payable initialized {
+        mint(recipient, 1);
     }
 
     function adminMint(address recipient) public initialized onlyOwner {
