@@ -1,4 +1,4 @@
-const { groth16 } = require('snarkjs')
+import { groth16 } from 'snarkjs'
 
 
 async function exportCallDataGroth16(input, wasmPath, zkeyPath) {
@@ -37,7 +37,11 @@ async function verify(verificationPath, publicSignals, proof) {
   return res
 }
 
-module.exports = {
+const exported = {
   exportCallDataGroth16,
   verify
 }
+
+
+export default exported
+// module.exports = exported

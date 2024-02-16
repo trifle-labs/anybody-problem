@@ -160,8 +160,8 @@ contract Problems is ERC721, Ownable {
     }
 
     function generateSeed(uint256 tokenId) internal view returns (bytes32) {
-        // TODO: add back blockhash
-        return keccak256(abi.encodePacked(tokenId)); //, blockhash(block.number - 1)));
+        return
+            keccak256(abi.encodePacked(tokenId, blockhash(block.number - 1)));
     }
 
     function mint() public payable {

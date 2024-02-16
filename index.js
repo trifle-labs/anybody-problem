@@ -1,25 +1,31 @@
 
-const ProblemsABI = require('./contractData/ABI-80085-Problems.json')
-const Problems = require('./contractData/80085-Problems.json')
-const ProblemsLocal = require('./contractData/12345-Problems.json')
 
-const BodiesABI = require('./contractData/ABI-80085-Bodies.json')
-const Bodies = require('./contractData/80085-Bodies.json')
-const BodiesLocal = require('./contractData/12345-Bodies.json')
+import ProblemsABI from './contractData/ABI-80085-Problems.json'
+import Problems from './contractData/80085-Problems.json'
+import ProblemsLocal from './contractData/12345-Problems.json'
 
-const SolverABI = require('./contractData/ABI-80085-Solver.json')
-const Solver = require('./contractData/80085-Solver.json')
-const SolverLocal = require('./contractData/12345-Solver.json')
+import BodiesABI from './contractData/ABI-80085-Bodies.json'
+import Bodies from './contractData/80085-Bodies.json'
+import BodiesLocal from './contractData/12345-Bodies.json'
 
-const TocksABI = require('./contractData/ABI-80085-Tocks.json')
-const Tocks = require('./contractData/80085-Tocks.json')
-const TocksLocal = require('./contractData/12345-Tocks.json')
+import SolverABI from './contractData/ABI-80085-Solver.json'
+import Solver from './contractData/80085-Solver.json'
+import SolverLocal from './contractData/12345-Solver.json'
 
-const Anybody = require('./src/anybody.js')
-const circuits = require('./scripts/circuits')
+import TocksABI from './contractData/ABI-80085-Tocks.json'
+import Tocks from './contractData/80085-Tocks.json'
+import TocksLocal from './contractData/12345-Tocks.json'
+
+import MetadataABI from './contractData/ABI-80085-Metadata.json'
+import Metadata from './contractData/80085-Metadata.json'
+import MetadataLocal from './contractData/12345-Metadata.json'
+
+import Anybody from './src/anybody.js'
+import circuits from './scripts/circuits'
 // const utils = require('./scripts/utils')
 
-module.exports = {
+
+const exported = {
   circuits,
   // utils,
   Anybody,
@@ -51,4 +57,13 @@ module.exports = {
       '12345': TocksLocal
     },
   },
+  Metadata: {
+    abi: MetadataABI,
+    networks: {
+      '80085': Metadata,
+      '12345': MetadataLocal
+    },
+  },
 }
+export default exported
+// module.exports = exported
