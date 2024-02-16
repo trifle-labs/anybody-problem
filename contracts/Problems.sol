@@ -13,7 +13,7 @@ import "hardhat/console.sol";
 contract Problems is ERC721, Ownable {
     bool public paused;
     // TODO: update with actual start date
-    uint256 public startDate = 4070908800; // Thu Jan 01 2099 00:00:00 GMT+0000 (___ CEST Berlin, ___ London, ___ NYC, ___ LA)
+    uint256 public startDate = 0; //4070908800; // Thu Jan 01 2099 00:00:00 GMT+0000 (___ CEST Berlin, ___ London, ___ NYC, ___ LA)
 
     uint256 public problemSupply;
 

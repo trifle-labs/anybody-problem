@@ -62,10 +62,11 @@ const config = {
   },
   networks: {
     hardhat: {
+      accounts: { mnemonic: process.env.deploymentKey },
       gasPrice: 10_000_000_000,
       blockGasLimit: 30_000_000,
       chainId: 12345,
-      // loggingEnabled: false
+      loggingEnabled: true
     },
     formatest: {
       // url: 'https://sepolia.infura.io/v3/' + process.env.INFURA_API_KEY,
