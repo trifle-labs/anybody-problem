@@ -1,9 +1,7 @@
 const Prando = require('prando').default
 const EventEmitter = require('events')
-
-// eslint-disable-next-line no-unused-vars
-// window.p5 = require('p5')
-// window.p5sound = require('p5/lib/addons/p5.sound')
+window.p5 = require('p5')
+require('p5/lib/addons/p5.sound')
 
 const eyeArray = ['≖', '✿', 'ಠ', '◉', '۞', '◉', 'ಡ', '˘', '❛', '⊚', '✖', 'ᓀ', '◔', 'ಠ', '⊡', '◑', '■', '↑', '༎', 'ಥ', 'ཀ', '╥', '☯']
 const mouthArray = ['益', '﹏', '෴', 'ᗜ', 'ω']//'_', '‿', '‿‿', '‿‿‿', '‿‿‿‿', '‿‿‿‿‿', '‿‿‿‿‿‿', '‿‿‿‿‿‿‿', '‿‿‿‿‿‿‿‿', '‿‿‿‿‿‿‿‿‿']
@@ -30,7 +28,7 @@ class Anybody extends EventEmitter {
       preRun: 0,
       paintSteps: 0,
       chunk: 1,
-      mute: true,
+      mute: false,
       freeze: false,
       stopEvery: 0,
       util: false,
@@ -139,6 +137,7 @@ class Anybody extends EventEmitter {
 
   audio() {
     if (this.mute) return
+
     // tone
     this.envelopes = []
     this.oscillators = []
@@ -660,7 +659,6 @@ class Anybody extends EventEmitter {
     this.drawBodyTrails()
     this.drawBodies()
 
-
     if (this.mode == 'game') {
       this.drawMissiles()
       this.drawExplosions()
@@ -878,7 +876,8 @@ class Anybody extends EventEmitter {
   }
 
   playSounds() {
-    if (this.mute) return
+    if (this.mute || this.paused) return
+    this.p.userStartAudio()
     for (let i = 0; i < this.bodies.length; i++) {
       const body = this.bodies[i]
       const speed = body.velocity.mag()
@@ -887,7 +886,7 @@ class Anybody extends EventEmitter {
       const amp = this.p.map(speed, 0, 5, 100, 200)
       this.oscillators[i].amp(amp)
       this.oscillators[i].freq(freq)
-      this.envelopes[i].volume(freq)
+      // this.envelopes[i].volume(freq)
       this.envelopes[i].play()
 
       this.envelopes[i].play(this.noises[i])
@@ -987,6 +986,7 @@ class Anybody extends EventEmitter {
 
 
   paintAtOnce(n = this.paintSteps) {
+    console.log('paint at once')
     if (!this.bodiesGraphic) {
       this.bodiesGraphic = this.p.createGraphics(this.windowWidth, this.windowHeight)
     }
@@ -1588,8 +1588,11 @@ class Anybody extends EventEmitter {
 
   prepareP5() {
     this.p.frameRate(60)
-    this.p.createCanvas(this.windowWidth, this.windowWidth)
+    let cnv = this.p.createCanvas(this.windowWidth, this.windowWidth)
     this.p.background('white')
+
+    // browsers require user to interact before sounds can start
+    cnv.mousePressed(this.playSounds.bind(this))
   }
 
   missileClick(e) {
