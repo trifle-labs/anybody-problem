@@ -6,6 +6,13 @@ require('p5/lib/addons/p5.sound')
 const eyeArray = ['≖', '✿', 'ಠ', '◉', '۞', '◉', 'ಡ', '˘', '❛', '⊚', '✖', 'ᓀ', '◔', 'ಠ', '⊡', '◑', '■', '↑', '༎', 'ಥ', 'ཀ', '╥', '☯']
 const mouthArray = ['益', '﹏', '෴', 'ᗜ', 'ω']//'_', '‿', '‿‿', '‿‿‿', '‿‿‿‿', '‿‿‿‿‿', '‿‿‿‿‿‿', '‿‿‿‿‿‿‿', '‿‿‿‿‿‿‿‿', '‿‿‿‿‿‿‿‿‿']
 
+// const noteArray = ['C#4', 'D#4', 'F4', 'F#4', 'G#4', 'A#4']
+const sounds = [
+  { amp: 1, wave: 'sine', notes: ['C#4', 'D#4', 'F4', 'F#4', 'G#4', 'A#4'] },
+  { amp: 1, wave: 'sine' },
+  { amp: 0.5, wave: 'square' },
+]
+
 class Anybody extends EventEmitter {
   constructor(p, options = {}) {
     super()
@@ -142,15 +149,23 @@ class Anybody extends EventEmitter {
     this.envelopes = []
     this.oscillators = []
     this.noises = []
+    this.monosynths = []
     for (let i = 0; i < this.bodies.length; i++) {
-      this.noises[i] = new window.p5.Noise('pink')
+      this.monosynths[i] = new window.p5.MonoSynth()
+      this.monosynths[i].setADSR(0.1, .1, 0.1, 0.1)
+
+      this.noises[i] = new window.p5.Noise('white')
+      this.noises[i].amp = 0.005
       // this.noises[i].start()
 
       this.envelopes[i] = new window.p5.Envelope()
       this.envelopes[i].setADSR(0.1, .1, .1, .1)
       this.envelopes[i].setRange(1, 0)
-      this.oscillators[i] = new window.p5.Oscillator('sine')
-      this.oscillators[i].amp(this.envelopes[i])
+
+      const { amp, wave } = sounds[i % sounds.length]
+      this.oscillators[i] = new window.p5.Oscillator(wave)
+      this.oscillators[i].amp(amp)
+      // this.oscillators[i].amp(this.envelopes[i])
       this.oscillators[i].start()
     }
   }
@@ -876,21 +891,21 @@ class Anybody extends EventEmitter {
   }
 
   playSounds() {
-    if (this.mute || this.paused) return
+    if (this.mute) return
     this.p.userStartAudio()
     for (let i = 0; i < this.bodies.length; i++) {
       const body = this.bodies[i]
       const speed = body.velocity.mag()
       // const mass = body.radius
-      const freq = this.p.map(speed, 0, 5, 100, 300)
-      const amp = this.p.map(speed, 0, 5, 100, 200)
+      const freq = this.p.map(body.position.x, 0, this.p.windowWidth, 40, 300)
+      const amp = this.p.map(speed, 0, 5, 0.3, 0.8)
       this.oscillators[i].amp(amp)
       this.oscillators[i].freq(freq)
-      // this.envelopes[i].volume(freq)
-      this.envelopes[i].play()
+      this.envelopes[i].releaseTime = freq
+      // this.envelopes[i].play()
 
-      this.envelopes[i].play(this.noises[i])
-      // this.noises[i].pan(this.p.map(speed, 0, this.vectorLimit, -1, 1))
+      // this.envelopes[i].play(this.noises[i])
+      this.oscillators[i].pan(this.p.map(body.position.x, 0, this.p.windowHeight, -1, 1))
       // this.noises[i].amp(this.p.map(speed, 0, this.vectorLimit + 100, 0, 10))
     }
   }
