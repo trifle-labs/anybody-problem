@@ -77,7 +77,7 @@ class Anybody extends EventEmitter {
     this.clearValues()
     this.init()
     !this.util && this.start()
-    !this.util && this.audio()
+    !this.util && this.initAudio()
   }
 
   // run whenever the class should be reset
@@ -142,7 +142,7 @@ class Anybody extends EventEmitter {
     // console.dir({ bodyInits: this.bodyInits }, { depth: null })
   }
 
-  audio() {
+  initAudio() {
     if (this.mute) return
 
     // tone
