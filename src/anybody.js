@@ -8,7 +8,7 @@ const EventEmitter = require('events')
 const eyeArray = ['≖', '✿', 'ಠ', '◉', '۞', '◉', 'ಡ', '˘', '❛', '⊚', '✖', 'ᓀ', '◔', 'ಠ', '⊡', '◑', '■', '↑', '༎', 'ಥ', 'ཀ', '╥', '☯']
 const mouthArray = ['益', '﹏', '෴', 'ᗜ', 'ω']//'_', '‿', '‿‿', '‿‿‿', '‿‿‿‿', '‿‿‿‿‿', '‿‿‿‿‿‿', '‿‿‿‿‿‿‿', '‿‿‿‿‿‿‿‿', '‿‿‿‿‿‿‿‿‿']
 
-class Anybody extends EventEmitter {
+export class Anybody extends EventEmitter {
   constructor(p, options = {}) {
     super()
     const defaultOptions = {
@@ -1678,33 +1678,51 @@ class Anybody extends EventEmitter {
 //   }
 // }
 
-(function (root, factory) {
-  if (typeof module === 'object' && module.exports) {
-    // Node.js environment
-    module.exports = factory()
-  } else if (typeof define === 'function' && define.amd) {
-    // AMD module
-    define(factory)
-  } else {
-    // Browser environment
-    root.AnybodyUtils = factory()
-  }
-}(typeof self !== 'undefined' ? self : this, function () {
-  return {
-    Anybody,
-    utils: {
-      _smolr,
-      _convertBigIntToModP,
-      _approxDist,
-      _approxSqrt,
-      _approxDiv,
-      _calculateTime,
-      _explosion,
-      _addVectors,
-      _validateSeed,
-    }
-  }
-}))
+// (function (root, factory) {
+//   if (typeof module === 'object' && module.exports) {
+//     // Node.js environment
+//     module.exports = factory()
+//   } else if (typeof define === 'function' && define.amd) {
+//     // AMD module
+//     define(factory)
+//   } else {
+//     // Browser environment
+//     root.AnybodyUtils = factory()
+//   }
+// }(typeof self !== 'undefined' ? self : this, function () {
+//   return {
+//     Anybody,
+//     utils: {
+//       _smolr,
+//       _convertBigIntToModP,
+//       _approxDist,
+//       _approxSqrt,
+//       _approxDiv,
+//       _calculateTime,
+//       _explosion,
+//       _addVectors,
+//       _validateSeed,
+//     }
+//   }
+// }))
+
+export const utils = {
+  _smolr,
+  _convertBigIntToModP,
+  _approxDist,
+  _approxSqrt,
+  _approxDiv,
+  _calculateTime,
+  _explosion,
+  _addVectors,
+  _validateSeed,
+
+}
+
+export default {
+  Anybody,
+  utils
+}
 
 // ------
 /// functional utils
