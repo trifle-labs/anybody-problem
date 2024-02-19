@@ -10,7 +10,7 @@ const cSharpMaj = [61, 63, 65, 66, 68, 70, 72]
 const sounds = [
   { amp: 0.8, wave: 'sine', notes: cSharpMaj },
   { amp: 0.9, wave: 'sine', notes: cSharpMaj.map(n => n - 12) },
-  { amp: 1, wave: 'sine', notes: cSharpMaj.slice(2, 4).map (n => n - 24) },
+  { amp: 1, wave: 'sine', notes: cSharpMaj.slice(2, 6).map (n => n - 24) },
 ]
 
 class Anybody extends EventEmitter {
