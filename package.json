@@ -1,80 +1,42 @@
 {
   "name": "anybody-problem",
   "version": "1.0.0",
+  "license": "CC-BY-NC-4.0",
+  "main": "index.js",
   "scripts": {
-    "serve": "vue-cli-service serve --inspect-brk",
-    "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint",
+    "build": "npx webpack --mode production",
+    "chain": "hardhat node",
     "circom": "./scripts/basic_circom.sh",
     "circom:dev": "hardhat circom --deterministic --debug --verbose",
     "circom:prod": "hardhat circom --verbose",
+    "dev": "npx webpack serve --mode development",
+    "postinstall": "npx webpack --mode production",
     "sol-test": "hardhat test test/problems.test.js test/bodies.test.js test/solver.test.js",
-    "test": "hardhat test",
-    "chain": "hardhat node"
+    "test": "hardhat test"
   },
-  "main": "index.js",
-  "dependencies": {
-    "base64-sol": "^1.1.0",
-    "core-js": "^3.8.3",
-    "p5": "^1.8.0",
-    "prando": "^6.0.1",
-    "vue": "^3.2.13",
-    "vuex": "^4.1.0"
-  },
-  "devDependencies": {
-    "@babel/core": "^7.12.16",
-    "@babel/eslint-parser": "^7.12.16",
-    "@nomicfoundation/hardhat-network-helpers": "^1.0.9",
-    "@nomiclabs/hardhat-ethers": "*",
-    "@nomiclabs/hardhat-etherscan": "^3.1.0",
-    "@nomiclabs/hardhat-ganache": "*",
-    "@nomiclabs/hardhat-waffle": "*",
-    "@openzeppelin/contracts": "^4.6.0",
-    "@vue/cli-plugin-babel": "~5.0.0",
-    "@vue/cli-plugin-eslint": "~5.0.0",
-    "@vue/cli-service": "~5.0.0",
-    "chai": "*",
-    "circomlib": "^2.0.3",
-    "circomlibjs": "^0.1.2",
-    "dotenv": "^16.0.1",
-    "eslint": "^7.32.0",
-    "eslint-plugin-vue": "^8.0.3",
-    "ethereum-waffle": "*",
-    "ethers": "^5.7.0",
-    "hardhat": "2.12.2",
-    "hardhat-circom": "git+ssh://git@github.com/okwme/hardhat-circom.git#514bf05c8aa1b5864484eb1e257c0df6053553f2",
-    "hardhat-contract-sizer": "*",
-    "hardhat-gas-reporter": "*",
-    "solidity-coverage": "^0.8.6"
-  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead",
+    "not ie 11"
+  ],
   "eslintConfig": {
-    "root": true,
     "env": {
-      "browser": true,
-      "node": true,
       "amd": true,
-      "es2020": true
+      "browser": true,
+      "es2020": true,
+      "node": true
     },
-    "extends": [
-      "plugin:vue/vue3-essential",
-      "eslint:recommended"
-    ],
     "parserOptions": {
-      "parser": "@babel/eslint-parser",
-      "ecmaVersion": 12,
-      "sourceType": "module",
       "ecmaFeatures": {
         "modules": true
-      }
+      },
+      "ecmaVersion": 12,
+      "parser": "@babel/eslint-parser",
+      "sourceType": "module"
     },
-    "globals": {
-      "it": "readonly",
-      "assert": "readonly",
-      "describe": "readonly",
-      "before": "readonly"
-    },
-    "ignorePatterns": [
-      "/docs/index.js"
+    "extends": [
+      "eslint:recommended"
     ],
     "rules": {
       "indent": [
@@ -96,18 +58,52 @@
         "error",
         "never"
       ]
-    }
+    },
+    "globals": {
+      "assert": "readonly",
+      "before": "readonly",
+      "describe": "readonly",
+      "it": "readonly"
+    },
+    "ignorePatterns": [
+      "/docs/index.js"
+    ],
+    "root": true
   },
-  "browserslist": [
-    "> 1%",
-    "last 2 versions",
-    "not dead",
-    "not ie 11"
-  ],
-  "_id": "anybody-problem@1.0.0",
+  "dependencies": {
+    "@babel/eslint-parser": "^7.12.16",
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.9",
+    "@nomiclabs/hardhat-ethers": "*",
+    "@nomiclabs/hardhat-etherscan": "^3.1.0",
+    "@nomiclabs/hardhat-ganache": "*",
+    "@nomiclabs/hardhat-waffle": "*",
+    "@openzeppelin/contracts": "^4.6.0",
+    "base64-sol": "^1.1.0",
+    "chai": "*",
+    "circomlib": "^2.0.3",
+    "circomlibjs": "^0.1.2",
+    "copy-webpack-plugin": "^11.0.0",
+    "dotenv": "^16.0.1",
+    "eslint": "^7.32.0",
+    "ethereum-waffle": "*",
+    "ethers": "^5.7.0",
+    "hardhat": "2.12.2",
+    "hardhat-circom": "git+ssh://git@github.com/okwme/hardhat-circom.git#514bf05c8aa1b5864484eb1e257c0df6053553f2",
+    "hardhat-contract-sizer": "*",
+    "hardhat-gas-reporter": "*",
+    "html-webpack-plugin": "^5.5.0",
+    "p5": "^1.8.0",
+    "prando": "^6.0.1",
+    "solidity-coverage": "^0.8.6",
+    "url-loader": "^4.1.1",
+    "webpack": "^5.79.0",
+    "webpack-cli": "^5.0.1",
+    "webpack-dev-server": "^4.13.1"
+  },
+  "devDependencies": {},
   "engines": {
     "node": ">=16"
   },
-  "license": "CC-BY-NC-4.0",
-  "readme": "ERROR: No README data found!"
+  "readme": "ERROR: No README data found!",
+  "_id": "anybody-problem@1.0.0"
 }

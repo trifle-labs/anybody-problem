@@ -1,0 +1,81 @@
+<html>
+
+<head>
+  <title>
+    <%= compilation.options.plugins.find(plugin => plugin.constructor.name === 'HtmlWebpackPlugin').options.title  %>
+  </title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <meta name="description" content="<%= compilation.options.plugins.find(plugin => plugin.constructor.name === 'HtmlWebpackPlugin').options.metaDesc %>  " />
+  <head>
+    <title>
+      <%= compilation.options.plugins.find(plugin => plugin.constructor.name === 'HtmlWebpackPlugin').options.title %>
+    </title>
+      <style>
+      .pointer{cursor: pointer;margin: 10px;}
+       html, body, * {margin: 0px;padding: 0px;}
+       * {
+        font-family: 'Comic Sans MS', 'Comic Sans', cursive;
+        font-size: 24pt;
+       }
+       div {
+        margin:10px;
+        padding:10px;
+       }
+       button {
+        padding:5px 15px;
+        border-radius: 25px;
+       }
+       /* #sketch-holder {
+        position: absolute;
+        left:0px;
+        top:0px;
+        width:100vw;
+        height:100vh;
+       }
+       #sketch-holder canvas {
+          pointer-events: none;
+
+       }
+       #control {
+        position:absolute;
+        left:0px;
+        top:0px;
+        z-index:100;
+       } */
+       /* body {
+        background-color: red;
+       } */
+      </style>
+
+      <script  src="./p5.js"></script>
+      <%= "<script>" + compilation.assets["anybody.js"].source() + "</script>" %>
+
+
+    </head>
+
+<body>
+  <div id="sketch-holder"></div>
+ 
+  <script>
+    let anybody
+    var stop = false
+    var s = function(p) {
+      p.preload = async () => {
+      }
+      p.setup = async () => {
+        console.log({Anybody})
+        anybody = new Anybody(p, {
+          mode: "nft"
+        })
+      }
+      p.draw = async () => {
+        if (stop) return
+        anybody.draw()
+      }
+    }
+    new p5(s)
+  </script>
+</body>
+
+</html>

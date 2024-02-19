@@ -1,5 +1,5 @@
-import Prando from 'prando'
-import { default as EventEmitter } from 'events'
+const Prando = require('prando').default
+const EventEmitter = require('events')
 
 // eslint-disable-next-line no-unused-vars
 // window.p5 = require('p5')
@@ -1678,48 +1678,31 @@ class Anybody extends EventEmitter {
 //   }
 // }
 
-// (function (root, factory) {
-//   if (typeof module === 'object' && module.exports) {
-//     // Node.js environment
-//     module.exports = factory()
-//   } else if (typeof define === 'function' && define.amd) {
-//     // AMD module
-//     define(factory)
-//   } else {
-//     // Browser environment
-//     root.AnybodyUtils = factory()
-//   }
-// }(typeof self !== 'undefined' ? self : this, function () {
-//   return {
-//     Anybody,
-//     _smolr,
-//     _convertBigIntToModP,
-//     _approxDist,
-//     _approxSqrt,
-//     _approxDiv,
-//     _calculateTime,
-//     _explosion,
-//     _addVectors,
-//     _validateSeed,
-//   }
-// }))
-
-const exported = {
-  Anybody,
-  _smolr,
-  _convertBigIntToModP,
-  _approxDist,
-  _approxSqrt,
-  _approxDiv,
-  _calculateTime,
-  _explosion,
-  _addVectors,
-  _validateSeed,
-}
-
-
-// module.exports = exported
-export default exported
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) {
+    // Node.js environment
+    module.exports = factory()
+  } else if (typeof define === 'function' && define.amd) {
+    // AMD module
+    define(factory)
+  } else {
+    // Browser environment
+    root.AnybodyUtils = factory()
+  }
+}(typeof self !== 'undefined' ? self : this, function () {
+  return {
+    Anybody,
+    _smolr,
+    _convertBigIntToModP,
+    _approxDist,
+    _approxSqrt,
+    _approxDiv,
+    _calculateTime,
+    _explosion,
+    _addVectors,
+    _validateSeed,
+  }
+}))
 
 // ------
 /// functional utils
