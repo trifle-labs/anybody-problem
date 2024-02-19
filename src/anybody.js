@@ -6,11 +6,11 @@ require('p5/lib/addons/p5.sound')
 const eyeArray = ['≖', '✿', 'ಠ', '◉', '۞', '◉', 'ಡ', '˘', '❛', '⊚', '✖', 'ᓀ', '◔', 'ಠ', '⊡', '◑', '■', '↑', '༎', 'ಥ', 'ཀ', '╥', '☯']
 const mouthArray = ['益', '﹏', '෴', 'ᗜ', 'ω']//'_', '‿', '‿‿', '‿‿‿', '‿‿‿‿', '‿‿‿‿‿', '‿‿‿‿‿‿', '‿‿‿‿‿‿‿', '‿‿‿‿‿‿‿‿', '‿‿‿‿‿‿‿‿‿']
 
-// const noteArray = ['C#4', 'D#4', 'F4', 'F#4', 'G#4', 'A#4']
+const cSharpMaj = [61, 63, 65, 66, 68, 70, 72]
 const sounds = [
-  { amp: 1, wave: 'sine', notes: ['C#4', 'D#4', 'F4', 'F#4', 'G#4', 'A#4'] },
-  { amp: 1, wave: 'sine' },
-  { amp: 0.5, wave: 'square' },
+  { amp: 0.8, wave: 'sine', notes: cSharpMaj },
+  { amp: 0.9, wave: 'sine', notes: cSharpMaj.map(n => n - 12) },
+  { amp: 1, wave: 'sine', notes: cSharpMaj.slice(2, 4).map (n => n - 24) },
 ]
 
 class Anybody extends EventEmitter {
@@ -677,6 +677,10 @@ class Anybody extends EventEmitter {
     this.frames++
     if (this.frames % 100 == 0) {
       // console.log({ bodies })
+      // rotate notes for each sound
+      sounds.forEach((sound) => {
+        sound.notes.reverse()
+      })
     }
     this.p.noFill()
 
@@ -913,9 +917,11 @@ class Anybody extends EventEmitter {
       const body = this.bodies[i]
       const speed = body.velocity.mag()
       // const mass = body.radius
-      const freq = this.p.map(body.position.x, 0, this.p.windowWidth, 40, 300)
-      const amp = this.p.map(speed, 0, 5, 0.3, 0.8)
-      this.oscillators[i].amp(amp)
+      const { notes, amp} = sounds[i % sounds.length]
+      const midiNote = this.p.map(body.position.x, 0, this.p.windowWidth, 0, notes.length - 1, true)
+      const freq = this.p.midiToFreq(notes[Math.floor(midiNote)])
+      const ampBase = this.p.map(speed, 0, 5, 0.3, 0.8)
+      this.oscillators[i].amp(amp * ampBase)
       this.oscillators[i].freq(freq)
       this.envelopes[i].releaseTime = freq
       // this.envelopes[i].play()
