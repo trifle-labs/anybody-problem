@@ -8,9 +8,9 @@ const mouthArray = ['益', '﹏', '෴', 'ᗜ', 'ω']//'_', '‿', '‿‿', '�
 
 const cSharpMaj = [61, 63, 65, 66, 68, 70, 72]
 const sounds = [
-  { amp: 0.8, wave: 'sine', notes: cSharpMaj },
-  { amp: 0.9, wave: 'sine', notes: cSharpMaj.map(n => n - 12) },
-  { amp: 1, wave: 'sine', notes: cSharpMaj.slice(2, 6).map (n => n - 24) },
+  { amp: 0.2, wave: 'saw', notes: cSharpMaj.map(n => n + 12) },
+  { amp: 0.9, wave: 'sine', notes: cSharpMaj.map(n => n) },
+  { amp: 1, wave: 'sine', notes: cSharpMaj.slice(2, 6).map (n => n - 12) },
 ]
 
 class Anybody extends EventEmitter {
@@ -151,17 +151,18 @@ class Anybody extends EventEmitter {
 
   mute() {
     this.muted = true
-    this.oscillators.forEach(o => o.stop())
+    this.oscillators.forEach(o => o.dispose())
   }
 
   unmute() {
     this.muted = false
+    this.p.userStartAudio()
     this.initAudio()
   }
 
   initAudio() {
     // tone
-    this.envelopes = []
+    // this.envelopes = []
     this.oscillators = []
     this.noises = []
     this.monosynths = []
@@ -173,9 +174,9 @@ class Anybody extends EventEmitter {
       this.noises[i].amp = 0.005
       // this.noises[i].start()
 
-      this.envelopes[i] = new window.p5.Envelope()
-      this.envelopes[i].setADSR(0.1, .1, .1, .1)
-      this.envelopes[i].setRange(1, 0)
+      // this.envelopes[i] = new window.p5.Envelope()
+      // this.envelopes[i].setADSR(0, 0, .1, .01)
+      // this.envelopes[i].setRange(1, 0)
 
       const { amp, wave } = sounds[i % sounds.length]
       this.oscillators[i] = new window.p5.Oscillator(wave)
@@ -912,18 +913,17 @@ class Anybody extends EventEmitter {
 
   playSounds() {
     if (this.muted) return
-    this.p.userStartAudio()
     for (let i = 0; i < this.bodies.length; i++) {
       const body = this.bodies[i]
       const speed = body.velocity.mag()
       // const mass = body.radius
-      const { notes, amp} = sounds[i % sounds.length]
+      const { notes, amp } = sounds[i % sounds.length]
       const midiNote = this.p.map(body.position.x, 0, this.p.windowWidth, 0, notes.length - 1, true)
       const freq = this.p.midiToFreq(notes[Math.floor(midiNote)])
-      const ampBase = this.p.map(speed, 0, 5, 0.3, 0.8)
+      const ampBase = this.p.map(speed, 0, 10, 0.1, 0.5, true)
       this.oscillators[i].amp(amp * ampBase)
       this.oscillators[i].freq(freq)
-      this.envelopes[i].releaseTime = freq
+      // this.envelopes[i].releaseTime = freq
       // this.envelopes[i].play()
 
       // this.envelopes[i].play(this.noises[i])
