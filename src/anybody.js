@@ -1692,15 +1692,17 @@ class Anybody extends EventEmitter {
 }(typeof self !== 'undefined' ? self : this, function () {
   return {
     Anybody,
-    _smolr,
-    _convertBigIntToModP,
-    _approxDist,
-    _approxSqrt,
-    _approxDiv,
-    _calculateTime,
-    _explosion,
-    _addVectors,
-    _validateSeed,
+    utils: {
+      _smolr,
+      _convertBigIntToModP,
+      _approxDist,
+      _approxSqrt,
+      _approxDiv,
+      _calculateTime,
+      _explosion,
+      _addVectors,
+      _validateSeed,
+    }
   }
 }))
 

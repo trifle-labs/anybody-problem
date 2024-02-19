@@ -6,19 +6,24 @@ const path = require('path')
 
 module.exports = {
   mode: 'production',
-  entry: {
-    anybody: [path.resolve(__dirname, 'src', 'anybody.js')],
-  },
+  entry: './src/index.js',
   externals: {
     'fs': 'fs',
     'window': 'window'
   },
   output: {
+    path: path.resolve(__dirname, 'dist'),
+    filename: 'anybody-problem.js',
+    library: {
+      name: 'anybody-problem',
+      type: 'umd',
+    },
+    libraryExport: 'default', // This option is often used to select which part of your module to export if it's not the entire module.
+    // library: 'anybody-problem',
+    // libraryTarget: 'umd',
+    globalObject: 'this',
     publicPath: '',
     clean: true,
-    libraryTarget: 'umd',
-    globalObject: 'this',
-    path: path.resolve(__dirname, 'dist')
   },
   devServer: {
     // static: path.resolve(__dirname, "dist"),
@@ -50,24 +55,24 @@ module.exports = {
         }
       },
     }),
-    new HtmlWebpackPlugin({
-      hash: true,
-      title: 'Anybody Problem',
-      metaDesc: 'Anybody Problem',
-      template: path.resolve(__dirname, 'src/dev.ejs'),
-      filename: 'dev.html',
-      inject: false,
-      minify: false,
-    }),
-    new HtmlWebpackPlugin({
-      hash: true,
-      title: 'Anybody Problem',
-      metaDesc: 'Anybody Problem',
-      template: path.resolve(__dirname, 'src/grid.ejs'),
-      filename: 'grid.html',
-      inject: false,
-      minify: false,
-    }),
+    // new HtmlWebpackPlugin({
+    //   hash: true,
+    //   title: 'Anybody Problem',
+    //   metaDesc: 'Anybody Problem',
+    //   template: path.resolve(__dirname, 'src/dev.ejs'),
+    //   filename: 'dev.html',
+    //   inject: false,
+    //   minify: false,
+    // }),
+    // new HtmlWebpackPlugin({
+    //   hash: true,
+    //   title: 'Anybody Problem',
+    //   metaDesc: 'Anybody Problem',
+    //   template: path.resolve(__dirname, 'src/grid.ejs'),
+    //   filename: 'grid.html',
+    //   inject: false,
+    //   minify: false,
+    // }),
 
     new CopyWebpackPlugin({
       patterns: [
@@ -75,8 +80,25 @@ module.exports = {
       ]
     })
   ],
+  resolve: {
+    extensions: ['.js', '.json'], // Automatically resolve certain extensions
+  },
   module: {
     rules: [
+      {
+        test: /\.js$/, // Transpile .js files with Babel
+        exclude: /node_modules/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: ['@babel/preset-env'],
+          },
+        },
+      },
+      {
+        test: /\.json$/, // Allows importing JSON files directly
+        type: 'json',
+      },
       {
         test: /\.(png|jpg|jpeg|gif|svg|ttf)$/i,
         use: [
