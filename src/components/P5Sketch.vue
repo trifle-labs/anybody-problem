@@ -172,9 +172,9 @@ export default {
             totalBodies: 3,
             mode: 'nft',
             // freeze: true,
-            stopEvery: steps,//487,
+            stopEvery: 0,//steps,//487,
             optimistic: true,
-            seed: 1n,
+            // seed: 1n,
             // inputData: [
             //   [ '616000', '599000', '10000', '10000', '13000' ],
             //   [ '257000', '602000', '10000', '10000', '12000' ],

@@ -680,10 +680,14 @@ class Anybody extends EventEmitter {
     if (this.frames % 100 == 0) {
       // console.log({ bodies })
       // rotate notes for each sound
-      sounds.forEach((sound) => {
-        sound.notes.reverse()
-      })
-      this.monosynths[0]?.play(cSharpMaj[this.frames % cSharpMaj.length], 1, 0, 0.1)
+      try {
+        sounds.forEach((sound) => {
+          sound.notes.reverse()
+        })
+        this.monosynths[0]?.play(cSharpMaj[this.frames % cSharpMaj.length], 1, 0, 0.1)
+      } catch (e) {
+        console.log('sound still not enabled')
+      }
     }
     this.p.noFill()
 
