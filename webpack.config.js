@@ -11,13 +11,21 @@ module.exports = {
     'fs': 'fs',
     'window': 'window'
   },
+  experiments: {
+    outputModule: true,
+  },
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: 'anybody-problem.js',
+    // library: {
+    //   name: 'anybody-problem',
+    //   type: 'umd',
+    // },
     library: {
       name: 'anybody-problem',
-      type: 'umd',
+      type: 'module',
     },
+    libraryTarget: 'module', // For Webpack 5
     libraryExport: 'default', // This option is often used to select which part of your module to export if it's not the entire module.
     // library: 'anybody-problem',
     // libraryTarget: 'umd',

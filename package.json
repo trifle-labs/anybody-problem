@@ -3,8 +3,12 @@
   "version": "1.0.0",
   "license": "CC-BY-NC-4.0",
   "main": "dist/anybody-problem.js",
+
+  "files": [
+    "dist/**/*"
+  ],
   "scripts": {
-    "build": "npx webpack --mode production",
+    "build": "npx webpack --mode development",
     "chain": "hardhat node",
     "circom": "./scripts/basic_circom.sh",
     "circom:dev": "hardhat circom --deterministic --debug --verbose",
