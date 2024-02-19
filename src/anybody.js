@@ -9,8 +9,10 @@ const mouthArray = ['益', '﹏', '෴', 'ᗜ', 'ω']//'_', '‿', '‿‿', '�
 const cSharpMaj = [61, 63, 65, 66, 68, 70, 72]
 const sounds = [
   { amp: 0.2, wave: 'saw', notes: cSharpMaj.map(n => n + 12) },
-  { amp: 0.9, wave: 'sine', notes: cSharpMaj.map(n => n) },
+  { amp: 0.9, wave: 'sine', notes: cSharpMaj.map(n => n).reverse() },
   { amp: 1, wave: 'sine', notes: cSharpMaj.slice(2, 6).map (n => n - 12) },
+  { amp: 0.1, wave: 'saw', notes: cSharpMaj.map(n => n + 24) },
+  { amp: 1, wave: 'sine', notes: cSharpMaj.slice(0, 2).map (n => n - 24) },
 ]
 
 class Anybody extends EventEmitter {
@@ -165,20 +167,19 @@ class Anybody extends EventEmitter {
     // this.envelopes = []
     this.oscillators = []
     this.noises = []
-    this.monosynths = []
+    this.monosynths = [new window.p5.MonoSynth()]
+    this.monosynths[0].setADSR(0.1, .1, 0.1, 0.1)
+    const shuffled = this.p.shuffle(sounds)
     for (let i = 0; i < this.bodies.length; i++) {
-      this.monosynths[i] = new window.p5.MonoSynth()
-      this.monosynths[i].setADSR(0.1, .1, 0.1, 0.1)
-
-      this.noises[i] = new window.p5.Noise('white')
-      this.noises[i].amp = 0.005
+      // this.noises[i] = new window.p5.Noise('white')
+      // this.noises[i].amp = 0.005
       // this.noises[i].start()
 
       // this.envelopes[i] = new window.p5.Envelope()
       // this.envelopes[i].setADSR(0, 0, .1, .01)
       // this.envelopes[i].setRange(1, 0)
 
-      const { amp, wave } = sounds[i % sounds.length]
+      const { amp, wave } = shuffled[i % sounds.length]
       this.oscillators[i] = new window.p5.Oscillator(wave)
       this.oscillators[i].amp(amp)
       // this.oscillators[i].amp(this.envelopes[i])
@@ -682,6 +683,7 @@ class Anybody extends EventEmitter {
       sounds.forEach((sound) => {
         sound.notes.reverse()
       })
+      this.monosynths[0]?.play(cSharpMaj[this.frames % cSharpMaj.length], 1, 0, 0.1)
     }
     this.p.noFill()
 
