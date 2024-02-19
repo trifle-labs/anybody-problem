@@ -35,7 +35,7 @@ class Anybody extends EventEmitter {
       preRun: 0,
       paintSteps: 0,
       chunk: 1,
-      mute: false,
+      muted: true,
       freeze: false,
       stopEvery: 0,
       util: false,
@@ -63,7 +63,7 @@ class Anybody extends EventEmitter {
     this.preRun = mergedOptions.preRun
     this.paintSteps = mergedOptions.paintSteps
     this.chunk = mergedOptions.chunk
-    this.mute = mergedOptions.mute
+    this.muted = mergedOptions.muted
     this.freeze = mergedOptions.freeze
     this.stopEvery = mergedOptions.stopEvery
     this.util = mergedOptions.util
@@ -77,7 +77,6 @@ class Anybody extends EventEmitter {
     this.clearValues()
     this.init()
     !this.util && this.start()
-    !this.util && this.initAudio()
   }
 
   // run whenever the class should be reset
@@ -142,9 +141,25 @@ class Anybody extends EventEmitter {
     // console.dir({ bodyInits: this.bodyInits }, { depth: null })
   }
 
-  initAudio() {
-    if (this.mute) return
+  toggleMute() {
+    if (this.muted) {
+      this.unmute()
+    } else {
+      this.mute()
+    }
+  }
 
+  mute() {
+    this.muted = true
+    this.oscillators.forEach(o => o.stop())
+  }
+
+  unmute() {
+    this.muted = false
+    this.initAudio()
+  }
+
+  initAudio() {
     // tone
     this.envelopes = []
     this.oscillators = []
@@ -223,6 +238,7 @@ class Anybody extends EventEmitter {
     this.justPaused = true
     if (newPauseState) {
       this.emit('paused', this.paused)
+      this.mute()
     }
   }
 
@@ -891,7 +907,7 @@ class Anybody extends EventEmitter {
   }
 
   playSounds() {
-    if (this.mute) return
+    if (this.muted) return
     this.p.userStartAudio()
     for (let i = 0; i < this.bodies.length; i++) {
       const body = this.bodies[i]
@@ -1607,7 +1623,7 @@ class Anybody extends EventEmitter {
     this.p.background('white')
 
     // browsers require user to interact before sounds can start
-    cnv.mousePressed(this.playSounds.bind(this))
+    cnv.mousePressed(this.toggleMute.bind(this))
   }
 
   missileClick(e) {
