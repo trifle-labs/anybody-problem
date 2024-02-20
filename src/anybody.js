@@ -927,7 +927,7 @@ class Anybody extends EventEmitter {
       const midiNote = this.p.map(body.position.x, 0, this.p.windowWidth, 0, notes.length - 1, true)
       const freq = this.p.midiToFreq(notes[Math.floor(midiNote)])
       const ampBase = this.p.map(speed, 0, 10, 0.1, 0.5, true)
-      this.oscillators[i].amp(amp * ampBase)
+      this.oscillators[i].amp(amp * ampBase / this.bodies.length)
       this.oscillators[i].freq(freq)
       // this.envelopes[i].releaseTime = freq
       // this.envelopes[i].play()
