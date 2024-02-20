@@ -1,7 +1,7 @@
 
 
 export { Anybody, utils } from './anybody.js'
-// import circuits from '../scripts/circuits'
+export * as circuits from '../scripts/circuits'
 // const utils = require('../scripts/utils')
 
 import ProblemsABI from '../contractData/ABI-80085-Problems.json'

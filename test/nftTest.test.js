@@ -9,7 +9,7 @@ import { expect } from 'chai'
 
 import hre from 'hardhat'
 const { ethers } = hre
-import { exportCallDataGroth16 } from '../scripts/circuits.cjs'
+import { exportCallDataGroth16 } from '../scripts/circuits.js'
 import { mine } from '@nomicfoundation/hardhat-network-helpers'
 
 // const hre = require('hardhat');

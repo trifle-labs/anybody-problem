@@ -3,7 +3,7 @@ import hre from 'hardhat'
 import path from 'node:path'
 import { promises as fs } from 'fs'
 import { Anybody } from '../src/anybody.js'
-import { exportCallDataGroth16 } from './circuits.cjs'
+import { exportCallDataGroth16 } from './circuits.js'
 
 const correctPrice = ethers.utils.parseEther('0.01')
 // TODO: change this to the splitter address
