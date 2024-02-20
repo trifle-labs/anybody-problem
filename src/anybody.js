@@ -176,9 +176,19 @@ class Anybody extends EventEmitter {
     // this.envelopes = []
     this.oscillators = []
     this.noises = []
+    const shuffled = this.p.shuffle(voices)
+    const compressor = new window.p5.Compressor()
+    compressor.attack(10)
+    compressor.knee(40)
+    compressor.ratio(12)
+    compressor.threshold(-18)
+    compressor.release(1)
+
     this.monosynth ||= new window.p5.MonoSynth()
     this.monosynth.setADSR(0.1, .1, 0.1, 0.1)
-    const shuffled = this.p.shuffle(voices)
+    this.monosynth.disconnect()
+    this.monosynth.connect(compressor)
+
     for (let i = 0; i < this.bodies.length; i++) {
       // this.noises[i] = new window.p5.Noise('white')
       // this.noises[i].amp = 0.005
@@ -194,6 +204,8 @@ class Anybody extends EventEmitter {
       this.oscillators[i].amp(0)
       this.oscillators[i].freq(0)
       // this.oscillators[i].amp(this.envelopes[i])
+      this.oscillators[i].disconnect() // only connect to compressor
+      this.oscillators[i].connect(compressor)
       this.oscillators[i].start()
     }
   }
