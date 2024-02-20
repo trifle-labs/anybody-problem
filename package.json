@@ -11,7 +11,6 @@
     "circom:dev": "hardhat circom --deterministic --debug --verbose",
     "circom:prod": "hardhat circom --verbose",
     "dev": "npx webpack serve --mode development",
-    "postinstall": "npx webpack --mode development",
     "sol-test": "hardhat test test/problems.test.js test/bodies.test.js test/solver.test.js",
     "test": "hardhat test"
   },
