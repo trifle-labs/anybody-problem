@@ -6,14 +6,23 @@ require('p5/lib/addons/p5.sound')
 const eyeArray = ['≖', '✿', 'ಠ', '◉', '۞', '◉', 'ಡ', '˘', '❛', '⊚', '✖', 'ᓀ', '◔', 'ಠ', '⊡', '◑', '■', '↑', '༎', 'ಥ', 'ཀ', '╥', '☯']
 const mouthArray = ['益', '﹏', '෴', 'ᗜ', 'ω']//'_', '‿', '‿‿', '‿‿‿', '‿‿‿‿', '‿‿‿‿‿', '‿‿‿‿‿‿', '‿‿‿‿‿‿‿', '‿‿‿‿‿‿‿‿', '‿‿‿‿‿‿‿‿‿']
 
+// sound
+// each body has a voice associated with it
+// each voice plays an arpeggio as it moves
+// the note played in the arpeggio is based on the body's speed
+// the arpeggios reverse every phraseLength frames
+// a bass note from the cSharpMaj scale plays every phraseLength frames
 const cSharpMaj = [61, 63, 65, 66, 68, 70, 72]
-const sounds = [
+const voices = [
+  { amp: 0.2, wave: 'sine', notes: cSharpMaj.map(n => n + 24).reverse() },
   { amp: 0.2, wave: 'saw', notes: cSharpMaj.map(n => n + 12) },
   { amp: 0.9, wave: 'sine', notes: cSharpMaj.map(n => n).reverse() },
   { amp: 1, wave: 'sine', notes: cSharpMaj.slice(2, 6).map (n => n - 12) },
   { amp: 0.1, wave: 'saw', notes: cSharpMaj.map(n => n + 24) },
   { amp: 1, wave: 'sine', notes: cSharpMaj.slice(0, 2).map (n => n - 24) },
 ]
+// it is nice to have tempo tied to frames because it makes the sound and visuals sync up
+const phraseLength = 80
 
 class Anybody extends EventEmitter {
   constructor(p, options = {}) {
@@ -169,7 +178,7 @@ class Anybody extends EventEmitter {
     this.noises = []
     this.monosynth ||= new window.p5.MonoSynth()
     this.monosynth.setADSR(0.1, .1, 0.1, 0.1)
-    const shuffled = this.p.shuffle(sounds)
+    const shuffled = this.p.shuffle(voices)
     for (let i = 0; i < this.bodies.length; i++) {
       // this.noises[i] = new window.p5.Noise('white')
       // this.noises[i].amp = 0.005
@@ -179,7 +188,7 @@ class Anybody extends EventEmitter {
       // this.envelopes[i].setADSR(0, 0, .1, .01)
       // this.envelopes[i].setRange(1, 0)
 
-      const { wave } = shuffled[i % sounds.length]
+      const { wave } = shuffled[i % voices.length]
       this.oscillators[i] = new window.p5.Oscillator(wave)
       // start quiet
       this.oscillators[i].amp(0)
@@ -681,11 +690,11 @@ class Anybody extends EventEmitter {
     this.frames++
 
     // kick + change notes at about 60bpm
-    if (this.frames % 60 == 0 && !this.muted && this.monosynth) {
+    if (this.frames % phraseLength == 0 && !this.muted && this.monosynth) {
       // console.log({ bodies })
       // rotate notes for each sound
-      for (const sound of sounds) {
-        sound.notes.reverse()
+      for (const voice of voices) {
+        voice.notes.reverse()
       }
       this.monosynth.play(cSharpMaj[this.frames % cSharpMaj.length], 1, 0, 0.1)
     }
@@ -923,7 +932,7 @@ class Anybody extends EventEmitter {
       const body = this.bodies[i]
       const speed = body.velocity.mag()
       // const mass = body.radius
-      const { notes, amp } = sounds[i % sounds.length]
+      const { notes, amp } = voices[i % voices.length]
       const midiNote = this.p.map(body.position.x, 0, this.p.windowWidth, 0, notes.length - 1, true)
       const freq = this.p.midiToFreq(notes[Math.floor(midiNote)])
       const ampBase = this.p.map(speed, 0, 10, 0.1, 0.5, true)
