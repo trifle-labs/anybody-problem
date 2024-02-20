@@ -1,8 +1,9 @@
 
-const { _validateSeed } = require('../src/anybody.js')
+import { utils } from '../src/anybody.js'
+const _validateSeed = utils._validateSeed
 // const { describe, it } = require('mocha')
 //jest
-const { expect } = require('chai')
+import { expect } from 'chai'
 
 describe('Utilities work as expected', () => {
   it('should only allow valid seeds', async () => {

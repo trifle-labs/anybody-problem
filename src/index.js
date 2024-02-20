@@ -1,9 +1,8 @@
 
 
-import { Anybody, utils } from './anybody.js'
+export { Anybody, utils } from './anybody.js'
 // import circuits from '../scripts/circuits'
 // const utils = require('../scripts/utils')
-
 
 import ProblemsABI from '../contractData/ABI-80085-Problems.json'
 import ProblemsForma from '../contractData/80085-Problems.json'
@@ -65,13 +64,13 @@ export const Metadata = {
   },
 }
 
-export default {
-  Anybody,
-  utils,
-  // circuits,
-  Problems,
-  Bodies,
-  Solver,
-  Tocks,
-  Metadata
-}
+// export default {
+//   Anybody,
+//   utils,
+//   // circuits,
+//   Problems,
+//   Bodies,
+//   Solver,
+//   Tocks,
+//   Metadata
+// }

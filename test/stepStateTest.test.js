@@ -1,14 +1,35 @@
 
 
-const hre = require('hardhat')
-const path = require('path')
-const fs = require('fs')
+// const hre = require('hardhat')
+// const path = require('path')
+// const fs = require('fs')
+// import fs from 'fs'
+// import path from 'path'
+// const {
+//   calculateTime,
+//   runComputationBigInt,
+//   convertScaledStringArrayToBody,
+//   convertScaledBigIntBodyToArray,
+// } = require('../docs/index.cjs')
+
+import hre from 'hardhat'
+import { join, dirname } from 'path'
+import { fileURLToPath } from 'url'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+
+// import { assert } from 'chai';
+// import { describe, it, before } from 'mocha';
+
+import index from '../docs/index.cjs'
+import { writeFileSync } from 'fs'
 const {
   calculateTime,
+  // detectCollisionBigInt,
   runComputationBigInt,
   convertScaledStringArrayToBody,
-  convertScaledBigIntBodyToArray,
-} = require('../docs/index.js')
+  convertScaledBigIntBodyToArray
+} = index
 // const p = 21888242871839275222246405745257275088548364400416034343698204186575808495617n
 const totalSteps = 20//487
 // const { describe, it, before } = require('mocha')
@@ -30,8 +51,8 @@ describe('stepStateTest circuit', () => {
   }
 
   // write sampleInput to circuits/stepStateTest.json
-  fs.writeFileSync(
-    path.join(__dirname, '../circuits/stepStateTest.json'),
+  writeFileSync(
+    join(__dirname, '../circuits/stepStateTest.json'),
     JSON.stringify(sampleInput, null, 2)
   )
   // console.dir({ sampleInput }, { depth: null })

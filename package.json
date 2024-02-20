@@ -2,11 +2,8 @@
   "name": "anybody-problem",
   "version": "1.0.0",
   "license": "CC-BY-NC-4.0",
-  "main": "dist/anybody-problem.js",
+  "main": "src/index.js",
 
-  "files": [
-    "dist/**/*"
-  ],
   "scripts": {
     "build": "npx webpack --mode development",
     "chain": "hardhat node",
@@ -18,6 +15,7 @@
     "sol-test": "hardhat test test/problems.test.js test/bodies.test.js test/solver.test.js",
     "test": "hardhat test"
   },
+  "type": "module",
   "browserslist": [
     "> 1%",
     "last 2 versions",
@@ -75,6 +73,9 @@
     "root": true
   },
   "dependencies": {
+    "prando": "^6.0.1"
+  },
+  "devDependencies": {
     "@babel/core": "^7.23.9",
     "@babel/eslint-parser": "^7.12.16",
     "@babel/preset-env": "^7.23.9",
@@ -94,20 +95,18 @@
     "eslint": "^7.32.0",
     "ethereum-waffle": "*",
     "ethers": "^5.7.0",
-    "hardhat": "2.12.2",
+    "hardhat": "2.13.0",
     "hardhat-circom": "git+ssh://git@github.com/okwme/hardhat-circom.git#514bf05c8aa1b5864484eb1e257c0df6053553f2",
     "hardhat-contract-sizer": "*",
     "hardhat-gas-reporter": "*",
     "html-webpack-plugin": "^5.5.0",
     "p5": "^1.8.0",
-    "prando": "^6.0.1",
     "solidity-coverage": "^0.8.6",
     "url-loader": "^4.1.1",
     "webpack": "^5.79.0",
     "webpack-cli": "^5.1.4",
     "webpack-dev-server": "^4.13.1"
   },
-  "devDependencies": {},
   "engines": {
     "node": ">=16"
   },

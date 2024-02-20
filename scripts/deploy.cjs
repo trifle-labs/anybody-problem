@@ -6,7 +6,6 @@ const path = require('node:path')
 
 const fs = require('fs').promises
 
-const { deployContracts } = require('./utils')
 
 async function writedata(path, data) {
   // await fs.writeFile(path, data, function (err, result) {
@@ -72,7 +71,9 @@ async function main() {
   console.log({ deployer: deployer.address })
   console.log('Deploy to chain:')
   console.log(await hre.ethers.provider.getNetwork())
+  const { deployContracts } = await import('./utils.js')
   const deployedContracts = await deployContracts()
+
   for (const contractName in deployedContracts) {
     if (contractName.indexOf('Verifier') > -1) {
       await copyABI(contractName, 'Groth16Verifier')
@@ -91,4 +92,3 @@ main()
     process.exit(1)
   })
 
-module.exports = { deployContracts }

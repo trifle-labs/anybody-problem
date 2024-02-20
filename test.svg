@@ -9,11 +9,11 @@
   <style>
     @keyframes moveEllipse1 {
       0% {
-        transform-origin: 797.411px 324.933px;
+        transform-origin: 504.782px 996.36px;
         transform: rotate(0deg) translate(0px, 10px);
       }
       100% {
-        transform-origin: 797.411px 324.933px;
+        transform-origin: 504.782px 996.36px;
         transform: rotate(360deg) translate(0px, 10px);
       }
     }
@@ -24,20 +24,20 @@
   </style>
   <ellipse
     id="id-1"
-    ry="128.0"
-    rx="128.0"
-    cy="324.933"
-    cx="797.411"
-    fill="#fa0cf6"
+    ry="148.0"
+    rx="148.0"
+    cy="996.36"
+    cx="504.782"
+    fill="#dcb7da"
   />
   <style>
     @keyframes moveEllipse2 {
       0% {
-        transform-origin: 880.478px 799.14px;
+        transform-origin: 187.839px 639.56px;
         transform: rotate(0deg) translate(0px, 10px);
       }
       100% {
-        transform-origin: 880.478px 799.14px;
+        transform-origin: 187.839px 639.56px;
         transform: rotate(360deg) translate(0px, 10px);
       }
     }
@@ -50,18 +50,18 @@
     id="id-2"
     ry="108.0"
     rx="108.0"
-    cy="799.140"
-    cx="880.478"
-    fill="#bb5ace"
+    cy="639.56"
+    cx="187.839"
+    fill="#e82378"
   />
   <style>
     @keyframes moveEllipse3 {
       0% {
-        transform-origin: 712.872px 785.867px;
+        transform-origin: 3.438px 476.983px;
         transform: rotate(0deg) translate(0px, 10px);
       }
       100% {
-        transform-origin: 712.872px 785.867px;
+        transform-origin: 3.438px 476.983px;
         transform: rotate(360deg) translate(0px, 10px);
       }
     }
@@ -72,11 +72,11 @@
   </style>
   <ellipse
     id="id-3"
-    ry="108.0"
-    rx="108.0"
-    cy="785.867"
-    cx="712.872"
-    fill="#71f85b"
+    ry="128.0"
+    rx="128.0"
+    cy="476.983"
+    cx="3.438"
+    fill="#aebbf7"
   />
   <text x="50" y="550" class="name">Problem #1</text>
 </svg>

@@ -66,7 +66,7 @@ const config = {
       gasPrice: 10_000_000_000,
       blockGasLimit: 30_000_000,
       chainId: 12345,
-      loggingEnabled: true
+      loggingEnabled: false
     },
     formatest: {
       // url: 'https://sepolia.infura.io/v3/' + process.env.INFURA_API_KEY,

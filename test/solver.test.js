@@ -1,8 +1,13 @@
-const { expect } = require('chai')
-const { ethers } = require('hardhat')
+// const { expect } = require('chai')
+// const { ethers } = require('hardhat')
+// // const { describe, it } = require('mocha')
+// const { deployContracts, mintProblem, getParsedEventLogs, prepareMintBody, generateAndSubmitProof } = require('../scripts/utils.js')
+import { expect } from 'chai'
+import hre from 'hardhat'
+const ethers = hre.ethers
 // const { describe, it } = require('mocha')
-const { deployContracts, mintProblem, getParsedEventLogs, prepareMintBody, generateAndSubmitProof } = require('../scripts/utils.js')
 
+import { deployContracts, /*splitterAddress,*/ getParsedEventLogs, prepareMintBody, mintProblem, generateAndSubmitProof } from '../scripts/utils.js'
 // let tx
 describe('Solver Tests', function () {
   this.timeout(50000000)

@@ -1,8 +1,9 @@
-const { expect } = require('chai')
-const { ethers } = require('hardhat')
+import { expect } from 'chai'
+import hre from 'hardhat'
+const ethers = hre.ethers
 // const { describe, it } = require('mocha')
 
-const { deployContracts, correctPrice, /*splitterAddress,*/ getParsedEventLogs, prepareMintBody, mintProblem } = require('../scripts/utils.js')
+import { deployContracts, correctPrice, /*splitterAddress,*/ getParsedEventLogs, prepareMintBody, mintProblem } from '../scripts/utils.js'
 let tx
 describe('Problem Tests', function () {
   this.timeout(50000000)

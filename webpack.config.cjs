@@ -21,10 +21,10 @@ module.exports = {
     //   name: 'anybody-problem',
     //   type: 'umd',
     // },
-    library: {
-      name: 'anybody-problem',
-      type: 'module',
-    },
+    // library: {
+    // name: 'anybody-problem',
+    // type: 'module',
+    // },
     libraryTarget: 'module', // For Webpack 5
     libraryExport: 'default', // This option is often used to select which part of your module to export if it's not the entire module.
     // library: 'anybody-problem',
