@@ -173,7 +173,6 @@ class Anybody extends EventEmitter {
 
   initAudio() {
     // tone
-    // this.envelopes = []
     this.oscillators = []
     this.noises = []
     const shuffled = this.p.shuffle(voices)
@@ -190,22 +189,17 @@ class Anybody extends EventEmitter {
     this.monosynth.connect(compressor)
 
     for (let i = 0; i < this.bodies.length; i++) {
-      // this.noises[i] = new window.p5.Noise('white')
-      // this.noises[i].amp = 0.005
-      // this.noises[i].start()
-
-      // this.envelopes[i] = new window.p5.Envelope()
-      // this.envelopes[i].setADSR(0, 0, .1, .01)
-      // this.envelopes[i].setRange(1, 0)
-
       const { wave } = shuffled[i % voices.length]
       this.oscillators[i] = new window.p5.Oscillator(wave)
+
       // start quiet
       this.oscillators[i].amp(0)
       this.oscillators[i].freq(0)
-      // this.oscillators[i].amp(this.envelopes[i])
-      this.oscillators[i].disconnect() // only connect to compressor
+
+      // only connect to compressor
+      this.oscillators[i].disconnect()
       this.oscillators[i].connect(compressor)
+
       this.oscillators[i].start()
     }
   }
@@ -943,19 +937,13 @@ class Anybody extends EventEmitter {
     for (let i = 0; i < this.bodies.length; i++) {
       const body = this.bodies[i]
       const speed = body.velocity.mag()
-      // const mass = body.radius
       const { notes, amp } = voices[i % voices.length]
       const midiNote = this.p.map(body.position.x, 0, this.p.windowWidth, 0, notes.length - 1, true)
       const freq = this.p.midiToFreq(notes[Math.floor(midiNote)])
       const ampBase = this.p.map(speed, 0, 10, 0.1, 0.5, true)
       this.oscillators[i].amp(amp * ampBase / this.bodies.length)
       this.oscillators[i].freq(freq)
-      // this.envelopes[i].releaseTime = freq
-      // this.envelopes[i].play()
-
-      // this.envelopes[i].play(this.noises[i])
       this.oscillators[i].pan(this.p.map(body.position.x, 0, this.p.windowHeight, -1, 1))
-      // this.noises[i].amp(this.p.map(speed, 0, this.vectorLimit + 100, 0, 10))
     }
   }
 
