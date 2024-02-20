@@ -167,8 +167,8 @@ class Anybody extends EventEmitter {
     // this.envelopes = []
     this.oscillators = []
     this.noises = []
-    this.monosynths = [new window.p5.MonoSynth()]
-    this.monosynths[0].setADSR(0.1, .1, 0.1, 0.1)
+    this.monosynth ||= new window.p5.MonoSynth()
+    this.monosynth.setADSR(0.1, .1, 0.1, 0.1)
     const shuffled = this.p.shuffle(sounds)
     for (let i = 0; i < this.bodies.length; i++) {
       // this.noises[i] = new window.p5.Noise('white')
@@ -179,9 +179,11 @@ class Anybody extends EventEmitter {
       // this.envelopes[i].setADSR(0, 0, .1, .01)
       // this.envelopes[i].setRange(1, 0)
 
-      const { amp, wave } = shuffled[i % sounds.length]
+      const { wave } = shuffled[i % sounds.length]
       this.oscillators[i] = new window.p5.Oscillator(wave)
-      this.oscillators[i].amp(amp)
+      // start quiet
+      this.oscillators[i].amp(0)
+      this.oscillators[i].freq(0)
       // this.oscillators[i].amp(this.envelopes[i])
       this.oscillators[i].start()
     }
@@ -677,13 +679,15 @@ class Anybody extends EventEmitter {
     if (this.paused) return
     if (!this.showIt) return
     this.frames++
-    if (this.frames % 100 == 0) {
+
+    // kick + change notes at about 60bpm
+    if (this.frames % 60 == 0 && !this.muted && this.monosynth) {
       // console.log({ bodies })
       // rotate notes for each sound
-      sounds.forEach((sound) => {
+      for (const sound of sounds) {
         sound.notes.reverse()
-      })
-      this.monosynths[0]?.play(cSharpMaj[this.frames % cSharpMaj.length], 1, 0, 0.1)
+      }
+      this.monosynth.play(cSharpMaj[this.frames % cSharpMaj.length], 1, 0, 0.1)
     }
     this.p.noFill()
 
