@@ -1,5 +1,5 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin')
-const HtmlWebpackInlineSourcePlugin = require('html-inline-script-webpack-plugin')
+// const HtmlWebpackInlineSourcePlugin = require('html-inline-script-webpack-plugin')
 
 // const CopyWebpackPlugin = require('copy-webpack-plugin')
 // const fs = require('fs')
@@ -8,7 +8,7 @@ const path = require('path')
 
 module.exports = {
   // mode: 'production',
-  entry: './src/index.js',
+  entry: './src/anybody.js',
   externals: {
     // 'fs': 'fs',
     // 'window': 'window'
@@ -19,73 +19,48 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: 'anybody-problem.js',
-    // library: {
-    //   name: 'anybody-problem',
-    //   type: 'umd',
-    // },
-    // library: {
-    // name: 'anybody-problem',
-    // type: 'module',
-    // },
-    // libraryTarget: 'module', // For Webpack 5
-    // libraryExport: 'default', // This option is often used to select which part of your module to export if it's not the entire module.
-    // library: 'anybody-problem',
-    // libraryTarget: 'umd',
-    // globalObject: 'this',
-    // publicPath: '',
     clean: true,
   },
   devServer: {
     // static: path.resolve(__dirname, "dist"),
     open: true
   },
-  // node: {
-  //   __dirname: false,   // this configuration ensures you get the actual directory path
-  //   __filename: false,  // this configuration ensures you get the actual file path
-  // },
+  node: {
+    __dirname: false,   // this configuration ensures you get the actual directory path
+    __filename: false,  // this configuration ensures you get the actual file path
+  },
   plugins: [
     new HtmlWebpackPlugin({
-      inlineSource: './src/index.js', // Inline all .js files
+      inlineSource: './src/anybody.js', // Inline all .js files
       // hash: true,
       title: 'Anybody Problem',
       metaDesc: 'Anybody Problem',
       template: path.resolve(__dirname, 'src/index.ejs'),
       filename: 'index.html',
-      // inject: 'head',
-      // minify: false,
-      // scriptLoading: 'module',
-      // templateParameters: (compilation, assets, options) => {
-      //   const fs = require('fs')
-      //   const p5Content = fs.readFileSync('./public/p5.min.js', 'utf-8')
-      //   return {
-      //     compilation,
-      //     webpackConfig: options.webpackConfig,
-      //     assets,
-      //     options,
-      //     // fs,
-      //     p5Content,
-      //   }
-      // },
+      inject: true,
+      minify: false,
+      templateParameters: (compilation, assets, options) => {
+        const fs = require('fs')
+        const p5Content = fs.readFileSync('./public/p5.min.js', 'utf-8')
+        return {
+          compilation,
+          webpackConfig: options.webpackConfig,
+          assets,
+          options,
+          fs,
+          p5Content,
+        }
+      },
     }),
-    new HtmlWebpackInlineSourcePlugin(),
-    // new HtmlWebpackPlugin({
-    //   hash: true,
-    //   title: 'Anybody Problem',
-    //   metaDesc: 'Anybody Problem',
-    //   template: path.resolve(__dirname, 'src/dev.ejs'),
-    //   filename: 'dev.html',
-    //   inject: false,
-    //   minify: false,
-    // }),
-    // new HtmlWebpackPlugin({
-    //   hash: true,
-    //   title: 'Anybody Problem',
-    //   metaDesc: 'Anybody Problem',
-    //   template: path.resolve(__dirname, 'src/grid.ejs'),
-    //   filename: 'grid.html',
-    //   inject: false,
-    //   minify: false,
-    // }),
+    new HtmlWebpackPlugin({
+      hash: true,
+      title: 'Anybody Problem',
+      metaDesc: 'Anybody Problem',
+      template: path.resolve(__dirname, 'src/dev.ejs'),
+      filename: 'dev.html',
+      inject: false,
+      minify: false,
+    }),
 
     // new CopyWebpackPlugin({
     //   patterns: [
