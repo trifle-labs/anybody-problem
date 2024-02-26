@@ -1,5 +1,4 @@
 <html>
-<!--<%= "<script>" + Object.keys(compilation.assets) + "<script>" %>-->
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
@@ -10,11 +9,11 @@
   <body>
 
 
-    <%= "<script>"  + compilation.assets['anybody-problem.js'].source() + p5Content %>
-      console.log(window['anybody-problem'])
-      const {Anybody} = window['anybody-problem'].default
-      console.log({Anybody})
-let anybody;var s = function(p) {p.preload = async () => {}; p.setup = async () => {anybody = new Anybody(p,{mode:"nft"});}; p.draw = async () => {anybody.draw();}}; new p5(s);
+    <script>
+      console.log(window)
+      // const {Anybody} = window['anybody-problem']
+      // console.log({Anybody})
+// let anybody;var s = function(p) {p.preload = async () => {}; p.setup = async () => {anybody = new Anybody(p,{mode:"nft"});}; p.draw = async () => {anybody.draw();}}; new p5(s);
     </script>
   </body>
 </html>
