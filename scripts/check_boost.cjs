@@ -2,7 +2,7 @@
 
 // const { deployContracts } = require('./utils')
 const { Anybody } = require('../src/anybody.js')
-const { exportCallDataGroth16 } = require('../scripts/circuits.js')
+const { exportCallDataGroth16 } = require('./circuits.js')
 
 async function main() {
   // const [owner] = await hre.ethers.getSigners()

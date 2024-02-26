@@ -1,15 +1,24 @@
 
 
-const hre = require('hardhat')
+// const hre = require('hardhat')
+import hre from 'hardhat'
 // const { assert } = require('chai')
 // const { describe, it, before } = require('mocha')
 
+// const {
+//   calculateTime,
+//   convertScaledStringArrayToBody,
+//   convertScaledBigIntBodyToArray,
+//   forceAccumulatorBigInts
+// } = require('../docs/index.cjs')
+import index from '../docs/index.cjs'
 const {
   calculateTime,
   convertScaledStringArrayToBody,
   convertScaledBigIntBodyToArray,
   forceAccumulatorBigInts
-} = require('../docs/index.js')
+} = index
+
 // const p = 21888242871839275222246405745257275088548364400416034343698204186575808495617n
 
 describe('forceAccumulatorMain circuit', () => {

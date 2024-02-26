@@ -1,5 +1,7 @@
+// const Prando = require('prando').default
 import Prando from 'prando'
-import { default as EventEmitter } from 'events'
+import EventEmitter from 'events'
+// const EventEmitter = require('events')
 
 // eslint-disable-next-line no-unused-vars
 // window.p5 = require('p5')
@@ -8,7 +10,7 @@ import { default as EventEmitter } from 'events'
 const eyeArray = ['≖', '✿', 'ಠ', '◉', '۞', '◉', 'ಡ', '˘', '❛', '⊚', '✖', 'ᓀ', '◔', 'ಠ', '⊡', '◑', '■', '↑', '༎', 'ಥ', 'ཀ', '╥', '☯']
 const mouthArray = ['益', '﹏', '෴', 'ᗜ', 'ω']//'_', '‿', '‿‿', '‿‿‿', '‿‿‿‿', '‿‿‿‿‿', '‿‿‿‿‿‿', '‿‿‿‿‿‿‿', '‿‿‿‿‿‿‿‿', '‿‿‿‿‿‿‿‿‿']
 
-class Anybody extends EventEmitter {
+export class Anybody extends EventEmitter {
   constructor(p, options = {}) {
     super()
     const defaultOptions = {
@@ -72,7 +74,7 @@ class Anybody extends EventEmitter {
     this.clearValues()
     this.init()
     !this.util && this.start()
-    !this.util && this.audio()
+    // !this.util && this.audio()
   }
 
   // run whenever the class should be reset
@@ -137,24 +139,24 @@ class Anybody extends EventEmitter {
     // console.dir({ bodyInits: this.bodyInits }, { depth: null })
   }
 
-  audio() {
-    if (this.mute) return
-    // tone
-    this.envelopes = []
-    this.oscillators = []
-    this.noises = []
-    for (let i = 0; i < this.bodies.length; i++) {
-      this.noises[i] = new window.p5.Noise('pink')
-      // this.noises[i].start()
+  // audio() {
+  //   if (this.mute) return
+  //   // tone
+  //   this.envelopes = []
+  //   this.oscillators = []
+  //   this.noises = []
+  //   for (let i = 0; i < this.bodies.length; i++) {
+  //     this.noises[i] = new window.p5.Noise('pink')
+  //     // this.noises[i].start()
 
-      this.envelopes[i] = new window.p5.Envelope()
-      this.envelopes[i].setADSR(0.1, .1, .1, .1)
-      this.envelopes[i].setRange(1, 0)
-      this.oscillators[i] = new window.p5.Oscillator('sine')
-      this.oscillators[i].amp(this.envelopes[i])
-      this.oscillators[i].start()
-    }
-  }
+  //     this.envelopes[i] = new window.p5.Envelope()
+  //     this.envelopes[i].setADSR(0.1, .1, .1, .1)
+  //     this.envelopes[i].setRange(1, 0)
+  //     this.oscillators[i] = new window.p5.Oscillator('sine')
+  //     this.oscillators[i].amp(this.envelopes[i])
+  //     this.oscillators[i].start()
+  //   }
+  // }
 
   runSteps(n = this.preRun) {
 
@@ -655,7 +657,7 @@ class Anybody extends EventEmitter {
     this.bodies = results.bodies || []
     this.missiles = results.missiles || []
 
-    this.playSounds()
+    // this.playSounds()
     await this.drawBg()
     this.drawBodyTrails()
     this.drawBodies()
@@ -877,24 +879,24 @@ class Anybody extends EventEmitter {
     }
   }
 
-  playSounds() {
-    if (this.mute) return
-    for (let i = 0; i < this.bodies.length; i++) {
-      const body = this.bodies[i]
-      const speed = body.velocity.mag()
-      // const mass = body.radius
-      const freq = this.p.map(speed, 0, 5, 100, 300)
-      const amp = this.p.map(speed, 0, 5, 100, 200)
-      this.oscillators[i].amp(amp)
-      this.oscillators[i].freq(freq)
-      this.envelopes[i].volume(freq)
-      this.envelopes[i].play()
+  // playSounds() {
+  //   if (this.mute) return
+  //   for (let i = 0; i < this.bodies.length; i++) {
+  //     const body = this.bodies[i]
+  //     const speed = body.velocity.mag()
+  //     // const mass = body.radius
+  //     const freq = this.p.map(speed, 0, 5, 100, 300)
+  //     const amp = this.p.map(speed, 0, 5, 100, 200)
+  //     this.oscillators[i].amp(amp)
+  //     this.oscillators[i].freq(freq)
+  //     this.envelopes[i].volume(freq)
+  //     this.envelopes[i].play()
 
-      this.envelopes[i].play(this.noises[i])
-      // this.noises[i].pan(this.p.map(speed, 0, this.vectorLimit, -1, 1))
-      // this.noises[i].amp(this.p.map(speed, 0, this.vectorLimit + 100, 0, 10))
-    }
-  }
+  //     this.envelopes[i].play(this.noises[i])
+  //     // this.noises[i].pan(this.p.map(speed, 0, this.vectorLimit, -1, 1))
+  //     // this.noises[i].amp(this.p.map(speed, 0, this.vectorLimit + 100, 0, 10))
+  //   }
+  // }
 
   drawScore() {
     if (this.mode == 'nft') {
@@ -909,7 +911,7 @@ class Anybody extends EventEmitter {
       // this.p.fill(this.getNotGrey())
       this.p.textAlign(this.p.RIGHT) // Right-align the text
       this.p.text(this.preRun + this.frames, 45, 15) // Adjust the x-coordinate to align the text
-      this.p.text(this.averageFrameRate?.toFixed(2), 45, 35)
+      this.averageFrameRate && this.p.text(this.averageFrameRate.toFixed(2), 45, 35)
     } else {
       this.p.fill('white')
       this.p.rect(0, 0, 50, 20)
@@ -1054,7 +1056,6 @@ class Anybody extends EventEmitter {
       this.bodiesGraphic.scale(1, -1)
     }
     // this.bodiesGraphic.blendMode(this.p.BLEND)
-
     this.bodiesGraphic.text(face, -radius / 2.4, radius / 8)
     // this.bodiesGraphic.blendMode(this.p.DIFFERENCE)
     this.bodiesGraphic.pop()
@@ -1678,34 +1679,8 @@ class Anybody extends EventEmitter {
 //   }
 // }
 
-// (function (root, factory) {
-//   if (typeof module === 'object' && module.exports) {
-//     // Node.js environment
-//     module.exports = factory()
-//   } else if (typeof define === 'function' && define.amd) {
-//     // AMD module
-//     define(factory)
-//   } else {
-//     // Browser environment
-//     root.AnybodyUtils = factory()
-//   }
-// }(typeof self !== 'undefined' ? self : this, function () {
-//   return {
-//     Anybody,
-//     _smolr,
-//     _convertBigIntToModP,
-//     _approxDist,
-//     _approxSqrt,
-//     _approxDiv,
-//     _calculateTime,
-//     _explosion,
-//     _addVectors,
-//     _validateSeed,
-//   }
-// }))
 
-const exported = {
-  Anybody,
+export const utils = {
   _smolr,
   _convertBigIntToModP,
   _approxDist,
@@ -1716,10 +1691,6 @@ const exported = {
   _addVectors,
   _validateSeed,
 }
-
-
-// module.exports = exported
-export default exported
 
 // ------
 /// functional utils
@@ -1850,3 +1821,5 @@ function _validateSeed(seed) {
     throw new Error(error + ' (6)')
   }
 }
+
+window.Anybody = Anybody

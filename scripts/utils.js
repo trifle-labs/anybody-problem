@@ -1,10 +1,9 @@
-// import { builtinModules } from "node:module";
-const ethers = require('ethers')
-const hre = require('hardhat')
-const path = require('node:path')
-const fs = require('fs').promises
-const { Anybody } = require('../src/anybody.js')
-const { exportCallDataGroth16 } = require('../scripts/circuits.js')
+import { ethers } from 'ethers'
+import hre from 'hardhat'
+import path from 'node:path'
+import { promises as fs } from 'fs'
+import { Anybody } from '../src/anybody.js'
+import { exportCallDataGroth16 } from './circuits.js'
 
 const correctPrice = ethers.utils.parseEther('0.01')
 // TODO: change this to the splitter address
@@ -329,7 +328,7 @@ const generateAndSubmitProof = async (expect, deployedContracts, problemId, body
 }
 
 
-module.exports = {
+export {
   generateAndSubmitProof,
   prepareMintBody,
   mintProblem,

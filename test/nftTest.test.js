@@ -1,17 +1,26 @@
 
 
 // const { describe, before, it } = require('mocha')
-const hre = require('hardhat')
-const { ethers } = require('hardhat')
-const { exportCallDataGroth16 } = require('../scripts/circuits')
-const { mine } = require('@nomicfoundation/hardhat-network-helpers')
+// const hre = require('hardhat')
+// const { ethers } = require('hardhat')
+// const { exportCallDataGroth16 } = require('../scripts/circuits.cjs')
+// const { mine } = require('@nomicfoundation/hardhat-network-helpers')
+import { expect } from 'chai'
 
-const { assert, expect } = require('chai')
-const {
-  Anybody,
-  _calculateTime,
-} = require('../src/anybody.js')
+import hre from 'hardhat'
+const { ethers } = hre
+import { exportCallDataGroth16 } from '../scripts/circuits.js'
+import { mine } from '@nomicfoundation/hardhat-network-helpers'
 
+// const hre = require('hardhat');
+
+// const { assert, expect } = require('chai')
+// const {
+//   Anybody,
+//   _calculateTime,
+// } = require('../src/anybody.js')
+import { Anybody, utils } from '../src/anybody.js'
+const _calculateTime = utils._calculateTime
 
 // const p = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
 const steps = 20

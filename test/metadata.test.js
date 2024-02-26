@@ -1,10 +1,10 @@
-const { expect } = require('chai')
-const { ethers } = require('hardhat')
-// const { describe, it } = require('mocha')
+import { expect } from 'chai'
+import hre from 'hardhat'
+const { ethers } = hre
 
-const { deployContracts, mintProblem } = require('../scripts/utils.js')
-const fs = require('fs')
-const prettier = require('prettier')
+import { deployContracts, mintProblem } from '../scripts/utils.js'
+import fs from 'fs'
+import prettier from 'prettier'
 // let tx
 describe('Metadata Tests', function () {
   this.timeout(50000000)

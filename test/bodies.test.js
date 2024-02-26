@@ -1,8 +1,8 @@
-const { expect } = require('chai')
-const { ethers } = require('hardhat')
-// const { describe, it } = require('mocha')
+import { expect } from 'chai'
+import hre from 'hardhat'
+const ethers = hre.ethers
 
-const { deployContracts, correctPrice, getParsedEventLogs, prepareMintBody, mintProblem } = require('../scripts/utils.js')
+import { deployContracts, correctPrice, getParsedEventLogs, prepareMintBody, mintProblem } from '../scripts/utils.js'
 
 // let tx
 describe('Bodies Tests', function () {

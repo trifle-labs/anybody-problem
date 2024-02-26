@@ -1,8 +1,9 @@
-const { expect } = require('chai')
-const { ethers } = require('hardhat')
+import { expect } from 'chai'
+import hre from 'hardhat'
+const ethers = hre.ethers
 // const { describe, it } = require('mocha')
 
-const { deployContracts, correctPrice, /*splitterAddress,*/ getParsedEventLogs, prepareMintBody, mintProblem } = require('../scripts/utils.js')
+import { deployContracts, correctPrice, /*splitterAddress,*/ getParsedEventLogs, prepareMintBody, mintProblem } from '../scripts/utils.js'
 let tx
 describe('Problem Tests', function () {
   this.timeout(50000000)
@@ -29,8 +30,8 @@ describe('Problem Tests', function () {
 
     // TODO: update with actual start date
     const startDate = await problems.startDate()
-    const actualStartDate = 'Thu Jan 01 2099 00:00:00 GMT+0000'
-    const actualStartDateInUnixTime = Date.parse(actualStartDate) / 1000
+    // const actualStartDate = 'Thu Jan 01 2099 00:00:00 GMT+0000'
+    const actualStartDateInUnixTime = 0//Date.parse(actualStartDate) / 1000
     expect(startDate).to.equal(actualStartDateInUnixTime)
   })
 

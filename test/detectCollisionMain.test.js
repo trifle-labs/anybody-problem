@@ -1,13 +1,14 @@
-const hre = require('hardhat')
-// const { assert } = require('chai')
-// const { describe, it, before } = require('mocha')
+import hre from 'hardhat'
+// import { assert } from 'chai';
+// import { describe, it, before } from 'mocha';
 
+import index from '../docs/index.cjs'
 const {
   calculateTime,
   detectCollisionBigInt,
   convertScaledStringArrayToBody,
   convertScaledBigIntBodyToArray
-} = require('../docs/index.js')
+} = index
 // const modp = 21888242871839275222246405745257275088548364400416034343698204186575808495617n
 describe('detectCollisionMain circuit', () => {
   let circuit

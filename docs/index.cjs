@@ -850,27 +850,29 @@ function calculateTime(constraints, steps = 1) {
   return Math.round(sec * 100) / 100
 }
 
+const exported = {
+  convertScaledStringArrayToBody,
+  convertScaledStringArrayToFloat,
+  convertScaledBigIntBodyToArray,
+  calculateForce,
+  approxSqrt,
+  approxDiv,
+  calculateTime,
+  vectorLimit,
+  scalingFactor,
+  runComputation,
+  runComputationBigInt,
+  detectCollision,
+  detectCollisionBigInt,
+  convertBigIntsToBodies,
+  convertBodiesToBigInts,
+  convertFloatToScaledBigInt,
+  convertScaledBigIntToFloat,
+  forceAccumulatorBigInts,
+  calculateForceBigInt,
+  convertBigIntToModP
+}
+
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = {
-    convertScaledStringArrayToBody,
-    convertScaledStringArrayToFloat,
-    convertScaledBigIntBodyToArray,
-    calculateForce,
-    approxSqrt,
-    approxDiv,
-    calculateTime,
-    vectorLimit,
-    scalingFactor,
-    runComputation,
-    runComputationBigInt,
-    detectCollision,
-    detectCollisionBigInt,
-    convertBigIntsToBodies,
-    convertBodiesToBigInts,
-    convertFloatToScaledBigInt,
-    convertScaledBigIntToFloat,
-    forceAccumulatorBigInts,
-    calculateForceBigInt,
-    convertBigIntToModP
-  }
+  module.exports = exported
 }
