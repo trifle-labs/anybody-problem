@@ -1,11 +1,16 @@
-const Prando = require('prando').default
-const EventEmitter = require('events')
+// const Prando = require('prando').default
+import Prando from 'prando'
+import EventEmitter from 'events'
+// const EventEmitter = require('events')
 
 // eslint-disable-next-line no-unused-vars
 // window.p5 = require('p5')
 // window.p5sound = require('p5/lib/addons/p5.sound')
 
-class Anybody extends EventEmitter {
+const eyeArray = ['≖', '✿', 'ಠ', '◉', '۞', '◉', 'ಡ', '˘', '❛', '⊚', '✖', 'ᓀ', '◔', 'ಠ', '⊡', '◑', '■', '↑', '༎', 'ಥ', 'ཀ', '╥', '☯']
+const mouthArray = ['益', '﹏', '෴', 'ᗜ', 'ω']//'_', '‿', '‿‿', '‿‿‿', '‿‿‿‿', '‿‿‿‿‿', '‿‿‿‿‿‿', '‿‿‿‿‿‿‿', '‿‿‿‿‿‿‿‿', '‿‿‿‿‿‿‿‿‿']
+
+export class Anybody extends EventEmitter {
   constructor(p, options = {}) {
     super()
     const defaultOptions = {
@@ -30,7 +35,8 @@ class Anybody extends EventEmitter {
       mute: true,
       freeze: false,
       stopEvery: 0,
-      util: false
+      util: false,
+      optimistic: false,
     }
 
     // Merge the default options with the provided options
@@ -58,18 +64,24 @@ class Anybody extends EventEmitter {
     this.freeze = mergedOptions.freeze
     this.stopEvery = mergedOptions.stopEvery
     this.util = mergedOptions.util
+    this.optimistic = mergedOptions.optimistic
 
     // Add other constructor logic here
     this.p = p
+    // this.p.blendMode(this.p.DIFFERENCE)
+
     !this.util && this.prepareP5()
     this.clearValues()
     this.init()
     !this.util && this.start()
-    !this.util && this.audio()
+    // !this.util && this.audio()
   }
 
   // run whenever the class should be reset
   clearValues() {
+    this.opac = 0.1
+    this.tailLength = 30
+    this.tailMod = 1
     this.thisLevelMissileCount = 0
     this.thisLevelSec = 0
     this.totalSec = 0
@@ -127,24 +139,24 @@ class Anybody extends EventEmitter {
     // console.dir({ bodyInits: this.bodyInits }, { depth: null })
   }
 
-  audio() {
-    if (this.mute) return
-    // tone
-    this.envelopes = []
-    this.oscillators = []
-    this.noises = []
-    for (let i = 0; i < this.bodies.length; i++) {
-      this.noises[i] = new window.p5.Noise('pink')
-      // this.noises[i].start()
+  // audio() {
+  //   if (this.mute) return
+  //   // tone
+  //   this.envelopes = []
+  //   this.oscillators = []
+  //   this.noises = []
+  //   for (let i = 0; i < this.bodies.length; i++) {
+  //     this.noises[i] = new window.p5.Noise('pink')
+  //     // this.noises[i].start()
 
-      this.envelopes[i] = new window.p5.Envelope()
-      this.envelopes[i].setADSR(0.1, .1, .1, .1)
-      this.envelopes[i].setRange(1, 0)
-      this.oscillators[i] = new window.p5.Oscillator('sine')
-      this.oscillators[i].amp(this.envelopes[i])
-      this.oscillators[i].start()
-    }
-  }
+  //     this.envelopes[i] = new window.p5.Envelope()
+  //     this.envelopes[i].setADSR(0.1, .1, .1, .1)
+  //     this.envelopes[i].setRange(1, 0)
+  //     this.oscillators[i] = new window.p5.Oscillator('sine')
+  //     this.oscillators[i].amp(this.envelopes[i])
+  //     this.oscillators[i].start()
+  //   }
+  // }
 
   runSteps(n = this.preRun) {
 
@@ -485,6 +497,13 @@ class Anybody extends EventEmitter {
       newBody.velocity.y = this.convertScaledBigIntToFloat(body.velocity.y)
       newBody.velocity = this.createVector(newBody.velocity.x, newBody.velocity.y)
 
+
+      if (!this.accumX) {
+        this.accumX = 0
+        this.accumY = 0
+      }
+      this.accumX += newBody.velocity.x
+      this.accumY += newBody.velocity.y
       newBody.radius = this.convertScaledBigIntToFloat(body.radius)
       if (body.c) {
         newBody.c = body.c
@@ -580,11 +599,18 @@ class Anybody extends EventEmitter {
     missiles[0] = missile
     return { bodies, missiles }
   }
+
+  started() {
+    this.emit('started', { bodyInits: JSON.parse(JSON.stringify(this.bodyInits)) })
+  }
+
   finish() {
     // this.finished = true
     // this.setPause(true)
     this.calculateBodyFinal()
-    this.emit('finished', { bodyInits: JSON.parse(JSON.stringify(this.bodyInits)), bodyFinal: JSON.parse(JSON.stringify(this.bodyFinal)) })
+    if (!this.optimistic) {
+      this.emit('finished', { bodyInits: JSON.parse(JSON.stringify(this.bodyInits)), bodyFinal: JSON.parse(JSON.stringify(this.bodyFinal)) })
+    }
     // console.log('FINISH????????????????????????????????????????')
     this.bodyInits = JSON.parse(JSON.stringify(this.bodyFinal))
     this.bodyFinal = []
@@ -603,9 +629,18 @@ class Anybody extends EventEmitter {
     })
   }
 
-  draw() {
-    if (!this.paused && this.frames % this.stopEvery == 0 && !this.justPaused && this.frames !== 0) {
-      this.finish()
+  async draw() {
+    const isNotFirstFrame = this.frames !== 0
+    const notPaused = !this.paused
+    const framesIsAtStopEveryInterval = this.frames % this.stopEvery == 0
+    const didNotJustPause = !this.justPaused
+    if (isNotFirstFrame && notPaused && framesIsAtStopEveryInterval && didNotJustPause) {
+      if (didNotJustPause) {
+        this.finish()
+      }
+      if (this.optimistic) {
+        this.started()
+      }
     } else {
       this.justPaused = false
     }
@@ -622,10 +657,11 @@ class Anybody extends EventEmitter {
     this.bodies = results.bodies || []
     this.missiles = results.missiles || []
 
-    this.playSounds()
-    this.drawBg()
-    // this.drawBodyTrails()
+    // this.playSounds()
+    await this.drawBg()
+    this.drawBodyTrails()
     this.drawBodies()
+
 
     if (this.mode == 'game') {
       this.drawMissiles()
@@ -648,9 +684,137 @@ class Anybody extends EventEmitter {
       this.p.ellipse(body.position.x, body.position.y, radius, radius)
     }
   }
-  drawBg() {
+  async drawBg() {
     if (this.mode == 'nft') {
-      this.p.background(this.bgColor)
+
+      this.p.background('rgb(10,10,10)')
+      // this.p.background('white')
+      if (!this.starBG) {
+        this.starBG = this.p.createGraphics(this.windowWidth, this.windowHeight)
+        for (let i = 0; i < 200; i++) {
+          // this.starBG.stroke('black')
+          this.starBG.strokeWeight(0)
+          // this.starBG.fill('rgba(255,255,255,0.6)')
+          // this.starBG.fill('black')
+          this.starBG.fill('white')
+          this.starBG.textSize(20)
+          const strings = [',', '.', '*']
+          this.starBG.text(strings[this.random(0, strings.length - 1)], this.random(0, this.windowWidth), this.random(0, this.windowHeight))
+        }
+        //   const totalLines = 6
+        //   for (let i = 0; i < totalLines; i++) {
+        //     if (i % 5 == 5) {
+        //       this.starBG.strokeWeight(1)
+        //       // this.starBG.stroke(`hsl(${i * (360 / totalLines)}, 100%, 50%)`)
+        //     } else {
+        //       this.starBG.strokeWeight(1)
+        //       // this.starBG.stroke('rgba(0,0,0,0.1)')
+        //     }
+        //     this.starBG.line(i * (this.windowWidth / totalLines), 0, i * (this.windowWidth / totalLines), this.windowHeight)
+        //     this.starBG.line(0, i * (this.windowHeight / totalLines), this.windowWidth, i * (this.windowHeight / totalLines))
+        //   }
+        // }
+      }
+
+      const basicX = (this.frames / 50) * (this.frames / 50) % this.windowWidth
+      const basicY = (this.frames / 50) * (this.frames / 50) % this.windowHeight
+
+      // const basicX = this.accumX % this.windowWidth
+      // const basicY = this.accumY % this.windowHeight
+
+      const Xleft = basicX - this.windowWidth
+      const Xright = basicX + this.windowWidth
+
+      const Ytop = basicY - this.windowHeight
+      const Ybottom = basicY + this.windowHeight
+
+      this.p.image(this.starBG, basicX, basicY, this.windowWidth, this.windowHeight)
+      this.p.image(this.starBG, Xleft, basicY, this.windowWidth, this.windowHeight)
+      this.p.image(this.starBG, Xright, basicY, this.windowWidth, this.windowHeight)
+      this.p.image(this.starBG, basicX, Ytop, this.windowWidth, this.windowHeight)
+      this.p.image(this.starBG, basicX, Ybottom, this.windowWidth, this.windowHeight)
+      this.p.image(this.starBG, Xleft, Ytop, this.windowWidth, this.windowHeight)
+      this.p.image(this.starBG, Xright, Ytop, this.windowWidth, this.windowHeight)
+      this.p.image(this.starBG, Xleft, Ybottom, this.windowWidth, this.windowHeight)
+      this.p.image(this.starBG, Xright, Ybottom, this.windowWidth, this.windowHeight)
+
+
+      const totalLines = 6
+      // this.p.stroke('black')
+      this.p.stroke('white')
+      for (let i = 0; i < totalLines; i++) {
+        if (i % 5 == 5) {
+          this.p.strokeWeight(1)
+          // this.starBG.stroke(`hsl(${i * (360 / totalLines)}, 100%, 50%)`)
+        } else {
+          this.p.strokeWeight(1)
+        }
+        this.p.line(i * (this.windowWidth / totalLines), 0, i * (this.windowWidth / totalLines), this.windowHeight)
+        this.p.line(0, i * (this.windowHeight / totalLines), this.windowWidth, i * (this.windowHeight / totalLines))
+      }
+
+      /*
+            if (!this.bgGenerated) {
+              console.log('again')
+      
+              // bg gradient
+      
+              this.bgGenerated = this.p.createGraphics(this.windowWidth, this.windowHeight)
+              // this.bgGenerated.background(this.bgColor)
+      
+              // this.img = this.p.createGraphics(this.windowWidth, this.windowHeight)
+              // this.img.fill('red')
+              // this.img.ellipse(this.windowWidth / 2, this.windowHeight / 2, this.windowWidth, this.windowHeight)
+      
+              this.img = await new Promise((resolve) => {
+                this.p.loadImage('/bg-2-blur.png', (img) => {
+                  resolve(img)
+                })
+              })
+              // console.log('promise returned')
+              this.bgGenerated.image(this.img, 0, 0, this.windowWidth, this.windowHeight)
+      
+              for (let r = this.windowWidth; r > 0; r -= 20) {
+                // let gradient = this.p.map(r, 0, this.windowWidth * 3, 0.01, 0)
+                // console.log({ gradient })
+                // this.bgGenerated.fill('rgba(0,0,0,0.01)')
+                // this.bgGenerated.noStroke()
+                // this.bgGenerated.ellipse(this.windowWidth / 2, this.windowHeight / 2, r, r)
+              }
+              // for (let r = this.windowWidth; r > 0; r--) {
+              //   let gradient = this.p.map(r, 0, this.windowWidth, 0, 255)
+              //   this.bgGenerated.fill(gradient)
+              //   this.bgGenerated.noStroke()
+              //   this.bgGenerated.ellipse(this.windowWidth / 2, this.windowHeight / 2, r * 2, r * 2)
+              // }
+      
+      
+      
+      
+            }
+            // this.p.filter(this.p.BLUR, false)
+            this.p.image(this.bgGenerated, 0, 0, this.windowWidth, this.windowHeight)
+            // this.p.background(this.bgColor)
+            return
+          }
+          */
+      // this.p.background(this.bgColor)
+      // this.p.background('white')
+      // this.p.stroke('rgba(0,0,0,1)')
+      // this.p.stroke('white')
+      // this.p.strokeWeight(1)
+      // const totalLines = 6
+      // for (let i = 1; i < totalLines; i++) {
+      //   if (i % 5 == 0) {
+      //     this.p.strokeWeight(2)
+      //     // this.p.stroke(`hsl(${i * (360 / totalLines)}, 100%, 50%)`)
+      //   } else {
+      //     this.p.strokeWeight(1)
+      //     // this.p.stroke('rgba(0,0,0,0.1)')
+      //   }
+      //   this.p.line(i * (this.windowWidth / totalLines), 0, i * (this.windowWidth / totalLines), this.windowHeight)
+      //   this.p.line(0, i * (this.windowHeight / totalLines), this.windowWidth, i * (this.windowHeight / totalLines))
+      // }
       // this.p.background(this.convertColor(this.bgColor, false))
       // this.p.background(this.getGrey())
       return
@@ -715,39 +879,39 @@ class Anybody extends EventEmitter {
     }
   }
 
-  playSounds() {
-    if (this.mute) return
-    for (let i = 0; i < this.bodies.length; i++) {
-      const body = this.bodies[i]
-      const speed = body.velocity.mag()
-      // const mass = body.radius
-      const freq = this.p.map(speed, 0, 5, 100, 300)
-      const amp = this.p.map(speed, 0, 5, 100, 200)
-      this.oscillators[i].amp(amp)
-      this.oscillators[i].freq(freq)
-      this.envelopes[i].volume(freq)
-      this.envelopes[i].play()
+  // playSounds() {
+  //   if (this.mute) return
+  //   for (let i = 0; i < this.bodies.length; i++) {
+  //     const body = this.bodies[i]
+  //     const speed = body.velocity.mag()
+  //     // const mass = body.radius
+  //     const freq = this.p.map(speed, 0, 5, 100, 300)
+  //     const amp = this.p.map(speed, 0, 5, 100, 200)
+  //     this.oscillators[i].amp(amp)
+  //     this.oscillators[i].freq(freq)
+  //     this.envelopes[i].volume(freq)
+  //     this.envelopes[i].play()
 
-      this.envelopes[i].play(this.noises[i])
-      // this.noises[i].pan(this.p.map(speed, 0, this.vectorLimit, -1, 1))
-      // this.noises[i].amp(this.p.map(speed, 0, this.vectorLimit + 100, 0, 10))
-    }
-  }
+  //     this.envelopes[i].play(this.noises[i])
+  //     // this.noises[i].pan(this.p.map(speed, 0, this.vectorLimit, -1, 1))
+  //     // this.noises[i].amp(this.p.map(speed, 0, this.vectorLimit + 100, 0, 10))
+  //   }
+  // }
 
   drawScore() {
     if (this.mode == 'nft') {
-      this.runningFrameRate += this.p.frameRate()
+      this.accumulateFrameRate += this.p.frameRate()
       if (this.frames % 10 == 0) {
-        this.averageFrameRate = this.runningFrameRate / 10
-        this.runningFrameRate = 0
+        this.averageFrameRate = this.accumulateFrameRate / 10
+        this.accumulateFrameRate = 0
       }
       this.p.noStroke()
       this.p.fill('white')
       // this.p.rect(0, 0, 50, 20)
-      this.p.fill(this.getGrey())
+      // this.p.fill(this.getNotGrey())
       this.p.textAlign(this.p.RIGHT) // Right-align the text
       this.p.text(this.preRun + this.frames, 45, 15) // Adjust the x-coordinate to align the text
-      this.p.text(this.averageFrameRate?.toFixed(2), 45, 30) // Adjust the x-coordinate to align the text
+      this.averageFrameRate && this.p.text(this.averageFrameRate.toFixed(2), 45, 35)
     } else {
       this.p.fill('white')
       this.p.rect(0, 0, 50, 20)
@@ -848,18 +1012,94 @@ class Anybody extends EventEmitter {
     // this.bodiesGraphic.color(r, g, b)
   }
 
-  drawBodies(attachToCanvas = true) {
-    if (!this.bodiesGraphic) {
-      this.bodiesGraphic = this.p.createGraphics(this.windowWidth, this.windowHeight)
+  invertColor(c) {
+    const color = this.p.color(c)
+    const r = 255 - this.p.red(color)
+    const g = 255 - this.p.green(color)
+    const b = 255 - this.p.blue(color)
+    return this.p.color(r, g, b)
+  }
+
+  async drawBody(x, y, v, radius, c, i) {
+    this.bodiesGraphic.fill(c)
+    this.bodiesGraphic.stroke('black')
+    this.bodiesGraphic.strokeWeight(0)
+    this.bodiesGraphic.ellipse(x, y, radius, radius)
+    this.bodiesGraphic.noStroke()
+    this.bodiesGraphic.push()
+    this.bodiesGraphic.translate(x, y)
+    var angle = v.heading() + this.p.PI / 2
+    this.bodiesGraphic.rotate(angle)
+    // const eyeOffsetX = radius / 5
+    // const eyeOffsetY = radius / 12
+    // this.bodiesGraphic.fill('rgba(0,0,0,0.3)')
+    // this.bodiesGraphic.filter(this.p.BLUR)
+    // this.bodiesGraphic.ellipse(- eyeOffsetX, - eyeOffsetY, radius / 7, radius / 5)
+    // this.bodiesGraphic.ellipse(eyeOffsetX, - eyeOffsetY, radius / 7, radius / 5)
+    // this.bodiesGraphic.ellipse(0, + eyeOffsetY, radius / 7, radius / 7)
+    // this.bodiesGraphic.fill(i % 2 == 0 ? 'white' : this.randomColor(0, 255))
+    this.bodiesGraphic.fill(this.invertColor(c))//'grey')
+    this.bodiesGraphic.strokeWeight(10)
+    this.bodiesGraphic.stroke(c)
+    this.bodiesGraphic.textSize(radius / 2.2)
+    // this.bodiesGraphic.blendMode(this.p.BLEND)
+
+    const eyeIndex = i % eyeArray.length
+    const mouthIndex = i % mouthArray.length
+    const face = eyeArray[eyeIndex] + mouthArray[mouthIndex] + eyeArray[eyeIndex]
+    this.bodiesGraphic.push()
+
+    if (v.x > 0) {
+      this.bodiesGraphic.scale(-1, 1)
     }
+    if (v.y > 0) {
+      this.bodiesGraphic.scale(1, -1)
+    }
+    // this.bodiesGraphic.blendMode(this.p.BLEND)
+    this.bodiesGraphic.text(face, -radius / 2.4, radius / 8)
+    // this.bodiesGraphic.blendMode(this.p.DIFFERENCE)
+    this.bodiesGraphic.pop()
+    // this.bodiesGraphic.blendMode(this.p.DIFFERENCE)
+
+    // this.bodiesGraphic.fill(c)
+    // this.bodiesGraphic.ellipse(0, 0, radius, radius)
+
+    // if (!this.face) {
+
+    //   this.face = ''
+    //   console.log('load face')
+    //   this.face = await new Promise((resolve) => {
+    //     this.p.loadImage('/3.png', (img) => {
+    //       resolve(img)
+    //     })
+    //   })
+
+    // }
+    // // this.bodiesGraphic.blendMode(this.p.BLEND)
+    // this.bodiesGraphic.image(this.face, 0, - radius / 3, radius / 3, radius / 3)
+    // // this.bodiesGraphic.blendMode(this.p.DIFFERENCE)
+
+    this.bodiesGraphic.pop()
+
+
+
+  }
+
+  async drawBodies(attachToCanvas = true) {
+    // if (!this.bodiesGraphic) {
+    this.bodiesGraphic = this.p.createGraphics(this.windowWidth, this.windowHeight)
+    this.bodiesGraphic.noStroke()
+
+    // this.bodiesGraphic.blendMode(this.p.DIFFERENCE)
+    // }
     // this.bodiesGraphic.clear()
     // if (this.mode == 'nft') this.drawBorder()
-    this.bodiesGraphic.strokeWeight(1)
+    // this.bodiesGraphic.strokeWeight(1)
     const bodyCopies = []
     for (let i = 0; i < this.bodies.length; i++) {
       // const body = this.bodies.sort((a, b) => b.radius - a.radius)[i]
       const body = this.bodies[i]
-      const c = body.c
+      let c = body.c
       let finalColor
       if (this.colorStyle == 'squiggle') {
         const hueColor = (parseInt(c.split(',')[1]) + this.frames) % 360
@@ -867,51 +1107,72 @@ class Anybody extends EventEmitter {
       } else if (this.mode == 'nft') {
         // console.log(c)
         // finalColor = c
-        finalColor = this.convertColor(c)
+
+        finalColor = c.replace(this.opac, '0.1')//this.convertColor(c)
+
       } else {
         finalColor = c
       }
 
       if (this.mode == 'nft') {
-        if (i % 3 == 0) {
-          this.bodiesGraphic.stroke('black')
-        } else if (i % 2 == 0) {
-          this.bodiesGraphic.stroke('white')
-        } else {
-          this.bodiesGraphic.noStroke()
+        // if (i % 3 == 0) {
+        //   this.bodiesGraphic.stroke('black')
+        // } else if (i % 2 == 0) {
+        //   this.bodiesGraphic.stroke('white')
+        // } else {
+        //   this.bodiesGraphic.noStroke()
+        // }
 
-        }
         // this.bodiesGraphic.noStroke()
         // this.bodiesGraphic.stroke(this.getBW())
         // this.bodiesGraphic.stroke('white')
-        this.bodiesGraphic.fill(finalColor)
+        // this.bodiesGraphic.fill(finalColor)
+        // this.bodiesGraphic.ellipse(body.position.x, body.position.y, radius, radius)
         const radius = body.radius * 4 + this.radiusMultiplyer
+        await this.drawBody(body.position.x, body.position.y, body.velocity, radius, finalColor, i)
 
-        this.bodiesGraphic.ellipse(body.position.x, body.position.y, radius, radius)
-        let looped = false, loopX = body.position.x, loopY = body.position.y
+        let loopedX = false, loopedY = false, loopX = body.position.x, loopY = body.position.y
         const loopGap = radius
         if (body.position.x > this.windowWidth - loopGap) {
-          looped = true
+          loopedX = true
           loopX = body.position.x - this.windowWidth
-          this.bodiesGraphic.ellipse(loopX, body.position.y, radius, radius)
+          // this.bodiesGraphic.ellipse(loopX, body.position.y, radius, radius)
+          await this.drawBody(loopX, body.position.y, body.velocity, radius, finalColor, i)
         } else if (body.position.x < loopGap) {
-          looped = true
+          loopedX = true
           loopX = body.position.x + this.windowWidth
-          this.bodiesGraphic.ellipse(loopX, body.position.y, radius, radius)
+          await this.drawBody(loopX, body.position.y, body.velocity, radius, finalColor, i)
+
+          // this.bodiesGraphic.ellipse(loopX, body.position.y, radius, radius)
         }
         if (body.position.y < this.windowHeight - loopGap) {
-          looped = true
+          loopedY = true
           loopY = body.position.y + this.windowHeight
-          this.bodiesGraphic.ellipse(body.position.x, loopY, radius, radius)
-        } else if (body.position.y > loopGap) {
-          looped = true
-          loopY = body.position.y - this.windowHeight
-          this.bodiesGraphic.ellipse(body.position.x, loopY, radius, radius)
+          // this.bodiesGraphic.ellipse(body.position.x, loopY, radius, radius)
+          await this.drawBody(body.position.x, loopY, body.velocity, radius, finalColor, i)
 
+        } else if (body.position.y > loopGap) {
+          loopedY = true
+          loopY = body.position.y - this.windowHeight
+          // this.bodiesGraphic.ellipse(body.position.x, loopY, radius, radius)
+          await this.drawBody(body.position.x, loopY, body.velocity, radius, finalColor, i)
         }
-        if (looped) {
-          this.bodiesGraphic.ellipse(loopX, loopY, radius, radius)
+        if (loopedX && loopedY) {
+          await this.drawBody(loopX, loopY, body.velocity, radius, finalColor, i)
+          // this.bodiesGraphic.ellipse(loopX, loopY, body.velocity, radius, radius)
         }
+
+
+        // if (!this.face) {
+        //   this.face = await new Promise((resolve) => {
+        //     this.p.loadImage('/2.png', (img) => {
+        //       console.log('loaded')
+        //       resolve(img)
+        //     })
+        //   })
+        // }
+        // this.bodiesGraphic.image(this.face, body.position.x - radius / 8, body.position.y - radius / 3, radius / 2, radius / 2)
+
 
         // const eyes = this.getAngledImage(body)
         // this.bodiesGraphic.image(eyes, 0, 0)
@@ -927,8 +1188,8 @@ class Anybody extends EventEmitter {
       }
       bodyCopies.push(bodyCopy)
     }
-    this.allCopiesOfBodies.push(bodyCopies)
-    if (this.allCopiesOfBodies.length > 50) {
+    this.frames % this.tailMod == 0 && this.allCopiesOfBodies.push(bodyCopies)
+    if (this.allCopiesOfBodies.length > this.tailLength) {
       this.allCopiesOfBodies.shift()
     }
 
@@ -1024,8 +1285,114 @@ class Anybody extends EventEmitter {
     this.p.pop()
   }
 
+
+  drawTail(x, y, v, radius, finalColor) {
+    // console.log({ finalColor })
+    // finalColor = finalColor.replace('50%', '75%')
+    this.p.push()
+    this.p.translate(x, y)
+    // this.p.rotate(angle)
+    this.p.fill(finalColor)
+    this.p.noStroke()
+
+    this.p.ellipse(0, 0, radius, radius)
+
+    // this.p.image(this.drawTails[id], -radius / 2, -radius)
+    this.p.pop()
+
+    // ghost version
+
+    // const id = radius + '-' + finalColor
+    // console.log()
+    // if (!this.drawTails) {
+    //   this.drawTails = {}
+    // }
+    // if (!this.drawTails || this.drawTails[id] == undefined) {
+    //   this.drawTails[id] = this.p.createGraphics(this.windowWidth, this.windowHeight)
+    //   this.drawTails[id].noStroke()
+    //   this.drawTails[id].fill(finalColor)
+
+    //   this.drawTails[id].beginShape()
+    //   // this.drawTails[id].vertex(radius, 0)
+    //   // this.drawTails[id].vertex(0, 0)
+
+    //   // this.p.arc(0, 0, radius, radius, this.p.PI, 2 * this.p.PI)
+    //   const arcResolution = 20
+
+    //   for (let j = 0; j < arcResolution; j++) {
+    //     const ang = this.p.map(j, 0, arcResolution, 0, this.p.PI)
+    //     const ax = radius / 2 + this.p.cos(ang) * radius / 2
+    //     const ay = (2 * radius / 2 + -1 * this.p.sin(ang) * radius / 2)
+    //     this.drawTails[id].vertex(ax, ay)
+    //   }
+
+
+
+    //   // this.drawTails[id].fill('red')
+    //   // this.drawTails[id].rect(0, 0, radius, radius / 2)
+
+    //   const bumps = 7
+    //   let bumpHeight = radius / 6
+    //   // let heightChanger = radius / 10
+    //   // const bumpHeightMax = radius / 5
+    //   // const bumpHeightMin = radius / 8
+    //   const startY = radius * 1
+    //   // this.drawTails[id].push()
+    //   let remaindingWidth = radius
+    //   for (let i = 0; i < bumps; i++) {
+    //     let bumpWidth = radius / bumps
+    //     // bumpHeight += heightChanger
+    //     // if (bumpHeight > bumpHeightMax || bumpHeight < bumpHeightMin) {
+    //     //   heightChanger *= -1
+    //     // }
+    //     let x = radius - remaindingWidth
+    //     if (i % 2 == 1) {
+    //       // this.drawTails[id].arc(x + bumpWidth / 2, startY, bumpWidth, bumpHeight, this.drawTails[id].PI, 0, this.drawTails[id].OPEN)
+    //       for (let j = 0; j < arcResolution; j++) {
+    //         const ang = this.p.map(j, 0, arcResolution, this.p.PI, 0)
+    //         const ax = x + bumpWidth / 2 + this.p.cos(ang) * bumpWidth / 2
+    //         const ay = startY + bumpHeight + -1 * this.p.sin(ang) * bumpHeight / 2
+    //         this.drawTails[id].vertex(ax, ay)
+    //       }
+    //     } else {
+    //       for (let j = 0; j < arcResolution; j++) {
+    //         const ang = this.p.map(j, 0, arcResolution, this.p.PI, 0)
+    //         const ax = x + bumpWidth / 2 + this.p.cos(ang) * bumpWidth / 2
+    //         const ay = startY + bumpHeight + this.p.sin(ang) * bumpHeight / 2
+    //         this.drawTails[id].vertex(ax, ay)
+    //       }
+    //       // this.drawTails[id].arc(x + bumpWidth / 2, startY + bumpWidth, bumpWidth, bumpHeight, 0, this.drawTails[id].PI, this.drawTails[id].OPEN)
+    //     }
+    //     remaindingWidth -= bumpWidth
+    //   }
+    //   this.drawTails[id].endShape(this.drawTails[id].CLOSE)
+    //   // this.drawTails[id].pop()
+
+    // }
+
+    // // this.drawTails[id].push()
+    // // this.drawTails[id].translate(x, y)
+    // var angle = v.heading() + this.p.PI / 2
+    // // this.drawTails[id].rotate(angle)
+    // // this.drawTails[id].fill(finalColor)
+    // // this.drawTails[id].fill('rgba(255,0,0,1)')
+    // // this.drawTails[id].rect(0, 0, radius, radius / 4)
+    // // this.drawTails[id].pop()
+    // this.p.push()
+    // this.p.translate(x, y)
+    // this.p.rotate(angle)
+    // this.p.image(this.drawTails[id], -radius / 2, -radius)
+    // this.p.pop()
+
+
+
+  }
+
   drawBodyTrails() {
-    if (this.mode == 'nft') return
+    // this.p.blendMode(this.p.DIFFERENCE)
+
+    // this.bodiesGraphic.filter(this.p.INVERT)
+    // // this.bodiesGraphic.blendMode(this.p.SCREEN)
     for (let i = 0; i < this.allCopiesOfBodies.length; i++) {
       const copyOfBodies = this.allCopiesOfBodies[i]
       for (let j = 0; j < copyOfBodies.length; j++) {
@@ -1036,12 +1403,21 @@ class Anybody extends EventEmitter {
           const hueColor = (parseInt(c.split(',')[1]) + this.frames) % 360
           finalColor = this.p.color(hueColor, 60, 100) // Saturation and brightness at 100 for pure spectral colors
         } else {
-          finalColor = c
+          finalColor = c//this.convertColor(c)
         }
         this.p.fill(finalColor)
         if (this.mode == 'nft') {
-          this.p.ellipse(body.position.x, body.position.y, body.radius * 4, body.radius * 4)
+          const radius = body.radius * 4 + this.radiusMultiplyer
 
+          // this.p.ellipse(body.position.x, body.position.y, radius, radius)
+          this.p.push()
+          this.p.translate(body.position.x, body.position.y)
+          this.p.rotate(body.velocity.heading() + this.p.PI / 2)
+          // this.p.arc(0, 0, radius, radius, this.p.PI, 2 * this.p.PI)
+          this.p.pop()
+          // if (i == 0) {
+          this.drawTail(body.position.x, body.position.y, body.velocity, radius, finalColor)
+          // }
         } else {
           this.p.push()
           this.p.translate(body.position.x, body.position.y)
@@ -1060,6 +1436,8 @@ class Anybody extends EventEmitter {
         }
       }
     }
+    // this.p.blendMode(this.p.BLEND)
+
   }
 
 
@@ -1077,14 +1455,15 @@ class Anybody extends EventEmitter {
   }
 
   colorArrayToTxt(cc) {
-    const opac = 1
     // let cc = baseColor.map(c => c + start + (chunk * i))
-    cc.push(opac)
+    cc.push(this.opac)
     cc = `rgba(${cc.join(',')})`
     return cc
   }
 
   generateBodies() {
+
+
 
     if (this.inputData) {
       // console.dir({ inputData: this.inputData }, { depth: null })
@@ -1092,17 +1471,18 @@ class Anybody extends EventEmitter {
       // console.dir({ step1 }, { depth: null })
       this.bodies = this.convertBigIntsToBodies(step1)
       // console.dir({ bodies: this.bodies })
-      this.bgColor = this.colorArrayToTxt(this.randomColor(0, 200))
+      this.bgColor = this.colorArrayToTxt([0, 0, 0,])//this.randomColor(0, 20))
       this.radiusMultiplyer = this.random(10, 200)
       for (let i = 0; i < this.startingBodies; i++) {
-        this.bodies[i].c = this.colorArrayToTxt(this.randomColor(0, 200))
+        this.bodies[i].c = `hsla(${this.random(0, 360)}, 100%, 100%, ${this.opac})`
+        // this.bodies[i].c = this.colorArrayToTxt(this.randomColor(200, 250)
         this.bodies[i].bodyIndex = i
       }
       return
     }
     if (this.bodyData) {
       this.bgColor = this.colorArrayToTxt(this.randomColor(0, 200))
-      this.radiusMultiplyer = this.random(10, 200)
+      this.radiusMultiplyer = 100//this.random(10, 200)
       this.bodies = this.bodyData.map(b => {
         const seed = b.seed
         const bodyRNG = new Prando(seed.toString(16))
@@ -1126,9 +1506,10 @@ class Anybody extends EventEmitter {
     const cs = []
     const bodies = []
 
-    this.radiusMultiplyer = this.random(10, 200)
+    this.radiusMultiplyer = 100//this.random(10, 50)
 
-    const startingRadius = 10//this.random(20, 40)
+
+    const startingRadius = 2//this.random(20, 40)
 
     // const baseColor = this.randomColor(0, 200)
 
@@ -1138,10 +1519,12 @@ class Anybody extends EventEmitter {
     // const totalChunks = this.startingBodies
     // const chunk = range / totalChunks
 
-    this.bgColor = this.colorArrayToTxt(this.randomColor(0, 200))
+    this.bgColor = this.colorArrayToTxt(this.randomColor(0, 100))
 
     for (let i = 0; i < this.startingBodies; i++) {
-      cs.push(this.colorArrayToTxt(this.randomColor(0, 200)))
+      // cs.push(`hsla(${this.random(0, 360)}, 100%, 50%, ${this.opac})`)
+
+      cs.push(this.colorArrayToTxt(this.randomColor(50, 250)))
     }
 
     for (let i = 0; i < this.startingBodies; i++) {
@@ -1151,10 +1534,14 @@ class Anybody extends EventEmitter {
     if (this.startingBodies.length > 10) {
       throw new Error('too many bodies')
     }
-    let maxSize = this.startingBodies < 10 ? 10 : this.startingBodies
+    let maxSize = (this.startingBodies < 10 ? 10 : this.startingBodies)
     for (let i = 0; i < maxSize; i++) {
       if (i >= this.startingBodies) break
-      const radius = (maxSize - i * 5) + startingRadius
+
+      // const j = i
+      // const j = this.random(0, 2)
+      const j = Math.floor(this.random(0, 3))
+      const radius = (j) * 5 + startingRadius
       const body = {
         bodyIndex: i,
         position: this.createVector(ss[i][0], ss[i][1]),
@@ -1182,9 +1569,10 @@ class Anybody extends EventEmitter {
     // return Math.floor(Math.random() * (upper - lower + 1)) + lower;
   }
 
+
   randomColor(min = 0, max = 255, rng = this.rng) {
     const color = []
-    // let c = Math.floor(random(0, 255))
+    // let c = Math.floor(this.random(min, max, rng))
     for (let i = 0; i < 3; i++) {
       let c = this.random(min, max, rng)
       color.push(c)
@@ -1291,31 +1679,18 @@ class Anybody extends EventEmitter {
 //   }
 // }
 
-(function (root, factory) {
-  if (typeof module === 'object' && module.exports) {
-    // Node.js environment
-    module.exports = factory()
-  } else if (typeof define === 'function' && define.amd) {
-    // AMD module
-    define(factory)
-  } else {
-    // Browser environment
-    root.AnybodyUtils = factory()
-  }
-}(typeof self !== 'undefined' ? self : this, function () {
-  return {
-    Anybody,
-    _smolr,
-    _convertBigIntToModP,
-    _approxDist,
-    _approxSqrt,
-    _approxDiv,
-    _calculateTime,
-    _explosion,
-    _addVectors,
-    _validateSeed,
-  }
-}))
+
+export const utils = {
+  _smolr,
+  _convertBigIntToModP,
+  _approxDist,
+  _approxSqrt,
+  _approxDiv,
+  _calculateTime,
+  _explosion,
+  _addVectors,
+  _validateSeed,
+}
 
 // ------
 /// functional utils
@@ -1446,3 +1821,5 @@ function _validateSeed(seed) {
     throw new Error(error + ' (6)')
   }
 }
+
+window.Anybody = Anybody

@@ -1,7 +1,7 @@
-const { groth16 } = require('snarkjs')
+import { groth16 } from 'snarkjs'
 
 
-async function exportCallDataGroth16(input, wasmPath, zkeyPath) {
+export async function exportCallDataGroth16(input, wasmPath, zkeyPath) {
   const { proof: _proof, publicSignals: _publicSignals } =
     await groth16.fullProve(input, wasmPath, zkeyPath)
   const calldata = await groth16.exportSolidityCallData(_proof, _publicSignals)
@@ -26,7 +26,7 @@ async function exportCallDataGroth16(input, wasmPath, zkeyPath) {
   return { a, b, c, Input, proof: _proof, publicSignals: _publicSignals }
 }
 
-async function verify(verificationPath, publicSignals, proof) {
+export async function verify(verificationPath, publicSignals, proof) {
 
   const vkey = await fetch(verificationPath).then(function (res) {
     return res.json()
@@ -37,7 +37,7 @@ async function verify(verificationPath, publicSignals, proof) {
   return res
 }
 
-module.exports = {
-  exportCallDataGroth16,
-  verify
-}
+// module.exports = {
+//   exportCallDataGroth16,
+//   verify
+// }

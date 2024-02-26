@@ -1,8 +1,9 @@
-const hre = require('hardhat')
+// const hre = require('hardhat')
+import hre from 'hardhat'
 // const { assert } = require('chai')
+import index from '../docs/index.cjs'
+const { calculateTime } = index
 // const { describe, it, before } = require('mocha')
-
-const { calculateTime } = require('../old/index.js')
 
 describe('limiterMain circuit', () => {
   let circuit

@@ -1,14 +1,13 @@
-// import { builtinModules } from "node:module";
-const ethers = require('ethers')
-const hre = require('hardhat')
-const path = require('node:path')
-const fs = require('fs').promises
-const { Anybody } = require('../src/anybody.js')
-const { exportCallDataGroth16 } = require('../scripts/circuits.js')
+import { ethers } from 'ethers'
+import hre from 'hardhat'
+import path from 'node:path'
+import { promises as fs } from 'fs'
+import { Anybody } from '../src/anybody.js'
+import { exportCallDataGroth16 } from './circuits.js'
 
 const correctPrice = ethers.utils.parseEther('0.01')
 // TODO: change this to the splitter address
-const splitterAddress = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266'
+// const splitterAddress = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266'
 
 const testJson = (tJson) => {
   try {
@@ -50,8 +49,11 @@ const getPathAddress = async (name) => {
   return savePath
 }
 
-const initContracts = async () => {
-  const [owner] = await hre.ethers.getSigners()
+const initContracts = async (getSigners = true) => {
+  let owner
+  if (getSigners) {
+    ([owner] = await hre.ethers.getSigners())
+  }
 
   const contractNames = ['Problems', 'Bodies', 'Tocks', 'Solver', 'Metadata']
   for (let i = 3; i <= 10; i++) {
@@ -63,7 +65,11 @@ const initContracts = async () => {
   for (let i = 0; i < contractNames.length; i++) {
     const address = JSON.parse(await readData(await getPathAddress(contractNames[i])))['address']
     const abi = JSON.parse(await readData(await getPathABI(contractNames[i])))['abi']
-    returnObject[contractNames[i]] = new ethers.Contract(address, abi, owner)
+    if (getSigners) {
+      returnObject[contractNames[i]] = new ethers.Contract(address, abi, owner)
+    } else {
+      returnObject[contractNames[i]] = new ethers.Contract(address, abi)
+    }
   }
 
   return returnObject
@@ -161,6 +167,10 @@ const deployContracts = async () => {
   const solverAddress = solver.address
   returnObject['Solver'] = solver
   !testing && log(`Solver deployed at ${solverAddress} with problemsAddress ${problemsAddress} and tocksAddress ${tocksAddress}`)
+
+  // configure Metadata
+  await metadata.updateProblemsAddress(problemsAddress)
+  !testing && log(`Metadata configured with problemsAddress ${problemsAddress}`)
 
   // configure Problems
   await problems.updateBodiesAddress(bodiesAddress)
@@ -318,7 +328,7 @@ const generateAndSubmitProof = async (expect, deployedContracts, problemId, body
 }
 
 
-module.exports = {
+export {
   generateAndSubmitProof,
   prepareMintBody,
   mintProblem,
@@ -331,6 +341,6 @@ module.exports = {
   readData,
   testJson,
   correctPrice,
-  splitterAddress
+  // splitterAddress
 }
 

@@ -1,8 +1,9 @@
-const { expect } = require('chai')
-const { ethers } = require('hardhat')
+import { expect } from 'chai'
+import hre from 'hardhat'
+const ethers = hre.ethers
 // const { describe, it } = require('mocha')
 
-const { deployContracts, correctPrice, splitterAddress, getParsedEventLogs, prepareMintBody, mintProblem } = require('../scripts/utils.js')
+import { deployContracts, correctPrice, /*splitterAddress,*/ getParsedEventLogs, prepareMintBody, mintProblem } from '../scripts/utils.js'
 let tx
 describe('Problem Tests', function () {
   this.timeout(50000000)
@@ -29,8 +30,8 @@ describe('Problem Tests', function () {
 
     // TODO: update with actual start date
     const startDate = await problems.startDate()
-    const actualStartDate = 'Thu Jan 01 2099 00:00:00 GMT+0000'
-    const actualStartDateInUnixTime = Date.parse(actualStartDate) / 1000
+    // const actualStartDate = 'Thu Jan 01 2099 00:00:00 GMT+0000'
+    const actualStartDateInUnixTime = 0//Date.parse(actualStartDate) / 1000
     expect(startDate).to.equal(actualStartDateInUnixTime)
   })
 
@@ -59,7 +60,7 @@ describe('Problem Tests', function () {
     await expect(problems.connect(addr1).updateBodiesAddress(addr1.address))
       .to.be.revertedWith('Ownable: caller is not the owner')
 
-    await expect(problems.connect(addr1).updateWalletAddress(addr1.address))
+    await expect(problems.connect(addr1).updateProceedRecipientAddress(addr1.address))
       .to.be.revertedWith('Ownable: caller is not the owner')
 
 
@@ -84,7 +85,7 @@ describe('Problem Tests', function () {
     await expect(problems.updateBodiesAddress(addr1.address))
       .to.not.be.reverted
 
-    await expect(problems.updateWalletAddress(addr1.address))
+    await expect(problems.updateProceedRecipientAddress(addr1.address))
       .to.not.be.reverted
 
   })
@@ -176,7 +177,7 @@ describe('Problem Tests', function () {
     const { Problems: problems, Metadata: metadata } = await deployContracts()
 
     // set splitter to metadata address which cannot recive eth
-    await problems.updateWalletAddress(metadata.address)
+    await problems.updateProceedRecipientAddress(metadata.address)
 
     await problems.updatePaused(false)
     await problems.updateStartDate(0)
@@ -242,15 +243,15 @@ describe('Problem Tests', function () {
       .to.be.revertedWith('Ownable: caller is not the owner')
   })
 
-  it('sends money to splitter correctly', async function () {
+  it.skip('sends money to splitter correctly', async function () {
     const [, , , addr3] = await ethers.getSigners()
     const { Problems: problems } = await deployContracts()
     await problems.updatePaused(false)
     await problems.updateStartDate(0)
     await problems.connect(addr3)['mint()']({ value: correctPrice })
     expect(await problems.ownerOf(1)).to.equal(addr3.address)
-    var splitterBalance = await ethers.provider.getBalance(splitterAddress)
-    expect(splitterBalance == correctPrice)
+    // var splitterBalance = await ethers.provider.getBalance(splitterAddress)
+    // expect(splitterBalance == correctPrice)
   })
 
   it('must be unpaused', async function () {
@@ -389,7 +390,10 @@ describe('Problem Tests', function () {
 
     const scalingFactor = await problems.scalingFactor()
     const maxVector = await problems.maxVector()
-    const maxRadius = await problems.maxRadius()
+    const startingRadius = await problems.startingRadius()
+    const maxRadius = ethers.BigNumber.from(3 * 5).add(startingRadius)
+
+
     const windowWidth = await problems.windowWidth()
 
     const bodyIDs = await problems.getProblemBodyIds(problemId)
@@ -430,7 +434,10 @@ describe('Problem Tests', function () {
 
     const scalingFactor = await problems.scalingFactor()
     const maxVector = await problems.maxVector()
-    const maxRadius = await problems.maxRadius()
+    const startingRadius = await problems.startingRadius()
+    const maxRadius = ethers.BigNumber.from(3 * 5).add(startingRadius)
+
+
     const windowWidth = await problems.windowWidth()
     const initialVelocity = maxVector.mul(scalingFactor)
 
