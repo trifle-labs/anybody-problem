@@ -1027,6 +1027,22 @@
   resolved "https://registry.yarnpkg.com/@discoveryjs/json-ext/-/json-ext-0.5.7.tgz#1d572bfbbe14b7704e0ba0f39b74815b84870d70"
   integrity sha512-dBVuXR082gk3jsFp7Rd/JI4kytwGHecnCoTtXFb7DB6CNHp4rg5k1bhg0nWdLGLnOV71lmDzGQaLMy8iPLY0pw==
 
+"@elemaudio/core@^3.1.0":
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/@elemaudio/core/-/core-3.1.0.tgz#9c47d8b78387fb1edb4e3d5242d29cd4a247882b"
+  integrity sha512-q8ODIvWBWQ9ubOmdytRL389pIm2bjHhABsQqIADQC2/OBLEKy+S+X6SsjVCJ+D0fqZmW2CVrxC8c/oWYuDwYrg==
+  dependencies:
+    events "^3.3.0"
+    invariant "^2.2.4"
+    shallowequal "^1.1.0"
+
+"@elemaudio/web-renderer@^3.1.0":
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/@elemaudio/web-renderer/-/web-renderer-3.1.0.tgz#e80fb103bcf51b05505b23de14dda717eb209fa5"
+  integrity sha512-ZTp75DtDJOqzdh8raKI4d4zTxC/66I8ktexItaXczfBDZM9ArZBDYoa8oR2KW1vk+3jFkrkHb7C6rGjvFjEa8w==
+  dependencies:
+    "@elemaudio/core" "^3.1.0"
+
 "@eslint/eslintrc@^0.4.3":
   version "0.4.3"
   resolved "https://registry.yarnpkg.com/@eslint/eslintrc/-/eslintrc-0.4.3.tgz#9e42981ef035beb3dd49add17acb96e8ff6f394c"
@@ -8618,7 +8634,7 @@ interpret@^1.0.0:
   resolved "https://registry.yarnpkg.com/interpret/-/interpret-1.4.0.tgz#665ab8bc4da27a774a40584e812e3e0fa45b1a1e"
   integrity sha512-agE4QfB2Lkp9uICn7BAqoscw4SZP9kTE2hxiFI3jBPmXJfdqiahTbUuKGsMoN2GtqL9AxhYioAcVvgsb1HvRbA==
 
-invariant@^2.2.2:
+invariant@^2.2.2, invariant@^2.2.4:
   version "2.2.4"
   resolved "https://registry.yarnpkg.com/invariant/-/invariant-2.2.4.tgz#610f3c92c9359ce1db616e538008d23ff35158e6"
   integrity sha512-phJfQVBuaJM5raOpJjSfkiD6BpbCE4Ns//LaXl6wGYtUBY83nWS6Rf9tXm2e8VaK60JEjYldbPif/A2B1C2gNA==
@@ -12451,6 +12467,11 @@ shallow-clone@^3.0.0:
   integrity sha512-/6KqX+GVUdqPuPPd2LxDDxzX6CAbjJehAAOKlNpqqUpAqPM6HeL8f+o3a+JsyGjn2lv0WY8UsTgUJjU9Ok55NA==
   dependencies:
     kind-of "^6.0.2"
+
+shallowequal@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/shallowequal/-/shallowequal-1.1.0.tgz#188d521de95b9087404fd4dcb68b13df0ae4e7f8"
+  integrity sha512-y0m1JoUZSlPAjXVtPPW70aZWfIL/dSP7AFkRnniLCrK/8MDKog3TySTBmckD+RObVxH0v4Tox67+F14PdED2oQ==
 
 shebang-command@^1.2.0:
   version "1.2.0"

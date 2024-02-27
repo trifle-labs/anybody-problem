@@ -1,9 +1,6 @@
 const Prando = require('prando').default
 const EventEmitter = require('events')
-
-// eslint-disable-next-line no-unused-vars
-// window.p5 = require('p5')
-// window.p5sound = require('p5/lib/addons/p5.sound')
+const Sound = require('./sound').default
 
 class Anybody extends EventEmitter {
   constructor(p, options = {}) {
@@ -66,6 +63,8 @@ class Anybody extends EventEmitter {
     this.init()
     !this.util && this.start()
     !this.util && this.audio()
+  
+    this.sound = new Sound()
   }
 
   // run whenever the class should be reset
@@ -199,6 +198,9 @@ class Anybody extends EventEmitter {
     this.justPaused = true
     if (newPauseState) {
       this.emit('paused', this.paused)
+      this.sound.pause()
+    } else {
+      this.sound.resume()
     }
   }
 
