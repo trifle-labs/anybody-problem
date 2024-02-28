@@ -31,19 +31,25 @@
   </style>
   </head>
   <body>
-    <script  src="./p5.js"></script>
+    <script  src="./q5.min.js"></script>
     <%= "<script>" + compilation.assets["anybody-problem.js"].source() + "</script>" %>
     <script>
-  var s = function(p) {
-    p.preload = async () => {};
-    p.setup = async () => {
-      anybody = new Anybody(p, { mode: "nft" });
-    };
-    p.draw = async () => {
-      anybody.draw();
-    };
-  };
-  new p5(s);
+  // var s = function(p) {
+  //   p.preload = async () => {};
+  //   p.setup = async () => {
+  //     anybody = new Anybody(p, { mode: "nft" });
+  //   };
+  //   p.draw = async () => {
+  //     anybody.draw();
+  //   };
+  // };
+  const q5 = new Q5();
+  q5.setup =  () => {
+    anybody = new Anybody(q5, { mode: "nft", seed: 0n });
+  }
+  q5.draw = () => {
+    anybody.draw();
+  }
     </script>
   </body>
 </html>

@@ -190,7 +190,9 @@ export class Anybody extends EventEmitter {
   }
 
   addListener() {
-    const body = document.getElementsByClassName('p5Canvas')[0]
+    // const body = document.getElementsByClassName('p5Canvas')[0]
+    const body = document.querySelector('canvas')
+
     if (typeof window !== 'undefined' && this.mode == 'game') {
       body.removeEventListener('click', this.setPause)
       body.removeEventListener('click', this.missileClick)
@@ -1011,13 +1013,38 @@ export class Anybody extends EventEmitter {
     return [r, g, b]
     // this.bodiesGraphic.color(r, g, b)
   }
+  componentToHex(c) {
+    var hex = parseInt(c).toString(16)
+    console.log({ c, hex })
+    return hex.length == 1 ? '0' + hex : hex
+  }
+
+  rgbToHex(r, g, b) {
+    return '0x' + this.componentToHex(r) + this.componentToHex(g) + this.componentToHex(b)
+  }
+  hexToRgb(hex) {
+    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+    console.log({ hex, result })
+    return result ? {
+      r: parseInt(result[1], 16),
+      g: parseInt(result[2], 16),
+      b: parseInt(result[3], 16)
+    } : null
+  }
 
   invertColor(c) {
-    const color = this.p.color(c)
-    const r = 255 - this.p.red(color)
-    const g = 255 - this.p.green(color)
-    const b = 255 - this.p.blue(color)
-    return this.p.color(r, g, b)
+    let [r, g, b] = c.replace('rgba(', '').split(',').slice(0, 3)
+    const hexColor = this.rgbToHex(r, g, b)
+    console.log({ hexColor })
+    const invert = (parseInt(hexColor) ^ 0xffffff).toString(16).padStart(6, '0')
+    const invertRGB = this.hexToRgb(invert)
+    console.log({ invertRGB })
+    // r = r - 255
+    // g = g - 255
+    // b = b - 255
+    const newColor = this.p.color(invertRGB.r, invertRGB.g, invertRGB.b)
+    console.log({ newColor })
+    return newColor
   }
 
   async drawBody(x, y, v, radius, c, i) {
@@ -1038,9 +1065,6 @@ export class Anybody extends EventEmitter {
     // this.bodiesGraphic.ellipse(eyeOffsetX, - eyeOffsetY, radius / 7, radius / 5)
     // this.bodiesGraphic.ellipse(0, + eyeOffsetY, radius / 7, radius / 7)
     // this.bodiesGraphic.fill(i % 2 == 0 ? 'white' : this.randomColor(0, 255))
-    this.bodiesGraphic.fill(this.invertColor(c))//'grey')
-    this.bodiesGraphic.strokeWeight(10)
-    this.bodiesGraphic.stroke(c)
     this.bodiesGraphic.textSize(radius / 2.2)
     // this.bodiesGraphic.blendMode(this.p.BLEND)
 
@@ -1056,6 +1080,15 @@ export class Anybody extends EventEmitter {
       this.bodiesGraphic.scale(1, -1)
     }
     // this.bodiesGraphic.blendMode(this.p.BLEND)
+    const invertedC = this.invertColor(c)
+    // const solidColor = c.replace('0.1', '1')
+    this.bodiesGraphic.fill(c)//'grey')
+    this.bodiesGraphic.strokeWeight(10)
+    this.bodiesGraphic.stroke(c)
+    this.bodiesGraphic.text(face, -radius / 2.4, radius / 8)
+
+    this.bodiesGraphic.fill(invertedC)//'grey')
+    this.bodiesGraphic.noStroke()
     this.bodiesGraphic.text(face, -radius / 2.4, radius / 8)
     // this.bodiesGraphic.blendMode(this.p.DIFFERENCE)
     this.bodiesGraphic.pop()

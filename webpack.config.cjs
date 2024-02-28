@@ -41,7 +41,7 @@ module.exports = {
       minify: false,
       templateParameters: (compilation, assets, options) => {
         const fs = require('fs')
-        const p5Content = fs.readFileSync('./public/p5.min.js', 'utf-8')
+        const p5Content = fs.readFileSync('./public/q5.min.js', 'utf-8')
         return {
           compilation,
           webpackConfig: options.webpackConfig,
