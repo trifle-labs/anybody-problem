@@ -629,6 +629,10 @@ class Anybody extends EventEmitter {
     // this.drawBodyTrails()
     this.drawBodies()
 
+    if (this.frames % 10 == 0) {
+      this.sound.render(this)
+    }
+
     if (this.mode == 'game') {
       this.drawMissiles()
       this.drawExplosions()
