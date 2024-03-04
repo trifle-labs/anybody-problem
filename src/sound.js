@@ -13,12 +13,12 @@ const SONGS = {
       // type Track: [sample, probability, introProbability?]
       [whistle_8_T7, 1, 0],
       [whistle_4_T3, 0.9, 1],
-      [whistle_7_T6, 0.8, 1],
+      [whistle_7_T6, 0.7, 1],
       [whistle_12_T11, 0.7, 0],
     ], [
       [whistle_8_T7_B, 1, 0],
-      [whistle_4_T3, 0.9, 1],
-      [whistle_7_T6, 0.8, 1],
+      [whistle_4_T3, 0.7, 1],
+      [whistle_7_T6, 0.7, 1],
       [whistle_12_T11, 0.7, 0],
     ]],
   },
