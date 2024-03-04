@@ -4,12 +4,14 @@ const SONGS = {
   whistle: {
     bpm: 70,
     parts: [[
-      ['/whistle/whistle_8_T7.wav', 1],
+      // each part consists of a set of tracks
+      // type Track: [sample, probability, introProbability?]
+      ['/whistle/whistle_8_T7.wav', 1, 0],
       ['/whistle/whistle_4_T3.wav', 0.9],
       ['/whistle/whistle_7_T6.wav', 0.8],
       ['/whistle/whistle_12_T11.wav', 0.7],
     ], [
-      ['/whistle/whistle_8_T7_b.wav', 1],
+      ['/whistle/whistle_8_T7_b.wav', 1, 0],
       ['/whistle/whistle_4_T3.wav', 0.9],
       ['/whistle/whistle_7_T6.wav', 0.8],
       ['/whistle/whistle_12_T11.wav', 0.7],
@@ -30,32 +32,29 @@ export default class Sound {
   }
 
   pause() {
-    console.log('Sound#pause')
-
     Tone.Transport.stop()
     this.voices?.forEach(voice => voice.player.stop())
   }
 
   voiceFromFile(file) {
-    return {
+    const voice = {
       file: file,
       player: new Tone.Player(`${window.location.origin}${file}`),
       filter: new Tone.Filter(500, 'highpass'),
       panVol: new Tone.PanVol()
     }
+    voice.panVol.volume.value = -Infinity
+    return voice
   }
 
   async play(song) {
-    console.log('Sound#play')
-
     // only start if it hasn't started yet
     if (Tone.Transport.state === 'started') return
     await Tone.start()
 
     if (!this.voices) {
       const parts = song.parts[0]
-      const files = parts.map(part => part[0])
-      this.voices = files.map(file => this.voiceFromFile(file))
+      this.voices = parts.map(part => this.voiceFromFile(part[0]))
       
       // master output
       const reverb = new Tone.Reverb(1)
@@ -74,18 +73,19 @@ export default class Sound {
         this.currentMeasure++
         this.voices.forEach((voice, i) => {
           // just step through parts
-          const part = song.parts[this.currentMeasure % song.parts.length]
-          const url = part.melody.concat(part.other)[i]
+          const part = song.parts[this.currentMeasure % song.parts.length][i]
+          const url = part[0]
           if (url) {
             voice.player.load(url)
           } else {
-            // voice.player.stop()
+            voice.player.stop()
           }
           voice.player.chain(voice.filter, voice.panVol)
           voice.panVol.connect(this.master)
 
           // randomly mute some voices, but keep most on
-          if (Math.random() > 0.8) {
+          const probability = this.currentMeasure <= 2 && typeof part[2] === 'number' ? part[2] : part[1]
+          if (Math.random() > probability) {
             voice.panVol.volume.linearRampTo(-Infinity, 0.1)
           } else {
             voice.panVol.volume.linearRampTo(0, 0.1)
