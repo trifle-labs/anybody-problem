@@ -99,6 +99,7 @@ export class Anybody extends EventEmitter {
     this.paused = false
     this.justStopped = false
     this.bgColor = null
+    this.loadTime = Date.now()
   }
 
   // run once at initilization
@@ -695,7 +696,7 @@ export class Anybody extends EventEmitter {
         this.starBG = this.p.createGraphics(this.windowWidth, this.windowHeight)
         for (let i = 0; i < 200; i++) {
           // this.starBG.stroke('black')
-          this.starBG.strokeWeight(0)
+          this.starBG.noStroke()
           // this.starBG.fill('rgba(255,255,255,0.6)')
           // this.starBG.fill('black')
           this.starBG.fill('white')
@@ -900,20 +901,26 @@ export class Anybody extends EventEmitter {
   //   }
   // }
 
+  frameRate() {
+    const diff = Date.now() - this.loadTime
+    return (this.frames / diff) * 1000
+  }
+
   drawScore() {
     if (this.mode == 'nft') {
-      this.accumulateFrameRate += this.p.frameRate()
-      if (this.frames % 10 == 0) {
-        this.averageFrameRate = this.accumulateFrameRate / 10
-        this.accumulateFrameRate = 0
-      }
+      // this.accumulateFrameRate += this.frameRate()
+      // console.log(this.accumulateFrameRate, this.p.frameRate())
+      // if (this.frames % 10 == 0) {
+      //   this.averageFrameRate = this.accumulateFrameRate / 10
+      //   this.accumulateFrameRate = 0
+      // }
       this.p.noStroke()
       this.p.fill('white')
       // this.p.rect(0, 0, 50, 20)
       // this.p.fill(this.getNotGrey())
       this.p.textAlign(this.p.RIGHT) // Right-align the text
       this.p.text(this.preRun + this.frames, 45, 15) // Adjust the x-coordinate to align the text
-      this.averageFrameRate && this.p.text(this.averageFrameRate.toFixed(2), 45, 35)
+      this.p.text(this.frameRate().toFixed(2), 45, 35)
     } else {
       this.p.fill('white')
       this.p.rect(0, 0, 50, 20)
@@ -1015,7 +1022,6 @@ export class Anybody extends EventEmitter {
   }
   componentToHex(c) {
     var hex = parseInt(c).toString(16)
-    console.log({ c, hex })
     return hex.length == 1 ? '0' + hex : hex
   }
 
@@ -1024,7 +1030,6 @@ export class Anybody extends EventEmitter {
   }
   hexToRgb(hex) {
     var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
-    console.log({ hex, result })
     return result ? {
       r: parseInt(result[1], 16),
       g: parseInt(result[2], 16),
@@ -1035,24 +1040,19 @@ export class Anybody extends EventEmitter {
   invertColor(c) {
     let [r, g, b] = c.replace('rgba(', '').split(',').slice(0, 3)
     const hexColor = this.rgbToHex(r, g, b)
-    console.log({ hexColor })
     const invert = (parseInt(hexColor) ^ 0xffffff).toString(16).padStart(6, '0')
     const invertRGB = this.hexToRgb(invert)
-    console.log({ invertRGB })
     // r = r - 255
     // g = g - 255
     // b = b - 255
     const newColor = this.p.color(invertRGB.r, invertRGB.g, invertRGB.b)
-    console.log({ newColor })
     return newColor
   }
 
   async drawBody(x, y, v, radius, c, i) {
     this.bodiesGraphic.fill(c)
-    this.bodiesGraphic.stroke('black')
-    this.bodiesGraphic.strokeWeight(0)
-    this.bodiesGraphic.ellipse(x, y, radius, radius)
     this.bodiesGraphic.noStroke()
+    this.bodiesGraphic.ellipse(x, y, radius, radius)
     this.bodiesGraphic.push()
     this.bodiesGraphic.translate(x, y)
     var angle = v.heading() + this.p.PI / 2

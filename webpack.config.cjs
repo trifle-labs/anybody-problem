@@ -1,28 +1,29 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin')
-// const HtmlWebpackInlineSourcePlugin = require('html-inline-script-webpack-plugin')
-
-// const CopyWebpackPlugin = require('copy-webpack-plugin')
-// const fs = require('fs')
-
+const fs = require('fs')
+// const p5Content = fs.readFileSync('./public/p5.min.js', 'utf-8')
+const q5Content = fs.readFileSync('./public/q5.min.js', 'utf-8')
+const templateParameters = (compilation, assets, options) => {
+  return {
+    compilation,
+    webpackConfig: options.webpackConfig,
+    assets,
+    options,
+    q5Content,
+  }
+}
 const path = require('path')
 
 module.exports = {
   // mode: 'production',
   entry: './src/anybody.js',
-  externals: {
-    // 'fs': 'fs',
-    // 'window': 'window'
-  },
-  experiments: {
-    // outputModule: true,
-  },
   output: {
     path: path.resolve(__dirname, 'dist'),
+    publicPath: '/', // Ensure files are served relative to the base URL
     filename: 'anybody-problem.js',
     clean: true,
   },
   devServer: {
-    // static: path.resolve(__dirname, "dist"),
+    static: path.resolve(__dirname, 'dist'),
     open: true
   },
   node: {
@@ -31,42 +32,23 @@ module.exports = {
   },
   plugins: [
     new HtmlWebpackPlugin({
-      inlineSource: './src/anybody.js', // Inline all .js files
-      // hash: true,
       title: 'Anybody Problem',
       metaDesc: 'Anybody Problem',
       template: path.resolve(__dirname, 'src/index.ejs'),
       filename: 'index.html',
-      inject: true,
+      inject: false,
       minify: false,
-      templateParameters: (compilation, assets, options) => {
-        const fs = require('fs')
-        const p5Content = fs.readFileSync('./public/q5.min.js', 'utf-8')
-        return {
-          compilation,
-          webpackConfig: options.webpackConfig,
-          assets,
-          options,
-          fs,
-          p5Content,
-        }
-      },
+      templateParameters,
     }),
     new HtmlWebpackPlugin({
-      hash: true,
       title: 'Anybody Problem',
       metaDesc: 'Anybody Problem',
       template: path.resolve(__dirname, 'src/dev.ejs'),
       filename: 'dev.html',
       inject: false,
       minify: false,
+      templateParameters,
     }),
-
-    // new CopyWebpackPlugin({
-    //   patterns: [
-    //     { from: 'public' }
-    //   ]
-    // })
   ],
   resolve: {
     extensions: ['.js', '.json'], // Automatically resolve certain extensions

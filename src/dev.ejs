@@ -31,18 +31,19 @@
   </style>
   </head>
   <body>
-    <script  src="./q5.min.js"></script>
-    <%= "<script>" + compilation.assets["anybody-problem.js"].source() + "</script>" %>
     <script>
+    <%= compilation.assets['anybody-problem.js'].source() + q5Content  %>
+    const ignore = 'this is here for linters sake'
   // var s = function(p) {
   //   p.preload = async () => {};
   //   p.setup = async () => {
-  //     anybody = new Anybody(p, { mode: "nft" });
+  //     anybody = new Anybody(p, { mode: "nft", seed: 0n });
   //   };
   //   p.draw = async () => {
   //     anybody.draw();
   //   };
   // };
+  // new p5(s);
   const q5 = new Q5();
   q5.setup =  () => {
     anybody = new Anybody(q5, { mode: "nft", seed: 0n });
