@@ -129,7 +129,7 @@ export default {
           anybody = new Anybody(p, {
             // preRun: 480,
             // seed: 94n, // NOTE: this seed diverges after 4 proofs
-            totalBodies: 4,
+            totalBodies: 10,
             mode: 'nft',
             stopEvery: steps,//487,
             seed: 1n,

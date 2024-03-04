@@ -1,31 +1,51 @@
 const Tone = require('tone')
 
-const FILES = [
-  '/whistle/whistle_4_T3.wav',
-  '/whistle/whistle_7_T6.wav',
-  '/whistle/whistle_8_T7.wav',
-  '/whistle/whistle_12_T11.wav',
-  '/whistle/whistle_15_Delay_Reverb.wav'
-]
+const SONGS = {
+  whistle: {
+    bpm: 70,
+    parts: [[
+      ['/whistle/whistle_8_T7.wav', 1],
+      ['/whistle/whistle_4_T3.wav', 0.9],
+      ['/whistle/whistle_7_T6.wav', 0.8],
+      ['/whistle/whistle_12_T11.wav', 0.7],
+    ], [
+      ['/whistle/whistle_8_T7_b.wav', 1],
+      ['/whistle/whistle_4_T3.wav', 0.9],
+      ['/whistle/whistle_7_T6.wav', 0.8],
+      ['/whistle/whistle_12_T11.wav', 0.7],
+    ]],
+  },
+  wii: {}
+}
 
 const MAX_VOLUME = 24 //db
 
 export default class Sound {
+  currentMeasure = 0
+
   // this function must be called in response to a user action
   // otherwise safari and chrome will block the audio
   resume() {
-    this.play()
+    this.play(SONGS.whistle)
   }
 
   pause() {
     console.log('Sound#pause')
 
-    this.sampler?.releaseAll()
     Tone.Transport.stop()
     this.voices?.forEach(voice => voice.player.stop())
   }
 
-  async play() {
+  voiceFromFile(file) {
+    return {
+      file: file,
+      player: new Tone.Player(`${window.location.origin}${file}`),
+      filter: new Tone.Filter(500, 'highpass'),
+      panVol: new Tone.PanVol()
+    }
+  }
+
+  async play(song) {
     console.log('Sound#play')
 
     // only start if it hasn't started yet
@@ -33,32 +53,45 @@ export default class Sound {
     await Tone.start()
 
     if (!this.voices) {
-      this.voices = FILES.map(file => ({
-        player: new Tone.Player(`${window.location.origin}${file}`),
-        filter: new Tone.Filter(500, 'highpass'),
-        panVol: new Tone.PanVol()
-      }))
-
+      const parts = song.parts[0]
+      const files = parts.map(part => part[0])
+      this.voices = files.map(file => this.voiceFromFile(file))
+      
       // master output
       const reverb = new Tone.Reverb(1)
       reverb.wet.value = 0.1
       this.masterVolume = new Tone.Volume(0).toDestination()
       this.masterVolume.volume.rampTo(MAX_VOLUME, 3)
-
       this.master = reverb
         .connect(new Tone.MultibandCompressor())
         .connect(this.masterVolume)
   
-      Tone.Transport.bpm.value = 70
+      Tone.Transport.bpm.value = song.bpm
 
       await Tone.loaded()
-      // start every sample at the same time every other bar
-      // loop every 2 measures
+
       new Tone.Loop(time => {
-        this.voices.forEach(voice => {
-          voice.player.start(time)
+        this.currentMeasure++
+        this.voices.forEach((voice, i) => {
+          // just step through parts
+          const part = song.parts[this.currentMeasure % song.parts.length]
+          const url = part.melody.concat(part.other)[i]
+          if (url) {
+            voice.player.load(url)
+          } else {
+            // voice.player.stop()
+          }
           voice.player.chain(voice.filter, voice.panVol)
           voice.panVol.connect(this.master)
+
+          // randomly mute some voices, but keep most on
+          if (Math.random() > 0.8) {
+            voice.panVol.volume.linearRampTo(-Infinity, 0.1)
+          } else {
+            voice.panVol.volume.linearRampTo(0, 0.1)
+          }
+
+          voice.player.start(time)
         })
       }, '2m').start(0)
     }
@@ -75,18 +108,19 @@ export default class Sound {
     this.voices.forEach((voice, i) => {
       const body = anybody.bodies[i]
       if (!body) return
-      const { x, y} = body.position
+      const { x } = body.position
       const speed = body.velocity.mag()
 
       const xFactor = x/anybody.windowWidth
-      const yFactor = y/anybody.windowHeight
+      // const yFactor = y/anybody.windowHeight
       const speedFactor = speed/anybody.vectorLimit
 
       // panning
-      voice.panVol.pan.linearRampTo(xFactor * 1.9 - 0.95, 0.1)
+      const panRange = 1.92 // 2 allows hard L/R panning
+      voice.panVol.pan.linearRampTo(xFactor * panRange - panRange/2, 0.1)
 
-      const volRange = 4
-      voice.panVol.volume.linearRampTo(-(volRange/2) + yFactor * volRange, 0.1)
+      // const volRange = 4
+      // voice.panVol.volume.linearRampTo(-(volRange/2) + yFactor * volRange, 0.1)
       
       // filter frequency
       voice.filter.Q.value = 13
