@@ -112,16 +112,12 @@ export default class Sound {
       const speed = body.velocity.mag()
 
       const xFactor = x/anybody.windowWidth
-      // const yFactor = y/anybody.windowHeight
       const speedFactor = speed/anybody.vectorLimit
 
       // panning
       const panRange = 1.92 // 2 allows hard L/R panning
       voice.panVol.pan.linearRampTo(xFactor * panRange - panRange/2, 0.1)
 
-      // const volRange = 4
-      // voice.panVol.volume.linearRampTo(-(volRange/2) + yFactor * volRange, 0.1)
-      
       // filter frequency
       voice.filter.Q.value = 13
       const filterFreq = 600 + speedFactor * 1000
