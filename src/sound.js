@@ -1,4 +1,9 @@
-const Tone = require('tone')
+import { Transport, MultibandCompressor, Loop, Player, Reverb, Filter, Volume, PanVol, start, loaded} from 'tone'
+import whistle_8_T7 from '../public/whistle/whistle_8_T7.wav'
+import whistle_4_T3 from '../public/whistle/whistle_4_T3.wav'
+import whistle_7_T6 from '../public/whistle/whistle_7_T6.wav'
+import whistle_12_T11 from '../public/whistle/whistle_12_T11.wav'
+import whistle_8_T7_B from '../public/whistle/whistle_8_T7_B.wav'
 
 const SONGS = {
   whistle: {
@@ -6,15 +11,15 @@ const SONGS = {
     parts: [[
       // each part consists of a set of tracks
       // type Track: [sample, probability, introProbability?]
-      ['/whistle/whistle_8_T7.wav', 1, 0],
-      ['/whistle/whistle_4_T3.wav', 0.9],
-      ['/whistle/whistle_7_T6.wav', 0.8],
-      ['/whistle/whistle_12_T11.wav', 0.7],
+      [whistle_8_T7, 1, 0],
+      [whistle_4_T3, 0.9, 1],
+      [whistle_7_T6, 0.8, 1],
+      [whistle_12_T11, 0.7, 0],
     ], [
-      ['/whistle/whistle_8_T7_b.wav', 1, 0],
-      ['/whistle/whistle_4_T3.wav', 0.9],
-      ['/whistle/whistle_7_T6.wav', 0.8],
-      ['/whistle/whistle_12_T11.wav', 0.7],
+      [whistle_8_T7_B, 1, 0],
+      [whistle_4_T3, 0.9, 1],
+      [whistle_7_T6, 0.8, 1],
+      [whistle_12_T11, 0.7, 0],
     ]],
   },
   wii: {}
@@ -32,16 +37,16 @@ export default class Sound {
   }
 
   pause() {
-    Tone.Transport.stop()
+    Transport.stop()
     this.voices?.forEach(voice => voice.player.stop())
   }
 
   voiceFromFile(file) {
     const voice = {
       file: file,
-      player: new Tone.Player(`${window.location.origin}${file}`),
-      filter: new Tone.Filter(500, 'highpass'),
-      panVol: new Tone.PanVol()
+      player: new Player(`${window.location.origin}${file}`),
+      filter: new Filter(500, 'highpass'),
+      panVol: new PanVol()
     }
     voice.panVol.volume.value = -Infinity
     return voice
@@ -49,27 +54,27 @@ export default class Sound {
 
   async play(song) {
     // only start if it hasn't started yet
-    if (Tone.Transport.state === 'started') return
-    await Tone.start()
+    if (Transport.state === 'started') return
+    await start()
 
     if (!this.voices) {
       const parts = song.parts[0]
       this.voices = parts.map(part => this.voiceFromFile(part[0]))
       
       // master output
-      const reverb = new Tone.Reverb(1)
+      const reverb = new Reverb(1)
       reverb.wet.value = 0.1
-      this.masterVolume = new Tone.Volume(0).toDestination()
+      this.masterVolume = new Volume(0).toDestination()
       this.masterVolume.volume.rampTo(MAX_VOLUME, 3)
       this.master = reverb
-        .connect(new Tone.MultibandCompressor())
+        .connect(new MultibandCompressor())
         .connect(this.masterVolume)
   
-      Tone.Transport.bpm.value = song.bpm
+      Transport.bpm.value = song.bpm
 
-      await Tone.loaded()
+      await loaded()
 
-      new Tone.Loop(time => {
+      new Loop(time => {
         this.currentMeasure++
         this.voices.forEach((voice, i) => {
           // just step through parts
@@ -97,7 +102,7 @@ export default class Sound {
     }
   
     // PLAY
-    Tone.Transport.start()
+    Transport.start()
   }
 
   // given the state of anybody, modify voices

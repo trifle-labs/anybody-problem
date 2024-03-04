@@ -13,7 +13,7 @@ import "hardhat/console.sol";
 contract Problems is ERC721, Ownable {
     bool public paused;
     // TODO: update with actual start date
-    uint256 public startDate = 4070908800; // Thu Jan 01 2099 00:00:00 GMT+0000 (___ CEST Berlin, ___ London, ___ NYC, ___ LA)
+    uint256 public startDate = 0; //4070908800; // Thu Jan 01 2099 00:00:00 GMT+0000 (___ CEST Berlin, ___ London, ___ NYC, ___ LA)
 
     uint256 public problemSupply;
 
@@ -21,7 +21,7 @@ contract Problems is ERC721, Ownable {
     address public solver;
     address public metadata;
 
-    address public wallet;
+    address public proceedRecipient;
 
     uint256 public price = 0.01 ether;
 
@@ -54,7 +54,8 @@ contract Problems is ERC721, Ownable {
     uint256 public constant maxVector = 10;
     uint256 public constant scalingFactor = 10 ** 3;
     uint256 public constant windowWidth = 1000 * scalingFactor;
-    uint256 public constant maxRadius = 13;
+    // uint256 public constant maxRadius = 13;
+    uint256 public constant startingRadius = 2;
 
     event bodyAdded(
         uint256 problemId,
@@ -83,7 +84,7 @@ contract Problems is ERC721, Ownable {
         require(solver != address(0), "Not initialized");
         require(bodies != address(0), "Not initialized");
         require(metadata != address(0), "Not initialized");
-        require(wallet != address(0), "Not initialized");
+        require(proceedRecipient != address(0), "Not initialized");
         _;
     }
 
@@ -101,7 +102,7 @@ contract Problems is ERC721, Ownable {
         uint256[] memory verifiersBodies
     ) ERC721("Anybody Problem", "ANY") {
         require(metadata_ != address(0), "Invalid metadata");
-        wallet = msg.sender;
+        proceedRecipient = msg.sender;
         metadata = metadata_;
         for (uint256 i = 0; i < verifiers_.length; i++) {
             require(verifiersTicks[i] > 0, "Invalid verifier tocks");
@@ -152,27 +153,41 @@ contract Problems is ERC721, Ownable {
         bodies = bodies_;
     }
 
-    function updateWalletAddress(address wallet_) public onlyOwner {
-        wallet = wallet_;
+    function updateProceedRecipientAddress(
+        address proceedRecipient_
+    ) public onlyOwner {
+        proceedRecipient = proceedRecipient_;
     }
 
     function generateSeed(uint256 tokenId) internal view returns (bytes32) {
-        // TODO: add back blockhash
-        return keccak256(abi.encodePacked(tokenId)); //, blockhash(block.number - 1)));
+        return
+            keccak256(abi.encodePacked(tokenId, blockhash(block.number - 1)));
     }
 
     function mint() public payable {
-        mint(msg.sender);
+        mint(msg.sender, 1);
+    }
+
+    function mint(
+        address recipient,
+        uint256 quantity
+    ) public payable initialized {
+        require(quantity <= 5, "Max 5");
+        require(!paused, "Paused");
+        require(block.timestamp >= startDate, "Not started");
+        require(msg.value == quantity * price, "Invalid price");
+        // (bool sent, bytes memory data) = proceedRecipient.call{value: msg.value}("");
+        (bool sent, bytes memory data) = proceedRecipient.call{
+            value: msg.value
+        }("");
+        emit EthMoved(proceedRecipient, sent, data, msg.value);
+        for (uint256 i = 0; i < quantity; i++) {
+            _internalMint(recipient);
+        }
     }
 
     function mint(address recipient) public payable initialized {
-        require(!paused, "Paused");
-        require(block.timestamp >= startDate, "Not started");
-        require(msg.value == price, "Invalid price");
-        // (bool sent, bytes memory data) = wallet.call{value: msg.value}("");
-        (bool sent, bytes memory data) = wallet.call{value: msg.value}("");
-        emit EthMoved(wallet, sent, data, msg.value);
-        _internalMint(recipient);
+        mint(recipient, 1);
     }
 
     function adminMint(address recipient) public initialized onlyOwner {
@@ -288,17 +303,27 @@ contract Problems is ERC721, Ownable {
         uint256 bodyId,
         bytes32 seed,
         uint256 bodyStyle,
-        uint256 i /*TODO: add back: pure*/
-    ) public view returns (Body memory) {
+        uint256 i
+    ) public pure returns (Body memory) {
         Body memory body;
         body.seed = seed;
 
         bytes32 rand = keccak256(abi.encodePacked(seed, i));
         uint256 x = randomRange(0, windowWidth, rand);
+
         rand = keccak256(abi.encodePacked(rand));
         uint256 y = randomRange(0, windowWidth, rand);
-        // TODO: update radius so it matches JS
-        uint256 r = (maxRadius - i) * scalingFactor;
+
+        rand = keccak256(abi.encodePacked(rand));
+        // console.log("rand");
+        // console.logBytes32(rand);
+        uint256 randRadius = randomRange(0, 3, rand);
+        // console.log("randRadius");
+        // console.log(randRadius);
+        randRadius = (randRadius) * 5 + startingRadius;
+        // console.log("randRadius");
+        // console.log(randRadius);
+        uint256 r = randRadius * scalingFactor;
 
         // console.log("maxVectorScaled");
         // console.log(maxVector * scalingFactor);

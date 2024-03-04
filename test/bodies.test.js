@@ -1,8 +1,8 @@
-const { expect } = require('chai')
-const { ethers } = require('hardhat')
-// const { describe, it } = require('mocha')
+import { expect } from 'chai'
+import hre from 'hardhat'
+const ethers = hre.ethers
 
-const { deployContracts, correctPrice, getParsedEventLogs, prepareMintBody, mintProblem } = require('../scripts/utils.js')
+import { deployContracts, correctPrice, getParsedEventLogs, prepareMintBody, mintProblem } from '../scripts/utils.js'
 
 // let tx
 describe('Bodies Tests', function () {
@@ -245,13 +245,15 @@ describe('Bodies Tests', function () {
 
     const scalingFactor = await problems.scalingFactor()
     const maxVector = await problems.maxVector()
-    const maxRadius = await problems.maxRadius()
+    const startingRadius = await problems.startingRadius()
+    const maxRadius = ethers.BigNumber.from(3 * 5).add(startingRadius)
+
     const windowWidth = await problems.windowWidth()
 
     const initialVelocity = maxVector.mul(scalingFactor)
 
     const bodyIDs = await problems.getProblemBodyIds(problemId)
-    let smallestRadius = maxRadius.mul(scalingFactor)
+    let smallestRadius = startingRadius.mul(scalingFactor)
     for (let i = 0; i < bodyCount; i++) {
       const currentBodyId = bodyIDs[i]
       const bodyData = await problems.getProblemBodyData(problemId, currentBodyId)
@@ -273,9 +275,7 @@ describe('Bodies Tests', function () {
 
       expect(radius).to.not.equal(0)
       expect(radius.lte(maxRadius.mul(scalingFactor))).to.be.true
-      // ensures radi get smaller even after 3
-      expect(radius.lte(smallestRadius)).to.be.true
-      smallestRadius = radius
+      expect(radius.gte(smallestRadius)).to.be.true
 
       expect(seed).to.not.equal(0)
     }

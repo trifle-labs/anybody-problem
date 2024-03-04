@@ -1,8 +1,9 @@
-const hre = require('hardhat')
-const { assert } = require('chai')
-const {
-  _calculateTime,
-} = require('../src/anybody.js')
+import hre from 'hardhat'
+import { assert } from 'chai'
+import {
+  utils,
+} from '../src/anybody.js'
+const _calculateTime = utils._calculateTime
 // const { describe, it, before } = require('mocha')
 
 describe('acceptableMarginOfError circuit', () => {

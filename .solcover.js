@@ -9,5 +9,6 @@ module.exports = {
     'Nft_9_20Verifier.sol',
     'Nft_10_20Verifier.sol'
   ],
+  configureYulOptimizer: true,
   istanbulFolder: 'docs'
 }

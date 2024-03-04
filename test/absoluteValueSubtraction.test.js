@@ -1,12 +1,14 @@
-const hre = require('hardhat')
+// const hre = require('hardhat')
+import hre from 'hardhat'
 // const { assert } = require('chai')
-
-const {
-  _calculateTime,
-} = require('../src/anybody.js')
-
+// const {
+//   utils,
+// } = require('../src/anybody.js')
+import { utils } from '../src/anybody.js'
+const _calculateTime = utils._calculateTime
 // const { describe, it, before } = require('mocha')
 console.log('Test absoluteValueSubtraction circuit')
+
 describe('absoluteValueSubtraction circuit', () => {
   let circuit
 
