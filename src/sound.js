@@ -1,9 +1,9 @@
 import { Transport, MultibandCompressor, Loop, Player, Reverb, Filter, Volume, PanVol, start, loaded} from 'tone'
-import whistle_8_T7 from '../public/whistle/whistle_8_T7.wav'
-import whistle_4_T3 from '../public/whistle/whistle_4_T3.wav'
-import whistle_7_T6 from '../public/whistle/whistle_7_T6.wav'
-import whistle_12_T11 from '../public/whistle/whistle_12_T11.wav'
-import whistle_8_T7_B from '../public/whistle/whistle_8_T7_B.wav'
+import whistle_8_T7 from '../public/whistle/whistle_8_T7.mp3'
+import whistle_4_T3 from '../public/whistle/whistle_4_T3.mp3'
+import whistle_7_T6 from '../public/whistle/whistle_7_T6.mp3'
+import whistle_12_T11 from '../public/whistle/whistle_12_T11.mp3'
+import whistle_8_T7_B from '../public/whistle/whistle_8_T7_B.mp3'
 
 const SONGS = {
   whistle: {
