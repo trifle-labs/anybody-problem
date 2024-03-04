@@ -28,7 +28,9 @@ const SONGS = {
 const MAX_VOLUME = 24 //db
 
 export default class Sound {
-  currentMeasure = 0
+  constructor() {
+    this.currentMeasure = 0
+  }
 
   // this function must be called in response to a user action
   // otherwise safari and chrome will block the audio
