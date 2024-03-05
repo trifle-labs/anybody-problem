@@ -1,18 +1,25 @@
 import { Transport, Compressor, Loop, Player, Reverb, Volume, PanVol, start, loaded} from 'tone'
+
 import whistle_8_T7 from '../public/sound/whistle/whistle_8_T7.mp3'
 import whistle_4_T3 from '../public/sound/whistle/whistle_4_T3.mp3'
 import whistle_7_T6 from '../public/sound/whistle/whistle_7_T6.mp3'
 import whistle_12_T11 from '../public/sound/whistle/whistle_12_T11.mp3'
 import whistle_8_T7_B from '../public/sound/whistle/whistle_8_T7_B.mp3'
 
-
-// public/sound/wii/wii_10_T9.mp3 public/sound/wii/wii_T5.mp3 public/sound/wii/wii_8_T7.mp3 public/sound/wii/wii_7_T6.mp3 public/sound/wii/wii_4_T3.mp3 public/sound/wii/wii_2_T1.mp3 public/sound/wii/wii_12_T11.mp3
 import wii_2_T1 from '../public/sound/wii/wii_2_T1.mp3'
 import wii_4_T3 from '../public/sound/wii/wii_4_T3.mp3'
 import wii_8_T7 from '../public/sound/wii/wii_8_T7.mp3'
 import wii_10_T9 from '../public/sound/wii/wii_10_T9.mp3'
 import wii_12_T11 from '../public/sound/wii/wii_12_T11.mp3'
 import wii_T5 from '../public/sound/wii/wii_T5.mp3'
+
+import ipod_2_T1 from '../public/sound/ipod/ipod_2_T1.mp3'
+import ipod_5_T4 from '../public/sound/ipod/ipod_5_T4.mp3'
+import ipod_7_T6 from '../public/sound/ipod/ipod_7_T6.mp3'
+import ipod_8_T7 from '../public/sound/ipod/ipod_8_T7.mp3'
+import ipod_14_FX from '../public/sound/ipod/ipod_14_FX.mp3'
+import ipod_15_Delay_Reverb from '../public/sound/ipod/ipod_15_Delay_Reverb.mp3'
+import ipod_hiss from '../public/sound/ipod/ipod_hiss.mp3'
 
 const SONGS = {
   whistle: {
@@ -38,15 +45,27 @@ const SONGS = {
       [wii_4_T3, 0.9, 1],
       [whistle_7_T6, 0.7, 1],
       [wii_12_T11, 0.7, 0],
-      [wii_10_T9, 0.7, 0],
+      [wii_10_T9, 0.9, 0],
       [wii_T5, 0.2, 1],
     ], [
       [wii_2_T1, 1, 0],
-      [wii_4_T3, 0.9, 1],
-      [wii_8_T7, 1, 0],
+      [wii_4_T3, 0.9, 0],
+      [wii_8_T7, 1, 1],
       [whistle_7_T6, 0.7, 1],
-      [wii_12_T11, 0.7, 0],
+      [wii_12_T11, 0.8, 0],
       [wii_10_T9, 0.7, 0],
+    ]],
+  },
+  ipod: {
+    bpm: 113,
+    parts: [[
+      [ipod_2_T1, 0.9, 0],
+      [ipod_5_T4, 0.9, 1],
+      [ipod_7_T6, 0.7, 1],
+      [ipod_8_T7, 0.7, 0],
+      [ipod_14_FX, 0.5, 0],
+      [ipod_15_Delay_Reverb, 1, 0],
+      [ipod_hiss, 0.5, 0],
     ]],
   }
 }
@@ -61,7 +80,7 @@ export default class Sound {
   // this function must be called in response to a user action
   // otherwise safari and chrome will block the audio
   resume() {
-    this.play(Math.random() < .5 ? SONGS.whistle : SONGS.wii)
+    this.play(SONGS.ipod)
   }
 
   pause() {
@@ -89,8 +108,8 @@ export default class Sound {
       this.voices = parts.map(part => this.voiceFromFile(part[0]))
       
       // master output
-      const reverb = new Reverb(1)
-      reverb.wet.value = 0.1
+      const reverb = new Reverb(0.5)
+      reverb.wet.value = 0.15
       this.masterVolume = new Volume(0).toDestination()
       this.masterVolume.volume.rampTo(MAX_VOLUME, 3)
       this.master = reverb
@@ -145,7 +164,7 @@ export default class Sound {
       const xFactor = x/anybody.windowWidth
 
       // panning
-      const panRange = 1.92 // 2 allows hard L/R panning
+      const panRange = 1.6 // 2 allows hard L/R panning
       voice.panVol.pan.linearRampTo(xFactor * panRange - panRange/2, 0.1)
     })
   }
