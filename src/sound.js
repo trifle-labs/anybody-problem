@@ -9,7 +9,6 @@ import whistle_8_T7_B from '../public/sound/whistle/whistle_8_T7_B.mp3'
 // public/sound/wii/wii_10_T9.mp3 public/sound/wii/wii_T5.mp3 public/sound/wii/wii_8_T7.mp3 public/sound/wii/wii_7_T6.mp3 public/sound/wii/wii_4_T3.mp3 public/sound/wii/wii_2_T1.mp3 public/sound/wii/wii_12_T11.mp3
 import wii_2_T1 from '../public/sound/wii/wii_2_T1.mp3'
 import wii_4_T3 from '../public/sound/wii/wii_4_T3.mp3'
-import wii_7_T6 from '../public/sound/wii/wii_7_T6.mp3'
 import wii_8_T7 from '../public/sound/wii/wii_8_T7.mp3'
 import wii_10_T9 from '../public/sound/wii/wii_10_T9.mp3'
 import wii_12_T11 from '../public/sound/wii/wii_12_T11.mp3'
@@ -37,7 +36,7 @@ const SONGS = {
     parts: [[
       [wii_2_T1, 1, 0],
       [wii_4_T3, 0.9, 1],
-      [wii_7_T6, 0.7, 1],
+      [whistle_7_T6, 0.7, 1],
       [wii_12_T11, 0.7, 0],
       [wii_10_T9, 0.7, 0],
       [wii_T5, 0.2, 1],
@@ -45,7 +44,7 @@ const SONGS = {
       [wii_2_T1, 1, 0],
       [wii_4_T3, 0.9, 1],
       [wii_8_T7, 1, 0],
-      [wii_7_T6, 0.7, 1],
+      [whistle_7_T6, 0.7, 1],
       [wii_12_T11, 0.7, 0],
       [wii_10_T9, 0.7, 0],
     ]],
