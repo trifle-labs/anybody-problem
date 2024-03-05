@@ -32,6 +32,7 @@ module.exports = {
   },
   plugins: [
     new HtmlWebpackPlugin({
+      hash: true,
       title: 'Anybody Problem',
       metaDesc: 'Anybody Problem',
       template: path.resolve(__dirname, 'src/index.ejs'),
@@ -41,6 +42,7 @@ module.exports = {
       templateParameters,
     }),
     new HtmlWebpackPlugin({
+      hash: true,
       title: 'Anybody Problem',
       metaDesc: 'Anybody Problem',
       template: path.resolve(__dirname, 'src/dev.ejs'),
