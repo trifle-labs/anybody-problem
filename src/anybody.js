@@ -1,11 +1,6 @@
-// const Prando = require('prando').default
 import Prando from 'prando'
 import EventEmitter from 'events'
-// const EventEmitter = require('events')
-
-// eslint-disable-next-line no-unused-vars
-// window.p5 = require('p5')
-// window.p5sound = require('p5/lib/addons/p5.sound')
+import Sound from './sound.js'
 
 const eyeArray = ['≖', '✿', 'ಠ', '◉', '۞', '◉', 'ಡ', '˘', '❛', '⊚', '✖', 'ᓀ', '◔', 'ಠ', '⊡', '◑', '■', '↑', '༎', 'ಥ', 'ཀ', '╥', '☯']
 const mouthArray = ['益', '﹏', '෴', 'ᗜ', 'ω']//'_', '‿', '‿‿', '‿‿‿', '‿‿‿‿', '‿‿‿‿‿', '‿‿‿‿‿‿', '‿‿‿‿‿‿‿', '‿‿‿‿‿‿‿‿', '‿‿‿‿‿‿‿‿‿']
@@ -74,7 +69,8 @@ export class Anybody extends EventEmitter {
     this.clearValues()
     this.init()
     !this.util && this.start()
-    // !this.util && this.audio()
+  
+    this.sound = new Sound()
   }
 
   // run whenever the class should be reset
@@ -140,25 +136,6 @@ export class Anybody extends EventEmitter {
     // console.dir({ bodyInits: this.bodyInits }, { depth: null })
   }
 
-  // audio() {
-  //   if (this.mute) return
-  //   // tone
-  //   this.envelopes = []
-  //   this.oscillators = []
-  //   this.noises = []
-  //   for (let i = 0; i < this.bodies.length; i++) {
-  //     this.noises[i] = new window.p5.Noise('pink')
-  //     // this.noises[i].start()
-
-  //     this.envelopes[i] = new window.p5.Envelope()
-  //     this.envelopes[i].setADSR(0.1, .1, .1, .1)
-  //     this.envelopes[i].setRange(1, 0)
-  //     this.oscillators[i] = new window.p5.Oscillator('sine')
-  //     this.oscillators[i].amp(this.envelopes[i])
-  //     this.oscillators[i].start()
-  //   }
-  // }
-
   runSteps(n = this.preRun) {
 
     let runIndex = 0
@@ -214,6 +191,9 @@ export class Anybody extends EventEmitter {
     this.justPaused = true
     if (newPauseState) {
       this.emit('paused', this.paused)
+      this.sound.pause()
+    } else {
+      this.sound.resume()
     }
   }
 
@@ -660,11 +640,13 @@ export class Anybody extends EventEmitter {
     this.bodies = results.bodies || []
     this.missiles = results.missiles || []
 
-    // this.playSounds()
     await this.drawBg()
     this.drawBodyTrails()
     this.drawBodies()
 
+    if (this.frames % 10 == 0) {
+      this.sound.render(this)
+    }
 
     if (this.mode == 'game') {
       this.drawMissiles()
@@ -881,25 +863,6 @@ export class Anybody extends EventEmitter {
       return Math.floor(this.frames / this.chunk) % 255
     }
   }
-
-  // playSounds() {
-  //   if (this.mute) return
-  //   for (let i = 0; i < this.bodies.length; i++) {
-  //     const body = this.bodies[i]
-  //     const speed = body.velocity.mag()
-  //     // const mass = body.radius
-  //     const freq = this.p.map(speed, 0, 5, 100, 300)
-  //     const amp = this.p.map(speed, 0, 5, 100, 200)
-  //     this.oscillators[i].amp(amp)
-  //     this.oscillators[i].freq(freq)
-  //     this.envelopes[i].volume(freq)
-  //     this.envelopes[i].play()
-
-  //     this.envelopes[i].play(this.noises[i])
-  //     // this.noises[i].pan(this.p.map(speed, 0, this.vectorLimit, -1, 1))
-  //     // this.noises[i].amp(this.p.map(speed, 0, this.vectorLimit + 100, 0, 10))
-  //   }
-  // }
 
   frameRate() {
     const diff = Date.now() - this.loadTime
