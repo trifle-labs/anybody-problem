@@ -82,6 +82,10 @@ module.exports = {
           },
         ],
       },
+      {
+        test: /\.(wav|mp3|webm)/,
+        type: 'asset/resource'
+      }
     ]
   }
 }
