@@ -1083,12 +1083,13 @@ export class Anybody extends EventEmitter {
 
   async drawBodies(attachToCanvas = true) {
     // if (!this.bodiesGraphic) {
-    this.bodiesGraphic = this.p.createGraphics(this.windowWidth, this.windowHeight)
+
+    this.bodiesGraphic ||= this.p.createGraphics(this.windowWidth, this.windowHeight)
     this.bodiesGraphic.noStroke()
 
     // this.bodiesGraphic.blendMode(this.p.DIFFERENCE)
     // }
-    // this.bodiesGraphic.clear()
+    this.bodiesGraphic.clear()
     // if (this.mode == 'nft') this.drawBorder()
     // this.bodiesGraphic.strokeWeight(1)
     const bodyCopies = []
