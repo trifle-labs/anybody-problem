@@ -204,9 +204,4 @@ export default class Sound {
       voice.panVol.pan.linearRampTo(xFactor * panRange - panRange/2, 0.1)
     })
   }
-
-  dispose() {
-    window.removeEventListener('keydown', this.handleKeyDown)
-    this.stop()
-  }
 }
