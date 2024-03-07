@@ -73,15 +73,13 @@ const SONGS = {
 const MAX_VOLUME = 24 //db
 
 export default class Sound {
-  constructor() {
-    this.currentMeasure = 0
-    this.handleKeyDown = this.handleKeyDown.bind(this)
+  currentMeasure = 0
 
-    // listen to arrow keys and switch song
+  constructor() {
     window.addEventListener('keydown', this.handleKeyDown)
   }
 
-  handleKeyDown(e) {
+  handleKeyDown = (e) => {
     if (e.key === '1') {
       this.stop()
       this.play(SONGS.whistle)

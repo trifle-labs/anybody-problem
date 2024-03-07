@@ -31,7 +31,7 @@
       "ecmaFeatures": {
         "modules": true
       },
-      "ecmaVersion": 12,
+      "ecmaVersion": "latest",
       "parser": "@babel/eslint-parser",
       "sourceType": "module"
     },
