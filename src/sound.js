@@ -12,6 +12,7 @@ import wii_8_T7 from '../public/sound/wii/wii_8_T7.mp3'
 import wii_10_T9 from '../public/sound/wii/wii_10_T9.mp3'
 import wii_12_T11 from '../public/sound/wii/wii_12_T11.mp3'
 import wii_T5 from '../public/sound/wii/wii_T5.mp3'
+import wii_chord from '../public/sound/wii/wii_chord.mp3'
 
 import ipod_2_T1 from '../public/sound/ipod/ipod_2_T1.mp3'
 import ipod_5_T4 from '../public/sound/ipod/ipod_5_T4.mp3'
@@ -48,17 +49,18 @@ const SONGS = {
     parts: [[
       [wii_2_T1, 1, 0],
       [wii_4_T3, 0.9, 1],
-      [whistle_7_T6, 0.7, 1],
-      [wii_12_T11, 0.7, 0],
-      [wii_10_T9, 0.9, 0],
-      [wii_T5, 0.2, 1],
+      [whistle_7_T6, 0.7, 0],
+      [wii_12_T11, 0.7, 1],
+      [wii_10_T9, 0.9, 1],
+      [wii_T5, 0.2, 0],
     ], [
-      [wii_2_T1, 1, 0],
-      [wii_4_T3, 0.9, 0],
+      [wii_2_T1, 1, 1],
+      [wii_4_T3, 0.9, 1],
       [wii_8_T7, 1, 1],
-      [whistle_7_T6, 0.7, 1],
+      [whistle_7_T6, 0.7, 0],
       [wii_12_T11, 0.8, 0],
-      [wii_10_T9, 0.7, 0],
+      [wii_10_T9, 0.7, 1],
+      [wii_chord, 1, 1],
     ]],
   },
   ipod: {
@@ -86,7 +88,8 @@ const SONGS = {
   },
 }
 
-const MAX_VOLUME = 8 //db
+const TRACK_VOLUME = -0.6 //db
+const MAX_VOLUME = 0 //db
 
 export default class Sound {
   currentMeasure = 0
@@ -167,6 +170,10 @@ export default class Sound {
       this.reverb ||= new Reverb(0.5)
       this.reverb.wet.value = 0.15
       this.compressor ||= new Compressor()
+      this.compressor.threshold.value = -24
+      this.compressor.ratio.value = 2
+      this.compressor.attack.value = 1
+      this.compressor.release.value = 0.1
       this.masterVolume = new Volume(0).toDestination()
       this.masterVolume.volume.rampTo(MAX_VOLUME, 3)
       this.master = this.reverb
@@ -196,7 +203,7 @@ export default class Sound {
           if (Math.random() > probability) {
             voice.panVol.volume.linearRampTo(-Infinity, 0.1)
           } else {
-            voice.panVol.volume.linearRampTo(MAX_VOLUME, 0.1)
+            voice.panVol.volume.linearRampTo(TRACK_VOLUME, 0.1)
           }
 
           voice.player.start(time)
