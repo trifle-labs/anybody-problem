@@ -278,7 +278,6 @@ export class Anybody extends EventEmitter {
     return (this.frames / diff) * 1000
   }
 
-
   generateBodies() {
     if (this.inputData) {
       // console.dir({ inputData: this.inputData }, { depth: null })
