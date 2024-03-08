@@ -302,9 +302,8 @@ export const Visuals = {
 
 
   paintAtOnce(n = this.paintSteps) {
-    if (!this.bodiesGraphic) {
-      this.bodiesGraphic = this.p.createGraphics(this.windowWidth, this.windowHeight)
-    }
+    this.bodiesGraphic ||= this.p.createGraphics(this.windowWidth, this.windowHeight)
+
     for (let i = 0; i < n; i++) {
       const results = this.step(this.bodies, this.missiles)
       this.bodies = results.bodies
@@ -314,6 +313,7 @@ export const Visuals = {
     }
 
     this.p.image(this.bodiesGraphic, 0, 0)
+    this.bodiesGraphic.clear()
   },
 
   convertColor(c, isGrey = true) {
@@ -481,8 +481,7 @@ export const Visuals = {
   },
 
   async drawBodies(attachToCanvas = true) {
-    // if (!this.bodiesGraphic) {
-    this.bodiesGraphic = this.p.createGraphics(this.windowWidth, this.windowHeight)
+    this.bodiesGraphic ||= this.p.createGraphics(this.windowWidth, this.windowHeight)
     this.bodiesGraphic.noStroke()
 
     // this.bodiesGraphic.blendMode(this.p.DIFFERENCE)
@@ -563,6 +562,8 @@ export const Visuals = {
     if (attachToCanvas) {
       this.p.image(this.bodiesGraphic, 0, 0)
     }
+
+    this.bodiesGraphic.clear()
 
 
     if (this.paused) {
