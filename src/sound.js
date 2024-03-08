@@ -75,6 +75,25 @@ const MAX_VOLUME = 24 //db
 export default class Sound {
   constructor() {
     this.currentMeasure = 0
+    this.handleKeyDown = this.handleKeyDown.bind(this)
+
+    // listen to arrow keys and switch song
+    window.addEventListener('keydown', this.handleKeyDown)
+  }
+
+  handleKeyDown(e) {
+    if (e.key === '1') {
+      this.stop()
+      this.play(SONGS.whistle)
+    }
+    if (e.key === '2') {
+      this.stop()
+      this.play(SONGS.wii)
+    }
+    if (e.key === '3') {
+      this.stop()
+      this.play(SONGS.ipod)
+    }
   }
 
   // this function must be called in response to a user action
@@ -98,10 +117,29 @@ export default class Sound {
     return voice
   }
 
+  stop() {
+    this.pause()
+    this.loop?.dispose()
+    this.voices?.forEach(voice => {
+      voice.player.dispose()
+      voice.panVol.dispose()
+    })
+    this.voices = null
+    this.currentMeasure = 0
+    this.currentSong = null
+  }
+
   async play(song) {
     // only start if it hasn't started yet
     if (Transport.state === 'started') return
     await start()
+    
+    // if song is different from last one, dispose of old voices
+    if (this.currentSong && this.currentSong !== song) {
+      this.stop()
+    }
+  
+    this.currentSong = song
 
     if (!this.voices) {
       const parts = song.parts[0]
@@ -115,12 +153,12 @@ export default class Sound {
       this.master = reverb
         .connect(new Compressor())
         .connect(this.masterVolume)
-  
+
       Transport.bpm.value = song.bpm
 
       await loaded()
 
-      new Loop(time => {
+      this.loop = new Loop(time => {
         this.currentMeasure++
         this.voices.forEach((voice, i) => {
           // just step through parts
