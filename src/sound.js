@@ -90,6 +90,7 @@ const SONGS = {
 
 const TRACK_VOLUME = -0.6 //db
 const MAX_VOLUME = 0 //db
+const INTRO_LENGTH = 1 // measures
 
 export default class Sound {
   currentMeasure = 0
@@ -199,7 +200,7 @@ export default class Sound {
           voice.panVol.connect(this.master)
 
           // randomly mute some voices, but keep most on
-          const probability = this.currentMeasure <= 2 && typeof part[2] === 'number' ? part[2] : part[1]
+          const probability = this.currentMeasure <= INTRO_LENGTH && typeof part[2] === 'number' ? part[2] : part[1]
           if (Math.random() > probability) {
             voice.panVol.volume.linearRampTo(-Infinity, 0.1)
           } else {
@@ -231,5 +232,10 @@ export default class Sound {
       const panRange = 1.4 // 2 is max, hard L/R panning
       voice.panVol.pan.linearRampTo(xFactor * panRange - panRange/2, 0.1)
     })
+  }
+
+  activeVoices() {
+    return this.voices?.map((voice, i) => voice.panVol.volume.value > -Infinity ? i : null)
+      .filter(i => i !== null) || []
   }
 }

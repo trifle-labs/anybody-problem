@@ -19,9 +19,9 @@ export const Visuals = {
     // if (this.paused) return
     if (!this.showIt) return
     this.frames++
-    if (this.frames % 100 == 0) {
+    // if (this.frames % 100 == 0) {
       // console.log({ bodies })
-    }
+    // }
     this.p.noFill()
 
 
@@ -29,15 +29,13 @@ export const Visuals = {
     this.bodies = results.bodies || []
     this.missiles = results.missiles || []
 
-    // this.playSounds()
-    this.drawBg()
-    this.drawBodyTrails()
-    this.drawBodies()
-
-
     if (this.frames % 10 == 0) {
       this.sound.render(this)
     }
+    
+    this.drawBg()
+    this.drawBodyTrails()
+    this.drawBodies()
 
 
     if (this.mode == 'game') {
@@ -440,9 +438,13 @@ export const Visuals = {
     this.bodiesGraphic.pop()
   },
 
-  drawBodiesLooped(body, drawFunction) {
+  drawBodiesLooped(body, drawFunction, playingSound) {
     drawFunction = drawFunction.bind(this)
-    const radius = body.radius * 4 + this.radiusMultiplyer
+    let radius = body.radius * 4 + this.radiusMultiplyer
+    // if we are playing sound, the radius should animate from big to small
+    if (playingSound) {
+      radius = radius + Math.sin(this.frames / 10) * 20
+    }
     drawFunction(body.position.x, body.position.y, body.velocity, radius, body)
 
     let loopedX = false, loopedY = false, loopX = body.position.x, loopY = body.position.y
@@ -478,6 +480,18 @@ export const Visuals = {
     if (loopedX && loopedY) {
       drawFunction(loopX, loopY, body.velocity, radius, body)
     }
+
+    // if we are playing sound, draw a music note
+    if (playingSound) {
+      this.bodiesGraphic.fill('rgba(0,0,0,0.3)')
+      this.bodiesGraphic.textSize(radius / 4)
+      this.bodiesGraphic.text('♫', body.position.x - radius / 2.4, body.position.y + radius / 8)
+      // draw 2 smaller notes up and to the right like a "zzz" sleeping graphic
+      this.bodiesGraphic.textSize(radius / 6)
+      this.bodiesGraphic.text('♫', body.position.x - radius / 2.4 + radius / 4, body.position.y - radius / 4)
+      this.bodiesGraphic.textSize(radius / 8)
+      this.bodiesGraphic.text('♫', body.position.x - radius / 2.4 + radius / 2, body.position.y - radius / 2)
+    }
   },
 
   async drawBodies(attachToCanvas = true) {
@@ -489,10 +503,12 @@ export const Visuals = {
     // this.bodiesGraphic.clear()
     // if (this.mode == 'nft') this.drawBorder()
     // this.bodiesGraphic.strokeWeight(1)
+    const activeVoices = this.sound.activeVoices()
     const bodyCopies = []
     for (let i = 0; i < this.bodies.length; i++) {
       // const body = this.bodies.sort((a, b) => b.radius - a.radius)[i]
       const body = this.bodies[i]
+      const playingSound = activeVoices.includes(i)
       let c = body.c
       let finalColor
       if (this.colorStyle == 'squiggle') {
@@ -509,7 +525,7 @@ export const Visuals = {
       }
 
       if (this.mode == 'nft') {
-        this.drawBodiesLooped(body, this.drawBody)
+        this.drawBodiesLooped(body, this.drawBody, playingSound)
         // if (i % 3 == 0) {
         //   this.bodiesGraphic.stroke('black')
         // } else if (i % 2 == 0) {
