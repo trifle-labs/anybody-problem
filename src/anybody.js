@@ -53,6 +53,7 @@ export class Anybody extends EventEmitter {
       stopEvery: 0,
       util: false,
       optimistic: false,
+      paused: true,
     }
 
     // Merge the default options with the provided options
@@ -81,6 +82,7 @@ export class Anybody extends EventEmitter {
     this.stopEvery = mergedOptions.stopEvery
     this.util = mergedOptions.util
     this.optimistic = mergedOptions.optimistic
+    this.paused = mergedOptions.paused
 
     // Add other constructor logic here
     this.p = p
@@ -88,10 +90,10 @@ export class Anybody extends EventEmitter {
 
     !this.util && this.prepareP5()
     this.clearValues()
+    this.sound = new Sound()
     this.init()
     !this.util && this.start()
-  
-    this.sound = new Sound()
+
   }
 
   // run whenever the class should be reset
@@ -113,7 +115,6 @@ export class Anybody extends EventEmitter {
     this.missileCount = 0
     this.frames = 0
     this.showIt = true
-    this.paused = false
     this.justStopped = false
     this.bgColor = null
     this.loadTime = Date.now()
@@ -130,6 +131,7 @@ export class Anybody extends EventEmitter {
     this.generateBodies()
     // const vectorLimitScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
     this.storeInits()
+    this.setPause(this.paused)
   }
 
   start() {
@@ -138,7 +140,7 @@ export class Anybody extends EventEmitter {
     this.runSteps(this.preRun)
     this.paintAtOnce(this.paintSteps)
     if (this.freeze) {
-      this.paused = true
+      this.setPause(true)
     }
   }
 
@@ -207,13 +209,14 @@ export class Anybody extends EventEmitter {
     if (typeof newPauseState !== 'boolean') {
       newPauseState = !this.paused
     }
-    console.log('pause clicked', newPauseState)
     this.paused = newPauseState
     this.justPaused = true
     if (newPauseState) {
       this.emit('paused', this.paused)
+      this.p.noLoop()
       this.sound.pause()
     } else {
+      this.p.loop()
       this.sound.resume()
     }
   }
@@ -396,7 +399,7 @@ export class Anybody extends EventEmitter {
   }
 
   prepareP5() {
-    this.p.frameRate(60)
+    this.p.frameRate(50)
     this.p.createCanvas(this.windowWidth, this.windowWidth)
     this.p.background('white')
   }
