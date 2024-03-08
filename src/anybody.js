@@ -1,25 +1,34 @@
+
 import Prando from 'prando'
 
 
 import EventEmitter from 'events'
-import Sound from './sound.js'
+// import Sound from './sound.js'
 import { Visuals } from './visuals.js'
-import { utils, Calculations } from './calculations.js'
-const {
+import {
   _smolr,
-  // _convertBigIntToModP,
-  // _approxDist,
-  // _approxSqrt,
-  // _approxDiv,
-  // _calculateTime,
-  // _explosion,
-  // _addVectors,
+  _convertBigIntToModP,
+  _approxDist,
+  _approxSqrt,
+  _approxDiv,
+  _calculateTime,
+  _explosion,
+  _addVectors,
+  _validateSeed,
+  Calculations
+} from './calculations.js'
+
+export {
+  _smolr,
+  _convertBigIntToModP,
+  _approxDist,
+  _approxSqrt,
+  _approxDiv,
+  _calculateTime,
+  _explosion,
+  _addVectors,
   _validateSeed
-} = utils
-
-export { utils }
-
-
+}
 
 export class Anybody extends EventEmitter {
   constructor(p, options = {}) {
@@ -90,7 +99,7 @@ export class Anybody extends EventEmitter {
 
     !this.util && this.prepareP5()
     this.clearValues()
-    this.sound = new Sound()
+    // this.sound = new Sound()
     this.init()
     !this.util && this.start()
 
@@ -213,11 +222,11 @@ export class Anybody extends EventEmitter {
     this.justPaused = true
     if (newPauseState) {
       this.emit('paused', this.paused)
-      this.p.noLoop()
-      this.sound.pause()
+      this.p?.noLoop()
+      this.sound?.pause()
     } else {
-      this.p.loop()
-      this.sound.resume()
+      this.p?.loop()
+      this.sound?.resume()
     }
   }
 
@@ -432,5 +441,6 @@ export class Anybody extends EventEmitter {
   }
 
 }
-
-window.Anybody = Anybody
+if (typeof window !== 'undefined') {
+  window.Anybody = Anybody
+}

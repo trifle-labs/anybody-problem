@@ -508,7 +508,7 @@ function _validateSeed(seed) {
 
 
 
-export const utils = {
+export {
   _smolr,
   _convertBigIntToModP,
   _approxDist,

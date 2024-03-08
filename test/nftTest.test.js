@@ -19,8 +19,7 @@ import { mine } from '@nomicfoundation/hardhat-network-helpers'
 //   Anybody,
 //   _calculateTime,
 // } = require('../src/anybody.js')
-import { Anybody, utils } from '../src/anybody.js'
-const _calculateTime = utils._calculateTime
+import { Anybody, _calculateTime } from '../src/anybody.js'
 
 // const p = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
 const steps = 20

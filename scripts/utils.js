@@ -281,6 +281,7 @@ const generateProof = async (seed, bodyCount, ticksRun, bodyData) => {
 
   const bodyFinal = anybody.bodyFinal
   // const startTime = Date.now()
+  console.log({ inputData, bodyCount, ticksRun })
   const dataResult = await exportCallDataGroth16(
     inputData,
     `./public/nft_${bodyCount}_${ticksRun}.wasm`,

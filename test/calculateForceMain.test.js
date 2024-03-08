@@ -4,9 +4,8 @@ import hre from 'hardhat'
 
 import {
   Anybody,
-  utils,
+  _calculateTime,
 } from '../src/anybody.js'
-const _calculateTime = utils._calculateTime
 // const p = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
 
 describe('calculateForceMain circuit', () => {

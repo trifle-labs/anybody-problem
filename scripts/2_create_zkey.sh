@@ -36,7 +36,7 @@ fi
 
 echo "----- Generate .zkey file -----"
 # Generate a .zkey file that will contain the proving and verification keys together with all phase 2 contributions
-node --max-old-space-size=8192 $(which snarkjs) groth16 setup ${CIRCUIT}.r1cs ${PTAU_PATH} ${CIRCUIT}_0000.zkey
+node --max-old-space-size=32768 $(which snarkjs) groth16 setup ${CIRCUIT}.r1cs ${PTAU_PATH} ${CIRCUIT}_0000.zkey
 
 
 CURRENT_TIME=$(date +%s)

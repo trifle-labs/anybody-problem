@@ -365,11 +365,11 @@ export const Visuals = {
     // this.bodiesGraphic.fill(i % 2 == 0 ? 'white' : this.randomColor(0, 255))
   },
 
-  drawStyleGhost(x, y, v, radius, body) {
+  drawStyleGhost(x, y, v, radius) {
     this.ghostEyes(radius)
   },
 
-  drawPngFace(x, y, v, radius, body) {
+  drawPngFace(x, y, v, radius) {
 
     if (!this.faceLoading && !this.face) {
       this.faceLoading = true
@@ -436,7 +436,8 @@ export const Visuals = {
 
   drawBody(x, y, v, radius, body) {
     this.moveAndRotate_PopAfter(this.bodiesGraphic, x, y, v)
-    this.drawPngFace(x, y, v, radius, body)
+    this.drawStyle1(x, y, v, radius, body)
+    // this.drawPngFace(x, y, v, radius, body)
     this.bodiesGraphic.pop()
   },
 
@@ -462,13 +463,11 @@ export const Visuals = {
 
     // crosses bottom, draw on top
     if (body.position.y > this.windowHeight - loopGap) {
-      console.log(body.position.y, this.windowHeight - loopGap, 'y > height - loopGap')
       loopedY = true
       loopY = body.position.y - this.windowHeight
       drawFunction(body.position.x, loopY, body.velocity, radius, body)
       // crosses top, draw on bottom
     } else if (body.position.y < loopGap) {
-      console.log(body.position.y, loopGap, 'y < loopGap')
       loopedY = true
       loopY = body.position.y + this.windowHeight
       drawFunction(body.position.x, loopY, body.velocity, radius, body)

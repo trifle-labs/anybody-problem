@@ -169,7 +169,7 @@ describe('Solver Tests', function () {
     expect(newTickCount).to.equal(runningTickCount)
 
   })
-  it('creates proofs for multiple bodies', async () => {
+  it.only('creates proofs for multiple bodies', async () => {
 
     const ticksRun = 20
 

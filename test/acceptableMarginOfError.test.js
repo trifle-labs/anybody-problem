@@ -1,9 +1,8 @@
 import hre from 'hardhat'
 import { assert } from 'chai'
 import {
-  utils,
+  _calculateTime,
 } from '../src/anybody.js'
-const _calculateTime = utils._calculateTime
 // const { describe, it, before } = require('mocha')
 
 describe('acceptableMarginOfError circuit', () => {
@@ -17,11 +16,13 @@ describe('acceptableMarginOfError circuit', () => {
   const sanityCheck = true
 
   before(async () => {
+    console.log('before 2)')
     circuit = await hre.circuitTest.setup('acceptableMarginOfError')
 
   })
 
   it('produces a witness with valid constraints', async () => {
+    console.log('before 3')
     const witness = await circuit.calculateWitness(sampleInput, sanityCheck)
     // get the number of inputs
     const inputs = Object.keys(sampleInput).length
