@@ -1,5 +1,5 @@
 import { groth16 } from 'snarkjs'
-
+// const groth16 = {}
 
 export async function exportCallDataGroth16(input, wasmPath, zkeyPath) {
   const { proof: _proof, publicSignals: _publicSignals } =

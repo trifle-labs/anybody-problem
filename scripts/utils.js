@@ -267,6 +267,26 @@ const prepareMintBody = async (signers, deployedContracts, problemId, acct) => {
   return { tx }
 }
 
+const generateWitness = async (seed, bodyCount, ticksRun, bodyData) => {
+  const anybody = new Anybody(null, {
+    bodyData,
+    seed,
+    util: true,
+  })
+
+  const inputData = { bodies: anybody.bodyInits }
+  anybody.runSteps(ticksRun)
+  anybody.calculateBodyFinal()
+
+  const bodyFinal = anybody.bodyFinal
+  const dataResult = await exportCallDataGroth16(
+    inputData,
+    `./public/nft_${bodyCount}_${ticksRun}.wasm`,
+    `./public/nft_${bodyCount}_${ticksRun}_final.zkey`
+  )
+  return { inputData, bodyFinal, dataResult }
+
+}
 
 const generateProof = async (seed, bodyCount, ticksRun, bodyData) => {
   const anybody = new Anybody(null, {
@@ -281,7 +301,6 @@ const generateProof = async (seed, bodyCount, ticksRun, bodyData) => {
 
   const bodyFinal = anybody.bodyFinal
   // const startTime = Date.now()
-  console.log({ inputData, bodyCount, ticksRun })
   const dataResult = await exportCallDataGroth16(
     inputData,
     `./public/nft_${bodyCount}_${ticksRun}.wasm`,
@@ -342,6 +361,7 @@ export {
   readData,
   testJson,
   correctPrice,
+  generateWitness
   // splitterAddress
 }
 

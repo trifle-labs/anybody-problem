@@ -169,7 +169,7 @@ describe('Solver Tests', function () {
     expect(newTickCount).to.equal(runningTickCount)
 
   })
-  it.only('creates proofs for multiple bodies', async () => {
+  it('creates proofs for multiple bodies', async () => {
 
     const ticksRun = 20
 
@@ -187,7 +187,8 @@ describe('Solver Tests', function () {
     // mint enough tocks to mint and add a new body before next loop
     for (let i = 0; i <= totalBodies; i++) {
       const { bodyCount } = await problems.problems(problemId)
-      expect(bodyCount).to.equal(initialBodyCount.add(i))
+      console.log({ bodyCount: bodyCount.toString(), initialBodyCount: initialBodyCount.toString(), i, add: initialBodyCount.add(i).toString() })
+      expect(bodyCount.toString()).to.equal(initialBodyCount.add(i).toString())
       const bodyData = []
       const bodyIds = await problems.getProblemBodyIds(problemId)
       for (let j = 0; j < bodyCount; j++) {
