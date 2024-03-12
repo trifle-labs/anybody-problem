@@ -1,6 +1,6 @@
 
 
-export { Anybody, utils } from './anybody.js'
+export { Anybody } from './anybody.js'
 export * as circuits from '../scripts/circuits.js'
 // const utils = require('../scripts/utils')
 
@@ -66,7 +66,6 @@ export const Metadata = {
 
 // export default {
 //   Anybody,
-//   utils,
 //   // circuits,
 //   Problems,
 //   Bodies,

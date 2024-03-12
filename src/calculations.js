@@ -1,5 +1,8 @@
 
 
+// these still use this:
+// scalingFactor, vectorLimit, windowWidth, G, minDistanceSquared, bodies, bodyFinal, explosions, missiles
+
 export const Calculations = {
 
   forceAccumulator(bodies = this.bodies) {
@@ -341,9 +344,6 @@ export const Calculations = {
 /// functional utils
 // ------
 
-function _smolr(a, b) {
-  return a < b ? a : b
-}
 function _convertBigIntToModP(v) {
   const prime = 21888242871839275222246405745257275088548364400416034343698204186575808495617n
   let vmp = v % prime
@@ -508,8 +508,7 @@ function _validateSeed(seed) {
 
 
 
-export const utils = {
-  _smolr,
+export {
   _convertBigIntToModP,
   _approxDist,
   _approxSqrt,

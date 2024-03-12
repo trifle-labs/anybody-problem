@@ -1,4 +1,4 @@
-import { Transport, Compressor, Loop, Player, Reverb, Volume, PanVol, start, loaded} from 'tone'
+import { Transport, Compressor, Loop, Player, Reverb, Volume, PanVol, start, loaded } from 'tone'
 
 import whistle_8_T7 from '../public/sound/whistle/whistle_8_T7.mp3'
 import whistle_4_T3 from '../public/sound/whistle/whistle_4_T3.mp3'
@@ -155,18 +155,18 @@ export default class Sound {
     // only start if it hasn't started yet
     if (Transport.state === 'started') return
     await start()
-    
+
     // if song is different from last one, dispose of old voices
     if (this.currentSong && this.currentSong !== song) {
       this.stop()
     }
-  
+
     this.currentSong = song
 
     if (!this.voices) {
       const parts = song.parts[0]
       this.voices = parts.map(part => this.voiceFromFile(part[0]))
-      
+
       // master output
       this.reverb ||= new Reverb(0.5)
       this.reverb.wet.value = 0.15
@@ -211,7 +211,7 @@ export default class Sound {
         })
       }, song.interval || '2m').start(0)
     }
-  
+
     // PLAY
     Transport.start()
   }
@@ -226,11 +226,11 @@ export default class Sound {
       if (!body) return
       const { x } = body.position
 
-      const xFactor = x/anybody.windowWidth
+      const xFactor = x / anybody.windowWidth
 
       // panning
       const panRange = 1.4 // 2 is max, hard L/R panning
-      voice.panVol.pan.linearRampTo(xFactor * panRange - panRange/2, 0.1)
+      voice.panVol.pan.linearRampTo(xFactor * panRange - panRange / 2, 0.1)
     })
   }
 
