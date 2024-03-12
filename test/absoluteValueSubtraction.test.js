@@ -1,6 +1,6 @@
 
 import hre from 'hardhat'
-import { _calculateTime } from '../src/anybody.js'
+import { _calculateTime } from '../src/calculations.js'
 // const { describe, it, before } = require('mocha')
 console.log('Test absoluteValueSubtraction circuit')
 

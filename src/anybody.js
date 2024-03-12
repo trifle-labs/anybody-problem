@@ -6,29 +6,10 @@ import EventEmitter from 'events'
 // import Sound from './sound.js'
 import { Visuals } from './visuals.js'
 import {
-  _smolr,
-  _convertBigIntToModP,
-  _approxDist,
-  _approxSqrt,
-  _approxDiv,
-  _calculateTime,
-  _explosion,
-  _addVectors,
   _validateSeed,
   Calculations
 } from './calculations.js'
 
-export {
-  _smolr,
-  _convertBigIntToModP,
-  _approxDist,
-  _approxSqrt,
-  _approxDiv,
-  _calculateTime,
-  _explosion,
-  _addVectors,
-  _validateSeed
-}
 
 export class Anybody extends EventEmitter {
   constructor(p, options = {}) {
@@ -443,4 +424,8 @@ export class Anybody extends EventEmitter {
 }
 if (typeof window !== 'undefined') {
   window.Anybody = Anybody
+}
+
+function _smolr(a, b) {
+  return a < b ? a : b
 }

@@ -1,5 +1,5 @@
 
-import { _validateSeed } from '../src/anybody.js'
+import { _validateSeed } from '../src/calculations.js'
 // const { describe, it } = require('mocha')
 //jest
 import { expect } from 'chai'

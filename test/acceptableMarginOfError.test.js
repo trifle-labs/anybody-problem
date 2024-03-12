@@ -2,7 +2,7 @@ import hre from 'hardhat'
 import { assert } from 'chai'
 import {
   _calculateTime,
-} from '../src/anybody.js'
+} from '../src/calculations.js'
 // const { describe, it, before } = require('mocha')
 
 describe('acceptableMarginOfError circuit', () => {

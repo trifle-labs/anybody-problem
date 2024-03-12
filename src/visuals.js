@@ -36,7 +36,7 @@ export const Visuals = {
 
 
     if (this.frames % 10 == 0) {
-      this.sound.render(this)
+      this.sound?.render(this)
     }
 
 
