@@ -1,24 +1,14 @@
+
 import Prando from 'prando'
 
 
 import EventEmitter from 'events'
-import Sound from './sound.js'
+// import Sound from './sound.js'
 import { Visuals } from './visuals.js'
-import { utils, Calculations } from './calculations.js'
-const {
-  _smolr,
-  // _convertBigIntToModP,
-  // _approxDist,
-  // _approxSqrt,
-  // _approxDiv,
-  // _calculateTime,
-  // _explosion,
-  // _addVectors,
-  _validateSeed
-} = utils
-
-export { utils }
-
+import {
+  _validateSeed,
+  Calculations
+} from './calculations.js'
 
 
 export class Anybody extends EventEmitter {
@@ -90,7 +80,7 @@ export class Anybody extends EventEmitter {
 
     !this.util && this.prepareP5()
     this.clearValues()
-    this.sound = new Sound()
+    // this.sound = new Sound()
     this.init()
     !this.util && this.start()
 
@@ -213,11 +203,11 @@ export class Anybody extends EventEmitter {
     this.justPaused = true
     if (newPauseState) {
       this.emit('paused', this.paused)
-      this.p.noLoop()
-      this.sound.pause()
+      this.p?.noLoop()
+      this.sound?.pause()
     } else {
-      this.p.loop()
-      this.sound.resume()
+      this.p?.loop()
+      this.sound?.resume()
     }
   }
 
@@ -427,5 +417,10 @@ export class Anybody extends EventEmitter {
   }
 
 }
+if (typeof window !== 'undefined') {
+  window.Anybody = Anybody
+}
 
-window.Anybody = Anybody
+function _smolr(a, b) {
+  return a < b ? a : b
+}

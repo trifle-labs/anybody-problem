@@ -1,6 +1,5 @@
 
-import { utils } from '../src/anybody.js'
-const _validateSeed = utils._validateSeed
+import { _validateSeed } from '../src/calculations.js'
 // const { describe, it } = require('mocha')
 //jest
 import { expect } from 'chai'

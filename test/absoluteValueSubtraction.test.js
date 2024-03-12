@@ -1,11 +1,6 @@
-// const hre = require('hardhat')
+
 import hre from 'hardhat'
-// const { assert } = require('chai')
-// const {
-//   utils,
-// } = require('../src/anybody.js')
-import { utils } from '../src/anybody.js'
-const _calculateTime = utils._calculateTime
+import { _calculateTime } from '../src/calculations.js'
 // const { describe, it, before } = require('mocha')
 console.log('Test absoluteValueSubtraction circuit')
 
@@ -25,10 +20,12 @@ describe('absoluteValueSubtraction circuit', () => {
   const sanityCheck = true
 
   before(async () => {
+    console.log('before')
     circuit = await hre.circuitTest.setup('absoluteValueSubtraction')
   })
 
   it('produces a witness with valid constraints', async () => {
+    console.log('produces witnss')
     const witness = await circuit.calculateWitness(sampleInput[0].in, sanityCheck)
     const inputs = sampleInput[0].in.in.length
     const perStep = witness.length - inputs
