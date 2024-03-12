@@ -1,6 +1,4 @@
-if(typeof exports === "object" && typeof module !== "undefined") module.exports = Q5;
-
-function Q5(scope){
+export default function Q5(scope){
   "use strict";
   return new graphics(scope);
   function graphics(scope){let $ = (scope == "global" ? window : this);
@@ -2155,12 +2153,12 @@ function Q5(scope){
       };
     }
     function isTouchUnaware(){
-      return $._touchStarted.isPlaceHolder
-         &&  $._touchMoved.isPlaceHolder
-         &&  $._touchEnded.isPlaceHolder
+      return $.touchStarted
+         &&  $.touchMoved
+         &&  $.touchEnded
     }
     $.canvas.ontouchstart = function(event){
-      $.touches = event.touches.map(getTouchInfo);
+      $.touches = [...event.touches].map(getTouchInfo);
       if (isTouchUnaware()){
         $.pmouseX = $.mouseX;
         $.pmouseY = $.mouseY;
@@ -2178,7 +2176,7 @@ function Q5(scope){
 
     }
     $.canvas.ontouchmove = function(event){
-      $.touches = event.touches.map(getTouchInfo);
+      $.touches = [...event.touches].map(getTouchInfo);
       if (isTouchUnaware()){
         $.pmouseX = $.mouseX;
         $.pmouseY = $.mouseY;
@@ -2190,13 +2188,13 @@ function Q5(scope){
           event.preventDefault();
         }
       }
-      if (!$._touchMovedFn(event)){
+      if (!$.touchMoved(event)){
         event.preventDefault();
       }
 
     }
     $.canvas.ontouchend = $.canvas.ontouchcancel = function(event){
-      $.touches = event.touches.map(getTouchInfo);
+      $.touches = [...event.touches].map(getTouchInfo);
       if (isTouchUnaware()){
         $.pmouseX = $.mouseX;
         $.pmouseY = $.mouseY;
