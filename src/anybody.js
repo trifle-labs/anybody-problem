@@ -276,11 +276,6 @@ export class Anybody extends EventEmitter {
     // this.setPause(false)
   }
 
-  frameRate() {
-    const diff = Date.now() - this.loadTime
-    return (this.frames / diff) * 1000
-  }
-
   generateBodies() {
     if (this.inputData) {
       // console.dir({ inputData: this.inputData }, { depth: null })

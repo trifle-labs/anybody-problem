@@ -223,8 +223,8 @@ export const Visuals = {
       // this.p.rect(0, 0, 50, 20)
       // this.p.fill(this.getNotGrey())
       this.p.textAlign(this.p.RIGHT) // Right-align the text
-      this.p.text(this.preRun + this.frames, 45, 15) // Adjust the x-coordinate to align the text
-      this.p.text(this.frameRate().toFixed(2), 45, 35)
+      this.p.text(`${this.preRun + this.frames} t`, 65, 25) // Adjust the x-coordinate to align the text
+      this.p.text(`${this.frameRate().toFixed(2)} fps`, 65, 45)
     } else {
       this.p.fill('white')
       this.p.rect(0, 0, 50, 20)
@@ -462,13 +462,13 @@ export const Visuals = {
 
     // crosses bottom, draw on top
     if (body.position.y > this.windowHeight - loopGap) {
-      console.log(body.position.y, this.windowHeight - loopGap, 'y > height - loopGap')
+      // console.log(body.position.y, this.windowHeight - loopGap, 'y > height - loopGap')
       loopedY = true
       loopY = body.position.y - this.windowHeight
       drawFunction(body.position.x, loopY, body.velocity, radius, body)
       // crosses top, draw on bottom
     } else if (body.position.y < loopGap) {
-      console.log(body.position.y, loopGap, 'y < loopGap')
+      // console.log(body.position.y, loopGap, 'y < loopGap')
       loopedY = true
       loopY = body.position.y + this.windowHeight
       drawFunction(body.position.x, loopY, body.velocity, radius, body)
@@ -845,5 +845,18 @@ export const Visuals = {
     } else {
       return { x, y }
     }
+  },
+
+  frameRate() {
+    this.lastFrameRateCheckAt ||= { frames: this.frames, time: Date.now() }
+    this.lastFrameRate ||= 0
+
+    if (this.frames - this.lastFrameRateCheckAt.frames > 30) {
+      const diff = (Date.now() - this.lastFrameRateCheckAt.time)
+      this.lastFrameRate = (this.frames - this.lastFrameRateCheckAt.frames) / diff * 1000
+      this.lastFrameRateCheckAt = { frames: this.frames, time: Date.now() }
+    }
+
+    return this.lastFrameRate
   }
 }
