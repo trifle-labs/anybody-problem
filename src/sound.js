@@ -12,6 +12,7 @@ import wii_8_T7 from '../public/sound/wii/wii_8_T7.mp3'
 import wii_10_T9 from '../public/sound/wii/wii_10_T9.mp3'
 import wii_12_T11 from '../public/sound/wii/wii_12_T11.mp3'
 import wii_T5 from '../public/sound/wii/wii_T5.mp3'
+import wii_chord from '../public/sound/wii/wii_chord.mp3'
 
 import ipod_2_T1 from '../public/sound/ipod/ipod_2_T1.mp3'
 import ipod_5_T4 from '../public/sound/ipod/ipod_5_T4.mp3'
@@ -20,6 +21,11 @@ import ipod_8_T7 from '../public/sound/ipod/ipod_8_T7.mp3'
 import ipod_14_FX from '../public/sound/ipod/ipod_14_FX.mp3'
 import ipod_15_Delay_Reverb from '../public/sound/ipod/ipod_15_Delay_Reverb.mp3'
 import ipod_hiss from '../public/sound/ipod/ipod_hiss.mp3'
+
+import orbit_3_Audio from '../public/sound/orbit/orbit_3-Audio.mp3'
+import orbit_8_DT1 from '../public/sound/orbit/orbit_8_DT1.mp3'
+import orbit_9_DT2 from '../public/sound/orbit/orbit_9_DT2.mp3'
+import orbit_10_DT6 from '../public/sound/orbit/orbit_10_DT6.mp3'
 
 const SONGS = {
   whistle: {
@@ -43,21 +49,23 @@ const SONGS = {
     parts: [[
       [wii_2_T1, 1, 0],
       [wii_4_T3, 0.9, 1],
-      [whistle_7_T6, 0.7, 1],
-      [wii_12_T11, 0.7, 0],
-      [wii_10_T9, 0.9, 0],
-      [wii_T5, 0.2, 1],
+      [whistle_7_T6, 0.7, 0],
+      [wii_12_T11, 0.7, 1],
+      [wii_10_T9, 0.9, 1],
+      [wii_T5, 0.2, 0],
     ], [
-      [wii_2_T1, 1, 0],
-      [wii_4_T3, 0.9, 0],
+      [wii_2_T1, 1, 1],
+      [wii_4_T3, 0.9, 1],
       [wii_8_T7, 1, 1],
-      [whistle_7_T6, 0.7, 1],
+      [whistle_7_T6, 0.7, 0],
       [wii_12_T11, 0.8, 0],
-      [wii_10_T9, 0.7, 0],
+      [wii_10_T9, 0.7, 1],
+      [wii_chord, 1, 1],
     ]],
   },
   ipod: {
     bpm: 113,
+    interval: '4m',
     parts: [[
       [ipod_2_T1, 0.9, 0],
       [ipod_5_T4, 0.9, 1],
@@ -67,10 +75,22 @@ const SONGS = {
       [ipod_15_Delay_Reverb, 1, 0],
       [ipod_hiss, 0.5, 0],
     ]],
-  }
+  },
+  orbit: {
+    bpm: 96,
+    interval: '4m',
+    parts: [[
+      [orbit_3_Audio, 1, 1],
+      [orbit_8_DT1, 0.6, 0],
+      [orbit_9_DT2, 0.7, 0],
+      [orbit_10_DT6, 0.7, 0],
+    ]],
+  },
 }
 
-const MAX_VOLUME = 24 //db
+const TRACK_VOLUME = -0.6 //db
+const MAX_VOLUME = 0 //db
+const INTRO_LENGTH = 1 // measures
 
 export default class Sound {
   currentMeasure = 0
@@ -83,14 +103,15 @@ export default class Sound {
     if (e.key === '1') {
       this.stop()
       this.play(SONGS.whistle)
-    }
-    if (e.key === '2') {
+    } else if (e.key === '2') {
       this.stop()
       this.play(SONGS.wii)
-    }
-    if (e.key === '3') {
+    } else if (e.key === '3') {
       this.stop()
       this.play(SONGS.ipod)
+    } else if (e.key === '4') {
+      this.stop()
+      this.play(SONGS.orbit)
     }
   }
 
@@ -108,7 +129,10 @@ export default class Sound {
   voiceFromFile(file) {
     const voice = {
       file: file,
-      player: new Player(`${window.location.origin}${file}`),
+      player: new Player({
+        url: `${window.location.origin}${file}`,
+        fadeOut: 0.1,
+      }),
       panVol: new PanVol()
     }
     voice.panVol.volume.value = -Infinity
@@ -144,12 +168,17 @@ export default class Sound {
       this.voices = parts.map(part => this.voiceFromFile(part[0]))
 
       // master output
-      const reverb = new Reverb(0.5)
-      reverb.wet.value = 0.15
+      this.reverb ||= new Reverb(0.5)
+      this.reverb.wet.value = 0.15
+      this.compressor ||= new Compressor()
+      this.compressor.threshold.value = -24
+      this.compressor.ratio.value = 2
+      this.compressor.attack.value = 1
+      this.compressor.release.value = 0.1
       this.masterVolume = new Volume(0).toDestination()
       this.masterVolume.volume.rampTo(MAX_VOLUME, 3)
-      this.master = reverb
-        .connect(new Compressor())
+      this.master = this.reverb
+        .connect(this.compressor)
         .connect(this.masterVolume)
 
       Transport.bpm.value = song.bpm
@@ -171,16 +200,16 @@ export default class Sound {
           voice.panVol.connect(this.master)
 
           // randomly mute some voices, but keep most on
-          const probability = this.currentMeasure <= 2 && typeof part[2] === 'number' ? part[2] : part[1]
+          const probability = this.currentMeasure <= INTRO_LENGTH && typeof part[2] === 'number' ? part[2] : part[1]
           if (Math.random() > probability) {
             voice.panVol.volume.linearRampTo(-Infinity, 0.1)
           } else {
-            voice.panVol.volume.linearRampTo(0, 0.1)
+            voice.panVol.volume.linearRampTo(TRACK_VOLUME, 0.1)
           }
 
           voice.player.start(time)
         })
-      }, '2m').start(0)
+      }, song.interval || '2m').start(0)
     }
 
     // PLAY
@@ -200,8 +229,13 @@ export default class Sound {
       const xFactor = x / anybody.windowWidth
 
       // panning
-      const panRange = 1.6 // 2 allows hard L/R panning
+      const panRange = 1.4 // 2 is max, hard L/R panning
       voice.panVol.pan.linearRampTo(xFactor * panRange - panRange / 2, 0.1)
     })
+  }
+
+  activeVoices() {
+    return this.voices?.map((voice, i) => voice.panVol.volume.value > -Infinity ? i : null)
+      .filter(i => i !== null) || []
   }
 }
