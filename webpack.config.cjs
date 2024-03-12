@@ -1,7 +1,7 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const fs = require('fs')
 // const p5Content = fs.readFileSync('./public/p5.min.js', 'utf-8')
-const q5Content = fs.readFileSync('./public/q5.min.js', 'utf-8')
+const q5Content = fs.readFileSync('./public/q5.js', 'utf-8')
 const templateParameters = (compilation, assets, options) => {
   return {
     compilation,
