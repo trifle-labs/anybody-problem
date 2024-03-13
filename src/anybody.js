@@ -1,9 +1,8 @@
 
 import Prando from 'prando'
 
-
 import EventEmitter from 'events'
-// import Sound from './sound.js'
+import Sound from './sound.js'
 import { Visuals } from './visuals.js'
 import {
   _validateSeed,
@@ -80,7 +79,7 @@ export class Anybody extends EventEmitter {
 
     !this.util && this.prepareP5()
     this.clearValues()
-    // this.sound = new Sound()
+    this.sound = new Sound()
     this.init()
     !this.util && this.start()
 
@@ -183,6 +182,13 @@ export class Anybody extends EventEmitter {
   addListener() {
     // const body = document.getElementsByClassName('p5Canvas')[0]
     const body = document.querySelector('canvas')
+
+    this.p.touchStarted = () => {
+      this.setPause()
+      return false
+    }
+    this.p.touchMoved = () => {}
+    this.p.touchEnded = () => {}
 
     if (typeof window !== 'undefined' && this.mode == 'game') {
       body.removeEventListener('click', this.setPause)

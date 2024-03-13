@@ -1,21 +1,18 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const fs = require('fs')
-// const p5Content = fs.readFileSync('./public/p5.min.js', 'utf-8')
-const q5Content = fs.readFileSync('./public/q5.min.js', 'utf-8')
 const templateParameters = (compilation, assets, options) => {
   return {
     compilation,
     webpackConfig: options.webpackConfig,
     assets,
     options,
-    q5Content,
   }
 }
 const path = require('path')
 
 module.exports = {
   // mode: 'production',
-  entry: './src/anybody.js',
+  entry: './src/nft.js',
   output: {
     path: path.resolve(__dirname, 'dist'),
     publicPath: '/', // Ensure files are served relative to the base URL
