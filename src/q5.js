@@ -2170,7 +2170,7 @@ export default function Q5(scope){
           event.preventDefault();
         }
       }
-      if (!$._touchStartedFn(event)){
+      if (!$.touchStarted(event)){
         event.preventDefault();
       }
 
@@ -2205,7 +2205,7 @@ export default function Q5(scope){
           event.preventDefault();
         }
       }
-      if (!$._touchEndedFn(event)){
+      if (!$.touchEnded(event)){
         event.preventDefault();
       }
     }
