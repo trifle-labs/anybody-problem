@@ -234,7 +234,6 @@ export const Calculations = {
       newBody.velocity.y = this.convertScaledBigIntToFloat(body.velocity.y)
       newBody.velocity = this.createVector(newBody.velocity.x, newBody.velocity.y)
 
-
       if (!this.accumX) {
         this.accumX = 0
         this.accumY = 0
@@ -245,6 +244,7 @@ export const Calculations = {
       if (body.c) {
         newBody.c = body.c
       }
+      newBody.hp = body.hp
       bodies.push(newBody)
     }
     return bodies
@@ -265,12 +265,10 @@ export const Calculations = {
   },
 
   convertBodiesToBigInts(bodies) {
-    // console.log('convertBodiesToBigInts')
     const bigBodies = []
     // const maxVectorScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
     for (let i = 0; i < bodies.length; i++) {
       const body = bodies[i]
-      // console.log({ body })
       const newBody = { position: {}, velocity: {}, radius: null }
 
       newBody.position.x = body.px || this.convertFloatToScaledBigInt(body.position.x)
@@ -278,13 +276,10 @@ export const Calculations = {
       newBody.velocity.x = body.vx || this.convertFloatToScaledBigInt(body.velocity.x)
       newBody.velocity.y = body.vy || this.convertFloatToScaledBigInt(body.velocity.y)
       newBody.radius = this.convertFloatToScaledBigInt(body.radius)
-      if (body.c) {
-        newBody.c = body.c
-      }
-      if (body.bodyIndex) {
-        newBody.bodyIndex = body.bodyIndex
-      }
-      // console.log({ newBody })
+      newBody.hp = body.hp
+      newBody.c = body.c
+      newBody.bodyIndex = body.bodyIndex
+
       bigBodies.push(newBody)
     }
     return bigBodies

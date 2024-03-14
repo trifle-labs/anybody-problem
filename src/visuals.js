@@ -1,3 +1,4 @@
+import { WITHERING_STEPS, MAX_HP } from './hp.js'
 
 export const Visuals = {
 
@@ -16,29 +17,23 @@ export const Visuals = {
     } else {
       this.justPaused = false
     }
-    // if (this.paused) return
     if (!this.showIt) return
     this.frames++
-    if (this.frames % 100 == 0) {
-      // console.log({ bodies })
-    }
-    this.p.noFill()
 
+    this.p.noFill()
 
     const results = this.step(this.bodies, this.missiles)
     this.bodies = results.bodies || []
     this.missiles = results.missiles || []
 
-    // this.playSounds()
     this.drawBg()
     this.drawBodyTrails()
     this.drawBodies()
-
+    this.drawWitheringBodies()
 
     if (this.frames % 10 == 0) {
       this.sound?.render(this)
     }
-
 
     if (this.mode == 'game') {
       this.drawMissiles()
@@ -309,6 +304,7 @@ export const Visuals = {
       this.bodies = results.bodies
       this.missiles = results.missiles || []
       this.drawBodies(false)
+      this.drawWitheringBodies()
       this.frames++
     }
 
@@ -419,6 +415,21 @@ export const Visuals = {
     this.bodiesGraphic.noStroke()
     this.bodiesGraphic.text(face, -radius / 2.4, radius / 8)
     // this.bodiesGraphic.blendMode(this.p.DIFFERENCE)
+
+    // show body.hp as a guage
+    const hpBarLength = radius * 2
+    const hpBarHeight = radius / 10
+    const hpBarX = -radius
+    const hpBarY = radius / 2
+    this.bodiesGraphic.fill('rgba(0,0,0,0.3)')
+    this.bodiesGraphic.rect(hpBarX, hpBarY, hpBarLength, hpBarHeight)
+    this.bodiesGraphic.fill('rgba(0,255,0,0.3)')
+    this.bodiesGraphic.rect(hpBarX, hpBarY, hpBarLength * (body.hp / MAX_HP), hpBarHeight)
+    // hp in white text
+    this.bodiesGraphic.fill('white')
+    this.bodiesGraphic.textSize(radius / 4)
+    this.bodiesGraphic.text(body.hp, hpBarX + hpBarLength / 2, hpBarY + hpBarHeight / 2)
+    
   },
 
   moveAndRotate_PopAfter(graphic, x, y, v) {
@@ -476,6 +487,21 @@ export const Visuals = {
     // crosses corner, draw opposite corner
     if (loopedX && loopedY) {
       drawFunction(loopX, loopY, body.velocity, radius, body)
+    }
+  },
+
+  drawWitheringBodies() {
+    this.bodiesGraphic ||= this.p.createGraphics(this.windowWidth, this.windowHeight)
+    this.bodiesGraphic.noStroke()
+
+    for (const body of this.witheringBodies) {
+      // the body should shrink to nothing as HP goes from 0 to -WITHERING_STEPS
+      const witherMultiplier = 1 + (body.hp / WITHERING_STEPS)
+      const radius = (body.radius * 4 + this.radiusMultiplyer) * witherMultiplier
+
+      // render as a white circle
+      this.bodiesGraphic.fill('white')
+      this.bodiesGraphic.ellipse(body.position.x, body.position.y, radius, radius)
     }
   },
 

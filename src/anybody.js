@@ -8,7 +8,7 @@ import {
   _validateSeed,
   Calculations
 } from './calculations.js'
-
+import { stepHP } from './hp.js'
 
 export class Anybody extends EventEmitter {
   constructor(p, options = {}) {
@@ -98,6 +98,7 @@ export class Anybody extends EventEmitter {
     this.missiles = []
     this.missileInits = []
     this.bodies = []
+    this.witheringBodies = []
     this.bodyInits = []
     this.bodyFinal = []
     this.allCopiesOfBodies = []
@@ -219,6 +220,10 @@ export class Anybody extends EventEmitter {
 
 
   step() {
+    const { live, withering } = stepHP(this.bodies, this.witheringBodies)
+    this.witheringBodies = withering
+    this.bodies = live
+
     this.bodies = this.forceAccumulator(this.bodies)
     var results = this.detectCollision(this.bodies, this.missiles)
     this.bodies = results.bodies
@@ -235,6 +240,7 @@ export class Anybody extends EventEmitter {
         this.finish()
       }
     }
+
     return { bodies: this.bodies, missiles: this.missiles }
   }
 
@@ -252,6 +258,7 @@ export class Anybody extends EventEmitter {
     this.startingBodies += 1
     this.missiles = []
     this.bodies = []
+    this.witheringBodies = []
     this.generateBodies()
   }
 
