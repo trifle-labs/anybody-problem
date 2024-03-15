@@ -17,7 +17,6 @@ export class Anybody extends EventEmitter {
     Object.assign(this, Visuals)
     Object.assign(this, Calculations)
 
-
     const defaultOptions = {
       inputData: null,
       bodyData: null,
@@ -270,7 +269,6 @@ export class Anybody extends EventEmitter {
     if (!this.optimistic) {
       this.emit('finished', { bodyInits: JSON.parse(JSON.stringify(this.bodyInits)), bodyFinal: JSON.parse(JSON.stringify(this.bodyFinal)) })
     }
-    // console.log('FINISH????????????????????????????????????????')
     this.bodyInits = JSON.parse(JSON.stringify(this.bodyFinal))
     this.bodyFinal = []
     // this.setPause(false)
@@ -278,11 +276,8 @@ export class Anybody extends EventEmitter {
 
   generateBodies() {
     if (this.inputData) {
-      // console.dir({ inputData: this.inputData }, { depth: null })
       const step1 = this.inputData.map(this.convertScaledStringArrayToBody.bind(this))
-      // console.dir({ step1 }, { depth: null })
       this.bodies = this.convertBigIntsToBodies(step1)
-      // console.dir({ bodies: this.bodies })
       this.bgColor = this.colorArrayToTxt([0, 0, 0,])//this.randomColor(0, 20))
       this.radiusMultiplyer = this.random(10, 200)
       for (let i = 0; i < this.startingBodies; i++) {
