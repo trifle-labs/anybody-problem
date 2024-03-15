@@ -39,11 +39,13 @@ export function createButton(options) {
       p.fill('rgba(0, 0, 0, 0.2)');
       p.rect(x, y, width, height);
     } else {
-      p.fill('white');
+      p.fill('rgba(0, 0, 0, 0)');
       p.rect(x, y, width, height);
     }
 
-    p.fill('black');
+    p.textSize(12);
+    p.textStyle(p.NORMAL);
+    p.fill('white');
     p.textAlign(p.CENTER);
     p.text(label, x + width / 2, y + height / 2);
   }
