@@ -9,6 +9,7 @@ import {
   Calculations
 } from './calculations.js'
 import { stepHP } from './hp.js'
+import { createButton } from './button.js'
 
 export class Anybody extends EventEmitter {
   constructor(p, options = {}) {
@@ -126,6 +127,17 @@ export class Anybody extends EventEmitter {
 
   start() {
     this.addListener()
+
+    // create buttons
+    this.bodyButton = createButton({
+      label: 'Buy body',
+      x: 100,
+      y: 200,
+      width: 100,
+      height: 50,
+    })
+    this.buttons = [this.bodyButton]
+
     this.startTick()
     this.runSteps(this.preRun)
     this.paintAtOnce(this.paintSteps)
@@ -182,23 +194,27 @@ export class Anybody extends EventEmitter {
 
   addListener() {
     // const body = document.getElementsByClassName('p5Canvas')[0]
-    const body = document.querySelector('canvas')
-
-    this.p.touchStarted = () => {
-      this.setPause()
-      return false
-    }
-    this.p.touchMoved = () => {}
-    this.p.touchEnded = () => {}
 
     if (typeof window !== 'undefined' && this.mode == 'game') {
+      const body = document.querySelector('canvas')
       body.removeEventListener('click', this.setPause)
       body.removeEventListener('click', this.missileClick)
       body.addEventListener('click', this.missileClick.bind(this))
     } else {
-      body.removeEventListener('click', this.missileClick)
-      body.removeEventListener('click', this.setPause)
-      body.addEventListener('click', this.setPause.bind(this))
+      this.p.mousePressed = () => {
+        const handler = this.buttons.find(b => b.handleMousePressed(this.p.mouseX, this.p.mouseY))
+        if (!handler) this.setPause()
+      }
+      this.p.mouseReleased = () => {
+        for (const button of this.buttons) {
+          button.handleMouseReleased()
+        }
+      }
+      this.p.mouseMoved = () => {
+        for (const button of this.buttons) {
+          button.handleMouseMoved(this.p.mouseX, this.p.mouseY)
+        }
+      }
     }
   }
 

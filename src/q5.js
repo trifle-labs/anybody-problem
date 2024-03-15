@@ -2083,10 +2083,7 @@ export default function Q5(scope){
 
     $.canvas.onmousemove = function(event){
 
-      $.pmouseX = $.mouseX;
-      $.pmouseY = $.mouseY;
-      $.mouseX = event.offsetX;
-      $.mouseY = event.offsetY;
+      updateMouseXY(event.offsetX, event.offsetY);
 
       if ($.mouseIsPressed){
         $._mouseDraggedFn(event);
@@ -2095,27 +2092,18 @@ export default function Q5(scope){
       }
     }
     $.canvas.onmousedown = function(event){
-      $.pmouseX = $.mouseX;
-      $.pmouseY = $.mouseY;
-      $.mouseX = event.offsetX;
-      $.mouseY = event.offsetY;
+      updateMouseXY(event.offsetX, event.offsetY);
       $.mouseIsPressed = true;
       $.mouseButton = [$.LEFT,$.CENTER,$.RIGHT][event.button];
       $._mousePressedFn(event);
     }
     $.canvas.onmouseup = function(event){
-      $.pmouseX = $.mouseX;
-      $.pmouseY = $.mouseY;
-      $.mouseX = event.offsetX;
-      $.mouseY = event.offsetY;
+      updateMouseXY(event.offsetX, event.offsetY);
       $.mouseIsPressed = false;
       $._mouseReleasedFn(event);
     }
     $.canvas.onclick = function(event){
-      $.pmouseX = $.mouseX;
-      $.pmouseY = $.mouseY;
-      $.mouseX = event.offsetX;
-      $.mouseY = event.offsetY;
+      updateMouseXY(event.offsetX, event.offsetY);
       $.mouseIsPressed = true;
       $._mouseClickedFn(event);
       $.mouseIsPressed = false;
@@ -2153,17 +2141,32 @@ export default function Q5(scope){
       };
     }
     function isTouchUnaware(){
-      return $._touchStartedFn.isPlaceHolder
-         &&  $._touchMovedFn.isPlaceHolder
-         &&  $._touchEndedFn.isPlaceHolder
+      return !$.touchStarted
+         &&  !$.touchMoved
+         &&  !$.touchEnded
     }
+
+    function updateTouchXY(){
+      $.pmouseX = $.mouseX;
+      $.pmouseY = $.mouseY;
+      $.mouseX = $.touches[0].x;
+      $.mouseY = $.touches[0].y;
+    }
+
+    function updateMouseXY(x, y){
+      let rect = $.canvas.getBoundingClientRect();
+      let sx = $.canvas.scrollWidth / $.width || 1;
+      let sy = $.canvas.scrollHeight / $.height || 1;
+      $.pmouseX = $.mouseX;
+      $.pmouseY = $.mouseY;
+      $.mouseX = (x - rect.left) / sx;
+      $.mouseY = (y - rect.top) / sy;
+    }
+
     $.canvas.ontouchstart = function(event){
       $.touches = [...event.touches].map(getTouchInfo);
       if (isTouchUnaware()){
-        $.pmouseX = $.mouseX;
-        $.pmouseY = $.mouseY;
-        $.mouseX = $.touches[0].x;
-        $.mouseY = $.touches[0].y;
+        updateTouchXY()
         $.mouseIsPressed = true;
         $.mouseButton = $.LEFT;
         if (!$._mousePressedFn(event)){
@@ -2173,15 +2176,11 @@ export default function Q5(scope){
       if (!$._touchStartedFn(event)){
         event.preventDefault();
       }
-
     }
     $.canvas.ontouchmove = function(event){
       $.touches = [...event.touches].map(getTouchInfo);
       if (isTouchUnaware()){
-        $.pmouseX = $.mouseX;
-        $.pmouseY = $.mouseY;
-        $.mouseX = $.touches[0].x;
-        $.mouseY = $.touches[0].y;
+        updateTouchXY()
         $.mouseIsPressed = true;
         $.mouseButton = $.LEFT;
         if (!$._mouseDraggedFn(event)){
@@ -2195,11 +2194,10 @@ export default function Q5(scope){
     }
     $.canvas.ontouchend = $.canvas.ontouchcancel = function(event){
       $.touches = [...event.touches].map(getTouchInfo);
+      console.log('touchend', event, event.offsetX)
       if (isTouchUnaware()){
         $.pmouseX = $.mouseX;
         $.pmouseY = $.mouseY;
-        $.mouseX = $.touches[0].x;
-        $.mouseY = $.touches[0].y;
         $.mouseIsPressed = false;
         if (!$._mouseReleasedFn(event)){
           event.preventDefault();

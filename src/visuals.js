@@ -30,6 +30,18 @@ export const Visuals = {
     this.drawBodyTrails()
     this.drawBodies()
     this.drawWitheringBodies()
+    for (const button of this.buttons) {
+      button.draw(this.p)
+    }
+    if (this.paused) {
+      this.p.fill('rgba(0,0,0,0.6)')
+      this.p.rect(0, 0, this.windowWidth, this.windowHeight)
+      this.p.push()
+      this.p.fill('white')
+      this.p.translate(this.windowWidth / 2, this.windowHeight / 2)
+      this.p.triangle(-100, -100, -100, 100, 100, 0)
+      this.p.pop()
+    }
 
     if (this.frames % 10 == 0) {
       this.sound?.render(this)
@@ -589,18 +601,6 @@ export const Visuals = {
     }
 
     this.bodiesGraphic.clear()
-
-
-    if (this.paused) {
-      this.p.fill('rgba(0,0,0,0.6)')
-      this.p.rect(0, 0, this.windowWidth, this.windowHeight)
-      this.p.push()
-      this.p.fill('white')
-      this.p.translate(this.windowWidth / 2, this.windowHeight / 2)
-      this.p.triangle(-100, -100, -100, 100, 100, 0)
-      this.p.pop()
-    }
-
   },
 
   drawBorder() {
