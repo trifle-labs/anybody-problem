@@ -14,7 +14,6 @@ export function createButton(options) {
   }
   
   const handleMousePressed = (clickX, clickY) => {
-    console.log('mouse down', clickX, clickY, intersect(clickX, clickY), x, y, width, height)
     pressed = intersect(clickX, clickY);
     if (pressed) {
       if (onClick) onClick();
@@ -24,18 +23,15 @@ export function createButton(options) {
   }
 
   const handleMouseReleased = () => {
-    console.log('mouse up')
     pressed = false;
   }
 
   const draw = (p) => {
     p.rectMode(p.CORNER);
     if (pressed) {
-      console.log('pressed')
       p.fill('pink');
       p.rect(x, y, width, height);
     } else if (hovered) {
-      console.log('hovered')
       p.fill('rgba(0, 0, 0, 0.2)');
       p.rect(x, y, width, height);
     } else {

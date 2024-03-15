@@ -2194,7 +2194,6 @@ export default function Q5(scope){
     }
     $.canvas.ontouchend = $.canvas.ontouchcancel = function(event){
       $.touches = [...event.touches].map(getTouchInfo);
-      console.log('touchend', event, event.offsetX)
       if (isTouchUnaware()){
         $.pmouseX = $.mouseX;
         $.pmouseY = $.mouseY;
