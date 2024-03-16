@@ -1,5 +1,5 @@
-export const MAX_HP = 1000
-export const WITHERING_STEPS = 200
+export const MAX_HP = 100000
+export const WITHERING_STEPS = 2000
 
 export function stepHP(bodies, witheringBodies) {
   const live = []
