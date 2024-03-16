@@ -28,20 +28,21 @@ contract Problems is ERC721, Ownable {
     // TODO: confirm bodyIndex matches anybody.js for proof generation
     struct Body {
         uint256 bodyId;
-        uint256 bodyStyle;
+        uint256 mintedBodyIndex;
         uint256 bodyIndex;
         uint256 px;
         uint256 py;
         uint256 vx;
         uint256 vy;
         uint256 radius;
+        uint256 life;
         bytes32 seed;
     }
 
     struct Problem {
         bytes32 seed;
         uint256 bodyCount;
-        uint256 bodiesProduced;
+        uint256 mintedBodiesIndex;
         mapping(uint256 => Body) bodyData;
         uint256[10] bodyIds;
         uint256 tickCount;
@@ -60,11 +61,12 @@ contract Problems is ERC721, Ownable {
     event bodyAdded(
         uint256 problemId,
         uint256 bodyId,
-        uint256 bodyStyle,
+        uint256 mintedBodyIndex,
         uint256 tick,
         uint256 px,
         uint256 py,
         uint256 radius,
+        uint256 life,
         bytes32 seed
     );
 
@@ -168,6 +170,10 @@ contract Problems is ERC721, Ownable {
         mint(msg.sender, 1);
     }
 
+    function mint(address recipient) public payable initialized {
+        mint(recipient, 1);
+    }
+
     function mint(
         address recipient,
         uint256 quantity
@@ -176,7 +182,6 @@ contract Problems is ERC721, Ownable {
         require(!paused, "Paused");
         require(block.timestamp >= startDate, "Not started");
         require(msg.value == quantity * price, "Invalid price");
-        // (bool sent, bytes memory data) = proceedRecipient.call{value: msg.value}("");
         (bool sent, bytes memory data) = proceedRecipient.call{
             value: msg.value
         }("");
@@ -184,10 +189,6 @@ contract Problems is ERC721, Ownable {
         for (uint256 i = 0; i < quantity; i++) {
             _internalMint(recipient);
         }
-    }
-
-    function mint(address recipient) public payable initialized {
-        mint(recipient, 1);
     }
 
     function adminMint(address recipient) public initialized onlyOwner {
@@ -198,40 +199,67 @@ contract Problems is ERC721, Ownable {
         problemSupply++;
         _mint(recipient, problemSupply);
 
-        for (uint256 i = 0; i < 3; i++) {
-            uint256 bodyId = Bodies(bodies).mintAndBurn(
-                recipient,
-                problemSupply
+        for (
+            uint256 mintedBodyIndex = 0;
+            mintedBodyIndex < 3;
+            mintedBodyIndex++
+        ) {
+            (uint256 bodyId, uint256 life, bytes32 bodySeed) = Bodies(bodies)
+                .mintAndAddToProblem(
+                    recipient,
+                    problemSupply, // problemId
+                    mintedBodyIndex
+                );
+            _addBody(
+                problemSupply, // problemId
+                bodyId,
+                mintedBodyIndex,
+                life,
+                bodySeed,
+                mintedBodyIndex, // bodyIndex == mintedBodyIndex when minting
+                1
             );
-            _addBody(problemSupply, bodyId, i, 1);
         }
         problems[problemSupply].seed = generateSeed(problemSupply);
         problems[problemSupply].bodyCount = 3;
     }
 
-    function mintBody(uint256 problemId) public {
+    function mintBodyToProblem(uint256 problemId) public {
         require(!paused, "Paused");
         require(ownerOf(problemId) == msg.sender, "Not problem owner");
         require(
             problems[problemId].bodyCount < 10,
             "Cannot have more than 10 bodies"
         );
-        uint256 bodyId = Bodies(bodies).mintAndBurn(msg.sender, problemId);
-        uint256 i = problems[problemId].bodyCount;
-        _addBody(problemId, bodyId, i, 1);
+        uint256 mintedBodyIndex = problems[problemId].mintedBodiesIndex;
+        // TODO: confirm this should be 10 instead of 9
+        require(mintedBodyIndex < 10, "Problem already minted 10 bodies");
+        (uint256 bodyId, uint256 life, bytes32 bodySeed) = Bodies(bodies)
+            .mintAndAddToProblem(msg.sender, problemId, mintedBodyIndex);
+        uint256 bodyIndex = problems[problemId].bodyCount;
+
+        _addBody(
+            problemId,
+            bodyId,
+            mintedBodyIndex,
+            life,
+            bodySeed,
+            bodyIndex,
+            1
+        );
     }
 
-    function addBody(uint256 problemId, uint256 bodyId) public {
+    function addExistingBody(uint256 problemId, uint256 bodyId) public {
         require(!paused, "Paused");
         require(ownerOf(problemId) == msg.sender, "Not problem owner");
-        require(Bodies(bodies).ownerOf(bodyId) == msg.sender, "Not body owner");
         require(
             problems[problemId].bodyCount < 10,
             "Cannot have more than 10 bodies"
         );
-        Bodies(bodies).burn(bodyId);
-        uint256 i = problems[problemId].bodyCount;
-        _addBody(problemId, bodyId, i, 0);
+        (uint256 mintedBodyIndex, uint256 life, bytes32 seed) = Bodies(bodies)
+            .moveBodyToProblem(bodyId, msg.sender, problemId);
+        uint256 bodyIndex = problems[problemId].bodyCount;
+        _addBody(problemId, bodyId, mintedBodyIndex, life, seed, bodyIndex, 0);
     }
 
     function removeBody(uint256 problemId, uint256 bodyId) public {
@@ -255,6 +283,15 @@ contract Problems is ERC721, Ownable {
             bodyIndex
         );
         delete problems[problemId].bodyData[bodyId];
+
+        // TODO: add tests for this
+        // TODO: confirm this is necessary, maybe another way to ensure order of
+        // bodies is by just sorting by ID whenever proof is generated
+        for (uint256 i = bodyIndex; i < problems[problemId].bodyCount; i++) {
+            problems[problemId]
+                .bodyData[problems[problemId].bodyIds[i]]
+                .bodyIndex = i;
+        }
     }
 
     function _removeElement(
@@ -268,29 +305,47 @@ contract Problems is ERC721, Ownable {
         return array;
     }
 
+    /**
+     * @dev Internal function to add a body to a problem, whether that body is new or old
+     * @param problemId The ID of the problem.
+     * @param bodyId The ID of the body to be added.
+     * @param mintedBodyIndex The nth body minted from this problem.
+     * @param life The life of the body.
+     * @param bodySeed The seed of the body.
+     * @param bodyIndex The index of the body in the problem's body list.
+     * @param incrementBodiesProduced The number of bodies produced to increment the problem's counter.
+     */
     function _addBody(
         uint256 problemId,
         uint256 bodyId,
-        uint256 i,
+        uint256 mintedBodyIndex,
+        uint256 life,
+        bytes32 bodySeed,
+        uint256 bodyIndex,
         uint256 incrementBodiesProduced
     ) internal {
-        bytes32 bodySeed = Bodies(bodies).seeds(bodyId);
-        uint256 bodyStyle = Bodies(bodies).styles(bodyId);
-        uint256 tickCount = problems[problemId].tickCount;
-        Body memory bodyData;
-        bodyData = getRandomValues(bodyId, bodySeed, bodyStyle, i);
+        // getRandomValues adds seed, px, py & radius to bodyData
+        // vx and vy are left empty to be 0 when a body is added
+        Body memory bodyData = getRandomValues(bodySeed);
+
+        bodyData.bodyId = bodyId;
+        bodyData.mintedBodyIndex = mintedBodyIndex;
+        bodyData.life = life;
+        bodyData.bodyIndex = bodyIndex;
+
         problems[problemId].bodyData[bodyId] = bodyData;
-        problems[problemId].bodyIds[i] = bodyId;
+        problems[problemId].bodyIds[bodyIndex] = bodyId;
         problems[problemId].bodyCount++;
-        problems[problemId].bodiesProduced += incrementBodiesProduced;
+        problems[problemId].mintedBodiesIndex += incrementBodiesProduced;
         emit bodyAdded(
             problemId,
             bodyId,
-            bodyStyle,
-            tickCount,
+            mintedBodyIndex,
+            problems[problemId].tickCount,
             bodyData.px,
             bodyData.py,
             bodyData.radius,
+            bodyData.life,
             bodySeed
         );
     }
@@ -299,42 +354,32 @@ contract Problems is ERC721, Ownable {
     // for an owner to remove a body at index 0 and add back with a greater index
     // the greater index may collide with the index originally used or another body
     // the result is that there may be bodies with the same radius which is acceptable
-    function getRandomValues(
-        uint256 bodyId,
-        bytes32 seed,
-        uint256 bodyStyle,
-        uint256 i
-    ) public pure returns (Body memory) {
+    function getRandomValues(bytes32 seed) public view returns (Body memory) {
         Body memory body;
         body.seed = seed;
 
-        bytes32 rand = keccak256(abi.encodePacked(seed, i));
+        // NOTE: radius is a function of the seed of the body so it stays the
+        // same no matter what problem it enters
+
+        // TODO: confirm whether radius should remain only one of 3 sizes
+        uint256 randRadius = randomRange(0, 3, seed);
+        randRadius = (randRadius) * 5 + startingRadius;
+        uint256 r = randRadius * scalingFactor;
+
+        // this ensures location is random each time body is added to problem
+        bytes32 rand = keccak256(
+            abi.encodePacked(seed, blockhash(block.number - 1))
+        );
         uint256 x = randomRange(0, windowWidth, rand);
 
         rand = keccak256(abi.encodePacked(rand));
         uint256 y = randomRange(0, windowWidth, rand);
 
-        rand = keccak256(abi.encodePacked(rand));
-        // console.log("rand");
-        // console.logBytes32(rand);
-        uint256 randRadius = randomRange(0, 3, rand);
-        // console.log("randRadius");
-        // console.log(randRadius);
-        randRadius = (randRadius) * 5 + startingRadius;
-        // console.log("randRadius");
-        // console.log(randRadius);
-        uint256 r = randRadius * scalingFactor;
-
-        // console.log("maxVectorScaled");
-        // console.log(maxVector * scalingFactor);
-        body.bodyId = bodyId;
-        body.bodyStyle = bodyStyle;
         body.px = x;
         body.py = y;
-        body.vx = maxVector * scalingFactor;
-        body.vy = maxVector * scalingFactor;
+        // body.vx = 0; // maxVector * scalingFactor; // TODO: confirm why this wasn't 0 before
+        // body.vy = 0; // maxVector * scalingFactor; // TODO: confirm why this wasn't 0 before
         body.radius = r;
-        body.bodyIndex = i;
 
         return body;
     }
@@ -345,6 +390,12 @@ contract Problems is ERC721, Ownable {
         bytes32 rand
     ) internal pure returns (uint256) {
         return min + (uint256(rand) % (max - min));
+    }
+
+    function getProblemMintedBodiesIndex(
+        uint256 problemId
+    ) public view returns (uint256) {
+        return problems[problemId].mintedBodiesIndex;
     }
 
     function getProblemBodyIds(

@@ -234,7 +234,7 @@ describe('Solver Tests', function () {
         const decimals = await bodies.decimals()
         const bodyCost = await bodies.tockPrice(bodyCount)
         const bodyCostDecimals = bodyCost.mul(decimals)
-        tx = await problems.mintBody(problemId)
+        tx = await problems.mintBodyToProblem(problemId)
         receipt = await tx.wait()
         const bodyId = getParsedEventLogs(receipt, bodies, 'Transfer')[0].args.tokenId
         await expect(tx)
@@ -250,7 +250,7 @@ describe('Solver Tests', function () {
     await tocks.mint(signers[0].address, (15_625_000n * (10n ** 18n)).toString())
     await tocks.updateSolverAddress(solver.address)
 
-    await expect(problems.mintBody(problemId))
+    await expect(problems.mintBodyToProblem(problemId))
       .to.be.revertedWith('Cannot have more than 10 bodies')
 
     await expect(bodies.mint(problemId))
@@ -281,7 +281,7 @@ describe('Solver Tests', function () {
     bodyIds = [...new Set(bodyIds.map(body => body.args.tokenId.toNumber()))]
     expect(bodyIds.length).to.equal(3)
     await prepareMintBody(signers, deployedContracts, problemId)
-    let tx = await problems.mintBody(problemId)
+    let tx = await problems.mintBodyToProblem(problemId)
     receipt = await tx.wait()
     const newBodyId = await getParsedEventLogs(receipt, bodies, 'Transfer')[0].args.tokenId
 
@@ -308,7 +308,7 @@ describe('Solver Tests', function () {
       .to.emit(solver, 'Solved')
       .withArgs(problemId, 0, ticksRun)
 
-    await expect(problems.addBody(problemId, removedBodyId))
+    await expect(problems.addExistingBody(problemId, removedBodyId))
       .to.not.be.reverted
 
     const { bodyCount: newBodyCount } = await problems.problems(problemId)
