@@ -1,4 +1,6 @@
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const HtmlWebpackPlugin = require('html-webpack-plugin')
+const HTMLInlineCSSWebpackPlugin = require("html-inline-css-webpack-plugin").default;
 const fs = require('fs')
 const templateParameters = (compilation, assets, options) => {
   return {
@@ -28,6 +30,10 @@ module.exports = {
     __filename: false,  // this configuration ensures you get the actual file path
   },
   plugins: [
+    new MiniCssExtractPlugin({
+      filename: "[name].css",
+      chunkFilename: "[id].css"
+    }),
     new HtmlWebpackPlugin({
       hash: true,
       title: 'Anybody Problem',
@@ -48,6 +54,7 @@ module.exports = {
       minify: false,
       templateParameters,
     }),
+    new HTMLInlineCSSWebpackPlugin(),
   ],
   resolve: {
     extensions: ['.js', '.json'], // Automatically resolve certain extensions
@@ -82,6 +89,13 @@ module.exports = {
       {
         test: /\.(wav|mp3|webm)/,
         type: 'asset/resource'
+      },
+      {
+        test: /\.css$/,
+        use: [
+          MiniCssExtractPlugin.loader,
+          "css-loader"
+        ]
       }
     ]
   }

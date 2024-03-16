@@ -9,6 +9,7 @@ import {
   Calculations
 } from './calculations.js'
 import { stepHP } from './hp.js'
+import { createUI } from './ui.js'
 
 export class Anybody extends EventEmitter {
   constructor(p, options = {}) {
@@ -124,6 +125,7 @@ export class Anybody extends EventEmitter {
   }
 
   start() {
+    createUI(this)
     this.addListener()
     this.startTick()
     this.runSteps(this.preRun)

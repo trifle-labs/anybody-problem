@@ -71,7 +71,8 @@
     "root": true
   },
   "dependencies": {
-    "prando": "^6.0.1"
+    "prando": "^6.0.1",
+    "tone": "^14.7.77"
   },
   "devDependencies": {
     "@babel/core": "^7.24.0",
@@ -89,6 +90,7 @@
     "circomlib": "^2.0.3",
     "circomlibjs": "^0.1.2",
     "copy-webpack-plugin": "^11.0.0",
+    "css-loader": "^6.10.0",
     "dotenv": "^16.0.1",
     "eslint": "^8.57.0",
     "ethereum-waffle": "*",
@@ -97,9 +99,11 @@
     "hardhat-circom": "git+ssh://git@github.com/okwme/hardhat-circom.git#514bf05c8aa1b5864484eb1e257c0df6053553f2",
     "hardhat-contract-sizer": "*",
     "hardhat-gas-reporter": "*",
+    "html-inline-css-webpack-plugin": "^1.11.2",
     "html-inline-script-webpack-plugin": "^3.2.1",
     "html-webpack-inline-source-plugin": "^0.0.10",
     "html-webpack-plugin": "^5.6.0",
+    "mini-css-extract-plugin": "^2.8.1",
     "p5": "^1.8.0",
     "solidity-coverage": "^0.8.6",
     "url-loader": "^4.1.1",
