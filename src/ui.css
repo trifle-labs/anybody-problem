@@ -1,15 +1,21 @@
 body {
   margin: 0;
   padding: 0;
-  overflow: hidden;
   background-color: pink !important;
 }
 
-.add-body {
+.add-body.button-pushable {
   display: relative;
   position: absolute;
   bottom: 24px;
   left: 42px;
+}
+
+.verify.button-pushable {
+  display: relative;
+  position: absolute;
+  bottom: 24px;
+  right: 42px;
 }
 
 /* Button */

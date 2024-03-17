@@ -30,7 +30,7 @@ export function createUI(anyone) {
     anyone.addBody();
   };
 
-  // add a button for verifying the game
+  // add a button for verifying
   const verifyButton = button("Verify", "verify");
   document.body.appendChild(verifyButton);
   verifyButton.onclick = () => {
