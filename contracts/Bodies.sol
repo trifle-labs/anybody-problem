@@ -48,6 +48,15 @@ contract Bodies is ERC721, Ownable {
         20_000 // 10th body
     ];
 
+    event bodyBorn(
+        uint256 indexed bodyId,
+        uint256 indexed problemId,
+        uint256 indexed mintedBodyIndex,
+        uint256 life,
+        bytes32 seed,
+        bool addedToProblem
+    );
+
     modifier onlyProblems() {
         require(msg.sender == problems, "Only Problems can call");
         _;
@@ -101,15 +110,13 @@ contract Bodies is ERC721, Ownable {
         }
     }
 
-    function mint(uint256 problemId) public {
+    function mint(
+        address owner,
+        uint256 problemId,
+        uint256 mintedBodyIndex
+    ) public onlyProblems {
         // TODO: combine ownerOf with BodiesProduced with previous external read to reduce cost
-        require(
-            Problems(problems).ownerOf(problemId) == msg.sender,
-            "Not problem owner"
-        );
-        uint256 mintedBodyIndex = Problems(problems)
-            .getProblemMintedBodiesIndex(problemId);
-        processPayment(msg.sender, mintedBodyIndex);
+        processPayment(owner, mintedBodyIndex);
         counter++; // bodyId
         bodies[counter] = Body({
             problemId: 0,
@@ -117,7 +124,15 @@ contract Bodies is ERC721, Ownable {
             life: lifeLengths[mintedBodyIndex],
             seed: generateSeed(counter)
         });
-        _mint(msg.sender, counter);
+        _mint(owner, counter);
+        emit bodyBorn(
+            counter,
+            problemId,
+            mintedBodyIndex,
+            lifeLengths[mintedBodyIndex],
+            bodies[counter].seed,
+            false
+        );
     }
 
     function mintAndAddToProblem(
@@ -139,7 +154,7 @@ contract Bodies is ERC721, Ownable {
 
         _mint(owner, counter);
         _transfer(owner, address(this), counter);
-
+        emit bodyBorn(counter, problemId, mintedBodyIndex, life, seed, true);
         return (counter, life, seed);
     }
 
@@ -160,6 +175,19 @@ contract Bodies is ERC721, Ownable {
             bodies[bodyId].life,
             bodies[bodyId].seed
         );
+    }
+
+    function moveBodyFromProblem(
+        address owner,
+        uint256 bodyId,
+        uint256 problemId,
+        uint256 life
+    ) public onlyProblems {
+        require(ownerOf(bodyId) == address(this), "Not body owner");
+        require(bodies[bodyId].problemId == problemId, "Not in problem");
+        bodies[bodyId].problemId = 0;
+        bodies[bodyId].life = life;
+        _transfer(address(this), owner, bodyId);
     }
 
     // // TODO: add back and combine life amounts here

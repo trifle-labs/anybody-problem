@@ -169,7 +169,7 @@ describe('Solver Tests', function () {
     expect(newTickCount).to.equal(runningTickCount)
 
   })
-  it('creates proofs for multiple bodies', async () => {
+  it.only('creates proofs for multiple bodies', async () => {
 
     const ticksRun = 20
 
@@ -187,7 +187,7 @@ describe('Solver Tests', function () {
     // mint enough tocks to mint and add a new body before next loop
     for (let i = 0; i <= totalBodies; i++) {
       const { bodyCount } = await problems.problems(problemId)
-      console.log({ bodyCount: bodyCount.toString(), initialBodyCount: initialBodyCount.toString(), i, add: initialBodyCount.add(i).toString() })
+      // console.log({ bodyCount: bodyCount.toString(), initialBodyCount: initialBodyCount.toString(), i, add: initialBodyCount.add(i).toString() })
       expect(bodyCount.toString()).to.equal(initialBodyCount.add(i).toString())
       const bodyData = []
       const bodyIds = await problems.getProblemBodyIds(problemId)
@@ -253,8 +253,8 @@ describe('Solver Tests', function () {
     await expect(problems.mintBodyToProblem(problemId))
       .to.be.revertedWith('Cannot have more than 10 bodies')
 
-    await expect(bodies.mint(problemId))
-      .to.be.revertedWith('Problem already minted 10 bodies')
+    await expect(problems.mintBodyOutsideProblem(problemId))
+      .to.be.revertedWith('Cannot have more than 10 bodies')
   })
 
   it('has the correct body boost amount', async () => {

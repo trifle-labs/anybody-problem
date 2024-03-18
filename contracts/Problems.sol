@@ -74,6 +74,7 @@ contract Problems is ERC721, Ownable {
         uint256 problemId,
         uint256 tick,
         uint256 bodyId,
+        uint256 life,
         bytes32 seed
     );
 
@@ -249,6 +250,19 @@ contract Problems is ERC721, Ownable {
         );
     }
 
+    function mintBodyOutsideProblem(uint256 problemId) public {
+        require(!paused, "Paused");
+        require(ownerOf(problemId) == msg.sender, "Not problem owner");
+        require(
+            problems[problemId].bodyCount < 10,
+            "Cannot have more than 10 bodies"
+        ); // TODO: confirm this should be 10 instead of 9
+        uint256 mintedBodyIndex = problems[problemId].mintedBodiesIndex;
+        require(mintedBodyIndex < 10, "Problem already minted 10 bodies");
+        Bodies(bodies).mint(msg.sender, problemId, mintedBodyIndex);
+        problems[problemId].mintedBodiesIndex++;
+    }
+
     function addExistingBody(uint256 problemId, uint256 bodyId) public {
         require(!paused, "Paused");
         require(ownerOf(problemId) == msg.sender, "Not problem owner");
@@ -269,11 +283,21 @@ contract Problems is ERC721, Ownable {
             problems[problemId].bodyCount > 3,
             "Cannot have less than 3 bodies"
         );
-        Bodies(bodies).problemMint(msg.sender, bodyId);
+
+        Body memory bodyData = problems[problemId].bodyData[bodyId];
+        require(bodyData.bodyId == bodyId, "Body not in problem");
+
+        Bodies(bodies).moveBodyFromProblem(
+            msg.sender,
+            bodyId,
+            problemId,
+            bodyData.life
+        );
         emit bodyRemoved(
             problemId,
             problems[problemId].tickCount,
             bodyId,
+            bodyData.life,
             problems[problemId].seed
         );
         uint256 bodyIndex = problems[problemId].bodyData[bodyId].bodyIndex;
@@ -337,6 +361,7 @@ contract Problems is ERC721, Ownable {
         problems[problemId].bodyIds[bodyIndex] = bodyId;
         problems[problemId].bodyCount++;
         problems[problemId].mintedBodiesIndex += incrementBodiesProduced;
+
         emit bodyAdded(
             problemId,
             bodyId,
