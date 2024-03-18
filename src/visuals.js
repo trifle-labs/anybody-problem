@@ -369,21 +369,21 @@ export const Visuals = {
     this.ghostEyes(radius)
   },
 
-  drawPngFace(x, y, v, radius) {
+  // drawPngFace(x, y, v, radius) {
 
-    if (!this.faceLoading && !this.face) {
-      this.faceLoading = true
-      import('../public/3.png').then((png3) => {
-        console.log({ png3 })
-        this.p.loadImage(png3.default, (img) => {
-          this.face = img
-        })
-      })
-    }
-    if (this.face) {
-      this.bodiesGraphic.image(this.face, 0, - radius / 3, radius / 3, radius / 3)
-    }
-  },
+  //   if (!this.faceLoading && !this.face) {
+  //     this.faceLoading = true
+  //     import('../public/3.png').then((png3) => {
+  //       console.log({ png3 })
+  //       this.p.loadImage(png3.default, (img) => {
+  //         this.face = img
+  //       })
+  //     })
+  //   }
+  //   if (this.face) {
+  //     this.bodiesGraphic.image(this.face, 0, - radius / 3, radius / 3, radius / 3)
+  //   }
+  // },
 
   drawStyle1(x, y, v, radius, body) {
 

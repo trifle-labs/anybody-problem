@@ -1,11 +1,8 @@
-<!-- <%= "<script>" + Object.keys(compilation.assets) + "</script>" %> -->
-
 <html>
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <meta name="description" content="<%= compilation.options.plugins.find(plugin => plugin.constructor.name === 'HtmlWebpackPlugin').options.metaDesc %>  " />
-  <title><%= compilation.options.plugins.find(plugin => plugin.constructor.name === 'HtmlWebpackPlugin').options.title %></title>
   <style>
     html, body, * {
       margin: 0px;
@@ -30,24 +27,8 @@
       height: var(--canvas-size) !important;
     }
   </style>
+  <script type="module" src="nft.js"></script>
 </head>
 <body>
-  <script>
-  <%= compilation.assets['anybody-problem.js'].source() %>
-    const ignore = 'this is here for linters sake'
-
-  // let anybody;
-  // var s = function(p) {
-  //   p.preload = async () => {};
-  //   p.setup = async () => {
-  //     anybody = new Anybody(p, { mode: "nft" });
-  //   };
-  //   p.draw = async () => {
-  //     anybody.draw();
-  //   };
-  // };
-  // new p5(s);
-
-    </script>
-  </body>
+</body>
 </html>

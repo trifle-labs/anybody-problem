@@ -1,31 +1,31 @@
-import { Transport, Compressor, Loop, Player, Reverb, Volume, PanVol, start, loaded } from 'tone'
+import { Transport, Player, PanVol, Reverb, Compressor, Volume, Loop, start, loaded } from 'tone'
 
-import whistle_8_T7 from '../public/sound/whistle/whistle_8_T7.mp3'
-import whistle_4_T3 from '../public/sound/whistle/whistle_4_T3.mp3'
-import whistle_7_T6 from '../public/sound/whistle/whistle_7_T6.mp3'
-import whistle_12_T11 from '../public/sound/whistle/whistle_12_T11.mp3'
-import whistle_8_T7_B from '../public/sound/whistle/whistle_8_T7_B.mp3'
+const whistle_8_T7 = new URL('../public/sound/whistle/whistle_8_T7.mp3', import.meta.url).href;
+const whistle_4_T3 = new URL('../public/sound/whistle/whistle_4_T3.mp3', import.meta.url).href;
+const whistle_7_T6 = new URL('../public/sound/whistle/whistle_7_T6.mp3', import.meta.url).href;
+const whistle_12_T11 = new URL('../public/sound/whistle/whistle_12_T11.mp3', import.meta.url).href;
+const whistle_8_T7_B = new URL('../public/sound/whistle/whistle_8_T7_B.mp3', import.meta.url).href;
 
-import wii_2_T1 from '../public/sound/wii/wii_2_T1.mp3'
-import wii_4_T3 from '../public/sound/wii/wii_4_T3.mp3'
-import wii_8_T7 from '../public/sound/wii/wii_8_T7.mp3'
-import wii_10_T9 from '../public/sound/wii/wii_10_T9.mp3'
-import wii_12_T11 from '../public/sound/wii/wii_12_T11.mp3'
-import wii_T5 from '../public/sound/wii/wii_T5.mp3'
-import wii_chord from '../public/sound/wii/wii_chord.mp3'
+const wii_2_T1 = new URL('../public/sound/wii/wii_2_T1.mp3', import.meta.url).href;
+const wii_4_T3 = new URL('../public/sound/wii/wii_4_T3.mp3', import.meta.url).href;
+const wii_8_T7 = new URL('../public/sound/wii/wii_8_T7.mp3', import.meta.url).href;
+const wii_10_T9 = new URL('../public/sound/wii/wii_10_T9.mp3', import.meta.url).href;
+const wii_12_T11 = new URL('../public/sound/wii/wii_12_T11.mp3', import.meta.url).href;
+const wii_T5 = new URL('../public/sound/wii/wii_T5.mp3', import.meta.url).href;
+const wii_chord = new URL('../public/sound/wii/wii_chord.mp3', import.meta.url).href;
 
-import ipod_2_T1 from '../public/sound/ipod/ipod_2_T1.mp3'
-import ipod_5_T4 from '../public/sound/ipod/ipod_5_T4.mp3'
-import ipod_7_T6 from '../public/sound/ipod/ipod_7_T6.mp3'
-import ipod_8_T7 from '../public/sound/ipod/ipod_8_T7.mp3'
-import ipod_14_FX from '../public/sound/ipod/ipod_14_FX.mp3'
-import ipod_15_Delay_Reverb from '../public/sound/ipod/ipod_15_Delay_Reverb.mp3'
-import ipod_hiss from '../public/sound/ipod/ipod_hiss.mp3'
+const ipod_2_T1 = new URL('../public/sound/ipod/ipod_2_T1.mp3', import.meta.url).href;
+const ipod_5_T4 = new URL('../public/sound/ipod/ipod_5_T4.mp3', import.meta.url).href;
+const ipod_7_T6 = new URL('../public/sound/ipod/ipod_7_T6.mp3', import.meta.url).href;
+const ipod_8_T7 = new URL('../public/sound/ipod/ipod_8_T7.mp3', import.meta.url).href;
+const ipod_14_FX = new URL('../public/sound/ipod/ipod_14_FX.mp3', import.meta.url).href;
+const ipod_15_Delay_Reverb = new URL('../public/sound/ipod/ipod_15_Delay_Reverb.mp3', import.meta.url).href;
+const ipod_hiss = new URL('../public/sound/ipod/ipod_hiss.mp3', import.meta.url).href;
 
-import orbit_3_Audio from '../public/sound/orbit/orbit_3-Audio.mp3'
-import orbit_8_DT1 from '../public/sound/orbit/orbit_8_DT1.mp3'
-import orbit_9_DT2 from '../public/sound/orbit/orbit_9_DT2.mp3'
-import orbit_10_DT6 from '../public/sound/orbit/orbit_10_DT6.mp3'
+const orbit_3_Audio = new URL('../public/sound/orbit/orbit_3-Audio.mp3', import.meta.url).href;
+const orbit_8_DT1 = new URL('../public/sound/orbit/orbit_8_DT1.mp3', import.meta.url).href;
+const orbit_9_DT2 = new URL('../public/sound/orbit/orbit_9_DT2.mp3', import.meta.url).href;
+const orbit_10_DT6 = new URL('../public/sound/orbit/orbit_10_DT6.mp3', import.meta.url).href;
 
 const SONGS = {
   whistle: {
@@ -130,7 +130,7 @@ export default class Sound {
     const voice = {
       file: file,
       player: new Player({
-        url: `${window.location.origin}${file}`,
+        url: `${file}`,
         fadeOut: 0.1,
       }),
       panVol: new PanVol()
