@@ -1,4 +1,5 @@
-import { Transport, Player, PanVol, Reverb, Compressor, Volume, Loop, start, loaded } from 'tone'
+import * as Tone from 'tone'
+const { Transport, Player, PanVol, Reverb, Compressor, Volume, Loop, start, loaded } = Tone
 
 const whistle_8_T7 = new URL('../public/sound/whistle/whistle_8_T7.mp3', import.meta.url).href;
 const whistle_4_T3 = new URL('../public/sound/whistle/whistle_4_T3.mp3', import.meta.url).href;
