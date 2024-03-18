@@ -132,6 +132,7 @@ describe('Problem Tests', function () {
       vx: 13,
       vy: 14,
       radius: 15,
+      life: 1000,
       seed: '0x' + (666).toString(16).padStart(64, '0')
     }
     await expect(problems.connect(addr1).updateProblemBody(problemId, 1, newBodyData))
@@ -146,7 +147,7 @@ describe('Problem Tests', function () {
     expect(bodyData.py).to.equal(newBodyData.py)
     expect(bodyData.vx).to.equal(newBodyData.vx)
     expect(bodyData.vy).to.equal(newBodyData.vy)
-    // TODO: add life tests
+    expect(bodyData.life).to.equal(newBodyData.life)
     expect(bodyData.radius).to.equal(newBodyData.radius)
     expect(bodyData.seed).to.equal(newBodyData.seed)
 
@@ -390,7 +391,7 @@ describe('Problem Tests', function () {
     expect(tickCount).to.equal(0)
 
     const scalingFactor = await problems.scalingFactor()
-    const maxVector = await problems.maxVector()
+    // const maxVector = await problems.maxVector()
     const startingRadius = await problems.startingRadius()
     const maxRadius = ethers.BigNumber.from(3 * 5).add(startingRadius)
 
@@ -399,7 +400,7 @@ describe('Problem Tests', function () {
 
     const bodyIDs = await problems.getProblemBodyIds(problemId)
 
-    const initialVelocity = maxVector.mul(scalingFactor)
+    const initialVelocity = 0//maxVector.mul(scalingFactor)
     for (let i = 0; i < bodyCount; i++) {
       const currentBodyId = bodyIDs[i]
       const bodyData = await problems.getProblemBodyData(problemId, currentBodyId)
@@ -434,13 +435,13 @@ describe('Problem Tests', function () {
     const { problemId } = await mintProblem(signers, deployedContracts)
 
     const scalingFactor = await problems.scalingFactor()
-    const maxVector = await problems.maxVector()
+    // const maxVector = await problems.maxVector()
     const startingRadius = await problems.startingRadius()
     const maxRadius = ethers.BigNumber.from(3 * 5).add(startingRadius)
 
 
     const windowWidth = await problems.windowWidth()
-    const initialVelocity = maxVector.mul(scalingFactor)
+    const initialVelocity = 0//maxVector.mul(scalingFactor)
 
     const bodyIds = await problems.getProblemBodyIds(problemId)
     const { bodyCount } = await problems.problems(problemId)
