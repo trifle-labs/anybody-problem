@@ -26,6 +26,9 @@ circuits/*.vkey.json
 circuits/*.wasm
 circuits/*.zkey
 contracts/*Verifier.sol
+contractData/12345-*
+contractData/ABI-12345*
+
 /*_js/
 /*_cpp/
 *_proof.json

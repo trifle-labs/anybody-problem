@@ -187,8 +187,8 @@ export class Anybody extends EventEmitter {
       this.setPause()
       return false
     }
-    this.p.touchMoved = () => {}
-    this.p.touchEnded = () => {}
+    this.p.touchMoved = () => { }
+    this.p.touchEnded = () => { }
 
     if (typeof window !== 'undefined' && this.mode == 'game') {
       body.removeEventListener('click', this.setPause)
@@ -197,7 +197,7 @@ export class Anybody extends EventEmitter {
     } else {
       body.removeEventListener('click', this.missileClick)
       body.removeEventListener('click', this.setPause)
-      body.addEventListener('click', this.setPause.bind(this))
+      // body.addEventListener('click', this.setPause.bind(this))
     }
   }
 

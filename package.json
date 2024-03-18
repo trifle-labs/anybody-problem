@@ -13,7 +13,8 @@
     "circom": "./scripts/basic_circom.sh",
     "circom:dev": "hardhat circom --deterministic --debug --verbose",
     "circom:prod": "hardhat circom --verbose",
-    "sol-test": "hardhat test test/problems.test.js test/bodies.test.js test/solver.test.js",
+    "test:circom": "ls test/*.js | grep -v -e 'bodies' -e 'problems' -e 'solver' -e 'metadata' | xargs npx hardhat test",
+    "test:solidity": "hardhat test test/problems.test.js test/metadata.test.js test/bodies.test.js test/solver.test.js",
     "test": "hardhat test"
   },
   "type": "module",

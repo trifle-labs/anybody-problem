@@ -256,10 +256,10 @@ const mintProblem = async (signers, deployedContracts, acct) => {
 const prepareMintBody = async (signers, deployedContracts, problemId, acct) => {
   const [owner] = signers
   acct = acct || owner
-  const { Tocks: tocks, Bodies: bodies, Solver: solver } = deployedContracts
-  const tockPriceIndex = await bodies.problemPriceLevels(problemId)
+  const { Problems: problems, Tocks: tocks, Bodies: bodies, Solver: solver } = deployedContracts
+  const { mintedBodiesIndex } = await problems.problems(problemId)
   const decimals = await bodies.decimals()
-  const tockPrice = await bodies.tockPrice(tockPriceIndex)
+  const tockPrice = await bodies.tockPrice(mintedBodiesIndex)
   const tockPriceWithDecimals = tockPrice.mul(decimals)
   await tocks.updateSolverAddress(owner.address)
   const tx = await tocks.mint(acct.address, tockPriceWithDecimals)

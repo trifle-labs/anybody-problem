@@ -125,13 +125,14 @@ describe('Problem Tests', function () {
 
     const newBodyData = {
       bodyId: 8,
-      bodyStyle: 9,
+      mintedBodyIndex: 9,
       bodyIndex: 10,
       px: 11,
       py: 12,
       vx: 13,
       vy: 14,
       radius: 15,
+      life: 1000,
       seed: '0x' + (666).toString(16).padStart(64, '0')
     }
     await expect(problems.connect(addr1).updateProblemBody(problemId, 1, newBodyData))
@@ -140,12 +141,13 @@ describe('Problem Tests', function () {
       .to.not.be.reverted
     const bodyData = await problems.getProblemBodyData(problemId, 0)
     expect(bodyData.bodyId).to.equal(newBodyData.bodyId)
-    expect(bodyData.bodyStyle).to.equal(newBodyData.bodyStyle)
+    expect(bodyData.mintedBodyIndex).to.equal(newBodyData.mintedBodyIndex)
     expect(bodyData.bodyIndex).to.equal(newBodyData.bodyIndex)
     expect(bodyData.px).to.equal(newBodyData.px)
     expect(bodyData.py).to.equal(newBodyData.py)
     expect(bodyData.vx).to.equal(newBodyData.vx)
     expect(bodyData.vy).to.equal(newBodyData.vy)
+    expect(bodyData.life).to.equal(newBodyData.life)
     expect(bodyData.radius).to.equal(newBodyData.radius)
     expect(bodyData.seed).to.equal(newBodyData.seed)
 
@@ -382,14 +384,14 @@ describe('Problem Tests', function () {
     await problems['mint()']({ value: correctPrice })
     const problemId = await problems.problemSupply()
     const problem = await problems.problems(problemId)
-    const { seed, bodyCount, tickCount, bodiesProduced } = problem
+    const { seed, bodyCount, tickCount, mintedBodiesIndex } = problem
     expect(parseInt(seed, 16)).to.not.equal(0)
     expect(bodyCount).to.equal(3)
-    expect(bodiesProduced).to.equal(3)
+    expect(mintedBodiesIndex).to.equal(3)
     expect(tickCount).to.equal(0)
 
     const scalingFactor = await problems.scalingFactor()
-    const maxVector = await problems.maxVector()
+    // const maxVector = await problems.maxVector()
     const startingRadius = await problems.startingRadius()
     const maxRadius = ethers.BigNumber.from(3 * 5).add(startingRadius)
 
@@ -398,7 +400,7 @@ describe('Problem Tests', function () {
 
     const bodyIDs = await problems.getProblemBodyIds(problemId)
 
-    const initialVelocity = maxVector.mul(scalingFactor)
+    const initialVelocity = 0//maxVector.mul(scalingFactor)
     for (let i = 0; i < bodyCount; i++) {
       const currentBodyId = bodyIDs[i]
       const bodyData = await problems.getProblemBodyData(problemId, currentBodyId)
@@ -425,7 +427,7 @@ describe('Problem Tests', function () {
     }
   })
 
-  it('mints a body via mintBody', async () => {
+  it('mints a body via mintBodyToProblem', async () => {
     const signers = await ethers.getSigners()
     // const [, acct1] = signers
     const deployedContracts = await deployContracts()
@@ -433,18 +435,18 @@ describe('Problem Tests', function () {
     const { problemId } = await mintProblem(signers, deployedContracts)
 
     const scalingFactor = await problems.scalingFactor()
-    const maxVector = await problems.maxVector()
+    // const maxVector = await problems.maxVector()
     const startingRadius = await problems.startingRadius()
     const maxRadius = ethers.BigNumber.from(3 * 5).add(startingRadius)
 
 
     const windowWidth = await problems.windowWidth()
-    const initialVelocity = maxVector.mul(scalingFactor)
+    const initialVelocity = 0//maxVector.mul(scalingFactor)
 
     const bodyIds = await problems.getProblemBodyIds(problemId)
     const { bodyCount } = await problems.problems(problemId)
     await prepareMintBody(signers, deployedContracts, problemId)
-    const tx = await problems.mintBody(problemId)
+    const tx = await problems.mintBodyToProblem(problemId)
     const receipt = await tx.wait()
     const newBodyId = getParsedEventLogs(receipt, bodies, 'Transfer')[0].args.tokenId
     const { bodyCount: newBodyCount } = await problems.problems(problemId)

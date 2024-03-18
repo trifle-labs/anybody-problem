@@ -74,6 +74,11 @@ const config = {
       accounts: { mnemonic: process.env.deploymentKey },
       gasPrice: 1_000_000_000, // 1 GWEI
     },
+    sepolia: {
+      url: 'https://sepolia.rpc.grove.city/v1/' + process.env.grove,
+      accounts: { mnemonic: process.env.deploymentKey },
+      gasPrice: 1_000_000_000, // 1 GWEI
+    },
   },
   gasReporter: {
     currency: 'EUR',
