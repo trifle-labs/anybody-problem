@@ -2,6 +2,8 @@
   "name": "anybody-problem",
   "version": "1.0.0",
   "license": "CC-BY-NC-4.0",
+  "targets": { "main": false },
+  "main": "src/index.js",
   "scripts": {
     "build": "yarn parcel build src/index.html",
     "dev": "yarn parcel src/index.html --open",
