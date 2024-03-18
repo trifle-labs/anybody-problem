@@ -13,6 +13,7 @@ artifacts
 
 test.svg
 
+# parcel
 .parcel-cache
 
 # Ignore the output from circom because we want people to build these

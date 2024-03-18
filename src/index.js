@@ -1,5 +1,3 @@
-
-
 export { Anybody } from './anybody.js'
 export * as circuits from '../scripts/circuits.js'
 // const utils = require('../scripts/utils')
