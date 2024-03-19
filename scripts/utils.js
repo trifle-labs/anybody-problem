@@ -86,8 +86,6 @@ const decodeUri = (decodedJson) => {
 
 const deployContracts = async () => {
   var networkinfo = await hre.ethers.provider.getNetwork()
-  const blocksToWaitBeforeVerify = 0
-
   const testing = networkinfo['chainId'] == 12345
 
   // const [owner] = await hre.ethers.getSigners()
@@ -213,21 +211,29 @@ const deployContracts = async () => {
       },
     ]
 
-    for (let i = 0; i < verificationData.length; i++) {
-      await solver.deployTransaction.wait(blocksToWaitBeforeVerify)
-      !testing && log(`Verifying ${verificationData[i].name} Contract`)
-      try {
-        await hre.run('verify:verify', {
-          address: returnObject[verificationData[i].name].address,
-          constructorArguments: verificationData[i].constructorArguments,
-        })
-      } catch (e) {
-        !testing && log({ e })
-      }
-    }
+    returnObject.verificationData = verificationData
+
   }
 
   return returnObject
+}
+
+const verifyContracts = async (returnObject) => {
+  const blocksToWaitBeforeVerify = 0
+  const verificationData = returnObject.verificationData
+  const solver = returnObject.Solver
+  for (let i = 0; i < verificationData.length; i++) {
+    await solver.deployTransaction.wait(blocksToWaitBeforeVerify)
+    log(`Verifying ${verificationData[i].name} Contract`)
+    try {
+      await hre.run('verify:verify', {
+        address: returnObject[verificationData[i].name].address,
+        constructorArguments: verificationData[i].constructorArguments,
+      })
+    } catch (e) {
+      log({ e })
+    }
+  }
 }
 
 const log = (message) => {
@@ -361,7 +367,8 @@ export {
   readData,
   testJson,
   correctPrice,
-  generateWitness
+  generateWitness,
+  verifyContracts
   // splitterAddress
 }
 

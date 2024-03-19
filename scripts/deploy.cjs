@@ -71,9 +71,9 @@ async function main() {
   console.log({ deployer: deployer.address })
   console.log('Deploy to chain:')
   console.log(await hre.ethers.provider.getNetwork())
-  const { deployContracts } = await import('./utils.js')
-  const deployedContracts = await deployContracts()
+  const { deployContracts, verifyContracts } = await import('./utils.js')
 
+  const deployedContracts = await deployContracts()
   for (const contractName in deployedContracts) {
     if (contractName.indexOf('Verifier') > -1) {
       await copyABI(contractName, 'Groth16Verifier')
@@ -82,6 +82,9 @@ async function main() {
     }
     const contract = deployedContracts[contractName]
     await saveAddress(contract, contractName)
+  }
+  if (deployedContracts.verificationData) {
+    await verifyContracts(deployedContracts)
   }
 }
 

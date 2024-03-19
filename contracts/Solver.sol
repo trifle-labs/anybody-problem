@@ -20,6 +20,7 @@ import "hardhat/console.sol";
 contract Solver is Ownable {
     address payable public problems;
     address public tocks;
+    uint256 public constant decimals = 10 ** 18;
 
     uint256[11] public bodyBoost = [
         0, // 0th body, just for easier indexing
@@ -76,6 +77,8 @@ contract Solver is Ownable {
             numberOfBodies,
             tickCount
         );
+
+        require(verifier != address(0), "Invalid verifier");
 
         if (numberOfBodies == 3) {
             require(
@@ -169,7 +172,10 @@ contract Solver is Ownable {
             previousTickCount + tickCount
         );
 
-        Tocks(tocks).mint(msg.sender, tickCount * bodyBoost[bodyCount]);
+        Tocks(tocks).mint(
+            msg.sender,
+            tickCount * bodyBoost[bodyCount] * decimals
+        );
 
         // uint256 traits = 5;
         Problems.Body memory bodyData;

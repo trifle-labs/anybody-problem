@@ -83,8 +83,9 @@ describe('Solver Tests', function () {
     // user earned new balance in Tocks token
     const tockCount = getParsedEventLogs(receipt, tocks, 'Transfer')[0].args.value
     const { bodyCount: newBodyCount } = await problems.problems(problemId)
+    const decimals = await solver.decimals()
     const boostAmount = await solver.bodyBoost(newBodyCount)
-    const expectedTockCount = ticksRun * boostAmount
+    const expectedTockCount = boostAmount.mul(decimals.mul(ticksRun))
     expect(tockCount).to.equal(expectedTockCount)
     expect(tockCount.gt(0)).to.equal(true)
 
@@ -118,7 +119,7 @@ describe('Solver Tests', function () {
     const { bodyCount, tickCount } = await problems.problems(problemId)
 
     const totalTicks = 2 * ticksRun
-    let totalTockCount = 0, runningTickCount = tickCount
+    let totalTockCount = ethers.BigNumber.from(0), runningTickCount = tickCount
     for (let i = 0; i < totalTicks; i += ticksRun) {
 
       const bodyData = []
@@ -136,14 +137,16 @@ describe('Solver Tests', function () {
         .to.emit(solver, 'Solved')
         .withArgs(problemId, runningTickCount, ticksRun)
       const receipt = await tx.wait()
-      runningTickCount = parseInt(runningTickCount) + parseInt(ticksRun)
+      runningTickCount = runningTickCount.add(ticksRun)
 
       // user earned new balance in Tocks token
       const tockCount = getParsedEventLogs(receipt, tocks, 'Transfer')[0].args.value
-      totalTockCount += tockCount.toNumber()
+      totalTockCount = totalTockCount.add(tockCount)
       const { bodyCount: newBodyCount } = await problems.problems(problemId)
+
+      const decimals = await solver.decimals()
       const boostAmount = await solver.bodyBoost(newBodyCount)
-      const expectedTockCount = boostAmount.mul(ticksRun)
+      const expectedTockCount = boostAmount.mul(decimals.mul(ticksRun))
       expect(tockCount).to.equal(expectedTockCount)
 
       // confirm new values are stored correctly
@@ -209,8 +212,9 @@ describe('Solver Tests', function () {
       const tockCount = getParsedEventLogs(receipt, tocks, 'Transfer')[0].args.value
 
       totalTockCount = tockCount.add(totalTockCount)
+      const decimals = await solver.decimals()
       const boostAmount = await solver.bodyBoost(bodyCount)
-      const expectedTockCount = boostAmount.mul(ticksRun)
+      const expectedTockCount = boostAmount.mul(decimals.mul(ticksRun))
       expect(tockCount).to.equal(expectedTockCount)
 
       // confirm new values are stored correctly

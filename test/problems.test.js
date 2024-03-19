@@ -391,7 +391,7 @@ describe('Problem Tests', function () {
     expect(tickCount).to.equal(0)
 
     const scalingFactor = await problems.scalingFactor()
-    // const maxVector = await problems.maxVector()
+    const maxVector = await problems.maxVector()
     const startingRadius = await problems.startingRadius()
     const maxRadius = ethers.BigNumber.from(3 * 5).add(startingRadius)
 
@@ -400,7 +400,7 @@ describe('Problem Tests', function () {
 
     const bodyIDs = await problems.getProblemBodyIds(problemId)
 
-    const initialVelocity = 0//maxVector.mul(scalingFactor)
+    const initialVelocity = maxVector.mul(scalingFactor)
     for (let i = 0; i < bodyCount; i++) {
       const currentBodyId = bodyIDs[i]
       const bodyData = await problems.getProblemBodyData(problemId, currentBodyId)
@@ -435,13 +435,13 @@ describe('Problem Tests', function () {
     const { problemId } = await mintProblem(signers, deployedContracts)
 
     const scalingFactor = await problems.scalingFactor()
-    // const maxVector = await problems.maxVector()
+    const maxVector = await problems.maxVector()
     const startingRadius = await problems.startingRadius()
     const maxRadius = ethers.BigNumber.from(3 * 5).add(startingRadius)
 
 
     const windowWidth = await problems.windowWidth()
-    const initialVelocity = 0//maxVector.mul(scalingFactor)
+    const initialVelocity = maxVector.mul(scalingFactor)
 
     const bodyIds = await problems.getProblemBodyIds(problemId)
     const { bodyCount } = await problems.problems(problemId)

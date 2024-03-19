@@ -181,23 +181,24 @@ export class Anybody extends EventEmitter {
 
   addListener() {
     // const body = document.getElementsByClassName('p5Canvas')[0]
-    const body = document.querySelector('canvas')
+    // const body = document.querySelector('canvas')
+    const canvas = document.getElementById('defaultCanvas0')
 
     this.p.touchStarted = () => {
-      this.setPause()
-      return false
+      // this.setPause()
+      // return false
     }
     this.p.touchMoved = () => { }
     this.p.touchEnded = () => { }
 
     if (typeof window !== 'undefined' && this.mode == 'game') {
-      body.removeEventListener('click', this.setPause)
-      body.removeEventListener('click', this.missileClick)
-      body.addEventListener('click', this.missileClick.bind(this))
+      canvas.removeEventListener('click', this.setPause)
+      canvas.removeEventListener('click', this.missileClick)
+      canvas.addEventListener('click', this.missileClick.bind(this))
     } else {
-      body.removeEventListener('click', this.missileClick)
-      body.removeEventListener('click', this.setPause)
-      // body.addEventListener('click', this.setPause.bind(this))
+      canvas.removeEventListener('click', this.missileClick)
+      canvas.removeEventListener('click', this.setPause)
+      canvas.addEventListener('click', this.setPause.bind(this))
     }
   }
 

@@ -36,15 +36,15 @@ contract Bodies is ERC721, Ownable {
     ];
 
     uint256[10] public lifeLengths = [
-        10_000, // 1st body
-        10_000, // 2nd body
-        10_000, // 3rd body
+        7_000, // 1st body
+        7_000, // 2nd body
+        7_000, // 3rd body
         10_000, // 4th body
         11_000, // 5th body
         12_000, // 6th body
-        12_000, // 7th body
-        12_000, // 8th body
-        12_000, //9th body
+        13_000, // 7th body
+        14_000, // 8th body
+        15_000, // 9th body
         20_000 // 10th body
     ];
 
