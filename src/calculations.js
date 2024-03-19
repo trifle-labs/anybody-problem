@@ -83,7 +83,9 @@ export const Calculations = {
 
   calculateBodyFinal() {
     // const maxVectorScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
+    console.log(this.bodies.map(b => b.bodyIndex.toString()))
     this.bodies.sort((a, b) => a.bodyIndex - b.bodyIndex)
+    console.log(this.bodies.map(b => b.bodyIndex.toString()))
     const bodiesAsBigInts = this.convertBodiesToBigInts(this.bodies)
     this.bodyFinal = bodiesAsBigInts.map(b => {
       b = this.convertScaledBigIntBodyToArray(b)

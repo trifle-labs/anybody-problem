@@ -402,8 +402,8 @@ contract Problems is ERC721, Ownable {
 
         body.px = x;
         body.py = y;
-        // body.vx = 0; // maxVector * scalingFactor; // TODO: confirm why this wasn't 0 before
-        // body.vy = 0; // maxVector * scalingFactor; // TODO: confirm why this wasn't 0 before
+        body.vx = maxVector * scalingFactor; // NOTE: this is offset by maxVector so actually is 0
+        body.vy = maxVector * scalingFactor; // NOTE: this is offset by maxVector so actually is 0
         body.radius = r;
 
         return body;

@@ -246,13 +246,13 @@ describe('Bodies Tests', function () {
     expect(tickCount).to.equal(0)
 
     const scalingFactor = await problems.scalingFactor()
-    // const maxVector = await problems.maxVector()
+    const maxVector = await problems.maxVector()
     const startingRadius = await problems.startingRadius()
     const maxRadius = ethers.BigNumber.from(3 * 5).add(startingRadius)
 
     const windowWidth = await problems.windowWidth()
 
-    const initialVelocity = 0//maxVector.mul(scalingFactor)
+    const initialVelocity = maxVector.mul(scalingFactor)
 
     const bodyIDs = await problems.getProblemBodyIds(problemId)
     let smallestRadius = startingRadius.mul(scalingFactor)
