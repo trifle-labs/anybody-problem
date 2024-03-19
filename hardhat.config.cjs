@@ -77,7 +77,7 @@ const config = {
     sepolia: {
       url: 'https://sepolia.rpc.grove.city/v1/' + process.env.grove,
       accounts: { mnemonic: process.env.deploymentKey },
-      gasPrice: 1_000_000_000, // 1 GWEI
+      gasPrice: 10_000_000_000, // 10 GWEI
     },
   },
   gasReporter: {
