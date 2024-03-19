@@ -97,6 +97,7 @@ export default class Sound {
   currentMeasure = 0
 
   constructor() {
+    if (typeof window === 'undefined') return
     window.addEventListener('keydown', this.handleKeyDown)
   }
 
@@ -123,7 +124,7 @@ export default class Sound {
   }
 
   pause() {
-    Transport.stop()
+    Transport?.stop()
     this.voices?.forEach(voice => voice.player.stop())
   }
 
