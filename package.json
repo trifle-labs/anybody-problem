@@ -26,6 +26,10 @@
     "not ie 11"
   ],
   "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write --ignore-unknown"
+    ],
     "**/*": "prettier --write --ignore-unknown"
   },
   "eslintConfig": {
