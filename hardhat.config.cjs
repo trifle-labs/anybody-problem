@@ -1,13 +1,12 @@
-require('hardhat-circom')
-require('@nomiclabs/hardhat-waffle')
-require('hardhat-gas-reporter')
-require('hardhat-contract-sizer')
-require('dotenv').config()
-require('@nomiclabs/hardhat-etherscan')
-require('solidity-coverage')
+require("hardhat-circom");
+require("@nomiclabs/hardhat-waffle");
+require("hardhat-gas-reporter");
+require("hardhat-contract-sizer");
+require("dotenv").config();
+require("@nomiclabs/hardhat-etherscan");
+require("solidity-coverage");
 
 // const util = require("util");
-
 
 // // Import necessary modules
 // const { task } = require("hardhat/config");
@@ -44,15 +43,15 @@ require('solidity-coverage')
  */
 const config = {
   mocha: {
-    timeout: 100_000_000
+    timeout: 100_000_000,
   },
   solidity: {
     compilers: [
       {
-        version: '0.6.11',
+        version: "0.6.11",
       },
       {
-        version: '0.8.15',
+        version: "0.8.15",
         settings: {
           viaIR: true,
           optimizer: { enabled: true, runs: 200 },
@@ -66,25 +65,25 @@ const config = {
       gasPrice: 10_000_000_000,
       blockGasLimit: 30_000_000,
       chainId: 12345,
-      loggingEnabled: false
+      loggingEnabled: false,
     },
     formatest: {
       // url: 'https://sepolia.infura.io/v3/' + process.env.INFURA_API_KEY,
-      url: 'https://rpc.sketchpad-1.forma.art/',
+      url: "https://rpc.sketchpad-1.forma.art/",
       accounts: { mnemonic: process.env.deploymentKey },
       gasPrice: 1_000_000_000, // 1 GWEI
     },
     sepolia: {
-      url: 'https://sepolia.rpc.grove.city/v1/' + process.env.grove,
+      url: "https://sepolia.rpc.grove.city/v1/" + process.env.grove,
       accounts: { mnemonic: process.env.deploymentKey },
       gasPrice: 10_000_000_000, // 10 GWEI
     },
   },
   gasReporter: {
-    currency: 'EUR',
+    currency: "EUR",
     gasPrice: 42,
-    url: 'http://localhost:8545',
-    coinmarketcap: '38b60711-0559-45f4-8bda-e72f446c8278',
+    url: "http://localhost:8545",
+    coinmarketcap: "38b60711-0559-45f4-8bda-e72f446c8278",
     enabled: true,
   },
   etherscan: {
@@ -99,51 +98,51 @@ const config = {
     strict: true,
   },
   circom: {
-    inputBasePath: './circuits',
-    ptau: 'https://hermez.s3-eu-west-1.amazonaws.com/powersOfTau28_hez_final_20.ptau',
+    inputBasePath: "./circuits",
+    ptau: "https://hermez.s3-eu-west-1.amazonaws.com/powersOfTau28_hez_final_20.ptau",
     circuits: [
       {
-        name: 'absoluteValueSubtraction',
+        name: "absoluteValueSubtraction",
         // No protocol, so it defaults to groth16
       },
       {
-        name: 'acceptableMarginOfError',
+        name: "acceptableMarginOfError",
         // No protocol, so it defaults to groth16
       },
       {
-        name: 'calculateForceMain',
+        name: "calculateForceMain",
         // No protocol, so it defaults to groth16
       },
       {
-        name: 'detectCollisionMain',
+        name: "detectCollisionMain",
         // No protocol, so it defaults to groth16
       },
       {
-        name: 'forceAccumulatorMain',
+        name: "forceAccumulatorMain",
         // No protocol, so it defaults to groth16
       },
       {
-        name: 'getDistanceMain',
+        name: "getDistanceMain",
         // No protocol, so it defaults to groth16
       },
       {
-        name: 'limiterMain',
+        name: "limiterMain",
         // No protocol, so it defaults to groth16
       },
       {
-        name: 'lowerLimiterMain',
+        name: "lowerLimiterMain",
         // No protocol, so it defaults to groth16
       },
       {
-        name: 'nftTest',
+        name: "nftTest",
         // No protocol, so it defaults to groth16
       },
       {
-        name: 'nftProd',
+        name: "nftProd",
         // No protocol, so it defaults to groth16
       },
       {
-        name: 'stepStateTest',
+        name: "stepStateTest",
         // No protocol, so it defaults to groth16
       },
       // {
@@ -162,14 +161,13 @@ const config = {
       // },
     ],
   },
-}
+};
 
 for (let i = 3; i <= 10; i++) {
   config.circom.circuits.push({
     name: `nft_${i}_20`,
     // No protocol, so it defaults to groth16
-  })
+  });
 }
 
-
-module.exports = config
+module.exports = config;

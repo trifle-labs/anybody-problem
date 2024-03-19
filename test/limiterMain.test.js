@@ -1,55 +1,58 @@
 // const hre = require('hardhat')
-import hre from 'hardhat'
+import hre from "hardhat";
 // const { assert } = require('chai')
-import index from '../docs/index.cjs'
-const { calculateTime } = index
+import index from "../docs/index.cjs";
+const { calculateTime } = index;
 // const { describe, it, before } = require('mocha')
 
-describe('limiterMain circuit', () => {
-  let circuit
+describe("limiterMain circuit", () => {
+  let circuit;
 
   const sampleInputs = [
     {
-      expectedResult: '400000000',
+      expectedResult: "400000000",
       sampleInput: {
-        in: '1300000000',
-        limit: '700000000',
-        rather: '400000000'
-      }
+        in: "1300000000",
+        limit: "700000000",
+        rather: "400000000",
+      },
     },
     {
-      expectedResult: '1300000000',
+      expectedResult: "1300000000",
       sampleInput: {
-        in: '1300000000',
-        limit: '1300000001',
-        rather: '400000000'
-      }
+        in: "1300000000",
+        limit: "1300000001",
+        rather: "400000000",
+      },
     },
     {
-      expectedResult: '1400000000',
+      expectedResult: "1400000000",
       sampleInput: {
-        in: '1300000000',
-        limit: '700000000',
-        rather: '1400000000'
-      }
-    }
-  ]
-  const sanityCheck = true
+        in: "1300000000",
+        limit: "700000000",
+        rather: "1400000000",
+      },
+    },
+  ];
+  const sanityCheck = true;
 
   before(async () => {
-    circuit = await hre.circuitTest.setup('limiterMain')
-  })
+    circuit = await hre.circuitTest.setup("limiterMain");
+  });
 
-  it('produces a witness with valid constraints', async () => {
-    const witness = await circuit.calculateWitness(sampleInputs[0].sampleInput, sanityCheck)
-    const inputs = Object.keys(sampleInputs[0].sampleInput).length
-    const perStep = witness.length - inputs
-    const secRounded = calculateTime(perStep)
-    console.log(`| limiter(252) | ${perStep} | ${secRounded}|`)
-    await circuit.checkConstraints(witness)
-  })
+  it("produces a witness with valid constraints", async () => {
+    const witness = await circuit.calculateWitness(
+      sampleInputs[0].sampleInput,
+      sanityCheck,
+    );
+    const inputs = Object.keys(sampleInputs[0].sampleInput).length;
+    const perStep = witness.length - inputs;
+    const secRounded = calculateTime(perStep);
+    console.log(`| limiter(252) | ${perStep} | ${secRounded}|`);
+    await circuit.checkConstraints(witness);
+  });
 
-  it('has expected witness values', async () => {
+  it("has expected witness values", async () => {
     // const witness = await circuit.calculateLabeledWitness(
     //   sampleInputs[0].sampleInput,
     //   sanityCheck
@@ -61,13 +64,16 @@ describe('limiterMain circuit', () => {
     // assert.propertyVal(witness, "main.y1", undefined);
     // assert.propertyVal(witness, "main.y2", undefined);
     // assert.propertyVal(witness, "main.out", "3");
-  })
+  });
 
-  it('has the correct output', async () => {
+  it("has the correct output", async () => {
     for (let i = 0; i < sampleInputs.length; i++) {
-      const expected = { out: sampleInputs[i].expectedResult }
-      const witness = await circuit.calculateWitness(sampleInputs[i].sampleInput, sanityCheck)
-      await circuit.assertOut(witness, expected)
+      const expected = { out: sampleInputs[i].expectedResult };
+      const witness = await circuit.calculateWitness(
+        sampleInputs[i].sampleInput,
+        sanityCheck,
+      );
+      await circuit.assertOut(witness, expected);
     }
-  })
-})
+  });
+});

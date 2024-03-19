@@ -103,6 +103,7 @@
     "hardhat-gas-reporter": "*",
     "p5": "^1.8.0",
     "parcel": "^2.12.0",
+    "prettier": "3.2.5",
     "solidity-coverage": "^0.8.6"
   },
   "resolutions": {
