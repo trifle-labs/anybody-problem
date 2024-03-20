@@ -2,13 +2,9 @@ import hre from 'hardhat'
 // import { assert } from 'chai';
 // import { describe, it, before } from 'mocha';
 
-import {
-  Anybody,
-} from '../src/anybody.js'
+import { Anybody } from '../src/anybody.js'
 
-import {
-  _calculateTime
-} from '../src/calculations.js'
+import { _calculateTime } from '../src/calculations.js'
 
 // const p = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
 
@@ -51,7 +47,8 @@ describe('calculateForceMain circuit', () => {
   it('produces a witness with valid constraints', async () => {
     const witness = await circuit.calculateWitness(sampleInputs[0], sanityCheck)
     // get the number of inputs
-    const inputs = sampleInputs[0].in_bodies.length * sampleInputs[0].in_bodies[0].length
+    const inputs =
+      sampleInputs[0].in_bodies.length * sampleInputs[0].in_bodies[0].length
     const perStep = witness.length - inputs
     const secRounded = _calculateTime(perStep)
     console.log(`| calculateForce() | ${perStep} | ${secRounded} |`)
@@ -72,16 +69,19 @@ describe('calculateForceMain circuit', () => {
   })
 
   it.skip('has the correct output', async () => {
-
     for (let i = 0; i < sampleInputs.length; i++) {
       const sampleInput = sampleInputs[i]
 
       const anybody = new Anybody(null, { util: true })
-      let bodies = sampleInput.bodies.map(anybody.convertScaledStringArrayToBody.bind(anybody))
+      let bodies = sampleInput.bodies.map(
+        anybody.convertScaledStringArrayToBody.bind(anybody)
+      )
       // for (let i = 0; i < steps; i++) {
       bodies = anybody.forceAccumulatorBigInts(bodies)
       // }
-      const out_forces = bodies.map(anybody.convertScaledBigIntBodyToArray.bind(anybody))
+      const out_forces = bodies.map(
+        anybody.convertScaledBigIntBodyToArray.bind(anybody)
+      )
 
       // const bodies = sampleInput.in_bodies.map(convertScaledStringArrayToBody)
       // const out_forces = calculateForceBigInt(bodies[0], bodies[1]).map(v => {

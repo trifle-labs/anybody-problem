@@ -18,10 +18,11 @@ describe('Metadata Tests', function () {
   it('onlyOwner functions are really only Owner', async function () {
     const [, addr1] = await ethers.getSigners()
     const { Metadata: metadata } = await deployContracts()
-    await expect(metadata.connect(addr1).updateProblemsAddress(addr1.address))
-      .to.be.revertedWith('Ownable: caller is not the owner')
-    await expect(metadata.updateProblemsAddress(addr1.address))
-      .to.not.be.reverted
+    await expect(
+      metadata.connect(addr1).updateProblemsAddress(addr1.address)
+    ).to.be.revertedWith('Ownable: caller is not the owner')
+    await expect(metadata.updateProblemsAddress(addr1.address)).to.not.be
+      .reverted
   })
 
   it('creates an SVG', async function () {
@@ -41,12 +42,5 @@ describe('Metadata Tests', function () {
     const svgString = prettier.format(base64ToString(svg), { parser: 'html' })
 
     fs.writeFileSync('test.svg', svgString)
-
-
-
-
   })
-
-
-
 })

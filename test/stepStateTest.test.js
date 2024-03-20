@@ -1,5 +1,3 @@
-
-
 // const hre = require('hardhat')
 // const path = require('path')
 // const fs = require('fs')
@@ -31,13 +29,15 @@ const {
   convertScaledBigIntBodyToArray
 } = index
 // const p = 21888242871839275222246405745257275088548364400416034343698204186575808495617n
-const totalSteps = 20//487
+const totalSteps = 20 //487
 // const { describe, it, before } = require('mocha')
 
 describe('stepStateTest circuit', () => {
   let circuit
 
-  const missiles = new Array(totalSteps + 1).fill(0).map(() => new Array(5).fill('0'))
+  const missiles = new Array(totalSteps + 1)
+    .fill(0)
+    .map(() => new Array(5).fill('0'))
   missiles[0] = ['226000', '42000', '10000', '10000', '100000']
   const sampleInput = {
     bodies: [
@@ -67,7 +67,9 @@ describe('stepStateTest circuit', () => {
 
   it('produces a witness with valid constraints', async () => {
     const witness = await circuit.calculateWitness(sampleInput, sanityCheck)
-    const inputs = sampleInput.bodies.length * sampleInput.bodies[0].length + sampleInput.missiles.length * sampleInput.missiles[0].length
+    const inputs =
+      sampleInput.bodies.length * sampleInput.bodies[0].length +
+      sampleInput.missiles.length * sampleInput.missiles[0].length
     const perStep = witness.length - inputs
     const secRounded = calculateTime(perStep, steps)
     console.log(`| stepState(3, ${steps}) | ${perStep} | ${secRounded} |`)

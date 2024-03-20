@@ -3,13 +3,18 @@ import hre from 'hardhat'
 const ethers = hre.ethers
 // const { describe, it } = require('mocha')
 
-import { deployContracts, correctPrice, /*splitterAddress,*/ getParsedEventLogs, prepareMintBody, mintProblem } from '../scripts/utils.js'
+import {
+  deployContracts,
+  correctPrice,
+  /*splitterAddress,*/ getParsedEventLogs,
+  prepareMintBody,
+  mintProblem
+} from '../scripts/utils.js'
 let tx
 describe('Problem Tests', function () {
   this.timeout(50000000)
 
   it('has the correct verifiers metadata, bodies, tocks, solver addresses', async () => {
-
     const deployedContracts = await deployContracts()
 
     const { Problems: problems } = deployedContracts
@@ -31,7 +36,7 @@ describe('Problem Tests', function () {
     // TODO: update with actual start date
     const startDate = await problems.startDate()
     // const actualStartDate = 'Thu Jan 01 2099 00:00:00 GMT+0000'
-    const actualStartDateInUnixTime = 0//Date.parse(actualStartDate) / 1000
+    const actualStartDateInUnixTime = 0 //Date.parse(actualStartDate) / 1000
     expect(startDate).to.equal(actualStartDateInUnixTime)
   })
 
@@ -39,87 +44,95 @@ describe('Problem Tests', function () {
     const [, addr1] = await ethers.getSigners()
     const { Problems: problems } = await deployContracts()
 
-    await expect(problems.connect(addr1).updatePrice(0))
-      .to.be.revertedWith('Ownable: caller is not the owner')
+    await expect(problems.connect(addr1).updatePrice(0)).to.be.revertedWith(
+      'Ownable: caller is not the owner'
+    )
 
-    await expect(problems.connect(addr1).updatePaused(true))
-      .to.be.revertedWith('Ownable: caller is not the owner')
+    await expect(problems.connect(addr1).updatePaused(true)).to.be.revertedWith(
+      'Ownable: caller is not the owner'
+    )
 
-    await expect(problems.connect(addr1).updateStartDate(0))
-      .to.be.revertedWith('Ownable: caller is not the owner')
+    await expect(problems.connect(addr1).updateStartDate(0)).to.be.revertedWith(
+      'Ownable: caller is not the owner'
+    )
 
-    await expect(problems.connect(addr1).updateVerifier(addr1.address, 0, 0))
-      .to.be.revertedWith('Ownable: caller is not the owner')
+    await expect(
+      problems.connect(addr1).updateVerifier(addr1.address, 0, 0)
+    ).to.be.revertedWith('Ownable: caller is not the owner')
 
-    await expect(problems.connect(addr1).updateSolverAddress(addr1.address))
-      .to.be.revertedWith('Ownable: caller is not the owner')
+    await expect(
+      problems.connect(addr1).updateSolverAddress(addr1.address)
+    ).to.be.revertedWith('Ownable: caller is not the owner')
 
-    await expect(problems.connect(addr1).updateMetadataAddress(addr1.address))
-      .to.be.revertedWith('Ownable: caller is not the owner')
+    await expect(
+      problems.connect(addr1).updateMetadataAddress(addr1.address)
+    ).to.be.revertedWith('Ownable: caller is not the owner')
 
-    await expect(problems.connect(addr1).updateBodiesAddress(addr1.address))
-      .to.be.revertedWith('Ownable: caller is not the owner')
+    await expect(
+      problems.connect(addr1).updateBodiesAddress(addr1.address)
+    ).to.be.revertedWith('Ownable: caller is not the owner')
 
-    await expect(problems.connect(addr1).updateProceedRecipientAddress(addr1.address))
-      .to.be.revertedWith('Ownable: caller is not the owner')
+    await expect(
+      problems.connect(addr1).updateProceedRecipientAddress(addr1.address)
+    ).to.be.revertedWith('Ownable: caller is not the owner')
 
+    await expect(problems.updatePrice(0)).to.not.be.reverted
 
-    await expect(problems.updatePrice(0))
-      .to.not.be.reverted
+    await expect(problems.updatePaused(true)).to.not.be.reverted
 
-    await expect(problems.updatePaused(true))
-      .to.not.be.reverted
+    await expect(problems.updateStartDate(0)).to.not.be.reverted
 
-    await expect(problems.updateStartDate(0))
-      .to.not.be.reverted
+    await expect(problems.updateVerifier(addr1.address, 0, 0)).to.not.be
+      .reverted
 
-    await expect(problems.updateVerifier(addr1.address, 0, 0))
-      .to.not.be.reverted
+    await expect(problems.updateSolverAddress(addr1.address)).to.not.be.reverted
 
-    await expect(problems.updateSolverAddress(addr1.address))
-      .to.not.be.reverted
+    await expect(problems.updateMetadataAddress(addr1.address)).to.not.be
+      .reverted
 
-    await expect(problems.updateMetadataAddress(addr1.address))
-      .to.not.be.reverted
+    await expect(problems.updateBodiesAddress(addr1.address)).to.not.be.reverted
 
-    await expect(problems.updateBodiesAddress(addr1.address))
-      .to.not.be.reverted
-
-    await expect(problems.updateProceedRecipientAddress(addr1.address))
-      .to.not.be.reverted
-
+    await expect(problems.updateProceedRecipientAddress(addr1.address)).to.not
+      .be.reverted
   })
 
   it('onlySolver functions are really only Solver', async () => {
     const [owner, addr1] = await ethers.getSigners()
     const { Problems: problems } = await deployContracts()
 
-    const { problemId } = await mintProblem([addr1], { Problems: problems }, addr1)
+    const { problemId } = await mintProblem(
+      [addr1],
+      { Problems: problems },
+      addr1
+    )
     await problems.updateSolverAddress(owner.address)
 
-    await expect(problems.connect(addr1).updateProblemBodyCount(problemId, 1))
-      .to.be.revertedWith('Only Solver can call')
+    await expect(
+      problems.connect(addr1).updateProblemBodyCount(problemId, 1)
+    ).to.be.revertedWith('Only Solver can call')
     const newBodyCount = 1
-    await expect(problems.updateProblemBodyCount(problemId, newBodyCount))
-      .to.not.be.reverted
+    await expect(problems.updateProblemBodyCount(problemId, newBodyCount)).to
+      .not.be.reverted
     const { bodyCount } = await problems.problems(problemId)
     expect(bodyCount).to.equal(newBodyCount)
 
     const newBodyIds = [9, 8, 7, 6, 5, 4, 3, 2, 1, 1111]
-    await expect(problems.connect(addr1).updateProblemBodyIds(problemId, newBodyIds))
-      .to.be.revertedWith('Only Solver can call')
-    await expect(problems.updateProblemBodyIds(problemId, newBodyIds))
-      .to.not.be.reverted
+    await expect(
+      problems.connect(addr1).updateProblemBodyIds(problemId, newBodyIds)
+    ).to.be.revertedWith('Only Solver can call')
+    await expect(problems.updateProblemBodyIds(problemId, newBodyIds)).to.not.be
+      .reverted
     const returnedBodyIds = await problems.getProblemBodyIds(problemId)
     for (let i = 0; i < newBodyIds.length; i++) {
       expect(returnedBodyIds[i]).to.equal(newBodyIds[i])
     }
 
     const newTickCount = 999
-    await expect(problems.connect(addr1).updateProblemTickCount(problemId, newTickCount))
-      .to.be.revertedWith('Only Solver can call')
-    await expect(problems.updateProblemTickCount(problemId, newTickCount))
-      .to.not.be.reverted
+    await expect(
+      problems.connect(addr1).updateProblemTickCount(problemId, newTickCount)
+    ).to.be.revertedWith('Only Solver can call')
+    await expect(problems.updateProblemTickCount(problemId, newTickCount)).to
+      .not.be.reverted
     const { tickCount } = await problems.problems(problemId)
     expect(tickCount).to.equal(newTickCount)
 
@@ -135,10 +148,11 @@ describe('Problem Tests', function () {
       life: 1000,
       seed: '0x' + (666).toString(16).padStart(64, '0')
     }
-    await expect(problems.connect(addr1).updateProblemBody(problemId, 1, newBodyData))
-      .to.be.revertedWith('Only Solver can call')
-    await expect(problems.updateProblemBody(problemId, 0, newBodyData))
-      .to.not.be.reverted
+    await expect(
+      problems.connect(addr1).updateProblemBody(problemId, 1, newBodyData)
+    ).to.be.revertedWith('Only Solver can call')
+    await expect(problems.updateProblemBody(problemId, 0, newBodyData)).to.not
+      .be.reverted
     const bodyData = await problems.getProblemBodyData(problemId, 0)
     expect(bodyData.bodyId).to.equal(newBodyData.bodyId)
     expect(bodyData.mintedBodyIndex).to.equal(newBodyData.mintedBodyIndex)
@@ -150,9 +164,7 @@ describe('Problem Tests', function () {
     expect(bodyData.life).to.equal(newBodyData.life)
     expect(bodyData.radius).to.equal(newBodyData.radius)
     expect(bodyData.seed).to.equal(newBodyData.seed)
-
   })
-
 
   it('has all the correct interfaces', async () => {
     const interfaces = [
@@ -162,7 +174,7 @@ describe('Problem Tests', function () {
       { name: 'ERC4906MetadataUpdate', id: '0x49064906', supported: false },
       { name: 'ERC721Enumerable', id: '0x780e9d63', supported: false },
       { name: 'ERC2981', id: '0x2a55205a', supported: false },
-      { name: 'ERC20', id: '0x36372b07', supported: false },
+      { name: 'ERC20', id: '0x36372b07', supported: false }
     ]
 
     for (let i = 0; i < interfaces.length; i++) {
@@ -173,8 +185,7 @@ describe('Problem Tests', function () {
     }
   })
 
-
-  it('emits \'EthMoved\' events when eth is moved', async () => {
+  it("emits 'EthMoved' events when eth is moved", async () => {
     const [, addr1] = await ethers.getSigners()
     const { Problems: problems, Metadata: metadata } = await deployContracts()
 
@@ -198,9 +209,9 @@ describe('Problem Tests', function () {
     expect(balanceAfter).to.equal(correctPrice)
 
     // only owner can call recoverUnsuccessfulMintPayment
-    await expect(problems.connect(addr1).recoverUnsuccessfulMintPayment(addr1.address))
-      .to.be.revertedWith('Ownable: caller is not the owner')
-
+    await expect(
+      problems.connect(addr1).recoverUnsuccessfulMintPayment(addr1.address)
+    ).to.be.revertedWith('Ownable: caller is not the owner')
 
     // get the balance of the eventual recipient
     const balanceOfAddr1Before = await ethers.provider.getBalance(addr1.address)
@@ -219,30 +230,43 @@ describe('Problem Tests', function () {
     const [owner] = await ethers.getSigners()
     // deploy Problems without setting bodies
     const Problems = await ethers.getContractFactory('Problems')
-    const problems = await Problems.deploy(owner.address, [owner.address], [1], [1])
+    const problems = await Problems.deploy(
+      owner.address,
+      [owner.address],
+      [1],
+      [1]
+    )
     await problems.deployed()
     await problems.updatePaused(false)
     await problems.updateStartDate(0)
-    await expect(problems['mint()']({ value: correctPrice }))
-      .to.be.revertedWith('Not initialized')
+    await expect(
+      problems['mint()']({ value: correctPrice })
+    ).to.be.revertedWith('Not initialized')
   })
 
   it('fails to adminMint when uninitialized', async function () {
     const [owner, , , addr3] = await ethers.getSigners()
     // deploy Problems without setting Bodies
     const Problems = await ethers.getContractFactory('Problems')
-    const problems = await Problems.deploy(owner.address, [owner.address], [1], [1])
+    const problems = await Problems.deploy(
+      owner.address,
+      [owner.address],
+      [1],
+      [1]
+    )
     await problems.deployed()
 
-    await expect(problems.adminMint(addr3.address))
-      .to.be.revertedWith('Not initialized')
+    await expect(problems.adminMint(addr3.address)).to.be.revertedWith(
+      'Not initialized'
+    )
   })
 
   it('fails to adminMint when not owner', async function () {
-    const [, , , addr3,] = await ethers.getSigners()
+    const [, , , addr3] = await ethers.getSigners()
     const { Problems: problems } = await deployContracts()
-    await expect(problems.connect(addr3).adminMint(addr3.address))
-      .to.be.revertedWith('Ownable: caller is not the owner')
+    await expect(
+      problems.connect(addr3).adminMint(addr3.address)
+    ).to.be.revertedWith('Ownable: caller is not the owner')
   })
 
   it.skip('sends money to splitter correctly', async function () {
@@ -261,8 +285,9 @@ describe('Problem Tests', function () {
     const { Problems: problems } = await deployContracts()
     await problems.updatePaused(true)
     await problems.updateStartDate(0)
-    await expect(problems.connect(addr1)['mint()']({ value: correctPrice }))
-      .to.be.revertedWith('Paused')
+    await expect(
+      problems.connect(addr1)['mint()']({ value: correctPrice })
+    ).to.be.revertedWith('Paused')
   })
 
   //
@@ -274,8 +299,9 @@ describe('Problem Tests', function () {
     const { Problems: problems } = await deployContracts()
     await problems.updatePaused(true)
 
-    await expect(problems['mint()']({ value: correctPrice }))
-      .to.be.revertedWith('Paused')
+    await expect(
+      problems['mint()']({ value: correctPrice })
+    ).to.be.revertedWith('Paused')
 
     await problems.updatePaused(false)
     await problems.updateStartDate(0)
@@ -290,31 +316,35 @@ describe('Problem Tests', function () {
     await problems.updatePaused(false)
     await problems.updateStartDate(0)
 
-    await expect(addr2.sendTransaction({ to: problems.address, value: 0 }))
-      .to.be.revertedWith('Invalid price')
+    await expect(
+      addr2.sendTransaction({ to: problems.address, value: 0 })
+    ).to.be.revertedWith('Invalid price')
 
     const correctPrice = await problems.price()
     // send ether to an address
-    await expect(addr2.sendTransaction({ to: problems.address, value: correctPrice }))
+    await expect(
+      addr2.sendTransaction({ to: problems.address, value: correctPrice })
+    )
       .to.emit(problems, 'Transfer')
       .withArgs(ethers.constants.AddressZero, addr2.address, 1)
 
     const balance = await problems.balanceOf(addr2.address)
     expect(balance).to.equal(1)
-
   })
-
 
   it('succeeds to mint with explicit recipient', async function () {
     const [, addr1] = await ethers.getSigners()
     const { Problems: problems } = await deployContracts()
     await problems.updatePaused(true)
-    await expect(problems['mint(address)'](addr1.address, { value: correctPrice }))
-      .to.be.revertedWith('Paused')
+    await expect(
+      problems['mint(address)'](addr1.address, { value: correctPrice })
+    ).to.be.revertedWith('Paused')
 
     await problems.updatePaused(false)
     await problems.updateStartDate(0)
-    await expect(problems['mint(address)'](addr1.address, { value: correctPrice }))
+    await expect(
+      problems['mint(address)'](addr1.address, { value: correctPrice })
+    )
       .to.emit(problems, 'Transfer')
       .withArgs(ethers.constants.AddressZero, addr1.address, 1)
   })
@@ -346,11 +376,11 @@ describe('Problem Tests', function () {
     const { Problems: problems } = await deployContracts()
     await problems.updatePaused(false)
     await problems.updateStartDate(0)
-    await expect(problems['mint()']())
-      .to.be.revertedWith('Invalid price')
+    await expect(problems['mint()']()).to.be.revertedWith('Invalid price')
     await problems.updatePrice('0')
 
-    await expect(problems['mint()']()).to.emit(problems, 'Transfer')
+    await expect(problems['mint()']())
+      .to.emit(problems, 'Transfer')
       .withArgs(ethers.constants.AddressZero, owner.address, 1)
   })
 
@@ -360,7 +390,6 @@ describe('Problem Tests', function () {
     await problems.adminMint(addr1.address)
     expect(await problems.ownerOf(1)).to.equal(addr1.address)
   })
-
 
   // anybody relevant logic
 
@@ -395,7 +424,6 @@ describe('Problem Tests', function () {
     const startingRadius = await problems.startingRadius()
     const maxRadius = ethers.BigNumber.from(3 * 5).add(startingRadius)
 
-
     const windowWidth = await problems.windowWidth()
 
     const bodyIDs = await problems.getProblemBodyIds(problemId)
@@ -403,7 +431,10 @@ describe('Problem Tests', function () {
     const initialVelocity = maxVector.mul(scalingFactor)
     for (let i = 0; i < bodyCount; i++) {
       const currentBodyId = bodyIDs[i]
-      const bodyData = await problems.getProblemBodyData(problemId, currentBodyId)
+      const bodyData = await problems.getProblemBodyData(
+        problemId,
+        currentBodyId
+      )
       const { bodyId, bodyIndex, px, py, vx, vy, radius, seed } = bodyData
 
       expect(bodyId).to.equal(currentBodyId)
@@ -439,7 +470,6 @@ describe('Problem Tests', function () {
     const startingRadius = await problems.startingRadius()
     const maxRadius = ethers.BigNumber.from(3 * 5).add(startingRadius)
 
-
     const windowWidth = await problems.windowWidth()
     const initialVelocity = maxVector.mul(scalingFactor)
 
@@ -448,7 +478,8 @@ describe('Problem Tests', function () {
     await prepareMintBody(signers, deployedContracts, problemId)
     const tx = await problems.mintBodyToProblem(problemId)
     const receipt = await tx.wait()
-    const newBodyId = getParsedEventLogs(receipt, bodies, 'Transfer')[0].args.tokenId
+    const newBodyId = getParsedEventLogs(receipt, bodies, 'Transfer')[0].args
+      .tokenId
     const { bodyCount: newBodyCount } = await problems.problems(problemId)
     expect(newBodyCount).to.equal(bodyCount.add(1))
 
@@ -480,10 +511,5 @@ describe('Problem Tests', function () {
     expect(radius.lte(maxRadius.mul(scalingFactor))).to.be.true
 
     expect(seed).to.not.equal(0)
-
   })
-
-
-
-
 })

@@ -12,7 +12,7 @@ describe('getDistanceMain circuit', () => {
     x1: '13000',
     y1: '7000',
     x2: '4000',
-    y2: '2000',
+    y2: '2000'
   }
   const sanityCheck = true
 

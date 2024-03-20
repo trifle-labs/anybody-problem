@@ -14,7 +14,7 @@ export async function exportCallDataGroth16(input, wasmPath, zkeyPath) {
   const a = [argv[0], argv[1]]
   const b = [
     [argv[2], argv[3]],
-    [argv[4], argv[5]],
+    [argv[4], argv[5]]
   ]
   const c = [argv[6], argv[7]]
   const Input = []
@@ -27,11 +27,9 @@ export async function exportCallDataGroth16(input, wasmPath, zkeyPath) {
 }
 
 export async function verify(verificationPath, publicSignals, proof) {
-
   const vkey = await fetch(verificationPath).then(function (res) {
     return res.json()
   })
-
 
   const res = await groth16.verify(vkey, publicSignals, proof)
   return res

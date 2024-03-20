@@ -52,7 +52,7 @@ const getPathAddress = async (name) => {
 const initContracts = async (getSigners = true) => {
   let owner
   if (getSigners) {
-    ([owner] = await hre.ethers.getSigners())
+    ;[owner] = await hre.ethers.getSigners()
   }
 
   const contractNames = ['Problems', 'Bodies', 'Tocks', 'Solver', 'Metadata']
@@ -63,8 +63,12 @@ const initContracts = async (getSigners = true) => {
   let returnObject = {}
 
   for (let i = 0; i < contractNames.length; i++) {
-    const address = JSON.parse(await readData(await getPathAddress(contractNames[i])))['address']
-    const abi = JSON.parse(await readData(await getPathABI(contractNames[i])))['abi']
+    const address = JSON.parse(
+      await readData(await getPathAddress(contractNames[i]))
+    )['address']
+    const abi = JSON.parse(await readData(await getPathABI(contractNames[i])))[
+      'abi'
+    ]
     if (getSigners) {
       returnObject[contractNames[i]] = new ethers.Contract(address, abi, owner)
     } else {
@@ -75,14 +79,12 @@ const initContracts = async (getSigners = true) => {
   return returnObject
 }
 
-
 const decodeUri = (decodedJson) => {
   const metaWithoutDataURL = decodedJson.substring(decodedJson.indexOf(',') + 1)
   let buff = Buffer.from(metaWithoutDataURL, 'base64')
   let text = buff.toString('ascii')
   return text
 }
-
 
 const deployContracts = async () => {
   var networkinfo = await hre.ethers.provider.getNetwork()
@@ -136,11 +138,21 @@ const deployContracts = async () => {
 
   // deploy Problems
   const Problems = await hre.ethers.getContractFactory('Problems')
-  const problems = await Problems.deploy(metadataAddress, verifiers, verifiersTicks, verifiersBodies)
+  const problems = await Problems.deploy(
+    metadataAddress,
+    verifiers,
+    verifiersTicks,
+    verifiersBodies
+  )
   await problems.deployed()
   var problemsAddress = problems.address
   returnObject['Problems'] = problems
-  !testing && log('Problems Deployed at ' + String(problemsAddress) + ` with metadata ${metadataAddress} and verifiers ${verifiers} and verifiersTicks ${verifiersTicks} and verifiersBodies ${verifiersBodies}`)
+  !testing &&
+    log(
+      'Problems Deployed at ' +
+        String(problemsAddress) +
+        ` with metadata ${metadataAddress} and verifiers ${verifiers} and verifiersTicks ${verifiersTicks} and verifiersBodies ${verifiersBodies}`
+    )
 
   // deploy Bodies
   const Bodies = await hre.ethers.getContractFactory('Bodies')
@@ -148,7 +160,10 @@ const deployContracts = async () => {
   await bodies.deployed()
   const bodiesAddress = bodies.address
   returnObject['Bodies'] = bodies
-  !testing && log(`Bodies deployed at ${bodiesAddress} with problemsAddress ${problemsAddress} and metadataAddress ${metadataAddress}`)
+  !testing &&
+    log(
+      `Bodies deployed at ${bodiesAddress} with problemsAddress ${problemsAddress} and metadataAddress ${metadataAddress}`
+    )
 
   // deploy Tocks
   const Tocks = await hre.ethers.getContractFactory('Tocks')
@@ -156,7 +171,10 @@ const deployContracts = async () => {
   await tocks.deployed()
   const tocksAddress = tocks.address
   returnObject['Tocks'] = tocks
-  !testing && log(`Tocks deployed at ${tocksAddress} with problemsAddress ${problemsAddress} and bodiesAddress ${bodiesAddress}`)
+  !testing &&
+    log(
+      `Tocks deployed at ${tocksAddress} with problemsAddress ${problemsAddress} and bodiesAddress ${bodiesAddress}`
+    )
 
   // deploy Solver
   const Solver = await hre.ethers.getContractFactory('Solver')
@@ -164,7 +182,10 @@ const deployContracts = async () => {
   await solver.deployed()
   const solverAddress = solver.address
   returnObject['Solver'] = solver
-  !testing && log(`Solver deployed at ${solverAddress} with problemsAddress ${problemsAddress} and tocksAddress ${tocksAddress}`)
+  !testing &&
+    log(
+      `Solver deployed at ${solverAddress} with problemsAddress ${problemsAddress} and tocksAddress ${tocksAddress}`
+    )
 
   // configure Metadata
   await metadata.updateProblemsAddress(problemsAddress)
@@ -184,35 +205,41 @@ const deployContracts = async () => {
   await tocks.updateSolverAddress(solverAddress)
   !testing && log(`Tocks configured with solverAddress ${solverAddress}`)
 
-
   // verify contract if network ID is mainnet goerli or sepolia
-  if (networkinfo['chainId'] == 5 || networkinfo['chainId'] == 1 || networkinfo['chainId'] == 11155111) {
-
+  if (
+    networkinfo['chainId'] == 5 ||
+    networkinfo['chainId'] == 1 ||
+    networkinfo['chainId'] == 11155111
+  ) {
     const verificationData = [
       {
         name: 'Metadata',
-        constructorArguments: [],
+        constructorArguments: []
       },
       {
         name: 'Problems',
-        constructorArguments: [metadataAddress, verifiers, verifiersTicks, verifiersBodies],
+        constructorArguments: [
+          metadataAddress,
+          verifiers,
+          verifiersTicks,
+          verifiersBodies
+        ]
       },
       {
         name: 'Bodies',
-        constructorArguments: [problemsAddress],
+        constructorArguments: [problemsAddress]
       },
       {
         name: 'Tocks',
-        constructorArguments: [problemsAddress, bodiesAddress],
+        constructorArguments: [problemsAddress, bodiesAddress]
       },
       {
         name: 'Solver',
-        constructorArguments: [problemsAddress, tocksAddress],
-      },
+        constructorArguments: [problemsAddress, tocksAddress]
+      }
     ]
 
     returnObject.verificationData = verificationData
-
   }
 
   return returnObject
@@ -228,7 +255,7 @@ const verifyContracts = async (returnObject) => {
     try {
       await hre.run('verify:verify', {
         address: returnObject[verificationData[i].name].address,
-        constructorArguments: verificationData[i].constructorArguments,
+        constructorArguments: verificationData[i].constructorArguments
       })
     } catch (e) {
       log({ e })
@@ -242,10 +269,11 @@ const log = (message) => {
 }
 
 const getParsedEventLogs = (receipt, contract, eventName) => {
-  const events = receipt.events.filter((x) => x.address === contract.address).map((log) => contract.interface.parseLog(log))
+  const events = receipt.events
+    .filter((x) => x.address === contract.address)
+    .map((log) => contract.interface.parseLog(log))
   return events.filter((x) => x.name === eventName)
 }
-
 
 const mintProblem = async (signers, deployedContracts, acct) => {
   const [owner] = signers
@@ -255,14 +283,20 @@ const mintProblem = async (signers, deployedContracts, acct) => {
   await problems.updateStartDate(0)
   const tx = await problems.connect(acct)['mint()']({ value: correctPrice })
   const receipt = await tx.wait()
-  const problemId = getParsedEventLogs(receipt, problems, 'Transfer')[0].args.tokenId
+  const problemId = getParsedEventLogs(receipt, problems, 'Transfer')[0].args
+    .tokenId
   return { receipt, problemId }
 }
 
 const prepareMintBody = async (signers, deployedContracts, problemId, acct) => {
   const [owner] = signers
   acct = acct || owner
-  const { Problems: problems, Tocks: tocks, Bodies: bodies, Solver: solver } = deployedContracts
+  const {
+    Problems: problems,
+    Tocks: tocks,
+    Bodies: bodies,
+    Solver: solver
+  } = deployedContracts
   const { mintedBodiesIndex } = await problems.problems(problemId)
   const decimals = await bodies.decimals()
   const tockPrice = await bodies.tockPrice(mintedBodiesIndex)
@@ -277,7 +311,7 @@ const generateWitness = async (seed, bodyCount, ticksRun, bodyData) => {
   const anybody = new Anybody(null, {
     bodyData,
     seed,
-    util: true,
+    util: true
   })
 
   const inputData = { bodies: anybody.bodyInits }
@@ -291,14 +325,13 @@ const generateWitness = async (seed, bodyCount, ticksRun, bodyData) => {
     `./public/nft_${bodyCount}_${ticksRun}_final.zkey`
   )
   return { inputData, bodyFinal, dataResult }
-
 }
 
 const generateProof = async (seed, bodyCount, ticksRun, bodyData) => {
   const anybody = new Anybody(null, {
     bodyData,
     seed,
-    util: true,
+    util: true
   })
 
   const inputData = { bodies: anybody.bodyInits }
@@ -329,11 +362,23 @@ const generateProof = async (seed, bodyCount, ticksRun, bodyData) => {
   return { inputData, bodyFinal, dataResult }
 }
 
-const generateAndSubmitProof = async (expect, deployedContracts, problemId, bodyCount, ticksRun, bodyData) => {
+const generateAndSubmitProof = async (
+  expect,
+  deployedContracts,
+  problemId,
+  bodyCount,
+  ticksRun,
+  bodyData
+) => {
   const { Problems: problems, Solver: solver } = deployedContracts
   const { seed } = await problems.problems(problemId)
 
-  const { inputData, bodyFinal, dataResult } = await generateProof(seed, bodyCount, ticksRun, bodyData)
+  const { inputData, bodyFinal, dataResult } = await generateProof(
+    seed,
+    bodyCount,
+    ticksRun,
+    bodyData
+  )
 
   for (let i = 0; i < dataResult.Input.length; i++) {
     if (i < dataResult.Input.length / 2) {
@@ -349,10 +394,16 @@ const generateAndSubmitProof = async (expect, deployedContracts, problemId, body
     }
   }
 
-  const tx = await solver.solveProblem(problemId, ticksRun, dataResult.a, dataResult.b, dataResult.c, dataResult.Input)
+  const tx = await solver.solveProblem(
+    problemId,
+    ticksRun,
+    dataResult.a,
+    dataResult.b,
+    dataResult.c,
+    dataResult.Input
+  )
   return { tx, bodyFinal }
 }
-
 
 export {
   generateAndSubmitProof,
@@ -371,4 +422,3 @@ export {
   verifyContracts
   // splitterAddress
 }
-

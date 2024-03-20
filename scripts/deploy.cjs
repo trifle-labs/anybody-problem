@@ -6,7 +6,6 @@ const path = require('node:path')
 
 const fs = require('fs').promises
 
-
 async function writedata(path, data) {
   // await fs.writeFile(path, data, function (err, result) {
   //   if (err) console.log('error', err);
@@ -61,7 +60,7 @@ async function saveAddress(contract, name) {
   )
   var objToWrite = {
     address: newAddress,
-    chain: networkinfo,
+    chain: networkinfo
   }
   await writedata(savePath, JSON.stringify(objToWrite))
 }
@@ -94,4 +93,3 @@ main()
     console.error(error)
     process.exit(1)
   })
-

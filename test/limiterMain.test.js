@@ -41,7 +41,10 @@ describe('limiterMain circuit', () => {
   })
 
   it('produces a witness with valid constraints', async () => {
-    const witness = await circuit.calculateWitness(sampleInputs[0].sampleInput, sanityCheck)
+    const witness = await circuit.calculateWitness(
+      sampleInputs[0].sampleInput,
+      sanityCheck
+    )
     const inputs = Object.keys(sampleInputs[0].sampleInput).length
     const perStep = witness.length - inputs
     const secRounded = calculateTime(perStep)
@@ -66,7 +69,10 @@ describe('limiterMain circuit', () => {
   it('has the correct output', async () => {
     for (let i = 0; i < sampleInputs.length; i++) {
       const expected = { out: sampleInputs[i].expectedResult }
-      const witness = await circuit.calculateWitness(sampleInputs[i].sampleInput, sanityCheck)
+      const witness = await circuit.calculateWitness(
+        sampleInputs[i].sampleInput,
+        sanityCheck
+      )
       await circuit.assertOut(witness, expected)
     }
   })

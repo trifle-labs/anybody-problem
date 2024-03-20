@@ -1,5 +1,3 @@
-
-
 // const hre = require('hardhat')
 import hre from 'hardhat'
 // const { assert } = require('chai')
@@ -29,7 +27,7 @@ describe('forceAccumulatorMain circuit', () => {
       ['226000', '42000', '8670', '3710', '100000'],
       ['363000', '658000', '6680', '13740', '75000'],
       ['679000', '500000', '12290', '12520', '50000']
-    ],
+    ]
   }
   const sanityCheck = true
 
@@ -63,7 +61,9 @@ describe('forceAccumulatorMain circuit', () => {
     const bodies = sampleInput.bodies.map(convertScaledStringArrayToBody)
     // console.dir({ bodies }, { depth: null })
 
-    const out_bodies = forceAccumulatorBigInts(bodies).map(convertScaledBigIntBodyToArray)
+    const out_bodies = forceAccumulatorBigInts(bodies).map(
+      convertScaledBigIntBodyToArray
+    )
     // console.log({ out_bodies })
     const expected = { out_bodies }
     const witness = await circuit.calculateWitness(sampleInput, sanityCheck)

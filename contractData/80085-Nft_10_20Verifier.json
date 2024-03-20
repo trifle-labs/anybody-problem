@@ -1,1 +1,4 @@
-{"address":"0x4a4723C8FBcDF96474439b4db8d5C832022E2e6a","chain":{"chainId":80085,"name":"unknown"}}
+{
+  "address": "0x4a4723C8FBcDF96474439b4db8d5C832022E2e6a",
+  "chain": { "chainId": 80085, "name": "unknown" }
+}

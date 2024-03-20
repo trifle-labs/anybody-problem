@@ -10,10 +10,10 @@ import ProblemsSepolia from '../contractData/11155111-Problems.json'
 export const Problems = {
   abi: ProblemsABI,
   networks: {
-    '80085': ProblemsForma,
-    '12345': ProblemsLocal,
-    '11155111': ProblemsSepolia
-  },
+    80085: ProblemsForma,
+    12345: ProblemsLocal,
+    11155111: ProblemsSepolia
+  }
 }
 
 import BodiesABI from '../contractData/ABI-11155111-Bodies.json'
@@ -24,10 +24,10 @@ import BodiesSepolia from '../contractData/11155111-Bodies.json'
 export const Bodies = {
   abi: BodiesABI,
   networks: {
-    '80085': BodiesForma,
-    '12345': BodiesLocal,
-    '11155111': BodiesSepolia
-  },
+    80085: BodiesForma,
+    12345: BodiesLocal,
+    11155111: BodiesSepolia
+  }
 }
 
 import SolverABI from '../contractData/ABI-11155111-Solver.json'
@@ -38,9 +38,9 @@ import SolverSepolia from '../contractData/11155111-Solver.json'
 export const Solver = {
   abi: SolverABI,
   networks: {
-    '80085': SolverForma,
-    '12345': SolverLocal,
-    '11155111': SolverSepolia
+    80085: SolverForma,
+    12345: SolverLocal,
+    11155111: SolverSepolia
   }
 }
 
@@ -52,9 +52,9 @@ import TocksSepolia from '../contractData/11155111-Tocks.json'
 export const Tocks = {
   abi: TocksABI,
   networks: {
-    '80085': TocksForma,
-    '12345': TocksLocal,
-    '11155111': TocksSepolia
+    80085: TocksForma,
+    12345: TocksLocal,
+    11155111: TocksSepolia
   }
 }
 
@@ -66,10 +66,10 @@ import MetadataSepolia from '../contractData/11155111-Metadata.json'
 export const Metadata = {
   abi: MetadataABI,
   networks: {
-    '80085': MetadataForma,
-    '12345': MetadataLocal,
-    '11155111': MetadataSepolia
-  },
+    80085: MetadataForma,
+    12345: MetadataLocal,
+    11155111: MetadataSepolia
+  }
 }
 
 // export default {
