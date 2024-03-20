@@ -638,10 +638,7 @@ export const Visuals = {
   drawWitheringBodies() {
     this.bodiesGraphic ||= this.p.createGraphics(this.windowWidth, this.windowHeight)
     this.bodiesGraphic.noStroke()
-    // let i = 0;
     for (const body of this.witheringBodies) {
-      // console.log('draw withering body', i, { body })
-      // i++
       // the body should shrink to nothing as HP goes from 0 to -WITHERING_STEPS
       const witherMultiplier = 1 + (body.hp / WITHERING_STEPS)
       const radius = (body.radius * 4 + this.radiusMultiplyer) * witherMultiplier
