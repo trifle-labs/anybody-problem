@@ -36,7 +36,7 @@ async function main() {
       const anybody = new Anybody(null, {
         totalBodies: i,
         seed,
-        util: true,
+        util: true
       })
       const inputData = { bodies: anybody.bodyInits }
       const startTime = Date.now()
@@ -51,7 +51,9 @@ async function main() {
     }
     const difference = totalTime / sampleSize
     const differenceInReadableText = `${Math.floor(difference / 60_000)}m ${Math.floor(difference / 1000)}s ${(difference % 1000).toFixed(0)}ms`
-    console.log(`Generated proof in ${differenceInReadableText} for ${ticksRun} ticks with ${bodyCount} bodies`)
+    console.log(
+      `Generated proof in ${differenceInReadableText} for ${ticksRun} ticks with ${bodyCount} bodies`
+    )
     const tickRate = ticksRun / (difference / 1000)
     console.log(`Tick rate: ${tickRate.toFixed(2)} ticks/s`)
     const tickRatePerBody = tickRate / bodyCount

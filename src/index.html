@@ -1,0 +1,40 @@
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1"
+    />
+    <style>
+      html,
+      body,
+      * {
+        margin: 0px;
+        padding: 0px;
+      }
+      :root {
+        --canvas-size: min(1vw, 1vh);
+      }
+      @media (orientation: landscape) {
+        :root {
+          --canvas-size: 100vh;
+        }
+      }
+      @media (orientation: portrait) {
+        :root {
+          --canvas-size: 100vw;
+        }
+      }
+      canvas {
+        cursor: pointer;
+        width: var(--canvas-size) !important;
+        height: var(--canvas-size) !important;
+      }
+    </style>
+  </head>
+  <body></body>
+  <script type="module">
+    // NOTE: needs to come after body
+    import * as nft from './nft.js'
+  </script>
+</html>

@@ -11,5 +11,5 @@ q5.setup =  () => {
   anybody = new Anybody(q5, { mode: "nft", seed: 0n });
 }
 q5.draw = () => {
-  anybody.draw();
+  anybody.draw()
 }

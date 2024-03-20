@@ -6,7 +6,6 @@ const path = require('node:path')
 
 const fs = require('fs').promises
 
-
 async function writedata(path, data) {
   // await fs.writeFile(path, data, function (err, result) {
   //   if (err) console.log('error', err);
@@ -61,7 +60,7 @@ async function saveAddress(contract, name) {
   )
   var objToWrite = {
     address: newAddress,
-    chain: networkinfo,
+    chain: networkinfo
   }
   await writedata(savePath, JSON.stringify(objToWrite))
 }
@@ -71,9 +70,9 @@ async function main() {
   console.log({ deployer: deployer.address })
   console.log('Deploy to chain:')
   console.log(await hre.ethers.provider.getNetwork())
-  const { deployContracts } = await import('./utils.js')
-  const deployedContracts = await deployContracts()
+  const { deployContracts, verifyContracts } = await import('./utils.js')
 
+  const deployedContracts = await deployContracts()
   for (const contractName in deployedContracts) {
     if (contractName.indexOf('Verifier') > -1) {
       await copyABI(contractName, 'Groth16Verifier')
@@ -83,6 +82,9 @@ async function main() {
     const contract = deployedContracts[contractName]
     await saveAddress(contract, contractName)
   }
+  if (deployedContracts.verificationData) {
+    await verifyContracts(deployedContracts)
+  }
 }
 
 main()
@@ -91,4 +93,3 @@ main()
     console.error(error)
     process.exit(1)
   })
-

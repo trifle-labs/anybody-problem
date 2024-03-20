@@ -1,5 +1,3 @@
-
-
 // const { describe, before, it } = require('mocha')
 // const hre = require('hardhat')
 // const { ethers } = require('hardhat')
@@ -70,12 +68,16 @@ describe('nft circuit', () => {
 
   it('has the correct output', async () => {
     const anybody = new Anybody(null, { util: true })
-    let bodies = sampleInput.bodies.map(anybody.convertScaledStringArrayToBody.bind(anybody))
+    let bodies = sampleInput.bodies.map(
+      anybody.convertScaledStringArrayToBody.bind(anybody)
+    )
     // console.dir({ bodies }, { depth: null })
     for (let i = 0; i < steps; i++) {
       bodies = anybody.forceAccumulatorBigInts(bodies)
     }
-    const out_bodies = bodies.map(anybody.convertScaledBigIntBodyToArray.bind(anybody))
+    const out_bodies = bodies.map(
+      anybody.convertScaledBigIntBodyToArray.bind(anybody)
+    )
     // console.log({ out_bodies })
     const expected = { out_bodies }
     const witness = await circuit.calculateWitness(sampleInput, sanityCheck)
@@ -83,8 +85,9 @@ describe('nft circuit', () => {
   })
 
   it.skip('NftVerifier.sol works', async () => {
-
-    const NftVerifier = await ethers.getContractFactory('contracts/NftTestVerifier.sol:Groth16Verifier')
+    const NftVerifier = await ethers.getContractFactory(
+      'contracts/NftTestVerifier.sol:Groth16Verifier'
+    )
     const nftVerifier = await NftVerifier.deploy()
     await nftVerifier.deployed()
 
@@ -100,13 +103,12 @@ describe('nft circuit', () => {
       dataResult.Input
     )
     assert.equal(result, true)
-
   })
 
-
-
   it.skip('nft.sol works', async () => {
-    const NftVerifier = await ethers.getContractFactory('contracts/NftVerifier.sol:Groth16Verifier')
+    const NftVerifier = await ethers.getContractFactory(
+      'contracts/NftVerifier.sol:Groth16Verifier'
+    )
     const nftVerifier = await NftVerifier.deploy()
     await nftVerifier.deployed()
 
@@ -119,8 +121,7 @@ describe('nft circuit', () => {
     await nft.deployed()
 
     console.log('committing...')
-    await expect(nft.commit())
-      .to.not.be.reverted
+    await expect(nft.commit()).to.not.be.reverted
 
     const blockBefore = await ethers.provider.getBlock()
     console.log('waiting one block')
@@ -132,8 +133,7 @@ describe('nft circuit', () => {
 
     console.log('minting...')
 
-    await expect(nft.mint())
-      .to.not.be.reverted
+    await expect(nft.mint()).to.not.be.reverted
     const block = await ethers.provider.getBlock()
     console.log({ block: block.number })
 
@@ -153,7 +153,4 @@ describe('nft circuit', () => {
     // );
     // assert.equal(result, true);
   })
-
-
-
 })

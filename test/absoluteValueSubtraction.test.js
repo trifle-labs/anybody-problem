@@ -1,4 +1,3 @@
-
 import hre from 'hardhat'
 import { _calculateTime } from '../src/calculations.js'
 // const { describe, it, before } = require('mocha')
@@ -26,11 +25,16 @@ describe('absoluteValueSubtraction circuit', () => {
 
   it('produces a witness with valid constraints', async () => {
     console.log('produces witnss')
-    const witness = await circuit.calculateWitness(sampleInput[0].in, sanityCheck)
+    const witness = await circuit.calculateWitness(
+      sampleInput[0].in,
+      sanityCheck
+    )
     const inputs = sampleInput[0].in.in.length
     const perStep = witness.length - inputs
     const secRounded = _calculateTime(perStep)
-    console.log(`| absoluteValueSubtraction(252) | ${perStep} | ${secRounded} |`)
+    console.log(
+      `| absoluteValueSubtraction(252) | ${perStep} | ${secRounded} |`
+    )
     await circuit.checkConstraints(witness)
   })
 
@@ -53,7 +57,10 @@ describe('absoluteValueSubtraction circuit', () => {
   it('has the correct output', async () => {
     for (let i = 0; i < sampleInput.length; i++) {
       const expected = sampleInput[i].out
-      const witness = await circuit.calculateWitness(sampleInput[i].in, sanityCheck)
+      const witness = await circuit.calculateWitness(
+        sampleInput[i].in,
+        sanityCheck
+      )
       await circuit.assertOut(witness, expected)
     }
   })

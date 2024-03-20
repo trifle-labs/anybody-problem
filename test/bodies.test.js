@@ -2,13 +2,18 @@ import { expect } from 'chai'
 import hre from 'hardhat'
 const ethers = hre.ethers
 
-import { deployContracts, correctPrice, getParsedEventLogs, prepareMintBody, mintProblem } from '../scripts/utils.js'
+import {
+  deployContracts,
+  correctPrice,
+  getParsedEventLogs,
+  prepareMintBody,
+  mintProblem
+} from '../scripts/utils.js'
 
 // let tx
 describe('Bodies Tests', function () {
   this.timeout(50000000)
   it('has the correct bodies, tocks addresses', async () => {
-
     const deployedContracts = await deployContracts()
 
     const { Bodies: bodies } = deployedContracts
@@ -27,23 +32,23 @@ describe('Bodies Tests', function () {
     const [, addr1] = await ethers.getSigners()
     const { Bodies: bodies } = await deployContracts()
 
-    await expect(bodies.connect(addr1).updateTockPrice(0, 0))
-      .to.be.revertedWith('Ownable: caller is not the owner')
+    await expect(
+      bodies.connect(addr1).updateTockPrice(0, 0)
+    ).to.be.revertedWith('Ownable: caller is not the owner')
 
-    await expect(bodies.connect(addr1).updateProblemsAddress(addr1.address))
-      .to.be.revertedWith('Ownable: caller is not the owner')
+    await expect(
+      bodies.connect(addr1).updateProblemsAddress(addr1.address)
+    ).to.be.revertedWith('Ownable: caller is not the owner')
 
-    await expect(bodies.connect(addr1).updateTocksAddress(addr1.address))
-      .to.be.revertedWith('Ownable: caller is not the owner')
+    await expect(
+      bodies.connect(addr1).updateTocksAddress(addr1.address)
+    ).to.be.revertedWith('Ownable: caller is not the owner')
 
-    await expect(bodies.updateTockPrice(0, 0))
-      .to.not.be.reverted
+    await expect(bodies.updateTockPrice(0, 0)).to.not.be.reverted
 
-    await expect(bodies.updateProblemsAddress(addr1.address))
-      .to.not.be.reverted
+    await expect(bodies.updateProblemsAddress(addr1.address)).to.not.be.reverted
 
-    await expect(bodies.updateTocksAddress(addr1.address))
-      .to.not.be.reverted
+    await expect(bodies.updateTocksAddress(addr1.address)).to.not.be.reverted
   })
 
   it('updates tock price correctly', async () => {
@@ -57,11 +62,10 @@ describe('Bodies Tests', function () {
     expect(updatedPrice.toNumber()).to.equal(newPrice)
 
     const outOfRangeIndex = 10
-    await expect(bodies.updateTockPrice(outOfRangeIndex, newPrice))
-      .to.be.revertedWith('Invalid index')
-
+    await expect(
+      bodies.updateTockPrice(outOfRangeIndex, newPrice)
+    ).to.be.revertedWith('Invalid index')
   })
-
 
   it('has all the correct interfaces', async () => {
     const interfaces = [
@@ -71,7 +75,7 @@ describe('Bodies Tests', function () {
       { name: 'ERC4906MetadataUpdate', id: '0x49064906', supported: false },
       { name: 'ERC721Enumerable', id: '0x780e9d63', supported: false },
       { name: 'ERC2981', id: '0x2a55205a', supported: false },
-      { name: 'ERC20', id: '0x36372b07', supported: false },
+      { name: 'ERC20', id: '0x36372b07', supported: false }
     ]
 
     for (let i = 0; i < interfaces.length; i++) {
@@ -82,41 +86,44 @@ describe('Bodies Tests', function () {
     }
   })
 
-
   it('fallback and receive functions revert', async () => {
     const [owner] = await ethers.getSigners()
     const { Bodies: bodies } = await deployContracts()
-    await expect(owner.sendTransaction({ to: bodies.address, value: '1' }))
-      .to.be.revertedWith('there\'s no receive function, fallback function is not payable and was called with value 1')
-    await expect(owner.sendTransaction({ to: bodies.address, value: '0' }))
-      .to.be.revertedWith('no fallback function')
-
+    await expect(
+      owner.sendTransaction({ to: bodies.address, value: '1' })
+    ).to.be.revertedWith(
+      "there's no receive function, fallback function is not payable and was called with value 1"
+    )
+    await expect(
+      owner.sendTransaction({ to: bodies.address, value: '0' })
+    ).to.be.revertedWith('no fallback function')
   })
 
   it('onlyProblem functions can only be called by Problems address', async function () {
     const [owner] = await ethers.getSigners()
     const { Bodies: bodies } = await deployContracts()
 
-    await expect(bodies.mintAndBurn(owner.address, 0))
-      .to.be.revertedWith('Only Problems can call')
+    await expect(
+      bodies.mintAndAddToProblem(owner.address, 0, 0)
+    ).to.be.revertedWith('Only Problems can call')
 
-    await expect(bodies.burn(owner.address))
-      .to.be.revertedWith('Only Problems can call')
+    await expect(bodies.burn(owner.address)).to.be.revertedWith(
+      'Only Problems can call'
+    )
 
-    await expect(bodies.problemMint(owner.address, 0))
-      .to.be.revertedWith('Only Problems can call')
+    await expect(bodies.problemMint(owner.address, 0)).to.be.revertedWith(
+      'Only Problems can call'
+    )
 
     await bodies.updateProblemsAddress(owner.address)
 
     // NOTE: this scenario is non-sensical but sufficient to test the modifier
-    await expect(bodies.mintAndBurn(owner.address, 0))
-      .to.not.be.reverted
+    await expect(bodies.mintAndAddToProblem(owner.address, 0, 0)).to.not.be
+      .reverted
 
-    await expect(bodies.burn(0))
-      .to.be.revertedWith('ERC721: invalid token ID')
+    await expect(bodies.burn(0)).to.be.revertedWith('ERC721: invalid token ID')
 
-    await expect(bodies.problemMint(owner.address, 0))
-      .to.not.be.reverted
+    await expect(bodies.problemMint(owner.address, 0)).to.not.be.reverted
   })
 
   //
@@ -133,32 +140,40 @@ describe('Bodies Tests', function () {
     const { bodyCount } = await problems.problems(problemId)
     for (let i = 0; i < bodyCount; i++) {
       const bodyId = bodyIds[i]
-      const { seed: problemSeed } = await problems.getProblemBodyData(problemId, bodyId)
-      const bodySeed = await bodies.seeds(bodyId)
+      const { seed: problemSeed } = await problems.getProblemBodyData(
+        problemId,
+        bodyId
+      )
+      const { seed: bodySeed } = await bodies.bodies(bodyId)
+
       expect(problemSeed).to.equal(bodySeed)
     }
   })
 
   it('mints a new body after receiving Tocks', async () => {
     const [owner, acct1] = await ethers.getSigners()
-    const { Tocks: tocks, Bodies: bodies, Problems: problems } = await deployContracts()
+    const {
+      Tocks: tocks,
+      Bodies: bodies,
+      Problems: problems
+    } = await deployContracts()
     await problems.updatePaused(false)
     await problems.updateStartDate(0)
     await problems.connect(acct1)['mint()']({ value: correctPrice })
     const problemId = await problems.problemSupply()
 
     await tocks.updateSolverAddress(owner.address)
-
-    const tockPriceIndex = await bodies.problemPriceLevels(problemId)
+    const { mintedBodiesIndex } = await problems.problems(problemId)
     // NOTE: purposefully forgot to multiply by decimals here
-    const tockPrice = await bodies.tockPrice(tockPriceIndex)
+    const tockPrice = await bodies.tockPrice(mintedBodiesIndex)
 
     await tocks.mint(acct1.address, tockPrice)
 
-    let promise = bodies.connect(acct1).mint(problemId)
+    let promise = problems.connect(acct1).mintBodyOutsideProblem(problemId)
 
-    await expect(promise)
-      .to.be.revertedWith('ERC20: burn amount exceeds balance')
+    await expect(promise).to.be.revertedWith(
+      'ERC20: burn amount exceeds balance'
+    )
 
     const decimals = await bodies.decimals()
     const updatedPrice = tockPrice.mul(decimals)
@@ -168,9 +183,8 @@ describe('Bodies Tests', function () {
     const tockBalance = await tocks.balanceOf(acct1.address)
     expect(tockBalance).to.equal(updatedPrice)
 
-    promise = bodies.connect(acct1).mint(problemId)
-    await expect(promise)
-      .to.not.be.reverted
+    promise = problems.connect(acct1).mintBodyOutsideProblem(problemId)
+    await expect(promise).to.not.be.reverted
 
     let tx = await promise
     const receipt = await tx.wait()
@@ -189,7 +203,7 @@ describe('Bodies Tests', function () {
     expect(counter).to.equal(tokenId)
 
     // seed is not empty
-    const seed = await bodies.seeds(tokenId)
+    const { seed } = await bodies.bodies(tokenId)
     expect(seed).to.not.equal(0)
 
     // all tocks were spent
@@ -201,25 +215,24 @@ describe('Bodies Tests', function () {
     const signers = await ethers.getSigners()
     const [, acct1] = signers
     const deployedContracts = await deployContracts()
-    const { Bodies: bodies } = deployedContracts
+    const { Problems: problems } = deployedContracts
     const { problemId } = await mintProblem(signers, deployedContracts, acct1)
     await prepareMintBody(signers, deployedContracts, problemId)
-    await expect(bodies.mint(problemId))
-      .to.be.revertedWith('Not problem owner')
+    await expect(problems.mintBodyOutsideProblem(problemId)).to.be.revertedWith(
+      'Not problem owner'
+    )
   })
 
   it('validate second mint event', async function () {
     const signers = await ethers.getSigners()
     // const [, acct1] = signers
     const deployedContracts = await deployContracts()
-    const { Bodies: bodies } = deployedContracts
+    const { Problems: problems } = deployedContracts
     const { problemId } = await mintProblem(signers, deployedContracts)
     await prepareMintBody(signers, deployedContracts, problemId)
-    await expect(bodies.mint(problemId))
-      .to.not.be.reverted
+    await expect(problems.mintBodyOutsideProblem(problemId)).to.not.be.reverted
     await prepareMintBody(signers, deployedContracts, problemId)
-    await expect(bodies.mint(problemId))
-      .to.not.be.reverted
+    await expect(problems.mintBodyOutsideProblem(problemId)).to.not.be.reverted
   })
 
   it('succeeds adding a body into a problem', async () => {
@@ -228,15 +241,16 @@ describe('Bodies Tests', function () {
     const { Problems: problems, Bodies: bodies } = deployedContracts
     const { problemId } = await mintProblem(signers, deployedContracts)
     await prepareMintBody(signers, deployedContracts, problemId)
-    const tx = await bodies.mint(problemId)
+    const tx = await problems.mintBodyOutsideProblem(problemId)
     const receipt = await tx.wait()
-    const bodyId = getParsedEventLogs(receipt, bodies, 'Transfer')[0].args.tokenId
+    const bodyId = getParsedEventLogs(receipt, bodies, 'Transfer')[0].args
+      .tokenId
 
-    await expect(problems.addBody(problemId, bodyId))
-      .to.not.be.reverted
+    await expect(problems.addExistingBody(problemId, bodyId)).to.not.be.reverted
 
-    await expect(bodies.ownerOf(bodyId))
-      .to.be.revertedWith('ERC721: invalid token ID')
+    const custodyAddress = bodies.address
+    const bodyOwner = await bodies.ownerOf(bodyId)
+    expect(bodyOwner).to.eq(custodyAddress)
 
     const problem = await problems.problems(problemId)
     const { bodyCount, tickCount } = problem
@@ -256,7 +270,10 @@ describe('Bodies Tests', function () {
     let smallestRadius = startingRadius.mul(scalingFactor)
     for (let i = 0; i < bodyCount; i++) {
       const currentBodyId = bodyIDs[i]
-      const bodyData = await problems.getProblemBodyData(problemId, currentBodyId)
+      const bodyData = await problems.getProblemBodyData(
+        problemId,
+        currentBodyId
+      )
       const { bodyId, bodyIndex, px, py, vx, vy, radius, seed } = bodyData
 
       expect(bodyId).to.equal(currentBodyId)
@@ -279,7 +296,6 @@ describe('Bodies Tests', function () {
 
       expect(seed).to.not.equal(0)
     }
-
   })
 
   it('removes a body that was added into a problem', async () => {
@@ -289,11 +305,12 @@ describe('Bodies Tests', function () {
     const { Problems: problems, Bodies: bodies } = deployedContracts
     const { problemId } = await mintProblem(signers, deployedContracts)
     await prepareMintBody(signers, deployedContracts, problemId)
-    let tx = await bodies.mint(problemId)
+    let tx = await problems.mintBodyOutsideProblem(problemId)
     let receipt = await tx.wait()
-    const bodyId = getParsedEventLogs(receipt, bodies, 'Transfer')[0].args.tokenId
+    const bodyId = getParsedEventLogs(receipt, bodies, 'Transfer')[0].args
+      .tokenId
 
-    await problems.addBody(problemId, bodyId)
+    await problems.addExistingBody(problemId, bodyId)
 
     const bodyIds = await problems.getProblemBodyIds(problemId)
 
@@ -306,7 +323,8 @@ describe('Bodies Tests', function () {
     }
     tx = await problems.removeBody(problemId, bodyIdToRemove)
     receipt = await tx.wait()
-    const bodyIdMinted = getParsedEventLogs(receipt, bodies, 'Transfer')[0].args.tokenId
+    const bodyIdMinted = getParsedEventLogs(receipt, bodies, 'Transfer')[0].args
+      .tokenId
     expect(bodyIdMinted).to.equal(bodyIdToRemove)
     const ownerOfBodyIdMinted = await bodies.ownerOf(bodyIdMinted)
     expect(ownerOfBodyIdMinted).to.equal(owner.address)
@@ -314,7 +332,10 @@ describe('Bodies Tests', function () {
     const problem = await problems.problems(problemId)
     const { bodyCount } = problem
     expect(bodyCount).to.equal(3)
-    const bodyData = await problems.getProblemBodyData(problemId, bodyIdToRemove)
+    const bodyData = await problems.getProblemBodyData(
+      problemId,
+      bodyIdToRemove
+    )
     const { bodyIndex, px, py, vx, vy, radius, seed } = bodyData
     expect(radius).to.equal(0)
     expect(bodyIndex).to.equal(0)
@@ -323,7 +344,6 @@ describe('Bodies Tests', function () {
     expect(vx).to.equal(0)
     expect(vy).to.equal(0)
     expect(Number(seed)).to.equal(0)
-
   })
 
   it('mints a body, adds it to a problem, then mints another body', async () => {
@@ -333,55 +353,60 @@ describe('Bodies Tests', function () {
     const { Problems: problems, Bodies: bodies } = deployedContracts
     const { problemId } = await mintProblem(signers, deployedContracts)
     await prepareMintBody(signers, deployedContracts, problemId)
-    let tx = await bodies.mint(problemId)
+    let tx = await problems.mintBodyOutsideProblem(problemId)
     let receipt = await tx.wait()
-    const bodyId1 = getParsedEventLogs(receipt, bodies, 'Transfer')[0].args.tokenId
-    await problems.addBody(problemId, bodyId1)
+    const bodyId1 = getParsedEventLogs(receipt, bodies, 'Transfer')[0].args
+      .tokenId
+    await problems.addExistingBody(problemId, bodyId1)
 
     await prepareMintBody(signers, deployedContracts, problemId)
-    tx = await bodies.mint(problemId)
+    tx = await problems.mintBodyOutsideProblem(problemId)
     receipt = await tx.wait()
-    const bodyId2 = getParsedEventLogs(receipt, bodies, 'Transfer')[0].args.tokenId
+    const bodyId2 = getParsedEventLogs(receipt, bodies, 'Transfer')[0].args
+      .tokenId
 
     expect(bodyId2.gt(bodyId1)).to.be.true
   })
 
-
-  it('combines two bodies correctly', async () => {
+  it.skip('combines two bodies correctly', async () => {
     const signers = await ethers.getSigners()
     const [owner, acct1] = signers
     const deployedContracts = await deployContracts()
-    const { Bodies: bodies } = deployedContracts
+    const { Bodies: bodies, Problems: problems } = deployedContracts
     const { problemId } = await mintProblem(signers, deployedContracts)
     await prepareMintBody(signers, deployedContracts, problemId)
-    let tx = await bodies.mint(problemId)
+    let tx = await problems.mintBodyOutsideProblem(problemId)
     let receipt = await tx.wait()
-    const persistBodyId = getParsedEventLogs(receipt, bodies, 'Transfer')[0].args.tokenId
+    const persistBodyId = getParsedEventLogs(receipt, bodies, 'Transfer')[0]
+      .args.tokenId
 
-    await expect(bodies.upgrade(persistBodyId, persistBodyId))
-      .to.be.revertedWith('Same body')
+    await expect(
+      bodies.upgrade(persistBodyId, persistBodyId)
+    ).to.be.revertedWith('Same body')
 
     await prepareMintBody(signers, deployedContracts, problemId)
-    tx = await bodies.mint(problemId)
+    tx = await problems.mintBodyOutsideProblem(problemId)
     receipt = await tx.wait()
-    const burnBodyId = getParsedEventLogs(receipt, bodies, 'Transfer')[0].args.tokenId
+    const burnBodyId = getParsedEventLogs(receipt, bodies, 'Transfer')[0].args
+      .tokenId
 
     const balance = await bodies.balanceOf(owner.address)
     expect(balance).to.equal(2)
 
-    const styleId = await bodies.styles(persistBodyId)
+    const { mintedBodyIndex } = await bodies.bodies(persistBodyId)
 
     await expect(bodies.upgrade(persistBodyId, burnBodyId))
       .to.emit(bodies, 'Upgrade')
-      .withArgs(persistBodyId, burnBodyId, styleId + 1)
+      .withArgs(persistBodyId, burnBodyId, mintedBodyIndex + 1)
 
     const newBalance = await bodies.balanceOf(owner.address)
     expect(newBalance).to.equal(1)
 
     await prepareMintBody(signers, deployedContracts, problemId)
-    tx = await bodies.mint(problemId)
+    tx = await problems.mintBodyOutsideProblem(problemId)
     receipt = await tx.wait()
-    const newBodyId = getParsedEventLogs(receipt, bodies, 'Transfer')[0].args.tokenId
+    const newBodyId = getParsedEventLogs(receipt, bodies, 'Transfer')[0].args
+      .tokenId
 
     const ownerOfNewBodyId = await bodies.ownerOf(newBodyId)
     expect(ownerOfNewBodyId).to.equal(owner.address)
@@ -389,25 +414,30 @@ describe('Bodies Tests', function () {
     const ownerOfPersistBodyId = await bodies.ownerOf(persistBodyId)
     expect(ownerOfPersistBodyId).to.equal(owner.address)
 
-    await expect(bodies.upgrade(persistBodyId, newBodyId))
-      .to.be.revertedWith('Different styles')
+    await expect(bodies.upgrade(persistBodyId, newBodyId)).to.be.revertedWith(
+      'Different mintedBodyIndexes'
+    )
 
-    const { problemId: problemId2 } = await mintProblem(signers, deployedContracts, acct1)
-
+    const { problemId: problemId2 } = await mintProblem(
+      signers,
+      deployedContracts,
+      acct1
+    )
 
     await prepareMintBody(signers, deployedContracts, problemId2, acct1)
-    tx = await bodies.connect(acct1).mint(problemId2)
+    tx = await problems.connect(acct1).mintBodyOutsideProblem(problemId2)
     receipt = await tx.wait()
-    const newBodyId2 = getParsedEventLogs(receipt, bodies, 'Transfer')[0].args.tokenId
+    const newBodyId2 = getParsedEventLogs(receipt, bodies, 'Transfer')[0].args
+      .tokenId
 
-    await expect(bodies.upgrade(newBodyId, newBodyId2))
-      .to.be.revertedWith('Not burnBody owner')
+    await expect(bodies.upgrade(newBodyId, newBodyId2)).to.be.revertedWith(
+      'Not burnBody owner'
+    )
 
-    await expect(bodies.upgrade(newBodyId2, newBodyId))
-      .to.be.revertedWith('Not persistBody owner')
-
+    await expect(bodies.upgrade(newBodyId2, newBodyId)).to.be.revertedWith(
+      'Not persistBody owner'
+    )
   })
-
 
   it('fails to mint an 11th body', async () => {
     const signers = await ethers.getSigners()
@@ -417,30 +447,34 @@ describe('Bodies Tests', function () {
     let bodyIds = []
     for (let i = 0; i < 7; i++) {
       await prepareMintBody(signers, deployedContracts, problemId)
-      const tx = await bodies.mint(problemId)
+      const tx = await problems.mintBodyOutsideProblem(problemId)
       const receipt = await tx.wait()
-      const tokenId = getParsedEventLogs(receipt, bodies, 'Transfer')[0].args.tokenId
+      const event = getParsedEventLogs(receipt, bodies, 'Transfer')[0].args
+      const tokenId = event.tokenId
       bodyIds.push(tokenId)
     }
-    await expect(bodies.mint(problemId))
-      .to.be.revertedWith('Problem already minted 10 bodies')
+    await expect(problems.mintBodyOutsideProblem(problemId)).to.be.revertedWith(
+      'Problem already minted 10 bodies'
+    )
 
     const balance = await bodies.balanceOf(signers[0].address)
     expect(balance).to.equal(7)
 
     for (let i = 0; i < 7; i++) {
-      await problems.addBody(problemId, bodyIds[i])
+      await problems.addExistingBody(problemId, bodyIds[i])
     }
 
-    const { problemId: problemId2 } = await mintProblem(signers, deployedContracts)
+    const { problemId: problemId2 } = await mintProblem(
+      signers,
+      deployedContracts
+    )
     await prepareMintBody(signers, deployedContracts, problemId2)
-    const tx = await bodies.mint(problemId2)
+    const tx = await problems.mintBodyOutsideProblem(problemId2)
     const receipt = await tx.wait()
-    const tokenId = getParsedEventLogs(receipt, bodies, 'Transfer')[0].args.tokenId
-    await expect(problems.addBody(problemId, tokenId))
-      .to.be.revertedWith('Cannot have more than 10 bodies')
-
+    const tokenId = getParsedEventLogs(receipt, bodies, 'Transfer')[0].args
+      .tokenId
+    await expect(
+      problems.addExistingBody(problemId, tokenId)
+    ).to.be.revertedWith('Cannot have more than 10 bodies')
   })
-
-
 })

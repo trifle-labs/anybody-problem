@@ -1,13 +1,18 @@
+
 import { WITHERING_STEPS, MAX_HP } from './hp.js'
 
 export const Visuals = {
-
   async draw() {
     const isNotFirstFrame = this.frames !== 0
     const notPaused = !this.paused
     const framesIsAtStopEveryInterval = this.frames % this.stopEvery == 0
     const didNotJustPause = !this.justPaused
-    if (isNotFirstFrame && notPaused && framesIsAtStopEveryInterval && didNotJustPause) {
+    if (
+      isNotFirstFrame &&
+      notPaused &&
+      framesIsAtStopEveryInterval &&
+      didNotJustPause
+    ) {
       if (didNotJustPause) {
         this.finish()
       }
@@ -70,7 +75,11 @@ export const Visuals = {
         this.starBG.fill('white')
         this.starBG.textSize(20)
         const strings = [',', '.', '*']
-        this.starBG.text(strings[this.random(0, strings.length - 1)], this.random(0, this.windowWidth), this.random(0, this.windowHeight))
+        this.starBG.text(
+          strings[this.random(0, strings.length - 1)],
+          this.random(0, this.windowWidth),
+          this.random(0, this.windowHeight)
+        )
       }
       //   const totalLines = 6
       //   for (let i = 0; i < totalLines; i++) {
@@ -87,8 +96,8 @@ export const Visuals = {
       // }
     }
 
-    const basicX = (this.frames / 50) * (this.frames / 50) % this.windowWidth
-    const basicY = (this.frames / 50) * (this.frames / 50) % this.windowHeight
+    const basicX = ((this.frames / 50) * (this.frames / 50)) % this.windowWidth
+    const basicY = ((this.frames / 50) * (this.frames / 50)) % this.windowHeight
 
     // const basicX = this.accumX % this.windowWidth
     // const basicY = this.accumY % this.windowHeight
@@ -99,16 +108,51 @@ export const Visuals = {
     const Ytop = basicY - this.windowHeight
     const Ybottom = basicY + this.windowHeight
 
-    this.p.image(this.starBG, basicX, basicY, this.windowWidth, this.windowHeight)
-    this.p.image(this.starBG, Xleft, basicY, this.windowWidth, this.windowHeight)
-    this.p.image(this.starBG, Xright, basicY, this.windowWidth, this.windowHeight)
+    this.p.image(
+      this.starBG,
+      basicX,
+      basicY,
+      this.windowWidth,
+      this.windowHeight
+    )
+    this.p.image(
+      this.starBG,
+      Xleft,
+      basicY,
+      this.windowWidth,
+      this.windowHeight
+    )
+    this.p.image(
+      this.starBG,
+      Xright,
+      basicY,
+      this.windowWidth,
+      this.windowHeight
+    )
     this.p.image(this.starBG, basicX, Ytop, this.windowWidth, this.windowHeight)
-    this.p.image(this.starBG, basicX, Ybottom, this.windowWidth, this.windowHeight)
+    this.p.image(
+      this.starBG,
+      basicX,
+      Ybottom,
+      this.windowWidth,
+      this.windowHeight
+    )
     this.p.image(this.starBG, Xleft, Ytop, this.windowWidth, this.windowHeight)
     this.p.image(this.starBG, Xright, Ytop, this.windowWidth, this.windowHeight)
-    this.p.image(this.starBG, Xleft, Ybottom, this.windowWidth, this.windowHeight)
-    this.p.image(this.starBG, Xright, Ybottom, this.windowWidth, this.windowHeight)
-
+    this.p.image(
+      this.starBG,
+      Xleft,
+      Ybottom,
+      this.windowWidth,
+      this.windowHeight
+    )
+    this.p.image(
+      this.starBG,
+      Xright,
+      Ybottom,
+      this.windowWidth,
+      this.windowHeight
+    )
 
     const totalLines = 6
     // this.p.stroke('black')
@@ -120,8 +164,18 @@ export const Visuals = {
       } else {
         this.p.strokeWeight(1)
       }
-      this.p.line(i * (this.windowWidth / totalLines), 0, i * (this.windowWidth / totalLines), this.windowHeight)
-      this.p.line(0, i * (this.windowHeight / totalLines), this.windowWidth, i * (this.windowHeight / totalLines))
+      this.p.line(
+        i * (this.windowWidth / totalLines),
+        0,
+        i * (this.windowWidth / totalLines),
+        this.windowHeight
+      )
+      this.p.line(
+        0,
+        i * (this.windowHeight / totalLines),
+        this.windowWidth,
+        i * (this.windowHeight / totalLines)
+      )
     }
   },
 
@@ -130,28 +184,28 @@ export const Visuals = {
 
     // Fill the background with static noise
     if (!this.staticBg) {
-
-
       this.staticBg = this.p.createGraphics(this.windowWidth, this.windowHeight)
       this.staticBg.loadPixels()
       for (let x = 0; x < this.staticBg.width; x++) {
         for (let y = 0; y < this.staticBg.height; y++) {
           let colorValue
           if (bw) {
-
             const noiseValue = this.staticBg.noise(x * 0.01, y * 0.01)
             colorValue = this.staticBg.map(noiseValue, 0, 1, 0, 255)
             colorValue = this.staticBg.color(colorValue)
           } else {
-
             // const noiseValue = this.staticBg.noise(x * 0.01, y * 0.01)
-            const rNoise = this.staticBg.noise(x * 0.01, y * 0.01)// * 255
-            const gNoise = this.staticBg.noise(x * 0.02, y * 0.02)// * 255 // Different scale for variation
-            const bNoise = this.staticBg.noise(x * 0.03, y * 0.03)// * 255 // Different scale for variation
+            const rNoise = this.staticBg.noise(x * 0.01, y * 0.01) // * 255
+            const gNoise = this.staticBg.noise(x * 0.02, y * 0.02) // * 255 // Different scale for variation
+            const bNoise = this.staticBg.noise(x * 0.03, y * 0.03) // * 255 // Different scale for variation
             const rColorValue = this.staticBg.map(rNoise, 0, 1.01, 0, 255)
             const gColorValue = this.staticBg.map(gNoise, 0, 1.02, 0, 255)
             const bColorValue = this.staticBg.map(bNoise, 0, 1.03, 0, 255)
-            colorValue = this.staticBg.color(rColorValue, gColorValue, bColorValue)
+            colorValue = this.staticBg.color(
+              rColorValue,
+              gColorValue,
+              bColorValue
+            )
           }
           this.staticBg.set(x, y, this.staticBg.color(colorValue))
         }
@@ -176,7 +230,7 @@ export const Visuals = {
 
   getBW() {
     const dir = this.getColorDir(this.chunk)
-    const lowerHalf = (Math.floor(this.frames / this.chunk) % 255) < (255 / 2)
+    const lowerHalf = Math.floor(this.frames / this.chunk) % 255 < 255 / 2
     if (dir && lowerHalf) {
       return 'white'
     } else if (!dir && !lowerHalf) {
@@ -225,16 +279,46 @@ export const Visuals = {
       this.p.rect(0, 0, 50, 20)
       this.p.fill('black')
       // this.p.textAlign(this.p.RIGHT) // Right-align the text
-      const secondsAsTime = new Date(this.totalSec * 1000).toISOString().substr(14, 5)
-      const thisLevelSecondsAsTime = new Date(this.thisLevelSec * 1000).toISOString().substr(14, 5)
+      const secondsAsTime = new Date(this.totalSec * 1000)
+        .toISOString()
+        .substr(14, 5)
+      const thisLevelSecondsAsTime = new Date(this.thisLevelSec * 1000)
+        .toISOString()
+        .substr(14, 5)
       this.p.text('Total Frames: ' + this.preRun + this.frames, 50, 10) // Adjust the x-coordinate to align the text
       this.p.text('Total Time: ' + secondsAsTime, 50, 20) // Adjust the x-coordinate to align the text
       this.p.text('Total Shots: ' + this.missileCount, 50, 30) // Adjust the x-coordinate to align the text
-      this.p.text('Lvl ' + (this.startingBodies - 2) + ' - ' + thisLevelSecondsAsTime + ' - ' + (this.startingBodies - this.bodies.length) + '/' + this.startingBodies + ' - ' + this.thisLevelMissileCount + ' shots', 50, 40) // Adjust the x-coordinate to align the text
+      this.p.text(
+        'Lvl ' +
+          (this.startingBodies - 2) +
+          ' - ' +
+          thisLevelSecondsAsTime +
+          ' - ' +
+          (this.startingBodies - this.bodies.length) +
+          '/' +
+          this.startingBodies +
+          ' - ' +
+          this.thisLevelMissileCount +
+          ' shots',
+        50,
+        40
+      ) // Adjust the x-coordinate to align the text
       for (let i = 0; i < this.allLevelSec.length; i++) {
         const prevLevel = this.allLevelSec[i]
-        const prevLevelSecondsAsTime = new Date(prevLevel.thisLevelSec * 1000).toISOString().substr(14, 5)
-        this.p.text('Lvl ' + (this.allLevelSec.length - i) + ' - ' + prevLevelSecondsAsTime + ' - ' + prevLevel.thisLevelMissileCount + ' shots', 50, (i * 10) + 50) // Adjust the x-coordinate to align the text
+        const prevLevelSecondsAsTime = new Date(prevLevel.thisLevelSec * 1000)
+          .toISOString()
+          .substr(14, 5)
+        this.p.text(
+          'Lvl ' +
+            (this.allLevelSec.length - i) +
+            ' - ' +
+            prevLevelSecondsAsTime +
+            ' - ' +
+            prevLevel.thisLevelMissileCount +
+            ' shots',
+          50,
+          i * 10 + 50
+        ) // Adjust the x-coordinate to align the text
       }
     }
   },
@@ -291,13 +375,20 @@ export const Visuals = {
     for (let i = 0; i < this.missiles.length; i++) {
       const body = this.missiles[i]
       this.p.strokeWeight(0)
-      this.p.ellipse(body.position.x, body.position.y, body.radius / 2, body.radius / 2)
+      this.p.ellipse(
+        body.position.x,
+        body.position.y,
+        body.radius / 2,
+        body.radius / 2
+      )
     }
   },
 
-
   paintAtOnce(n = this.paintSteps) {
-    this.bodiesGraphic ||= this.p.createGraphics(this.windowWidth, this.windowHeight)
+    this.bodiesGraphic ||= this.p.createGraphics(
+      this.windowWidth,
+      this.windowHeight
+    )
 
     for (let i = 0; i < n; i++) {
       const results = this.step(this.bodies, this.missiles)
@@ -314,9 +405,15 @@ export const Visuals = {
 
   convertColor(c, isGrey = true) {
     const cc = c.replace('rgba(', '').replace(')', '')
-    const r = parseInt(cc.split(',')[0]) + Math.floor((isGrey ? this.getGrey() : this.getNotGrey()) / 2)
-    const g = parseInt(cc.split(',')[1]) + Math.floor((isGrey ? this.getGrey() : this.getNotGrey()) / 2)
-    const b = parseInt(cc.split(',')[2]) + Math.floor((isGrey ? this.getGrey() : this.getNotGrey()) / 2)
+    const r =
+      parseInt(cc.split(',')[0]) +
+      Math.floor((isGrey ? this.getGrey() : this.getNotGrey()) / 2)
+    const g =
+      parseInt(cc.split(',')[1]) +
+      Math.floor((isGrey ? this.getGrey() : this.getNotGrey()) / 2)
+    const b =
+      parseInt(cc.split(',')[2]) +
+      Math.floor((isGrey ? this.getGrey() : this.getNotGrey()) / 2)
     return [r, g, b]
     // this.bodiesGraphic.color(r, g, b)
   },
@@ -326,15 +423,22 @@ export const Visuals = {
   },
 
   rgbToHex(r, g, b) {
-    return '0x' + this.componentToHex(r) + this.componentToHex(g) + this.componentToHex(b)
+    return (
+      '0x' +
+      this.componentToHex(r) +
+      this.componentToHex(g) +
+      this.componentToHex(b)
+    )
   },
   hexToRgb(hex) {
     var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
-    return result ? {
-      r: parseInt(result[1], 16),
-      g: parseInt(result[2], 16),
-      b: parseInt(result[3], 16)
-    } : null
+    return result
+      ? {
+          r: parseInt(result[1], 16),
+          g: parseInt(result[2], 16),
+          b: parseInt(result[3], 16)
+        }
+      : null
   },
 
   invertColor(c) {
@@ -350,14 +454,13 @@ export const Visuals = {
   },
 
   ghostEyes(radius) {
-
     const eyeOffsetX = radius / 5
     const eyeOffsetY = radius / 12
     this.bodiesGraphic.fill('rgba(0,0,0,0.3)')
     this.bodiesGraphic.filter(this.p.BLUR)
-    this.bodiesGraphic.ellipse(-eyeOffsetX, - eyeOffsetY, radius / 7, radius / 5)
-    this.bodiesGraphic.ellipse(eyeOffsetX, - eyeOffsetY, radius / 7, radius / 5)
-    this.bodiesGraphic.ellipse(0, + eyeOffsetY, radius / 7, radius / 7)
+    this.bodiesGraphic.ellipse(-eyeOffsetX, -eyeOffsetY, radius / 7, radius / 5)
+    this.bodiesGraphic.ellipse(eyeOffsetX, -eyeOffsetY, radius / 7, radius / 5)
+    this.bodiesGraphic.ellipse(0, +eyeOffsetY, radius / 7, radius / 7)
     // this.bodiesGraphic.fill(i % 2 == 0 ? 'white' : this.randomColor(0, 255))
   },
 
@@ -365,32 +468,64 @@ export const Visuals = {
     this.ghostEyes(radius)
   },
 
-  drawPngFace(x, y, v, radius) {
+  // drawPngFace(x, y, v, radius) {
 
-    if (!this.faceLoading && !this.face) {
-      this.faceLoading = true
-      import('../public/3.png').then((png3) => {
-        console.log({ png3 })
-        this.p.loadImage(png3.default, (img) => {
-          this.face = img
-        })
-      })
-    }
-    if (this.face) {
-      this.bodiesGraphic.image(this.face, 0, - radius / 3, radius / 3, radius / 3)
-    }
-  },
+  //   if (!this.faceLoading && !this.face) {
+  //     this.faceLoading = true
+  //     import('../public/3.png').then((png3) => {
+  //       console.log({ png3 })
+  //       this.p.loadImage(png3.default, (img) => {
+  //         this.face = img
+  //       })
+  //     })
+  //   }
+  //   if (this.face) {
+  //     this.bodiesGraphic.image(this.face, 0, - radius / 3, radius / 3, radius / 3)
+  //   }
+  // },
 
   drawStyle1(x, y, v, radius, body) {
-
     const eyeArray = [
-      '≖', '✿', 'ಠ', '◉', '۞', '◉', 'ಡ', '˘', '❛', '⊚',
-      '✖', 'ᓀ', '◔', 'ಠ', '⊡', '◑', '■', '↑', '༎', 'ಥ',
-      'ཀ', '╥', '☯'
+      '≖',
+      '✿',
+      'ಠ',
+      '◉',
+      '۞',
+      '◉',
+      'ಡ',
+      '˘',
+      '❛',
+      '⊚',
+      '✖',
+      'ᓀ',
+      '◔',
+      'ಠ',
+      '⊡',
+      '◑',
+      '■',
+      '↑',
+      '༎',
+      'ಥ',
+      'ཀ',
+      '╥',
+      '☯'
     ]
     const mouthArray = [
-      '益', '﹏', '෴', 'ᗜ', 'ω', '_', '‿', '‿‿', '‿‿‿', '‿‿‿‿',
-      '‿‿‿‿‿', '‿‿‿‿‿‿', '‿‿‿‿‿‿‿', '‿‿‿‿‿‿‿‿', '‿‿‿‿‿‿‿‿‿'
+      '益',
+      '﹏',
+      '෴',
+      'ᗜ',
+      'ω',
+      '_',
+      '‿',
+      '‿‿',
+      '‿‿‿',
+      '‿‿‿‿',
+      '‿‿‿‿‿',
+      '‿‿‿‿‿‿',
+      '‿‿‿‿‿‿‿',
+      '‿‿‿‿‿‿‿‿',
+      '‿‿‿‿‿‿‿‿‿'
     ]
 
     const c = body.c.replace(this.opac, '0.1')
@@ -403,7 +538,8 @@ export const Visuals = {
     this.bodiesGraphic.textSize(radius / 2.2)
     const eyeIndex = i % eyeArray.length
     const mouthIndex = i % mouthArray.length
-    const face = eyeArray[eyeIndex] + mouthArray[mouthIndex] + eyeArray[eyeIndex]
+    const face =
+      eyeArray[eyeIndex] + mouthArray[mouthIndex] + eyeArray[eyeIndex]
 
     this.bodiesGraphic.fill(c)
     this.bodiesGraphic.strokeWeight(10)
@@ -457,7 +593,10 @@ export const Visuals = {
     const radius = body.radius * 4 + this.radiusMultiplyer
     drawFunction(body.position.x, body.position.y, body.velocity, radius, body)
 
-    let loopedX = false, loopedY = false, loopX = body.position.x, loopY = body.position.y
+    let loopedX = false,
+      loopedY = false,
+      loopX = body.position.x,
+      loopY = body.position.y
     const loopGap = radius / 2
 
     // crosses right, draw on left
@@ -506,7 +645,10 @@ export const Visuals = {
   },
 
   async drawBodies(attachToCanvas = true) {
-    this.bodiesGraphic ||= this.p.createGraphics(this.windowWidth, this.windowHeight)
+    this.bodiesGraphic ||= this.p.createGraphics(
+      this.windowWidth,
+      this.windowHeight
+    )
     this.bodiesGraphic.noStroke()
 
     // this.bodiesGraphic.blendMode(this.p.DIFFERENCE)
@@ -527,8 +669,7 @@ export const Visuals = {
         // console.log(c)
         // finalColor = c
 
-        finalColor = c.replace(this.opac, '1')//this.convertColor(c)
-
+        finalColor = c.replace(this.opac, '1') //this.convertColor(c)
       } else {
         finalColor = c
       }
@@ -551,7 +692,6 @@ export const Visuals = {
         // const radius = body.radius * 4 + this.radiusMultiplyer
         // this.drawBody(body.position.x, body.position.y, body.velocity, radius, finalColor, i)
 
-
         // if (!this.face) {
         //   this.face = await new Promise((resolve) => {
         //     this.p.loadImage('/2.png', (img) => {
@@ -561,7 +701,6 @@ export const Visuals = {
         //   })
         // }
         // this.bodiesGraphic.image(this.face, body.position.x - radius / 8, body.position.y - radius / 3, radius / 2, radius / 2)
-
 
         // const eyes = this.getAngledImage(body)
         // this.bodiesGraphic.image(eyes, 0, 0)
@@ -582,14 +721,12 @@ export const Visuals = {
       this.allCopiesOfBodies.shift()
     }
 
-
     // this.bodiesGraphic.strokeWeight(0)
     if (attachToCanvas) {
       this.p.image(this.bodiesGraphic, 0, 0)
     }
 
     this.bodiesGraphic.clear()
-
 
     if (this.paused) {
       this.p.fill('rgba(0,0,0,0.6)')
@@ -600,11 +737,9 @@ export const Visuals = {
       this.p.triangle(-100, -100, -100, 100, 100, 0)
       this.p.pop()
     }
-
   },
 
   drawBorder() {
-
     // drawClock
     const clockCenter = this.windowWidth / 2
 
@@ -618,11 +753,14 @@ export const Visuals = {
     // this.bodiesGraphic.ellipse(clockX, clockY, 100, 100)
 
     let size = this.windowWidth / Math.PI
-    const radialStep2 = (this.frames / (this.chunk * 1) / 255) * 360 + 270 % 360
-    const clockRadius2 = (this.windowWidth / 2) + size / 4
+    const radialStep2 =
+      (this.frames / (this.chunk * 1) / 255) * 360 + (270 % 360)
+    const clockRadius2 = this.windowWidth / 2 + size / 4
 
-    const clockX2 = clockCenter + clockRadius2 * Math.cos(radialStep2 * Math.PI / 180)
-    const clockY2 = clockCenter + clockRadius2 * Math.sin(radialStep2 * Math.PI / 180)
+    const clockX2 =
+      clockCenter + clockRadius2 * Math.cos((radialStep2 * Math.PI) / 180)
+    const clockY2 =
+      clockCenter + clockRadius2 * Math.sin((radialStep2 * Math.PI) / 180)
     // this.bodiesGraphic.stroke(this.getBW())
     this.bodiesGraphic.noStroke()
     // this.bodiesGraphic.stroke('white')
@@ -631,7 +769,6 @@ export const Visuals = {
     //   size = 0
     // }
     this.bodiesGraphic.ellipse(clockX2, clockY2, size, size)
-
   },
 
   getAngledImage(body) {
@@ -645,7 +782,13 @@ export const Visuals = {
       this.eyes = this.p.loadImage('/eyes-3.png')
     }
     const size = 6
-    graphic.image(this.eyes, -body.radius * (size / 2), -body.radius * (size / 2), body.radius * size, body.radius * size)
+    graphic.image(
+      this.eyes,
+      -body.radius * (size / 2),
+      -body.radius * (size / 2),
+      body.radius * size,
+      body.radius * size
+    )
 
     graphic.pop()
     graphic.push()
@@ -673,8 +816,10 @@ export const Visuals = {
     let x2 = body.radius * 4 * this.p.cos(this.p.PI / 6 + this.p.TWO_PI / 3)
     let y2 = body.radius * 4 * this.p.sin(this.p.PI / 6 + this.p.TWO_PI / 3)
 
-    let x3 = body.radius * 4 * this.p.cos(this.p.PI / 6 + 2 * this.p.TWO_PI / 3)
-    let y3 = body.radius * 4 * this.p.sin(this.p.PI / 6 + 2 * this.p.TWO_PI / 3)
+    let x3 =
+      body.radius * 4 * this.p.cos(this.p.PI / 6 + (2 * this.p.TWO_PI) / 3)
+    let y3 =
+      body.radius * 4 * this.p.sin(this.p.PI / 6 + (2 * this.p.TWO_PI) / 3)
 
     this.p.triangle(x1, y1, x2, y2, x3, y3)
     this.p.pop()
@@ -687,7 +832,6 @@ export const Visuals = {
     this.p.rotate(angle2)
     this.p.pop()
   },
-
 
   drawTail(x, y, v, radius, finalColor) {
     // console.log({ finalColor })
@@ -728,8 +872,6 @@ export const Visuals = {
     //     const ay = (2 * radius / 2 + -1 * this.p.sin(ang) * radius / 2)
     //     this.drawTails[id].vertex(ax, ay)
     //   }
-
-
 
     //   // this.drawTails[id].fill('red')
     //   // this.drawTails[id].rect(0, 0, radius, radius / 2)
@@ -786,9 +928,6 @@ export const Visuals = {
     // this.p.rotate(angle)
     // this.p.image(this.drawTails[id], -radius / 2, -radius)
     // this.p.pop()
-
-
-
   },
 
   drawBodyTrails() {
@@ -806,7 +945,7 @@ export const Visuals = {
           const hueColor = (parseInt(c.split(',')[1]) + this.frames) % 360
           finalColor = this.p.color(hueColor, 60, 100) // Saturation and brightness at 100 for pure spectral colors
         } else {
-          finalColor = c//this.convertColor(c)
+          finalColor = c //this.convertColor(c)
         }
         this.p.fill(finalColor)
         if (this.mode == 'nft') {
@@ -819,7 +958,13 @@ export const Visuals = {
           // this.p.arc(0, 0, radius, radius, this.p.PI, 2 * this.p.PI)
           this.p.pop()
           // if (i == 0) {
-          this.drawTail(body.position.x, body.position.y, body.velocity, radius, finalColor)
+          this.drawTail(
+            body.position.x,
+            body.position.y,
+            body.velocity,
+            radius,
+            finalColor
+          )
           // }
         } else {
           this.p.push()
@@ -829,20 +974,26 @@ export const Visuals = {
           let x1 = body.radius * 4 * this.p.cos(this.p.PI / 6)
           let y1 = body.radius * 4 * this.p.sin(this.p.PI / 6)
 
-          let x2 = body.radius * 4 * this.p.cos(this.p.PI / 6 + this.p.TWO_PI / 3)
-          let y2 = body.radius * 4 * this.p.sin(this.p.PI / 6 + this.p.TWO_PI / 3)
+          let x2 =
+            body.radius * 4 * this.p.cos(this.p.PI / 6 + this.p.TWO_PI / 3)
+          let y2 =
+            body.radius * 4 * this.p.sin(this.p.PI / 6 + this.p.TWO_PI / 3)
 
-          let x3 = body.radius * 4 * this.p.cos(this.p.PI / 6 + 2 * this.p.TWO_PI / 3)
-          let y3 = body.radius * 4 * this.p.sin(this.p.PI / 6 + 2 * this.p.TWO_PI / 3)
+          let x3 =
+            body.radius *
+            4 *
+            this.p.cos(this.p.PI / 6 + (2 * this.p.TWO_PI) / 3)
+          let y3 =
+            body.radius *
+            4 *
+            this.p.sin(this.p.PI / 6 + (2 * this.p.TWO_PI) / 3)
           this.p.triangle(x1, y1, x2, y2, x3, y3)
           this.p.pop()
         }
       }
     }
     // this.p.blendMode(this.p.BLEND)
-
   },
-
 
   drawCenter(x, y, r) {
     this.p.strokeWeight(0)
@@ -877,8 +1028,9 @@ export const Visuals = {
     this.lastFrameRate ||= 0
 
     if (this.frames - this.lastFrameRateCheckAt.frames > 30) {
-      const diff = (Date.now() - this.lastFrameRateCheckAt.time)
-      this.lastFrameRate = (this.frames - this.lastFrameRateCheckAt.frames) / diff * 1000
+      const diff = Date.now() - this.lastFrameRateCheckAt.time
+      this.lastFrameRate =
+        ((this.frames - this.lastFrameRateCheckAt.frames) / diff) * 1000
       this.lastFrameRateCheckAt = { frames: this.frames, time: Date.now() }
     }
 

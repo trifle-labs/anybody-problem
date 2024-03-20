@@ -121,13 +121,13 @@ contract Metadata is Ownable {
     }
 
     function getPath(uint256 tokenId) public view returns (string memory) {
-        // const { seed, bodyCount, tickCount, bodiesProduced } = problem
+        // const { seed, bodyCount, tickCount, mintedBodiesIndex } = problem
         string memory path = "";
         (
             bytes32 seed,
             uint256 bodyCount,
             uint256 tickCount,
-            uint256 bodiesProduced
+            uint256 mintedBodiesIndex
         ) = Problems(problems).problems(tokenId);
 
         uint256[10] memory bodyIds = Problems(problems).getProblemBodyIds(
