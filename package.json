@@ -15,7 +15,8 @@
     "circom:prod": "hardhat circom --verbose",
     "test:circom": "ls test/*.js | grep -v -e 'bodies' -e 'problems' -e 'solver' -e 'metadata' | xargs npx hardhat test",
     "test:solidity": "hardhat test test/problems.test.js test/metadata.test.js test/bodies.test.js test/solver.test.js",
-    "test": "hardhat test"
+    "test": "hardhat test",
+    "prepare": "husky"
   },
   "type": "module",
   "browserslist": [
@@ -24,6 +25,13 @@
     "not dead",
     "not ie 11"
   ],
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write --ignore-unknown"
+    ],
+    "**/*": "prettier --write --ignore-unknown"
+  },
   "eslintConfig": {
     "env": {
       "amd": true,
@@ -40,29 +48,9 @@
       "sourceType": "module"
     },
     "extends": [
-      "eslint:recommended"
+      "eslint:recommended",
+      "prettier"
     ],
-    "rules": {
-      "indent": [
-        "error",
-        2,
-        {
-          "SwitchCase": 1
-        }
-      ],
-      "linebreak-style": [
-        "error",
-        "unix"
-      ],
-      "quotes": [
-        "error",
-        "single"
-      ],
-      "semi": [
-        "error",
-        "never"
-      ]
-    },
     "globals": {
       "assert": "readonly",
       "before": "readonly",
@@ -95,14 +83,18 @@
     "circomlibjs": "^0.1.2",
     "dotenv": "^16.0.1",
     "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
     "ethereum-waffle": "*",
     "ethers": "^5.7.0",
     "hardhat": "2.13.0",
     "hardhat-circom": "git+ssh://git@github.com/okwme/hardhat-circom.git#514bf05c8aa1b5864484eb1e257c0df6053553f2",
     "hardhat-contract-sizer": "*",
     "hardhat-gas-reporter": "*",
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.2",
     "p5": "^1.8.0",
     "parcel": "^2.12.0",
+    "prettier": "3.2.5",
     "solidity-coverage": "^0.8.6"
   },
   "resolutions": {
