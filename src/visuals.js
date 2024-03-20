@@ -1,5 +1,5 @@
 
-import { WITHERING_STEPS, MAX_HP } from './hp.js'
+import { WITHERING_STEPS, MAX_HP, stepWithering } from './hp.js'
 
 export const Visuals = {
   async draw() {
@@ -23,6 +23,15 @@ export const Visuals = {
       this.justPaused = false
     }
     if (!this.showIt) return
+
+    // if (this.bodies.filter(b => !b.hp || b.hp > 0).length < 3) {
+    //   this.witheringBodies = stepWithering(this.witheringBodies)
+    //   this.drawWitheringBodies()
+    //   this.p.image(this.bodiesGraphic, 0, 0)
+    //   this.bodiesGraphic.clear()
+    //   return
+    // }
+
     this.frames++
 
     this.p.noFill()
@@ -565,7 +574,7 @@ export const Visuals = {
     this.bodiesGraphic.fill('white')
     this.bodiesGraphic.textSize(radius / 4)
     this.bodiesGraphic.text(body.hp, hpBarX + hpBarLength / 2, hpBarY + hpBarHeight / 2)
-    
+
   },
 
   moveAndRotate_PopAfter(graphic, x, y, v) {
@@ -632,8 +641,10 @@ export const Visuals = {
   drawWitheringBodies() {
     this.bodiesGraphic ||= this.p.createGraphics(this.windowWidth, this.windowHeight)
     this.bodiesGraphic.noStroke()
-
+    let i = 0;
     for (const body of this.witheringBodies) {
+      console.log('draw withering body', i, { body })
+      i++
       // the body should shrink to nothing as HP goes from 0 to -WITHERING_STEPS
       const witherMultiplier = 1 + (body.hp / WITHERING_STEPS)
       const radius = (body.radius * 4 + this.radiusMultiplyer) * witherMultiplier
