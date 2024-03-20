@@ -1,111 +1,111 @@
 {
-	"name": "anybody-problem",
-	"version": "1.0.0",
-	"license": "CC-BY-NC-4.0",
-	"targets": {
-		"main": false
-	},
-	"main": "src/index.js",
-	"scripts": {
-		"build": "yarn parcel build src/index.html",
-		"dev": "yarn parcel src/index.html --open",
-		"chain": "hardhat node",
-		"circom": "./scripts/basic_circom.sh",
-		"circom:dev": "hardhat circom --deterministic --debug --verbose",
-		"circom:prod": "hardhat circom --verbose",
-		"test:circom": "ls test/*.js | grep -v -e 'bodies' -e 'problems' -e 'solver' -e 'metadata' | xargs npx hardhat test",
-		"test:solidity": "hardhat test test/problems.test.js test/metadata.test.js test/bodies.test.js test/solver.test.js",
-		"test": "hardhat test",
-		"prepare": "husky"
-	},
-	"type": "module",
-	"browserslist": [
-		"> 1%",
-		"last 2 versions",
-		"not dead",
-		"not ie 11"
-	],
-	"lint-staged": {
-		"*.{js,jsx,ts,tsx}": [
-			"eslint --fix",
-			"prettier --write --ignore-unknown"
-		],
-		"**/*": "prettier --write --ignore-unknown"
-	},
-	"eslintConfig": {
-		"env": {
-			"amd": true,
-			"browser": true,
-			"es2020": true,
-			"node": true
-		},
-		"parserOptions": {
-			"ecmaFeatures": {
-				"modules": true
-			},
-			"ecmaVersion": "latest",
-			"parser": "@babel/eslint-parser",
-			"sourceType": "module"
-		},
-		"extends": [
-			"eslint:recommended",
-			"prettier"
-		],
-		"globals": {
-			"assert": "readonly",
-			"before": "readonly",
-			"describe": "readonly",
-			"it": "readonly"
-		},
-		"ignorePatterns": [
-			"/docs/index.js"
-		],
-		"root": true
-	},
-	"dependencies": {
-		"prando": "^6.0.1",
-		"tone": "^14.7.77"
-	},
-	"devDependencies": {
-		"@babel/core": "^7.24.0",
-		"@babel/eslint-parser": "^7.23.10",
-		"@babel/preset-env": "^7.24.0",
-		"@nomicfoundation/hardhat-chai-matchers": "^2.0.6",
-		"@nomicfoundation/hardhat-network-helpers": "^1.0.9",
-		"@nomiclabs/hardhat-ethers": "*",
-		"@nomiclabs/hardhat-etherscan": "^3.1.0",
-		"@nomiclabs/hardhat-ganache": "*",
-		"@nomiclabs/hardhat-waffle": "*",
-		"@openzeppelin/contracts": "^4.6.0",
-		"@parcel/transformer-inline": "^2.12.0",
-		"base64-sol": "^1.1.0",
-		"circomlib": "^2.0.3",
-		"circomlibjs": "^0.1.2",
-		"dotenv": "^16.0.1",
-		"eslint": "^8.57.0",
-		"eslint-config-prettier": "^9.1.0",
-		"ethereum-waffle": "*",
-		"ethers": "^5.7.0",
-		"hardhat": "2.13.0",
-		"hardhat-circom": "git+ssh://git@github.com/okwme/hardhat-circom.git#514bf05c8aa1b5864484eb1e257c0df6053553f2",
-		"hardhat-contract-sizer": "*",
-		"hardhat-gas-reporter": "*",
-		"husky": "^9.0.11",
-		"lint-staged": "^15.2.2",
-		"p5": "^1.8.0",
-		"parcel": "^2.12.0",
-		"prettier": "3.2.5",
-		"solidity-coverage": "^0.8.6"
-	},
-	"resolutions": {
-		"web-worker": "1.2.0"
-	},
-	"peerDependencies": {
-		"prando": "^6.0.1"
-	},
-	"engines": {
-		"node": ">=16"
-	},
-	"readme": "ERROR: No README data found!",
-	"_id": "anybody-problem@1.0.0"
+  "name": "anybody-problem",
+  "version": "1.0.0",
+  "license": "CC-BY-NC-4.0",
+  "targets": {
+    "main": false
+  },
+  "main": "src/index.js",
+  "scripts": {
+    "build": "yarn parcel build src/index.html",
+    "dev": "yarn parcel src/index.html --open",
+    "chain": "hardhat node",
+    "circom": "./scripts/basic_circom.sh",
+    "circom:dev": "hardhat circom --deterministic --debug --verbose",
+    "circom:prod": "hardhat circom --verbose",
+    "test:circom": "ls test/*.js | grep -v -e 'bodies' -e 'problems' -e 'solver' -e 'metadata' | xargs npx hardhat test",
+    "test:solidity": "hardhat test test/problems.test.js test/metadata.test.js test/bodies.test.js test/solver.test.js",
+    "test": "hardhat test",
+    "prepare": "husky"
+  },
+  "type": "module",
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead",
+    "not ie 11"
+  ],
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write --ignore-unknown"
+    ],
+    "**/*": "prettier --write --ignore-unknown"
+  },
+  "eslintConfig": {
+    "env": {
+      "amd": true,
+      "browser": true,
+      "es2020": true,
+      "node": true
+    },
+    "parserOptions": {
+      "ecmaFeatures": {
+        "modules": true
+      },
+      "ecmaVersion": "latest",
+      "parser": "@babel/eslint-parser",
+      "sourceType": "module"
+    },
+    "extends": [
+      "eslint:recommended",
+      "prettier"
+    ],
+    "globals": {
+      "assert": "readonly",
+      "before": "readonly",
+      "describe": "readonly",
+      "it": "readonly"
+    },
+    "ignorePatterns": [
+      "/docs/index.js"
+    ],
+    "root": true
+  },
+  "dependencies": {
+    "prando": "^6.0.1",
+    "tone": "^14.7.77"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.24.0",
+    "@babel/eslint-parser": "^7.23.10",
+    "@babel/preset-env": "^7.24.0",
+    "@nomicfoundation/hardhat-chai-matchers": "^2.0.6",
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.9",
+    "@nomiclabs/hardhat-ethers": "*",
+    "@nomiclabs/hardhat-etherscan": "^3.1.0",
+    "@nomiclabs/hardhat-ganache": "*",
+    "@nomiclabs/hardhat-waffle": "*",
+    "@openzeppelin/contracts": "^4.6.0",
+    "@parcel/transformer-inline": "^2.12.0",
+    "base64-sol": "^1.1.0",
+    "circomlib": "^2.0.3",
+    "circomlibjs": "^0.1.2",
+    "dotenv": "^16.0.1",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "ethereum-waffle": "*",
+    "ethers": "^5.7.0",
+    "hardhat": "2.13.0",
+    "hardhat-circom": "git+ssh://git@github.com/okwme/hardhat-circom.git#514bf05c8aa1b5864484eb1e257c0df6053553f2",
+    "hardhat-contract-sizer": "*",
+    "hardhat-gas-reporter": "*",
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.2",
+    "p5": "^1.8.0",
+    "parcel": "^2.12.0",
+    "prettier": "3.2.5",
+    "solidity-coverage": "^0.8.6"
+  },
+  "resolutions": {
+    "web-worker": "1.2.0"
+  },
+  "peerDependencies": {
+    "prando": "^6.0.1"
+  },
+  "engines": {
+    "node": ">=16"
+  },
+  "readme": "ERROR: No README data found!",
+  "_id": "anybody-problem@1.0.0"
 }
