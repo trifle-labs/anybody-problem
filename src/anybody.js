@@ -217,8 +217,9 @@ export class Anybody extends EventEmitter {
 
   step() {
     const { live, withering } = stepLife(this.bodies, this.witheringBodies)
-    // this.witheringBodies = withering
-    this.witheringBodies = stepWithering(withering)
+    this.witheringBodies ||= []
+    this.witheringBodies.push(...withering)
+    this.witheringBodies = stepWithering(this.witheringBodies)
     this.bodies = live
 
     this.bodies = this.forceAccumulator(this.bodies)

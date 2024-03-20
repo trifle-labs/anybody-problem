@@ -24,22 +24,19 @@ export const Visuals = {
     }
     if (!this.showIt) return
 
-    // if (this.bodies.filter(b => !b.hp || b.hp > 0).length < 3) {
-    //   this.witheringBodies = stepWithering(this.witheringBodies)
-    //   this.drawWitheringBodies()
-    //   this.p.image(this.bodiesGraphic, 0, 0)
-    //   this.bodiesGraphic.clear()
-    //   return
-    // }
-
-    this.frames++
-
+    // when there are 3 or more bodies, step the simulation
+    if (this.bodies.filter(b => !b.hp || b.hp > 0).length >= 3) {
+      this.frames++
+      const results = this.step(this.bodies, this.missiles)
+      this.bodies = results.bodies || []
+      this.missiles = results.missiles || []
+    } else {
+    // if less than 3 just finish the withering animation
+    // TODO: add some sort of instructional message to screen that new bodies are needed to progress the simulation
+      this.witheringBodies = stepWithering(this.witheringBodies)
+    }
+ 
     this.p.noFill()
-
-    const results = this.step(this.bodies, this.missiles)
-    this.bodies = results.bodies || []
-    this.missiles = results.missiles || []
-
     this.drawBg()
     this.drawBodyTrails()
     this.drawBodies()
@@ -641,10 +638,10 @@ export const Visuals = {
   drawWitheringBodies() {
     this.bodiesGraphic ||= this.p.createGraphics(this.windowWidth, this.windowHeight)
     this.bodiesGraphic.noStroke()
-    let i = 0;
+    // let i = 0;
     for (const body of this.witheringBodies) {
-      console.log('draw withering body', i, { body })
-      i++
+      // console.log('draw withering body', i, { body })
+      // i++
       // the body should shrink to nothing as HP goes from 0 to -WITHERING_STEPS
       const witherMultiplier = 1 + (body.hp / WITHERING_STEPS)
       const radius = (body.radius * 4 + this.radiusMultiplyer) * witherMultiplier

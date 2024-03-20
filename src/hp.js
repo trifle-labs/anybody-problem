@@ -1,4 +1,4 @@
-export const MAX_HP = 1000
+export const MAX_HP = 500
 export const WITHERING_STEPS = 200
 
 export function stepLife(bodies) {
@@ -15,7 +15,6 @@ export function stepLife(bodies) {
     } else if (body.hp > -WITHERING_STEPS) {
       withering.push(body)
     }
-
   }
 
   return { live, withering }
@@ -25,7 +24,6 @@ export function stepWithering(witheringBodies) {
   const withering = []
   for (const body of witheringBodies) {
     body.hp -= 1
-
     if (body.hp > -WITHERING_STEPS) {
       withering.push(body)
     }
