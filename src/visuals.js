@@ -558,20 +558,11 @@ export const Visuals = {
     this.bodiesGraphic.text(face, -radius / 2.4, radius / 8)
     // this.bodiesGraphic.blendMode(this.p.DIFFERENCE)
 
-    // show body.life as a guage
-    const hpBarLength = radius * 2
-    const hpBarHeight = radius / 10
-    const hpBarX = -radius
-    const hpBarY = radius / 2
-    this.bodiesGraphic.fill('rgba(0,0,0,0.3)')
-    this.bodiesGraphic.rect(hpBarX, hpBarY, hpBarLength, hpBarHeight)
-    this.bodiesGraphic.fill('rgba(0,255,0,0.3)')
-    this.bodiesGraphic.rect(hpBarX, hpBarY, hpBarLength * (body.life / MAX_LIFE), hpBarHeight)
     // hp in white text
     this.bodiesGraphic.fill('white')
-    this.bodiesGraphic.textSize(radius / 4)
-    this.bodiesGraphic.text(body.life, hpBarX + hpBarLength / 2, hpBarY + hpBarHeight / 2)
-
+    this.bodiesGraphic.textSize(radius / 8)
+    this.bodiesGraphic.textAlign(this.p.CENTER, this.p.CENTER)
+    this.bodiesGraphic.text(body.life, 0, 50)
   },
 
   moveAndRotate_PopAfter(graphic, x, y, v) {
