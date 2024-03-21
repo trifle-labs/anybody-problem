@@ -271,9 +271,10 @@ export const Visuals = {
       this.p.fill('white')
       // this.p.rect(0, 0, 50, 20)
       // this.p.fill(this.getNotGrey())
-      this.p.textAlign(this.p.RIGHT) // Right-align the text
-      this.p.text(`${this.preRun + this.frames} t`, 65, 25) // Adjust the x-coordinate to align the text
-      this.p.text(`${this.frameRate().toFixed(2)} fps`, 65, 45)
+      this.p.textSize(50)
+      this.p.textAlign(this.p.LEFT) // Right-align the text
+      this.p.text(`${ this.frames} t`, 65, 50) // Adjust the x-coordinate to align the text
+      this.p.text(`${this.frameRate().toFixed(2)} fps`, 65, 100)
     } else {
       this.p.fill('white')
       this.p.rect(0, 0, 50, 20)
@@ -394,7 +395,7 @@ export const Visuals = {
       const results = this.step(this.bodies, this.missiles)
       this.bodies = results.bodies
       this.missiles = results.missiles || []
-      this.drawBodies(false)
+      this.drawBodianes(false)
       this.frames++
     }
 
