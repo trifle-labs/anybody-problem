@@ -257,7 +257,7 @@ export const Calculations = {
       if (body.c) {
         newBody.c = body.c
       }
-      newBody.hp = body.hp
+      newBody.life = body.life
       bodies.push(newBody)
     }
     return bodies
@@ -292,7 +292,7 @@ export const Calculations = {
       newBody.velocity.y =
         body.vy || this.convertFloatToScaledBigInt(body.velocity.y)
       newBody.radius = this.convertFloatToScaledBigInt(body.radius)
-      newBody.hp = body.hp
+      newBody.life = body.life
       newBody.c = body.c
       newBody.bodyIndex = body.bodyIndex
 

@@ -1,5 +1,5 @@
 
-import { WITHERING_STEPS, MAX_HP, stepWithering } from './hp.js'
+import { WITHERING_STEPS, MAX_LIFE, stepWithering } from './life.js'
 
 export const Visuals = {
   async draw() {
@@ -25,7 +25,7 @@ export const Visuals = {
     if (!this.showIt) return
 
     // when there are 3 or more bodies, step the simulation
-    if (this.bodies.filter(b => !b.hp || b.hp > 0).length >= 3) {
+    if (this.bodies.filter(b => !b.life || b.life > 0).length >= 3) {
       this.frames++
       const results = this.step(this.bodies, this.missiles)
       this.bodies = results.bodies || []
@@ -558,7 +558,7 @@ export const Visuals = {
     this.bodiesGraphic.text(face, -radius / 2.4, radius / 8)
     // this.bodiesGraphic.blendMode(this.p.DIFFERENCE)
 
-    // show body.hp as a guage
+    // show body.life as a guage
     const hpBarLength = radius * 2
     const hpBarHeight = radius / 10
     const hpBarX = -radius
@@ -566,11 +566,11 @@ export const Visuals = {
     this.bodiesGraphic.fill('rgba(0,0,0,0.3)')
     this.bodiesGraphic.rect(hpBarX, hpBarY, hpBarLength, hpBarHeight)
     this.bodiesGraphic.fill('rgba(0,255,0,0.3)')
-    this.bodiesGraphic.rect(hpBarX, hpBarY, hpBarLength * (body.hp / MAX_HP), hpBarHeight)
+    this.bodiesGraphic.rect(hpBarX, hpBarY, hpBarLength * (body.life / MAX_LIFE), hpBarHeight)
     // hp in white text
     this.bodiesGraphic.fill('white')
     this.bodiesGraphic.textSize(radius / 4)
-    this.bodiesGraphic.text(body.hp, hpBarX + hpBarLength / 2, hpBarY + hpBarHeight / 2)
+    this.bodiesGraphic.text(body.life, hpBarX + hpBarLength / 2, hpBarY + hpBarHeight / 2)
 
   },
 
@@ -640,7 +640,7 @@ export const Visuals = {
     this.bodiesGraphic.noStroke()
     for (const body of this.witheringBodies) {
       // the body should shrink to nothing as HP goes from 0 to -WITHERING_STEPS
-      const witherMultiplier = 1 + (body.hp / WITHERING_STEPS)
+      const witherMultiplier = 1 + (body.life / WITHERING_STEPS)
       const radius = (body.radius * 4 + this.radiusMultiplyer) * witherMultiplier
 
       // render as a white circle

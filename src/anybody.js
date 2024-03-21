@@ -7,7 +7,7 @@ import {
   _validateSeed,
   Calculations
 } from './calculations.js'
-import { stepLife, stepWithering } from './hp.js'
+import { stepLife, stepWithering } from './life.js'
 
 export class Anybody extends EventEmitter {
   constructor(p, options = {}) {
