@@ -1,3 +1,6 @@
+
+import { WITHERING_STEPS, MAX_LIFE, stepWithering } from './life.js'
+
 export const Visuals = {
   async draw() {
     const isNotFirstFrame = this.frames !== 0
@@ -19,22 +22,25 @@ export const Visuals = {
     } else {
       this.justPaused = false
     }
-    // if (this.paused) return
     if (!this.showIt) return
-    this.frames++
-    if (this.frames % 100 == 0) {
-      // console.log({ bodies })
+
+    // when there are 3 or more bodies, step the simulation
+    if (this.bodies.filter(b => !b.life || b.life > 0).length >= 3) {
+      this.frames++
+      const results = this.step(this.bodies, this.missiles)
+      this.bodies = results.bodies || []
+      this.missiles = results.missiles || []
+    } else {
+    // if less than 3 just finish the withering animation
+    // TODO: add some sort of instructional message to screen that new bodies are needed to progress the simulation
+      this.witheringBodies = stepWithering(this.witheringBodies)
     }
+ 
     this.p.noFill()
-
-    const results = this.step(this.bodies, this.missiles)
-    this.bodies = results.bodies || []
-    this.missiles = results.missiles || []
-
-    // this.playSounds()
     this.drawBg()
     this.drawBodyTrails()
     this.drawBodies()
+    this.drawWitheringBodies()
 
     if (this.frames % 10 == 0) {
       this.sound?.render(this)
@@ -395,6 +401,7 @@ export const Visuals = {
       this.bodies = results.bodies
       this.missiles = results.missiles || []
       this.drawBodies(false)
+      this.drawWitheringBodies()
       this.frames++
     }
 
@@ -550,6 +557,12 @@ export const Visuals = {
     this.bodiesGraphic.noStroke()
     this.bodiesGraphic.text(face, -radius / 2.4, radius / 8)
     // this.bodiesGraphic.blendMode(this.p.DIFFERENCE)
+
+    // hp in white text
+    this.bodiesGraphic.fill('white')
+    this.bodiesGraphic.textSize(radius / 8)
+    this.bodiesGraphic.textAlign(this.p.CENTER, this.p.CENTER)
+    this.bodiesGraphic.text(body.life, 0, 50)
   },
 
   moveAndRotate_PopAfter(graphic, x, y, v) {
@@ -610,6 +623,20 @@ export const Visuals = {
     // crosses corner, draw opposite corner
     if (loopedX && loopedY) {
       drawFunction(loopX, loopY, body.velocity, radius, body)
+    }
+  },
+
+  drawWitheringBodies() {
+    this.bodiesGraphic ||= this.p.createGraphics(this.windowWidth, this.windowHeight)
+    this.bodiesGraphic.noStroke()
+    for (const body of this.witheringBodies) {
+      // the body should shrink to nothing as HP goes from 0 to -WITHERING_STEPS
+      const witherMultiplier = 1 + (body.life / WITHERING_STEPS)
+      const radius = (body.radius * 4 + this.radiusMultiplyer) * witherMultiplier
+
+      // render as a white circle
+      this.bodiesGraphic.fill('white')
+      this.bodiesGraphic.ellipse(body.position.x, body.position.y, radius, radius)
     }
   },
 

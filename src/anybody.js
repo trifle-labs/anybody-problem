@@ -3,7 +3,11 @@ import Prando from 'prando'
 import EventEmitter from 'events'
 import Sound from './sound.js'
 import { Visuals } from './visuals.js'
-import { _validateSeed, Calculations } from './calculations.js'
+import {
+  _validateSeed,
+  Calculations
+} from './calculations.js'
+import { stepLife, stepWithering } from './life.js'
 
 export class Anybody extends EventEmitter {
   constructor(p, options = {}) {
@@ -91,6 +95,7 @@ export class Anybody extends EventEmitter {
     this.missiles = []
     this.missileInits = []
     this.bodies = []
+    this.witheringBodies = []
     this.bodyInits = []
     this.bodyFinal = []
     this.allCopiesOfBodies = []
@@ -173,15 +178,15 @@ export class Anybody extends EventEmitter {
 
   addListener() {
     // const body = document.getElementsByClassName('p5Canvas')[0]
-    // const body = document.querySelector('canvas')
-    const canvas = document.getElementById('defaultCanvas0')
+    const canvas = document.querySelector('canvas')
+    // const canvas = document.getElementById('defaultCanvas0')
 
     this.p.touchStarted = () => {
       // this.setPause()
       // return false
     }
-    this.p.touchMoved = () => {}
-    this.p.touchEnded = () => {}
+    this.p.touchMoved = () => { }
+    this.p.touchEnded = () => { }
 
     if (typeof window !== 'undefined' && this.mode == 'game') {
       canvas.removeEventListener('click', this.setPause)
@@ -211,6 +216,12 @@ export class Anybody extends EventEmitter {
   }
 
   step() {
+    const { live, withering } = stepLife(this.bodies, this.witheringBodies)
+    this.witheringBodies ||= []
+    this.witheringBodies.push(...withering)
+    this.witheringBodies = stepWithering(this.witheringBodies)
+    this.bodies = live
+
     this.bodies = this.forceAccumulator(this.bodies)
     var results = this.detectCollision(this.bodies, this.missiles)
     this.bodies = results.bodies
@@ -230,6 +241,7 @@ export class Anybody extends EventEmitter {
         this.finish()
       }
     }
+
     return { bodies: this.bodies, missiles: this.missiles }
   }
 
@@ -244,6 +256,7 @@ export class Anybody extends EventEmitter {
     this.startingBodies += 1
     this.missiles = []
     this.bodies = []
+    this.witheringBodies = []
     this.generateBodies()
   }
 
