@@ -1,7 +1,7 @@
-import hre from 'hardhat'
-import { assert } from 'chai'
-import { _calculateTime } from '../src/calculations.js'
-// const { describe, it, before } = require('mocha')
+// import hre from 'hardhat'
+// import { assert } from 'chai'
+// import { _calculateTime } from '../src/calculations.js'
+import {wasm as wasm_tester } from "circom_tester";
 
 describe('acceptableMarginOfError circuit', () => {
   let circuit
@@ -14,31 +14,19 @@ describe('acceptableMarginOfError circuit', () => {
   const sanityCheck = true
 
   before(async () => {
-    console.log('before 2)')
-    circuit = await hre.circuitTest.setup('acceptableMarginOfError')
+    circuit = await wasm_tester('circuits/acceptableMarginOfError.circom')
   })
 
   it('produces a witness with valid constraints', async () => {
-    console.log('before 3')
     const witness = await circuit.calculateWitness(sampleInput, sanityCheck)
     // get the number of inputs
-    const inputs = Object.keys(sampleInput).length
-    const perStep = witness.length - inputs
-    const secRounded = _calculateTime(perStep)
-    console.log(`| acceptableMarginOfError(60) | ${perStep} | ${secRounded} |`)
+    // const inputs = Object.keys(sampleInput).length
+    // const perStep = witness.length - inputs
+    // const secRounded = _calculateTime(perStep)
+    // console.log(`| acceptableMarginOfError(60) | ${perStep} | ${secRounded} |`)
     await circuit.checkConstraints(witness)
   })
 
-  it('has expected witness values', async () => {
-    const witness = await circuit.calculateLabeledWitness(
-      sampleInput,
-      sanityCheck
-    )
-    assert.propertyVal(witness, 'main.expected', sampleInput.expected)
-    assert.propertyVal(witness, 'main.actual', sampleInput.actual)
-    assert.propertyVal(witness, 'main.marginOfError', sampleInput.marginOfError)
-    assert.propertyVal(witness, 'main.out', '1')
-  })
 
   it('has the correct output', async () => {
     const expected = { out: 1 }

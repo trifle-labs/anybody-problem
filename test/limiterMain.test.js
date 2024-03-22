@@ -1,9 +1,5 @@
-// const hre = require('hardhat')
-import hre from 'hardhat'
-// const { assert } = require('chai')
-import index from '../docs/index.cjs'
-const { calculateTime } = index
-// const { describe, it, before } = require('mocha')
+// import hre from 'hardhat'
+import {wasm as wasm_tester } from "circom_tester";
 
 describe('limiterMain circuit', () => {
   let circuit
@@ -37,7 +33,7 @@ describe('limiterMain circuit', () => {
   const sanityCheck = true
 
   before(async () => {
-    circuit = await hre.circuitTest.setup('limiterMain')
+    circuit = await wasm_tester('circuits/limiterMain.circom')
   })
 
   it('produces a witness with valid constraints', async () => {
@@ -45,25 +41,11 @@ describe('limiterMain circuit', () => {
       sampleInputs[0].sampleInput,
       sanityCheck
     )
-    const inputs = Object.keys(sampleInputs[0].sampleInput).length
-    const perStep = witness.length - inputs
-    const secRounded = calculateTime(perStep)
-    console.log(`| limiter(252) | ${perStep} | ${secRounded}|`)
+    // const inputs = Object.keys(sampleInputs[0].sampleInput).length
+    // const perStep = witness.length - inputs
+    // const secRounded = calculateTime(perStep)
+    // console.log(`| limiter(252) | ${perStep} | ${secRounded}|`)
     await circuit.checkConstraints(witness)
-  })
-
-  it('has expected witness values', async () => {
-    // const witness = await circuit.calculateLabeledWitness(
-    //   sampleInputs[0].sampleInput,
-    //   sanityCheck
-    // )
-    // assert.propertyVal(witness, "main.x1", sampleInput.x1);
-    // assert.propertyVal(witness, "main.x2", sampleInput.x2);
-    // assert.propertyVal(witness, "main.x3", sampleInput.x3);
-    // assert.propertyVal(witness, "main.x4", sampleInput.x4);
-    // assert.propertyVal(witness, "main.y1", undefined);
-    // assert.propertyVal(witness, "main.y2", undefined);
-    // assert.propertyVal(witness, "main.out", "3");
   })
 
   it('has the correct output', async () => {

@@ -39,7 +39,7 @@ describe('Metadata Tests', function () {
       return buff.toString('utf-8')
     }
 
-    const svgString = prettier.format(base64ToString(svg), { parser: 'html' })
+    const svgString = await prettier.format(base64ToString(svg), { parser: 'html' })
 
     fs.writeFileSync('test.svg', svgString)
   })

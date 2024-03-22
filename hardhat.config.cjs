@@ -1,4 +1,3 @@
-require('hardhat-circom')
 require('@nomiclabs/hardhat-waffle')
 require('hardhat-gas-reporter')
 require('hardhat-contract-sizer')
@@ -96,78 +95,6 @@ const config = {
     disambiguatePaths: true,
     runOnCompile: true,
     strict: true
-  },
-  circom: {
-    inputBasePath: './circuits',
-    ptau: 'https://hermez.s3-eu-west-1.amazonaws.com/powersOfTau28_hez_final_20.ptau',
-    circuits: [
-      {
-        name: 'absoluteValueSubtraction'
-        // No protocol, so it defaults to groth16
-      },
-      {
-        name: 'acceptableMarginOfError'
-        // No protocol, so it defaults to groth16
-      },
-      {
-        name: 'calculateForceMain'
-        // No protocol, so it defaults to groth16
-      },
-      {
-        name: 'detectCollisionMain'
-        // No protocol, so it defaults to groth16
-      },
-      {
-        name: 'forceAccumulatorMain'
-        // No protocol, so it defaults to groth16
-      },
-      {
-        name: 'getDistanceMain'
-        // No protocol, so it defaults to groth16
-      },
-      {
-        name: 'limiterMain'
-        // No protocol, so it defaults to groth16
-      },
-      {
-        name: 'lowerLimiterMain'
-        // No protocol, so it defaults to groth16
-      },
-      {
-        name: 'nftTest'
-        // No protocol, so it defaults to groth16
-      },
-      {
-        name: 'nftProd'
-        // No protocol, so it defaults to groth16
-      },
-      {
-        name: 'stepStateTest'
-        // No protocol, so it defaults to groth16
-      }
-      // {
-      //   name: "division",
-      //   // No protocol, so it defaults to groth16
-      // },
-      // {
-      //   name: "simple-polynomial",
-      //   // Generate PLONK
-      //   protocol: "plonk",
-      // },
-      // {
-      //   name: "hash",
-      //   // Explicitly generate groth16
-      //   protocol: "groth16",
-      // },
-    ]
   }
 }
-
-for (let i = 3; i <= 10; i++) {
-  config.circom.circuits.push({
-    name: `nft_${i}_20`
-    // No protocol, so it defaults to groth16
-  })
-}
-
 module.exports = config

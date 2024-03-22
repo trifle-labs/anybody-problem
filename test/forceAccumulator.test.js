@@ -1,17 +1,10 @@
-// const hre = require('hardhat')
-import hre from 'hardhat'
-// const { assert } = require('chai')
-// const { describe, it, before } = require('mocha')
+// import hre from 'hardhat'
 
-// const {
-//   calculateTime,
-//   convertScaledStringArrayToBody,
-//   convertScaledBigIntBodyToArray,
-//   forceAccumulatorBigInts
-// } = require('../docs/index.cjs')
 import index from '../docs/index.cjs'
+import {wasm as wasm_tester } from "circom_tester";
+
 const {
-  calculateTime,
+  // calculateTime,
   convertScaledStringArrayToBody,
   convertScaledBigIntBodyToArray,
   forceAccumulatorBigInts
@@ -32,32 +25,19 @@ describe('forceAccumulatorMain circuit', () => {
   const sanityCheck = true
 
   before(async () => {
-    circuit = await hre.circuitTest.setup('forceAccumulatorMain')
+    circuit = await wasm_tester('circuits/forceAccumulatorMain.circom')
   })
 
   it('produces a witness with valid constraints', async () => {
     const witness = await circuit.calculateWitness(sampleInput, sanityCheck)
-    const inputs = sampleInput.bodies.length * sampleInput.bodies[0].length
-    const perStep = witness.length - inputs
-    const secRounded = calculateTime(perStep)
-    console.log(`| forceAccumulator(3) | ${perStep} | ${secRounded} |`)
+    // const inputs = sampleInput.bodies.length * sampleInput.bodies[0].length
+    // const perStep = witness.length - inputs
+    // const secRounded = calculateTime(perStep)
+    // console.log(`| forceAccumulator(3) | ${perStep} | ${secRounded} |`)
     await circuit.checkConstraints(witness)
   })
 
-  it.skip('has expected witness values', async () => {
-    const witness = await circuit.calculateLabeledWitness(
-      sampleInput,
-      sanityCheck
-    )
-    console.log({ witness })
-
-    // assert.propertyVal(witness, "main.squared", sampleInput.squared);
-    // assert.propertyVal(witness, "main.calculatedRoot", sampleInput.calculatedRoot);
-    // assert.propertyVal(witness, "main.calculatedSquared", (sampleInput.calculatedRoot ** 2).toString())
-    // assert.propertyVal(witness, "main.out", "1");
-  })
-
-  it.skip('has the correct output', async () => {
+  it('has the correct output', async () => {
     const bodies = sampleInput.bodies.map(convertScaledStringArrayToBody)
     // console.dir({ bodies }, { depth: null })
 
