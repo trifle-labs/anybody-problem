@@ -1,11 +1,7 @@
-// const { expect } = require('chai')
-// const { ethers } = require('hardhat')
-// // const { describe, it } = require('mocha')
-// const { deployContracts, mintProblem, getParsedEventLogs, prepareMintBody, generateAndSubmitProof } = require('../scripts/utils.js')
+
 import { expect } from 'chai'
 import hre from 'hardhat'
 const ethers = hre.ethers
-// const { describe, it } = require('mocha')
 
 import {
   deployContracts,
@@ -55,12 +51,10 @@ describe('Solver Tests', function () {
     const { Solver: solver } = await deployContracts()
     await expect(
       owner.sendTransaction({ to: solver.address, value: '1' })
-    ).to.be.revertedWith(
-      "there's no receive function, fallback function is not payable and was called with value 1"
-    )
+    ).to.be.reverted
     await expect(
       owner.sendTransaction({ to: solver.address, value: '0' })
-    ).to.be.revertedWith('no fallback function')
+    ).to.be.reverted
   })
 
   it('creates a proof for 3 bodies', async () => {

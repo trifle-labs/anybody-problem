@@ -111,7 +111,6 @@ export class Anybody extends EventEmitter {
   init() {
     if (this.seed == undefined) {
       this.seed = BigInt(Math.floor(Math.random() * 10000))
-      console.log({ seed: this.seed })
     }
     _validateSeed(this.seed)
     this.rng = new Prando(this.seed.toString(16))

@@ -1,10 +1,11 @@
-import hre from 'hardhat'
+// import hre from 'hardhat'
 // import { assert } from 'chai';
 // import { describe, it, before } from 'mocha';
+import {wasm as wasm_tester } from "circom_tester";
 
 import index from '../docs/index.cjs'
 const {
-  calculateTime,
+  // calculateTime,
   detectCollisionBigInt,
   convertScaledStringArrayToBody,
   convertScaledBigIntBodyToArray
@@ -30,32 +31,22 @@ describe('detectCollisionMain circuit', () => {
   const sanityCheck = true
 
   before(async () => {
-    circuit = await hre.circuitTest.setup('detectCollisionMain')
+    circuit = await wasm_tester('circuits/detectCollisionMain.circom')
   })
 
   it('produces a witness with valid constraints', async () => {
     const witness = await circuit.calculateWitness(sampleInput, sanityCheck)
-    const inputs =
-      sampleInput.bodies.length * sampleInput.bodies[0].length +
-      sampleInput.missile.length
-    const perStep = witness.length - inputs
-    const secRounded = calculateTime(perStep)
-    console.log(`| detectCollision(3) | ${perStep} | ${secRounded} |`)
+    // const inputs =
+    //   sampleInput.bodies.length * sampleInput.bodies[0].length +
+    //   sampleInput.missile.length
+    // const perStep = witness.length - inputs
+    // const secRounded = calculateTime(perStep)
+    // console.log(`| detectCollision(3) | ${perStep} | ${secRounded} |`)
     await circuit.checkConstraints(witness)
   })
 
-  it('has expected witness values', async () => {
-    // const witness = await circuit.calculateLabeledWitness(
-    //   sampleInput,
-    //   sanityCheck
-    // )
-    // assert.propertyVal(witness, "main.squared", sampleInput.squared);
-    // assert.propertyVal(witness, "main.calculatedRoot", sampleInput.calculatedRoot);
-    // assert.propertyVal(witness, "main.calculatedSquared", (sampleInput.calculatedRoot ** 2).toString())
-    // assert.propertyVal(witness, "main.out", "1");
-  })
 
-  it.skip('has the correct output', async () => {
+  it('has the correct output', async () => {
     const bodiesBefore = []
     for (let i = 0; i < sampleInput.bodies.length; i++) {
       bodiesBefore.push(convertScaledStringArrayToBody(jsSampleInput.bodies[i]))

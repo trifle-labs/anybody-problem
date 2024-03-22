@@ -129,59 +129,108 @@ You should see something like:
 
 ```bash
   absoluteValueSubtraction circuit
-    ✔ produces a witness with valid constraints (97ms)
-    ✔ has expected witness values
-    ✔ has the correct output (53ms)
-
-  acceptableMarginOfError circuit
-    ✔ produces a witness with valid constraints (145ms)
-    ✔ has expected witness values
+    ✔ produces a witness with valid constraints
     ✔ has the correct output
 
+  acceptableMarginOfError circuit
+    ✔ produces a witness with valid constraints
+    ✔ has the correct output
+
+  Bodies Tests
+    ✔ has the correct bodies, tocks addresses
+    ✔ onlyOwner functions are really only Owner
+    ✔ updates tock price correctly
+    ✔ has all the correct interfaces
+    ✔ fallback and receive functions revert
+    ✔ onlyProblem functions can only be called by Problems address
+    ✔ matches seeds between Bodies and Problems contracts
+    ✔ mints a new body after receiving Tocks
+    ✔ fails when you try to mint a body for a problem you do not own
+    ✔ validate second mint event
+    ✔ succeeds adding a body into a problem
+    ✔ removes a body that was added into a problem
+    ✔ mints a body, adds it to a problem, then mints another body
+    - combines two bodies correctly
+    ✔ fails to mint an 11th body
+
   calculateForceMain circuit
-    ✔ produces a witness with valid constraints (1076ms)
-    ✔ has expected witness values (43ms)
+    ✔ produces a witness with valid constraints
     ✔ has the correct output
 
   detectCollisionMain circuit
-    ✔ produces a witness with valid constraints (855ms)
-    ✔ has expected witness values
+    ✔ produces a witness with valid constraints
     ✔ has the correct output
 
   forceAccumulatorMain circuit
-    ✔ produces a witness with valid constraints (232ms)
-    ✔ has expected witness values (53ms)
+    ✔ produces a witness with valid constraints
     ✔ has the correct output
 
   getDistanceMain circuit
-    ✔ produces a witness with valid constraints (898ms)
-    ✔ has expected witness values (90ms)
-    ✔ has the correct output (41ms)
+    ✔ produces a witness with valid constraints
+    ✔ has the correct output
 
   limiterMain circuit
-    ✔ produces a witness with valid constraints (95ms)
-    ✔ has expected witness values
-    ✔ has the correct output (57ms)
+    ✔ produces a witness with valid constraints
+    ✔ has the correct output
 
   lowerLimiterMain circuit
-    ✔ produces a witness with valid constraints (975ms)
-    ✔ has expected witness values
-    ✔ has the correct output (48ms)
+    ✔ produces a witness with valid constraints
+    ✔ has the correct output
+
+  Metadata Tests
+    ✔ has the correct problems address
+    ✔ onlyOwner functions are really only Owner
+    ✔ creates an SVG
 
   nft circuit
-    ✔ produces a witness with valid constraints (1043ms)
-    ✔ has expected witness values (324ms)
-    ✔ has the correct output (185ms)
+    ✔ produces a witness with valid constraints
+    ✔ has the correct output
+    ✔ NftVerifier.sol works
 
-  stepStateMain circuit
-    ✔ produces a witness with valid constraints (1520ms)
-    ✔ has expected witness values (485ms)
-    ✔ has the correct output (238ms)
+  Problem Tests
+    ✔ has the correct verifiers metadata, bodies, tocks, solver addresses
+    ✔ onlyOwner functions are really only Owner
+    ✔ onlySolver functions are really only Solver
+    ✔ has all the correct interfaces
+    ✔ emits 'EthMoved' events when eth is moved
+    ✔ fails when unitialized
+    ✔ fails to adminMint when uninitialized
+    ✔ fails to adminMint when not owner
+    - sends money to splitter correctly
+    ✔ must be unpaused
+    ✔ succeeds to mint
+    ✔ succeeds to mint with fallback method
+    ✔ succeeds to mint with explicit recipient
+    ✔ token ID is correctly correlated
+    ✔ validate second mint event
+    ✔ checks whether mint fails with wrong price and succeeds even when price = 0
+    ✔ adminMint from owner address
+    ✔ stores the verifiers in the correct order of the mapping
+    ✔ mints bodies that contain valid values
+    ✔ mints a body via mintBodyToProblem
 
+  Solver Tests
+    ✔ has the correct problems, tocks addresses
+    ✔ onlyOwner functions are really only Owner
+    ✔ fallback and receive functions revert
+    ✔ creates a proof for 3 bodies
+    ✔ creates multiple proofs in a row
+    ✔ creates proofs for multiple bodies
+    ✔ has the correct body boost amount
+    ✔ adds a body, removes a body, creates a proof
+    - adds two bodies, removes first body, creates a proof
 
-  30 passing (28s)
+  stepStateTest circuit
+    ✔ produces a witness with valid constraints
+    ✔ has the correct output
 
-✨  Done in 30.33s.
+  Utilities work as expected
+    ✔ should only allow valid seeds
+
+  66 passing (1m)
+  3 pending
+
+✨  Done in 64.01s.
 ```
 
 ## Performance
