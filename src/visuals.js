@@ -1,30 +1,14 @@
-import { WITHERING_STEPS, MAX_LIFE, stepWithering } from './life.js'
+import { WITHERING_STEPS, stepWithering } from './life.js'
 
 export const Visuals = {
   async draw() {
-    const isNotFirstFrame = this.frames !== 0
-    const notPaused = !this.paused
-    const framesIsAtStopEveryInterval = this.frames % this.stopEvery == 0
-    const didNotJustPause = !this.justPaused
-    if (
-      isNotFirstFrame &&
-      notPaused &&
-      framesIsAtStopEveryInterval &&
-      didNotJustPause
-    ) {
-      if (didNotJustPause) {
-        this.finish()
-      }
-      if (this.optimistic) {
-        this.started()
-      }
-    } else {
-      this.justPaused = false
-    }
     if (!this.showIt) return
 
+    const enoughBodies = this.bodies.filter((b) => !b.life || b.life > 0).length >= 3
+
+
     // when there are 3 or more bodies, step the simulation
-    if (this.bodies.filter((b) => !b.life || b.life > 0).length >= 3) {
+    if (enoughBodies) {
       this.frames++
       const results = this.step(this.bodies, this.missiles)
       this.bodies = results.bodies || []
@@ -53,6 +37,27 @@ export const Visuals = {
     // this.drawBodyOutlines()
 
     this.drawScore()
+
+    const isNotFirstFrame = this.frames !== 0
+    const notPaused = !this.paused
+    const framesIsAtStopEveryInterval = this.frames % this.stopEvery == 0
+    const didNotJustPause = !this.justPaused
+    if (
+      isNotFirstFrame &&
+      notPaused &&
+      framesIsAtStopEveryInterval &&
+      didNotJustPause
+    ) {
+      if (didNotJustPause && enoughBodies) {
+        this.finish()
+      }
+      if (this.optimistic && enoughBodies) {
+        this.started()
+      }
+    } else {
+      this.justPaused = false
+    }
+
   },
   drawBodyOutlines() {
     for (let i = 0; i < this.bodies.length; i++) {
@@ -276,9 +281,10 @@ export const Visuals = {
       this.p.fill('white')
       // this.p.rect(0, 0, 50, 20)
       // this.p.fill(this.getNotGrey())
-      this.p.textAlign(this.p.RIGHT) // Right-align the text
-      this.p.text(`${this.preRun + this.frames} t`, 65, 25) // Adjust the x-coordinate to align the text
-      this.p.text(`${this.frameRate().toFixed(2)} fps`, 65, 45)
+      this.p.textSize(50)
+      this.p.textAlign(this.p.LEFT) // Right-align the text
+      this.p.text(`${this.frames} t`, 65, 50) // Adjust the x-coordinate to align the text
+      this.p.text(`${this.frameRate().toFixed(2)} fps`, 65, 100)
     } else {
       this.p.fill('white')
       this.p.rect(0, 0, 50, 20)
@@ -295,16 +301,16 @@ export const Visuals = {
       this.p.text('Total Shots: ' + this.missileCount, 50, 30) // Adjust the x-coordinate to align the text
       this.p.text(
         'Lvl ' +
-          (this.startingBodies - 2) +
-          ' - ' +
-          thisLevelSecondsAsTime +
-          ' - ' +
-          (this.startingBodies - this.bodies.length) +
-          '/' +
-          this.startingBodies +
-          ' - ' +
-          this.thisLevelMissileCount +
-          ' shots',
+        (this.startingBodies - 2) +
+        ' - ' +
+        thisLevelSecondsAsTime +
+        ' - ' +
+        (this.startingBodies - this.bodies.length) +
+        '/' +
+        this.startingBodies +
+        ' - ' +
+        this.thisLevelMissileCount +
+        ' shots',
         50,
         40
       ) // Adjust the x-coordinate to align the text
@@ -315,12 +321,12 @@ export const Visuals = {
           .substr(14, 5)
         this.p.text(
           'Lvl ' +
-            (this.allLevelSec.length - i) +
-            ' - ' +
-            prevLevelSecondsAsTime +
-            ' - ' +
-            prevLevel.thisLevelMissileCount +
-            ' shots',
+          (this.allLevelSec.length - i) +
+          ' - ' +
+          prevLevelSecondsAsTime +
+          ' - ' +
+          prevLevel.thisLevelMissileCount +
+          ' shots',
           50,
           i * 10 + 50
         ) // Adjust the x-coordinate to align the text
@@ -439,10 +445,10 @@ export const Visuals = {
     var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
     return result
       ? {
-          r: parseInt(result[1], 16),
-          g: parseInt(result[2], 16),
-          b: parseInt(result[3], 16)
-        }
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+      }
       : null
   },
 
@@ -557,8 +563,9 @@ export const Visuals = {
 
     // hp in white text
     this.bodiesGraphic.fill('white')
-    this.bodiesGraphic.textSize(radius / 8)
+    this.bodiesGraphic.textSize(radius / 4)
     this.bodiesGraphic.textAlign(this.p.CENTER, this.p.CENTER)
+    // this.bodiesGraphic.text(body.life, 0, radius)
   },
 
   drawBodyStyle1(radius, body) {

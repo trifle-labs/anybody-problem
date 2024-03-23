@@ -10,6 +10,17 @@ import {
   mintProblem,
   generateAndSubmitProof
 } from '../scripts/utils.js'
+const proverTickIndex = {
+  3: 500,
+  4: 100,
+  5: 100,
+  6: 100,
+  7: 100,
+  8: 100,
+  9: 50,
+  10: 50,
+}
+
 // let tx
 describe('Solver Tests', function () {
   this.timeout(50000000)
@@ -57,8 +68,7 @@ describe('Solver Tests', function () {
     ).to.be.reverted
   })
 
-  it('creates a proof for 3 bodies', async () => {
-    const ticksRun = 20
+  it.only('creates a proof for 3 bodies', async () => {
 
     const signers = await ethers.getSigners()
     const deployedContracts = await deployContracts()
@@ -77,6 +87,8 @@ describe('Solver Tests', function () {
       const body = await problems.getProblemBodyData(problemId, bodyId)
       bodyData.push(body)
     }
+
+    const ticksRun = proverTickIndex[bodyCount.toNumber()]
 
     const { tx, bodyFinal } = await generateAndSubmitProof(
       expect,
@@ -121,7 +133,7 @@ describe('Solver Tests', function () {
   })
 
   it('creates multiple proofs in a row', async () => {
-    const ticksRun = 20
+
 
     const signers = await ethers.getSigners()
     const deployedContracts = await deployContracts()
@@ -133,7 +145,7 @@ describe('Solver Tests', function () {
     const { problemId } = await mintProblem(signers, deployedContracts)
 
     const { bodyCount, tickCount } = await problems.problems(problemId)
-
+    const ticksRun = proverTickIndex[bodyCount.toNumber()]
     const totalTicks = 2 * ticksRun
     let totalTockCount = ethers.BigNumber.from(0),
       runningTickCount = tickCount
@@ -194,7 +206,6 @@ describe('Solver Tests', function () {
     expect(newTickCount).to.equal(runningTickCount)
   })
   it('creates proofs for multiple bodies', async () => {
-    const ticksRun = 20
 
     const signers = await ethers.getSigners()
     const deployedContracts = await deployContracts()
@@ -225,6 +236,7 @@ describe('Solver Tests', function () {
         const body = await problems.getProblemBodyData(problemId, bodyId)
         bodyData.push(body)
       }
+      const ticksRun = proverTickIndex[bodyCount.toNumber()]
       // console.log({ bodyData })
       let { tx, bodyFinal } = await generateAndSubmitProof(
         expect,
@@ -318,7 +330,6 @@ describe('Solver Tests', function () {
     }
   })
   it('adds a body, removes a body, creates a proof', async () => {
-    const ticksRun = 20
     const signers = await ethers.getSigners()
     const deployedContracts = await deployContracts()
     const {
@@ -354,8 +365,10 @@ describe('Solver Tests', function () {
       const body = await problems.getProblemBodyData(problemId, bodyId)
       bodyData.push(body)
     }
+    const ticksRun = proverTickIndex[bodyCount.toNumber()];
+
     // console.log({ bodyData })
-    ;({ tx } = await generateAndSubmitProof(
+    ; ({ tx } = await generateAndSubmitProof(
       expect,
       deployedContracts,
       problemId,
@@ -380,7 +393,7 @@ describe('Solver Tests', function () {
       bodyData.push(body)
     }
     // console.log({ bodyData })
-    ;({ tx } = await generateAndSubmitProof(
+    ; ({ tx } = await generateAndSubmitProof(
       expect,
       deployedContracts,
       problemId,
@@ -420,5 +433,5 @@ describe('Solver Tests', function () {
       expect(e).to.be.an('error')
     }
   })
-  it.skip('adds two bodies, removes first body, creates a proof', async () => {})
+  it.skip('adds two bodies, removes first body, creates a proof', async () => { })
 })

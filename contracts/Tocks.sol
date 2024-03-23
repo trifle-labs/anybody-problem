@@ -22,7 +22,7 @@ contract Tocks is ERC20, Ownable {
     constructor(
         address payable problems_,
         address bodies_
-    ) ERC20("Tocks", "TICK") {
+    ) ERC20("Tocks", "TOCK") {
         updateProblemsAddress(problems_);
         updateBodiesAddress(bodies_);
     }

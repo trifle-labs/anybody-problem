@@ -115,15 +115,27 @@ const deployContracts = async () => {
   const verifiersTicks = []
   const verifiersBodies = []
 
+  const proofSizeKey = {
+    3: 500,
+    4: 100,
+    5: 100,
+    6: 100,
+    7: 100,
+    8: 100,
+    9: 50,
+    10: 50
+  }
+
   for (let i = 3; i <= 10; i++) {
-    const name = `Nft_${i}_20Verifier`
+    const ticks = proofSizeKey[i]
+    const name = `Nft_${i}_${ticks}Verifier`
     const path = `contracts/${name}.sol:Groth16Verifier`
     const verifier = await hre.ethers.getContractFactory(path)
     const verifierContract = await verifier.deploy()
     await verifierContract.deployed()
     !testing && log(`Verifier ${i} deployed at ${verifierContract.address}`)
     verifiers.push(verifierContract.address)
-    verifiersTicks.push(20)
+    verifiersTicks.push(ticks)
     verifiersBodies.push(i)
     returnObject[name] = verifierContract
   }
@@ -150,8 +162,8 @@ const deployContracts = async () => {
   !testing &&
     log(
       'Problems Deployed at ' +
-        String(problemsAddress) +
-        ` with metadata ${metadataAddress} and verifiers ${verifiers} and verifiersTicks ${verifiersTicks} and verifiersBodies ${verifiersBodies}`
+      String(problemsAddress) +
+      ` with metadata ${metadataAddress} and verifiers ${verifiers} and verifiersTicks ${verifiersTicks} and verifiersBodies ${verifiersBodies}`
     )
 
   // deploy Bodies
@@ -258,7 +270,7 @@ const verifyContracts = async (returnObject) => {
         constructorArguments: verificationData[i].constructorArguments
       })
     } catch (e) {
-      log({ e })
+      log({ e, verificationData: verificationData[i] })
     }
   }
 }
@@ -333,11 +345,11 @@ const generateProof = async (seed, bodyCount, ticksRun, bodyData) => {
     seed,
     util: true
   })
-
-  const inputData = { bodies: anybody.bodyInits }
+  anybody.storeInits()
   anybody.runSteps(ticksRun)
   anybody.calculateBodyFinal()
 
+  const inputData = { bodies: anybody.bodyInits }
   const bodyFinal = anybody.bodyFinal
   // const startTime = Date.now()
   const dataResult = await exportCallDataGroth16(
@@ -372,7 +384,14 @@ const generateAndSubmitProof = async (
 ) => {
   const { Problems: problems, Solver: solver } = deployedContracts
   const { seed } = await problems.problems(problemId)
-
+  console.log({
+    expect,
+    deployedContracts,
+    problemId,
+    bodyCount,
+    ticksRun,
+    bodyData
+  })
   const { inputData, bodyFinal, dataResult } = await generateProof(
     seed,
     bodyCount,

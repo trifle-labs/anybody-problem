@@ -188,6 +188,9 @@ contract Solver is Ownable {
                 bodyIds[i]
             );
 
+            // This should revert if the tickCount is greater than the life
+            bodyData.life = bodyData.life - tickCount;
+
             // px
             // confirm previously stored values were used as input to the proof
             // uint256 pxIndex = 5 * numberOfBodies + i * 5 + 0;

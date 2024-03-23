@@ -33,6 +33,7 @@ export class Anybody extends EventEmitter {
       clearBG: true,
       colorStyle: '!squiggle', // squiggle or !squiggle
       preRun: 0,
+      alreadyRun: 0,
       paintSteps: 0,
       chunk: 1,
       mute: true,
@@ -61,6 +62,7 @@ export class Anybody extends EventEmitter {
     this.admin = mergedOptions.admin
     this.clearBG = mergedOptions.clearBG
     this.colorStyle = mergedOptions.colorStyle
+    this.alreadyRun = mergedOptions.alreadyRun
     this.preRun = mergedOptions.preRun
     this.paintSteps = mergedOptions.paintSteps
     this.chunk = mergedOptions.chunk
@@ -115,8 +117,8 @@ export class Anybody extends EventEmitter {
     _validateSeed(this.seed)
     this.rng = new Prando(this.seed.toString(16))
     this.generateBodies()
+    this.frames = this.alreadyRun
     // const vectorLimitScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
-    this.storeInits()
     this.setPause(this.paused)
   }
 
@@ -124,15 +126,17 @@ export class Anybody extends EventEmitter {
     this.addListener()
     this.startTick()
     this.runSteps(this.preRun)
-    this.paintAtOnce(this.paintSteps)
+    // this.paintAtOnce(this.paintSteps)
     if (this.freeze) {
       this.setPause(true)
     }
+    this.storeInits()
+
   }
 
   storeInits() {
-    // console.log('storeInits')
-    // console.dir({ bodies: this.bodies }, { depth: null })
+    console.log('storeInits')
+    console.dir({frames: this.frames, bodies: this.bodies.map(b => (b.position.x, b.position.y)) }, { depth: null })
     this.bodyInits = this.convertBodiesToBigInts(this.bodies).map((b) => {
       // console.log({ b1: b })
       b = this.convertScaledBigIntBodyToArray(b)
@@ -157,6 +161,7 @@ export class Anybody extends EventEmitter {
         // n > 0 && console.log(`${n.toLocaleString()} runs`)
       } else {
         const results = this.step(this.bodies, this.missiles)
+        this.frames++
         this.bodies = results.bodies
         this.missiles = results.missiles || []
       }
@@ -225,22 +230,21 @@ export class Anybody extends EventEmitter {
     var results = this.detectCollision(this.bodies, this.missiles)
     this.bodies = results.bodies
     this.missiles = results.missiles || []
-
+    
     if (this.missiles.length > 0 && this.missiles[0].radius == 0) {
       this.missiles.splice(0, 1)
     }
-
+    
     if (
       this.mode == 'game' &&
       this.bodies.reduce((a, c) => a + c.radius, 0) == 0
-    ) {
-      // this.nextLevel()
-      // this.paused = true
-      if (!this.finished) {
-        this.finish()
+      ) {
+        // this.nextLevel()
+        // this.paused = true
+        if (!this.finished) {
+          this.finish()
+        }
       }
-    }
-
     return { bodies: this.bodies, missiles: this.missiles }
   }
 
@@ -320,6 +324,7 @@ export class Anybody extends EventEmitter {
           position: this.createVector(px, py),
           velocity: this.createVector(vx, vy),
           radius: radius,
+          life: b.life.toNumber(),
           c: this.colorArrayToTxt(this.randomColor(0, 200, bodyRNG))
         }
       })
