@@ -1,11 +1,26 @@
 import { WITHERING_STEPS, stepWithering } from './life.js'
 
+const FACE_PNGS = [
+  new URL('../public/faces/face1.png', import.meta.url).href,
+  new URL('../public/faces/face2.png', import.meta.url).href,
+  new URL('../public/faces/face3.png', import.meta.url).href,
+  new URL('../public/faces/face4.png', import.meta.url).href,
+  new URL('../public/faces/face5.png', import.meta.url).href,
+  new URL('../public/faces/face6.png', import.meta.url).href,
+  new URL('../public/faces/face7.png', import.meta.url).href,
+  new URL('../public/faces/face8.png', import.meta.url).href,
+  new URL('../public/faces/face9.png', import.meta.url).href,
+  new URL('../public/faces/face10.png', import.meta.url).href,
+  new URL('../public/faces/face11.png', import.meta.url).href,
+  new URL('../public/faces/face12.png', import.meta.url).href
+]
+
 export const Visuals = {
   async draw() {
     if (!this.showIt) return
 
-    const enoughBodies = this.bodies.filter((b) => !b.life || b.life > 0).length >= 3
-
+    const enoughBodies =
+      this.bodies.filter((b) => !b.life || b.life > 0).length >= 3
 
     // when there are 3 or more bodies, step the simulation
     if (enoughBodies) {
@@ -57,7 +72,6 @@ export const Visuals = {
     } else {
       this.justPaused = false
     }
-
   },
   drawBodyOutlines() {
     for (let i = 0; i < this.bodies.length; i++) {
@@ -301,16 +315,16 @@ export const Visuals = {
       this.p.text('Total Shots: ' + this.missileCount, 50, 30) // Adjust the x-coordinate to align the text
       this.p.text(
         'Lvl ' +
-        (this.startingBodies - 2) +
-        ' - ' +
-        thisLevelSecondsAsTime +
-        ' - ' +
-        (this.startingBodies - this.bodies.length) +
-        '/' +
-        this.startingBodies +
-        ' - ' +
-        this.thisLevelMissileCount +
-        ' shots',
+          (this.startingBodies - 2) +
+          ' - ' +
+          thisLevelSecondsAsTime +
+          ' - ' +
+          (this.startingBodies - this.bodies.length) +
+          '/' +
+          this.startingBodies +
+          ' - ' +
+          this.thisLevelMissileCount +
+          ' shots',
         50,
         40
       ) // Adjust the x-coordinate to align the text
@@ -321,12 +335,12 @@ export const Visuals = {
           .substr(14, 5)
         this.p.text(
           'Lvl ' +
-          (this.allLevelSec.length - i) +
-          ' - ' +
-          prevLevelSecondsAsTime +
-          ' - ' +
-          prevLevel.thisLevelMissileCount +
-          ' shots',
+            (this.allLevelSec.length - i) +
+            ' - ' +
+            prevLevelSecondsAsTime +
+            ' - ' +
+            prevLevel.thisLevelMissileCount +
+            ' shots',
           50,
           i * 10 + 50
         ) // Adjust the x-coordinate to align the text
@@ -445,10 +459,10 @@ export const Visuals = {
     var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
     return result
       ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16)
-      }
+          r: parseInt(result[1], 16),
+          g: parseInt(result[2], 16),
+          b: parseInt(result[3], 16)
+        }
       : null
   },
 
@@ -479,21 +493,19 @@ export const Visuals = {
     this.ghostEyes(radius)
   },
 
-  // drawPngFace(x, y, v, radius) {
-
-  //   if (!this.faceLoading && !this.face) {
-  //     this.faceLoading = true
-  //     import('../public/3.png').then((png3) => {
-  //       console.log({ png3 })
-  //       this.p.loadImage(png3.default, (img) => {
-  //         this.face = img
-  //       })
-  //     })
-  //   }
-  //   if (this.face) {
-  //     this.bodiesGraphic.image(this.face, 0, - radius / 3, radius / 3, radius / 3)
-  //   }
-  // },
+  drawPngFace(radius, body) {
+    this.pngFaces ||= []
+    const face = this.pngFaces[body.bodyIndex]
+    if (!face) {
+      const png = FACE_PNGS[body.bodyIndex]
+      this.p.loadImage(png, (img) => {
+        this.pngFaces[body.bodyIndex] = img
+      })
+    }
+    if (face) {
+      this.bodiesGraphic.image(face, 0, -radius / 3, radius / 3, radius / 3)
+    }
+  },
 
   drawGlyphFace(radius, body) {
     const eyeArray = [
@@ -596,12 +608,12 @@ export const Visuals = {
         this.drawBodyStyle1(radius, body)
     }
 
-    switch (body.faceStyle) {
-      default:
-        this.drawGlyphFace(radius, body)
+    if (body.bodyIndex <= FACE_PNGS.length) {
+      this.drawPngFace(radius, body)
+    } else {
+      this.drawGlyphFace(radius, body)
     }
 
-    // this.drawPngFace(x, y, v, radius, body)
     this.bodiesGraphic.pop()
   },
 
