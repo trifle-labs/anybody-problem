@@ -3,7 +3,7 @@ const { ethers } = hre
 import { expect } from 'chai'
 import { exportCallDataGroth16 } from '../scripts/circuits.js'
 // import { mine } from '@nomicfoundation/hardhat-network-helpers'
-import {wasm as wasm_tester } from "circom_tester";
+import { wasm as wasm_tester } from "circom_tester";
 
 import { Anybody } from '../src/anybody.js'
 // import { _calculateTime } from '../src/calculations.js'
@@ -12,7 +12,7 @@ import { Anybody } from '../src/anybody.js'
 const steps = 20
 
 describe('nft circuit', () => {
-  
+
   let circuit
   // NOTE: velocities are offset by 10_000 to avoid negative numbers
   const sampleInput = {
@@ -22,15 +22,33 @@ describe('nft circuit', () => {
     //   ['679000', '500000', '12290', '12520', '50000']
     // ]
     bodies: [
-      ['523444', '630395', '0', '19433', '13000'],
-      ['570102', '453205', '19804', '367', '12000'],
-      ['268103', '465485', '20000', '20000', '11000']
+      [
+        "924573",
+        "473053",
+        "10000",
+        "10000",
+        "7000"
+      ],
+      [
+        "214411",
+        "120612",
+        "10000",
+        "10000",
+        "7000"
+      ],
+      [
+        "772980",
+        "706368",
+        "10000",
+        "10000",
+        "2000"
+      ]
     ]
   }
   const sanityCheck = true
 
   before(async () => {
-    circuit = await wasm_tester('circuits/nft_3_20.circom')
+    circuit = await wasm_tester(`circuits/nft_3_${steps}.circom`)
   })
 
   it('produces a witness with valid constraints', async () => {
@@ -61,15 +79,15 @@ describe('nft circuit', () => {
 
   it('NftVerifier.sol works', async () => {
     const NftVerifier = await ethers.getContractFactory(
-      'contracts/Nft_3_20Verifier.sol:Groth16Verifier'
+      `contracts/Nft_3_${steps}Verifier.sol:Groth16Verifier`
     )
     const nftVerifier = await NftVerifier.deploy()
     await nftVerifier.deployed()
 
     let dataResult = await exportCallDataGroth16(
       sampleInput,
-      './public/nft_3_20.wasm',
-      './public/nft_3_20_final.zkey'
+      `./public/nft_3_${steps}.wasm`,
+      `./public/nft_3_${steps}_final.zkey`
     )
     let result = await nftVerifier.verifyProof(
       dataResult.a,

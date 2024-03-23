@@ -245,7 +245,6 @@ export class Anybody extends EventEmitter {
           this.finish()
         }
       }
-    }
     return { bodies: this.bodies, missiles: this.missiles }
   }
 
@@ -325,6 +324,7 @@ export class Anybody extends EventEmitter {
           position: this.createVector(px, py),
           velocity: this.createVector(vx, vy),
           radius: radius,
+          life: b.life.toNumber(),
           c: this.colorArrayToTxt(this.randomColor(0, 200, bodyRNG))
         }
       })

@@ -74,6 +74,7 @@ async function main() {
 
   const deployedContracts = await deployContracts()
   for (const contractName in deployedContracts) {
+    if (contractName == 'verificationData') continue
     if (contractName.indexOf('Verifier') > -1) {
       await copyABI(contractName, 'Groth16Verifier')
     } else {
