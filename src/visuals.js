@@ -1,5 +1,20 @@
 import { WITHERING_STEPS, stepWithering } from './life.js'
 
+const FACE_PNGS = [
+  new URL('../public/faces/face1.png', import.meta.url).href,
+  new URL('../public/faces/face2.png', import.meta.url).href,
+  new URL('../public/faces/face3.png', import.meta.url).href,
+  new URL('../public/faces/face4.png', import.meta.url).href,
+  new URL('../public/faces/face5.png', import.meta.url).href,
+  new URL('../public/faces/face6.png', import.meta.url).href,
+  new URL('../public/faces/face7.png', import.meta.url).href,
+  new URL('../public/faces/face8.png', import.meta.url).href,
+  new URL('../public/faces/face9.png', import.meta.url).href,
+  new URL('../public/faces/face10.png', import.meta.url).href,
+  new URL('../public/faces/face11.png', import.meta.url).href,
+  new URL('../public/faces/face12.png', import.meta.url).href
+]
+
 export const Visuals = {
   async draw() {
     if (!this.showIt) return
@@ -478,21 +493,19 @@ export const Visuals = {
     this.ghostEyes(radius)
   },
 
-  // drawPngFace(x, y, v, radius) {
-
-  //   if (!this.faceLoading && !this.face) {
-  //     this.faceLoading = true
-  //     import('../public/3.png').then((png3) => {
-  //       console.log({ png3 })
-  //       this.p.loadImage(png3.default, (img) => {
-  //         this.face = img
-  //       })
-  //     })
-  //   }
-  //   if (this.face) {
-  //     this.bodiesGraphic.image(this.face, 0, - radius / 3, radius / 3, radius / 3)
-  //   }
-  // },
+  drawPngFace(radius, body) {
+    this.pngFaces ||= []
+    const face = this.pngFaces[body.bodyIndex]
+    if (!face) {
+      const png = FACE_PNGS[body.bodyIndex]
+      this.p.loadImage(png, (img) => {
+        this.pngFaces[body.bodyIndex] = img
+      })
+    }
+    if (face) {
+      this.bodiesGraphic.image(face, 0, -radius / 3, radius / 3, radius / 3)
+    }
+  },
 
   drawGlyphFace(radius, body) {
     const eyeArray = [
@@ -595,12 +608,12 @@ export const Visuals = {
         this.drawBodyStyle1(radius, body)
     }
 
-    switch (body.faceStyle) {
-      default:
-        this.drawGlyphFace(radius, body)
+    if (body.bodyIndex <= FACE_PNGS.length) {
+      this.drawPngFace(radius, body)
+    } else {
+      this.drawGlyphFace(radius, body)
     }
 
-    // this.drawPngFace(x, y, v, radius, body)
     this.bodiesGraphic.pop()
   },
 
