@@ -1,7 +1,7 @@
 // import hre from 'hardhat'
 
 import index from '../docs/index.cjs'
-import {wasm as wasm_tester } from "circom_tester";
+import { wasm as wasm_tester } from 'circom_tester'
 
 const {
   // calculateTime,

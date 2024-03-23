@@ -1,7 +1,7 @@
 // import hre from 'hardhat'
 // import { assert } from 'chai';
 // import { describe, it, before } from 'mocha';
-import {wasm as wasm_tester } from "circom_tester";
+import { wasm as wasm_tester } from 'circom_tester'
 
 import index from '../docs/index.cjs'
 const {
@@ -44,7 +44,6 @@ describe('detectCollisionMain circuit', () => {
     // console.log(`| detectCollision(3) | ${perStep} | ${secRounded} |`)
     await circuit.checkConstraints(witness)
   })
-
 
   it('has the correct output', async () => {
     const bodiesBefore = []

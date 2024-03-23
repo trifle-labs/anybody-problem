@@ -1,5 +1,5 @@
 // import hre from 'hardhat'
-import {wasm as wasm_tester } from "circom_tester";
+import { wasm as wasm_tester } from 'circom_tester'
 
 describe('limiterMain circuit', () => {
   let circuit

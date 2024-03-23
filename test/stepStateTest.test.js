@@ -1,7 +1,7 @@
 // import hre from 'hardhat'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
-import {wasm as wasm_tester } from "circom_tester";
+import { wasm as wasm_tester } from 'circom_tester'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 

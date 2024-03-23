@@ -162,8 +162,8 @@ const deployContracts = async () => {
   !testing &&
     log(
       'Problems Deployed at ' +
-      String(problemsAddress) +
-      ` with metadata ${metadataAddress} and verifiers ${verifiers} and verifiersTicks ${verifiersTicks} and verifiersBodies ${verifiersBodies}`
+        String(problemsAddress) +
+        ` with metadata ${metadataAddress} and verifiers ${verifiers} and verifiersTicks ${verifiersTicks} and verifiersBodies ${verifiersBodies}`
     )
 
   // deploy Bodies

@@ -3,7 +3,7 @@ const { ethers } = hre
 import { expect } from 'chai'
 import { exportCallDataGroth16 } from '../scripts/circuits.js'
 // import { mine } from '@nomicfoundation/hardhat-network-helpers'
-import { wasm as wasm_tester } from "circom_tester";
+import { wasm as wasm_tester } from 'circom_tester'
 
 import { Anybody } from '../src/anybody.js'
 // import { _calculateTime } from '../src/calculations.js'
@@ -12,7 +12,6 @@ import { Anybody } from '../src/anybody.js'
 const steps = 20
 
 describe('nft circuit', () => {
-
   let circuit
   // NOTE: velocities are offset by 10_000 to avoid negative numbers
   const sampleInput = {
@@ -22,27 +21,9 @@ describe('nft circuit', () => {
     //   ['679000', '500000', '12290', '12520', '50000']
     // ]
     bodies: [
-      [
-        "924573",
-        "473053",
-        "10000",
-        "10000",
-        "7000"
-      ],
-      [
-        "214411",
-        "120612",
-        "10000",
-        "10000",
-        "7000"
-      ],
-      [
-        "772980",
-        "706368",
-        "10000",
-        "10000",
-        "2000"
-      ]
+      ['924573', '473053', '10000', '10000', '7000'],
+      ['214411', '120612', '10000', '10000', '7000'],
+      ['772980', '706368', '10000', '10000', '2000']
     ]
   }
   const sanityCheck = true

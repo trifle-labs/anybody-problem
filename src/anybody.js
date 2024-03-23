@@ -3,10 +3,7 @@ import Prando from 'prando'
 import EventEmitter from 'events'
 import Sound from './sound.js'
 import { Visuals } from './visuals.js'
-import {
-  _validateSeed,
-  Calculations
-} from './calculations.js'
+import { _validateSeed, Calculations } from './calculations.js'
 import { stepLife, stepWithering } from './life.js'
 
 export class Anybody extends EventEmitter {
@@ -131,12 +128,17 @@ export class Anybody extends EventEmitter {
       this.setPause(true)
     }
     this.storeInits()
-
   }
 
   storeInits() {
     console.log('storeInits')
-    console.dir({frames: this.frames, bodies: this.bodies.map(b => (b.position.x, b.position.y)) }, { depth: null })
+    console.dir(
+      {
+        frames: this.frames,
+        bodies: this.bodies.map((b) => (b.position.x, b.position.y))
+      },
+      { depth: null }
+    )
     this.bodyInits = this.convertBodiesToBigInts(this.bodies).map((b) => {
       // console.log({ b1: b })
       b = this.convertScaledBigIntBodyToArray(b)
@@ -189,8 +191,8 @@ export class Anybody extends EventEmitter {
       // this.setPause()
       // return false
     }
-    this.p.touchMoved = () => { }
-    this.p.touchEnded = () => { }
+    this.p.touchMoved = () => {}
+    this.p.touchEnded = () => {}
 
     if (typeof window !== 'undefined' && this.mode == 'game') {
       canvas.removeEventListener('click', this.setPause)
@@ -230,21 +232,21 @@ export class Anybody extends EventEmitter {
     var results = this.detectCollision(this.bodies, this.missiles)
     this.bodies = results.bodies
     this.missiles = results.missiles || []
-    
+
     if (this.missiles.length > 0 && this.missiles[0].radius == 0) {
       this.missiles.splice(0, 1)
     }
-    
+
     if (
       this.mode == 'game' &&
       this.bodies.reduce((a, c) => a + c.radius, 0) == 0
-      ) {
-        // this.nextLevel()
-        // this.paused = true
-        if (!this.finished) {
-          this.finish()
-        }
+    ) {
+      // this.nextLevel()
+      // this.paused = true
+      if (!this.finished) {
+        this.finish()
       }
+    }
     return { bodies: this.bodies, missiles: this.missiles }
   }
 
