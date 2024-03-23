@@ -1,6 +1,6 @@
 // import hre from 'hardhat'
 // import { _calculateTime } from '../src/calculations.js'
-import {wasm as wasm_tester } from "circom_tester";
+import { wasm as wasm_tester } from 'circom_tester'
 
 describe('absoluteValueSubtraction circuit', () => {
   let circuit
@@ -18,7 +18,7 @@ describe('absoluteValueSubtraction circuit', () => {
   const sanityCheck = true
 
   before(async () => {
-    circuit = await wasm_tester("circuits/absoluteValueSubtraction.circom");
+    circuit = await wasm_tester('circuits/absoluteValueSubtraction.circom')
   })
 
   it('produces a witness with valid constraints', async () => {

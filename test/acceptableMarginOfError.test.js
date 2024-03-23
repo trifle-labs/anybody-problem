@@ -1,7 +1,7 @@
 // import hre from 'hardhat'
 // import { assert } from 'chai'
 // import { _calculateTime } from '../src/calculations.js'
-import {wasm as wasm_tester } from "circom_tester";
+import { wasm as wasm_tester } from 'circom_tester'
 
 describe('acceptableMarginOfError circuit', () => {
   let circuit
@@ -26,7 +26,6 @@ describe('acceptableMarginOfError circuit', () => {
     // console.log(`| acceptableMarginOfError(60) | ${perStep} | ${secRounded} |`)
     await circuit.checkConstraints(witness)
   })
-
 
   it('has the correct output', async () => {
     const expected = { out: 1 }
