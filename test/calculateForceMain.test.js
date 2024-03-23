@@ -3,8 +3,10 @@
 // import { describe, it, before } from 'mocha';
 
 import { Anybody } from '../src/anybody.js'
-import {wasm as wasm_tester } from "circom_tester";
-import { /*_calculateTime,*/ _convertBigIntToModP } from '../src/calculations.js'
+import { wasm as wasm_tester } from 'circom_tester'
+import {
+  /*_calculateTime,*/ _convertBigIntToModP
+} from '../src/calculations.js'
 
 // const p = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
 
@@ -48,7 +50,7 @@ describe('calculateForceMain circuit', () => {
     const witness = await circuit.calculateWitness(sampleInputs[0], sanityCheck)
     // get the number of inputs
     // const inputs =
-      // sampleInputs[0].in_bodies.length * sampleInputs[0].in_bodies[0].length
+    // sampleInputs[0].in_bodies.length * sampleInputs[0].in_bodies[0].length
     // const perStep = witness.length - inputs
     // const secRounded = _calculateTime(perStep)
     // console.log(`| calculateForce() | ${perStep} | ${secRounded} |`)
@@ -64,13 +66,15 @@ describe('calculateForceMain circuit', () => {
         anybody.convertScaledStringArrayToBody.bind(anybody)
       )
 
-      const out_forces = anybody.calculateForceBigInt(bodies[0], bodies[1]).map(v => {
-        if (v < 0n) {
-          return [1, _convertBigIntToModP(v * -1n)].map(n => n.toString())
-        } else {
-          return [0, _convertBigIntToModP(v)].map(n => n.toString())
-        }
-      })
+      const out_forces = anybody
+        .calculateForceBigInt(bodies[0], bodies[1])
+        .map((v) => {
+          if (v < 0n) {
+            return [1, _convertBigIntToModP(v * -1n)].map((n) => n.toString())
+          } else {
+            return [0, _convertBigIntToModP(v)].map((n) => n.toString())
+          }
+        })
       const expected = { out_forces }
       const witness = await circuit.calculateWitness(sampleInput, sanityCheck)
       await circuit.assertOut(witness, expected)

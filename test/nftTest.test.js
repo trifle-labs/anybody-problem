@@ -3,7 +3,7 @@ const { ethers } = hre
 import { expect } from 'chai'
 import { exportCallDataGroth16 } from '../scripts/circuits.js'
 // import { mine } from '@nomicfoundation/hardhat-network-helpers'
-import { wasm as wasm_tester } from "circom_tester";
+import { wasm as wasm_tester } from 'circom_tester'
 
 import { Anybody } from '../src/anybody.js'
 // import { _calculateTime } from '../src/calculations.js'
@@ -12,7 +12,6 @@ import { Anybody } from '../src/anybody.js'
 const steps = 20
 
 describe('nft circuit', () => {
-
   let circuit
   // NOTE: velocities are offset by 10_000 to avoid negative numbers
   const sampleInput = {
@@ -22,33 +21,17 @@ describe('nft circuit', () => {
     //   ['679000', '500000', '12290', '12520', '50000']
     // ]
     bodies: [
-      [
-        "924573",
-        "473053",
-        "10000",
-        "10000",
-        "7000"
-      ],
-      [
-        "214411",
-        "120612",
-        "10000",
-        "10000",
-        "7000"
-      ],
-      [
-        "772980",
-        "706368",
-        "10000",
-        "10000",
-        "2000"
-      ]
+      ['700501', '604025', '10167', '11594', '12000'],
+      ['811208', '285147', '20000', '11243', '2000'],
+      ['759904', '489069', '10890', '5409', '2000']
     ]
   }
   const sanityCheck = true
 
   before(async () => {
-    circuit = await wasm_tester(`circuits/nft_3_${steps}.circom`)
+    circuit = await wasm_tester(
+      `circuits/nft_${sampleInput.bodies.length}_${steps}.circom`
+    )
   })
 
   it('produces a witness with valid constraints', async () => {
@@ -59,7 +42,7 @@ describe('nft circuit', () => {
     // console.log(`| nft(3, ${steps}) | ${perStep} | ${secRounded} |`)
     await circuit.checkConstraints(witness)
   })
-  it('has the correct output', async () => {
+  it.only('has the correct output', async () => {
     const anybody = new Anybody(null, { util: true })
     let bodies = sampleInput.bodies.map(
       anybody.convertScaledStringArrayToBody.bind(anybody)

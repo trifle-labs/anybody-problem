@@ -245,7 +245,10 @@ export const Calculations = {
       newBody.velocity.x = this.convertScaledBigIntToFloat(body.velocity.x)
       newBody.vy = body.velocity.y
       newBody.velocity.y = this.convertScaledBigIntToFloat(body.velocity.y)
-      newBody.velocity = this.createVector(newBody.velocity.x, newBody.velocity.y)
+      newBody.velocity = this.createVector(
+        newBody.velocity.x,
+        newBody.velocity.y
+      )
 
       if (!this.accumX) {
         this.accumX = 0

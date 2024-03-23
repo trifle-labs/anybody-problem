@@ -4,8 +4,8 @@ export const Visuals = {
   async draw() {
     if (!this.showIt) return
 
-    const enoughBodies = this.bodies.filter((b) => !b.life || b.life > 0).length >= 3
-
+    const enoughBodies =
+      this.bodies.filter((b) => !b.life || b.life > 0).length >= 3
 
     // when there are 3 or more bodies, step the simulation
     if (enoughBodies) {
@@ -57,7 +57,6 @@ export const Visuals = {
     } else {
       this.justPaused = false
     }
-
   },
   drawBodyOutlines() {
     for (let i = 0; i < this.bodies.length; i++) {
@@ -301,16 +300,16 @@ export const Visuals = {
       this.p.text('Total Shots: ' + this.missileCount, 50, 30) // Adjust the x-coordinate to align the text
       this.p.text(
         'Lvl ' +
-        (this.startingBodies - 2) +
-        ' - ' +
-        thisLevelSecondsAsTime +
-        ' - ' +
-        (this.startingBodies - this.bodies.length) +
-        '/' +
-        this.startingBodies +
-        ' - ' +
-        this.thisLevelMissileCount +
-        ' shots',
+          (this.startingBodies - 2) +
+          ' - ' +
+          thisLevelSecondsAsTime +
+          ' - ' +
+          (this.startingBodies - this.bodies.length) +
+          '/' +
+          this.startingBodies +
+          ' - ' +
+          this.thisLevelMissileCount +
+          ' shots',
         50,
         40
       ) // Adjust the x-coordinate to align the text
@@ -321,12 +320,12 @@ export const Visuals = {
           .substr(14, 5)
         this.p.text(
           'Lvl ' +
-          (this.allLevelSec.length - i) +
-          ' - ' +
-          prevLevelSecondsAsTime +
-          ' - ' +
-          prevLevel.thisLevelMissileCount +
-          ' shots',
+            (this.allLevelSec.length - i) +
+            ' - ' +
+            prevLevelSecondsAsTime +
+            ' - ' +
+            prevLevel.thisLevelMissileCount +
+            ' shots',
           50,
           i * 10 + 50
         ) // Adjust the x-coordinate to align the text
@@ -445,10 +444,10 @@ export const Visuals = {
     var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
     return result
       ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16)
-      }
+          r: parseInt(result[1], 16),
+          g: parseInt(result[2], 16),
+          b: parseInt(result[3], 16)
+        }
       : null
   },
 

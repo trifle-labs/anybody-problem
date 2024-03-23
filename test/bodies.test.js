@@ -89,12 +89,10 @@ describe('Bodies Tests', function () {
   it('fallback and receive functions revert', async () => {
     const [owner] = await ethers.getSigners()
     const { Bodies: bodies } = await deployContracts()
-    await expect(
-      owner.sendTransaction({ to: bodies.address, value: '1' })
-    ).to.be.reverted
-    await expect(
-      owner.sendTransaction({ to: bodies.address, value: '0' })
-    ).to.be.reverted
+    await expect(owner.sendTransaction({ to: bodies.address, value: '1' })).to
+      .be.reverted
+    await expect(owner.sendTransaction({ to: bodies.address, value: '0' })).to
+      .be.reverted
   })
 
   it('onlyProblem functions can only be called by Problems address', async function () {

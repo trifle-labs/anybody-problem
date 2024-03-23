@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "./Metadata.sol";
+import './Metadata.sol';
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "./Bodies.sol";
-import "./Solver.sol";
+import '@openzeppelin/contracts/token/ERC721/ERC721.sol';
+import '@openzeppelin/contracts/access/Ownable.sol';
+import './Bodies.sol';
+import './Solver.sol';
 
-import "hardhat/console.sol";
+import 'hardhat/console.sol';
 
 contract Problems is ERC721, Ownable {
     bool public paused;
@@ -79,15 +79,15 @@ contract Problems is ERC721, Ownable {
     );
 
     modifier onlySolver() {
-        require(msg.sender == solver, "Only Solver can call");
+        require(msg.sender == solver, 'Only Solver can call');
         _;
     }
 
     modifier initialized() {
-        require(solver != address(0), "Not initialized");
-        require(bodies != address(0), "Not initialized");
-        require(metadata != address(0), "Not initialized");
-        require(proceedRecipient != address(0), "Not initialized");
+        require(solver != address(0), 'Not initialized');
+        require(bodies != address(0), 'Not initialized');
+        require(metadata != address(0), 'Not initialized');
+        require(proceedRecipient != address(0), 'Not initialized');
         _;
     }
 
@@ -103,13 +103,13 @@ contract Problems is ERC721, Ownable {
         address[] memory verifiers_,
         uint256[] memory verifiersTicks,
         uint256[] memory verifiersBodies
-    ) ERC721("Anybody Problem", "ANY") {
-        require(metadata_ != address(0), "Invalid metadata");
+    ) ERC721('Anybody Problem', 'ANY') {
+        require(metadata_ != address(0), 'Invalid metadata');
         proceedRecipient = msg.sender;
         metadata = metadata_;
         for (uint256 i = 0; i < verifiers_.length; i++) {
-            require(verifiersTicks[i] > 0, "Invalid verifier tocks");
-            require(verifiers_[i] != address(0), "Invalid verifier");
+            require(verifiersTicks[i] > 0, 'Invalid verifier tocks');
+            require(verifiers_[i] != address(0), 'Invalid verifier');
             verifiers[verifiersBodies[i]][verifiersTicks[i]] = verifiers_[i];
         }
     }
@@ -179,13 +179,13 @@ contract Problems is ERC721, Ownable {
         address recipient,
         uint256 quantity
     ) public payable initialized {
-        require(quantity <= 5, "Max 5");
-        require(!paused, "Paused");
-        require(block.timestamp >= startDate, "Not started");
-        require(msg.value == quantity * price, "Invalid price");
+        require(quantity <= 5, 'Max 5');
+        require(!paused, 'Paused');
+        require(block.timestamp >= startDate, 'Not started');
+        require(msg.value == quantity * price, 'Invalid price');
         (bool sent, bytes memory data) = proceedRecipient.call{
             value: msg.value
-        }("");
+        }('');
         emit EthMoved(proceedRecipient, sent, data, msg.value);
         for (uint256 i = 0; i < quantity; i++) {
             _internalMint(recipient);
@@ -226,15 +226,15 @@ contract Problems is ERC721, Ownable {
     }
 
     function mintBodyToProblem(uint256 problemId) public {
-        require(!paused, "Paused");
-        require(ownerOf(problemId) == msg.sender, "Not problem owner");
+        require(!paused, 'Paused');
+        require(ownerOf(problemId) == msg.sender, 'Not problem owner');
         require(
             problems[problemId].bodyCount < 10,
-            "Cannot have more than 10 bodies"
+            'Cannot have more than 10 bodies'
         );
         uint256 mintedBodyIndex = problems[problemId].mintedBodiesIndex;
         // TODO: confirm this should be 10 instead of 9
-        require(mintedBodyIndex < 10, "Problem already minted 10 bodies");
+        require(mintedBodyIndex < 10, 'Problem already minted 10 bodies');
         (uint256 bodyId, uint256 life, bytes32 bodySeed) = Bodies(bodies)
             .mintAndAddToProblem(msg.sender, problemId, mintedBodyIndex);
         uint256 bodyIndex = problems[problemId].bodyCount;
@@ -251,24 +251,24 @@ contract Problems is ERC721, Ownable {
     }
 
     function mintBodyOutsideProblem(uint256 problemId) public {
-        require(!paused, "Paused");
-        require(ownerOf(problemId) == msg.sender, "Not problem owner");
+        require(!paused, 'Paused');
+        require(ownerOf(problemId) == msg.sender, 'Not problem owner');
         require(
             problems[problemId].bodyCount < 10,
-            "Cannot have more than 10 bodies"
+            'Cannot have more than 10 bodies'
         ); // TODO: confirm this should be 10 instead of 9
         uint256 mintedBodyIndex = problems[problemId].mintedBodiesIndex;
-        require(mintedBodyIndex < 10, "Problem already minted 10 bodies");
+        require(mintedBodyIndex < 10, 'Problem already minted 10 bodies');
         Bodies(bodies).mint(msg.sender, problemId, mintedBodyIndex);
         problems[problemId].mintedBodiesIndex++;
     }
 
     function addExistingBody(uint256 problemId, uint256 bodyId) public {
-        require(!paused, "Paused");
-        require(ownerOf(problemId) == msg.sender, "Not problem owner");
+        require(!paused, 'Paused');
+        require(ownerOf(problemId) == msg.sender, 'Not problem owner');
         require(
             problems[problemId].bodyCount < 10,
-            "Cannot have more than 10 bodies"
+            'Cannot have more than 10 bodies'
         );
         (uint256 mintedBodyIndex, uint256 life, bytes32 seed) = Bodies(bodies)
             .moveBodyToProblem(bodyId, msg.sender, problemId);
@@ -276,16 +276,25 @@ contract Problems is ERC721, Ownable {
         _addBody(problemId, bodyId, mintedBodyIndex, life, seed, bodyIndex, 0);
     }
 
+    function purgeDeadBodies(uint256 problemId) public {
+        for (uint256 i = 0; i < problems[problemId].bodyCount; i++) {
+            uint256 bodyId = problems[problemId].bodyIds[i];
+            if (problems[problemId].bodyData[bodyId].life == 0) {
+                removeBody(problemId, bodyId);
+            }
+        }
+    }
+
     function removeBody(uint256 problemId, uint256 bodyId) public {
-        require(!paused, "Paused");
-        require(ownerOf(problemId) == msg.sender, "Not problem owner");
+        require(!paused, 'Paused');
+        require(ownerOf(problemId) == msg.sender, 'Not problem owner');
         require(
             problems[problemId].bodyCount > 3,
-            "Cannot have less than 3 bodies"
+            'Cannot have less than 3 bodies'
         );
 
         Body memory bodyData = problems[problemId].bodyData[bodyId];
-        require(bodyData.bodyId == bodyId, "Body not in problem");
+        require(bodyData.bodyId == bodyId, 'Body not in problem');
 
         Bodies(bodies).moveBodyFromProblem(
             msg.sender,
@@ -472,7 +481,7 @@ contract Problems is ERC721, Ownable {
         address payable _to
     ) public onlyOwner {
         uint256 amount = address(this).balance;
-        (bool sent, bytes memory data) = _to.call{value: amount}("");
+        (bool sent, bytes memory data) = _to.call{value: amount}('');
         emit EthMoved(_to, sent, data, amount);
     }
 }

@@ -1,1 +1,4 @@
-{"address":"0x9bb3F4bB6189e5Ad46B8492eCD8faA97352F95F6","chain":{"name":"sepolia","chainId":11155111,"ensAddress":null}}
+{
+  "address": "0x9bb3F4bB6189e5Ad46B8492eCD8faA97352F95F6",
+  "chain": { "name": "sepolia", "chainId": 11155111, "ensAddress": null }
+}

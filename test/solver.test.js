@@ -1,4 +1,3 @@
-
 import { expect } from 'chai'
 import hre from 'hardhat'
 const ethers = hre.ethers
@@ -18,7 +17,7 @@ const proverTickIndex = {
   7: 100,
   8: 100,
   9: 50,
-  10: 50,
+  10: 50
 }
 
 // let tx
@@ -60,16 +59,13 @@ describe('Solver Tests', function () {
   it('fallback and receive functions revert', async () => {
     const [owner] = await ethers.getSigners()
     const { Solver: solver } = await deployContracts()
-    await expect(
-      owner.sendTransaction({ to: solver.address, value: '1' })
-    ).to.be.reverted
-    await expect(
-      owner.sendTransaction({ to: solver.address, value: '0' })
-    ).to.be.reverted
+    await expect(owner.sendTransaction({ to: solver.address, value: '1' })).to
+      .be.reverted
+    await expect(owner.sendTransaction({ to: solver.address, value: '0' })).to
+      .be.reverted
   })
 
-  it.only('creates a proof for 3 bodies', async () => {
-
+  it('creates a proof for 3 bodies', async () => {
     const signers = await ethers.getSigners()
     const deployedContracts = await deployContracts()
     const {
@@ -133,8 +129,6 @@ describe('Solver Tests', function () {
   })
 
   it('creates multiple proofs in a row', async () => {
-
-
     const signers = await ethers.getSigners()
     const deployedContracts = await deployContracts()
     const {
@@ -206,7 +200,6 @@ describe('Solver Tests', function () {
     expect(newTickCount).to.equal(runningTickCount)
   })
   it('creates proofs for multiple bodies', async () => {
-
     const signers = await ethers.getSigners()
     const deployedContracts = await deployContracts()
     const {
@@ -365,10 +358,10 @@ describe('Solver Tests', function () {
       const body = await problems.getProblemBodyData(problemId, bodyId)
       bodyData.push(body)
     }
-    const ticksRun = proverTickIndex[bodyCount.toNumber()];
+    const ticksRun = proverTickIndex[bodyCount.toNumber()]
 
     // console.log({ bodyData })
-    ; ({ tx } = await generateAndSubmitProof(
+    ;({ tx } = await generateAndSubmitProof(
       expect,
       deployedContracts,
       problemId,
@@ -393,7 +386,7 @@ describe('Solver Tests', function () {
       bodyData.push(body)
     }
     // console.log({ bodyData })
-    ; ({ tx } = await generateAndSubmitProof(
+    ;({ tx } = await generateAndSubmitProof(
       expect,
       deployedContracts,
       problemId,
@@ -433,5 +426,5 @@ describe('Solver Tests', function () {
       expect(e).to.be.an('error')
     }
   })
-  it.skip('adds two bodies, removes first body, creates a proof', async () => { })
+  it.skip('adds two bodies, removes first body, creates a proof', async () => {})
 })
