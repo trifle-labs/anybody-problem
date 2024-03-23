@@ -1,4 +1,3 @@
-
 import { WITHERING_STEPS, MAX_LIFE, stepWithering } from './life.js'
 
 export const Visuals = {
@@ -25,17 +24,17 @@ export const Visuals = {
     if (!this.showIt) return
 
     // when there are 3 or more bodies, step the simulation
-    if (this.bodies.filter(b => !b.life || b.life > 0).length >= 3) {
+    if (this.bodies.filter((b) => !b.life || b.life > 0).length >= 3) {
       this.frames++
       const results = this.step(this.bodies, this.missiles)
       this.bodies = results.bodies || []
       this.missiles = results.missiles || []
     } else {
-    // if less than 3 just finish the withering animation
-    // TODO: add some sort of instructional message to screen that new bodies are needed to progress the simulation
+      // if less than 3 just finish the withering animation
+      // TODO: add some sort of instructional message to screen that new bodies are needed to progress the simulation
       this.witheringBodies = stepWithering(this.witheringBodies)
     }
- 
+
     this.p.noFill()
     this.drawBg()
     this.drawBodyTrails()
@@ -490,7 +489,7 @@ export const Visuals = {
   //   }
   // },
 
-  drawStyle1(x, y, v, radius, body) {
+  drawGlyphFace(radius, body) {
     const eyeArray = [
       '≖',
       '✿',
@@ -537,7 +536,6 @@ export const Visuals = {
     const c = body.c.replace(this.opac, '0.1')
     const i = this.bodies.indexOf(body) // TODO: change to bodyId
 
-    // this.bodiesGraphic.blendMode(this.p.BLEND)
     this.bodiesGraphic.noStroke()
     this.bodiesGraphic.fill(c)
     this.bodiesGraphic.ellipse(0, 0, radius, radius)
@@ -556,13 +554,18 @@ export const Visuals = {
     this.bodiesGraphic.fill(invertedC)
     this.bodiesGraphic.noStroke()
     this.bodiesGraphic.text(face, -radius / 2.4, radius / 8)
-    // this.bodiesGraphic.blendMode(this.p.DIFFERENCE)
 
     // hp in white text
     this.bodiesGraphic.fill('white')
     this.bodiesGraphic.textSize(radius / 8)
     this.bodiesGraphic.textAlign(this.p.CENTER, this.p.CENTER)
-    this.bodiesGraphic.text(body.life, 0, 50)
+  },
+
+  drawBodyStyle1(radius, body) {
+    const c = body.c.replace(this.opac, '0.1')
+    this.bodiesGraphic.noStroke()
+    this.bodiesGraphic.fill(c)
+    this.bodiesGraphic.ellipse(0, 0, radius, radius)
   },
 
   moveAndRotate_PopAfter(graphic, x, y, v) {
@@ -580,7 +583,17 @@ export const Visuals = {
 
   drawBody(x, y, v, radius, body) {
     this.moveAndRotate_PopAfter(this.bodiesGraphic, x, y, v)
-    this.drawStyle1(x, y, v, radius, body)
+
+    switch (body.bodyStyle) {
+      default:
+        this.drawBodyStyle1(radius, body)
+    }
+
+    switch (body.faceStyle) {
+      default:
+        this.drawGlyphFace(radius, body)
+    }
+
     // this.drawPngFace(x, y, v, radius, body)
     this.bodiesGraphic.pop()
   },
@@ -627,16 +640,25 @@ export const Visuals = {
   },
 
   drawWitheringBodies() {
-    this.bodiesGraphic ||= this.p.createGraphics(this.windowWidth, this.windowHeight)
+    this.bodiesGraphic ||= this.p.createGraphics(
+      this.windowWidth,
+      this.windowHeight
+    )
     this.bodiesGraphic.noStroke()
     for (const body of this.witheringBodies) {
       // the body should shrink to nothing as HP goes from 0 to -WITHERING_STEPS
-      const witherMultiplier = 1 + (body.life / WITHERING_STEPS)
-      const radius = (body.radius * 4 + this.radiusMultiplyer) * witherMultiplier
+      const witherMultiplier = 1 + body.life / WITHERING_STEPS
+      const radius =
+        (body.radius * 4 + this.radiusMultiplyer) * witherMultiplier
 
       // render as a white circle
       this.bodiesGraphic.fill('white')
-      this.bodiesGraphic.ellipse(body.position.x, body.position.y, radius, radius)
+      this.bodiesGraphic.ellipse(
+        body.position.x,
+        body.position.y,
+        radius,
+        radius
+      )
     }
   },
 
@@ -829,8 +851,7 @@ export const Visuals = {
     this.p.pop()
   },
 
-  drawTail(x, y, v, radius, finalColor) {
-    // console.log({ finalColor })
+  drawTailStyle1(x, y, v, radius, finalColor) {
     // finalColor = finalColor.replace('50%', '75%')
     this.p.push()
     this.p.translate(x, y)
@@ -842,88 +863,93 @@ export const Visuals = {
 
     // this.p.image(this.drawTails[id], -radius / 2, -radius)
     this.p.pop()
+  },
 
+  drawTailStyleGhost(x, y, v, radius, finalColor) {
     // ghost version
 
-    // const id = radius + '-' + finalColor
-    // console.log()
-    // if (!this.drawTails) {
-    //   this.drawTails = {}
-    // }
-    // if (!this.drawTails || this.drawTails[id] == undefined) {
-    //   this.drawTails[id] = this.p.createGraphics(this.windowWidth, this.windowHeight)
-    //   this.drawTails[id].noStroke()
-    //   this.drawTails[id].fill(finalColor)
+    const id = radius + '-' + finalColor
+    console.log()
+    if (!this.drawTails) {
+      this.drawTails = {}
+    }
+    if (!this.drawTails || this.drawTails[id] == undefined) {
+      this.drawTails[id] = this.p.createGraphics(
+        this.windowWidth,
+        this.windowHeight
+      )
+      this.drawTails[id].noStroke()
+      this.drawTails[id].fill(finalColor)
 
-    //   this.drawTails[id].beginShape()
-    //   // this.drawTails[id].vertex(radius, 0)
-    //   // this.drawTails[id].vertex(0, 0)
+      this.drawTails[id].beginShape()
+      // this.drawTails[id].vertex(radius, 0)
+      // this.drawTails[id].vertex(0, 0)
 
-    //   // this.p.arc(0, 0, radius, radius, this.p.PI, 2 * this.p.PI)
-    //   const arcResolution = 20
+      // this.p.arc(0, 0, radius, radius, this.p.PI, 2 * this.p.PI)
+      const arcResolution = 20
 
-    //   for (let j = 0; j < arcResolution; j++) {
-    //     const ang = this.p.map(j, 0, arcResolution, 0, this.p.PI)
-    //     const ax = radius / 2 + this.p.cos(ang) * radius / 2
-    //     const ay = (2 * radius / 2 + -1 * this.p.sin(ang) * radius / 2)
-    //     this.drawTails[id].vertex(ax, ay)
-    //   }
+      for (let j = 0; j < arcResolution; j++) {
+        const ang = this.p.map(j, 0, arcResolution, 0, this.p.PI)
+        const ax = radius / 2 + (this.p.cos(ang) * radius) / 2
+        const ay = (2 * radius) / 2 + (-1 * this.p.sin(ang) * radius) / 2
+        this.drawTails[id].vertex(ax, ay)
+      }
 
-    //   // this.drawTails[id].fill('red')
-    //   // this.drawTails[id].rect(0, 0, radius, radius / 2)
+      // this.drawTails[id].fill('red')
+      // this.drawTails[id].rect(0, 0, radius, radius / 2)
 
-    //   const bumps = 7
-    //   let bumpHeight = radius / 6
-    //   // let heightChanger = radius / 10
-    //   // const bumpHeightMax = radius / 5
-    //   // const bumpHeightMin = radius / 8
-    //   const startY = radius * 1
-    //   // this.drawTails[id].push()
-    //   let remaindingWidth = radius
-    //   for (let i = 0; i < bumps; i++) {
-    //     let bumpWidth = radius / bumps
-    //     // bumpHeight += heightChanger
-    //     // if (bumpHeight > bumpHeightMax || bumpHeight < bumpHeightMin) {
-    //     //   heightChanger *= -1
-    //     // }
-    //     let x = radius - remaindingWidth
-    //     if (i % 2 == 1) {
-    //       // this.drawTails[id].arc(x + bumpWidth / 2, startY, bumpWidth, bumpHeight, this.drawTails[id].PI, 0, this.drawTails[id].OPEN)
-    //       for (let j = 0; j < arcResolution; j++) {
-    //         const ang = this.p.map(j, 0, arcResolution, this.p.PI, 0)
-    //         const ax = x + bumpWidth / 2 + this.p.cos(ang) * bumpWidth / 2
-    //         const ay = startY + bumpHeight + -1 * this.p.sin(ang) * bumpHeight / 2
-    //         this.drawTails[id].vertex(ax, ay)
-    //       }
-    //     } else {
-    //       for (let j = 0; j < arcResolution; j++) {
-    //         const ang = this.p.map(j, 0, arcResolution, this.p.PI, 0)
-    //         const ax = x + bumpWidth / 2 + this.p.cos(ang) * bumpWidth / 2
-    //         const ay = startY + bumpHeight + this.p.sin(ang) * bumpHeight / 2
-    //         this.drawTails[id].vertex(ax, ay)
-    //       }
-    //       // this.drawTails[id].arc(x + bumpWidth / 2, startY + bumpWidth, bumpWidth, bumpHeight, 0, this.drawTails[id].PI, this.drawTails[id].OPEN)
-    //     }
-    //     remaindingWidth -= bumpWidth
-    //   }
-    //   this.drawTails[id].endShape(this.drawTails[id].CLOSE)
-    //   // this.drawTails[id].pop()
+      const bumps = 7
+      let bumpHeight = radius / 6
+      // let heightChanger = radius / 10
+      // const bumpHeightMax = radius / 5
+      // const bumpHeightMin = radius / 8
+      const startY = radius * 1
+      // this.drawTails[id].push()
+      let remaindingWidth = radius
+      for (let i = 0; i < bumps; i++) {
+        let bumpWidth = radius / bumps
+        // bumpHeight += heightChanger
+        // if (bumpHeight > bumpHeightMax || bumpHeight < bumpHeightMin) {
+        //   heightChanger *= -1
+        // }
+        let x = radius - remaindingWidth
+        if (i % 2 == 1) {
+          // this.drawTails[id].arc(x + bumpWidth / 2, startY, bumpWidth, bumpHeight, this.drawTails[id].PI, 0, this.drawTails[id].OPEN)
+          for (let j = 0; j < arcResolution; j++) {
+            const ang = this.p.map(j, 0, arcResolution, this.p.PI, 0)
+            const ax = x + bumpWidth / 2 + (this.p.cos(ang) * bumpWidth) / 2
+            const ay =
+              startY + bumpHeight + (-1 * this.p.sin(ang) * bumpHeight) / 2
+            this.drawTails[id].vertex(ax, ay)
+          }
+        } else {
+          for (let j = 0; j < arcResolution; j++) {
+            const ang = this.p.map(j, 0, arcResolution, this.p.PI, 0)
+            const ax = x + bumpWidth / 2 + (this.p.cos(ang) * bumpWidth) / 2
+            const ay = startY + bumpHeight + (this.p.sin(ang) * bumpHeight) / 2
+            this.drawTails[id].vertex(ax, ay)
+          }
+          // this.drawTails[id].arc(x + bumpWidth / 2, startY + bumpWidth, bumpWidth, bumpHeight, 0, this.drawTails[id].PI, this.drawTails[id].OPEN)
+        }
+        remaindingWidth -= bumpWidth
+      }
+      this.drawTails[id].endShape(this.drawTails[id].CLOSE)
+      // this.drawTails[id].pop()
+    }
 
-    // }
-
-    // // this.drawTails[id].push()
-    // // this.drawTails[id].translate(x, y)
-    // var angle = v.heading() + this.p.PI / 2
-    // // this.drawTails[id].rotate(angle)
-    // // this.drawTails[id].fill(finalColor)
-    // // this.drawTails[id].fill('rgba(255,0,0,1)')
-    // // this.drawTails[id].rect(0, 0, radius, radius / 4)
-    // // this.drawTails[id].pop()
-    // this.p.push()
-    // this.p.translate(x, y)
-    // this.p.rotate(angle)
-    // this.p.image(this.drawTails[id], -radius / 2, -radius)
-    // this.p.pop()
+    // this.drawTails[id].push()
+    // this.drawTails[id].translate(x, y)
+    var angle = v.heading() + this.p.PI / 2
+    // this.drawTails[id].rotate(angle)
+    // this.drawTails[id].fill(finalColor)
+    // this.drawTails[id].fill('rgba(255,0,0,1)')
+    // this.drawTails[id].rect(0, 0, radius, radius / 4)
+    // this.drawTails[id].pop()
+    this.p.push()
+    this.p.translate(x, y)
+    this.p.rotate(angle)
+    this.p.image(this.drawTails[id], -radius / 2, -radius)
+    this.p.pop()
   },
 
   drawBodyTrails() {
@@ -953,15 +979,35 @@ export const Visuals = {
           this.p.rotate(body.velocity.heading() + this.p.PI / 2)
           // this.p.arc(0, 0, radius, radius, this.p.PI, 2 * this.p.PI)
           this.p.pop()
-          // if (i == 0) {
-          this.drawTail(
-            body.position.x,
-            body.position.y,
-            body.velocity,
-            radius,
-            finalColor
-          )
-          // }
+
+          switch (body.tailStyle) {
+            case 1:
+              this.drawTailStyle1(
+                body.position.x,
+                body.position.y,
+                body.velocity,
+                radius,
+                finalColor
+              )
+              break
+            case 'ghost':
+              this.drawTailStyleGhost(
+                body.position.x,
+                body.position.y,
+                body.velocity,
+                radius,
+                finalColor
+              )
+              break
+            default:
+              this.drawTailStyle1(
+                body.position.x,
+                body.position.y,
+                body.velocity,
+                radius,
+                finalColor
+              )
+          }
         } else {
           this.p.push()
           this.p.translate(body.position.x, body.position.y)
