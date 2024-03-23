@@ -1,18 +1,7 @@
-// const hre = require('hardhat')
-// const path = require('path')
-// const fs = require('fs')
-// import fs from 'fs'
-// import path from 'path'
-// const {
-//   calculateTime,
-//   runComputationBigInt,
-//   convertScaledStringArrayToBody,
-//   convertScaledBigIntBodyToArray,
-// } = require('../docs/index.cjs')
-
-import hre from 'hardhat'
+// import hre from 'hardhat'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
+import {wasm as wasm_tester } from "circom_tester";
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -22,7 +11,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 import index from '../docs/index.cjs'
 import { writeFileSync } from 'fs'
 const {
-  calculateTime,
+  // calculateTime,
   // detectCollisionBigInt,
   runComputationBigInt,
   convertScaledStringArrayToBody,
@@ -60,36 +49,23 @@ describe('stepStateTest circuit', () => {
   const sanityCheck = true
 
   before(async () => {
-    circuit = await hre.circuitTest.setup('stepStateTest')
+    circuit = await wasm_tester('circuits/stepStateTest.circom')
   })
 
   const steps = sampleInput.missiles.length - 1
 
   it('produces a witness with valid constraints', async () => {
     const witness = await circuit.calculateWitness(sampleInput, sanityCheck)
-    const inputs =
-      sampleInput.bodies.length * sampleInput.bodies[0].length +
-      sampleInput.missiles.length * sampleInput.missiles[0].length
-    const perStep = witness.length - inputs
-    const secRounded = calculateTime(perStep, steps)
-    console.log(`| stepState(3, ${steps}) | ${perStep} | ${secRounded} |`)
+    // const inputs =
+    //   sampleInput.bodies.length * sampleInput.bodies[0].length +
+    //   sampleInput.missiles.length * sampleInput.missiles[0].length
+    // const perStep = witness.length - inputs
+    // const secRounded = calculateTime(perStep, steps)
+    // console.log(`| stepState(3, ${steps}) | ${perStep} | ${secRounded} |`)
     await circuit.checkConstraints(witness)
   })
 
-  it.skip('has expected witness values', async () => {
-    const witness = await circuit.calculateLabeledWitness(
-      sampleInput,
-      sanityCheck
-    )
-    console.dir({ witness: witness._labels }, { depth: null })
-
-    // assert.propertyVal(witness, "main.squared", sampleInput.squared);
-    // assert.propertyVal(witness, "main.calculatedRoot", sampleInput.calculatedRoot);
-    // assert.propertyVal(witness, "main.calculatedSquared", (sampleInput.calculatedRoot ** 2).toString())
-    // assert.propertyVal(witness, "main.out", "1");
-  })
-
-  it.skip('has the correct output', async () => {
+  it('has the correct output', async () => {
     let bodies = sampleInput.bodies.map(convertScaledStringArrayToBody)
     let missiles = sampleInput.missiles.map(convertScaledStringArrayToBody)
     // console.dir({ bodies }, { depth: null })

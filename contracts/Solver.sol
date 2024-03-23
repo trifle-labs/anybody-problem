@@ -67,6 +67,9 @@ contract Solver is Ownable {
         uint[2] memory c,
         uint[] memory input
     ) public {
+        address owner = Problems(problems).ownerOf(problemId);
+        require(owner == msg.sender, "Not the owner");
+
         (, uint256 bodyCount, , uint256 previousTickCount) = Problems(problems)
             .problems(problemId);
         uint256 numberOfBodies = bodyCount;

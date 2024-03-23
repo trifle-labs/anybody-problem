@@ -3,7 +3,11 @@ import Prando from 'prando'
 import EventEmitter from 'events'
 import Sound from './sound.js'
 import { Visuals } from './visuals.js'
-import { _validateSeed, Calculations } from './calculations.js'
+import {
+  _validateSeed,
+  Calculations
+} from './calculations.js'
+import { stepLife, stepWithering } from './life.js'
 
 export class Anybody extends EventEmitter {
   constructor(p, options = {}) {
@@ -93,6 +97,7 @@ export class Anybody extends EventEmitter {
     this.missiles = []
     this.missileInits = []
     this.bodies = []
+    this.witheringBodies = []
     this.bodyInits = []
     this.bodyFinal = []
     this.allCopiesOfBodies = []
@@ -108,7 +113,6 @@ export class Anybody extends EventEmitter {
   init() {
     if (this.seed == undefined) {
       this.seed = BigInt(Math.floor(Math.random() * 10000))
-      console.log({ seed: this.seed })
     }
     _validateSeed(this.seed)
     this.rng = new Prando(this.seed.toString(16))
@@ -185,8 +189,8 @@ export class Anybody extends EventEmitter {
       // this.setPause()
       // return false
     }
-    this.p.touchMoved = () => {}
-    this.p.touchEnded = () => {}
+    this.p.touchMoved = () => { }
+    this.p.touchEnded = () => { }
 
     if (typeof window !== 'undefined' && this.mode == 'game') {
       canvas.removeEventListener('click', this.setPause)
@@ -216,9 +220,12 @@ export class Anybody extends EventEmitter {
   }
 
   step() {
-    // console.log(`starting step at frame ${this.frames}`)
-    // let logBodies = this.bodies.map((body) => body.position.x )
-    // console.log('before bodies look like: ',  logBodies)
+    const { live, withering } = stepLife(this.bodies, this.witheringBodies)
+    this.witheringBodies ||= []
+    this.witheringBodies.push(...withering)
+    this.witheringBodies = stepWithering(this.witheringBodies)
+    this.bodies = live
+
     this.bodies = this.forceAccumulator(this.bodies)
     var results = this.detectCollision(this.bodies, this.missiles)
     this.bodies = results.bodies
@@ -238,8 +245,7 @@ export class Anybody extends EventEmitter {
           this.finish()
         }
       }
-    // logBodies = this.bodies.map((body) => body.position.x )
-    // console.log('after bodies look like: ', logBodies)
+    }
     return { bodies: this.bodies, missiles: this.missiles }
   }
 
@@ -254,6 +260,7 @@ export class Anybody extends EventEmitter {
     this.startingBodies += 1
     this.missiles = []
     this.bodies = []
+    this.witheringBodies = []
     this.generateBodies()
   }
 

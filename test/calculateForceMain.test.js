@@ -1,10 +1,10 @@
-import hre from 'hardhat'
+// import hre from 'hardhat'
 // import { assert } from 'chai';
 // import { describe, it, before } from 'mocha';
 
 import { Anybody } from '../src/anybody.js'
-
-import { _calculateTime } from '../src/calculations.js'
+import {wasm as wasm_tester } from "circom_tester";
+import { /*_calculateTime,*/ _convertBigIntToModP } from '../src/calculations.js'
 
 // const p = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
 
@@ -41,59 +41,37 @@ describe('calculateForceMain circuit', () => {
   const sanityCheck = true
 
   before(async () => {
-    circuit = await hre.circuitTest.setup('calculateForceMain')
+    circuit = await wasm_tester('circuits/calculateForceMain.circom')
   })
 
   it('produces a witness with valid constraints', async () => {
     const witness = await circuit.calculateWitness(sampleInputs[0], sanityCheck)
     // get the number of inputs
-    const inputs =
-      sampleInputs[0].in_bodies.length * sampleInputs[0].in_bodies[0].length
-    const perStep = witness.length - inputs
-    const secRounded = _calculateTime(perStep)
-    console.log(`| calculateForce() | ${perStep} | ${secRounded} |`)
+    // const inputs =
+      // sampleInputs[0].in_bodies.length * sampleInputs[0].in_bodies[0].length
+    // const perStep = witness.length - inputs
+    // const secRounded = _calculateTime(perStep)
+    // console.log(`| calculateForce() | ${perStep} | ${secRounded} |`)
     await circuit.checkConstraints(witness)
   })
 
-  it.skip('has expected witness values', async () => {
-    const witness = await circuit.calculateLabeledWitness(
-      sampleInputs[0],
-      sanityCheck
-    )
-    console.log({ witness })
-
-    // assert.propertyVal(witness, "main.squared", sampleInput.squared);
-    // assert.propertyVal(witness, "main.calculatedRoot", sampleInput.calculatedRoot);
-    // assert.propertyVal(witness, "main.calculatedSquared", (sampleInput.calculatedRoot ** 2).toString())
-    // assert.propertyVal(witness, "main.out", "1");
-  })
-
-  it.skip('has the correct output', async () => {
+  it('has the correct output', async () => {
     for (let i = 0; i < sampleInputs.length; i++) {
       const sampleInput = sampleInputs[i]
 
       const anybody = new Anybody(null, { util: true })
-      let bodies = sampleInput.bodies.map(
+      let bodies = sampleInput.in_bodies.map(
         anybody.convertScaledStringArrayToBody.bind(anybody)
       )
-      // for (let i = 0; i < steps; i++) {
-      bodies = anybody.forceAccumulatorBigInts(bodies)
-      // }
-      const out_forces = bodies.map(
-        anybody.convertScaledBigIntBodyToArray.bind(anybody)
-      )
 
-      // const bodies = sampleInput.in_bodies.map(convertScaledStringArrayToBody)
-      // const out_forces = calculateForceBigInt(bodies[0], bodies[1]).map(v => {
-      //   if (v < 0n) {
-      //     return [1, _convertBigIntToModP(v * -1n)].map(n => n.toString())
-      //   } else {
-      //     return [0, _convertBigIntToModP(v)].map(n => n.toString())
-      //   }
-      // })
-      // console.log({ out_forces })
+      const out_forces = anybody.calculateForceBigInt(bodies[0], bodies[1]).map(v => {
+        if (v < 0n) {
+          return [1, _convertBigIntToModP(v * -1n)].map(n => n.toString())
+        } else {
+          return [0, _convertBigIntToModP(v)].map(n => n.toString())
+        }
+      })
       const expected = { out_forces }
-      // console.log({ expected })
       const witness = await circuit.calculateWitness(sampleInput, sanityCheck)
       await circuit.assertOut(witness, expected)
     }
