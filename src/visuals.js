@@ -495,11 +495,12 @@ export const Visuals = {
 
   drawPngFace(radius, body) {
     this.pngFaces ||= []
-    const face = this.pngFaces[body.bodyIndex]
+    const faceIdx = body.mintedBodyIndex || body.bodyIndex
+    const face = this.pngFaces[faceIdx]
     if (!face) {
-      const png = FACE_PNGS[body.mintedBodyIndex || body.bodyIndex]
+      const png = FACE_PNGS[faceIdx]
       this.p.loadImage(png, (img) => {
-        this.pngFaces[body.bodyIndex] = img
+        this.pngFaces[faceIdx] = img
       })
     }
     if (face) {
