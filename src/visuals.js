@@ -503,7 +503,13 @@ export const Visuals = {
       })
     }
     if (face) {
-      this.bodiesGraphic.image(face, 0, -radius / 3, radius / 3, radius / 3)
+      this.bodiesGraphic.image(
+        face,
+        -radius / 3,
+        -radius / 3,
+        radius / 1.5,
+        radius / 1.5
+      )
     }
   },
 
@@ -697,6 +703,7 @@ export const Visuals = {
     for (let i = 0; i < this.bodies.length; i++) {
       // const body = this.bodies.sort((a, b) => b.radius - a.radius)[i]
       const body = this.bodies[i]
+      if (body.life <= 0) continue
       let c = body.c
       let finalColor
       if (this.colorStyle == 'squiggle') {
