@@ -2,20 +2,20 @@
 
 pragma solidity ^0.8.0;
 
-import {Groth16Verifier as Groth16Verifier3} from './Nft_3_20Verifier.sol';
-import {Groth16Verifier as Groth16Verifier4} from './Nft_4_20Verifier.sol';
-import {Groth16Verifier as Groth16Verifier5} from './Nft_5_20Verifier.sol';
-import {Groth16Verifier as Groth16Verifier6} from './Nft_6_20Verifier.sol';
-import {Groth16Verifier as Groth16Verifier7} from './Nft_7_20Verifier.sol';
-import {Groth16Verifier as Groth16Verifier8} from './Nft_8_20Verifier.sol';
-import {Groth16Verifier as Groth16Verifier9} from './Nft_9_20Verifier.sol';
-import {Groth16Verifier as Groth16Verifier10} from './Nft_10_20Verifier.sol';
+import {Groth16Verifier as Groth16Verifier3} from "./Nft_3_20Verifier.sol";
+import {Groth16Verifier as Groth16Verifier4} from "./Nft_4_20Verifier.sol";
+import {Groth16Verifier as Groth16Verifier5} from "./Nft_5_20Verifier.sol";
+import {Groth16Verifier as Groth16Verifier6} from "./Nft_6_20Verifier.sol";
+import {Groth16Verifier as Groth16Verifier7} from "./Nft_7_20Verifier.sol";
+import {Groth16Verifier as Groth16Verifier8} from "./Nft_8_20Verifier.sol";
+import {Groth16Verifier as Groth16Verifier9} from "./Nft_9_20Verifier.sol";
+import {Groth16Verifier as Groth16Verifier10} from "./Nft_10_20Verifier.sol";
 
-import '@openzeppelin/contracts/access/Ownable.sol';
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-import './Problems.sol';
-import './Tocks.sol';
-import 'hardhat/console.sol';
+import "./Problems.sol";
+import "./Tocks.sol";
+import "hardhat/console.sol";
 
 contract Solver is Ownable {
     address payable public problems;
@@ -48,7 +48,7 @@ contract Solver is Ownable {
     }
 
     fallback() external {
-        revert('no fallback function');
+        revert("no fallback function");
     }
 
     function updateProblemsAddress(address payable problems_) public onlyOwner {
@@ -68,20 +68,20 @@ contract Solver is Ownable {
         uint[] memory input
     ) public {
         address owner = Problems(problems).ownerOf(problemId);
-        require(owner == msg.sender, 'Not the owner');
+        require(owner == msg.sender, "Not the owner");
 
         (, uint256 bodyCount, , uint256 previousTickCount) = Problems(problems)
             .problems(problemId);
         uint256 numberOfBodies = bodyCount;
 
         uint256 numberOfInputs = numberOfBodies * 5 * 2;
-        require(input.length == numberOfInputs, 'Invalid input length');
+        require(input.length == numberOfInputs, "Invalid input length");
         address verifier = Problems(problems).verifiers(
             numberOfBodies,
             tickCount
         );
 
-        require(verifier != address(0), 'Invalid verifier');
+        require(verifier != address(0), "Invalid verifier");
 
         if (numberOfBodies == 3) {
             require(
@@ -91,7 +91,7 @@ contract Solver is Ownable {
                     c,
                     convertTo30(input)
                 ),
-                'Invalid 3 body proof'
+                "Invalid 3 body proof"
             );
         } else if (numberOfBodies == 4) {
             require(
@@ -101,7 +101,7 @@ contract Solver is Ownable {
                     c,
                     convertTo40(input)
                 ),
-                'Invalid 4 body proof'
+                "Invalid 4 body proof"
             );
         } else if (numberOfBodies == 5) {
             require(
@@ -111,7 +111,7 @@ contract Solver is Ownable {
                     c,
                     convertTo50(input)
                 ),
-                'Invalid 5 body proof'
+                "Invalid 5 body proof"
             );
         } else if (numberOfBodies == 6) {
             require(
@@ -121,7 +121,7 @@ contract Solver is Ownable {
                     c,
                     convertTo60(input)
                 ),
-                'Invalid 6 body proof'
+                "Invalid 6 body proof"
             );
         } else if (numberOfBodies == 7) {
             require(
@@ -131,7 +131,7 @@ contract Solver is Ownable {
                     c,
                     convertTo70(input)
                 ),
-                'Invalid 7 body proof'
+                "Invalid 7 body proof"
             );
         } else if (numberOfBodies == 8) {
             require(
@@ -141,7 +141,7 @@ contract Solver is Ownable {
                     c,
                     convertTo80(input)
                 ),
-                'Invalid 8 body proof'
+                "Invalid 8 body proof"
             );
         } else if (numberOfBodies == 9) {
             require(
@@ -151,7 +151,7 @@ contract Solver is Ownable {
                     c,
                     convertTo90(input)
                 ),
-                'Invalid 9 body proof'
+                "Invalid 9 body proof"
             );
         } else if (numberOfBodies == 10) {
             require(
@@ -161,10 +161,10 @@ contract Solver is Ownable {
                     c,
                     convertTo100(input)
                 ),
-                'Invalid 10 body proof'
+                "Invalid 10 body proof"
             );
         } else {
-            revert('Invalid number of bodies');
+            revert("Invalid number of bodies");
         }
         uint256[10] memory bodyIds = Problems(problems).getProblemBodyIds(
             problemId
@@ -199,7 +199,7 @@ contract Solver is Ownable {
             // console.log(input[5 * numberOfBodies + i * 5 + 0]);
             require(
                 bodyData.px == input[5 * numberOfBodies + i * 5 + 0],
-                'Invalid position x'
+                "Invalid position x"
             );
             // update stored values
             bodyData.px = input[i * 5 + 0];
@@ -209,7 +209,7 @@ contract Solver is Ownable {
             // uint256 pyIndex = 5 * numberOfBodies + i * 5 + 1;
             require(
                 bodyData.py == input[5 * numberOfBodies + i * 5 + 1],
-                'Invalid position y'
+                "Invalid position y"
             );
             // update stored values
             bodyData.py = input[i * 5 + 1];
@@ -223,7 +223,7 @@ contract Solver is Ownable {
             // console.log(input[i * 5 + 2]);
             require(
                 bodyData.vx == input[5 * numberOfBodies + i * 5 + 2],
-                'Invalid vector x'
+                "Invalid vector x"
             );
             // update stored values
             bodyData.vx = input[i * 5 + 2];
@@ -240,7 +240,7 @@ contract Solver is Ownable {
             // console.log(input[i * 5 + 3]);
             require(
                 bodyData.vy == input[5 * numberOfBodies + i * 5 + 3],
-                'Invalid vector y'
+                "Invalid vector y"
             );
             // update stored values
             bodyData.vy = input[i * 5 + 3];
@@ -250,7 +250,7 @@ contract Solver is Ownable {
             // uint256 radiusIndex = 5 * numberOfBodies + i * 5 + 4;
             require(
                 bodyData.radius == input[5 * numberOfBodies + i * 5 + 4],
-                'Invalid radius'
+                "Invalid radius"
             );
             // update stored values
             bodyData.radius = input[i * 5 + 4];

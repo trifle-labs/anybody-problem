@@ -345,8 +345,8 @@ contract Problems is ERC721, Ownable {
      * @param mintedBodyIndex The nth body minted from this problem.
      * @param life The life of the body.
      * @param bodySeed The seed of the body.
-     * @param bodyIndex The index of the body in the problem"s body list.
-     * @param incrementBodiesProduced The number of bodies produced to increment the problem"s counter.
+     * @param bodyIndex The index of the body in the problem's body list.
+     * @param incrementBodiesProduced The number of bodies produced to increment the problem's counter.
      */
     function _addBody(
         uint256 problemId,
@@ -384,7 +384,7 @@ contract Problems is ERC721, Ownable {
         );
     }
 
-    // NOTE: this function uses i as input for radius, which means it"s possible
+    // NOTE: this function uses i as input for radius, which means it's possible
     // for an owner to remove a body at index 0 and add back with a greater index
     // the greater index may collide with the index originally used or another body
     // the result is that there may be bodies with the same radius which is acceptable
