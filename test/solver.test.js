@@ -65,6 +65,7 @@ describe('Solver Tests', function () {
       .be.reverted
   })
 
+
   it('creates a proof for 3 bodies', async () => {
     const signers = await ethers.getSigners()
     const deployedContracts = await deployContracts()
