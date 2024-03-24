@@ -327,6 +327,7 @@ export class Anybody extends EventEmitter {
           velocity: this.createVector(vx, vy),
           radius: radius,
           life: b.life.toNumber(),
+          mintedBodyIndex: b.mintedBodyIndex.toNumber(),
           c: this.colorArrayToTxt(this.randomColor(0, 200, bodyRNG))
         }
       })

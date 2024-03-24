@@ -2,7 +2,7 @@ import { WITHERING_STEPS, stepWithering } from './life.js'
 
 const FACE_PNGS = [
   new URL('../public/faces/face1.png', import.meta.url).href,
-  new URL('../public/faces/face2.png', import.meta.url).href,
+  // new URL('../public/faces/face2.png', import.meta.url).href,
   new URL('../public/faces/face3.png', import.meta.url).href,
   new URL('../public/faces/face4.png', import.meta.url).href,
   new URL('../public/faces/face5.png', import.meta.url).href,
@@ -11,7 +11,7 @@ const FACE_PNGS = [
   new URL('../public/faces/face8.png', import.meta.url).href,
   new URL('../public/faces/face9.png', import.meta.url).href,
   new URL('../public/faces/face10.png', import.meta.url).href,
-  new URL('../public/faces/face11.png', import.meta.url).href,
+  // new URL('../public/faces/face11.png', import.meta.url).href,
   new URL('../public/faces/face12.png', import.meta.url).href
 ]
 
@@ -497,7 +497,7 @@ export const Visuals = {
     this.pngFaces ||= []
     const face = this.pngFaces[body.bodyIndex]
     if (!face) {
-      const png = FACE_PNGS[body.bodyIndex]
+      const png = FACE_PNGS[body.mintedBodyIndex || body.bodyIndex]
       this.p.loadImage(png, (img) => {
         this.pngFaces[body.bodyIndex] = img
       })
@@ -613,8 +613,7 @@ export const Visuals = {
       default:
         this.drawBodyStyle1(radius, body)
     }
-
-    if (body.bodyIndex <= FACE_PNGS.length) {
+    if ((body.mintedBodyIndex || body.bodyIndex) <= FACE_PNGS.length) {
       this.drawPngFace(radius, body)
     } else {
       this.drawGlyphFace(radius, body)
