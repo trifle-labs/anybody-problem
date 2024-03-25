@@ -28,20 +28,51 @@ describe('stepStateTest circuit', () => {
     .fill(0)
     .map(() => new Array(5).fill('0'))
   missiles[0] = ['226000', '42000', '10000', '10000', '100000']
+  // const sampleInput = {
+  //   bodies: [
+  //     ['226000', '42000', '8670', '3710', '100000'],
+  //     ['363000', '658000', '6680', '13740', '75000'],
+  //     ['679000', '500000', '12290', '12520', '50000']
+  //   ],
+
+  //   // NOTE: need to have array of 2 when step = 1 because missiles need to be n + 1
+  //   missiles
+  // }
+
   const sampleInput = {
     bodies: [
-      ['226000', '42000', '8670', '3710', '100000'],
-      ['363000', '658000', '6680', '13740', '75000'],
-      ['679000', '500000', '12290', '12520', '50000']
+      ['448036', '156525', '10000', '10000', '7000'],
+      ['687524', '239861', '10000', '10000', '7000'],
+      ['391027', '404572', '10000', '10000', '12000']
     ],
-
-    // NOTE: need to have array of 2 when step = 1 because missiles need to be n + 1
-    missiles
+    missiles: [
+      [0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0],
+      ['0', '1000000', '21159', '-6598', '10'],
+      [0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0]
+    ]
   }
 
   // write sampleInput to circuits/stepStateTest.json
   writeFileSync(
-    join(__dirname, '../circuits/stepStateTest.json'),
+    join(__dirname, '../circuits/game_3_20.json'),
     JSON.stringify(sampleInput, null, 2)
   )
   // console.dir({ sampleInput }, { depth: null })

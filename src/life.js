@@ -1,4 +1,4 @@
-export const MAX_LIFE = 500
+export const MAX_LIFE = 7000
 export const WITHERING_STEPS = 200
 
 export function stepLife(bodies) {
