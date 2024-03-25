@@ -16,15 +16,9 @@
     "test:circom": "ls test/*.js | grep -v -e 'bodies' -e 'problems' -e 'solver' -e 'metadata' | xargs npx hardhat test",
     "test:solidity": "hardhat test test/problems.test.js test/metadata.test.js test/bodies.test.js test/solver.test.js",
     "test": "hardhat test",
+    "precommit": "lint-staged",
     "prepare": "husky"
   },
-  "type": "module",
-  "browserslist": [
-    "> 1%",
-    "last 2 versions",
-    "not dead",
-    "not ie 11"
-  ],
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
       "eslint --fix",
@@ -101,6 +95,13 @@
   "resolutions": {
     "web-worker": "1.2.0"
   },
+  "type": "module",
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead",
+    "not ie 11"
+  ],
   "engines": {
     "node": ">=16"
   },

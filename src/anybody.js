@@ -131,14 +131,14 @@ export class Anybody extends EventEmitter {
   }
 
   storeInits() {
-    console.log('storeInits')
-    console.dir(
-      {
-        frames: this.frames,
-        bodies: this.bodies.map((b) => (b.position.x, b.position.y))
-      },
-      { depth: null }
-    )
+    // console.log('storeInits')
+    // console.dir(
+    //   {
+    //     frames: this.frames,
+    //     bodies: this.bodies.map((b) => (b.position.x, b.position.y))
+    //   },
+    //   { depth: null }
+    // )
     this.bodyInits = this.convertBodiesToBigInts(this.bodies).map((b) => {
       // console.log({ b1: b })
       b = this.convertScaledBigIntBodyToArray(b)
