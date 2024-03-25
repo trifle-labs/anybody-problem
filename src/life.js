@@ -10,9 +10,9 @@ export function stepLife(bodies) {
     } else {
       body.life -= 1
     }
-    if (body.life > 0) {
-      live.push(body)
-    } else if (body.life > -WITHERING_STEPS) {
+
+    live.push(body)
+    if (body.life < 0 && body.life > -WITHERING_STEPS) {
       withering.push(body)
     }
   }

@@ -2,7 +2,7 @@ import { WITHERING_STEPS, stepWithering } from './life.js'
 
 const FACE_PNGS = [
   new URL('../public/faces/face1.png', import.meta.url).href,
-  new URL('../public/faces/face2.png', import.meta.url).href,
+  // new URL('../public/faces/face2.png', import.meta.url).href,
   new URL('../public/faces/face3.png', import.meta.url).href,
   new URL('../public/faces/face4.png', import.meta.url).href,
   new URL('../public/faces/face5.png', import.meta.url).href,
@@ -11,7 +11,7 @@ const FACE_PNGS = [
   new URL('../public/faces/face8.png', import.meta.url).href,
   new URL('../public/faces/face9.png', import.meta.url).href,
   new URL('../public/faces/face10.png', import.meta.url).href,
-  new URL('../public/faces/face11.png', import.meta.url).href,
+  // new URL('../public/faces/face11.png', import.meta.url).href,
   new URL('../public/faces/face12.png', import.meta.url).href
 ]
 
@@ -495,15 +495,22 @@ export const Visuals = {
 
   drawPngFace(radius, body) {
     this.pngFaces ||= []
-    const face = this.pngFaces[body.bodyIndex]
+    const faceIdx = body.mintedBodyIndex || body.bodyIndex
+    const face = this.pngFaces[faceIdx]
     if (!face) {
-      const png = FACE_PNGS[body.bodyIndex]
+      const png = FACE_PNGS[faceIdx]
       this.p.loadImage(png, (img) => {
-        this.pngFaces[body.bodyIndex] = img
+        this.pngFaces[faceIdx] = img
       })
     }
     if (face) {
-      this.bodiesGraphic.image(face, 0, -radius / 3, radius / 3, radius / 3)
+      this.bodiesGraphic.image(
+        face,
+        -radius / 3,
+        -radius / 3,
+        radius / 1.5,
+        radius / 1.5
+      )
     }
   },
 
@@ -607,8 +614,7 @@ export const Visuals = {
       default:
         this.drawBodyStyle1(radius, body)
     }
-
-    if (body.bodyIndex <= FACE_PNGS.length) {
+    if ((body.mintedBodyIndex || body.bodyIndex) <= FACE_PNGS.length) {
       this.drawPngFace(radius, body)
     } else {
       this.drawGlyphFace(radius, body)
@@ -697,6 +703,7 @@ export const Visuals = {
     for (let i = 0; i < this.bodies.length; i++) {
       // const body = this.bodies.sort((a, b) => b.radius - a.radius)[i]
       const body = this.bodies[i]
+      if (body.life <= 0) continue
       let c = body.c
       let finalColor
       if (this.colorStyle == 'squiggle') {

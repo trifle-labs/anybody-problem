@@ -384,14 +384,6 @@ const generateAndSubmitProof = async (
 ) => {
   const { Problems: problems, Solver: solver } = deployedContracts
   const { seed } = await problems.problems(problemId)
-  console.log({
-    expect,
-    deployedContracts,
-    problemId,
-    bodyCount,
-    ticksRun,
-    bodyData
-  })
   const { inputData, bodyFinal, dataResult } = await generateProof(
     seed,
     bodyCount,

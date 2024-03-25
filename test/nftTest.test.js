@@ -21,15 +21,17 @@ describe('nft circuit', () => {
     //   ['679000', '500000', '12290', '12520', '50000']
     // ]
     bodies: [
-      ['924573', '473053', '10000', '10000', '7000'],
-      ['214411', '120612', '10000', '10000', '7000'],
-      ['772980', '706368', '10000', '10000', '2000']
+      ['700501', '604025', '10167', '11594', '12000'],
+      ['811208', '285147', '20000', '11243', '2000'],
+      ['759904', '489069', '10890', '5409', '2000']
     ]
   }
   const sanityCheck = true
 
   before(async () => {
-    circuit = await wasm_tester(`circuits/nft_3_${steps}.circom`)
+    circuit = await wasm_tester(
+      `circuits/nft_${sampleInput.bodies.length}_${steps}.circom`
+    )
   })
 
   it('produces a witness with valid constraints', async () => {

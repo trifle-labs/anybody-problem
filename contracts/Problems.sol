@@ -276,6 +276,15 @@ contract Problems is ERC721, Ownable {
         _addBody(problemId, bodyId, mintedBodyIndex, life, seed, bodyIndex, 0);
     }
 
+    function purgeDeadBodies(uint256 problemId) public {
+        for (uint256 i = 0; i < problems[problemId].bodyCount; i++) {
+            uint256 bodyId = problems[problemId].bodyIds[i];
+            if (problems[problemId].bodyData[bodyId].life == 0) {
+                removeBody(problemId, bodyId);
+            }
+        }
+    }
+
     function removeBody(uint256 problemId, uint256 bodyId) public {
         require(!paused, "Paused");
         require(ownerOf(problemId) == msg.sender, "Not problem owner");
