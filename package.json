@@ -16,7 +16,8 @@
     "test:circom": "ls test/*.js | grep -v -e 'bodies' -e 'problems' -e 'solver' -e 'metadata' | xargs npx hardhat test",
     "test:solidity": "hardhat test test/problems.test.js test/metadata.test.js test/bodies.test.js test/solver.test.js",
     "test": "hardhat test",
-    "prepare": "husky"
+    "prepare": "husky",
+    "pre-commit": "prettier --write ."
   },
   "type": "module",
   "browserslist": [

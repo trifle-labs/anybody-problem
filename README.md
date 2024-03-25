@@ -243,12 +243,12 @@ Currently the project is targeting [powersOfTau28_hez_final_20.ptau](https://git
 | acceptableMarginOfError(60)   | 125                    | 320                                    |
 | calculateForce()              | 279                    | 143.37                                 |
 | detectCollision(3)            | 348                    | 114.94                                 |
-| forceAccumulator(3)           | 1522                   | 26.28                                  |
+| forceAccumulator(3)           | 1522                  | 26.28                                  |
 | getDistance(20)               | 88                     | 454.55                                 |
 | limiter(252)                  | 254                    | 157.48                                 |
 | lowerLimiter(252)             | 254                    | 157.48                                 |
-| nft(3, 10)                    | 15184                  | 26.34                                  |
-| stepState(3, 10)              | 19121                  | 20.92                                  |
+| nft(3, 10)                    | 15_184                 | 26.34                                  |
+| stepState(3, 10)              | 19_121                 | 20.92                                  |
 | nft_3_20                      | 33_060                 |                                        |
 | nft_4_20                      | 55_480                 |                                        |
 
