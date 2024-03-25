@@ -300,6 +300,7 @@ export class Anybody extends EventEmitter {
       this.radiusMultiplyer = this.random(10, 200)
       for (let i = 0; i < this.startingBodies; i++) {
 
+
         this.bodies[i].c = `hsla(${this.random(0, 360)}, 100%, 100%, ${this.opac})`
         // this.bodies[i].c = this.colorArrayToTxt(this.randomColor(200, 250)
         this.bodies[i].bodyIndex = i
