@@ -17,11 +17,11 @@
     "test:solidity": "hardhat test test/problems.test.js test/metadata.test.js test/bodies.test.js test/solver.test.js",
     "test": "hardhat test",
     "prepare": "husky",
-    "pre-commit": "prettier --write ."
+    "precommit": "lint-staged"
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged"
+      "pre-commit": "yarn precommit"
     }
   },
   "lint-staged": {
