@@ -19,13 +19,11 @@
     "prepare": "husky",
     "pre-commit": "prettier --write ."
   },
-  "type": "module",
-  "browserslist": [
-    "> 1%",
-    "last 2 versions",
-    "not dead",
-    "not ie 11"
-  ],
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
       "eslint --fix",
@@ -102,6 +100,13 @@
   "resolutions": {
     "web-worker": "1.2.0"
   },
+  "type": "module",
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead",
+    "not ie 11"
+  ],
   "engines": {
     "node": ">=16"
   },
