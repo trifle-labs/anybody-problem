@@ -131,14 +131,14 @@ export class Anybody extends EventEmitter {
   }
 
   storeInits() {
-    console.log('storeInits')
-    console.dir(
-      {
-        frames: this.frames,
-        bodies: this.bodies.map((b) => (b.position.x, b.position.y))
-      },
-      { depth: null }
-    )
+    // console.log('storeInits')
+    // console.dir(
+    //   {
+    //     frames: this.frames,
+    //     bodies: this.bodies.map((b) => (b.position.x, b.position.y))
+    //   },
+    //   { depth: null }
+    // )
     this.bodyInits = this.convertBodiesToBigInts(this.bodies).map((b) => {
       // console.log({ b1: b })
       b = this.convertScaledBigIntBodyToArray(b)
@@ -299,9 +299,8 @@ export class Anybody extends EventEmitter {
       this.bgColor = this.colorArrayToTxt([0, 0, 0]) //this.randomColor(0, 20))
       this.radiusMultiplyer = this.random(10, 200)
       for (let i = 0; i < this.startingBodies; i++) {
-
-
-        this.bodies[i].c = `hsla(${this.random(0, 360)}, 100%, 100%, ${this.opac})`
+        this.bodies[i].c =
+          `hsla(${this.random(0, 360)}, 100%, 100%, ${this.opac})`
         // this.bodies[i].c = this.colorArrayToTxt(this.randomColor(200, 250)
         this.bodies[i].bodyIndex = i
       }
