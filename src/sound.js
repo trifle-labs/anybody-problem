@@ -235,7 +235,7 @@ export default class Sound {
       }).toDestination()
     }
 
-    // play if it's been loaded, otherwise load and skip
+    // play if it's been loaded or loads quickly, otherwise load and skip
     const now = Date.now()
     await loaded()
     if (Date.now() - now < 20) {
