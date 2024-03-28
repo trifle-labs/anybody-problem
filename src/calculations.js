@@ -353,6 +353,7 @@ export const Calculations = {
             this.convertScaledBigIntToFloat(body.radius)
           )
         )
+        this.sound?.playExplosion()
         bodies[j].radius = 0n
       }
     }
