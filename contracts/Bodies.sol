@@ -15,7 +15,8 @@ contract Bodies is ERC721, Ownable {
     struct Body {
         uint256 problemId;
         uint256 mintedBodyIndex;
-        uint256 life;
+        uint256 starLvl;
+        uint256 maxStarLvl;
         bytes32 seed;
     }
     mapping(uint256 => Body) public bodies;
@@ -26,26 +27,26 @@ contract Bodies is ERC721, Ownable {
         0, // 1st body
         0, // 2nd body
         0, // 3rd body
-        1_000, // 4th body
-        2_000, // 5th body
-        4_000, // 6th body
-        8_000, // 7th body
-        16_000, // 8th body
-        32_000, //9th body
-        64_000 // 10th body
+        2, // 4th body
+        4, // 5th body
+        8, // 6th body
+        16, // 7th body
+        32, // 8th body
+        64, // 9th body
+        128 // 10th body
     ];
 
-    uint256[10] public lifeLengths = [
-        7_000, // 1st body
-        7_000, // 2nd body
-        7_000, // 3rd body
-        10_000, // 4th body
-        11_000, // 5th body
-        12_000, // 6th body
-        13_000, // 7th body
-        14_000, // 8th body
-        15_000, // 9th body
-        20_000 // 10th body
+    uint256[10] public starLvls = [
+        4, // 1st body
+        4, // 2nd body
+        4, // 3rd body
+        4, // 4th body
+        5, // 5th body
+        6, // 6th body
+        7, // 7th body
+        8, // 8th body
+        9, // 9th body
+        10 // 10th body
     ];
 
     event bodyBorn(
@@ -86,7 +87,7 @@ contract Bodies is ERC721, Ownable {
 
     function updateBodyLife(uint256 index, uint256 life) public onlyOwner {
         require(index < 10, "Invalid index");
-        lifeLengths[index] = life;
+        starLvls[index] = life;
     }
 
     function updateProblemsAddress(address payable problems_) public onlyOwner {
@@ -121,7 +122,8 @@ contract Bodies is ERC721, Ownable {
         bodies[counter] = Body({
             problemId: 0,
             mintedBodyIndex: mintedBodyIndex,
-            life: lifeLengths[mintedBodyIndex],
+            starLvl: 0,
+            maxStarLvl: starLvls[mintedBodyIndex],
             seed: generateSeed(counter)
         });
         _mint(owner, counter);
@@ -129,7 +131,7 @@ contract Bodies is ERC721, Ownable {
             counter,
             problemId,
             mintedBodyIndex,
-            lifeLengths[mintedBodyIndex],
+            starLvls[mintedBodyIndex],
             bodies[counter].seed,
             false
         );
@@ -143,12 +145,13 @@ contract Bodies is ERC721, Ownable {
         // NOTE: Problems already confirms this problem exists and is owned by the owner
         processPayment(owner, mintedBodyIndex);
         counter++; // bodyId
-        life = lifeLengths[mintedBodyIndex];
+        life = starLvls[mintedBodyIndex];
         seed = generateSeed(counter);
         bodies[counter] = Body({
             problemId: problemId,
             mintedBodyIndex: mintedBodyIndex,
-            life: life,
+            starLvl: 0,
+            maxStarLvl: life,
             seed: seed
         });
 
@@ -165,44 +168,36 @@ contract Bodies is ERC721, Ownable {
     )
         public
         onlyProblems
-        returns (uint256 mintedBodyIndex, uint256 life, bytes32 seed)
+        returns (uint256 mintedBodyIndex, uint256 starLvl, uint256 maxStarLvl, bytes32 seed)
     {
         require(ownerOf(bodyId) == owner, "Not body owner");
         bodies[bodyId].problemId = problemId;
         _transfer(owner, address(this), bodyId);
         return (
             bodies[bodyId].mintedBodyIndex,
-            bodies[bodyId].life,
+            bodies[bodyId].starLvl,
+            bodies[bodyId].maxStarLvl,
             bodies[bodyId].seed
         );
     }
 
+    // NOTE: At this moment, it is possible for a body to reach star level but not be cemented in the
+    // problem. It allows people to "solve" a body, then sell the star version to someone else.
+    // UPDATE: I think this is an impossible situation to get into since bodies are converted
+    // to stars in the solver contract as soon as they occur.
+    // TODO: Decide whether we like this mechanic or not.
     function moveBodyFromProblem(
         address owner,
         uint256 bodyId,
         uint256 problemId,
-        uint256 life
+        uint256 starLvl
     ) public onlyProblems {
         require(ownerOf(bodyId) == address(this), "Not body owner");
         require(bodies[bodyId].problemId == problemId, "Not in problem");
         bodies[bodyId].problemId = 0;
-        bodies[bodyId].life = life;
+        bodies[bodyId].starLvl = starLvl;
         _transfer(address(this), owner, bodyId);
     }
-
-    // // TODO: add back and combine life amounts here
-    // function upgrade(uint256 persistBodyId, uint256 burnBodyId) public {
-    //     require(ownerOf(persistBodyId) == msg.sender, "Not persistBody owner");
-    //     require(ownerOf(burnBodyId) == msg.sender, "Not burnBody owner");
-    //     require(persistBodyId != burnBodyId, "Same body");
-    //     require(
-    //         styles[persistBodyId] == styles[burnBodyId],
-    //         "Different styles"
-    //     );
-    //     _burn(burnBodyId);
-    //     styles[persistBodyId]++;
-    //     emit Upgrade(persistBodyId, burnBodyId, styles[persistBodyId]);
-    // }
 
     function burn(uint256 bodyID) public onlyProblems {
         _burn(bodyID);

@@ -4,7 +4,7 @@ const ethers = hre.ethers
 // const { describe, it } = require('mocha')
 
 import {
-  proverTickIndex,
+  getTicksRun,
   deployContracts,
   correctPrice,
   /*splitterAddress,*/ getParsedEventLogs,
@@ -27,7 +27,7 @@ describe('Problem Tests', function () {
         const bodyCount = name.split('_')[1]
         storedAddress = await problems.verifiers(
           bodyCount,
-          proverTickIndex[bodyCount]
+          getTicksRun(bodyCount)
         )
       } else {
         const functionName = name.toLowerCase()
@@ -404,7 +404,7 @@ describe('Problem Tests', function () {
     for (const [name, contract] of Object.entries(deployedContracts)) {
       if (name.indexOf('Verifier') === -1) continue
       const bodyCount = name.split('_')[1]
-      const tickCount = proverTickIndex[bodyCount]
+      const tickCount = await getTicksRun(bodyCount)
       const storedAddress = await problems.verifiers(bodyCount, tickCount)
       const actualAddress = contract.address
       expect(storedAddress).to.equal(actualAddress)

@@ -9,6 +9,26 @@ const correctPrice = ethers.utils.parseEther('0.01')
 // TODO: change this to the splitter address
 // const splitterAddress = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266'
 
+const proverTickIndex = {
+  3: 500,
+  4: 100,
+  5: 100,
+  6: 100,
+  7: 100,
+  8: 50,
+  9: 50,
+  10: 50
+}
+
+const getTicksRun = async (bodyCount) => {
+  const networkInfo = await hre.ethers.provider.getNetwork()
+  if (networkInfo['chainId'] == 12345) {
+    return 20
+  } else {
+    return proverTickIndex[bodyCount]
+  }
+}
+
 const testJson = (tJson) => {
   try {
     JSON.parse(tJson)
@@ -57,7 +77,7 @@ const initContracts = async (getSigners = true) => {
 
   const contractNames = ['Problems', 'Bodies', 'Tocks', 'Solver', 'Metadata']
   for (let i = 3; i <= 10; i++) {
-    contractNames.push(`Nft_${i}_20Verifier.sol`)
+    contractNames.push(`Game_${i}_20Verifier.sol`)
   }
 
   let returnObject = {}
@@ -84,17 +104,6 @@ const decodeUri = (decodedJson) => {
   let buff = Buffer.from(metaWithoutDataURL, 'base64')
   let text = buff.toString('ascii')
   return text
-}
-
-const proverTickIndex = {
-  3: 500,
-  4: 100,
-  5: 100,
-  6: 100,
-  7: 100,
-  8: 100,
-  9: 50,
-  10: 50
 }
 
 const deployContracts = async () => {
@@ -127,8 +136,8 @@ const deployContracts = async () => {
   const verifiersBodies = []
 
   for (let i = 3; i <= 10; i++) {
-    const ticks = proverTickIndex[i]
-    const name = `Nft_${i}_${ticks}Verifier`
+    const ticks = await getTicksRun(i)
+    const name = `Game_${i}_${ticks}Verifier`
     const path = `contracts/${name}.sol:Groth16Verifier`
     const verifier = await hre.ethers.getContractFactory(path)
     const verifierContract = await verifier.deploy()
@@ -319,7 +328,13 @@ const prepareMintBody = async (signers, deployedContracts, problemId, acct) => {
   return { tx }
 }
 
-const generateWitness = async (seed, bodyCount, ticksRun, bodyData) => {
+const generateWitness = async (
+  seed,
+  bodyCount,
+  ticksRun,
+  bodyData,
+  mode = 'nft'
+) => {
   const anybody = new Anybody(null, {
     bodyData,
     seed,
@@ -333,29 +348,40 @@ const generateWitness = async (seed, bodyCount, ticksRun, bodyData) => {
   const bodyFinal = anybody.bodyFinal
   const dataResult = await exportCallDataGroth16(
     inputData,
-    `./public/nft_${bodyCount}_${ticksRun}.wasm`,
-    `./public/nft_${bodyCount}_${ticksRun}_final.zkey`
+    `./public/${mode}_${bodyCount}_${ticksRun}.wasm`,
+    `./public/${mode}_${bodyCount}_${ticksRun}_final.zkey`
   )
   return { inputData, bodyFinal, dataResult }
 }
 
-const generateProof = async (seed, bodyCount, ticksRun, bodyData) => {
+const generateProof = async (
+  seed,
+  bodyCount,
+  ticksRun,
+  bodyData,
+  mode = 'nft',
+  missiles = null
+) => {
   const anybody = new Anybody(null, {
     bodyData,
     seed,
-    util: true
+    util: true,
+    stopEvery: ticksRun,
+    mode
   })
   anybody.storeInits()
   anybody.runSteps(ticksRun)
-  anybody.calculateBodyFinal()
-
-  const inputData = { bodies: anybody.bodyInits }
-  const bodyFinal = anybody.bodyFinal
+  const results = anybody.finish()
+  const inputData = {
+    bodies: results.bodyInits,
+    missiles: missiles || results.missiles
+  }
+  const bodyFinal = results.bodyFinal
   // const startTime = Date.now()
   const dataResult = await exportCallDataGroth16(
     inputData,
-    `./public/nft_${bodyCount}_${ticksRun}.wasm`,
-    `./public/nft_${bodyCount}_${ticksRun}_final.zkey`
+    `./public/${mode}_${bodyCount}_${ticksRun}.wasm`,
+    `./public/${mode}_${bodyCount}_${ticksRun}_final.zkey`
   )
   // bodyCount = bodyCount.toNumber()
   // const endTime = Date.now()
@@ -388,7 +414,8 @@ const generateAndSubmitProof = async (
     seed,
     bodyCount,
     ticksRun,
-    bodyData
+    bodyData,
+    'game'
   )
 
   for (let i = 0; i < dataResult.Input.length; i++) {
@@ -417,7 +444,9 @@ const generateAndSubmitProof = async (
 }
 
 export {
+  getTicksRun,
   proverTickIndex,
+  generateProof,
   generateAndSubmitProof,
   prepareMintBody,
   mintProblem,
