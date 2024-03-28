@@ -289,7 +289,6 @@ export default class Sound {
       this.compressor.ratio.value = 2
       this.compressor.attack.value = 1
       this.compressor.release.value = 0.1
-      console.log('song.volume', song.volume)
       this.masterVolume?.dispose()
       this.masterVolume = new Volume(song.volume || 0).toDestination()
       this.masterVolume.volume.rampTo(song.volume || MAX_VOLUME, 3)
