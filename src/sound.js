@@ -204,18 +204,22 @@ export default class Sound {
   // this function must be called in response to a user action
   // otherwise safari and chrome will block the audio
   resume() {
-    this.play(SONGS.ipod)
+    const randomSong =
+      Object.values(SONGS)[
+        Math.floor(Math.random() * Object.values(SONGS).length)
+      ]
+    this.play(randomSong)
     this.playOneShot(bongoHard, -20)
   }
 
   pause() {
     Transport?.stop()
     this.voices?.forEach((voice) => voice.player.stop())
-    this.playOneShot(bongoHard, -20)
+    this.playOneShot(bongoHard, -22)
   }
 
   playMissile() {
-    this.playOneShot(bubble, -17)
+    this.playOneShot(bubble, -26)
   }
 
   playExplosion() {
