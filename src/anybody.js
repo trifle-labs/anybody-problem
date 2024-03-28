@@ -202,6 +202,13 @@ export class Anybody extends EventEmitter {
       canvas.removeEventListener('click', this.setPause)
       canvas.removeEventListener('click', this.missileClick)
       canvas.addEventListener('click', this.missileClick.bind(this))
+      window.addEventListener('keydown', (e) => {
+        // spacebar
+        if (e.code == 'Space') {
+          e.preventDefault()
+          this.setPause()
+        }
+      })
     } else {
       canvas.removeEventListener('click', this.missileClick)
       canvas.removeEventListener('click', this.setPause)
@@ -275,6 +282,25 @@ export class Anybody extends EventEmitter {
     })
   }
 
+  processMissileInits(missiles) {
+    const radius = 10
+    return missiles.map((b) => {
+      const maxVectorScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
+      return {
+        step: b.step,
+        x: this.convertFloatToScaledBigInt(b.position.x).toString(),
+        y: this.convertFloatToScaledBigInt(b.position.y).toString(),
+        vx: (
+          this.convertFloatToScaledBigInt(b.velocity.x) + maxVectorScaled
+        ).toString(),
+        vy: (
+          this.convertFloatToScaledBigInt(b.velocity.y) + maxVectorScaled
+        ).toString(),
+        radius: radius.toString()
+      }
+    })
+  }
+
   finish() {
     // this.finished = true
     // this.setPause(true)
@@ -283,14 +309,12 @@ export class Anybody extends EventEmitter {
       const missileInits = []
       if (this.mode == 'game') {
         let missileIndex = 0
-        console.log({
-          stopEvery: this.stopEvery,
-          alreadyRun: this.alreadyRun,
-          frames: this.frames
-        })
-        for (let i = 0; i < this.stopEvery - this.alreadyRun; i++) {
-          let j = i + this.alreadyRun
-          if (this.missileInits[missileIndex]?.step == j) {
+        for (
+          let i = this.alreadyRun;
+          i < this.alreadyRun + this.stopEvery;
+          i++
+        ) {
+          if (this.missileInits[missileIndex]?.step == i) {
             const missile = this.missileInits[missileIndex]
             missileInits.push([
               missile.x,
@@ -312,11 +336,13 @@ export class Anybody extends EventEmitter {
         bodyFinal: JSON.parse(JSON.stringify(this.bodyFinal))
       })
     }
-    // console.log('FINISH????????????????????????????????????????')
     this.bodyInits = JSON.parse(JSON.stringify(this.bodyFinal))
-    this.missileInits = []
-    this.bodyFinal = []
     this.alreadyRun = this.frames
+    this.missileInits = this.processMissileInits(this.missiles).map((m) => {
+      m.step = this.frames
+      return m
+    })
+    this.bodyFinal = []
     // this.setPause(false)
   }
 
@@ -456,7 +482,12 @@ export class Anybody extends EventEmitter {
       this.setPause(false)
       return
     }
-    if (this.missiles.length > 0 && !this.admin) return
+    if (this.missiles.length > 0 && !this.admin) {
+      // this is a hack to prevent multiple missiles from being fired
+      this.missiles = []
+      // remove latest missile from missileInits
+      this.missileInits.pop()
+    }
     const canvas = document.querySelector('canvas')
     this.thisLevelMissileCount++
     this.missileCount++
@@ -466,26 +497,14 @@ export class Anybody extends EventEmitter {
     const radius = 10
 
     const b = {
+      step: this.frames,
       position: this.p.createVector(0, this.windowWidth),
       velocity: this.p.createVector(x, y - this.windowWidth),
       radius
     }
     b.velocity.limit(10)
     this.missiles.push(b)
-    const maxVectorScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
-    const missileInit = {
-      step: this.frames - this.alreadyRun,
-      x: '0',
-      y: (BigInt(this.windowWidth) * this.scalingFactor).toString(),
-      vx: (
-        this.convertFloatToScaledBigInt(b.velocity.x) + maxVectorScaled
-      ).toString(),
-      vy: (
-        this.convertFloatToScaledBigInt(b.velocity.y) + maxVectorScaled
-      ).toString(),
-      radius: radius.toString()
-    }
-    this.missileInits.push(missileInit)
+    this.missileInits.push(...this.processMissileInits([b]))
   }
 }
 if (typeof window !== 'undefined') {

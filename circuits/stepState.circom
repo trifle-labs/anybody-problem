@@ -79,10 +79,10 @@ template StepState(totalBodies, steps) {
     mux[i].c[1][0] <== detectCollision[i].out_missile[1];
     mux[i].c[1][1] <== missiles[i + 1][1];
 
-    mux[i].c[2][0] <== missiles[i][2];
+    mux[i].c[2][0] <== calculateMissile[i].out_missile[2]; 
     mux[i].c[2][1] <== missiles[i + 1][2];
 
-    mux[i].c[3][0] <== missiles[i][3];
+    mux[i].c[3][0] <== calculateMissile[i].out_missile[3]; 
     mux[i].c[3][1] <== missiles[i + 1][3];
 
     mux[i].c[4][0] <== detectCollision[i].out_missile[2];

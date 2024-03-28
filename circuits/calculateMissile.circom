@@ -86,8 +86,8 @@ template CalculateMissile() {
   muxY.c[1] <== 0;
   muxY.s <== isZeroY.out;
 
-  out_missile[0] <== new_pos[0]; // maxBits: 20 (maxNum: 1_000_000)
-  out_missile[1] <== new_pos[1]; // maxBits: 20 (maxNum: 1_000_000)
+  out_missile[0] <== new_pos[0] - maxVectorScaled; // maxBits: 20 (maxNum: 1_000_000)
+  out_missile[1] <== new_pos[1] - maxVectorScaled; // maxBits: 20 (maxNum: 1_000_000)
   out_missile[2] <== in_missile[2]; // maxBits: 14 (maxNum: 10_000)
   out_missile[3] <== in_missile[3]; // maxBits: 14 (maxNum: 10_000)
   out_missile[4] <== muxY.out;

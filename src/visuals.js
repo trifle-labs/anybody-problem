@@ -19,9 +19,8 @@ export const Visuals = {
   async draw() {
     if (!this.showIt) return
 
-    // TODO: add back
-    const enoughBodies = true
-    // this.bodies.filter((b) => !b.life || b.life > 0).length >= 3
+    const enoughBodies =
+      this.bodies.filter((b) => !b.life || b.life > 0).length >= 3
 
     // when there are 3 or more bodies, step the simulation
     if (enoughBodies) {
@@ -79,7 +78,7 @@ export const Visuals = {
     if (this.paused) {
       this.p.noStroke()
       this.p.strokeWeight(0)
-      this.p.fill('rgba(0,0,0,1)')
+      this.p.fill('rgba(0,0,0,0.4)')
       this.p.rect(0, 0, this.windowWidth, this.windowHeight)
       this.p.push()
       this.p.fill('white')
@@ -423,6 +422,12 @@ export const Visuals = {
     for (let i = 0; i < this.missiles.length; i++) {
       const body = this.missiles[i]
       this.p.ellipse(body.position.x, body.position.y, body.radius, body.radius)
+      // this.p.textSize(40)
+      // this.p.text(
+      //   `${body.position.x}, ${body.position.y}`,
+      //   body.position.x,
+      //   body.position.y
+      // )
     }
   },
 
@@ -601,7 +606,7 @@ export const Visuals = {
     this.bodiesGraphic.fill('white')
     this.bodiesGraphic.textSize(radius / 4)
     this.bodiesGraphic.textAlign(this.p.CENTER, this.p.CENTER)
-    // this.bodiesGraphic.text(body.life, 0, radius)
+    this.bodiesGraphic.text(body.life, 0, radius)
   },
 
   drawBodyStyle1(radius, body) {
@@ -609,6 +614,13 @@ export const Visuals = {
     this.bodiesGraphic.noStroke()
     this.bodiesGraphic.fill(c)
     this.bodiesGraphic.ellipse(0, 0, radius, radius)
+
+    this.bodiesGraphic.text(body.life, 0, radius)
+    this.bodiesGraphic.fill('white')
+    this.bodiesGraphic.textSize(50)
+    this.bodiesGraphic.text(body.life, 0, radius)
+
+    // this.bodiesGraphic.text(`${body.position.x}, ${body.position.y}`, 0, 0)
   },
 
   moveAndRotate_PopAfter(graphic, x, y, v) {

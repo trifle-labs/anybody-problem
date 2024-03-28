@@ -1,4 +1,4 @@
-export const MAX_LIFE = 7000
+export const MAX_LIFE = 60 * 50 // 60 sec at 50 fps
 export const WITHERING_STEPS = 200
 
 export function stepLife(bodies) {
