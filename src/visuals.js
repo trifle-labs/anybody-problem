@@ -1,5 +1,4 @@
-import { WITHERING_STEPS, stepWithering } from './life.js'
-
+const WITHERING_STEPS = 200
 const FACE_PNGS = [
   new URL('../public/faces/face1.png', import.meta.url).href,
   // new URL('../public/faces/face2.png', import.meta.url).href,
@@ -31,7 +30,6 @@ export const Visuals = {
     } else {
       // if less than 3 just finish the withering animation
       // TODO: add some sort of instructional message to screen that new bodies are needed to progress the simulation
-      this.witheringBodies = stepWithering(this.witheringBodies)
     }
 
     this.p.noFill()
@@ -615,12 +613,9 @@ export const Visuals = {
     this.bodiesGraphic.fill(c)
     this.bodiesGraphic.ellipse(0, 0, radius, radius)
 
-    this.bodiesGraphic.text(body.life, 0, radius)
     this.bodiesGraphic.fill('white')
     this.bodiesGraphic.textSize(50)
-    this.bodiesGraphic.text(body.life, 0, radius)
-
-    // this.bodiesGraphic.text(`${body.position.x}, ${body.position.y}`, 0, 0)
+    this.bodiesGraphic.text(`${body.starLvl} / ${body.maxStarLvl}`, 0, radius)
   },
 
   moveAndRotate_PopAfter(graphic, x, y, v) {

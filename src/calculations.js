@@ -260,7 +260,8 @@ export const Calculations = {
         newBody.c = body.c
       }
       newBody.mintedBodyIndex = body.mintedBodyIndex
-      newBody.life = body.life
+      newBody.starLvl = body.starLvl
+      newBody.maxStarLvl = body.maxStarLvl
       bodies.push(newBody)
     }
     return bodies
@@ -354,9 +355,15 @@ export const Calculations = {
           )
         )
         this.sound?.playExplosion()
-        bodies[j].radius = 0n
+
+        body.starLvl += 1
+
+        if (body.starLvl >= body.maxStarLvl) {
+          bodies[j].radius = 0n
+        }
       }
     }
+
     missiles[0] = missile
     return { bodies, missiles }
   }
