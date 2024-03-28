@@ -86,6 +86,17 @@ const decodeUri = (decodedJson) => {
   return text
 }
 
+const proverTickIndex = {
+  3: 500,
+  4: 100,
+  5: 100,
+  6: 100,
+  7: 100,
+  8: 100,
+  9: 50,
+  10: 50
+}
+
 const deployContracts = async () => {
   var networkinfo = await hre.ethers.provider.getNetwork()
   const testing = networkinfo['chainId'] == 12345
@@ -115,19 +126,8 @@ const deployContracts = async () => {
   const verifiersTicks = []
   const verifiersBodies = []
 
-  const proofSizeKey = {
-    3: 500,
-    4: 100,
-    5: 100,
-    6: 100,
-    7: 100,
-    8: 100,
-    9: 50,
-    10: 50
-  }
-
   for (let i = 3; i <= 10; i++) {
-    const ticks = proofSizeKey[i]
+    const ticks = proverTickIndex[i]
     const name = `Nft_${i}_${ticks}Verifier`
     const path = `contracts/${name}.sol:Groth16Verifier`
     const verifier = await hre.ethers.getContractFactory(path)
@@ -417,6 +417,7 @@ const generateAndSubmitProof = async (
 }
 
 export {
+  proverTickIndex,
   generateAndSubmitProof,
   prepareMintBody,
   mintProblem,

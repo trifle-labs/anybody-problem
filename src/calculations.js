@@ -10,7 +10,6 @@ export const Calculations = {
   },
 
   forceAccumulatorBigInts(bodies) {
-    // console.dir({ bodies: bodies.map(this.convertScaledBigIntBodyToArray.bind(this)) }, { depth: null })
     const vectorLimitScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
     let accumulativeForces = []
     for (let i = 0; i < bodies.length; i++) {
@@ -346,7 +345,6 @@ export const Calculations = {
       const minDist = missile.radius == 0n ? 0n : body.radius * 2n
       if (distance < minDist) {
         missile.radius = 0n
-        // console.log('missile hit')
         this.explosions.push(
           _explosion(
             this.convertScaledBigIntToFloat(body.position.x),

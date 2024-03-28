@@ -4,6 +4,7 @@ const ethers = hre.ethers
 // const { describe, it } = require('mocha')
 
 import {
+  proverTickIndex,
   deployContracts,
   correctPrice,
   /*splitterAddress,*/ getParsedEventLogs,
@@ -24,7 +25,10 @@ describe('Problem Tests', function () {
       let storedAddress
       if (name.indexOf('Verifier') > -1) {
         const bodyCount = name.split('_')[1]
-        storedAddress = await problems.verifiers(bodyCount, 20)
+        storedAddress = await problems.verifiers(
+          bodyCount,
+          proverTickIndex[bodyCount]
+        )
       } else {
         const functionName = name.toLowerCase()
         storedAddress = await problems[`${functionName}()`]()
@@ -269,15 +273,16 @@ describe('Problem Tests', function () {
     ).to.be.revertedWith('Ownable: caller is not the owner')
   })
 
-  it.skip('sends money to splitter correctly', async function () {
+  it('sends money to splitter correctly', async function () {
     const [, , , addr3] = await ethers.getSigners()
     const { Problems: problems } = await deployContracts()
     await problems.updatePaused(false)
     await problems.updateStartDate(0)
     await problems.connect(addr3)['mint()']({ value: correctPrice })
     expect(await problems.ownerOf(1)).to.equal(addr3.address)
-    // var splitterBalance = await ethers.provider.getBalance(splitterAddress)
-    // expect(splitterBalance == correctPrice)
+    const splitterAddress = await problems.proceedRecipient()
+    var splitterBalance = await ethers.provider.getBalance(splitterAddress)
+    expect(splitterBalance == correctPrice)
   })
 
   it('must be unpaused', async function () {
@@ -396,10 +401,10 @@ describe('Problem Tests', function () {
   it('stores the verifiers in the correct order of the mapping', async () => {
     const deployedContracts = await deployContracts()
     const { Problems: problems } = deployedContracts
-    const tickCount = 20
     for (const [name, contract] of Object.entries(deployedContracts)) {
       if (name.indexOf('Verifier') === -1) continue
       const bodyCount = name.split('_')[1]
+      const tickCount = proverTickIndex[bodyCount]
       const storedAddress = await problems.verifiers(bodyCount, tickCount)
       const actualAddress = contract.address
       expect(storedAddress).to.equal(actualAddress)

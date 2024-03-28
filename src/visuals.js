@@ -36,7 +36,7 @@ export const Visuals = {
 
     this.p.noFill()
     this.drawBg()
-    this.drawBodyTrails()
+    this.drawTails()
     this.drawBodies()
     this.drawWitheringBodies()
 
@@ -51,6 +51,7 @@ export const Visuals = {
     }
     // this.drawBodyOutlines()
 
+    this.drawPause()
     this.drawScore()
 
     const isNotFirstFrame = this.frames !== 0
@@ -66,11 +67,24 @@ export const Visuals = {
       if (didNotJustPause && enoughBodies) {
         this.finish()
       }
-      if (this.optimistic && enoughBodies) {
-        this.started()
-      }
+      // if (this.optimistic && enoughBodies) {
+      //   this.started()
+      // }
     } else {
       this.justPaused = false
+    }
+  },
+  drawPause() {
+    if (this.paused) {
+      this.p.noStroke()
+      this.p.strokeWeight(0)
+      this.p.fill('rgba(0,0,0,0.4)')
+      this.p.rect(0, 0, this.windowWidth, this.windowHeight)
+      this.p.push()
+      this.p.fill('white')
+      this.p.translate(this.windowWidth / 2, this.windowHeight / 2)
+      this.p.triangle(-100, -100, -100, 100, 100, 0)
+      this.p.pop()
     }
   },
   drawBodyOutlines() {
@@ -284,6 +298,7 @@ export const Visuals = {
   },
 
   drawScore() {
+    this.p.noStroke()
     if (this.mode == 'nft') {
       // this.accumulateFrameRate += this.frameRate()
       // console.log(this.accumulateFrameRate, this.p.frameRate())
@@ -291,7 +306,6 @@ export const Visuals = {
       //   this.averageFrameRate = this.accumulateFrameRate / 10
       //   this.accumulateFrameRate = 0
       // }
-      this.p.noStroke()
       this.p.fill('white')
       // this.p.rect(0, 0, 50, 20)
       // this.p.fill(this.getNotGrey())
@@ -301,8 +315,8 @@ export const Visuals = {
       this.p.text(`${this.frameRate().toFixed(2)} fps`, 65, 100)
     } else {
       this.p.fill('white')
-      this.p.rect(0, 0, 50, 20)
-      this.p.fill('black')
+      // this.p.rect(0, 0, 50, 20)
+      // this.p.fill('black')
       // this.p.textAlign(this.p.RIGHT) // Right-align the text
       const secondsAsTime = new Date(this.totalSec * 1000)
         .toISOString()
@@ -352,14 +366,20 @@ export const Visuals = {
     this.p.stroke('rgba(200,200,200,1)')
     this.p.strokeCap(this.p.SQUARE)
     this.p.strokeWeight(10)
-
+    const canvas = document.querySelector('canvas')
     // Bottom left corner coordinates
     let startX = 0
     let startY = this.windowHeight
 
+    const scaleX = (val) => {
+      return (val / canvas.offsetWidth) * this.windowWidth
+    }
+    const scaleY = (val) => {
+      return (val / canvas.offsetHeight) * this.windowHeight
+    }
     // Calculate direction from bottom left to mouse
-    let dirX = this.p.mouseX - startX
-    let dirY = this.p.mouseY - startY
+    let dirX = scaleX(this.p.mouseX) - startX
+    let dirY = scaleY(this.p.mouseY) - startY
 
     // Calculate the length of the direction
     let len = this.p.sqrt(dirX * dirX + dirY * dirY)
@@ -396,16 +416,18 @@ export const Visuals = {
   },
 
   drawMissiles() {
-    this.p.fill('black')
+    this.p.fill('red')
+    this.p.noStroke()
+    this.p.strokeWeight(0)
     for (let i = 0; i < this.missiles.length; i++) {
       const body = this.missiles[i]
-      this.p.strokeWeight(0)
-      this.p.ellipse(
-        body.position.x,
-        body.position.y,
-        body.radius / 2,
-        body.radius / 2
-      )
+      this.p.ellipse(body.position.x, body.position.y, body.radius, body.radius)
+      // this.p.textSize(40)
+      // this.p.text(
+      //   `${body.position.x}, ${body.position.y}`,
+      //   body.position.x,
+      //   body.position.y
+      // )
     }
   },
 
@@ -584,7 +606,7 @@ export const Visuals = {
     this.bodiesGraphic.fill('white')
     this.bodiesGraphic.textSize(radius / 4)
     this.bodiesGraphic.textAlign(this.p.CENTER, this.p.CENTER)
-    // this.bodiesGraphic.text(body.life, 0, radius)
+    this.bodiesGraphic.text(body.life, 0, radius)
   },
 
   drawBodyStyle1(radius, body) {
@@ -592,6 +614,13 @@ export const Visuals = {
     this.bodiesGraphic.noStroke()
     this.bodiesGraphic.fill(c)
     this.bodiesGraphic.ellipse(0, 0, radius, radius)
+
+    this.bodiesGraphic.text(body.life, 0, radius)
+    this.bodiesGraphic.fill('white')
+    this.bodiesGraphic.textSize(50)
+    this.bodiesGraphic.text(body.life, 0, radius)
+
+    // this.bodiesGraphic.text(`${body.position.x}, ${body.position.y}`, 0, 0)
   },
 
   moveAndRotate_PopAfter(graphic, x, y, v) {
@@ -705,18 +734,18 @@ export const Visuals = {
       const body = this.bodies[i]
       if (body.life <= 0) continue
       let c = body.c
-      let finalColor
-      if (this.colorStyle == 'squiggle') {
-        const hueColor = (parseInt(c.split(',')[1]) + this.frames) % 360
-        finalColor = this.bodiesGraphic.color(hueColor, 60, 100) // Saturation and brightness at 100 for pure spectral colors
-      } else if (this.mode == 'nft') {
-        // console.log(c)
-        // finalColor = c
+      // let finalColor
+      // if (this.colorStyle == 'squiggle') {
+      //   const hueColor = (parseInt(c.split(',')[1]) + this.frames) % 360
+      //   finalColor = this.bodiesGraphic.color(hueColor, 60, 100) // Saturation and brightness at 100 for pure spectral colors
+      // } else if (this.mode == 'nft') {
+      //   // console.log(c)
+      //   // finalColor = c
 
-        finalColor = c.replace(this.opac, '1') //this.convertColor(c)
-      } else {
-        finalColor = c
-      }
+      //   finalColor = c.replace(this.opac, '1') //this.convertColor(c)
+      // } else {
+      //   finalColor = c
+      // }
 
       if (this.mode == 'nft') {
         this.drawBodiesLooped(body, this.drawBody)
@@ -749,7 +778,8 @@ export const Visuals = {
         // const eyes = this.getAngledImage(body)
         // this.bodiesGraphic.image(eyes, 0, 0)
       } else {
-        this.getAngledBody(body, finalColor)
+        this.drawBodiesLooped(body, this.drawBody)
+        // this.getAngledBody(body, finalColor)
         this.drawCenter(body.position.x, body.position.y, body.radius)
       }
       const bodyCopy = {
@@ -771,16 +801,6 @@ export const Visuals = {
     }
 
     this.bodiesGraphic.clear()
-
-    if (this.paused) {
-      this.p.fill('rgba(0,0,0,0.6)')
-      this.p.rect(0, 0, this.windowWidth, this.windowHeight)
-      this.p.push()
-      this.p.fill('white')
-      this.p.translate(this.windowWidth / 2, this.windowHeight / 2)
-      this.p.triangle(-100, -100, -100, 100, 100, 0)
-      this.p.pop()
-    }
   },
 
   drawBorder() {
@@ -896,20 +916,20 @@ export const Visuals = {
 
     const id = radius + '-' + finalColor
     console.log()
-    if (!this.drawTails) {
-      this.drawTails = {}
+    if (!this.tailGraphics) {
+      this.tailGraphics = {}
     }
-    if (!this.drawTails || this.drawTails[id] == undefined) {
-      this.drawTails[id] = this.p.createGraphics(
+    if (!this.tailGraphics || this.tailGraphics[id] == undefined) {
+      this.tailGraphics[id] = this.p.createGraphics(
         this.windowWidth,
         this.windowHeight
       )
-      this.drawTails[id].noStroke()
-      this.drawTails[id].fill(finalColor)
+      this.tailGraphics[id].noStroke()
+      this.tailGraphics[id].fill(finalColor)
 
-      this.drawTails[id].beginShape()
-      // this.drawTails[id].vertex(radius, 0)
-      // this.drawTails[id].vertex(0, 0)
+      this.tailGraphics[id].beginShape()
+      // this.tailGraphics[id].vertex(radius, 0)
+      // this.tailGraphics[id].vertex(0, 0)
 
       // this.p.arc(0, 0, radius, radius, this.p.PI, 2 * this.p.PI)
       const arcResolution = 20
@@ -918,11 +938,11 @@ export const Visuals = {
         const ang = this.p.map(j, 0, arcResolution, 0, this.p.PI)
         const ax = radius / 2 + (this.p.cos(ang) * radius) / 2
         const ay = (2 * radius) / 2 + (-1 * this.p.sin(ang) * radius) / 2
-        this.drawTails[id].vertex(ax, ay)
+        this.tailGraphics[id].vertex(ax, ay)
       }
 
-      // this.drawTails[id].fill('red')
-      // this.drawTails[id].rect(0, 0, radius, radius / 2)
+      // this.tailGraphics[id].fill('red')
+      // this.tailGraphics[id].rect(0, 0, radius, radius / 2)
 
       const bumps = 7
       let bumpHeight = radius / 6
@@ -930,7 +950,7 @@ export const Visuals = {
       // const bumpHeightMax = radius / 5
       // const bumpHeightMin = radius / 8
       const startY = radius * 1
-      // this.drawTails[id].push()
+      // this.tailGraphics[id].push()
       let remaindingWidth = radius
       for (let i = 0; i < bumps; i++) {
         let bumpWidth = radius / bumps
@@ -940,45 +960,45 @@ export const Visuals = {
         // }
         let x = radius - remaindingWidth
         if (i % 2 == 1) {
-          // this.drawTails[id].arc(x + bumpWidth / 2, startY, bumpWidth, bumpHeight, this.drawTails[id].PI, 0, this.drawTails[id].OPEN)
+          // this.tailGraphics[id].arc(x + bumpWidth / 2, startY, bumpWidth, bumpHeight, this.tailGraphics[id].PI, 0, this.tailGraphics[id].OPEN)
           for (let j = 0; j < arcResolution; j++) {
             const ang = this.p.map(j, 0, arcResolution, this.p.PI, 0)
             const ax = x + bumpWidth / 2 + (this.p.cos(ang) * bumpWidth) / 2
             const ay =
               startY + bumpHeight + (-1 * this.p.sin(ang) * bumpHeight) / 2
-            this.drawTails[id].vertex(ax, ay)
+            this.tailGraphics[id].vertex(ax, ay)
           }
         } else {
           for (let j = 0; j < arcResolution; j++) {
             const ang = this.p.map(j, 0, arcResolution, this.p.PI, 0)
             const ax = x + bumpWidth / 2 + (this.p.cos(ang) * bumpWidth) / 2
             const ay = startY + bumpHeight + (this.p.sin(ang) * bumpHeight) / 2
-            this.drawTails[id].vertex(ax, ay)
+            this.tailGraphics[id].vertex(ax, ay)
           }
-          // this.drawTails[id].arc(x + bumpWidth / 2, startY + bumpWidth, bumpWidth, bumpHeight, 0, this.drawTails[id].PI, this.drawTails[id].OPEN)
+          // this.tailGraphics[id].arc(x + bumpWidth / 2, startY + bumpWidth, bumpWidth, bumpHeight, 0, this.tailGraphics[id].PI, this.tailGraphics[id].OPEN)
         }
         remaindingWidth -= bumpWidth
       }
-      this.drawTails[id].endShape(this.drawTails[id].CLOSE)
-      // this.drawTails[id].pop()
+      this.tailGraphics[id].endShape(this.tailGraphics[id].CLOSE)
+      // this.tailGraphics[id].pop()
     }
 
-    // this.drawTails[id].push()
-    // this.drawTails[id].translate(x, y)
+    // this.tailGraphics[id].push()
+    // this.tailGraphics[id].translate(x, y)
     var angle = v.heading() + this.p.PI / 2
-    // this.drawTails[id].rotate(angle)
-    // this.drawTails[id].fill(finalColor)
-    // this.drawTails[id].fill('rgba(255,0,0,1)')
-    // this.drawTails[id].rect(0, 0, radius, radius / 4)
-    // this.drawTails[id].pop()
+    // this.tailGraphics[id].rotate(angle)
+    // this.tailGraphics[id].fill(finalColor)
+    // this.tailGraphics[id].fill('rgba(255,0,0,1)')
+    // this.tailGraphics[id].rect(0, 0, radius, radius / 4)
+    // this.tailGraphics[id].pop()
     this.p.push()
     this.p.translate(x, y)
     this.p.rotate(angle)
-    this.p.image(this.drawTails[id], -radius / 2, -radius)
+    this.p.image(this.tailGraphics[id], -radius / 2, -radius)
     this.p.pop()
   },
 
-  drawBodyTrails() {
+  drawTails() {
     // this.p.blendMode(this.p.DIFFERENCE)
 
     // this.bodiesGraphic.filter(this.p.INVERT)
@@ -996,68 +1016,68 @@ export const Visuals = {
           finalColor = c //this.convertColor(c)
         }
         this.p.fill(finalColor)
-        if (this.mode == 'nft') {
-          const radius = body.radius * 4 + this.radiusMultiplyer
+        // if (this.mode == 'nft') {
+        const radius = body.radius * 4 + this.radiusMultiplyer
 
-          // this.p.ellipse(body.position.x, body.position.y, radius, radius)
-          this.p.push()
-          this.p.translate(body.position.x, body.position.y)
-          this.p.rotate(body.velocity.heading() + this.p.PI / 2)
-          // this.p.arc(0, 0, radius, radius, this.p.PI, 2 * this.p.PI)
-          this.p.pop()
+        // this.p.ellipse(body.position.x, body.position.y, radius, radius)
+        this.p.push()
+        this.p.translate(body.position.x, body.position.y)
+        this.p.rotate(body.velocity.heading() + this.p.PI / 2)
+        // this.p.arc(0, 0, radius, radius, this.p.PI, 2 * this.p.PI)
+        this.p.pop()
 
-          switch (body.tailStyle) {
-            case 1:
-              this.drawTailStyle1(
-                body.position.x,
-                body.position.y,
-                body.velocity,
-                radius,
-                finalColor
-              )
-              break
-            case 'ghost':
-              this.drawTailStyleGhost(
-                body.position.x,
-                body.position.y,
-                body.velocity,
-                radius,
-                finalColor
-              )
-              break
-            default:
-              this.drawTailStyle1(
-                body.position.x,
-                body.position.y,
-                body.velocity,
-                radius,
-                finalColor
-              )
-          }
-        } else {
-          this.p.push()
-          this.p.translate(body.position.x, body.position.y)
-          var angle = body.velocity.heading() + this.p.PI / 2
-          this.p.rotate(angle)
-          let x1 = body.radius * 4 * this.p.cos(this.p.PI / 6)
-          let y1 = body.radius * 4 * this.p.sin(this.p.PI / 6)
-
-          let x2 =
-            body.radius * 4 * this.p.cos(this.p.PI / 6 + this.p.TWO_PI / 3)
-          let y2 =
-            body.radius * 4 * this.p.sin(this.p.PI / 6 + this.p.TWO_PI / 3)
-
-          let x3 =
-            body.radius *
-            4 *
-            this.p.cos(this.p.PI / 6 + (2 * this.p.TWO_PI) / 3)
-          let y3 =
-            body.radius *
-            4 *
-            this.p.sin(this.p.PI / 6 + (2 * this.p.TWO_PI) / 3)
-          this.p.triangle(x1, y1, x2, y2, x3, y3)
-          this.p.pop()
+        switch (body.tailStyle) {
+          case 1:
+            this.drawTailStyle1(
+              body.position.x,
+              body.position.y,
+              body.velocity,
+              radius,
+              finalColor
+            )
+            break
+          case 'ghost':
+            this.drawTailStyleGhost(
+              body.position.x,
+              body.position.y,
+              body.velocity,
+              radius,
+              finalColor
+            )
+            break
+          default:
+            this.drawTailStyle1(
+              body.position.x,
+              body.position.y,
+              body.velocity,
+              radius,
+              finalColor
+            )
         }
+        // } else {
+        //   this.p.push()
+        //   this.p.translate(body.position.x, body.position.y)
+        //   var angle = body.velocity.heading() + this.p.PI / 2
+        //   this.p.rotate(angle)
+        //   let x1 = body.radius * 4 * this.p.cos(this.p.PI / 6)
+        //   let y1 = body.radius * 4 * this.p.sin(this.p.PI / 6)
+
+        //   let x2 =
+        //     body.radius * 4 * this.p.cos(this.p.PI / 6 + this.p.TWO_PI / 3)
+        //   let y2 =
+        //     body.radius * 4 * this.p.sin(this.p.PI / 6 + this.p.TWO_PI / 3)
+
+        //   let x3 =
+        //     body.radius *
+        //     4 *
+        //     this.p.cos(this.p.PI / 6 + (2 * this.p.TWO_PI) / 3)
+        //   let y3 =
+        //     body.radius *
+        //     4 *
+        //     this.p.sin(this.p.PI / 6 + (2 * this.p.TWO_PI) / 3)
+        //   this.p.triangle(x1, y1, x2, y2, x3, y3)
+        //   this.p.pop()
+        // }
       }
     }
     // this.p.blendMode(this.p.BLEND)

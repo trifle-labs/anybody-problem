@@ -17,7 +17,7 @@ export class Anybody extends EventEmitter {
       inputData: null,
       bodyData: null,
       // Add default properties and their initial values here
-      totalBodies: 3,
+      startingBodies: 3,
       seed: null,
       windowWidth: 1000,
       windowHeight: 1000,
@@ -47,7 +47,7 @@ export class Anybody extends EventEmitter {
     // Assign the merged options to the instance properties
     this.inputData = mergedOptions.inputData
     this.bodyData = mergedOptions.bodyData
-    this.startingBodies = mergedOptions.totalBodies
+    this.startingBodies = mergedOptions.startingBodies
     this.seed = mergedOptions.seed
     this.windowWidth = mergedOptions.windowWidth
     this.windowHeight = mergedOptions.windowHeight
@@ -139,7 +139,12 @@ export class Anybody extends EventEmitter {
     //   },
     //   { depth: null }
     // )
-    this.bodyInits = this.convertBodiesToBigInts(this.bodies).map((b) => {
+    this.bodyInits = this.processInits(this.bodies)
+    // console.dir({ bodyInits: this.bodyInits }, { depth: null })
+  }
+
+  processInits(bodies) {
+    return this.convertBodiesToBigInts(bodies).map((b) => {
       // console.log({ b1: b })
       b = this.convertScaledBigIntBodyToArray(b)
       // console.log({ b2: b })
@@ -148,7 +153,6 @@ export class Anybody extends EventEmitter {
       // console.log({ vy_b: b[3] })
       return b
     })
-    // console.dir({ bodyInits: this.bodyInits }, { depth: null })
   }
 
   runSteps(n = this.preRun) {
@@ -198,6 +202,13 @@ export class Anybody extends EventEmitter {
       canvas.removeEventListener('click', this.setPause)
       canvas.removeEventListener('click', this.missileClick)
       canvas.addEventListener('click', this.missileClick.bind(this))
+      window.addEventListener('keydown', (e) => {
+        // spacebar
+        if (e.code == 'Space') {
+          e.preventDefault()
+          this.setPause()
+        }
+      })
     } else {
       canvas.removeEventListener('click', this.missileClick)
       canvas.removeEventListener('click', this.setPause)
@@ -211,8 +222,8 @@ export class Anybody extends EventEmitter {
     }
     this.paused = newPauseState
     this.justPaused = true
+    this.emit('paused', this.paused)
     if (newPauseState) {
-      this.emit('paused', this.paused)
       this.p?.noLoop()
       this.sound?.pause()
     } else {
@@ -241,11 +252,11 @@ export class Anybody extends EventEmitter {
       this.mode == 'game' &&
       this.bodies.reduce((a, c) => a + c.radius, 0) == 0
     ) {
-      // this.nextLevel()
-      // this.paused = true
-      if (!this.finished) {
-        this.finish()
-      }
+      this.nextLevel()
+      // if (!this.finished) {
+      //   this.finish()
+      // }
+      // this.setPause(true)
     }
     return { bodies: this.bodies, missiles: this.missiles }
   }
@@ -271,18 +282,66 @@ export class Anybody extends EventEmitter {
     })
   }
 
+  processMissileInits(missiles) {
+    const radius = 10
+    return missiles.map((b) => {
+      const maxVectorScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
+      return {
+        step: b.step,
+        x: this.convertFloatToScaledBigInt(b.position.x).toString(),
+        y: this.convertFloatToScaledBigInt(b.position.y).toString(),
+        vx: (
+          this.convertFloatToScaledBigInt(b.velocity.x) + maxVectorScaled
+        ).toString(),
+        vy: (
+          this.convertFloatToScaledBigInt(b.velocity.y) + maxVectorScaled
+        ).toString(),
+        radius: radius.toString()
+      }
+    })
+  }
+
   finish() {
     // this.finished = true
     // this.setPause(true)
     this.calculateBodyFinal()
     if (!this.optimistic) {
+      const missileInits = []
+      if (this.mode == 'game') {
+        let missileIndex = 0
+        for (
+          let i = this.alreadyRun;
+          i < this.alreadyRun + this.stopEvery;
+          i++
+        ) {
+          if (this.missileInits[missileIndex]?.step == i) {
+            const missile = this.missileInits[missileIndex]
+            missileInits.push([
+              missile.x,
+              missile.y,
+              missile.vx,
+              missile.vy,
+              missile.radius
+            ])
+            missileIndex++
+          } else {
+            missileInits.push([0, 0, 0, 0, 0])
+          }
+        }
+        missileInits.push([0, 0, 0, 0, 0])
+      }
       this.emit('finished', {
+        missiles: JSON.parse(JSON.stringify(missileInits)),
         bodyInits: JSON.parse(JSON.stringify(this.bodyInits)),
         bodyFinal: JSON.parse(JSON.stringify(this.bodyFinal))
       })
     }
-    // console.log('FINISH????????????????????????????????????????')
     this.bodyInits = JSON.parse(JSON.stringify(this.bodyFinal))
+    this.alreadyRun = this.frames
+    this.missileInits = this.processMissileInits(this.missiles).map((m) => {
+      m.step = this.frames
+      return m
+    })
     this.bodyFinal = []
     // this.setPause(false)
   }
@@ -371,7 +430,7 @@ export class Anybody extends EventEmitter {
 
       // const j = i
       // const j = this.random(0, 2)
-      const j = Math.floor(this.random(0, 3))
+      const j = Math.floor(this.random(1, 3))
       const radius = j * 5 + startingRadius
       const body = {
         bodyIndex: i,
@@ -419,35 +478,33 @@ export class Anybody extends EventEmitter {
   }
 
   missileClick(e) {
-    if (this.missiles.length > 0 && !this.admin) return
-    const body = document.getElementsByClassName('p5Canvas')[0]
+    if (this.paused) {
+      this.setPause(false)
+      return
+    }
+    if (this.missiles.length > 0 && !this.admin) {
+      // this is a hack to prevent multiple missiles from being fired
+      this.missiles = []
+      // remove latest missile from missileInits
+      this.missileInits.pop()
+    }
+    const canvas = document.querySelector('canvas')
     this.thisLevelMissileCount++
     this.missileCount++
-    const actualWidth = body.offsetWidth
+    const actualWidth = canvas.offsetWidth
     const x = (e.offsetX * this.windowWidth) / actualWidth
     const y = (e.offsetY * this.windowWidth) / actualWidth
     const radius = 10
 
     const b = {
+      step: this.frames,
       position: this.p.createVector(0, this.windowWidth),
       velocity: this.p.createVector(x, y - this.windowWidth),
       radius
     }
-    b.velocity.limit(20)
+    b.velocity.limit(10)
     this.missiles.push(b)
-    const maxVectorScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
-    this.missileInits.push({
-      step: this.frames,
-      x: '0',
-      y: (BigInt(this.windowWidth) * this.scalingFactor).toString(),
-      vx: (
-        this.convertFloatToScaledBigInt(b.velocity.x) + maxVectorScaled
-      ).toString(),
-      vy: (
-        this.convertFloatToScaledBigInt(b.velocity.y) + maxVectorScaled
-      ).toString(),
-      radius: radius.toString()
-    })
+    this.missileInits.push(...this.processMissileInits([b]))
   }
 }
 if (typeof window !== 'undefined') {

@@ -358,7 +358,7 @@ describe('Solver Tests', function () {
       const body = await problems.getProblemBodyData(problemId, bodyId)
       bodyData.push(body)
     }
-    const ticksRun = proverTickIndex[bodyCount.toNumber()]
+    const ticksRunA = proverTickIndex[bodyData.length]
 
     // console.log({ bodyData })
     ;({ tx } = await generateAndSubmitProof(
@@ -366,11 +366,11 @@ describe('Solver Tests', function () {
       deployedContracts,
       problemId,
       bodyCount,
-      ticksRun,
+      ticksRunA,
       bodyData
     ))
     // console.log({ bodyFinal })
-    await expect(tx).to.emit(solver, 'Solved').withArgs(problemId, 0, ticksRun)
+    await expect(tx).to.emit(solver, 'Solved').withArgs(problemId, 0, ticksRunA)
 
     await expect(problems.addExistingBody(problemId, removedBodyId)).to.not.be
       .reverted
@@ -385,19 +385,20 @@ describe('Solver Tests', function () {
       const body = await problems.getProblemBodyData(problemId, bodyId)
       bodyData.push(body)
     }
+    const ticksRunB = proverTickIndex[bodyData.length]
     // console.log({ bodyData })
     ;({ tx } = await generateAndSubmitProof(
       expect,
       deployedContracts,
       problemId,
       newBodyCount,
-      ticksRun,
+      ticksRunB,
       bodyData
     ))
 
     await expect(tx)
       .to.emit(solver, 'Solved')
-      .withArgs(problemId, ticksRun, ticksRun)
+      .withArgs(problemId, ticksRunA, ticksRunB)
 
     const problemBodyIds = await problems.getProblemBodyIds(problemId)
     expect(problemBodyIds[0]).to.equal(2)
@@ -412,13 +413,14 @@ describe('Solver Tests', function () {
       const body = await problems.getProblemBodyData(problemId, bodyId)
       bodyData.push(body)
     }
+    const ticksRunC = proverTickIndex[bodyData.length]
     try {
       await generateAndSubmitProof(
         expect,
         deployedContracts,
         problemId,
         newBodyCount,
-        ticksRun,
+        ticksRunC,
         bodyData
       )
       expect.fail('should have reverted')

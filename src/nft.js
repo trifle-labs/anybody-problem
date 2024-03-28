@@ -8,7 +8,11 @@ q5.touchEnded = () => {}
 
 window.anybody
 q5.setup = () => {
-  window.anybody = new Anybody(q5, { mode: 'nft', seed: 0n })
+  window.anybody = new Anybody(q5, {
+    mode: 'game',
+    seed: 0n
+    // startingBodies: 1
+  })
 }
 q5.draw = () => {
   window.anybody.draw()
