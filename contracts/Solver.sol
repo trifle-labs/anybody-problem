@@ -2,14 +2,14 @@
 
 pragma solidity ^0.8.0;
 
-import {Groth16Verifier as Groth16Verifier3} from "./Nft_3_20Verifier.sol";
-import {Groth16Verifier as Groth16Verifier4} from "./Nft_4_20Verifier.sol";
-import {Groth16Verifier as Groth16Verifier5} from "./Nft_5_20Verifier.sol";
-import {Groth16Verifier as Groth16Verifier6} from "./Nft_6_20Verifier.sol";
-import {Groth16Verifier as Groth16Verifier7} from "./Nft_7_20Verifier.sol";
-import {Groth16Verifier as Groth16Verifier8} from "./Nft_8_20Verifier.sol";
-import {Groth16Verifier as Groth16Verifier9} from "./Nft_9_20Verifier.sol";
-import {Groth16Verifier as Groth16Verifier10} from "./Nft_10_20Verifier.sol";
+import {Groth16Verifier as Groth16Verifier3} from "./Game_3_20Verifier.sol";
+import {Groth16Verifier as Groth16Verifier4} from "./Game_4_20Verifier.sol";
+import {Groth16Verifier as Groth16Verifier5} from "./Game_5_20Verifier.sol";
+import {Groth16Verifier as Groth16Verifier6} from "./Game_6_20Verifier.sol";
+import {Groth16Verifier as Groth16Verifier7} from "./Game_7_20Verifier.sol";
+import {Groth16Verifier as Groth16Verifier8} from "./Game_8_20Verifier.sol";
+import {Groth16Verifier as Groth16Verifier9} from "./Game_9_20Verifier.sol";
+import {Groth16Verifier as Groth16Verifier10} from "./Game_10_20Verifier.sol";
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 
@@ -36,10 +36,20 @@ contract Solver is Ownable {
         128 // 10th body
     ];
 
+    uint256 public constant maxTick = 50 * 60; // 50 fps * 60 sec = 3,000 ticks max
+
+    struct Match {
+        bool inProgress;
+        uint256 problemId;
+        uint256 startingTick;
+    }
+
+    mapping(uint256 => Match) public matches;
+
     event Solved(
         uint256 indexed problemId,
-        uint256 indexed previousTickCount,
-        uint256 indexed tickCount
+        uint256 indexed ticksInThisMatch,
+        uint256 indexed winnings
     );
 
     constructor(address payable problems_, address tocks_) {
@@ -59,6 +69,10 @@ contract Solver is Ownable {
         tocks = tocks_;
     }
 
+    function inProgress(uint256 problemId) public view returns (bool) {
+        return matches[problemId].inProgress;
+    }
+
     function solveProblem(
         uint256 problemId,
         uint256 tickCount,
@@ -67,23 +81,24 @@ contract Solver is Ownable {
         uint[2] memory c,
         uint[] memory input
     ) public {
+        
+
         address owner = Problems(problems).ownerOf(problemId);
         require(owner == msg.sender, "Not the owner");
 
         (, uint256 bodyCount, , uint256 previousTickCount) = Problems(problems)
             .problems(problemId);
-        uint256 numberOfBodies = bodyCount;
 
-        uint256 numberOfInputs = numberOfBodies * 5 * 2;
+        uint256 numberOfInputs = bodyCount * 5 * 2;
         require(input.length == numberOfInputs, "Invalid input length");
         address verifier = Problems(problems).verifiers(
-            numberOfBodies,
+            bodyCount,
             tickCount
         );
 
         require(verifier != address(0), "Invalid verifier");
 
-        if (numberOfBodies == 3) {
+        if (bodyCount == 3) {
             require(
                 Groth16Verifier3(verifier).verifyProof(
                     a,
@@ -93,7 +108,7 @@ contract Solver is Ownable {
                 ),
                 "Invalid 3 body proof"
             );
-        } else if (numberOfBodies == 4) {
+        } else if (bodyCount == 4) {
             require(
                 Groth16Verifier4(verifier).verifyProof(
                     a,
@@ -103,7 +118,7 @@ contract Solver is Ownable {
                 ),
                 "Invalid 4 body proof"
             );
-        } else if (numberOfBodies == 5) {
+        } else if (bodyCount == 5) {
             require(
                 Groth16Verifier5(verifier).verifyProof(
                     a,
@@ -113,7 +128,7 @@ contract Solver is Ownable {
                 ),
                 "Invalid 5 body proof"
             );
-        } else if (numberOfBodies == 6) {
+        } else if (bodyCount == 6) {
             require(
                 Groth16Verifier6(verifier).verifyProof(
                     a,
@@ -123,7 +138,7 @@ contract Solver is Ownable {
                 ),
                 "Invalid 6 body proof"
             );
-        } else if (numberOfBodies == 7) {
+        } else if (bodyCount == 7) {
             require(
                 Groth16Verifier7(verifier).verifyProof(
                     a,
@@ -133,7 +148,7 @@ contract Solver is Ownable {
                 ),
                 "Invalid 7 body proof"
             );
-        } else if (numberOfBodies == 8) {
+        } else if (bodyCount == 8) {
             require(
                 Groth16Verifier8(verifier).verifyProof(
                     a,
@@ -143,7 +158,7 @@ contract Solver is Ownable {
                 ),
                 "Invalid 8 body proof"
             );
-        } else if (numberOfBodies == 9) {
+        } else if (bodyCount == 9) {
             require(
                 Groth16Verifier9(verifier).verifyProof(
                     a,
@@ -153,7 +168,7 @@ contract Solver is Ownable {
                 ),
                 "Invalid 9 body proof"
             );
-        } else if (numberOfBodies == 10) {
+        } else if (bodyCount == 10) {
             require(
                 Groth16Verifier10(verifier).verifyProof(
                     a,
@@ -166,39 +181,45 @@ contract Solver is Ownable {
         } else {
             revert("Invalid number of bodies");
         }
+
+
+        Match memory currentMatch = matches[problemId];
+
+        if (!currentMatch.inProgress) {
+          currentMatch.inProgress = true;
+          currentMatch.startingTick = previousTickCount;
+        }
+
+        uint256 newTotalTicks = previousTickCount + tickCount;
+        uint256 ticksInThisMatch = newTotalTicks - currentMatch.startingTick;
+
+        if(ticksInThisMatch > maxTick) {
+          revert("Max tick exceeded");
+        }
+
         uint256[10] memory bodyIds = Problems(problems).getProblemBodyIds(
             problemId
         );
 
         Problems(problems).updateProblemTickCount(
             problemId,
-            previousTickCount + tickCount
+            newTotalTicks
         );
 
-        Tocks(tocks).mint(
-            msg.sender,
-            tickCount * bodyBoost[bodyCount] * decimals
-        );
-
-        // uint256 traits = 5;
+        uint256 bodiesGone;
         Problems.Body memory bodyData;
-        for (uint256 i = 0; i < numberOfBodies; i++) {
+
+        for (uint256 i = 0; i < bodyCount; i++) {
             bodyData = Problems(problems).getProblemBodyData(
                 problemId,
                 bodyIds[i]
             );
 
-            // This should revert if the tickCount is greater than the life
-            bodyData.life = bodyData.life - tickCount;
-
             // px
             // confirm previously stored values were used as input to the proof
-            // uint256 pxIndex = 5 * numberOfBodies + i * 5 + 0;
-            // console.log("px");
-            // console.log(bodyData.px);
-            // console.log(input[5 * numberOfBodies + i * 5 + 0]);
+            // uint256 pxIndex = 5 * bodyCount + i * 5 + 0;
             require(
-                bodyData.px == input[5 * numberOfBodies + i * 5 + 0],
+                bodyData.px == input[5 * bodyCount + i * 5 + 0],
                 "Invalid position x"
             );
             // update stored values
@@ -206,9 +227,9 @@ contract Solver is Ownable {
 
             // py
             // confirm previously stored values were used as input to the proof
-            // uint256 pyIndex = 5 * numberOfBodies + i * 5 + 1;
+            // uint256 pyIndex = 5 * bodyCount + i * 5 + 1;
             require(
-                bodyData.py == input[5 * numberOfBodies + i * 5 + 1],
+                bodyData.py == input[5 * bodyCount + i * 5 + 1],
                 "Invalid position y"
             );
             // update stored values
@@ -216,13 +237,9 @@ contract Solver is Ownable {
 
             // vx
             // confirm previously stored values were used as input to the proof
-            // uint256 vxIndex = 5 * numberOfBodies + i * 5 + 2;
-            // console.log("vx");
-            // console.log(bodyData.vx);
-            // console.log(input[5 * numberOfBodies + i * 5 + 2]);
-            // console.log(input[i * 5 + 2]);
+            // uint256 vxIndex = 5 * bodyCount + i * 5 + 2;
             require(
-                bodyData.vx == input[5 * numberOfBodies + i * 5 + 2],
+                bodyData.vx == input[5 * bodyCount + i * 5 + 2],
                 "Invalid vector x"
             );
             // update stored values
@@ -230,16 +247,9 @@ contract Solver is Ownable {
 
             // vy
             // confirm previously stored values were used as input to the proof
-            // uint256 vyIndex = 5 * numberOfBodies + i * 5 + 3;
-            // console.log("vy");
-            // console.log("current:");
-            // console.log(bodyData.vy);
-            // console.log("submitted starting point:");
-            // console.log(input[5 * numberOfBodies + i * 5 + 3]);
-            // console.log("new value:");
-            // console.log(input[i * 5 + 3]);
+            // uint256 vyIndex = 5 * bodyCount + i * 5 + 3;
             require(
-                bodyData.vy == input[5 * numberOfBodies + i * 5 + 3],
+                bodyData.vy == input[5 * bodyCount + i * 5 + 3],
                 "Invalid vector y"
             );
             // update stored values
@@ -247,9 +257,9 @@ contract Solver is Ownable {
 
             // radius
             // confirm previously stored values were used as input to the proof
-            // uint256 radiusIndex = 5 * numberOfBodies + i * 5 + 4;
+            // uint256 radiusIndex = 5 * bodyCount + i * 5 + 4;
             require(
-                bodyData.radius == input[5 * numberOfBodies + i * 5 + 4],
+                bodyData.radius == input[5 * bodyCount + i * 5 + 4],
                 "Invalid radius"
             );
             // update stored values
@@ -259,8 +269,30 @@ contract Solver is Ownable {
                 bodyIds[i],
                 bodyData
             );
+            if (bodyData.radius == 0) {
+              bodiesGone++;
+            }
         }
-        emit Solved(problemId, previousTickCount, tickCount);
+
+        // beat the level
+        if(bodiesGone == bodyCount) {
+          // bonus for beating level in half time
+          uint256 bonus = ticksInThisMatch <= (maxTick / 2) ? 2 : 1;
+          uint256 winnings = bodyCount * bonus * bodyBoost[bodyCount] * decimals;
+          Tocks(tocks).mint(
+              msg.sender,
+              winnings
+          );
+          Problems(problems).restoreRadius(problemId);
+          Problems(problems).levelUp(problemId);
+          delete matches[problemId];
+          emit Solved(problemId, ticksInThisMatch, winnings);
+        }
+    }
+
+    function deleteMatch(uint256 problemId) public {
+      require(msg.sender == Problems(problems).ownerOf(problemId), "Not the owner");
+      delete matches[problemId];
     }
 
     function convertTo30(

@@ -295,7 +295,8 @@ export const Calculations = {
       newBody.velocity.y =
         body.vy || this.convertFloatToScaledBigInt(body.velocity.y)
       newBody.radius = this.convertFloatToScaledBigInt(body.radius)
-      newBody.life = body.life
+      newBody.starLvl = body.starLvl
+      newBody.maxStarLvl = body.maxStarLvl
       newBody.mintedBodyIndex = body.mintedBodyIndex
       newBody.c = body.c
       newBody.bodyIndex = body.bodyIndex

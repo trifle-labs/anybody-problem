@@ -35,7 +35,8 @@ contract Problems is ERC721, Ownable {
         uint256 vx;
         uint256 vy;
         uint256 radius;
-        uint256 life;
+        uint256 starLvl;
+        uint256 maxStarLvl;
         bytes32 seed;
     }
 
@@ -43,6 +44,7 @@ contract Problems is ERC721, Ownable {
         bytes32 seed;
         uint256 bodyCount;
         uint256 mintedBodiesIndex;
+        Body[] starData;
         mapping(uint256 => Body) bodyData;
         uint256[10] bodyIds;
         uint256 tickCount;
@@ -66,7 +68,8 @@ contract Problems is ERC721, Ownable {
         uint256 px,
         uint256 py,
         uint256 radius,
-        uint256 life,
+        uint256 starLvl,
+        uint256 maxStarLvl,
         bytes32 seed
     );
 
@@ -74,9 +77,15 @@ contract Problems is ERC721, Ownable {
         uint256 problemId,
         uint256 tick,
         uint256 bodyId,
-        uint256 life,
+        uint256 starLvl,
+        uint256 maxStarLvl,
         bytes32 seed
     );
+
+    modifier notWhileInPlay(uint256 problemId) {
+        require(!Solver(solver).inProgress(problemId), "Problem currently in play");
+        _;
+    }
 
     modifier onlySolver() {
         require(msg.sender == solver, "Only Solver can call");
@@ -205,7 +214,7 @@ contract Problems is ERC721, Ownable {
             mintedBodyIndex < 3;
             mintedBodyIndex++
         ) {
-            (uint256 bodyId, uint256 life, bytes32 bodySeed) = Bodies(bodies)
+            (uint256 bodyId, uint256 maxStarLvl, bytes32 bodySeed) = Bodies(bodies)
                 .mintAndAddToProblem(
                     recipient,
                     problemSupply, // problemId
@@ -215,7 +224,8 @@ contract Problems is ERC721, Ownable {
                 problemSupply, // problemId
                 bodyId,
                 mintedBodyIndex,
-                life,
+                0, // starLvl is 0 for initial bodies
+                maxStarLvl,
                 bodySeed,
                 mintedBodyIndex, // bodyIndex == mintedBodyIndex when minting
                 1
@@ -225,7 +235,7 @@ contract Problems is ERC721, Ownable {
         problems[problemSupply].bodyCount = 3;
     }
 
-    function mintBodyToProblem(uint256 problemId) public {
+    function mintBodyToProblem(uint256 problemId) public notWhileInPlay(problemId) {
         require(!paused, "Paused");
         require(ownerOf(problemId) == msg.sender, "Not problem owner");
         require(
@@ -235,7 +245,7 @@ contract Problems is ERC721, Ownable {
         uint256 mintedBodyIndex = problems[problemId].mintedBodiesIndex;
         // TODO: confirm this should be 10 instead of 9
         require(mintedBodyIndex < 10, "Problem already minted 10 bodies");
-        (uint256 bodyId, uint256 life, bytes32 bodySeed) = Bodies(bodies)
+        (uint256 bodyId, uint256 maxStarLvl, bytes32 bodySeed) = Bodies(bodies)
             .mintAndAddToProblem(msg.sender, problemId, mintedBodyIndex);
         uint256 bodyIndex = problems[problemId].bodyCount;
 
@@ -243,14 +253,15 @@ contract Problems is ERC721, Ownable {
             problemId,
             bodyId,
             mintedBodyIndex,
-            life,
+            0,
+            maxStarLvl,
             bodySeed,
             bodyIndex,
             1
         );
     }
 
-    function mintBodyOutsideProblem(uint256 problemId) public {
+    function mintBodyOutsideProblem(uint256 problemId) public notWhileInPlay(problemId) {
         require(!paused, "Paused");
         require(ownerOf(problemId) == msg.sender, "Not problem owner");
         require(
@@ -270,28 +281,34 @@ contract Problems is ERC721, Ownable {
             problems[problemId].bodyCount < 10,
             "Cannot have more than 10 bodies"
         );
-        (uint256 mintedBodyIndex, uint256 life, bytes32 seed) = Bodies(bodies)
+        (uint256 mintedBodyIndex, uint256 starLvl, uint256 maxStarLvl, bytes32 seed) = Bodies(bodies)
             .moveBodyToProblem(bodyId, msg.sender, problemId);
         uint256 bodyIndex = problems[problemId].bodyCount;
-        _addBody(problemId, bodyId, mintedBodyIndex, life, seed, bodyIndex, 0);
+        _addBody(problemId, bodyId, mintedBodyIndex, starLvl, maxStarLvl, seed, bodyIndex, 0);
     }
 
-    function purgeDeadBodies(uint256 problemId) public {
+    function convertBodiesToStars(uint256 problemId) public notWhileInPlay(problemId) {
         for (uint256 i = 0; i < problems[problemId].bodyCount; i++) {
             uint256 bodyId = problems[problemId].bodyIds[i];
-            if (problems[problemId].bodyData[bodyId].life == 0) {
-                removeBody(problemId, bodyId);
+            if (problems[problemId].bodyData[bodyId].starLvl == problems[problemId].bodyData[bodyId].maxStarLvl) {
+                Body memory bodyData = problems[problemId].bodyData[bodyId];
+                internalRemoveBody(problemId, bodyId);
+                problems[problemId].starData.push(bodyData);
             }
         }
     }
 
-    function removeBody(uint256 problemId, uint256 bodyId) public {
-        require(!paused, "Paused");
-        require(ownerOf(problemId) == msg.sender, "Not problem owner");
+    function removeBody(uint256 problemId, uint256 bodyId) public notWhileInPlay(problemId) {
         require(
             problems[problemId].bodyCount > 3,
             "Cannot have less than 3 bodies"
         );
+        internalRemoveBody(problemId, bodyId);
+    }
+
+    function internalRemoveBody(uint256 problemId, uint256 bodyId) internal {
+        require(!paused, "Paused");
+        require(ownerOf(problemId) == msg.sender, "Not problem owner");
 
         Body memory bodyData = problems[problemId].bodyData[bodyId];
         require(bodyData.bodyId == bodyId, "Body not in problem");
@@ -300,13 +317,14 @@ contract Problems is ERC721, Ownable {
             msg.sender,
             bodyId,
             problemId,
-            bodyData.life
+            bodyData.starLvl
         );
         emit bodyRemoved(
             problemId,
             problems[problemId].tickCount,
             bodyId,
-            bodyData.life,
+            bodyData.starLvl,
+            bodyData.maxStarLvl,
             problems[problemId].seed
         );
         uint256 bodyIndex = problems[problemId].bodyData[bodyId].bodyIndex;
@@ -343,7 +361,8 @@ contract Problems is ERC721, Ownable {
      * @param problemId The ID of the problem.
      * @param bodyId The ID of the body to be added.
      * @param mintedBodyIndex The nth body minted from this problem.
-     * @param life The life of the body.
+     * @param starLvl The starLvl of the body.
+     * @param maxStarLvl The maxStarLvl of the body.
      * @param bodySeed The seed of the body.
      * @param bodyIndex The index of the body in the problem's body list.
      * @param incrementBodiesProduced The number of bodies produced to increment the problem's counter.
@@ -352,7 +371,8 @@ contract Problems is ERC721, Ownable {
         uint256 problemId,
         uint256 bodyId,
         uint256 mintedBodyIndex,
-        uint256 life,
+        uint256 starLvl,
+        uint256 maxStarLvl,
         bytes32 bodySeed,
         uint256 bodyIndex,
         uint256 incrementBodiesProduced
@@ -363,7 +383,8 @@ contract Problems is ERC721, Ownable {
 
         bodyData.bodyId = bodyId;
         bodyData.mintedBodyIndex = mintedBodyIndex;
-        bodyData.life = life;
+        bodyData.starLvl = starLvl;
+        bodyData.maxStarLvl = maxStarLvl;
         bodyData.bodyIndex = bodyIndex;
 
         problems[problemId].bodyData[bodyId] = bodyData;
@@ -379,9 +400,19 @@ contract Problems is ERC721, Ownable {
             bodyData.px,
             bodyData.py,
             bodyData.radius,
-            bodyData.life,
+            bodyData.starLvl,
+            bodyData.maxStarLvl,
             bodySeed
         );
+    }
+
+        // NOTE: radius is a function of the seed of the body so it stays the
+        // same no matter what problem it enters
+    function genRadius(bytes32 seed) internal pure returns (uint256) {
+        // TODO: confirm whether radius should remain only one of 3 sizes
+        uint256 randRadius = randomRange(0, 3, seed);
+        randRadius = (randRadius) * 5 + startingRadius;
+        return randRadius * scalingFactor;
     }
 
     // NOTE: this function uses i as input for radius, which means it's possible
@@ -392,13 +423,7 @@ contract Problems is ERC721, Ownable {
         Body memory body;
         body.seed = seed;
 
-        // NOTE: radius is a function of the seed of the body so it stays the
-        // same no matter what problem it enters
-
-        // TODO: confirm whether radius should remain only one of 3 sizes
-        uint256 randRadius = randomRange(0, 3, seed);
-        randRadius = (randRadius) * 5 + startingRadius;
-        uint256 r = randRadius * scalingFactor;
+        uint256 r = genRadius(seed);
 
         // this ensures location is random each time body is added to problem
         bytes32 rand = keccak256(
@@ -472,6 +497,27 @@ contract Problems is ERC721, Ownable {
         Body memory body
     ) public onlySolver {
         problems[problemId].bodyData[bodyId] = body;
+    }
+
+    function restoreRadius(uint256 problemId) public onlySolver {
+        for (uint256 i = 0; i < problems[problemId].bodyCount; i++) {
+            uint256 bodyId = problems[problemId].bodyIds[i];
+            problems[problemId].bodyData[bodyId].radius = genRadius(
+                problems[problemId].bodyData[bodyId].seed
+            );
+        }
+    }
+
+    function levelUp(uint256 problemId) public onlySolver {
+       for (uint256 i = 0; i < problems[problemId].bodyCount; i++) {
+            uint256 bodyId = problems[problemId].bodyIds[i];
+            problems[problemId].bodyData[bodyId].starLvl++;
+            if (problems[problemId].bodyData[bodyId].starLvl == problems[problemId].bodyData[bodyId].maxStarLvl) {
+                Body memory bodyData = problems[problemId].bodyData[bodyId];
+                internalRemoveBody(problemId, bodyId);
+                problems[problemId].starData.push(bodyData);
+            }
+        }
     }
 
     /// @dev if mint fails to send eth to splitter, admin can recover
