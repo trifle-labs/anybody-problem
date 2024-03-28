@@ -222,7 +222,6 @@ export default class Sound {
   async playOneShot(url, volume) {
     this.oneShots = this.oneShots || {}
     if (!this.oneShots[url]) {
-      console.log('loading', url)
       this.oneShots[url] = new Player({
         url,
         volume
