@@ -202,13 +202,13 @@ export default class Sound {
   // otherwise safari and chrome will block the audio
   resume() {
     this.play(SONGS.ipod)
-    this.playOneShot(bongoHard, -10)
+    this.playOneShot(bongoHard, -20)
   }
 
   pause() {
     Transport?.stop()
     this.voices?.forEach((voice) => voice.player.stop())
-    this.playOneShot(bongoHard, -10)
+    this.playOneShot(bongoHard, -20)
   }
 
   playMissile() {
