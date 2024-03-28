@@ -158,7 +158,7 @@ const SONGS = {
   orbit: {
     bpm: 96,
     interval: '4m',
-    volume: -20,
+    volume: -6,
     parts: [
       [
         [orbit_3_Audio, 1, 1],
@@ -177,12 +177,15 @@ const INTRO_LENGTH = 1 // measures
 export default class Sound {
   currentMeasure = 0
 
-  constructor() {
+  constructor(anybody) {
     if (typeof window === 'undefined') return
+    this.anybody = anybody
     window.addEventListener('keydown', this.handleKeyDown)
   }
 
   handleKeyDown = (e) => {
+    if (this.anybody.paused) return
+
     if (e.key === '1') {
       this.stop()
       this.play(SONGS.whistle)
@@ -250,9 +253,10 @@ export default class Sound {
   }
 
   stop() {
-    this.pause()
+    Transport?.stop()
     this.loop?.dispose()
     this.voices?.forEach((voice) => {
+      voice.player.stop()
       voice.player.dispose()
       voice.panVol.dispose()
     })
@@ -285,6 +289,8 @@ export default class Sound {
       this.compressor.ratio.value = 2
       this.compressor.attack.value = 1
       this.compressor.release.value = 0.1
+      console.log('song.volume', song.volume)
+      this.masterVolume?.dispose()
       this.masterVolume = new Volume(song.volume || 0).toDestination()
       this.masterVolume.volume.rampTo(song.volume || MAX_VOLUME, 3)
       this.master = this.reverb
