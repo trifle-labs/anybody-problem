@@ -149,7 +149,8 @@ describe('Problem Tests', function () {
       vx: 13,
       vy: 14,
       radius: 15,
-      life: 1000,
+      starLvl: 0,
+      maxStarLvl: 100,
       seed: '0x' + (666).toString(16).padStart(64, '0')
     }
     await expect(
