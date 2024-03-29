@@ -357,7 +357,6 @@ export const Calculations = {
         this.sound?.playExplosion()
 
         body.starLvl += 1
-
         if (body.starLvl >= body.maxStarLvl) {
           bodies[j].radius = 0n
         }

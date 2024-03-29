@@ -611,7 +611,7 @@ export const Visuals = {
     const c = body.c.replace(this.opac, '0.1')
     this.bodiesGraphic.noStroke()
     this.bodiesGraphic.fill(c)
-    this.bodiesGraphic.ellipse(0, 0, radius, radius)
+    this.bodiesGraphic.ellipse(0, 0, radius * body.starLvl, radius)
 
     this.bodiesGraphic.fill('white')
     this.bodiesGraphic.textSize(50)
@@ -781,6 +781,8 @@ export const Visuals = {
         position: this.p.createVector(body.position.x, body.position.y),
         velocity: this.p.createVector(body.velocity.x, body.velocity.y),
         radius: body.radius,
+        starLvl: body.starLvl,
+        maxStarLvl: body.maxStarLvl,
         c: c
       }
       bodyCopies.push(bodyCopy)
@@ -1012,7 +1014,8 @@ export const Visuals = {
         }
         this.p.fill(finalColor)
         // if (this.mode == 'nft') {
-        const radius = body.radius * 4 + this.radiusMultiplyer
+        const radius =
+          body.radius * (Math.pow(body.starLvl, 2) + 1) + this.radiusMultiplyer
 
         // this.p.ellipse(body.position.x, body.position.y, radius, radius)
         this.p.push()
