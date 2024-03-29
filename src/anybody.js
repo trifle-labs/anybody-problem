@@ -435,7 +435,7 @@ export class Anybody extends EventEmitter {
         velocity: this.createVector(0, 0),
         radius,
         starLvl: 0,
-        maxStarLvl: 3,
+        maxStarLvl: Math.random() > 0.2 ? 1 : 3,
         c: cs[i]
       }
       bodies.push(body)
