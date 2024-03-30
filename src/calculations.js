@@ -357,7 +357,20 @@ export const Calculations = {
         this.sound?.playExplosion()
 
         body.starLvl += 1
-        bodies[j].radius = 0n
+
+        if (body.starLvl >= body.maxStarLvl) {
+          // remove from bodies and add to withering bodies
+          bodies.splice(j, 1)
+          this.witheringBodies.push({
+            position: {
+              x: this.convertScaledBigIntToFloat(body.position.x),
+              y: this.convertScaledBigIntToFloat(body.position.y)
+            },
+            radius: this.convertScaledBigIntToFloat(body.radius)
+          })
+        } else {
+          bodies[j].radius = 0n
+        }
       }
     }
 

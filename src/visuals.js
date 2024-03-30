@@ -1,4 +1,4 @@
-const WITHERING_STEPS = 200
+const WITHERING_STEPS = 5000
 const FACE_PNGS = [
   new URL('../public/faces/face1.png', import.meta.url).href,
   // new URL('../public/faces/face2.png', import.meta.url).href,
@@ -19,18 +19,12 @@ export const Visuals = {
     if (!this.showIt) return
 
     const enoughBodies =
-      this.bodies.filter((b) => !b.life || b.life > 0).length >= 3
+      -this.bodies.filter((b) => !b.life || b.life > 0).length >= 3
 
-    // when there are 3 or more bodies, step the simulation
-    if (enoughBodies) {
-      this.frames++
-      const results = this.step(this.bodies, this.missiles)
-      this.bodies = results.bodies || []
-      this.missiles = results.missiles || []
-    } else {
-      // if less than 3 just finish the withering animation
-      // TODO: add some sort of instructional message to screen that new bodies are needed to progress the simulation
-    }
+    this.frames++
+    const results = this.step(this.bodies, this.missiles)
+    this.bodies = results.bodies || []
+    this.missiles = results.missiles || []
 
     this.p.noFill()
     this.drawBg()
@@ -404,6 +398,7 @@ export const Visuals = {
     for (let i = 0; i < this.explosions.length; i++) {
       const _explosion = this.explosions[i]
       const bomb = _explosion[0]
+      console.log(i / this.explosions.length)
       this.p.fill('red')
       this.p.ellipse(bomb.x, bomb.y, bomb.i * 2, bomb.i * 2)
       _explosion.shift()
@@ -695,10 +690,15 @@ export const Visuals = {
     )
     this.bodiesGraphic.noStroke()
     for (const body of this.witheringBodies) {
-      // the body should shrink to nothing as HP goes from 0 to -WITHERING_STEPS
-      const witherMultiplier = 1 + body.life / WITHERING_STEPS
-      const radius =
-        (body.radius * 4 + this.radiusMultiplyer) * witherMultiplier
+      body.witherSteps ||= 0
+      body.witherSteps++
+      if (body.witherSteps > WITHERING_STEPS) {
+        this.witheringBodies = this.witheringBodies.filter((b) => b !== body)
+        continue
+      }
+
+      // the body should shrink to nothing over WITHERING_STEPS
+      const radius = 10 + 30 / (body.witherSteps / 100)
 
       // render as a white circle
       this.bodiesGraphic.fill('white')
