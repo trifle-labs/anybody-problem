@@ -376,7 +376,7 @@ export const Visuals = {
     const time = this.timer / FPS
     // TODO: remove this line when timer is ticked somewhere more suitable (okwme's branch)
     this.timer--
-    p.text(`${time.toFixed(1)} left`, 0, 0)
+    p.text(time.toFixed(1), 0, 0)
 
     p.pop()
   },
