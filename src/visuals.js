@@ -692,9 +692,9 @@ export const Visuals = {
     const { p } = this
 
     // draw a fake withering body for development
-    if (this.witheringBodies.length === 0) {
-      this.witheringBodies = [{ position: p.createVector(100, 100) }]
-    }
+    // if (this.witheringBodies.length === 0) {
+    //   this.witheringBodies = [{ position: p.createVector(100, 100) }]
+    // }
 
     this.bodiesGraphic ||= p.createGraphics(this.windowWidth, this.windowHeight)
     this.bodiesGraphic.noStroke()
