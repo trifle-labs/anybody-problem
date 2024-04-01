@@ -689,12 +689,18 @@ export const Visuals = {
   },
 
   drawWitheringBodies() {
-    this.bodiesGraphic ||= this.p.createGraphics(
-      this.windowWidth,
-      this.windowHeight
-    )
+    const { p } = this
+
+    // draw a fake withering body for development
+    if (this.witheringBodies.length === 0) {
+      this.witheringBodies = [{ position: p.createVector(100, 100) }]
+    }
+
+    this.bodiesGraphic ||= p.createGraphics(this.windowWidth, this.windowHeight)
     this.bodiesGraphic.noStroke()
     for (const body of this.witheringBodies) {
+      p.push()
+      p.translate(body.position.x, body.position.y)
       body.witherSteps ||= 0
       body.witherSteps++
       if (body.witherSteps > WITHERING_STEPS) {
@@ -703,22 +709,38 @@ export const Visuals = {
       }
 
       // the body should shrink to nothing over WITHERING_STEPS
-      const radius = this.p.map(
+      const radius = p.map(
         WITHERING_STEPS - body.witherSteps,
         0,
         WITHERING_STEPS,
         1,
-        50
+        30 // start radius
       )
 
-      // render as a white circle
-      this.bodiesGraphic.fill(255, 255, 255, 240)
-      this.bodiesGraphic.ellipse(
-        body.position.x,
-        body.position.y,
-        radius,
-        radius
-      )
+      // the ghost body pulses a little bit, isn't totally round
+      body.zoff ||= 0
+      p.stroke(255)
+      p.noFill()
+      p.fill(255, 255, 255, 230)
+      p.beginShape()
+      for (let a = 0; a < p.TWO_PI; a += 0.02) {
+        let xoff = p.map(p.cos(a), -1, 1, 0, 2)
+        let yoff = p.map(p.sin(a), -1, 1, 0, 2)
+        const r = p.map(
+          p.noise(xoff, yoff, body.zoff),
+          0,
+          1,
+          radius - 10,
+          radius
+        )
+        let x = r * p.cos(a)
+        let y = r * p.sin(a)
+        p.vertex(x, y)
+      }
+      p.endShape(p.CLOSE)
+      body.zoff += 0.01
+
+      p.pop()
     }
   },
 
