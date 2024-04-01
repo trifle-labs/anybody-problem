@@ -132,7 +132,6 @@ export class Anybody extends EventEmitter {
   }
 
   storeInits() {
-    // console.log('storeInits')
     // console.dir(
     //   {
     //     frames: this.frames,
@@ -140,6 +139,7 @@ export class Anybody extends EventEmitter {
     //   },
     //   { depth: null }
     // )
+    this.bodyCopies = JSON.parse(JSON.stringify(this.bodies))
     this.bodyInits = this.processInits(this.bodies)
     // console.dir({ bodyInits: this.bodyInits }, { depth: null })
   }

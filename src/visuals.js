@@ -402,7 +402,7 @@ export const Visuals = {
     if (this.explosions.length > 0) {
       for (let i = 0; i < this.explosions.length; i++) {
         const bomb = this.explosions[i][0]
-        this.drawCenter(bomb.x, bomb.y, bomb.radius)
+        this.drawCenter(bomb)
       }
     }
 
@@ -532,7 +532,7 @@ export const Visuals = {
       this.bodiesGraphic.image(
         face,
         -radius / 3,
-        -radius / 3,
+        -radius / 3 + radius / 2,
         radius / 1.5,
         radius / 1.5
       )
@@ -613,14 +613,32 @@ export const Visuals = {
   },
 
   drawBodyStyle1(radius, body) {
-    const c = body.c.replace(this.opac, '0.1')
+    const c = body.c.replace(this.opac, '1')
     this.bodiesGraphic.noStroke()
     this.bodiesGraphic.fill(c)
-    this.bodiesGraphic.ellipse(0, 0, radius, radius)
+    this.bodiesGraphic.ellipse(0, radius / 2, radius, radius)
+    this.bodiesGraphic.push()
+    this.bodiesGraphic.translate(0, radius / 2)
+    this.bodiesGraphic.rotate(3 * (this.p.PI / 2))
+    for (let i = 0; i < body.maxStarLvl; i++) {
+      const rotated = i * (this.bodiesGraphic.TWO_PI / body.maxStarLvl)
+      const xRotated = (radius / 2) * Math.cos(rotated)
+      const yRotated = (radius / 2) * Math.sin(rotated)
+      // this.bodiesGraphic.fill('white')
+      if (i < body.starLvl) {
+        this.bodiesGraphic.fill(body.c.replace(this.opac, '1'))
+      } else {
+        this.bodiesGraphic.noFill()
+      }
+      this.bodiesGraphic.stroke('white')
+      this.bodiesGraphic.strokeWeight(4)
+      this.bodiesGraphic.ellipse(xRotated, yRotated, radius / 2)
+    }
+    this.bodiesGraphic.pop()
 
-    this.bodiesGraphic.fill('white')
-    this.bodiesGraphic.textSize(50)
-    this.bodiesGraphic.text(`${body.starLvl} / ${body.maxStarLvl}`, 0, radius)
+    // this.bodiesGraphic.fill('white')
+    // this.bodiesGraphic.textSize(50)
+    // this.bodiesGraphic.text(`${body.starLvl} / ${body.maxStarLvl}`, 0, radius)
   },
 
   moveAndRotate_PopAfter(graphic, x, y, v) {
@@ -654,7 +672,8 @@ export const Visuals = {
 
   drawBodiesLooped(body, drawFunction) {
     drawFunction = drawFunction.bind(this)
-    const radius = body.radius * 4 + this.radiusMultiplyer
+    const bodyRadius = this.bodyCopies.filter((b) => b.id == body.id)[0]?.radius
+    const radius = bodyRadius * 4 + this.radiusMultiplyer
     drawFunction(body.position.x, body.position.y, body.velocity, radius, body)
 
     let loopedX = false,
@@ -780,7 +799,6 @@ export const Visuals = {
       } else {
         this.drawBodiesLooped(body, this.drawBody)
         // this.getAngledBody(body, finalColor)
-        this.drawCenter(body.position.x, body.position.y, body.radius)
       }
       const bodyCopy = {
         position: this.p.createVector(body.position.x, body.position.y),
@@ -798,6 +816,12 @@ export const Visuals = {
     // this.bodiesGraphic.strokeWeight(0)
     if (attachToCanvas) {
       this.p.image(this.bodiesGraphic, 0, 0)
+    }
+    if (this.mode == 'game') {
+      for (let i = 0; i < this.bodies.length; i++) {
+        const body = this.bodies[i]
+        this.drawCenter(body)
+      }
     }
 
     this.bodiesGraphic.clear()
@@ -901,11 +925,13 @@ export const Visuals = {
     // finalColor = finalColor.replace('50%', '75%')
     this.p.push()
     this.p.translate(x, y)
+    this.p.rotate(v.heading() + this.p.PI / 2)
+
     // this.p.rotate(angle)
     this.p.fill(finalColor)
     this.p.noStroke()
 
-    this.p.ellipse(0, 0, radius, radius)
+    this.p.ellipse(0, radius / 2, radius, radius)
 
     // this.p.image(this.drawTails[id], -radius / 2, -radius)
     this.p.pop()
@@ -1083,17 +1109,48 @@ export const Visuals = {
     // this.p.blendMode(this.p.BLEND)
   },
 
-  drawCenter(x, y, r) {
+  drawCenter(b) {
     this.p.strokeWeight(0)
     const max = 4
-    for (var i = 0; i < max; i++) {
+    if (b.x) {
+      // just a bomb
+      const r = b.radius
+      const c = 'red'
+      for (let i = 0; i < max; i++) {
+        if (i % 2 == 0) {
+          this.p.fill('white')
+        } else {
+          this.p.fill(c)
+        }
+        this.p.ellipse(b.x, b.y, r * (max - i))
+      }
+      return
+    }
+    const x = b.position.x
+    const y = b.position.y
+    const r = b.radius
+    const c = b.c?.replace(this.opac, '1')
+    for (let i = 0; i < max; i++) {
       if (i % 2 == 0) {
         this.p.fill('white')
       } else {
-        this.p.fill('red')
+        this.p.fill(c)
       }
       this.p.ellipse(x, y, r * (max - i))
     }
+    // this.p.push()
+    // const radius = b.radius * 4 + this.radiusMultiplyer
+    // this.p.translate(x, y)
+    // this.p.translate(0, radius / 2)
+    // this.p.rotate(b.velocity.heading() + this.p.PI / 2)
+    // for (let i = 0; i < b.maxStarLvl; i++) {
+    //   const rotated = i * (this.p.TWO_PI / b.maxStarLvl)
+    //   const xRotated = r * 1.5 * this.p.cos(rotated)
+    //   const yRotated = r * 1.5 * this.p.sin(rotated)
+    //   this.p.fill('white')
+    //   this.p.ellipse(xRotated, yRotated, r)
+    // }
+    // this.p.pop()
   },
 
   colorArrayToTxt(cc) {
