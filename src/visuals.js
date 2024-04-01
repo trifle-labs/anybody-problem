@@ -1,4 +1,4 @@
-const WITHERING_STEPS = 5000
+const WITHERING_STEPS = 3000
 const FACE_PNGS = [
   new URL('/public/faces/face1.png', import.meta.url).href,
   // new URL('/public/faces/face2.png', import.meta.url).href,
@@ -703,10 +703,16 @@ export const Visuals = {
       }
 
       // the body should shrink to nothing over WITHERING_STEPS
-      const radius = 10 + 30 / (body.witherSteps / 100)
+      const radius = this.p.map(
+        WITHERING_STEPS - body.witherSteps,
+        0,
+        WITHERING_STEPS,
+        1,
+        50
+      )
 
       // render as a white circle
-      this.bodiesGraphic.fill('white')
+      this.bodiesGraphic.fill(255, 255, 255, 240)
       this.bodiesGraphic.ellipse(
         body.position.x,
         body.position.y,
