@@ -12,89 +12,83 @@ const {
 } = Tone
 
 const whistle_8_T7 = new URL(
-  '../public/sound/whistle/whistle_8_T7.mp3',
+  '/public/sound/whistle/whistle_8_T7.mp3',
   import.meta.url
 ).href
+console.log({ whistle_8_T7 })
 const whistle_4_T3 = new URL(
-  '../public/sound/whistle/whistle_4_T3.mp3',
+  '/public/sound/whistle/whistle_4_T3.mp3',
   import.meta.url
 ).href
 const whistle_7_T6 = new URL(
-  '../public/sound/whistle/whistle_7_T6.mp3',
+  '/public/sound/whistle/whistle_7_T6.mp3',
   import.meta.url
 ).href
 const whistle_12_T11 = new URL(
-  '../public/sound/whistle/whistle_12_T11.mp3',
+  '/public/sound/whistle/whistle_12_T11.mp3',
   import.meta.url
 ).href
 const whistle_8_T7_B = new URL(
-  '../public/sound/whistle/whistle_8_T7_B.mp3',
+  '/public/sound/whistle/whistle_8_T7_B.mp3',
   import.meta.url
 ).href
 
-const wii_2_T1 = new URL('../public/sound/wii/wii_2_T1.mp3', import.meta.url)
+const wii_2_T1 = new URL('/public/sound/wii/wii_2_T1.mp3', import.meta.url).href
+const wii_4_T3 = new URL('/public/sound/wii/wii_4_T3.mp3', import.meta.url).href
+const wii_8_T7 = new URL('/public/sound/wii/wii_8_T7.mp3', import.meta.url).href
+const wii_10_T9 = new URL('/public/sound/wii/wii_10_T9.mp3', import.meta.url)
   .href
-const wii_4_T3 = new URL('../public/sound/wii/wii_4_T3.mp3', import.meta.url)
+const wii_12_T11 = new URL('/public/sound/wii/wii_12_T11.mp3', import.meta.url)
   .href
-const wii_8_T7 = new URL('../public/sound/wii/wii_8_T7.mp3', import.meta.url)
-  .href
-const wii_10_T9 = new URL('../public/sound/wii/wii_10_T9.mp3', import.meta.url)
-  .href
-const wii_12_T11 = new URL(
-  '../public/sound/wii/wii_12_T11.mp3',
-  import.meta.url
-).href
-const wii_T5 = new URL('../public/sound/wii/wii_T5.mp3', import.meta.url).href
-const wii_chord = new URL('../public/sound/wii/wii_chord.mp3', import.meta.url)
+const wii_T5 = new URL('/public/sound/wii/wii_T5.mp3', import.meta.url).href
+const wii_chord = new URL('/public/sound/wii/wii_chord.mp3', import.meta.url)
   .href
 
-const ipod_2_T1 = new URL('../public/sound/ipod/ipod_2_T1.mp3', import.meta.url)
+const ipod_2_T1 = new URL('/public/sound/ipod/ipod_2_T1.mp3', import.meta.url)
   .href
-const ipod_5_T4 = new URL('../public/sound/ipod/ipod_5_T4.mp3', import.meta.url)
+const ipod_5_T4 = new URL('/public/sound/ipod/ipod_5_T4.mp3', import.meta.url)
   .href
-const ipod_7_T6 = new URL('../public/sound/ipod/ipod_7_T6.mp3', import.meta.url)
+const ipod_7_T6 = new URL('/public/sound/ipod/ipod_7_T6.mp3', import.meta.url)
   .href
-const ipod_8_T7 = new URL('../public/sound/ipod/ipod_8_T7.mp3', import.meta.url)
+const ipod_8_T7 = new URL('/public/sound/ipod/ipod_8_T7.mp3', import.meta.url)
   .href
-const ipod_14_FX = new URL(
-  '../public/sound/ipod/ipod_14_FX.mp3',
-  import.meta.url
-).href
+const ipod_14_FX = new URL('/public/sound/ipod/ipod_14_FX.mp3', import.meta.url)
+  .href
 const ipod_15_Delay_Reverb = new URL(
-  '../public/sound/ipod/ipod_15_Delay_Reverb.mp3',
+  '/public/sound/ipod/ipod_15_Delay_Reverb.mp3',
   import.meta.url
 ).href
-const ipod_hiss = new URL('../public/sound/ipod/ipod_hiss.mp3', import.meta.url)
+const ipod_hiss = new URL('/public/sound/ipod/ipod_hiss.mp3', import.meta.url)
   .href
 
 const orbit_3_Audio = new URL(
-  '../public/sound/orbit/orbit_3-Audio.mp3',
+  '/public/sound/orbit/orbit_3-Audio.mp3',
   import.meta.url
 ).href
 const orbit_8_DT1 = new URL(
-  '../public/sound/orbit/orbit_8_DT1.mp3',
+  '/public/sound/orbit/orbit_8_DT1.mp3',
   import.meta.url
 ).href
 const orbit_9_DT2 = new URL(
-  '../public/sound/orbit/orbit_9_DT2.mp3',
+  '/public/sound/orbit/orbit_9_DT2.mp3',
   import.meta.url
 ).href
 const orbit_10_DT6 = new URL(
-  '../public/sound/orbit/orbit_10_DT6.mp3',
+  '/public/sound/orbit/orbit_10_DT6.mp3',
   import.meta.url
 ).href
 
-// const coinBox = new URL('../public/sound/fx/coin-box.mp3', import.meta.url).href
+// const coinBox = new URL('/public/sound/fx/coin-box.mp3', import.meta.url).href
 const bongoHard = new URL(
-  '../public/sound/fx/SC_CP_perc_bongo_loud_tap.mp3',
+  '/public/sound/fx/SC_CP_perc_bongo_loud_tap.mp3',
   import.meta.url
 ).href
 const bubble = new URL(
-  '../public/sound/fx/DSC_GST_one_shot_perc_water.mp3',
+  '/public/sound/fx/DSC_GST_one_shot_perc_water.mp3',
   import.meta.url
 ).href
 const coin = new URL(
-  '../public/sound/fx/ESM_Game_Notification_83_Coin_Blip_Select_Tap_Button.mp3',
+  '/public/sound/fx/ESM_Game_Notification_83_Coin_Blip_Select_Tap_Button.mp3',
   import.meta.url
 ).href
 
@@ -227,6 +221,7 @@ export default class Sound {
   }
 
   async playOneShot(url, volume) {
+    console.log('playOneShot')
     this.oneShots = this.oneShots || {}
     if (!this.oneShots[url]) {
       this.oneShots[url] = new Player({
@@ -244,6 +239,7 @@ export default class Sound {
   }
 
   voiceFromFile(file) {
+    console.log({ file })
     const voice = {
       file: file,
       player: new Player({
@@ -283,6 +279,7 @@ export default class Sound {
 
     if (!this.voices) {
       const parts = song.parts[0]
+      console.log({ parts })
       this.voices = parts.map((part) => this.voiceFromFile(part[0]))
 
       // master output
