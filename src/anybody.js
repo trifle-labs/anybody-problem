@@ -2,7 +2,7 @@ import Prando from 'prando'
 
 import EventEmitter from 'events'
 import Sound from './sound.js'
-import { Visuals } from './visuals.js'
+import { Visuals, FPS } from './visuals.js'
 import { _validateSeed, Calculations } from './calculations.js'
 
 export class Anybody extends EventEmitter {
@@ -38,7 +38,7 @@ export class Anybody extends EventEmitter {
       util: false,
       optimistic: false,
       paused: true,
-      timer: 60 * 50 // 60 seconds * 50 frames per second
+      timer: 60 * FPS // 60 seconds * 50 frames per second
     }
 
     // Merge the default options with the provided options
@@ -480,7 +480,7 @@ export class Anybody extends EventEmitter {
   }
 
   prepareP5() {
-    this.p.frameRate(50)
+    this.p.frameRate(FPS)
     this.p.createCanvas(this.windowWidth, this.windowWidth)
     this.p.background('white')
   }
