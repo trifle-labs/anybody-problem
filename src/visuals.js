@@ -54,7 +54,8 @@ export const Visuals = {
 
     const isNotFirstFrame = this.frames !== 0
     const notPaused = !this.paused
-    const framesIsAtStopEveryInterval = this.frames % this.stopEvery == 0
+    const framesIsAtStopEveryInterval =
+      (this.frames - this.alreadyRun) % this.stopEvery == 0
     const didNotJustPause = !this.justPaused
     if (
       isNotFirstFrame &&

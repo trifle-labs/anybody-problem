@@ -53,9 +53,10 @@ describe('stepStateTest circuit', () => {
   }
   const sanityCheck = true
   const steps = sampleInput.missiles.length - 1
+  const bodies = sampleInput.bodies.length
 
   before(async () => {
-    circuit = await wasm_tester(`circuits/game_3_${steps}.circom`)
+    circuit = await wasm_tester(`circuits/game_${bodies}_${steps}.circom`)
   })
 
   it('produces a witness with valid constraints', async () => {
