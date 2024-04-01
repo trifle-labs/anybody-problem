@@ -54,7 +54,9 @@
       "it": "readonly"
     },
     "ignorePatterns": [
-      "/docs/index.js"
+      "/docs/index.js",
+      "**/*.min.js",
+      "**/*.worker.js"
     ],
     "root": true
   },

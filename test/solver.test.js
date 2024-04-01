@@ -127,7 +127,7 @@ describe('Solver Tests', function () {
     expect(newTickCount).to.equal(tickCount + ticksRun)
   })
 
-  it.only('shoots 3 missiles and hits 3 bodies in 1 proof', async () => {
+  it('shoots 3 missiles and hits 3 bodies in 1 proof', async () => {
     const signers = await ethers.getSigners()
     const deployedContracts = await deployContracts()
     const {

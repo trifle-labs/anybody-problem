@@ -37,7 +37,8 @@ export class Anybody extends EventEmitter {
       stopEvery: 0,
       util: false,
       optimistic: false,
-      paused: true
+      paused: true,
+      timer: 60 * 50 // 60 seconds * 50 frames per second
     }
 
     // Merge the default options with the provided options
@@ -68,6 +69,7 @@ export class Anybody extends EventEmitter {
     this.util = mergedOptions.util
     this.optimistic = mergedOptions.optimistic
     this.paused = mergedOptions.paused
+    this.timer = mergedOptions.timer + this.alreadyRun
 
     // Add other constructor logic here
     this.p = p
@@ -245,7 +247,7 @@ export class Anybody extends EventEmitter {
       this.mode == 'game' &&
       this.bodies.reduce((a, c) => a + c.radius, 0) == 0
     ) {
-      this.nextLevel()
+      // this.nextLevel()
       // if (!this.finished) {
       //   this.finish()
       // }
@@ -339,6 +341,13 @@ export class Anybody extends EventEmitter {
     })
     this.bodyFinal = []
     // this.setPause(false)
+    if (
+      this.mode == 'game' &&
+      this.bodies.reduce((a, c) => a + c.radius, 0) == 0
+    ) {
+      this.setPause(true)
+      alert('You won!')
+    }
     return results
   }
 
@@ -381,8 +390,8 @@ export class Anybody extends EventEmitter {
           position: this.createVector(px, py),
           velocity: this.createVector(vx, vy),
           radius: radius,
-          starLvl: b.starLvl.toNumber(),
-          maxStarLvl: b.maxStarLvl.toNumber(),
+          starLvl: b.starLvl?.toNumber(),
+          maxStarLvl: b.maxStarLvl?.toNumber(),
           mintedBodyIndex: b.mintedBodyIndex.toNumber(),
           c: this.colorArrayToTxt(this.randomColor(0, 200, bodyRNG))
         }

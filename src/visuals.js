@@ -1,17 +1,17 @@
 const WITHERING_STEPS = 5000
 const FACE_PNGS = [
-  new URL('../public/faces/face1.png', import.meta.url).href,
-  // new URL('../public/faces/face2.png', import.meta.url).href,
-  new URL('../public/faces/face3.png', import.meta.url).href,
-  new URL('../public/faces/face4.png', import.meta.url).href,
-  new URL('../public/faces/face5.png', import.meta.url).href,
-  new URL('../public/faces/face6.png', import.meta.url).href,
-  new URL('../public/faces/face7.png', import.meta.url).href,
-  new URL('../public/faces/face8.png', import.meta.url).href,
-  new URL('../public/faces/face9.png', import.meta.url).href,
-  new URL('../public/faces/face10.png', import.meta.url).href,
-  // new URL('../public/faces/face11.png', import.meta.url).href,
-  new URL('../public/faces/face12.png', import.meta.url).href
+  new URL('/public/faces/face1.png', import.meta.url).href,
+  // new URL('/public/faces/face2.png', import.meta.url).href,
+  new URL('/public/faces/face3.png', import.meta.url).href,
+  new URL('/public/faces/face4.png', import.meta.url).href,
+  new URL('/public/faces/face5.png', import.meta.url).href,
+  new URL('/public/faces/face6.png', import.meta.url).href,
+  new URL('/public/faces/face7.png', import.meta.url).href,
+  new URL('/public/faces/face8.png', import.meta.url).href,
+  new URL('/public/faces/face9.png', import.meta.url).href,
+  new URL('/public/faces/face10.png', import.meta.url).href,
+  // new URL('/public/faces/face11.png', import.meta.url).href,
+  new URL('/public/faces/face12.png', import.meta.url).href
 ]
 
 export const Visuals = {
@@ -48,7 +48,8 @@ export const Visuals = {
 
     const isNotFirstFrame = this.frames !== 0
     const notPaused = !this.paused
-    const framesIsAtStopEveryInterval = this.frames % this.stopEvery == 0
+    const framesIsAtStopEveryInterval =
+      (this.frames - this.alreadyRun) % this.stopEvery == 0
     const didNotJustPause = !this.justPaused
     if (
       isNotFirstFrame &&
@@ -64,6 +65,10 @@ export const Visuals = {
       // }
     } else {
       this.justPaused = false
+    }
+    if (this.frames == this.timer) {
+      this.setPause(true)
+      alert('Time is up!')
     }
   },
   drawPause() {

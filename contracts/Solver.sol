@@ -73,6 +73,12 @@ contract Solver is Ownable {
         return matches[problemId].inProgress;
     }
 
+    function batchSolve(uint256 problemId, uint256 tickCount, uint[2][] memory a, uint[2][2][] memory b, uint[2][] memory c, uint[][] memory input) public {
+        for(uint256 i = 0; i < input.length; i++) {
+            solveProblem(problemId, tickCount, a[i], b[i], c[i], input[i]);
+        }
+    }
+
     function solveProblem(
         uint256 problemId,
         uint256 tickCount,
