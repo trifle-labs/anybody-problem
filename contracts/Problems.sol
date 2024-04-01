@@ -288,6 +288,7 @@ contract Problems is ERC721, Ownable {
     }
 
     function convertBodiesToStars(uint256 problemId) public notWhileInPlay(problemId) {
+        require(ownerOf(problemId) == msg.sender, "Not problem owner");
         for (uint256 i = 0; i < problems[problemId].bodyCount; i++) {
             uint256 bodyId = problems[problemId].bodyIds[i];
             if (problems[problemId].bodyData[bodyId].starLvl == problems[problemId].bodyData[bodyId].maxStarLvl) {
@@ -303,12 +304,12 @@ contract Problems is ERC721, Ownable {
             problems[problemId].bodyCount > 3,
             "Cannot have less than 3 bodies"
         );
+        require(ownerOf(problemId) == msg.sender, "Not problem owner");
         internalRemoveBody(problemId, bodyId);
     }
 
     function internalRemoveBody(uint256 problemId, uint256 bodyId) internal {
         require(!paused, "Paused");
-        require(ownerOf(problemId) == msg.sender, "Not problem owner");
 
         Body memory bodyData = problems[problemId].bodyData[bodyId];
         require(bodyData.bodyId == bodyId, "Body not in problem");
@@ -410,7 +411,7 @@ contract Problems is ERC721, Ownable {
         // same no matter what problem it enters
     function genRadius(bytes32 seed) internal pure returns (uint256) {
         // TODO: confirm whether radius should remain only one of 3 sizes
-        uint256 randRadius = randomRange(0, 3, seed);
+        uint256 randRadius = randomRange(1, 3, seed);
         randRadius = (randRadius) * 5 + startingRadius;
         return randRadius * scalingFactor;
     }

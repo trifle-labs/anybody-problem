@@ -11,7 +11,7 @@ const correctPrice = ethers.utils.parseEther('0.01')
 
 const proverTickIndex = {
   3: 500,
-  4: 100,
+  4: 300,
   5: 100,
   6: 100,
   7: 100,

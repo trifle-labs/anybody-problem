@@ -71,6 +71,10 @@ export const Visuals = {
     } else {
       this.justPaused = false
     }
+    if (this.frames == this.timer) {
+      this.setPause(true)
+      alert('Time is up!')
+    }
   },
   drawPause() {
     if (this.paused) {
