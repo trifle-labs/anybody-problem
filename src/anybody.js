@@ -38,6 +38,8 @@ export class Anybody extends EventEmitter {
       util: false,
       optimistic: false,
       paused: true,
+      target: 'outside', // 'outside' or 'inside'
+      showLives: true, // true or false
       timer: 60 * 50 // 60 seconds * 50 frames per second
     }
 
@@ -70,6 +72,8 @@ export class Anybody extends EventEmitter {
     this.optimistic = mergedOptions.optimistic
     this.paused = mergedOptions.paused
     this.timer = mergedOptions.timer + this.alreadyRun
+    this.target = mergedOptions.target
+    this.showLives = mergedOptions.showLives
 
     // Add other constructor logic here
     this.p = p
@@ -345,7 +349,6 @@ export class Anybody extends EventEmitter {
       this.mode == 'game' &&
       this.bodies.reduce((a, c) => a + c.radius, 0) == 0
     ) {
-      this.setPause(true)
       alert('You won!')
     }
     return results
@@ -374,6 +377,8 @@ export class Anybody extends EventEmitter {
       this.bgColor = this.colorArrayToTxt(this.randomColor(0, 200))
       this.radiusMultiplyer = 100 //this.random(10, 200)
       this.bodies = this.bodyData.map((b) => {
+        const bodyId = b.bodyId.toNumber()
+        const bodyIndex = b.bodyIndex.toNumber()
         const seed = b.seed
         const bodyRNG = new Prando(seed.toString(16))
         const px = b.px.toNumber() / parseInt(this.scalingFactor)
@@ -386,7 +391,8 @@ export class Anybody extends EventEmitter {
           parseInt(this.scalingFactor)
         const radius = b.radius.toNumber() / parseInt(this.scalingFactor)
         return {
-          index: b.bodyIndex,
+          bodyId: bodyId,
+          bodyIndex: bodyIndex,
           position: this.createVector(px, py),
           velocity: this.createVector(vx, vy),
           radius: radius,
@@ -438,13 +444,15 @@ export class Anybody extends EventEmitter {
       // const j = this.random(0, 2)
       const j = Math.floor(this.random(1, 3))
       const radius = j * 5 + startingRadius
+      const maxStarLvl = this.random(3, 10, new Prando())
+      const starLvl = this.random(0, maxStarLvl - 1, new Prando())
       const body = {
         bodyIndex: i,
         position: this.createVector(ss[i][0], ss[i][1]),
         velocity: this.createVector(0, 0),
         radius,
-        starLvl: 0,
-        maxStarLvl: 3,
+        starLvl,
+        maxStarLvl,
         c: cs[i]
       }
       bodies.push(body)
@@ -488,6 +496,12 @@ export class Anybody extends EventEmitter {
   missileClick(e) {
     if (this.paused) {
       this.setPause(false)
+      return
+    }
+    if (
+      this.bodies.reduce((a, c) => a + c.radius, 0) == 0 ||
+      this.frames >= this.timer
+    ) {
       return
     }
     if (this.missiles.length > 0 && !this.admin) {

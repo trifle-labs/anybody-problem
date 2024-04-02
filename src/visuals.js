@@ -17,7 +17,10 @@ const FACE_PNGS = [
 export const Visuals = {
   async draw() {
     if (!this.showIt) return
-
+    if (this.bodies.length < 3) {
+      this.setPause(true)
+      return
+    }
     const enoughBodies =
       this.bodies.filter((b) => !b.life || b.life > 0).length >= 3
 
@@ -42,11 +45,15 @@ export const Visuals = {
       this.sound?.render(this)
     }
 
-    if (this.mode == 'game') {
-      this.drawMissiles()
-      this.drawExplosions()
+    if (
+      this.mode == 'game' &&
+      this.frames < this.timer &&
+      this.bodies.reduce((a, c) => a + c.radius, 0) != 0
+    ) {
       this.drawGun()
+      this.drawMissiles()
     }
+    this.drawExplosions()
     // this.drawBodyOutlines()
 
     this.drawPause()
@@ -61,10 +68,14 @@ export const Visuals = {
       isNotFirstFrame &&
       notPaused &&
       framesIsAtStopEveryInterval &&
-      didNotJustPause
+      didNotJustPause &&
+      this.frames < this.timer
     ) {
-      if (didNotJustPause && enoughBodies) {
+      if (didNotJustPause && enoughBodies && !this.won) {
         this.finish()
+        if (this.bodies.reduce((a, c) => a + c.radius, 0) == 0) {
+          this.won = true
+        }
       }
       // if (this.optimistic && enoughBodies) {
       //   this.started()
@@ -72,8 +83,17 @@ export const Visuals = {
     } else {
       this.justPaused = false
     }
-    if (this.frames == this.timer) {
-      this.setPause(true)
+    if (
+      this.stopEvery == 0 &&
+      this.mode == 'game' &&
+      this.bodies.reduce((a, c) => a + c.radius, 0) == 0 &&
+      !this.won
+    ) {
+      this.won = true
+      alert('You won!')
+    }
+    if (this.frames == this.timer && !this.won) {
+      // this.setPause(true)
       alert('Time is up!')
     }
   },
@@ -368,11 +388,13 @@ export const Visuals = {
   drawGun() {
     this.p.stroke('rgba(200,200,200,1)')
     this.p.strokeCap(this.p.SQUARE)
-    this.p.strokeWeight(10)
     const canvas = document.querySelector('canvas')
     // Bottom left corner coordinates
     let startX = 0
     let startY = this.windowHeight
+    this.p.strokeWeight(2)
+
+    const crossHairSize = 25
 
     const scaleX = (val) => {
       return (val / canvas.offsetWidth) * this.windowWidth
@@ -383,18 +405,37 @@ export const Visuals = {
     // Calculate direction from bottom left to mouse
     let dirX = scaleX(this.p.mouseX) - startX
     let dirY = scaleY(this.p.mouseY) - startY
+    this.p.line(
+      scaleX(this.p.mouseX) - crossHairSize,
+      scaleX(this.p.mouseY),
+      scaleX(this.p.mouseX) + crossHairSize,
+      scaleX(this.p.mouseY)
+    )
+    this.p.line(
+      scaleX(this.p.mouseX),
+      scaleX(this.p.mouseY) - crossHairSize,
+      scaleX(this.p.mouseX),
+      scaleX(this.p.mouseY) + crossHairSize
+    )
+    // // Calculate the length of the direction
+    // let len = this.p.sqrt(dirX * dirX + dirY * dirY)
 
-    // Calculate the length of the direction
-    let len = this.p.sqrt(dirX * dirX + dirY * dirY)
-
-    // If the length is not zero, scale the direction to have a length of 100
-    if (len != 0) {
-      dirX = (dirX / len) * 100
-      dirY = (dirY / len) * 100
-    }
+    // // If the length is not zero, scale the direction to have a length of 100
+    // if (len != 0) {
+    //   dirX = (dirX / len) * 100
+    //   dirY = (dirY / len) * 100
+    // }
 
     // Draw the line
+    // this.p.setLineDash([5, 15])
+    const drawingContext = this.p.canvas.getContext('2d')
+    const chunk = this.windowWidth / 100
+    drawingContext.setLineDash([chunk])
+    drawingContext.lineDashOffset = -(this.frames * 10)
+
     this.p.line(startX, startY, startX + dirX, startY + dirY)
+    drawingContext.setLineDash([])
+    drawingContext.lineDashOffset = 0
     this.p.strokeWeight(0)
   },
 
@@ -518,7 +559,7 @@ export const Visuals = {
     this.ghostEyes(radius)
   },
 
-  drawPngFace(radius, body) {
+  drawPngFace(radius, body, offset) {
     this.pngFaces ||= []
     const faceIdx = body.mintedBodyIndex || body.bodyIndex
     const face = this.pngFaces[faceIdx]
@@ -532,7 +573,7 @@ export const Visuals = {
       this.bodiesGraphic.image(
         face,
         -radius / 3,
-        -radius / 3 + radius / 2,
+        -radius / 3 + offset,
         radius / 1.5,
         radius / 1.5
       )
@@ -612,33 +653,56 @@ export const Visuals = {
     this.bodiesGraphic.text(body.life, 0, radius)
   },
 
-  drawBodyStyle1(radius, body) {
-    const c = body.c.replace(this.opac, '1')
-    this.bodiesGraphic.noStroke()
-    this.bodiesGraphic.fill(c)
-    this.bodiesGraphic.ellipse(0, radius / 2, radius, radius)
+  drawLevels(radius, body, offset) {
     this.bodiesGraphic.push()
-    this.bodiesGraphic.translate(0, radius / 2)
+    this.bodiesGraphic.translate(0, offset)
     this.bodiesGraphic.rotate(3 * (this.p.PI / 2))
+    const distance = radius / 1.5
+    radius = radius - this.radiusMultiplyer
+    const newRadius = radius
+    const blackTransparent = 'rgba(0,0,0,0.5)'
+    const whiteTransparent = 'rgba(255,255,255,0.5)'
     for (let i = 0; i < body.maxStarLvl; i++) {
-      const rotated = i * (this.bodiesGraphic.TWO_PI / body.maxStarLvl)
-      const xRotated = (radius / 2) * Math.cos(rotated)
-      const yRotated = (radius / 2) * Math.sin(rotated)
-      // this.bodiesGraphic.fill('white')
-      if (i < body.starLvl) {
-        this.bodiesGraphic.fill(body.c.replace(this.opac, '1'))
+      this.bodiesGraphic.strokeWeight(3)
+      this.bodiesGraphic.stroke(whiteTransparent)
+      const rotateOffset = this.frames / 50
+      const rotated =
+        i * (this.bodiesGraphic.TWO_PI / body.maxStarLvl) + rotateOffset
+      const xRotated = distance * Math.cos(rotated)
+      const yRotated = distance * Math.sin(rotated)
+      if (body.radius == 0) {
+        if (i < body.starLvl) {
+          // this.bodiesGraphic.fill(body.c.replace(this.opac, '1'))
+          if (i == body.starLvl - 1) {
+            this.bodiesGraphic.fill('white')
+          } else {
+            this.bodiesGraphic.fill(body.c.replace(this.opac, '1'))
+          }
+        } else {
+          this.bodiesGraphic.fill(blackTransparent)
+        }
       } else {
-        this.bodiesGraphic.noFill()
+        if (i > 0 && i - 1 < body.starLvl) {
+          this.bodiesGraphic.fill(body.c.replace(this.opac, '1'))
+        } else {
+          this.bodiesGraphic.fill(blackTransparent)
+        }
       }
-      this.bodiesGraphic.stroke('white')
-      this.bodiesGraphic.strokeWeight(4)
-      this.bodiesGraphic.ellipse(xRotated, yRotated, radius / 2)
+
+      this.bodiesGraphic.ellipse(xRotated, yRotated, newRadius)
+
+      // this.bodiesGraphic.fill('white')
+      // this.bodiesGraphic.textSize(50)
+      // this.bodiesGraphic.text(`${body.starLvl} / ${body.maxStarLvl}`, 0, radius)
     }
     this.bodiesGraphic.pop()
+  },
 
-    // this.bodiesGraphic.fill('white')
-    // this.bodiesGraphic.textSize(50)
-    // this.bodiesGraphic.text(`${body.starLvl} / ${body.maxStarLvl}`, 0, radius)
+  drawBodyStyle1(radius, body, offset) {
+    const c = body.c.replace(this.opac, '0.1')
+    this.bodiesGraphic.noStroke()
+    this.bodiesGraphic.fill(c)
+    this.bodiesGraphic.ellipse(0, offset, radius, radius)
   },
 
   moveAndRotate_PopAfter(graphic, x, y, v) {
@@ -657,12 +721,17 @@ export const Visuals = {
   drawBody(x, y, v, radius, body) {
     this.moveAndRotate_PopAfter(this.bodiesGraphic, x, y, v)
 
+    const offset = this.getOffset(radius)
+
+    if (this.showLives) {
+      this.drawLevels(radius, body, offset)
+    }
     switch (body.bodyStyle) {
       default:
-        this.drawBodyStyle1(radius, body)
+        this.drawBodyStyle1(radius, body, offset)
     }
     if ((body.mintedBodyIndex || body.bodyIndex) <= FACE_PNGS.length) {
-      this.drawPngFace(radius, body)
+      this.drawPngFace(radius, body, offset)
     } else {
       this.drawGlyphFace(radius, body)
     }
@@ -672,7 +741,9 @@ export const Visuals = {
 
   drawBodiesLooped(body, drawFunction) {
     drawFunction = drawFunction.bind(this)
-    const bodyRadius = this.bodyCopies.filter((b) => b.id == body.id)[0]?.radius
+    const bodyRadius = this.bodyCopies.filter(
+      (b) => b.bodyIndex == body.bodyIndex
+    )[0]?.radius
     const radius = bodyRadius * 4 + this.radiusMultiplyer
     drawFunction(body.position.x, body.position.y, body.velocity, radius, body)
 
@@ -747,12 +818,13 @@ export const Visuals = {
     // this.bodiesGraphic.clear()
     // if (this.mode == 'nft') this.drawBorder()
     // this.bodiesGraphic.strokeWeight(1)
+
     const bodyCopies = []
     for (let i = 0; i < this.bodies.length; i++) {
       // const body = this.bodies.sort((a, b) => b.radius - a.radius)[i]
       const body = this.bodies[i]
       if (body.life <= 0) continue
-      let c = body.c
+      // let c = body.c
       // let finalColor
       // if (this.colorStyle == 'squiggle') {
       //   const hueColor = (parseInt(c.split(',')[1]) + this.frames) % 360
@@ -800,12 +872,15 @@ export const Visuals = {
         this.drawBodiesLooped(body, this.drawBody)
         // this.getAngledBody(body, finalColor)
       }
-      const bodyCopy = {
-        position: this.p.createVector(body.position.x, body.position.y),
-        velocity: this.p.createVector(body.velocity.x, body.velocity.y),
-        radius: body.radius,
-        c: c
-      }
+
+      const bodyCopy = JSON.parse(
+        JSON.stringify(
+          body,
+          (key, value) => (typeof value === 'bigint' ? value.toString() : value) // return everything else unchanged
+        )
+      )
+      bodyCopy.position = this.p.createVector(body.position.x, body.position.y)
+      bodyCopy.velocity = this.p.createVector(body.velocity.x, body.velocity.y)
       bodyCopies.push(bodyCopy)
     }
     this.frames % this.tailMod == 0 && this.allCopiesOfBodies.push(bodyCopies)
@@ -817,14 +892,15 @@ export const Visuals = {
     if (attachToCanvas) {
       this.p.image(this.bodiesGraphic, 0, 0)
     }
-    if (this.mode == 'game') {
+
+    this.bodiesGraphic.clear()
+
+    if (this.mode == 'game' && this.target == 'outside') {
       for (let i = 0; i < this.bodies.length; i++) {
         const body = this.bodies[i]
         this.drawCenter(body)
       }
     }
-
-    this.bodiesGraphic.clear()
   },
 
   drawBorder() {
@@ -921,8 +997,8 @@ export const Visuals = {
     this.p.pop()
   },
 
-  drawTailStyle1(x, y, v, radius, finalColor) {
-    // finalColor = finalColor.replace('50%', '75%')
+  drawTailStyle1(x, y, v, radius, finalColor, offset) {
+    // finalColor = finalColor.replace(this.opac, '1')
     this.p.push()
     this.p.translate(x, y)
     this.p.rotate(v.heading() + this.p.PI / 2)
@@ -930,8 +1006,7 @@ export const Visuals = {
     // this.p.rotate(angle)
     this.p.fill(finalColor)
     this.p.noStroke()
-
-    this.p.ellipse(0, radius / 2, radius, radius)
+    this.p.ellipse(0, offset, radius, radius)
 
     // this.p.image(this.drawTails[id], -radius / 2, -radius)
     this.p.pop()
@@ -1024,6 +1099,10 @@ export const Visuals = {
     this.p.pop()
   },
 
+  getOffset(radius) {
+    return this.target == 'inside' ? 0 : radius / 1.5
+  },
+
   drawTails() {
     // this.p.blendMode(this.p.DIFFERENCE)
 
@@ -1043,7 +1122,10 @@ export const Visuals = {
         }
         this.p.fill(finalColor)
         // if (this.mode == 'nft') {
-        const radius = body.radius * 4 + this.radiusMultiplyer
+        const bodyCopy = this.bodyCopies.filter(
+          (b) => b.bodyIndex == body.bodyIndex
+        )[0]
+        const radius = bodyCopy.radius * 4 + this.radiusMultiplyer
 
         // this.p.ellipse(body.position.x, body.position.y, radius, radius)
         this.p.push()
@@ -1051,6 +1133,7 @@ export const Visuals = {
         this.p.rotate(body.velocity.heading() + this.p.PI / 2)
         // this.p.arc(0, 0, radius, radius, this.p.PI, 2 * this.p.PI)
         this.p.pop()
+        const offset = this.getOffset(radius)
 
         switch (body.tailStyle) {
           case 1:
@@ -1059,7 +1142,8 @@ export const Visuals = {
               body.position.y,
               body.velocity,
               radius,
-              finalColor
+              finalColor,
+              offset
             )
             break
           case 'ghost':
@@ -1068,7 +1152,8 @@ export const Visuals = {
               body.position.y,
               body.velocity,
               radius,
-              finalColor
+              finalColor,
+              offset
             )
             break
           default:
@@ -1077,7 +1162,8 @@ export const Visuals = {
               body.position.y,
               body.velocity,
               radius,
-              finalColor
+              finalColor,
+              offset
             )
         }
         // } else {
@@ -1110,7 +1196,6 @@ export const Visuals = {
   },
 
   drawCenter(b) {
-    this.p.strokeWeight(0)
     const max = 4
     if (b.x) {
       // just a bomb
@@ -1126,13 +1211,19 @@ export const Visuals = {
       }
       return
     }
+    this.p.noStroke()
+
     const x = b.position.x
     const y = b.position.y
     const r = b.radius
     const c = b.c?.replace(this.opac, '1')
     for (let i = 0; i < max; i++) {
       if (i % 2 == 0) {
-        this.p.fill('white')
+        if (this.target == 'outside') {
+          this.p.fill('white')
+        } else {
+          this.p.fill(c)
+        }
       } else {
         this.p.fill(c)
       }

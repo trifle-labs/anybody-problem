@@ -464,6 +464,23 @@ describe('Problem Tests', function () {
     }
   })
 
+  it('runs level up correctly', async () => {
+    const signers = await ethers.getSigners()
+    const deployedContracts = await deployContracts()
+    const { Problems: problems } = deployedContracts
+    const { problemId } = await mintProblem(signers, deployedContracts)
+    // set solver to be owner
+    const [owner] = signers
+    await problems.updateSolverAddress(owner.address)
+    await problems.levelUp(problemId)
+    await problems.levelUp(problemId)
+    await problems.levelUp(problemId)
+    await problems.levelUp(problemId)
+
+    const { bodyCount } = await problems.problems(problemId)
+    expect(bodyCount).to.equal(0)
+  })
+
   it('mints a body via mintBodyToProblem', async () => {
     const signers = await ethers.getSigners()
     // const [, acct1] = signers

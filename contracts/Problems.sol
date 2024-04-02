@@ -510,12 +510,15 @@ contract Problems is ERC721, Ownable {
     }
 
     function levelUp(uint256 problemId) public onlySolver {
-       for (uint256 i = 0; i < problems[problemId].bodyCount; i++) {
-            uint256 bodyId = problems[problemId].bodyIds[i];
+      uint256 deletionCount = 0;
+      uint256 bodyCount = problems[problemId].bodyCount;
+       for (uint256 i = 0; i < bodyCount; i++) {
+            uint256 bodyId = problems[problemId].bodyIds[i - deletionCount];
             problems[problemId].bodyData[bodyId].starLvl++;
             if (problems[problemId].bodyData[bodyId].starLvl == problems[problemId].bodyData[bodyId].maxStarLvl) {
                 Body memory bodyData = problems[problemId].bodyData[bodyId];
                 internalRemoveBody(problemId, bodyId);
+                deletionCount++;
                 problems[problemId].starData.push(bodyData);
             }
         }
