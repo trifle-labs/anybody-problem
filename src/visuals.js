@@ -367,16 +367,23 @@ export const Visuals = {
   drawScore() {
     const { p } = this
     p.push()
-    p.translate(10, 10)
+    p.translate(20, 10)
     p.fill('white')
     p.noStroke()
 
     p.textSize(50)
     p.textAlign(p.LEFT, p.TOP)
-    const time = this.timer / FPS
+    const secondsLeft = this.timer / FPS
+
+    // when we have less than 10s left, flash the timer and make it huge
+    if (secondsLeft < 10 && Math.floor(secondsLeft) % 2 == 0) {
+      p.textSize(300)
+      p.fill(255, 255, 255, 150)
+    }
+
     // TODO: remove this line when timer is ticked somewhere more suitable (okwme's branch)
     this.timer--
-    p.text(time.toFixed(1), 0, 0)
+    p.text(secondsLeft.toFixed(0), 0, 0)
 
     p.pop()
   },
