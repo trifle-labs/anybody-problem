@@ -372,15 +372,20 @@ export const Visuals = {
     p.noStroke()
 
     p.textSize(60)
-    p.textStyle(p.BOLD)
+    p.textStyle(p.BOLDITALIC)
     p.textAlign(p.LEFT, p.TOP)
     const secondsLeft = this.timer / FPS
 
     // when we have less than 10s left, flash the timer and make it huge
-    if (secondsLeft < 10 && Math.floor(secondsLeft) % 2 == 0) {
-      p.textClear()
+    if (secondsLeft < 10) {
       p.textSize(420)
       p.fill(255, 255, 255, 150)
+    } else if (secondsLeft < 30) {
+      p.textSize(160)
+      p.fill(255, 255, 255, 200)
+    } else if (secondsLeft < 50) {
+      p.textSize(80)
+      p.fill(255, 255, 255, 200)
     }
 
     // TODO: remove this line when timer is ticked somewhere more suitable (okwme's branch)
