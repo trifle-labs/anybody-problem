@@ -717,14 +717,22 @@ export const Visuals = {
         30 // start radius
       )
 
-      // the ghost body pulses a little bit
+      // the ghost body pulses a little bit, isn't totally round
       body.zoff ||= 0
       p.stroke(255)
       p.noFill()
       p.fill(255, 255, 255, 230)
       p.beginShape()
       for (let a = 0; a < p.TWO_PI; a += 0.02) {
-        const r = p.map(p.noise(body.zoff), 0, 1, radius - 10, radius)
+        let xoff = p.map(p.cos(a), -1, 1, 0, 2)
+        let yoff = p.map(p.sin(a), -1, 1, 0, 2)
+        const r = p.map(
+          p.noise(xoff, yoff, body.zoff),
+          0,
+          1,
+          radius - 10,
+          radius
+        )
         let x = r * p.cos(a)
         let y = r * p.sin(a)
         p.vertex(x, y)
