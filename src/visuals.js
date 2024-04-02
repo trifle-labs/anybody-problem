@@ -68,9 +68,9 @@ export const Visuals = {
     } else {
       this.justPaused = false
     }
-    if (0 == this.timer) {
-      this.setPause(true)
-      alert('Time is up!')
+    if (this.frames >= this.timer) {
+      this.witherAllBodies()
+      this.gameOver = true
     }
   },
   drawPause() {
@@ -375,13 +375,19 @@ export const Visuals = {
     this.scoreSize ||= initialScoreSize
     p.textStyle(p.BOLDITALIC)
     p.textAlign(p.LEFT, p.TOP)
-    const secondsLeft = this.timer / FPS
+    const secondsLeft = (this.timer - this.frames) / FPS
+
+    if (this.gameOver) {
+      p.textSize(100)
+      // game over in the center of screen
+      p.textAlign(p.CENTER)
+      p.text('GAME OVER', this.windowWidth / 2, this.windowHeight / 2)
+      p.pop()
+      return
+    }
 
     // when we have less than 10s left, flash the timer and make it huge
-    if (secondsLeft <= 0) {
-      p.noFill()
-      this.scoreSize = initialScoreSize
-    } else if (secondsLeft < 10 && this.scoreSize < 420) {
+    if (secondsLeft < 10 && this.scoreSize < 420) {
       this.scoreSize += 5
       p.fill(255, 255, 255, 150)
     } else if (secondsLeft < 30 && this.scoreSize < 160) {
@@ -393,8 +399,6 @@ export const Visuals = {
     }
     p.textSize(this.scoreSize)
 
-    // TODO: remove this line when timer is ticked somewhere more suitable (okwme's branch)
-    this.timer--
     p.text(secondsLeft.toFixed(0), 0, 0)
 
     p.pop()
@@ -786,6 +790,7 @@ export const Visuals = {
   },
 
   async drawBodies(attachToCanvas = true) {
+    if (this.gameOver) return
     this.bodiesGraphic ||= this.p.createGraphics(
       this.windowWidth,
       this.windowHeight
@@ -1068,6 +1073,7 @@ export const Visuals = {
   },
 
   drawTails() {
+    if (this.gameOver) return
     // this.p.blendMode(this.p.DIFFERENCE)
 
     // this.bodiesGraphic.filter(this.p.INVERT)
