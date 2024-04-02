@@ -371,13 +371,15 @@ export const Visuals = {
     p.fill('white')
     p.noStroke()
 
-    p.textSize(50)
+    p.textSize(60)
+    p.textStyle(p.BOLD)
     p.textAlign(p.LEFT, p.TOP)
     const secondsLeft = this.timer / FPS
 
     // when we have less than 10s left, flash the timer and make it huge
     if (secondsLeft < 10 && Math.floor(secondsLeft) % 2 == 0) {
-      p.textSize(300)
+      p.textClear()
+      p.textSize(420)
       p.fill(255, 255, 255, 150)
     }
 
