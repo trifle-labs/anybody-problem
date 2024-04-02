@@ -444,7 +444,7 @@ export class Anybody extends EventEmitter {
         velocity: this.createVector(0, 0),
         radius,
         starLvl: 0,
-        maxStarLvl: Math.random() > 0.2 ? 3 : 5,
+        maxStarLvl: Math.random() > 0.2 ? 1 : 3,
         c: cs[i]
       }
       bodies.push(body)
@@ -514,6 +514,10 @@ export class Anybody extends EventEmitter {
     this.missiles.push(b)
     this.sound?.playMissile()
     this.missileInits.push(...this.processMissileInits([b]))
+  }
+
+  witherAllBodies() {
+    this.witheringBodies = this.bodies.map((b) => ({ ...b }))
   }
 }
 if (typeof window !== 'undefined') {

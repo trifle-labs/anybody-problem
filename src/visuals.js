@@ -67,7 +67,8 @@ export const Visuals = {
       this.justPaused = false
     }
     if (this.frames == this.timer) {
-      this.setPause(true)
+      this.witherAllBodies()
+      this.gameOver = true
       alert('Time is up!')
     }
   },
@@ -745,6 +746,7 @@ export const Visuals = {
   },
 
   async drawBodies(attachToCanvas = true) {
+    if (this.gameOver) return
     this.bodiesGraphic ||= this.p.createGraphics(
       this.windowWidth,
       this.windowHeight
@@ -1027,6 +1029,7 @@ export const Visuals = {
   },
 
   drawTails() {
+    if (this.gameOver) return
     // this.p.blendMode(this.p.DIFFERENCE)
 
     // this.bodiesGraphic.filter(this.p.INVERT)
