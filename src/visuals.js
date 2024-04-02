@@ -386,7 +386,7 @@ export const Visuals = {
       return
     }
 
-    // when we have less than 10s left, flash the timer and make it huge
+    // make the timer bigger as time runs out
     if (secondsLeft < 10 && this.scoreSize < 420) {
       this.scoreSize += 5
       p.fill(255, 255, 255, 150)
