@@ -381,7 +381,7 @@ export const Visuals = {
       p.textSize(100)
       // game over in the center of screen
       p.textAlign(p.CENTER)
-      p.text('GAME OVER', this.windowWidth / 2, this.windowHeight / 2 - 200)
+      p.text('GAME OVER', this.windowWidth / 2, this.windowHeight / 2 - 60)
       p.pop()
       return
     }

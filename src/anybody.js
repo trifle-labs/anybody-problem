@@ -517,7 +517,19 @@ export class Anybody extends EventEmitter {
   }
 
   witherAllBodies() {
-    this.witheringBodies = this.bodies.map((b) => ({ ...b }))
+    for (const body of this.bodies) {
+      // find the index in witheringBodies
+      const index = this.witheringBodies.findIndex(
+        (b) => b.bodyIndex == body.bodyIndex
+      )
+      // if it's there, update the position
+      if (index >= 0) {
+        this.witheringBodies[index].position = body.position
+      } else {
+        // if not, add it
+        this.witheringBodies.push({ ...body })
+      }
+    }
   }
 }
 if (typeof window !== 'undefined') {
