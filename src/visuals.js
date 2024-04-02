@@ -371,27 +371,27 @@ export const Visuals = {
     p.fill('white')
     p.noStroke()
 
-    this.scoreSize ||= 60
-    p.textSize(this.scoreSize)
-
+    const initialScoreSize = 60
+    this.scoreSize ||= initialScoreSize
     p.textStyle(p.BOLDITALIC)
     p.textAlign(p.LEFT, p.TOP)
     const secondsLeft = this.timer / FPS
 
     // when we have less than 10s left, flash the timer and make it huge
-    if (secondsLeft < 10 && this.scoreSize < 420) {
+    if (secondsLeft <= 0) {
+      p.noFill()
+      this.scoreSize = initialScoreSize
+    } else if (secondsLeft < 10 && this.scoreSize < 420) {
       this.scoreSize += 5
-      p.textSize(this.scoreSize)
       p.fill(255, 255, 255, 150)
     } else if (secondsLeft < 30 && this.scoreSize < 160) {
       this.scoreSize += 2
-      p.textSize(this.scoreSize)
       p.fill(255, 255, 255, 150)
     } else if (secondsLeft < 50 && this.scoreSize < 80) {
       this.scoreSize += 1
-      p.textSize(this.scoreSize)
       p.fill(255, 255, 255, 150)
     }
+    p.textSize(this.scoreSize)
 
     // TODO: remove this line when timer is ticked somewhere more suitable (okwme's branch)
     this.timer--
