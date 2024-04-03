@@ -659,13 +659,7 @@ export const Visuals = {
     const framesLeft = this.timer - this.frames
     switch (this.faceRotation) {
       case 'time':
-        if (framesLeft > (2 / 3) * this.timer) {
-          expression = 0
-        } else if (framesLeft > (1 / 3) * this.timer) {
-          expression = 1
-        } else {
-          expression = 2
-        }
+        expression = 2 - Math.floor((framesLeft / this.timer) * 3)
         break
       case 'hitcycle':
         expression = hit ? (expression + 1) % 3 : expression
