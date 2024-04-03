@@ -1,3 +1,5 @@
+export const FPS = 50
+
 const WITHERING_STEPS = 3000
 const FACE_PNGS = [
   new URL('/public/faces/face1.png', import.meta.url).href,
@@ -66,10 +68,9 @@ export const Visuals = {
     } else {
       this.justPaused = false
     }
-    if (this.frames == this.timer) {
+    if (this.frames >= this.timer) {
       this.witherAllBodies()
       this.gameOver = true
-      alert('Time is up!')
     }
   },
   drawPause() {
@@ -132,8 +133,10 @@ export const Visuals = {
       // }
     }
 
-    const basicX = ((this.frames / 50) * (this.frames / 50)) % this.windowWidth
-    const basicY = ((this.frames / 50) * (this.frames / 50)) % this.windowHeight
+    const basicX =
+      ((this.frames / FPS) * (this.frames / FPS)) % this.windowWidth
+    const basicY =
+      ((this.frames / FPS) * (this.frames / FPS)) % this.windowHeight
 
     // const basicX = this.accumX % this.windowWidth
     // const basicY = this.accumY % this.windowHeight
@@ -295,69 +298,110 @@ export const Visuals = {
     }
   },
 
+  // This is the admin/debug version of the drawScore.
+  // drawScore() {
+  //   this.p.noStroke()
+  //   if (this.mode == 'nft') {
+  //     // this.accumulateFrameRate += this.frameRate()
+  //     // console.log(this.accumulateFrameRate, this.p.frameRate())
+  //     // if (this.frames % 10 == 0) {
+  //     //   this.averageFrameRate = this.accumulateFrameRate / 10
+  //     //   this.accumulateFrameRate = 0
+  //     // }
+  //     this.p.fill('white')
+  //     // this.p.rect(0, 0, 50, 20)
+  //     // this.p.fill(this.getNotGrey())
+  //     this.p.textSize(50)
+  //     this.p.textAlign(this.p.LEFT) // Right-align the text
+  //     this.p.text(`${this.frames} t`, 65, 50) // Adjust the x-coordinate to align the text
+  //     this.p.text(`${this.frameRate().toFixed(2)} fps`, 65, 100)
+  //   } else {
+  //     this.p.fill('white')
+  //     // this.p.rect(0, 0, 50, 20)
+  //     // this.p.fill('black')
+  //     // this.p.textAlign(this.p.RIGHT) // Right-align the text
+  //     const secondsAsTime = new Date(this.totalSec * 1000)
+  //       .toISOString()
+  //       .substr(14, 5)
+  //     const thisLevelSecondsAsTime = new Date(this.thisLevelSec * 1000)
+  //       .toISOString()
+  //       .substr(14, 5)
+  //     this.p.text('Total Frames: ' + this.preRun + this.frames, 50, 10) // Adjust the x-coordinate to align the text
+  //     this.p.text('Total Time: ' + secondsAsTime, 50, 20) // Adjust the x-coordinate to align the text
+  //     this.p.text('Total Shots: ' + this.missileCount, 50, 30) // Adjust the x-coordinate to align the text
+  //     this.p.text(
+  //       'Lvl ' +
+  //         (this.startingBodies - 2) +
+  //         ' - ' +
+  //         thisLevelSecondsAsTime +
+  //         ' - ' +
+  //         (this.startingBodies - this.bodies.length) +
+  //         '/' +
+  //         this.startingBodies +
+  //         ' - ' +
+  //         this.thisLevelMissileCount +
+  //         ' shots',
+  //       50,
+  //       40
+  //     ) // Adjust the x-coordinate to align the text
+  //     for (let i = 0; i < this.allLevelSec.length; i++) {
+  //       const prevLevel = this.allLevelSec[i]
+  //       const prevLevelSecondsAsTime = new Date(prevLevel.thisLevelSec * 1000)
+  //         .toISOString()
+  //         .substr(14, 5)
+  //       this.p.text(
+  //         'Lvl ' +
+  //           (this.allLevelSec.length - i) +
+  //           ' - ' +
+  //           prevLevelSecondsAsTime +
+  //           ' - ' +
+  //           prevLevel.thisLevelMissileCount +
+  //           ' shots',
+  //         50,
+  //         i * 10 + 50
+  //       ) // Adjust the x-coordinate to align the text
+  //     }
+  //   }
+  // },
+
   drawScore() {
-    this.p.noStroke()
-    if (this.mode == 'nft') {
-      // this.accumulateFrameRate += this.frameRate()
-      // console.log(this.accumulateFrameRate, this.p.frameRate())
-      // if (this.frames % 10 == 0) {
-      //   this.averageFrameRate = this.accumulateFrameRate / 10
-      //   this.accumulateFrameRate = 0
-      // }
-      this.p.fill('white')
-      // this.p.rect(0, 0, 50, 20)
-      // this.p.fill(this.getNotGrey())
-      this.p.textSize(50)
-      this.p.textAlign(this.p.LEFT) // Right-align the text
-      this.p.text(`${this.frames} t`, 65, 50) // Adjust the x-coordinate to align the text
-      this.p.text(`${this.frameRate().toFixed(2)} fps`, 65, 100)
-    } else {
-      this.p.fill('white')
-      // this.p.rect(0, 0, 50, 20)
-      // this.p.fill('black')
-      // this.p.textAlign(this.p.RIGHT) // Right-align the text
-      const secondsAsTime = new Date(this.totalSec * 1000)
-        .toISOString()
-        .substr(14, 5)
-      const thisLevelSecondsAsTime = new Date(this.thisLevelSec * 1000)
-        .toISOString()
-        .substr(14, 5)
-      this.p.text('Total Frames: ' + this.preRun + this.frames, 50, 10) // Adjust the x-coordinate to align the text
-      this.p.text('Total Time: ' + secondsAsTime, 50, 20) // Adjust the x-coordinate to align the text
-      this.p.text('Total Shots: ' + this.missileCount, 50, 30) // Adjust the x-coordinate to align the text
-      this.p.text(
-        'Lvl ' +
-          (this.startingBodies - 2) +
-          ' - ' +
-          thisLevelSecondsAsTime +
-          ' - ' +
-          (this.startingBodies - this.bodies.length) +
-          '/' +
-          this.startingBodies +
-          ' - ' +
-          this.thisLevelMissileCount +
-          ' shots',
-        50,
-        40
-      ) // Adjust the x-coordinate to align the text
-      for (let i = 0; i < this.allLevelSec.length; i++) {
-        const prevLevel = this.allLevelSec[i]
-        const prevLevelSecondsAsTime = new Date(prevLevel.thisLevelSec * 1000)
-          .toISOString()
-          .substr(14, 5)
-        this.p.text(
-          'Lvl ' +
-            (this.allLevelSec.length - i) +
-            ' - ' +
-            prevLevelSecondsAsTime +
-            ' - ' +
-            prevLevel.thisLevelMissileCount +
-            ' shots',
-          50,
-          i * 10 + 50
-        ) // Adjust the x-coordinate to align the text
-      }
+    const { p } = this
+    p.push()
+    p.translate(20, 10)
+    p.fill('white')
+    p.noStroke()
+
+    const initialScoreSize = 60
+    this.scoreSize ||= initialScoreSize
+    p.textStyle(p.BOLDITALIC)
+    p.textAlign(p.LEFT, p.TOP)
+    const secondsLeft = (this.timer - this.frames) / FPS
+
+    if (this.gameOver) {
+      p.textSize(100)
+      // game over in the center of screen
+      p.textAlign(p.CENTER)
+      p.text('GAME OVER', this.windowWidth / 2, this.windowHeight / 2 - 60)
+      p.pop()
+      return
     }
+
+    // make the timer bigger as time runs out
+    if (secondsLeft < 10 && this.scoreSize < 420) {
+      this.scoreSize += 5
+      p.fill(255, 255, 255, 150)
+    } else if (secondsLeft < 30 && this.scoreSize < 160) {
+      this.scoreSize += 2
+      p.fill(255, 255, 255, 150)
+    } else if (secondsLeft < 50 && this.scoreSize < 80) {
+      this.scoreSize += 1
+      p.fill(255, 255, 255, 150)
+    }
+    p.textSize(this.scoreSize)
+
+    p.text(secondsLeft.toFixed(0), 0, 0)
+
+    p.pop()
   },
 
   drawGun() {
