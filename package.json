@@ -15,6 +15,7 @@
     "circom:nft-prod": "yarn circom nft_3_500 && yarn circom nft_4_100 && yarn circom nft_5_100 && yarn circom nft_6_100 && yarn circom nft_7_100 && yarn circom nft_8_100 && yarn circom nft_9_50 && yarn circom nft_10_50",
     "circom:game-test": "yarn circom game_3_20 && yarn circom game_4_20 && yarn circom game_5_20 && yarn circom game_6_20 && yarn circom game_7_20 && yarn circom game_8_20 && yarn circom game_9_20 && yarn circom game_10_20",
     "circom:game-prod": "yarn circom game_3_500 && yarn circom game_4_100 && yarn circom game_5_100 && yarn circom game_6_100 && yarn circom game_7_100 && yarn circom game_8_50 && yarn circom game_9_50 && yarn circom game_10_50",
+    "deploy": "hardhat run scripts/deploy.cjs",
     "test:circom": "ls test/*.js | grep -v -e 'bodies' -e 'problems' -e 'solver' -e 'metadata' | xargs npx hardhat test",
     "test:solidity": "hardhat test test/problems.test.js test/metadata.test.js test/bodies.test.js test/solver.test.js",
     "test": "hardhat test",

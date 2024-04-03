@@ -15,7 +15,6 @@ const whistle_8_T7 = new URL(
   '/public/sound/whistle/whistle_8_T7.mp3',
   import.meta.url
 ).href
-console.log({ whistle_8_T7 })
 const whistle_4_T3 = new URL(
   '/public/sound/whistle/whistle_4_T3.mp3',
   import.meta.url
@@ -221,7 +220,6 @@ export default class Sound {
   }
 
   async playOneShot(url, volume) {
-    console.log('playOneShot')
     this.oneShots = this.oneShots || {}
     if (!this.oneShots[url]) {
       this.oneShots[url] = new Player({
@@ -239,7 +237,6 @@ export default class Sound {
   }
 
   voiceFromFile(file) {
-    console.log({ file })
     const voice = {
       file: file,
       player: new Player({
@@ -279,7 +276,6 @@ export default class Sound {
 
     if (!this.voices) {
       const parts = song.parts[0]
-      console.log({ parts })
       this.voices = parts.map((part) => this.voiceFromFile(part[0]))
 
       // master output
