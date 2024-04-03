@@ -645,13 +645,42 @@ export const Visuals = {
   },
 
   drawPngFace(radius, body, offset) {
-    this.pngFaces ||= []
+    this.pngFaces ||= new Array(FACE_PNGS.length)
+      .fill(null)
+      .map(() => new Array(FACE_PNGS[0].length))
     const faceIdx = body.mintedBodyIndex || body.bodyIndex
-    const face = this.pngFaces[faceIdx]
+
+    // faceRotation: 'time' | 'hitcycle' | 'mania'
+    // time: start sleepy and get happier as time goes on
+    // hit: rotate to a new face each time (expression is starLvl % 3)
+    // mania: when body is hit, cycle wildly until end of game
+    let expression = Math.floor((body.starLvl / body.maxStarLvl) * 3) // 0 sleepy, 1 normal, 2 ecstatic
+    let hit = body.radius === 0
+    const framesLeft = this.timer - this.frames
+    switch (this.faceRotation) {
+      case 'time':
+        if (framesLeft > (2 / 3) * this.timer) {
+          expression = 0
+        } else if (framesLeft > (1 / 3) * this.timer) {
+          expression = 1
+        } else {
+          expression = 2
+        }
+        break
+      case 'hitcycle':
+        expression = hit ? (expression + 1) % 3 : expression
+        break
+      case 'mania':
+        // cycle every 10 frames when hit
+        expression = hit ? Math.floor(this.frames / 10) % 3 : expression
+        break
+    }
+
+    const face = this.pngFaces[faceIdx][expression]
     if (!face) {
-      const png = FACE_PNGS[faceIdx]
+      const png = FACE_PNGS[faceIdx][expression]
       this.p.loadImage(png, (img) => {
-        this.pngFaces[faceIdx] = img
+        this.pngFaces[faceIdx][expression] = img
       })
     }
     if (face) {
