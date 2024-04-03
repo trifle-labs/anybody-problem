@@ -298,6 +298,7 @@ contract Solver is Ownable {
 
     function deleteMatch(uint256 problemId) public {
       require(msg.sender == Problems(problems).ownerOf(problemId), "Not the owner");
+      Problems(problems).restoreRadius(problemId);
       delete matches[problemId];
     }
 

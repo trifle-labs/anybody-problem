@@ -10,8 +10,8 @@ window.anybody
 q5.setup = () => {
   window.anybody = new Anybody(q5, {
     mode: 'game',
-    seed: 0n
-    // startingBodies: 1
+    // seed: 0n,
+    startingBodies: Math.floor(Math.random() * 7) + 3
   })
 }
 q5.draw = () => {
