@@ -357,6 +357,7 @@ export const Calculations = {
         this.sound?.playExplosion()
 
         body.starLvl += 1
+
         bodies[j].radius = 0n
       }
     }
