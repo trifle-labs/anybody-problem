@@ -41,7 +41,7 @@ export class Anybody extends EventEmitter {
       timer: 60 * FPS, // 60 seconds * 50 frames per second
       aimHelper: false,
       target: 'outside', // 'outside' or 'inside'
-      showLives: true, // true or false
+      showLives: true // true or false
     }
 
     // Merge the default options with the provided options
@@ -303,6 +303,7 @@ export class Anybody extends EventEmitter {
   }
 
   finish() {
+    if (this.finalBatchSent) return
     let results = {}
     // this.finished = true
     // this.setPause(true)
@@ -351,7 +352,7 @@ export class Anybody extends EventEmitter {
       this.mode == 'game' &&
       this.bodies.reduce((a, c) => a + c.radius, 0) == 0
     ) {
-      alert('You won!')
+      this.finalBatchSent = true
     }
     return results
   }
