@@ -92,7 +92,6 @@
     "hardhat-gas-reporter": "*",
     "husky": "^9.0.11",
     "lint-staged": "^15.2.2",
-    "p5": "^1.8.0",
     "parcel": "^2.12.0",
     "prettier": "3.2.5",
     "solidity-coverage": "^0.8.6"

@@ -2,18 +2,56 @@ export const FPS = 50
 
 const WITHERING_STEPS = 3000
 const FACE_PNGS = [
-  new URL('/public/faces/face1.png', import.meta.url).href,
-  // new URL('/public/faces/face2.png', import.meta.url).href,
-  new URL('/public/faces/face3.png', import.meta.url).href,
-  new URL('/public/faces/face4.png', import.meta.url).href,
-  new URL('/public/faces/face5.png', import.meta.url).href,
-  new URL('/public/faces/face6.png', import.meta.url).href,
-  new URL('/public/faces/face7.png', import.meta.url).href,
-  new URL('/public/faces/face8.png', import.meta.url).href,
-  new URL('/public/faces/face9.png', import.meta.url).href,
-  new URL('/public/faces/face10.png', import.meta.url).href,
-  // new URL('/public/faces/face11.png', import.meta.url).href,
-  new URL('/public/faces/face12.png', import.meta.url).href
+  [
+    new URL('/public/faces/face1_1.png', import.meta.url).href,
+    new URL('/public/faces/face1_2.png', import.meta.url).href,
+    new URL('/public/faces/face1_3.png', import.meta.url).href
+  ],
+  [
+    new URL('/public/faces/face3_1.png', import.meta.url).href,
+    new URL('/public/faces/face3_2.png', import.meta.url).href,
+    new URL('/public/faces/face3_3.png', import.meta.url).href
+  ],
+  [
+    new URL('/public/faces/face4_1.png', import.meta.url).href,
+    new URL('/public/faces/face4_2.png', import.meta.url).href,
+    new URL('/public/faces/face4_3.png', import.meta.url).href
+  ],
+  [
+    new URL('/public/faces/face6_1.png', import.meta.url).href,
+    new URL('/public/faces/face6_2.png', import.meta.url).href,
+    new URL('/public/faces/face6_3.png', import.meta.url).href
+  ],
+  [
+    new URL('/public/faces/face7_1.png', import.meta.url).href,
+    new URL('/public/faces/face7_2.png', import.meta.url).href,
+    new URL('/public/faces/face7_3.png', import.meta.url).href
+  ],
+  [
+    new URL('/public/faces/face8_1.png', import.meta.url).href,
+    new URL('/public/faces/face8_2.png', import.meta.url).href,
+    new URL('/public/faces/face8_3.png', import.meta.url).href
+  ],
+  [
+    new URL('/public/faces/face9_1.png', import.meta.url).href,
+    new URL('/public/faces/face9_2.png', import.meta.url).href,
+    new URL('/public/faces/face9_3.png', import.meta.url).href
+  ],
+  [
+    new URL('/public/faces/face10_1.png', import.meta.url).href,
+    new URL('/public/faces/face10_2.png', import.meta.url).href,
+    new URL('/public/faces/face10_3.png', import.meta.url).href
+  ],
+  [
+    new URL('/public/faces/face11_1.png', import.meta.url).href,
+    new URL('/public/faces/face11_2.png', import.meta.url).href,
+    new URL('/public/faces/face11_3.png', import.meta.url).href
+  ],
+  [
+    new URL('/public/faces/face12_1.png', import.meta.url).href,
+    new URL('/public/faces/face12_2.png', import.meta.url).href,
+    new URL('/public/faces/face12_3.png', import.meta.url).href
+  ]
 ]
 
 export const Visuals = {
@@ -413,7 +451,7 @@ export const Visuals = {
     }
 
     // make the timer bigger as time runs out
-    if (secondsLeft < 10 && this.scoreSize < 420) {
+    if (secondsLeft <= 9 && this.scoreSize < 420) {
       this.scoreSize += 5
       p.fill(255, 255, 255, 150)
     } else if (secondsLeft < 30 && this.scoreSize < 160) {
