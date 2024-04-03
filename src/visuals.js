@@ -23,8 +23,6 @@ export const Visuals = {
       this.setPause(true)
       return
     }
-    const enoughBodies =
-      -this.bodies.filter((b) => !b.life || b.life > 0).length >= 3
 
     this.frames++
     const results = this.step(this.bodies, this.missiles)
@@ -60,6 +58,13 @@ export const Visuals = {
     const framesIsAtStopEveryInterval =
       (this.frames - this.alreadyRun) % this.stopEvery == 0
     const didNotJustPause = !this.justPaused
+    // console.log({
+    //   stopEvery: this.stopEvery,
+    //   alreadyRun: this.alreadyRun,
+    //   frames: this.frames,
+    //   framesIsAtStopEveryInterval,
+    //   frames_lt_timer: this.frames < this.timer
+    // })
     if (
       isNotFirstFrame &&
       notPaused &&
@@ -67,13 +72,10 @@ export const Visuals = {
       didNotJustPause &&
       this.frames < this.timer
     ) {
-      if (didNotJustPause && enoughBodies && !this.won) {
+      if (didNotJustPause) {
         this.finish()
-        if (this.bodies.reduce((a, c) => a + c.radius, 0) == 0) {
-          this.won = true
-        }
       }
-      // if (this.optimistic && enoughBodies) {
+      // if (this.optimistic) {
       //   this.started()
       // }
     } else {
@@ -84,17 +86,13 @@ export const Visuals = {
       this.gameOver = true
     }
     if (
-      this.stopEvery == 0 &&
+      !this.won &&
       this.mode == 'game' &&
-      this.bodies.reduce((a, c) => a + c.radius, 0) == 0 &&
-      !this.won
+      this.bodies.reduce((a, c) => a + c.radius, 0) == 0
     ) {
+      this.witherAllBodies()
+      this.gameOver = true
       this.won = true
-      alert('You won!')
-    }
-    if (this.frames == this.timer && !this.won) {
-      // this.setPause(true)
-      alert('Time is up!')
     }
   },
   drawPause() {
@@ -405,7 +403,11 @@ export const Visuals = {
       p.textSize(100)
       // game over in the center of screen
       p.textAlign(p.CENTER)
-      p.text('GAME OVER', this.windowWidth / 2, this.windowHeight / 2 - 60)
+      p.text(
+        this.won ? 'SUCCESS' : 'GAME OVER',
+        this.windowWidth / 2,
+        this.windowHeight / 2 - 60
+      )
       p.pop()
       return
     }
@@ -495,7 +497,6 @@ export const Visuals = {
     for (let i = 0; i < this.explosions.length; i++) {
       const _explosion = this.explosions[i]
       const bomb = _explosion[0]
-      console.log(i / this.explosions.length)
       this.p.fill('red')
       this.p.ellipse(bomb.x, bomb.y, bomb.i * 2, bomb.i * 2)
       _explosion.shift()
