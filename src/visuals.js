@@ -431,7 +431,9 @@ export const Visuals = {
     const drawingContext = this.p.canvas.getContext('2d')
     const chunk = this.windowWidth / 100
     drawingContext.setLineDash([chunk])
-    drawingContext.lineDashOffset = -(this.frames * 10)
+    if (this.aimHelper) {
+      drawingContext.lineDashOffset = -(this.frames * 10)
+    }
 
     this.p.line(startX, startY, startX + dirX, startY + dirY)
     drawingContext.setLineDash([])

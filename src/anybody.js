@@ -38,6 +38,7 @@ export class Anybody extends EventEmitter {
       util: false,
       optimistic: false,
       paused: true,
+      aimHelper: false,
       target: 'outside', // 'outside' or 'inside'
       showLives: true, // true or false
       timer: 60 * 50 // 60 seconds * 50 frames per second
@@ -74,6 +75,7 @@ export class Anybody extends EventEmitter {
     this.timer = mergedOptions.timer + this.alreadyRun
     this.target = mergedOptions.target
     this.showLives = mergedOptions.showLives
+    this.aimHelper = mergedOptions.aimHelper
 
     // Add other constructor logic here
     this.p = p
