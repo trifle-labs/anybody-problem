@@ -42,7 +42,7 @@ export class Anybody extends EventEmitter {
       aimHelper: false,
       target: 'outside', // 'outside' or 'inside'
       showLives: true, // true or false
-      faceRotation: 'mania' // 'time' or 'hitcycle' or 'mania'
+      faceRotation: 'hitcycle' // 'time' or 'hitcycle' or 'mania'
     }
 
     // Merge the default options with the provided options
@@ -96,6 +96,7 @@ export class Anybody extends EventEmitter {
     this.rng = new Prando(this.seed.toString(16))
     this.generateBodies()
     this.frames = this.alreadyRun
+    this.startingFrame = this.alreadyRun
     // const vectorLimitScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
     this.setPause(this.paused)
   }
@@ -477,7 +478,7 @@ export class Anybody extends EventEmitter {
     }
     if (
       this.bodies.reduce((a, c) => a + c.radius, 0) == 0 ||
-      this.frames >= this.timer
+      this.frames - this.startingFrame >= this.timer
     ) {
       return
     }
@@ -509,6 +510,7 @@ export class Anybody extends EventEmitter {
 
   witherAllBodies() {
     for (const body of this.bodies) {
+      if (body.starLvl !== body.maxStarLvl) continue
       // find the index in witheringBodies
       const index = this.witheringBodies.findIndex(
         (b) => b.bodyIndex == body.bodyIndex

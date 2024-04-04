@@ -79,7 +79,7 @@ export const Visuals = {
 
     if (
       this.mode == 'game' &&
-      this.frames < this.timer &&
+      this.frames - this.startingFrame < this.timer &&
       this.bodies.reduce((a, c) => a + c.radius, 0) != 0
     ) {
       this.drawGun()
@@ -94,7 +94,7 @@ export const Visuals = {
     const isNotFirstFrame = this.frames !== 0
     const notPaused = !this.paused
     const framesIsAtStopEveryInterval =
-      (this.frames - this.alreadyRun) % this.stopEvery == 0
+      (this.frames - this.startingFrame) % this.stopEvery == 0
     const didNotJustPause = !this.justPaused
     // console.log({
     //   stopEvery: this.stopEvery,
@@ -108,7 +108,7 @@ export const Visuals = {
       notPaused &&
       framesIsAtStopEveryInterval &&
       didNotJustPause &&
-      this.frames < this.timer
+      this.frames - this.startingFrame < this.timer
     ) {
       if (didNotJustPause) {
         this.finish()
@@ -119,7 +119,7 @@ export const Visuals = {
     } else {
       this.justPaused = false
     }
-    if (this.frames >= this.timer) {
+    if (this.frames - this.startingFrame >= this.timer) {
       this.witherAllBodies()
       this.gameOver = true
     }
@@ -435,7 +435,7 @@ export const Visuals = {
     this.scoreSize ||= initialScoreSize
     p.textStyle(p.BOLDITALIC)
     p.textAlign(p.LEFT, p.TOP)
-    const secondsLeft = (this.timer - this.frames) / FPS
+    const secondsLeft = (this.startingFrame + this.timer - this.frames) / FPS
 
     if (this.gameOver) {
       p.textSize(100)
@@ -654,21 +654,26 @@ export const Visuals = {
     // time: start sleepy and get happier as time goes on
     // hit: rotate to a new face each time (expression is starLvl % 3)
     // mania: when body is hit, cycle wildly until end of game
-    let expression = Math.floor((body.starLvl / body.maxStarLvl) * 3) // 0 sleepy, 1 normal, 2 ecstatic
     let hit = body.radius === 0
-    const framesLeft = this.timer - this.frames
+    let expression = Math.ceil(
+      (2 * (hit ? body.starLvl - 1 : body.starLvl)) / body.maxStarLvl
+    ) // 0 sleepy, 1 normal, 2 ecstatic
+    const framesLeft = this.startingFrame + this.timer - this.frames
     switch (this.faceRotation) {
       case 'time':
         expression = 2 - Math.floor((framesLeft / this.timer) * 3)
         break
       case 'hitcycle':
-        expression = hit ? (expression + 1) % 3 : expression
+        expression = hit
+          ? expression + (Math.floor(this.frames / 10) % 2)
+          : expression
         break
       case 'mania':
         // cycle every 10 frames when hit
         expression = hit ? Math.floor(this.frames / 10) % 3 : expression
         break
     }
+    expression = expression % 3
 
     const face = this.pngFaces[faceIdx][expression]
     if (!face) {
@@ -948,7 +953,6 @@ export const Visuals = {
   },
 
   async drawBodies(attachToCanvas = true) {
-    if (this.gameOver) return
     this.bodiesGraphic ||= this.p.createGraphics(
       this.windowWidth,
       this.windowHeight
@@ -965,7 +969,13 @@ export const Visuals = {
     for (let i = 0; i < this.bodies.length; i++) {
       // const body = this.bodies.sort((a, b) => b.radius - a.radius)[i]
       const body = this.bodies[i]
-      if (body.life <= 0) continue
+      if (this.gameOver || this.won) {
+        if (
+          this.witheringBodies.filter((b) => b.bodyIndex == body.bodyIndex)
+            .length > 0
+        )
+          continue
+      }
       // let c = body.c
       // let finalColor
       // if (this.colorStyle == 'squiggle') {
@@ -1246,15 +1256,22 @@ export const Visuals = {
   },
 
   drawTails() {
-    if (this.gameOver) return
     // this.p.blendMode(this.p.DIFFERENCE)
 
     // this.bodiesGraphic.filter(this.p.INVERT)
     // // this.bodiesGraphic.blendMode(this.p.SCREEN)
     for (let i = 0; i < this.allCopiesOfBodies.length; i++) {
       const copyOfBodies = this.allCopiesOfBodies[i]
+
       for (let j = 0; j < copyOfBodies.length; j++) {
         const body = copyOfBodies[j]
+        if (this.gameOver || this.won) {
+          if (
+            this.witheringBodies.filter((b) => b.bodyIndex == body.bodyIndex)
+              .length > 0
+          )
+            continue
+        }
         const c = body.c
         let finalColor
         if (this.colorStyle == 'squiggle') {
