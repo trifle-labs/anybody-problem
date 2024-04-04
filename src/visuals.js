@@ -2,18 +2,56 @@ export const FPS = 50
 
 const WITHERING_STEPS = 3000
 const FACE_PNGS = [
-  new URL('/public/faces/face1.png', import.meta.url).href,
-  // new URL('/public/faces/face2.png', import.meta.url).href,
-  new URL('/public/faces/face3.png', import.meta.url).href,
-  new URL('/public/faces/face4.png', import.meta.url).href,
-  new URL('/public/faces/face5.png', import.meta.url).href,
-  new URL('/public/faces/face6.png', import.meta.url).href,
-  new URL('/public/faces/face7.png', import.meta.url).href,
-  new URL('/public/faces/face8.png', import.meta.url).href,
-  new URL('/public/faces/face9.png', import.meta.url).href,
-  new URL('/public/faces/face10.png', import.meta.url).href,
-  // new URL('/public/faces/face11.png', import.meta.url).href,
-  new URL('/public/faces/face12.png', import.meta.url).href
+  [
+    new URL('/public/faces/face1_1.png', import.meta.url).href,
+    new URL('/public/faces/face1_2.png', import.meta.url).href,
+    new URL('/public/faces/face1_3.png', import.meta.url).href
+  ],
+  [
+    new URL('/public/faces/face3_1.png', import.meta.url).href,
+    new URL('/public/faces/face3_2.png', import.meta.url).href,
+    new URL('/public/faces/face3_3.png', import.meta.url).href
+  ],
+  [
+    new URL('/public/faces/face4_1.png', import.meta.url).href,
+    new URL('/public/faces/face4_2.png', import.meta.url).href,
+    new URL('/public/faces/face4_3.png', import.meta.url).href
+  ],
+  [
+    new URL('/public/faces/face6_1.png', import.meta.url).href,
+    new URL('/public/faces/face6_2.png', import.meta.url).href,
+    new URL('/public/faces/face6_3.png', import.meta.url).href
+  ],
+  [
+    new URL('/public/faces/face7_1.png', import.meta.url).href,
+    new URL('/public/faces/face7_2.png', import.meta.url).href,
+    new URL('/public/faces/face7_3.png', import.meta.url).href
+  ],
+  [
+    new URL('/public/faces/face8_1.png', import.meta.url).href,
+    new URL('/public/faces/face8_2.png', import.meta.url).href,
+    new URL('/public/faces/face8_3.png', import.meta.url).href
+  ],
+  [
+    new URL('/public/faces/face9_1.png', import.meta.url).href,
+    new URL('/public/faces/face9_2.png', import.meta.url).href,
+    new URL('/public/faces/face9_3.png', import.meta.url).href
+  ],
+  [
+    new URL('/public/faces/face10_1.png', import.meta.url).href,
+    new URL('/public/faces/face10_2.png', import.meta.url).href,
+    new URL('/public/faces/face10_3.png', import.meta.url).href
+  ],
+  [
+    new URL('/public/faces/face11_1.png', import.meta.url).href,
+    new URL('/public/faces/face11_2.png', import.meta.url).href,
+    new URL('/public/faces/face11_3.png', import.meta.url).href
+  ],
+  [
+    new URL('/public/faces/face12_1.png', import.meta.url).href,
+    new URL('/public/faces/face12_2.png', import.meta.url).href,
+    new URL('/public/faces/face12_3.png', import.meta.url).href
+  ]
 ]
 
 export const Visuals = {
@@ -41,7 +79,7 @@ export const Visuals = {
 
     if (
       this.mode == 'game' &&
-      this.frames < this.timer &&
+      this.frames - this.startingFrame < this.timer &&
       this.bodies.reduce((a, c) => a + c.radius, 0) != 0
     ) {
       this.drawGun()
@@ -56,7 +94,7 @@ export const Visuals = {
     const isNotFirstFrame = this.frames !== 0
     const notPaused = !this.paused
     const framesIsAtStopEveryInterval =
-      (this.frames - this.alreadyRun) % this.stopEvery == 0
+      (this.frames - this.startingFrame) % this.stopEvery == 0
     const didNotJustPause = !this.justPaused
     // console.log({
     //   stopEvery: this.stopEvery,
@@ -70,7 +108,7 @@ export const Visuals = {
       notPaused &&
       framesIsAtStopEveryInterval &&
       didNotJustPause &&
-      this.frames < this.timer
+      this.frames - this.startingFrame < this.timer
     ) {
       if (didNotJustPause) {
         this.finish()
@@ -81,7 +119,7 @@ export const Visuals = {
     } else {
       this.justPaused = false
     }
-    if (this.frames >= this.timer) {
+    if (this.frames - this.startingFrame >= this.timer) {
       this.witherAllBodies()
       this.gameOver = true
     }
@@ -397,7 +435,7 @@ export const Visuals = {
     this.scoreSize ||= initialScoreSize
     p.textStyle(p.BOLDITALIC)
     p.textAlign(p.LEFT, p.TOP)
-    const secondsLeft = (this.timer - this.frames) / FPS
+    const secondsLeft = (this.startingFrame + this.timer - this.frames) / FPS
 
     if (this.gameOver) {
       p.textSize(100)
@@ -413,7 +451,7 @@ export const Visuals = {
     }
 
     // make the timer bigger as time runs out
-    if (secondsLeft < 10 && this.scoreSize < 420) {
+    if (secondsLeft <= 9 && this.scoreSize < 420) {
       this.scoreSize += 5
       p.fill(255, 255, 255, 150)
     } else if (secondsLeft < 30 && this.scoreSize < 160) {
@@ -607,13 +645,41 @@ export const Visuals = {
   },
 
   drawPngFace(radius, body, offset) {
-    this.pngFaces ||= []
+    this.pngFaces ||= new Array(FACE_PNGS.length)
+      .fill(null)
+      .map(() => new Array(FACE_PNGS[0].length))
     const faceIdx = body.mintedBodyIndex || body.bodyIndex
-    const face = this.pngFaces[faceIdx]
+
+    // faceRotation: 'time' | 'hitcycle' | 'mania'
+    // time: start sleepy and get happier as time goes on
+    // hit: rotate to a new face each time (expression is starLvl % 3)
+    // mania: when body is hit, cycle wildly until end of game
+    let hit = body.radius === 0
+    let expression = Math.ceil(
+      (2 * (hit ? body.starLvl - 1 : body.starLvl)) / body.maxStarLvl
+    ) // 0 sleepy, 1 normal, 2 ecstatic
+    const framesLeft = this.startingFrame + this.timer - this.frames
+    switch (this.faceRotation) {
+      case 'time':
+        expression = 2 - Math.floor((framesLeft / this.timer) * 3)
+        break
+      case 'hitcycle':
+        expression = hit
+          ? expression + (Math.floor(this.frames / 10) % 2)
+          : expression
+        break
+      case 'mania':
+        // cycle every 10 frames when hit
+        expression = hit ? Math.floor(this.frames / 10) % 3 : expression
+        break
+    }
+    expression = expression % 3
+
+    const face = this.pngFaces[faceIdx][expression]
     if (!face) {
-      const png = FACE_PNGS[faceIdx]
+      const png = FACE_PNGS[faceIdx][expression]
       this.p.loadImage(png, (img) => {
-        this.pngFaces[faceIdx] = img
+        this.pngFaces[faceIdx][expression] = img
       })
     }
     if (face) {
@@ -887,7 +953,6 @@ export const Visuals = {
   },
 
   async drawBodies(attachToCanvas = true) {
-    if (this.gameOver) return
     this.bodiesGraphic ||= this.p.createGraphics(
       this.windowWidth,
       this.windowHeight
@@ -904,7 +969,13 @@ export const Visuals = {
     for (let i = 0; i < this.bodies.length; i++) {
       // const body = this.bodies.sort((a, b) => b.radius - a.radius)[i]
       const body = this.bodies[i]
-      if (body.life <= 0) continue
+      if (this.gameOver || this.won) {
+        if (
+          this.witheringBodies.filter((b) => b.bodyIndex == body.bodyIndex)
+            .length > 0
+        )
+          continue
+      }
       // let c = body.c
       // let finalColor
       // if (this.colorStyle == 'squiggle') {
@@ -1185,15 +1256,22 @@ export const Visuals = {
   },
 
   drawTails() {
-    if (this.gameOver) return
     // this.p.blendMode(this.p.DIFFERENCE)
 
     // this.bodiesGraphic.filter(this.p.INVERT)
     // // this.bodiesGraphic.blendMode(this.p.SCREEN)
     for (let i = 0; i < this.allCopiesOfBodies.length; i++) {
       const copyOfBodies = this.allCopiesOfBodies[i]
+
       for (let j = 0; j < copyOfBodies.length; j++) {
         const body = copyOfBodies[j]
+        if (this.gameOver || this.won) {
+          if (
+            this.witheringBodies.filter((b) => b.bodyIndex == body.bodyIndex)
+              .length > 0
+          )
+            continue
+        }
         const c = body.c
         let finalColor
         if (this.colorStyle == 'squiggle') {

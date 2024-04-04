@@ -41,41 +41,15 @@ export class Anybody extends EventEmitter {
       timer: 60 * FPS, // 60 seconds * 50 frames per second
       aimHelper: false,
       target: 'outside', // 'outside' or 'inside'
-      showLives: true // true or false
+      showLives: true, // true or false
+      faceRotation: 'hitcycle' // 'time' or 'hitcycle' or 'mania'
     }
 
     // Merge the default options with the provided options
     const mergedOptions = { ...defaultOptions, ...options }
 
     // Assign the merged options to the instance properties
-    this.inputData = mergedOptions.inputData
-    this.bodyData = mergedOptions.bodyData
-    this.startingBodies = mergedOptions.startingBodies
-    this.seed = mergedOptions.seed
-    this.windowWidth = mergedOptions.windowWidth
-    this.windowHeight = mergedOptions.windowHeight
-    this.vectorLimit = mergedOptions.vectorLimit
-    this.scalingFactor = mergedOptions.scalingFactor
-    this.G = mergedOptions.G
-    this.minDistanceSquared = mergedOptions.minDistanceSquared
-    this.mode = mergedOptions.mode
-    this.admin = mergedOptions.admin
-    this.clearBG = mergedOptions.clearBG
-    this.colorStyle = mergedOptions.colorStyle
-    this.alreadyRun = mergedOptions.alreadyRun
-    this.preRun = mergedOptions.preRun
-    this.paintSteps = mergedOptions.paintSteps
-    this.chunk = mergedOptions.chunk
-    this.mute = mergedOptions.mute
-    this.freeze = mergedOptions.freeze
-    this.stopEvery = mergedOptions.stopEvery
-    this.util = mergedOptions.util
-    this.optimistic = mergedOptions.optimistic
-    this.paused = mergedOptions.paused
-    this.timer = mergedOptions.timer + this.alreadyRun
-    this.target = mergedOptions.target
-    this.showLives = mergedOptions.showLives
-    this.aimHelper = mergedOptions.aimHelper
+    Object.assign(this, mergedOptions)
 
     // Add other constructor logic here
     this.p = p
@@ -122,6 +96,7 @@ export class Anybody extends EventEmitter {
     this.rng = new Prando(this.seed.toString(16))
     this.generateBodies()
     this.frames = this.alreadyRun
+    this.startingFrame = this.alreadyRun
     // const vectorLimitScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
     this.setPause(this.paused)
   }
@@ -503,7 +478,7 @@ export class Anybody extends EventEmitter {
     }
     if (
       this.bodies.reduce((a, c) => a + c.radius, 0) == 0 ||
-      this.frames >= this.timer
+      this.frames - this.startingFrame >= this.timer
     ) {
       return
     }
@@ -535,6 +510,7 @@ export class Anybody extends EventEmitter {
 
   witherAllBodies() {
     for (const body of this.bodies) {
+      if (body.starLvl !== body.maxStarLvl) continue
       // find the index in witheringBodies
       const index = this.witheringBodies.findIndex(
         (b) => b.bodyIndex == body.bodyIndex
