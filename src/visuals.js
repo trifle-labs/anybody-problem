@@ -1467,7 +1467,6 @@ export const Visuals = {
   },
 
   drawCenter(b) {
-    const max = 4
     this.p.noStroke()
     const x = b.position.x
     const y = b.position.y
@@ -1499,7 +1498,9 @@ export const Visuals = {
       }
     } else {
       this.p.fill(c)
-      this.p.ellipse(x, y, r * max)
+      this.p.strokeWeight(2)
+      this.p.stroke('white')
+      this.p.ellipse(x, y, r)
     }
   },
 
