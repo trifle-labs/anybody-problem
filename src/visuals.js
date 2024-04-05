@@ -201,8 +201,31 @@ export const Visuals = {
 
     this.p.noFill()
     this.drawBg()
+    if (this.globalStyle == 'psycho') {
+      this.p.blendMode(this.p.DIFFERENCE)
+    }
     this.drawTails()
-    this.drawBodies()
+
+    if (this.globalStyle == 'psycho') {
+      this.p.blendMode(this.p.NORMAL)
+    }
+
+    if (this.mode == 'game' && this.target == 'inside' && !this.firstFrame) {
+      for (let i = 0; i < this.bodies.length; i++) {
+        const body = this.bodies[i]
+        this.drawCenter(body)
+      }
+    }
+    if (!this.firstFrame) {
+      this.drawBodies()
+    }
+
+    if (this.mode == 'game' && this.target == 'outside' && !this.firstFrame) {
+      for (let i = 0; i < this.bodies.length; i++) {
+        const body = this.bodies[i]
+        this.drawCenter(body)
+      }
+    }
     this.drawWitheringBodies()
 
     if (this.frames % 10 == 0) {
@@ -223,7 +246,6 @@ export const Visuals = {
     this.drawPause()
     this.drawScore()
 
-    const isNotFirstFrame = this.frames !== 0
     const notPaused = !this.paused
     const framesIsAtStopEveryInterval =
       (this.frames - this.startingFrame) % this.stopEvery == 0
@@ -236,7 +258,7 @@ export const Visuals = {
     //   frames_lt_timer: this.frames < this.timer
     // })
     if (
-      isNotFirstFrame &&
+      !this.firstFrame &&
       notPaused &&
       framesIsAtStopEveryInterval &&
       didNotJustPause &&
@@ -264,6 +286,7 @@ export const Visuals = {
       this.gameOver = true
       this.won = true
     }
+    this.firstFrame = false
   },
   drawPause() {
     if (this.paused) {
@@ -657,17 +680,10 @@ export const Visuals = {
   },
 
   drawExplosions() {
-    if (this.explosions.length > 0) {
-      for (let i = 0; i < this.explosions.length; i++) {
-        const bomb = this.explosions[i][0]
-        this.drawCenter(bomb)
-      }
-    }
-
     for (let i = 0; i < this.explosions.length; i++) {
       const _explosion = this.explosions[i]
       const bomb = _explosion[0]
-      this.p.fill('red')
+      this.p.fill(`rgba(255,0,0,0.${110 - bomb.i})`)
       this.p.ellipse(bomb.x, bomb.y, bomb.i * 2, bomb.i * 2)
       _explosion.shift()
       if (_explosion.length == 0) {
@@ -677,18 +693,30 @@ export const Visuals = {
   },
 
   drawMissiles() {
-    this.p.fill('red')
     this.p.noStroke()
     this.p.strokeWeight(0)
+
+    const missileReverbLevels = 10
+    const c =
+      Math.floor(this.frames / missileReverbLevels) % 2 == 0 ? 'red' : 'white'
+
     for (let i = 0; i < this.missiles.length; i++) {
       const body = this.missiles[i]
+      this.p.noStroke()
+      this.p.fill(c)
       this.p.ellipse(body.position.x, body.position.y, body.radius, body.radius)
-      // this.p.textSize(40)
-      // this.p.text(
-      //   `${body.position.x}, ${body.position.y}`,
-      //   body.position.x,
-      //   body.position.y
-      // )
+
+      this.p.noFill()
+      this.p.strokeWeight(1)
+      for (let i = 0; i < missileReverbLevels; i++) {
+        const c =
+          Math.floor((this.frames - i) / missileReverbLevels) % 2 == 0
+            ? `rgba(255,0,0,${(missileReverbLevels - i) / missileReverbLevels})`
+            : `rgba(255,255,255,${(missileReverbLevels - i) / missileReverbLevels})`
+        this.p.stroke(c)
+        const reverb = body.radius * (i + 1)
+        this.p.ellipse(body.position.x, body.position.y, reverb, reverb)
+      }
     }
   },
 
@@ -904,7 +932,6 @@ export const Visuals = {
     this.bodiesGraphic.rotate(3 * (this.p.PI / 2))
     const distance = radius / 1.5
     radius = radius - this.radiusMultiplyer
-    const newRadius = radius
     const blackTransparent = 'rgba(0,0,0,0.5)'
     const whiteTransparent = 'rgba(255,255,255,0.5)'
     for (let i = 0; i < body.maxStarLvl; i++) {
@@ -922,48 +949,48 @@ export const Visuals = {
           // this.bodiesGraphic.fill(body.c.replace(this.opac, '1'))
           if (i == body.starLvl - 1) {
             c = 'rgba(255,255,255,1)'
-            // this.bodiesGraphic.fill('white')
+            this.bodiesGraphic.fill('white')
           } else {
             c = body.c.replace(this.opac, '1')
-            // this.bodiesGraphic.fill(body.c.replace(this.opac, '1'))
+            this.bodiesGraphic.fill(body.c.replace(this.opac, '1'))
           }
         } else {
           c = blackTransparent
-          // this.bodiesGraphic.fill(blackTransparent)
+          this.bodiesGraphic.fill(blackTransparent)
         }
       } else {
         if (i > 0 && i - 1 < body.starLvl) {
           c = body.c.replace(this.opac, '1')
-          // this.bodiesGraphic.fill(body.c.replace(this.opac, '1'))
+          this.bodiesGraphic.fill(body.c.replace(this.opac, '1'))
         } else {
           c = blackTransparent
-          // this.bodiesGraphic.fill(blackTransparent)
+          this.bodiesGraphic.fill(c)
         }
       }
 
-      // this.bodiesGraphic.ellipse(xRotated, yRotated, newRadius)
+      this.bodiesGraphic.ellipse(xRotated, yRotated, radius)
       this.starSVG ||= []
-      const comboString = body.maxStarLvl + c
-      const star = this.starSVG[comboString]
+      const star = this.starSVG[body.maxStarLvl]
       if (!star) {
         const svg = STAR_SVGS[body.maxStarLvl - 1]
         this.p.loadImage(svg, (img) => {
-          const g = this.p.createGraphics(img.width, img.height)
-          const cc = c
-            .split(',')
-            .map((c) => parseFloat(c.replace(')', '').replace('rgba(', '')))
-          g.tint(cc[0], cc[1], cc[2], cc[3] * 255)
-          g.image(img, 0, 0)
-          this.starSVG[comboString] = g
+          // this is a hack to tint the svg
+          // const g = this.p.createGraphics(img.width, img.height)
+          // const cc = c
+          //   .split(',')
+          //   .map((c) => parseFloat(c.replace(')', '').replace('rgba(', '')))
+          // g.tint(cc[0], cc[1], cc[2], cc[3] * 255)
+          // g.image(img, 0, 0)
+          this.starSVG[body.maxStarLvl] = img //g
         })
       }
-      if (star) {
+      if (star && star !== 'loading') {
         this.bodiesGraphic.image(
           star,
-          xRotated - newRadius / 2,
-          yRotated - newRadius / 2,
-          newRadius,
-          newRadius
+          xRotated - radius / 2,
+          yRotated - radius / 2,
+          radius,
+          radius
         )
       }
 
@@ -989,9 +1016,8 @@ export const Visuals = {
   // },
 
   drawBodyStyle1(radius, body, offset) {
-    const c = body.c.replace(this.opac, '0.1')
     this.bodiesGraphic.noStroke()
-    this.bodiesGraphic.fill(c)
+    this.bodiesGraphic.fill(body.c)
     this.bodiesGraphic.ellipse(0, offset, radius, radius)
   },
 
@@ -1136,12 +1162,6 @@ export const Visuals = {
     )
     this.bodiesGraphic.noStroke()
 
-    // this.bodiesGraphic.blendMode(this.p.DIFFERENCE)
-    // }
-    // this.bodiesGraphic.clear()
-    // if (this.mode == 'nft') this.drawBorder()
-    // this.bodiesGraphic.strokeWeight(1)
-
     const bodyCopies = []
     for (let i = 0; i < this.bodies.length; i++) {
       // const body = this.bodies.sort((a, b) => b.radius - a.radius)[i]
@@ -1153,54 +1173,7 @@ export const Visuals = {
         )
           continue
       }
-      // let c = body.c
-      // let finalColor
-      // if (this.colorStyle == 'squiggle') {
-      //   const hueColor = (parseInt(c.split(',')[1]) + this.frames) % 360
-      //   finalColor = this.bodiesGraphic.color(hueColor, 60, 100) // Saturation and brightness at 100 for pure spectral colors
-      // } else if (this.mode == 'nft') {
-      //   // console.log(c)
-      //   // finalColor = c
-
-      //   finalColor = c.replace(this.opac, '1') //this.convertColor(c)
-      // } else {
-      //   finalColor = c
-      // }
-
-      if (this.mode == 'nft') {
-        this.drawBodiesLooped(body, this.drawBody)
-        // if (i % 3 == 0) {
-        //   this.bodiesGraphic.stroke('black')
-        // } else if (i % 2 == 0) {
-        //   this.bodiesGraphic.stroke('white')
-        // } else {
-        //   this.bodiesGraphic.noStroke()
-        // }
-
-        // this.bodiesGraphic.noStroke()
-        // this.bodiesGraphic.stroke(this.getBW())
-        // this.bodiesGraphic.stroke('white')
-        // this.bodiesGraphic.fill(finalColor)
-        // this.bodiesGraphic.ellipse(body.position.x, body.position.y, radius, radius)
-        // const radius = body.radius * 4 + this.radiusMultiplyer
-        // this.drawBody(body.position.x, body.position.y, body.velocity, radius, finalColor, i)
-
-        // if (!this.face) {
-        //   this.face = await new Promise((resolve) => {
-        //     this.p.loadImage('/2.png', (img) => {
-        //       console.log('loaded')
-        //       resolve(img)
-        //     })
-        //   })
-        // }
-        // this.bodiesGraphic.image(this.face, body.position.x - radius / 8, body.position.y - radius / 3, radius / 2, radius / 2)
-
-        // const eyes = this.getAngledImage(body)
-        // this.bodiesGraphic.image(eyes, 0, 0)
-      } else {
-        this.drawBodiesLooped(body, this.drawBody)
-        // this.getAngledBody(body, finalColor)
-      }
+      this.drawBodiesLooped(body, this.drawBody)
 
       const bodyCopy = JSON.parse(
         JSON.stringify(
@@ -1216,20 +1189,10 @@ export const Visuals = {
     if (this.allCopiesOfBodies.length > this.tailLength) {
       this.allCopiesOfBodies.shift()
     }
-
-    // this.bodiesGraphic.strokeWeight(0)
     if (attachToCanvas) {
       this.p.image(this.bodiesGraphic, 0, 0)
     }
-
     this.bodiesGraphic.clear()
-
-    if (this.mode == 'game' && this.target == 'outside') {
-      for (let i = 0; i < this.bodies.length; i++) {
-        const body = this.bodies[i]
-        this.drawCenter(body)
-      }
-    }
   },
 
   drawBorder() {
@@ -1433,10 +1396,6 @@ export const Visuals = {
   },
 
   drawTails() {
-    // this.p.blendMode(this.p.DIFFERENCE)
-
-    // this.bodiesGraphic.filter(this.p.INVERT)
-    // // this.bodiesGraphic.blendMode(this.p.SCREEN)
     for (let i = 0; i < this.allCopiesOfBodies.length; i++) {
       const copyOfBodies = this.allCopiesOfBodies[i]
 
@@ -1503,82 +1462,45 @@ export const Visuals = {
               offset
             )
         }
-        // } else {
-        //   this.p.push()
-        //   this.p.translate(body.position.x, body.position.y)
-        //   var angle = body.velocity.heading() + this.p.PI / 2
-        //   this.p.rotate(angle)
-        //   let x1 = body.radius * 4 * this.p.cos(this.p.PI / 6)
-        //   let y1 = body.radius * 4 * this.p.sin(this.p.PI / 6)
-
-        //   let x2 =
-        //     body.radius * 4 * this.p.cos(this.p.PI / 6 + this.p.TWO_PI / 3)
-        //   let y2 =
-        //     body.radius * 4 * this.p.sin(this.p.PI / 6 + this.p.TWO_PI / 3)
-
-        //   let x3 =
-        //     body.radius *
-        //     4 *
-        //     this.p.cos(this.p.PI / 6 + (2 * this.p.TWO_PI) / 3)
-        //   let y3 =
-        //     body.radius *
-        //     4 *
-        //     this.p.sin(this.p.PI / 6 + (2 * this.p.TWO_PI) / 3)
-        //   this.p.triangle(x1, y1, x2, y2, x3, y3)
-        //   this.p.pop()
-        // }
       }
     }
-    // this.p.blendMode(this.p.BLEND)
   },
 
   drawCenter(b) {
     const max = 4
-    if (b.x) {
-      // just a bomb
-      const r = b.radius
-      const c = 'red'
-      for (let i = 0; i < max; i++) {
-        if (i % 2 == 0) {
-          this.p.fill('white')
-        } else {
-          this.p.fill(c)
-        }
-        this.p.ellipse(b.x, b.y, r * (max - i))
-      }
-      return
-    }
     this.p.noStroke()
-
     const x = b.position.x
     const y = b.position.y
-    const r = b.radius
+    const r = b.radius * 4
+    if (r == 0) return
     const c = b.c?.replace(this.opac, '1')
-    for (let i = 0; i < max; i++) {
-      if (i % 2 == 0) {
-        if (this.target == 'outside') {
-          this.p.fill('white')
-        } else {
-          this.p.fill(c)
-        }
-      } else {
-        this.p.fill(c)
+    if (this.target == 'outside') {
+      this.p.fill(c)
+      this.p.ellipse(x, y, r)
+
+      this.starSVG ||= []
+      const star = this.starSVG[b.maxStarLvl]
+      if (!star) {
+        this.starSVG[b.maxStarLvl] = 'loading'
+        const svg = STAR_SVGS[b.maxStarLvl - 1]
+        this.p.loadImage(svg, (img) => {
+          // this is a hack to tint the svg
+          // const g = this.p.createGraphics(img.width, img.height)
+          // const cc = c
+          //   .split(',')
+          //   .map((c) => parseFloat(c.replace(')', '').replace('rgba(', '')))
+          // g.tint(cc[0], cc[1], cc[2], cc[3] * 255)
+          // g.image(img, 0, 0)
+          this.starSVG[b.maxStarLvl] = img // g
+        })
       }
-      this.p.ellipse(x, y, r * (max - i))
+      if (star && star !== 'loading') {
+        this.p.image(star, x - r / 2, y - r / 2, r, r)
+      }
+    } else {
+      this.p.fill(c)
+      this.p.ellipse(x, y, r * max)
     }
-    // this.p.push()
-    // const radius = b.radius * 4 + this.radiusMultiplyer
-    // this.p.translate(x, y)
-    // this.p.translate(0, radius / 2)
-    // this.p.rotate(b.velocity.heading() + this.p.PI / 2)
-    // for (let i = 0; i < b.maxStarLvl; i++) {
-    //   const rotated = i * (this.p.TWO_PI / b.maxStarLvl)
-    //   const xRotated = r * 1.5 * this.p.cos(rotated)
-    //   const yRotated = r * 1.5 * this.p.sin(rotated)
-    //   this.p.fill('white')
-    //   this.p.ellipse(xRotated, yRotated, r)
-    // }
-    // this.p.pop()
   },
 
   colorArrayToTxt(cc) {

@@ -38,10 +38,11 @@ export class Anybody extends EventEmitter {
       util: false,
       optimistic: false,
       paused: true,
+      globalStyle: 'default', // 'default', 'psycho'
       timer: 60 * FPS, // 60 seconds * 50 frames per second
       aimHelper: false,
       target: 'outside', // 'outside' or 'inside'
-      showLives: true, // true or false
+      showLives: false, // true or false
       faceRotation: 'hitcycle' // 'time' or 'hitcycle' or 'mania'
     }
 
@@ -64,9 +65,9 @@ export class Anybody extends EventEmitter {
 
   // run whenever the class should be reset
   clearValues() {
-    this.opac = 0.1
+    this.opac = this.globalStyle == 'psycho' ? 1 : 0.1
     this.tailLength = 30
-    this.tailMod = 1
+    this.tailMod = this.globalStyle == 'psycho' ? 2 : 1
     this.thisLevelMissileCount = 0
     this.thisLevelSec = 0
     this.totalSec = 0
@@ -85,6 +86,7 @@ export class Anybody extends EventEmitter {
     this.justStopped = false
     this.bgColor = null
     this.loadTime = Date.now()
+    this.firstFrame = true
   }
 
   // run once at initilization
