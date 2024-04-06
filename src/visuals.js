@@ -2,6 +2,7 @@ export const FPS = 50
 
 const WITHERING_STEPS = 3000
 const FACE_PNGS = [
+  // [tired, normal, ecstatic]
   [
     new URL('/public/faces/face1_1.png', import.meta.url).href,
     new URL('/public/faces/face1_2.png', import.meta.url).href,
@@ -253,6 +254,7 @@ export const Visuals = {
       this.windowHeight
     )
 
+    // Grid lines
     const totalLines = 6
     // this.p.stroke('black')
     this.p.stroke('white')

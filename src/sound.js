@@ -86,10 +86,10 @@ const bubble = new URL(
   '/public/sound/fx/DSC_GST_one_shot_perc_water.mp3',
   import.meta.url
 ).href
-const coin = new URL(
-  '/public/sound/fx/ESM_Game_Notification_83_Coin_Blip_Select_Tap_Button.mp3',
-  import.meta.url
-).href
+// const coin = new URL(
+//   '/public/sound/fx/ESM_Game_Notification_83_Coin_Blip_Select_Tap_Button.mp3',
+//   import.meta.url
+// ).href
 
 const SONGS = {
   whistle: {
@@ -216,15 +216,17 @@ export default class Sound {
   }
 
   playExplosion() {
-    this.playOneShot(coin, -16)
+    this.playOneShot(bubble, -26, 2.3)
   }
 
-  async playOneShot(url, volume) {
+  async playOneShot(url, volume, playbackRate = 1) {
     this.oneShots = this.oneShots || {}
-    if (!this.oneShots[url]) {
-      this.oneShots[url] = new Player({
+    const key = `${url}-${volume}-${playbackRate}`
+    if (!this.oneShots[key]) {
+      this.oneShots[key] = new Player({
         url,
-        volume
+        volume,
+        playbackRate
       }).toDestination()
     }
 
@@ -232,7 +234,7 @@ export default class Sound {
     const now = Date.now()
     await loaded()
     if (Date.now() - now < 20) {
-      this.oneShots[url].start()
+      this.oneShots[key].start()
     }
   }
 
