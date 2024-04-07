@@ -256,7 +256,6 @@ export default class Sound {
       voice.player.playbackRate = 2
     })
     Transport.bpm.value *= 2
-    // this.createLoop()
   }
 
   voiceFromFile(file) {
@@ -283,39 +282,6 @@ export default class Sound {
     this.voices = null
     this.currentMeasure = 0
     this.currentSong = null
-  }
-
-  async createLoop() {
-    const song = this.currentSong
-    this.loop?.dispose()
-    this.loop = new Loop((time) => {
-      this.currentMeasure++
-      this.voices.forEach((voice, i) => {
-        // just step through parts
-        const part = song.parts[this.currentMeasure % song.parts.length][i]
-        const url = part[0]
-        if (url) {
-          voice.player.load(url)
-        } else {
-          voice.player.stop()
-        }
-        voice.player.chain(voice.panVol)
-        voice.panVol.connect(this.master)
-
-        // randomly mute some voices, but keep most on
-        const probability =
-          this.currentMeasure <= INTRO_LENGTH && typeof part[2] === 'number'
-            ? part[2]
-            : part[1]
-        if (Math.random() > probability) {
-          voice.panVol.volume.linearRampTo(-Infinity, 0.1)
-        } else {
-          voice.panVol.volume.linearRampTo(TRACK_VOLUME, 0.1)
-        }
-
-        voice.player.start(time)
-      })
-    }, song.interval || '2m').start(0)
   }
 
   async play(song) {
@@ -354,7 +320,34 @@ export default class Sound {
 
       await loaded()
 
-      this.createLoop()
+      this.loop = new Loop((time) => {
+        this.currentMeasure++
+        this.voices.forEach((voice, i) => {
+          // just step through parts
+          const part = song.parts[this.currentMeasure % song.parts.length][i]
+          const url = part[0]
+          if (url) {
+            voice.player.load(url)
+          } else {
+            voice.player.stop()
+          }
+          voice.player.chain(voice.panVol)
+          voice.panVol.connect(this.master)
+
+          // randomly mute some voices, but keep most on
+          const probability =
+            this.currentMeasure <= INTRO_LENGTH && typeof part[2] === 'number'
+              ? part[2]
+              : part[1]
+          if (Math.random() > probability) {
+            voice.panVol.volume.linearRampTo(-Infinity, 0.1)
+          } else {
+            voice.panVol.volume.linearRampTo(TRACK_VOLUME, 0.1)
+          }
+
+          voice.player.start(time)
+        })
+      }, song.interval || '2m').start(0)
     }
 
     // PLAY
