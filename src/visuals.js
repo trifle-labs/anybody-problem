@@ -527,21 +527,30 @@ export const Visuals = {
   },
 
   drawExplosions() {
-    if (this.explosions.length > 0) {
-      for (let i = 0; i < this.explosions.length; i++) {
-        const bomb = this.explosions[i][0]
+    const { p, explosions } = this
+    if (explosions.length > 0) {
+      for (let i = 0; i < explosions.length; i++) {
+        const bomb = explosions[i][0]
         this.drawCenter(bomb)
       }
     }
 
-    for (let i = 0; i < this.explosions.length; i++) {
-      const _explosion = this.explosions[i]
+    for (let i = 0; i < explosions.length; i++) {
+      const _explosion = explosions[i]
       const bomb = _explosion[0]
-      this.p.fill('red')
-      this.p.ellipse(bomb.x, bomb.y, bomb.i * 2, bomb.i * 2)
+      p.fill('rgba(255,255,255,0.5)')
+      p.stroke('white')
+      p.strokeWeight(2)
+      p.ellipse(bomb.x, bomb.y, bomb.i * 2, bomb.i * 2)
+      p.ellipse(bomb.x, bomb.y, bomb.i * 1.8, bomb.i * 1.8)
+      p.ellipse(bomb.x, bomb.y, bomb.i * 1.6, bomb.i * 1.6)
+      p.ellipse(bomb.x, bomb.y, bomb.i * 1.4, bomb.i * 1.4)
+      p.ellipse(bomb.x, bomb.y, bomb.i * 1.6, bomb.i * 1.6)
+      p.fill('rgba(255,255,255,0.9)')
+      p.ellipse(bomb.x, bomb.y, bomb.i * 1.4, bomb.i * 1.4)
       _explosion.shift()
       if (_explosion.length == 0) {
-        this.explosions.splice(i, 1)
+        explosions.splice(i, 1)
       }
     }
   },
