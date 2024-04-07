@@ -248,6 +248,17 @@ export default class Sound {
     }
   }
 
+  async playGameOver() {
+    if (this.playingGameOver) return
+    this.playingGameOver = true
+    // slow down the voices
+    this.voices?.forEach((voice) => {
+      voice.player.playbackRate = 2
+    })
+    Transport.bpm.value *= 2
+    // this.createLoop()
+  }
+
   voiceFromFile(file) {
     const voice = {
       file: file,
@@ -274,10 +285,44 @@ export default class Sound {
     this.currentSong = null
   }
 
+  async createLoop() {
+    const song = this.currentSong
+    this.loop?.dispose()
+    this.loop = new Loop((time) => {
+      this.currentMeasure++
+      this.voices.forEach((voice, i) => {
+        // just step through parts
+        const part = song.parts[this.currentMeasure % song.parts.length][i]
+        const url = part[0]
+        if (url) {
+          voice.player.load(url)
+        } else {
+          voice.player.stop()
+        }
+        voice.player.chain(voice.panVol)
+        voice.panVol.connect(this.master)
+
+        // randomly mute some voices, but keep most on
+        const probability =
+          this.currentMeasure <= INTRO_LENGTH && typeof part[2] === 'number'
+            ? part[2]
+            : part[1]
+        if (Math.random() > probability) {
+          voice.panVol.volume.linearRampTo(-Infinity, 0.1)
+        } else {
+          voice.panVol.volume.linearRampTo(TRACK_VOLUME, 0.1)
+        }
+
+        voice.player.start(time)
+      })
+    }, song.interval || '2m').start(0)
+  }
+
   async play(song) {
     // only start if it hasn't started yet
     if (Transport.state === 'started') return
     await start()
+    this.playingGameOver = false
 
     // if song is different from last one, dispose of old voices
     if (this.currentSong && this.currentSong !== song) {
@@ -309,34 +354,7 @@ export default class Sound {
 
       await loaded()
 
-      this.loop = new Loop((time) => {
-        this.currentMeasure++
-        this.voices.forEach((voice, i) => {
-          // just step through parts
-          const part = song.parts[this.currentMeasure % song.parts.length][i]
-          const url = part[0]
-          if (url) {
-            voice.player.load(url)
-          } else {
-            voice.player.stop()
-          }
-          voice.player.chain(voice.panVol)
-          voice.panVol.connect(this.master)
-
-          // randomly mute some voices, but keep most on
-          const probability =
-            this.currentMeasure <= INTRO_LENGTH && typeof part[2] === 'number'
-              ? part[2]
-              : part[1]
-          if (Math.random() > probability) {
-            voice.panVol.volume.linearRampTo(-Infinity, 0.1)
-          } else {
-            voice.panVol.volume.linearRampTo(TRACK_VOLUME, 0.1)
-          }
-
-          voice.player.start(time)
-        })
-      }, song.interval || '2m').start(0)
+      this.createLoop()
     }
 
     // PLAY
@@ -357,7 +375,7 @@ export default class Sound {
 
       // panning
       const panRange = 1.4 // 2 is max, hard L/R panning
-      voice.panVol.pan.linearRampTo(xFactor * panRange - panRange / 2, 0.1)
+      voice.panVol.pan.linearRampTo(xFactor * panRange - panRange / 2, 0.5)
     })
   }
 }
