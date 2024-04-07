@@ -216,17 +216,27 @@ export default class Sound {
   }
 
   playExplosion() {
-    this.playOneShot(bubble, -26, 2.3)
+    this.playOneShot(bubble, -36, { playbackRate: 2.3 })
+    this.playOneShot(bubble, -36, { playbackRate: 4.5 })
+    this.playOneShot(bubble, -16, { playbackRate: 0.2 })
+    setTimeout(() => {
+      this.playOneShot(bubble, -26, { playbackRate: 1 })
+      this.playOneShot(bubble, -26, { playbackRate: 5.5 })
+    }, 100)
+    setTimeout(() => {
+      this.playOneShot(bubble, -26, { playbackRate: 2.3 })
+      this.playOneShot(bubble, -26, { playbackRate: 5.5 })
+    }, 300)
   }
 
-  async playOneShot(url, volume, playbackRate = 1) {
+  async playOneShot(url, volume, opts = false) {
     this.oneShots = this.oneShots || {}
-    const key = `${url}-${volume}-${playbackRate}`
+    const key = `${url}-${volume}-${opts && JSON.stringify(opts)}`
     if (!this.oneShots[key]) {
       this.oneShots[key] = new Player({
         url,
         volume,
-        playbackRate
+        ...opts
       }).toDestination()
     }
 
