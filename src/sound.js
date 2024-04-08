@@ -136,6 +136,7 @@ const SONGS = {
   ipod: {
     bpm: 113,
     interval: '4m',
+    gameoverSpeed: 0.5,
     parts: [
       [
         [ipod_2_T1, 0.9, 0],
@@ -249,13 +250,32 @@ export default class Sound {
   }
 
   async playGameOver() {
-    if (this.playingGameOver) return
-    this.playingGameOver = true
-    // slow down the voices
-    this.voices?.forEach((voice) => {
-      voice.player.playbackRate = 2
+    if (this.playedGameOver) return
+    this.playedGameOver = true
+    // const song = this.currentSong
+    Transport.stop()
+    this.voices?.forEach((voice) => voice.player.stop())
+
+    // speed up the voices
+
+    const playbackRate = this.currentSong.gameoverSpeed || 2
+    this.voices.forEach((voice) => {
+      voice.player.playbackRate = playbackRate
     })
-    Transport.bpm.value *= 2
+    Transport.bpm.value *= playbackRate
+
+    Transport.start()
+
+    // play the bubble sample as a descending melody
+    this.playOneShot(ipod_hiss, -20)
+    this.playOneShot(bubble, -26, { playbackRate: 4 })
+    await new Promise((resolve) => setTimeout(resolve, 200))
+    this.playOneShot(bubble, -26, { playbackRate: 1 })
+    await new Promise((resolve) => setTimeout(resolve, 200))
+    this.playOneShot(bubble, -26, { playbackRate: 0.8 })
+    await new Promise((resolve) => setTimeout(resolve, 200))
+    this.playOneShot(bubble, -26, { playbackRate: 0.6 })
+    await new Promise((resolve) => setTimeout(resolve, 1000))
   }
 
   voiceFromFile(file) {
