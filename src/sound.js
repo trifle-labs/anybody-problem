@@ -302,6 +302,7 @@ export default class Sound {
     this.voices = null
     this.currentMeasure = 0
     this.currentSong = null
+    this.playedGameOver = false
   }
 
   async play(song) {

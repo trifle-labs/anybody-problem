@@ -169,32 +169,54 @@ export class Anybody extends EventEmitter {
   }
 
   addListener() {
-    // const body = document.getElementsByClassName('p5Canvas')[0]
-    const canvas = document.querySelector('canvas')
-    // const canvas = document.getElementById('defaultCanvas0')
+    const { canvas } = this
 
-    this.p.touchStarted = () => {
-      // this.setPause()
-      // return false
-    }
+    this._handleGameClick ||= this.handleGameClick.bind(this)
+    this._handleGameKeyDown ||= this.handleGameKeyDown.bind(this)
+    this._handleNFClick ||= this.handleNFTClick.bind(this)
+
+    // these dummy handlers are necessary for p5 to track mouseX and mouseY
+    this.p.touchStarted = () => {}
     this.p.touchMoved = () => {}
     this.p.touchEnded = () => {}
 
     if (typeof window !== 'undefined' && this.mode == 'game') {
-      canvas.removeEventListener('click', this.setPause)
-      canvas.removeEventListener('click', this.missileClick)
-      canvas.addEventListener('click', this.missileClick.bind(this))
-      window.addEventListener('keydown', (e) => {
-        // spacebar
-        if (e.code == 'Space') {
-          e.preventDefault()
-          this.setPause()
-        }
-      })
+      canvas.removeEventListener('click', this._handleNFTlick)
+      canvas.addEventListener('click', this._handleGameClick)
+      canvas.addEventListener('touchend', this._handleGameClick)
+      window.addEventListener('keydown', this._handleGameKeyDown)
     } else {
-      canvas.removeEventListener('click', this.missileClick)
-      canvas.removeEventListener('click', this.setPause)
-      canvas.addEventListener('click', this.setPause.bind(this))
+      canvas.removeEventListener('click', this._handleGameClick)
+      window?.removeEventListener('keydown', this._handleGameKeyDown)
+      canvas.addEventListener('click', this._handleGameClick)
+    }
+  }
+
+  getXY(e) {
+    // e may be a touch event or a click event
+    let x = e.offsetX || e.pageX
+    let y = e.offsetY || e.pageY
+    const rect = e.target.getBoundingClientRect()
+    const actualWidth = rect.width
+    x = (x * this.windowWidth) / actualWidth
+    y = (y * this.windowWidth) / actualWidth
+
+    return { x, y }
+  }
+
+  handleGameClick(e) {
+    const { x, y } = this.getXY(e)
+    this.missileClick(x, y)
+  }
+
+  handleNFTClick() {
+    this.setPause()
+  }
+
+  handleGameKeyDown(e) {
+    if (e.code == 'Space') {
+      e.preventDefault()
+      this.setPause()
     }
   }
 
@@ -467,11 +489,11 @@ export class Anybody extends EventEmitter {
 
   prepareP5() {
     this.p.frameRate(FPS)
-    this.p.createCanvas(this.windowWidth, this.windowWidth)
+    this.canvas = this.p.createCanvas(this.windowWidth, this.windowWidth)
     this.p.background('white')
   }
 
-  missileClick(e) {
+  missileClick(x, y) {
     if (this.paused) {
       this.setPause(false)
       return
@@ -488,12 +510,9 @@ export class Anybody extends EventEmitter {
       // remove latest missile from missileInits
       this.missileInits.pop()
     }
-    const canvas = document.querySelector('canvas')
+
     this.thisLevelMissileCount++
     this.missileCount++
-    const actualWidth = canvas.offsetWidth
-    const x = (e.offsetX * this.windowWidth) / actualWidth
-    const y = (e.offsetY * this.windowWidth) / actualWidth
     const radius = 10
 
     const b = {
