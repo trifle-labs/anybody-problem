@@ -180,7 +180,7 @@ export class Anybody extends EventEmitter {
   }
 
   addListener() {
-    const { canvas } = this
+    const { p5instance } = this
 
     // binding dummy handlers is necessary for p5 to listen to touchmove
     // and track mouseX and mouseY
@@ -189,14 +189,14 @@ export class Anybody extends EventEmitter {
     this.p.touchEnded = () => {}
 
     if (typeof window !== 'undefined' && this.mode == 'game') {
-      canvas.canvas.removeEventListener('click', this.handleNFTlick)
-      canvas.canvas.addEventListener('click', this.handleGameClick)
-      canvas.canvas.addEventListener('touchend', this.handleGameClick)
+      p5instance.canvas.removeEventListener('click', this.handleNFTlick)
+      p5instance.canvas.addEventListener('click', this.handleGameClick)
+      p5instance.canvas.addEventListener('touchend', this.handleGameClick)
       window.addEventListener('keydown', this.handleGameKeyDown)
     } else {
-      canvas.canvas.removeEventListener('click', this.handleGameClick)
+      p5instance.canvas.removeEventListener('click', this.handleGameClick)
       window?.removeEventListener('keydown', this.handleGameKeyDown)
-      canvas.canvas.addEventListener('click', this.handleGameClick)
+      p5instance.canvas.addEventListener('click', this.handleGameClick)
     }
   }
 
@@ -525,7 +525,7 @@ export class Anybody extends EventEmitter {
 
   prepareP5() {
     this.p.frameRate(FPS)
-    this.canvas = this.p.createCanvas(this.windowWidth, this.windowWidth)
+    this.p5instance = this.p.createCanvas(this.windowWidth, this.windowWidth)
     this.p.background('white')
   }
 

@@ -689,7 +689,8 @@ export const Visuals = {
   drawGun() {
     this.p.stroke('rgba(200,200,200,1)')
     this.p.strokeCap(this.p.SQUARE)
-    const canvas = document.querySelector('canvas')
+    const { p5instance } = this
+    const canvas = p5instance.canvas
     // Bottom left corner coordinates
     let startX = 0
     let startY = this.windowHeight
