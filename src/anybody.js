@@ -84,9 +84,9 @@ export class Anybody extends EventEmitter {
     this.frames = 0
     this.showIt = true
     this.justStopped = false
-    this.bgColor = null
     this.loadTime = Date.now()
     this.firstFrame = true
+    this.loaded = false
   }
 
   // run once at initilization
@@ -100,6 +100,7 @@ export class Anybody extends EventEmitter {
     this.frames = this.alreadyRun
     this.startingFrame = this.alreadyRun
     // const vectorLimitScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
+    this.loadImages()
     this.setPause(this.paused)
     // setTimeout(() => {
     //   for (let i = 0; i < this.bodies.length; i++) {
@@ -206,6 +207,7 @@ export class Anybody extends EventEmitter {
   }
 
   setPause(newPauseState = !this.paused) {
+    console.log('setPause', newPauseState)
     if (typeof newPauseState !== 'boolean') {
       newPauseState = !this.paused
     }
@@ -367,7 +369,6 @@ export class Anybody extends EventEmitter {
       // console.dir({ step1 }, { depth: null })
       this.bodies = this.convertBigIntsToBodies(step1)
       // console.dir({ bodies: this.bodies })
-      this.bgColor = this.colorArrayToTxt([0, 0, 0]) //this.randomColor(0, 20))
       this.radiusMultiplyer = this.random(10, 200)
       for (let i = 0; i < this.startingBodies; i++) {
         this.bodies[i].c =
@@ -377,35 +378,12 @@ export class Anybody extends EventEmitter {
       }
       return
     }
+    if (this.starData) {
+      this.starPositions = this.starData.map(this.bodyDataToBodies.bind(this))
+    }
     if (this.bodyData) {
-      this.bgColor = this.colorArrayToTxt(this.randomColor(0, 200))
       this.radiusMultiplyer = 100 //this.random(10, 200)
-      this.bodies = this.bodyData.map((b) => {
-        const bodyId = b.bodyId.toNumber()
-        const bodyIndex = b.bodyIndex.toNumber()
-        const seed = b.seed
-        const bodyRNG = new Prando(seed.toString(16))
-        const px = b.px.toNumber() / parseInt(this.scalingFactor)
-        const py = b.py.toNumber() / parseInt(this.scalingFactor)
-        const vx =
-          (b.vx.toNumber() - this.vectorLimit * parseInt(this.scalingFactor)) /
-          parseInt(this.scalingFactor)
-        const vy =
-          (b.vy.toNumber() - this.vectorLimit * parseInt(this.scalingFactor)) /
-          parseInt(this.scalingFactor)
-        const radius = b.radius.toNumber() / parseInt(this.scalingFactor)
-        return {
-          bodyId: bodyId,
-          bodyIndex: bodyIndex,
-          position: this.createVector(px, py),
-          velocity: this.createVector(vx, vy),
-          radius: radius,
-          starLvl: b.starLvl?.toNumber(),
-          maxStarLvl: b.maxStarLvl?.toNumber(),
-          mintedBodyIndex: b.mintedBodyIndex.toNumber(),
-          c: this.colorArrayToTxt(this.randomColor(0, 200, bodyRNG))
-        }
-      })
+      this.bodies = this.bodyData.map(this.bodyDataToBodies.bind(this))
       this.startingBodies = this.bodies.length
       return
     }
@@ -424,8 +402,6 @@ export class Anybody extends EventEmitter {
     // const start = 0 - midRange
     // const totalChunks = this.startingBodies
     // const chunk = range / totalChunks
-
-    this.bgColor = this.colorArrayToTxt(this.randomColor(0, 100))
 
     for (let i = 0; i < this.startingBodies; i++) {
       // cs.push(`hsla(${this.random(0, 360)}, 100%, 50%, ${this.opac})`)
@@ -464,6 +440,33 @@ export class Anybody extends EventEmitter {
 
     this.bodies = bodies
     // .sort((a, b) => b.radius - a.radius)
+  }
+
+  bodyDataToBodies(b) {
+    const bodyId = b.bodyId.toNumber()
+    const bodyIndex = b.bodyIndex.toNumber()
+    const seed = b.seed
+    const bodyRNG = new Prando(seed.toString(16))
+    const px = b.px.toNumber() / parseInt(this.scalingFactor)
+    const py = b.py.toNumber() / parseInt(this.scalingFactor)
+    const vx =
+      (b.vx.toNumber() - this.vectorLimit * parseInt(this.scalingFactor)) /
+      parseInt(this.scalingFactor)
+    const vy =
+      (b.vy.toNumber() - this.vectorLimit * parseInt(this.scalingFactor)) /
+      parseInt(this.scalingFactor)
+    const radius = b.radius.toNumber() / parseInt(this.scalingFactor)
+    return {
+      bodyId: bodyId,
+      bodyIndex: bodyIndex,
+      position: this.createVector(px, py),
+      velocity: this.createVector(vx, vy),
+      radius: radius,
+      starLvl: b.starLvl?.toNumber(),
+      maxStarLvl: b.maxStarLvl?.toNumber(),
+      mintedBodyIndex: b.mintedBodyIndex.toNumber(),
+      c: this.colorArrayToTxt(this.randomColor(0, 200, bodyRNG))
+    }
   }
 
   random(min, max, rng = this.rng) {

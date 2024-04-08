@@ -471,6 +471,12 @@ contract Problems is ERC721, Ownable {
         return problems[problemId].bodyData[bodyId];
     }
 
+    function getProblemStarData(
+        uint256 problemId
+    ) public view returns (Body[] memory) {
+        return problems[problemId].starData;
+    }
+
     function updateProblemBodyCount(
         uint256 problemId,
         uint256 bodyCount

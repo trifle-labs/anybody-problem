@@ -190,6 +190,7 @@ export const Visuals = {
   async draw() {
     if (!this.showIt) return
     if (this.bodies.length < 3) {
+      this.p.text('Not enough bodies', 100, 100)
       this.setPause(true)
       return
     }
@@ -207,7 +208,7 @@ export const Visuals = {
     this.drawTails()
 
     if (this.globalStyle == 'psycho') {
-      this.p.blendMode(this.p.NORMAL)
+      this.p.blendMode(this.p.BLEND)
     }
 
     if (this.mode == 'game' && this.target == 'inside' && !this.firstFrame) {
@@ -315,7 +316,8 @@ export const Visuals = {
   },
 
   drawStarBg() {
-    this.p.background('rgb(10,10,100)')
+    // this.p.background('rgb(10,10,100)')
+    this.p.background('rgb(10,10,10)')
     // this.p.background('white')
     if (!this.starBG) {
       this.starBG = this.p.createGraphics(this.windowWidth, this.windowHeight)
@@ -366,24 +368,14 @@ export const Visuals = {
     for (let i = 0; i < this.starPositions?.length; i++) {
       if (i < this.confirmedStarPositions.length) continue
       const starBody = this.starPositions[i]
-      const star = this.starSVG[starBody.maxStarLvl]
-      if (basicX == 0) {
-        const newElement = this.p.createGraphics(
-          this.windowWidth,
-          this.windowHeight
-        )
-        newElement.image(this.starBG, 0, 0, this.windowWidth, this.windowHeight)
-        newElement.image(
-          star,
-          starBody.position.x,
-          starBody.position.y,
-          100,
-          100
-        )
-        this.starBG = newElement
-        this.confirmedStarPositions.push(this.starPositions[i])
+      const radius = starBody.radius * 4
+      if (Xleft < 10) {
+        this.drawBodiesLooped(starBody, radius, this.drawStarOnBG)
+        if (this.loaded) {
+          this.confirmedStarPositions.push(this.starPositions[i])
+        }
       } else {
-        this.p.image(star, starBody.position.x, starBody.position.y, 100, 100)
+        this.drawBodiesLooped(starBody, radius, this.drawStarOnTopOfBG)
       }
     }
 
@@ -456,6 +448,42 @@ export const Visuals = {
         i * (this.windowHeight / totalLines)
       )
     }
+  },
+
+  tintImage(img, color) {
+    const g = this.p.createGraphics(img.width, img.height)
+    const cc = this.getTintFromColor(color)
+    g.tint(cc[0], cc[1], cc[2], cc[3] * 255)
+    g.image(img, 0, 0)
+    return g
+  },
+
+  drawStarOnTopOfBG(x, y, v, radius, b) {
+    const star = this.starSVG[b.maxStarLvl]
+    if (star) {
+      this.p.image(this.tintImage(star, b.c), x, y, radius, radius)
+    }
+  },
+
+  drawStarOnBG(x, y, v, radius, b) {
+    let star = this.starSVG[b.maxStarLvl]
+    if (!star) return
+    star = this.tintImage(star, b.c)
+    const newElement = this.p.createGraphics(
+      this.windowWidth,
+      this.windowHeight
+    )
+    newElement.image(this.starBG, 0, 0, this.windowWidth, this.windowHeight)
+    // const resize = 1.2
+    // newElement.image(
+    //   this.starSVG[b.maxStarLvl],
+    //   x + (radius - radius * resize) / 2,
+    //   y + (radius - radius * resize) / 2,
+    //   radius * resize,
+    //   radius * resize
+    // )
+    newElement.image(star, x, y, radius, radius)
+    this.starBG = newElement
   },
 
   drawStaticBg() {
@@ -1123,12 +1151,8 @@ export const Visuals = {
     return actualRadius * 4 + this.radiusMultiplyer
   },
 
-  drawBodiesLooped(body, drawFunction) {
+  drawBodiesLooped(body, radius, drawFunction) {
     drawFunction = drawFunction.bind(this)
-    const bodyRadius = this.bodyCopies.filter(
-      (b) => b.bodyIndex == body.bodyIndex
-    )[0]?.radius
-    const radius = this.getBodyRadius(bodyRadius)
     drawFunction(body.position.x, body.position.y, body.velocity, radius, body)
 
     let loopedX = false,
@@ -1256,7 +1280,11 @@ export const Visuals = {
       const body = this.bodies[i]
       // after final proof is sent, don't draw upgradable bodies
       if (this.finalBatchSent && body.maxStarLvl == body.starLvl) continue
-      this.drawBodiesLooped(body, this.drawBody)
+      const bodyRadius = this.bodyCopies.filter(
+        (b) => b.bodyIndex == body.bodyIndex
+      )[0]?.radius
+      const radius = this.getBodyRadius(bodyRadius)
+      this.drawBodiesLooped(body, radius, this.drawBody)
 
       const bodyCopy = JSON.parse(
         JSON.stringify(
@@ -1550,6 +1578,7 @@ export const Visuals = {
   },
 
   drawCenter(b) {
+    // this.p.blendMode(this.p.DIFFERENCE)
     this.p.noStroke()
     const x = b.position.x
     const y = b.position.y
@@ -1559,32 +1588,15 @@ export const Visuals = {
     if (this.target == 'outside') {
       this.p.fill(c)
       this.p.ellipse(x, y, r)
-
-      this.starSVG ||= []
       const star = this.starSVG[b.maxStarLvl]
-      if (!star) {
-        this.starSVG[b.maxStarLvl] = 'loading'
-        const svg = STAR_SVGS[b.maxStarLvl - 1]
-        this.p.loadImage(svg, (img) => {
-          // this is a hack to tint the svg
-          // const g = this.p.createGraphics(img.width, img.height)
-          // const cc = c
-          //   .split(',')
-          //   .map((c) => parseFloat(c.replace(')', '').replace('rgba(', '')))
-          // g.tint(cc[0], cc[1], cc[2], cc[3] * 255)
-          // g.image(img, 0, 0)
-          this.starSVG[b.maxStarLvl] = img // g
-        })
-      }
-      if (star && star !== 'loading') {
-        this.p.image(star, x - r / 2, y - r / 2, r, r)
-      }
+      this.p.image(star, x - r / 2, y - r / 2, r, r)
     } else {
       this.p.fill(c)
       this.p.strokeWeight(2)
       this.p.stroke('white')
       this.p.ellipse(x, y, r)
     }
+    // this.p.blendMode(this.p.BLEND)
   },
 
   colorArrayToTxt(cc) {
@@ -1614,5 +1626,18 @@ export const Visuals = {
     }
 
     return this.lastFrameRate
+  },
+  async loadImages() {
+    this.starSVG ||= {}
+    for (let i = 0; i < STAR_SVGS.length; i++) {
+      const svg = STAR_SVGS[i]
+      await new Promise((resolve) => {
+        this.p.loadImage(svg, (img) => {
+          this.starSVG[i + 1] = img
+          resolve()
+        })
+      })
+    }
+    this.loaded = true
   }
 }
