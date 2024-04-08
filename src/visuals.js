@@ -55,10 +55,143 @@ const FACE_PNGS = [
   ]
 ]
 
+const STAR_SVGS = [
+  new URL(`/public/stars/star1.svg`, import.meta.url).href,
+  new URL(`/public/stars/star2.svg`, import.meta.url).href,
+  new URL(`/public/stars/star3.svg`, import.meta.url).href,
+  new URL(`/public/stars/star4.svg`, import.meta.url).href,
+  new URL(`/public/stars/star5.svg`, import.meta.url).href,
+  new URL(`/public/stars/star6.svg`, import.meta.url).href,
+  new URL(`/public/stars/star7.svg`, import.meta.url).href,
+  new URL(`/public/stars/star8.svg`, import.meta.url).href,
+  new URL(`/public/stars/star9.svg`, import.meta.url).href,
+  new URL(`/public/stars/star10.svg`, import.meta.url).href
+]
+
+// const stars = {
+//   1: `<path class="st1" d="M521.2,237.6c-8.4-4.6-18.3-5.7-27.6-3.6c-17.2,3.8-61.5,13.7-111.8,25c-6.7,1.5-13.5-2-16.2-8.2
+//   c-0.1-0.3-0.2-0.5-0.3-0.8c-2.9-6.5-0.4-14.3,5.7-18c33.5-20.6,69.8-43.1,96.6-60.4c6.1-3.9,11-9.3,14.2-15.8
+//   c6.3-12.7,10.5-34.3-13.4-58.2c0,0-22.9-20.9-48.5-13.4c-9.2,2.7-16.9,8.9-22.1,17c-9.5,15-34.3,53.8-62.1,97.8
+//   c-3.7,5.9-11.1,8.1-17.6,5.5c-0.1,0-0.2-0.1-0.2-0.1c-6.6-2.7-10.4-9.7-8.7-16.6c9.2-38.5,19-80.5,25.8-111.9
+//   c1.5-7.1,1.2-14.4-1.1-21.3C329.5,41.2,317.2,23,283.4,23c0,0-31,1.4-43.7,24.8c-4.6,8.4-5.7,18.3-3.6,27.6
+//   c3.8,17.3,13.7,61.9,25.1,112.4c1.5,6.8-2.1,13.8-8.6,16.4c-0.6,0.2-1.1,0.5-1.7,0.7c-6.5,2.7-14,0.4-17.7-5.6
+//   c-20.6-33.6-43.2-69.9-60.5-96.8c-3.9-6.1-9.3-11-15.8-14.2c-12.7-6.3-34.3-10.5-58.2,13.4c0,0-20.9,22.9-13.4,48.5
+//   c2.7,9.2,8.9,16.9,17,22.1c14.8,9.5,53.1,33.8,96.5,61.2c6,3.8,8.2,11.3,5.4,17.8c-0.1,0.2-0.2,0.5-0.3,0.7
+//   c-2.7,6.5-9.7,10.1-16.5,8.5C149.3,251.3,108,241.6,77,235c-7.1-1.5-14.4-1.2-21.3,1.1c-13.5,4.5-31.7,16.9-31.7,50.6
+//   c0,0,1.4,31,24.8,43.7c8.4,4.6,18.3,5.7,27.6,3.6c17-3.8,60.6-13.4,110.1-24.6c6.9-1.6,13.8,2.2,16.4,8.8c0.1,0.3,0.3,0.7,0.4,1
+//   c2.7,6.5,0.3,14-5.7,17.6c-33.1,20.4-68.9,42.5-95.3,59.6c-6.1,3.9-11,9.3-14.2,15.8c-6.3,12.7-10.5,34.3,13.4,58.2
+//   c0,0,22.9,20.9,48.5,13.4c9.2-2.7,16.9-8.9,22.1-17c9.3-14.6,33.1-52,60.1-94.6c3.8-5.9,11.3-8.2,17.7-5.4c0.5,0.2,1.1,0.5,1.6,0.7
+//   c6.5,2.7,10.1,9.7,8.5,16.5c-9,37.7-18.5,78.5-25.1,109.1c-1.5,7.1-1.2,14.4,1.1,21.3c4.5,13.5,16.9,31.7,50.6,31.7
+//   c0,0,31-1.4,43.7-24.8c4.6-8.4,5.7-18.3,3.6-27.6c-3.8-17-13.4-60.3-24.5-109.7c-1.5-6.8,2-13.7,8.5-16.3c0.8-0.3,1.7-0.7,2.5-1.1
+//   c6.5-2.9,14.2-0.5,17.9,5.6c20.2,32.9,42.2,68.2,59.1,94.4c3.9,6.1,9.3,11,15.8,14.2c12.7,6.3,34.3,10.5,58.2-13.4
+//   c0,0,20.9-22.9,13.4-48.5c-2.7-9.2-8.9-16.9-17-22.1c-14.7-9.4-52.5-33.5-95.6-60.7c-5.8-3.7-8.2-10.9-5.6-17.3
+//   c0.3-0.7,0.5-1.3,0.8-2c2.5-6.8,9.7-10.6,16.7-8.9c37.7,9,78.4,18.5,109,25.1c7.1,1.5,14.4,1.2,21.3-1.1
+//   c13.5-4.5,31.7-16.9,31.7-50.6C546.1,281.4,544.7,250.4,521.2,237.6z" />`,
+//   2: `<path class="st1" d="M536.1,223.4c0,0-10.4-19.9-73.2-32.4c-1.5-0.3-2.1,1.8-0.7,2.4c15.4,6.5,37.9,19.3,37.9,39c0,0,2,26-59,43
+//   c0,0-28.3,12.3-147.2,9.3c-0.3,0-5-0.4-1.8-5.7l0,0c30.5-19.7,131.4-90.5,151.7-179.1c0,0,8.5-33.9-24.7-37.5
+//   c0,0-21.5-6.7-74.7,28.9c-1.2,0.8-0.2,2.7,1.2,2.2c15.5-6.3,40.5-13.2,54.4,0.8c0,0,19.8,17-11.3,72.1c0,0-11.4,28.8-97.9,111
+//   c-0.2,0.1-5.6,3.5-5-3.1l0,0c7.7-35.7,28.8-156.9-19.4-233.8c0,0-18-30-44-9c0,0-19.9,10.4-32.4,73.2c-0.3,1.5,1.8,2.1,2.4,0.7
+//   c6.5-15.4,19.3-37.9,39-37.9c0,0,26-2,43,59c0,0,12.3,28.4,9.3,147.5c0,0.3-0.9,6.8-5.6,1.7l0,0c-19.4-30.2-90.4-131.6-179.3-152
+//   c0,0-33.9-8.5-37.5,24.7c0,0-6.7,21.5,28.9,74.7c0.8,1.2,2.7,0.2,2.2-1.2c-6.3-15.5-13.2-40.5,0.8-54.4c0,0,17-19.8,72.1,11.3
+//   c0,0,28.9,11.4,111.5,98.4c0.6,0.7,4.2,5-2.8,4.6l0,0c-34.6-7.5-157.1-29.4-234.6,19.2c0,0-30,18-9,44c0,0,10.4,19.9,73.2,32.4
+//   c1.5,0.3,2.1-1.8,0.7-2.4c-15.4-6.5-37.9-19.3-37.9-39c0,0-2-26,59-43c0,0,28.5-12.3,148.5-9.3c0.1,0,4.9,1.2,1.7,4.9l0,0
+//   c-28.9,18.5-132.3,90.1-153,179.9c0,0-8.5,33.9,24.7,37.5c0,0,21.5,6.7,74.7-28.9c1.2-0.8,0.2-2.7-1.2-2.2
+//   c-15.5,6.3-40.5,13.2-54.4-0.8c0,0-19.8-17,11.3-72.1c0,0,11.5-29,98.9-112c0.3-0.2,4.9-3.6,4.3,2.3l0,0
+//   c-7.3,33.2-30.1,157.3,19,235.6c0,0,18,30,44,9c0,0,19.9-10.4,32.4-73.2c0.3-1.5-1.8-2.1-2.4-0.7c-6.5,15.4-19.3,37.9-39,37.9
+//   c0,0-26,2-43-59c0,0-12.4-28.6-9.3-149.2c0.1-0.4,1.1-5.9,4.8-1.2l0,0c18.3,28.7,90,132.5,180,153.1c0,0,33.9,8.5,37.5-24.7
+//   c0,0,6.7-21.5-28.9-74.7c-0.8-1.2-2.7-0.2-2.2,1.2c6.3,15.5,13.2,40.5-0.8,54.4c0,0-17,19.8-72.1-11.3c0,0-29-11.5-112.1-99
+//   c-0.1-0.2-2.5-4.2,4.8-3.7v0c36.4,7.8,156.7,28.4,233.2-19.5C527.1,267.4,557.1,249.4,536.1,223.4z" />`,
+//   3: `<path class="st1" d="M525.7,283h-76.4c-2.4,0-3.5-3-1.8-4.6c0.6-0.6,1.3-1.2,1.9-1.8c0,0,83.5-71,8.9-164.6c-1-1.2-2.8-1.3-3.9-0.2
+//   l-53.5,53.5c-1.7,1.7-4.6,0.4-4.5-2c0-0.6,0.1-1.2,0.1-1.9c0,0,8.9-109.2-110.1-122.7c-1.6-0.2-2.9,1.1-2.9,2.6v75
+//   c0,2.4-2.9,3.5-4.6,1.8c-0.5-0.6-1.1-1.2-1.6-1.8c0,0-71-83.5-164.6-8.9c-1.2,1-1.3,2.8-0.2,3.9l54.2,54.2c1.7,1.7,0.4,4.6-2,4.5
+//   c-1-0.1-2.1-0.1-3.1-0.1c0,0-109.2-8.9-122.7,110.1c-0.2,1.6,1.1,2.9,2.6,2.9h74.9c2.4,0,3.5,2.9,1.8,4.5c0,0,0,0-0.1,0
+//   c0,0-83.5,71-8.9,164.6c1,1.2,2.8,1.3,3.9,0.2l53.5-53.5c1.7-1.7,4.6-0.4,4.5,2c-0.1,1.2-0.1,2.4-0.2,3.7
+//   c0,0-8.9,109.2,110.1,122.7c1.6,0.2,2.9-1.1,2.9-2.6v-75.9c0-2.4,2.9-3.5,4.6-1.8c0.6,0.6,1.1,1.2,1.7,1.8c0,0,71,83.5,164.6,8.9
+//   c1.2-1,1.3-2.8,0.2-3.9l-53.3-53.3c-1.7-1.7-0.4-4.6,2-4.5c0.6,0,1.2,0.1,1.9,0.1c0,0,109.2,8.9,122.7-110.1
+//   C528.4,284.4,527.2,283,525.7,283z" />`,
+//   4: ` <path class="st1" d="M286.4,291.8c6.1-20.9,28-82.3,80.2-114.8c1-0.7,1.2-2.1,0.2-2.9c-10.4-8.9-60.5-54.6-80.6-123.8
+//   c-0.5-1.7-3-1.8-3.5,0c-6.1,20.1-28.5,84.2-77.3,119.8c-1,0.7-1,2.2,0,2.9c10.8,7.8,60.6,47.2,77.5,118.7
+//   C283.3,293.5,285.8,293.6,286.4,291.8z" />
+//   <path class="st1" d="M274.9,298.3c-18-12.4-69.5-52.2-84.1-111.9c-0.3-1.2-1.6-1.8-2.7-1.1c-11.7,7.1-70.7,40.4-142.8,38.1
+//   c-1.8-0.1-2.6,2.3-1.1,3.3c17.3,12,71.1,53.3,89.7,110.7c0.4,1.2,1.8,1.7,2.8,0.9c10.8-7.8,63.7-42.9,137-36.6
+//   C275.6,301.8,276.4,299.4,274.9,298.3z" />
+//   <path class="st1" d="M277,310.3c-17.3,13.3-71.2,49.9-132.5,45.3c-1.2-0.1-2.2,1-1.9,2.2c3.1,13.4,16.6,79.8-8,147.6
+//   c-0.6,1.7,1.3,3.2,2.8,2.1c16.8-12.7,72.6-51.1,133.1-51.1c1.2,0,2.1-1.2,1.8-2.4c-4.1-12.7-21.1-73.9,7.5-141.6
+//   C280.5,310.8,278.5,309.2,277,310.3z" />
+//   <path class="st1" d="M288.7,313.6c7.3,20.5,25.8,83,2.7,140c-0.5,1.1,0.3,2.4,1.5,2.5c13.7,1.1,81,8.6,138.1,52.7
+//   c1.4,1.1,3.4-0.3,2.8-2c-7-19.9-26.5-84.8-8-142.3c0.4-1.2-0.5-2.4-1.7-2.4c-13.3,0-76.8-2.5-132.5-50.4
+//   C290.2,310.4,288.1,311.8,288.7,313.6z" />
+//   <path class="st1" d="M295,301.9c21.8-1,86.9-0.5,134.7,38.2c1,0.8,2.4,0.4,2.8-0.7c5-12.8,31.8-75,90.6-116.7
+//   c1.5-1.1,0.7-3.4-1.1-3.3c-21,0.9-88.8,0.6-138.5-33.8c-1-0.7-2.4-0.2-2.8,1c-3.9,12.8-24.7,72.7-86.9,112.1
+//   C292.4,299.5,293.2,302,295,301.9z" />`,
+//   5: `<polygon class="st1" points="218.3,196.6 291.6,179.8 249.9,242.3 288.5,306.8 216.1,286.5 166.8,343.1 163.7,268 94.6,238.6
+//   165.1,212.5 171.7,137.6 	" />
+//   <polygon class="st1" points="329.5,375.1 383.8,409.1 321,421.7 305.4,483.8 274,428 210.1,432.3 253.5,385.2 229.6,325.8
+//   287.8,352.6 337,311.4 	" />
+//   <polygon class="st1" points="385.5,453.1 404.3,464.9 382.6,469.2 377.2,490.7 366.4,471.4 344.3,472.9 359.3,456.6 351,436.1
+//   371.1,445.3 388.1,431.1 	" />
+//   <polygon class="st1" points="429.1,492.7 436.6,504.2 423.3,501 414.7,511.7 413.6,498 400.8,493.1 413.4,487.9 414.1,474.2
+//   423,484.6 436.2,481 	" />
+//   <polygon class="st1" points="472.1,484.2 482.7,492.9 469,493.9 464,506.6 458.9,493.9 445.2,493.1 455.7,484.3 452.3,471
+//   463.9,478.3 475.4,470.9 	" />
+//   <polygon class="st1" points="224.8,138.8 223.8,116.6 239.7,132 260.4,124.3 250.7,144.2 264.5,161.5 242.6,158.4 230.4,176.8
+//   226.6,155 205.2,149.1 	" />
+//   <polygon class="st1" points="232.6,80.4 237.8,67.7 242.7,80.5 256.4,81.5 245.8,90.2 249.1,103.5 237.5,96.1 225.9,103.3
+//   229.4,90 218.9,81.2 	" />
+//   <polygon class="st1" points="201.2,49.8 202.4,36.2 210.9,46.9 224.2,43.8 216.7,55.2 223.8,67 210.6,63.3 201.6,73.7 201,60
+//   188.4,54.7 	" />
+//   <polygon class="st1" points="154.7,379.3 188.9,376.9 165.7,402.2 178.5,434 147.3,419.7 121,441.7 125,407.6 95.9,389.4
+//   129.5,382.6 137.9,349.3 	" />
+//   <polygon class="st1" points="365.2,233.5 389.7,257.5 355.4,256.9 340.2,287.7 330.1,254.9 296.1,249.9 324.2,230.2 318.5,196.4
+//   345.9,217 376.3,201 	" />`,
+//   6: `<path class="st1" d="M491.5,218.2c-71.7-22.8-125.4,41.2-125.4,41.2c-0.5,0.7-1,1.5-1.4,2.1c-2.7,4.5-6.8,7.9-11.8,9.5l-30.8,10.1
+//   c-3.3,1.1-6.8,1.5-10.3,1.1c-4.5-6.6-11.1-11.5-18.9-13.8c-1-2.7-1.5-5.6-1.5-8.4v-32.4c0-5.2,2-10.2,5.4-14.1
+//   c0.5-0.6,1.1-1.3,1.6-2c0,0,44-71,0-132c0,0-13-17-28,0c0,0-50,49,0,132c0,0,0.6,1,1.6,2.3c2.9,3.7,4.4,8.3,4.4,13v32.8
+//   c0,3-0.8,5.8-2,8.5c-8.5,2.1-15.7,7.3-20.5,14.4c-2.8,0.1-5.7-0.3-8.4-1.2l-30.8-10.1c-5-1.6-9.1-5.1-11.8-9.5
+//   c-0.4-0.7-0.9-1.4-1.4-2.1c0,0-53.7-64-125.4-41.2c0,0-20.2,7-8.7,26.6c0,0,31,62.8,125.4,41.2c0,0,1.1-0.2,2.7-0.8
+//   c4.4-1.6,9.3-1.6,13.7-0.1l31.2,10.2c2.9,0.9,5.4,2.6,7.6,4.7c0,0.6-0.1,1.3-0.1,1.9c0,8.7,3.2,16.7,8.5,22.9
+//   c-0.8,2-1.9,3.8-3.1,5.5l-19.4,25.9c-3.1,4.2-7.7,7-12.8,8.1c-0.8,0.2-1.6,0.4-2.5,0.6c0,0-77.8,30.4-79.2,105.6
+//   c0,0,0.2,21.4,22.4,16.8c0,0,69.4-9.2,79.2-105.6c0,0,0.1-1.1,0.1-2.8c-0.1-4.7,1.4-9.3,4.3-13.1l19.7-26.2c1.5-2,3.4-3.7,5.6-4.9
+//   c3.8,1.4,8,2.2,12.3,2.2c5,0,9.8-1.1,14.1-2.9c2.7,1.4,5.1,3.2,6.9,5.7l19.7,26.2c2.8,3.8,4.4,8.4,4.3,13.1c0,1.7,0.1,2.8,0.1,2.8
+//   c9.8,96.4,79.2,105.6,79.2,105.6c22.2,4.6,22.4-16.8,22.4-16.8c-1.4-75.2-79.2-105.6-79.2-105.6c-0.9-0.2-1.7-0.5-2.5-0.6
+//   c-5.1-1.1-9.7-3.9-12.8-8.1l-19.4-25.9c-1.9-2.5-3.3-5.3-4-8.3c4-5.7,6.3-12.6,6.3-20.1c0,0,0-0.1,0-0.1c0.1-0.1,0.1-0.1,0.2-0.2
+//   c2.4-2.9,5.5-5.2,9.1-6.4l31.2-10.2c4.5-1.5,9.3-1.5,13.7,0.1c1.6,0.6,2.7,0.8,2.7,0.8c94.5,21.6,125.4-41.2,125.4-41.2
+//   C511.7,225.3,491.5,218.2,491.5,218.2z" />`,
+//   7: `<path class="st1" d="M283.5,35.5c-137,0-248,111-248,248s111,248,248,248s248-111,248-248S420.5,35.5,283.5,35.5z M374.7,438.8
+//   l-80.4-58.4c-6.4-4.7-15.2-4.7-21.6,0l-80.4,58.4c-14.4,10.5-33.8-3.6-28.3-20.5l30.7-94.6c2.5-7.6-0.2-15.9-6.7-20.5l-80.4-58.4
+//   c-14.4-10.5-7-33.2,10.8-33.2h99.4c8,0,15-5.1,17.5-12.7l30.7-94.6c5.5-16.9,29.4-16.9,34.9,0l30.7,94.6
+//   c2.5,7.6,9.5,12.7,17.5,12.7h99.4c17.8,0,25.2,22.8,10.8,33.2l-80.4,58.4c-6.4,4.7-9.1,13-6.7,20.5l30.7,94.6
+//   C408.5,435.2,389.1,449.2,374.7,438.8z" />`,
+//   8: `<path class="st1" d="M474.7,232.3c-3.1-2.4-4.4-6.4-3.2-10.1c22.8-72.8-30.2-84.4-30.2-84.4c-31.5-8.1-55.7,11.5-68.7,26.1
+//   c10.4-16.5,23-45.8,6-74.1c0,0-26.2-47.4-89.5-4.9c-3.2,2.2-7.5,2.1-10.6-0.2c-15.1-11.1-60.4-38-92,9.4c0,0-20.2,32,3.7,69.1
+//   c-13.2-14.5-37.1-33.4-68-25.4c0,0-53,11.7-30.2,84.4c1.2,3.7-0.1,7.8-3.2,10.1c-14.9,11.3-53.6,47.1-17.2,90.9
+//   c0,0,19.4,22.2,53.2,18.9c-16.4,9-34.3,24.7-36.5,51.1c0,0-6.4,53.8,69.8,56.3c3.9,0.1,7.3,2.7,8.5,6.4
+//   c5.8,17.8,26.8,66.2,80.2,46.2c0,0,29-11.7,36-46.8c7,35.1,36,46.8,36,46.8c53.3,20,74.4-28.3,80.2-46.2c1.2-3.7,4.6-6.3,8.5-6.4
+//   c76.2-2.5,69.8-56.3,69.8-56.3c-2.2-26.2-19.9-41.9-36.2-50.9c32.5,2.3,51.1-19.1,51.1-19.1C528.3,279.4,489.6,243.7,474.7,232.3z
+//    M307.2,308.8c-5.3-1.1-10.4,2.5-11.1,7.8l-13.6,104.7l-13.6-104.7c-0.7-5.3-5.8-9-11.1-7.8l-96,20.7l92.2-46.3
+//   c4.8-2.4,6.5-8.4,3.7-13L201.4,178c0,0-0.4-0.7-1.2-1.8c0.4,0.4,0.7,0.8,1.1,1.1l75.4,80.3c3.7,3.9,9.9,3.9,13.6-0.1l71.5-79.2
+//   l-56.1,91.8c-2.8,4.6-1.1,10.6,3.7,13l90.9,45.7L307.2,308.8z" />`,
+//   9: `<path class="st1" d="M556,283.9l-105-96.8L420.1,47.7L283.8,90.2L147.6,47.3l-31.3,139.3L11,283.1l105,96.8l30.9,139.4l136.3-42.5
+//   l136.2,42.9l31.3-139.3L556,283.9z M404.4,493.7L283.4,376.1L162,493.3l41.3-163.6L41,283.1l162.3-46.1L162.6,73.3l121.1,117.6
+//   L405,73.7l-41.3,163.6L526,283.9l-162.3,46.1L404.4,493.7z" />`,
+//   10: `<polygon class="st1" points="551.2,214.9 511.8,215.8 498.8,178.6 487.5,216.3 448.1,217.3 471.5,233.5 452.6,233.9 436.9,189.1
+//   423.3,234.6 375.9,235.7 402.9,254.4 319,254.4 292.4,172.7 320.3,193 305.6,147.9 344,120 296.6,120 290.7,102 313.8,118.7
+//   301.6,81.3 333.4,58.1 294.1,58.1 281.9,20.7 269.7,58.1 230.4,58.1 262.2,81.3 250.1,118.7 273.1,102 267.2,120 219.8,120
+//   258.2,147.9 243.5,193 271.4,172.7 244.8,254.4 161.7,254.4 189.8,236.9 142.5,233.5 131.1,187.4 113.2,231.3 94.4,229.9
+//   118.6,214.9 79.3,212.1 69.9,173.8 55,210.3 15.8,207.4 45.9,232.8 31,269.3 64.5,248.5 94.5,273.9 87.7,246.3 102.2,258.5
+//   84.3,302.4 124.6,277.4 160.9,308 152.6,274.5 221.9,324.9 196,404.7 187,373.4 170.8,418 123.4,416.4 160.8,445.6 154.3,463.3
+//   146.5,436 133,473 93.7,471.6 124.7,495.8 111.2,532.8 143.9,510.8 174.9,535 164,497.2 196.7,475.2 168.2,474.2 183.9,463.6
+//   221.3,492.8 208.2,447.2 247.5,420.7 211.7,419.4 281.9,368.4 352.1,419.4 316.9,420.7 356.3,447.2 343.2,492.8 380.6,463.6
+//   396.2,474.2 367.8,475.2 400.4,497.2 389.6,535 420.6,510.8 453.2,532.8 439.8,495.8 470.8,471.6 431.5,473 418,436 410.1,463.3
+//   403.7,445.6 441.1,416.4 393.7,418 377.5,373.4 368.2,405.8 341.9,324.9 411.4,274.4 401.3,308.1 439,279.3 478,306.3 462.3,261.6
+//   477.3,250.1 469.2,277.4 500.5,253.5 532.9,275.9 519.8,238.8 	" />`
+// }
+
 export const Visuals = {
   async draw() {
     if (!this.showIt) return
     if (this.bodies.length < 3) {
+      this.p.text('Not enough bodies', 100, 100)
       this.setPause(true)
       return
     }
@@ -70,8 +203,31 @@ export const Visuals = {
 
     this.p.noFill()
     this.drawBg()
+    if (this.globalStyle == 'psycho') {
+      this.p.blendMode(this.p.DIFFERENCE)
+    }
     this.drawTails()
-    this.drawBodies()
+
+    if (this.globalStyle == 'psycho') {
+      this.p.blendMode(this.p.BLEND)
+    }
+
+    if (this.mode == 'game' && this.target == 'inside' && !this.firstFrame) {
+      for (let i = 0; i < this.bodies.length; i++) {
+        const body = this.bodies[i]
+        this.drawCenter(body)
+      }
+    }
+    if (!this.firstFrame) {
+      this.drawBodies()
+    }
+
+    if (this.mode == 'game' && this.target == 'outside' && !this.firstFrame) {
+      for (let i = 0; i < this.bodies.length; i++) {
+        const body = this.bodies[i]
+        this.drawCenter(body)
+      }
+    }
     this.drawWitheringBodies()
 
     if (this.frames % 10 == 0) {
@@ -92,7 +248,6 @@ export const Visuals = {
     this.drawPause()
     this.drawScore()
 
-    const isNotFirstFrame = this.frames !== 0
     const notPaused = !this.paused
     const framesIsAtStopEveryInterval =
       (this.frames - this.startingFrame) % this.stopEvery == 0
@@ -105,7 +260,7 @@ export const Visuals = {
     //   frames_lt_timer: this.frames < this.timer
     // })
     if (
-      isNotFirstFrame &&
+      !this.firstFrame &&
       notPaused &&
       framesIsAtStopEveryInterval &&
       didNotJustPause &&
@@ -135,6 +290,7 @@ export const Visuals = {
       this.gameOver = true
       this.won = true
     }
+    this.firstFrame = false
   },
   drawPause() {
     if (this.paused) {
@@ -163,6 +319,7 @@ export const Visuals = {
   },
 
   drawStarBg() {
+    // this.p.background('rgb(10,10,100)')
     this.p.background('rgb(10,10,10)')
     // this.p.background('white')
     if (!this.starBG) {
@@ -197,9 +354,9 @@ export const Visuals = {
     }
 
     const basicX =
-      ((this.frames / FPS) * (this.frames / FPS)) % this.windowWidth
+      Math.floor((this.frames / FPS) * (this.frames / FPS)) % this.windowWidth
     const basicY =
-      ((this.frames / FPS) * (this.frames / FPS)) % this.windowHeight
+      Math.floor((this.frames / FPS) * (this.frames / FPS)) % this.windowHeight
 
     // const basicX = this.accumX % this.windowWidth
     // const basicY = this.accumY % this.windowHeight
@@ -209,6 +366,21 @@ export const Visuals = {
 
     const Ytop = basicY - this.windowHeight
     const Ybottom = basicY + this.windowHeight
+
+    this.confirmedStarPositions ||= []
+    for (let i = 0; i < this.starPositions?.length; i++) {
+      if (i < this.confirmedStarPositions.length) continue
+      const starBody = this.starPositions[i]
+      const radius = starBody.radius * 4
+      if (Xleft < 10) {
+        this.drawBodiesLooped(starBody, radius, this.drawStarOnBG)
+        if (this.loaded) {
+          this.confirmedStarPositions.push(this.starPositions[i])
+        }
+      } else {
+        this.drawBodiesLooped(starBody, radius, this.drawStarOnTopOfBG)
+      }
+    }
 
     this.p.image(
       this.starBG,
@@ -280,6 +452,42 @@ export const Visuals = {
         i * (this.windowHeight / totalLines)
       )
     }
+  },
+
+  tintImage(img, color) {
+    const g = this.p.createGraphics(img.width, img.height)
+    const cc = this.getTintFromColor(color)
+    g.tint(cc[0], cc[1], cc[2], cc[3] * 255)
+    g.image(img, 0, 0)
+    return g
+  },
+
+  drawStarOnTopOfBG(x, y, v, radius, b) {
+    const star = this.starSVG[b.maxStarLvl]
+    if (star) {
+      this.p.image(this.tintImage(star, b.c), x, y, radius, radius)
+    }
+  },
+
+  drawStarOnBG(x, y, v, radius, b) {
+    let star = this.starSVG[b.maxStarLvl]
+    if (!star) return
+    star = this.tintImage(star, b.c)
+    const newElement = this.p.createGraphics(
+      this.windowWidth,
+      this.windowHeight
+    )
+    newElement.image(this.starBG, 0, 0, this.windowWidth, this.windowHeight)
+    // const resize = 1.2
+    // newElement.image(
+    //   this.starSVG[b.maxStarLvl],
+    //   x + (radius - radius * resize) / 2,
+    //   y + (radius - radius * resize) / 2,
+    //   radius * resize,
+    //   radius * resize
+    // )
+    newElement.image(star, x, y, radius, radius)
+    this.starBG = newElement
   },
 
   drawStaticBg() {
@@ -536,12 +744,6 @@ export const Visuals = {
 
   drawExplosions() {
     const { p, explosions } = this
-    if (explosions.length > 0) {
-      for (let i = 0; i < explosions.length; i++) {
-        const bomb = explosions[i][0]
-        this.drawCenter(bomb)
-      }
-    }
 
     for (let i = 0; i < explosions.length; i++) {
       const _explosion = explosions[i]
@@ -564,18 +766,30 @@ export const Visuals = {
   },
 
   drawMissiles() {
-    this.p.fill('red')
     this.p.noStroke()
     this.p.strokeWeight(0)
+
+    const missileReverbLevels = 10
+    const c =
+      Math.floor(this.frames / missileReverbLevels) % 2 == 0 ? 'red' : 'white'
+
     for (let i = 0; i < this.missiles.length; i++) {
       const body = this.missiles[i]
+      this.p.noStroke()
+      this.p.fill(c)
       this.p.ellipse(body.position.x, body.position.y, body.radius, body.radius)
-      // this.p.textSize(40)
-      // this.p.text(
-      //   `${body.position.x}, ${body.position.y}`,
-      //   body.position.x,
-      //   body.position.y
-      // )
+
+      this.p.noFill()
+      this.p.strokeWeight(1)
+      for (let i = 0; i < missileReverbLevels; i++) {
+        const c =
+          Math.floor((this.frames - i) / missileReverbLevels) % 2 == 0
+            ? `rgba(255,0,0,${(missileReverbLevels - i) / missileReverbLevels})`
+            : `rgba(255,255,255,${(missileReverbLevels - i) / missileReverbLevels})`
+        this.p.stroke(c)
+        const reverb = body.radius * (i + 1)
+        this.p.ellipse(body.position.x, body.position.y, reverb, reverb)
+      }
     }
   },
 
@@ -663,6 +877,23 @@ export const Visuals = {
     this.ghostEyes(radius)
   },
 
+  // Function to apply mask color to the image
+  maskImage(img, maskColor) {
+    img.loadPixels() // Load the image's pixel data
+
+    for (let i = 0; i < img.pixels.length; i += 4) {
+      if (img.pixels[i + 3] == 0) continue // Skip transparent pixels (alpha = 0
+      // Replace RGB values with the mask color's RGB, preserve the original alpha
+      img.pixels[i] = maskColor[0] // R
+      img.pixels[i + 1] = maskColor[1] // G
+      img.pixels[i + 2] = maskColor[2] // B
+      img.pixels[i + 3] = 255 // TODO: could be 100% or 1
+      // Alpha remains unchanged to preserve transparency
+    }
+
+    img.updatePixels() // Update the image with the new pixel values
+  },
+
   drawPngFace(radius, body, offset) {
     this.pngFaces ||= new Array(FACE_PNGS.length)
       .fill(null)
@@ -696,18 +927,33 @@ export const Visuals = {
 
     const face = this.pngFaces[faceIdx][expression]
     if (!face) {
+      this.pngFaces[faceIdx][expression] = 'loading'
       const png = FACE_PNGS[faceIdx][expression]
       this.p.loadImage(png, (img) => {
+        // to make masked background
+
+        // const bgSize = img.width * 1.2
+        // const imgCopy = img.get()
+        // this.maskImage(imgCopy, [255, 255, 255])
+        // const tinted = this.p.createGraphics(bgSize, bgSize)
+        // const cc = this.getTintFromColor(body.c)
+        // tinted.tint(cc[0], cc[1], cc[2])
+        // tinted.image(imgCopy, 0, 0, bgSize, bgSize)
+        // tinted.noTint()
+        // const offset = (bgSize - img.width) / 2
+        // tinted.image(img, offset, offset)
+        // this.pngFaces[faceIdx][expression] = tinted
         this.pngFaces[faceIdx][expression] = img
       })
     }
-    if (face) {
+    if (face && face !== 'loading') {
+      const faceSize = radius / 1.5
       this.bodiesGraphic.image(
         face,
-        -radius / 3,
-        -radius / 3 + offset,
-        radius / 1.5,
-        radius / 1.5
+        -faceSize / 2,
+        -faceSize / 2 + offset,
+        faceSize,
+        faceSize
       )
     }
   },
@@ -785,13 +1031,19 @@ export const Visuals = {
     this.bodiesGraphic.text(body.life, 0, radius)
   },
 
+  getTintFromColor(c) {
+    const cc = c
+      .split(',')
+      .map((c) => parseFloat(c.replace(')', '').replace('rgba(', '')))
+    return [cc[0], cc[1], cc[2], cc[2]]
+  },
+
   drawLevels(radius, body, offset) {
     this.bodiesGraphic.push()
     this.bodiesGraphic.translate(0, offset)
     this.bodiesGraphic.rotate(3 * (this.p.PI / 2))
     const distance = radius / 1.5
     radius = radius - this.radiusMultiplyer
-    const newRadius = radius
     const blackTransparent = 'rgba(0,0,0,0.5)'
     const whiteTransparent = 'rgba(255,255,255,0.5)'
     for (let i = 0; i < body.maxStarLvl; i++) {
@@ -802,26 +1054,57 @@ export const Visuals = {
         i * (this.bodiesGraphic.TWO_PI / body.maxStarLvl) + rotateOffset
       const xRotated = distance * Math.cos(rotated)
       const yRotated = distance * Math.sin(rotated)
+
+      let c = body.c
       if (body.radius == 0) {
         if (i < body.starLvl) {
           // this.bodiesGraphic.fill(body.c.replace(this.opac, '1'))
           if (i == body.starLvl - 1) {
+            c = 'rgba(255,255,255,1)'
             this.bodiesGraphic.fill('white')
           } else {
+            c = body.c.replace(this.opac, '1')
             this.bodiesGraphic.fill(body.c.replace(this.opac, '1'))
           }
         } else {
+          c = blackTransparent
           this.bodiesGraphic.fill(blackTransparent)
         }
       } else {
         if (i > 0 && i - 1 < body.starLvl) {
+          c = body.c.replace(this.opac, '1')
           this.bodiesGraphic.fill(body.c.replace(this.opac, '1'))
         } else {
-          this.bodiesGraphic.fill(blackTransparent)
+          c = blackTransparent
+          this.bodiesGraphic.fill(c)
         }
       }
 
-      this.bodiesGraphic.ellipse(xRotated, yRotated, newRadius)
+      this.bodiesGraphic.ellipse(xRotated, yRotated, radius)
+      this.starSVG ||= []
+      const star = this.starSVG[body.maxStarLvl]
+      if (!star) {
+        const svg = STAR_SVGS[body.maxStarLvl - 1]
+        this.p.loadImage(svg, (img) => {
+          // this is a hack to tint the svg
+          // const g = this.p.createGraphics(img.width, img.height)
+          // const cc = c
+          //   .split(',')
+          //   .map((c) => parseFloat(c.replace(')', '').replace('rgba(', '')))
+          // g.tint(cc[0], cc[1], cc[2], cc[3] * 255)
+          // g.image(img, 0, 0)
+          this.starSVG[body.maxStarLvl] = img //g
+        })
+      }
+      if (star && star !== 'loading') {
+        this.bodiesGraphic.image(
+          star,
+          xRotated - radius / 2,
+          yRotated - radius / 2,
+          radius,
+          radius
+        )
+      }
 
       // this.bodiesGraphic.fill('white')
       // this.bodiesGraphic.textSize(50)
@@ -830,10 +1113,23 @@ export const Visuals = {
     this.bodiesGraphic.pop()
   },
 
+  // async getStar(starIndex, color) {
+  //   if (this.starPNGs[starIndex][color]) {
+  //     return this.starPNGs[starIndex + color]
+  //   }
+  //   this.starPNGs[starIndex + color] = 'not-yet'
+  //   const path = stars[starIndex]
+
+  //   const starImg = this.p.loadImage(svg, (img) => {
+
+  //   }
+  //   this.starPNGs[starIndex][color] = starImg
+
+  // },
+
   drawBodyStyle1(radius, body, offset) {
-    const c = body.c.replace(this.opac, '0.1')
     this.bodiesGraphic.noStroke()
-    this.bodiesGraphic.fill(c)
+    this.bodiesGraphic.fill(body.c)
     this.bodiesGraphic.ellipse(0, offset, radius, radius)
   },
 
@@ -871,12 +1167,12 @@ export const Visuals = {
     this.bodiesGraphic.pop()
   },
 
-  drawBodiesLooped(body, drawFunction) {
+  getBodyRadius(actualRadius) {
+    return actualRadius * 4 + this.radiusMultiplyer
+  },
+
+  drawBodiesLooped(body, radius, drawFunction) {
     drawFunction = drawFunction.bind(this)
-    const bodyRadius = this.bodyCopies.filter(
-      (b) => b.bodyIndex == body.bodyIndex
-    )[0]?.radius
-    const radius = bodyRadius * 4 + this.radiusMultiplyer
     drawFunction(body.position.x, body.position.y, body.velocity, radius, body)
 
     let loopedX = false,
@@ -971,6 +1267,26 @@ export const Visuals = {
     }
   },
 
+  async drawBodyAsStar(body) {
+    const star = this.starSVG[body.starLvl]
+    if (!star) {
+      this.starSVG[body.starLvl] = 'loading'
+      const svg = STAR_SVGS[body.starLvl - 1]
+      this.p.loadImage(svg, (img) => {
+        this.starSVG[body.starLvl] = img
+      })
+    }
+    if (star && star !== 'loading') {
+      this.bodiesGraphic.image(
+        star,
+        body.position.x - body.radius * 2,
+        body.position.y - body.radius * 2,
+        body.radius,
+        body.radius
+      )
+    }
+  },
+
   async drawBodies(attachToCanvas = true) {
     this.bodiesGraphic ||= this.p.createGraphics(
       this.windowWidth,
@@ -978,71 +1294,17 @@ export const Visuals = {
     )
     this.bodiesGraphic.noStroke()
 
-    // this.bodiesGraphic.blendMode(this.p.DIFFERENCE)
-    // }
-    // this.bodiesGraphic.clear()
-    // if (this.mode == 'nft') this.drawBorder()
-    // this.bodiesGraphic.strokeWeight(1)
-
     const bodyCopies = []
     for (let i = 0; i < this.bodies.length; i++) {
       // const body = this.bodies.sort((a, b) => b.radius - a.radius)[i]
       const body = this.bodies[i]
-      if (this.gameOver || this.won) {
-        if (
-          this.witheringBodies.filter((b) => b.bodyIndex == body.bodyIndex)
-            .length > 0
-        )
-          continue
-      }
-      // let c = body.c
-      // let finalColor
-      // if (this.colorStyle == 'squiggle') {
-      //   const hueColor = (parseInt(c.split(',')[1]) + this.frames) % 360
-      //   finalColor = this.bodiesGraphic.color(hueColor, 60, 100) // Saturation and brightness at 100 for pure spectral colors
-      // } else if (this.mode == 'nft') {
-      //   // console.log(c)
-      //   // finalColor = c
-
-      //   finalColor = c.replace(this.opac, '1') //this.convertColor(c)
-      // } else {
-      //   finalColor = c
-      // }
-
-      if (this.mode == 'nft') {
-        this.drawBodiesLooped(body, this.drawBody)
-        // if (i % 3 == 0) {
-        //   this.bodiesGraphic.stroke('black')
-        // } else if (i % 2 == 0) {
-        //   this.bodiesGraphic.stroke('white')
-        // } else {
-        //   this.bodiesGraphic.noStroke()
-        // }
-
-        // this.bodiesGraphic.noStroke()
-        // this.bodiesGraphic.stroke(this.getBW())
-        // this.bodiesGraphic.stroke('white')
-        // this.bodiesGraphic.fill(finalColor)
-        // this.bodiesGraphic.ellipse(body.position.x, body.position.y, radius, radius)
-        // const radius = body.radius * 4 + this.radiusMultiplyer
-        // this.drawBody(body.position.x, body.position.y, body.velocity, radius, finalColor, i)
-
-        // if (!this.face) {
-        //   this.face = await new Promise((resolve) => {
-        //     this.p.loadImage('/2.png', (img) => {
-        //       console.log('loaded')
-        //       resolve(img)
-        //     })
-        //   })
-        // }
-        // this.bodiesGraphic.image(this.face, body.position.x - radius / 8, body.position.y - radius / 3, radius / 2, radius / 2)
-
-        // const eyes = this.getAngledImage(body)
-        // this.bodiesGraphic.image(eyes, 0, 0)
-      } else {
-        this.drawBodiesLooped(body, this.drawBody)
-        // this.getAngledBody(body, finalColor)
-      }
+      // after final proof is sent, don't draw upgradable bodies
+      if (this.finalBatchSent && body.maxStarLvl == body.starLvl) continue
+      const bodyRadius = this.bodyCopies.filter(
+        (b) => b.bodyIndex == body.bodyIndex
+      )[0]?.radius
+      const radius = this.getBodyRadius(bodyRadius)
+      this.drawBodiesLooped(body, radius, this.drawBody)
 
       const bodyCopy = JSON.parse(
         JSON.stringify(
@@ -1058,20 +1320,10 @@ export const Visuals = {
     if (this.allCopiesOfBodies.length > this.tailLength) {
       this.allCopiesOfBodies.shift()
     }
-
-    // this.bodiesGraphic.strokeWeight(0)
     if (attachToCanvas) {
       this.p.image(this.bodiesGraphic, 0, 0)
     }
-
     this.bodiesGraphic.clear()
-
-    if (this.mode == 'game' && this.target == 'outside') {
-      for (let i = 0; i < this.bodies.length; i++) {
-        const body = this.bodies[i]
-        this.drawCenter(body)
-      }
-    }
   },
 
   drawBorder() {
@@ -1275,10 +1527,6 @@ export const Visuals = {
   },
 
   drawTails() {
-    // this.p.blendMode(this.p.DIFFERENCE)
-
-    // this.bodiesGraphic.filter(this.p.INVERT)
-    // // this.bodiesGraphic.blendMode(this.p.SCREEN)
     for (let i = 0; i < this.allCopiesOfBodies.length; i++) {
       const copyOfBodies = this.allCopiesOfBodies[i]
 
@@ -1304,7 +1552,7 @@ export const Visuals = {
         const bodyCopy = this.bodyCopies.filter(
           (b) => b.bodyIndex == body.bodyIndex
         )[0]
-        const radius = bodyCopy.radius * 4 + this.radiusMultiplyer
+        const radius = this.getBodyRadius(bodyCopy.radius)
 
         // this.p.ellipse(body.position.x, body.position.y, radius, radius)
         this.p.push()
@@ -1345,82 +1593,30 @@ export const Visuals = {
               offset
             )
         }
-        // } else {
-        //   this.p.push()
-        //   this.p.translate(body.position.x, body.position.y)
-        //   var angle = body.velocity.heading() + this.p.PI / 2
-        //   this.p.rotate(angle)
-        //   let x1 = body.radius * 4 * this.p.cos(this.p.PI / 6)
-        //   let y1 = body.radius * 4 * this.p.sin(this.p.PI / 6)
-
-        //   let x2 =
-        //     body.radius * 4 * this.p.cos(this.p.PI / 6 + this.p.TWO_PI / 3)
-        //   let y2 =
-        //     body.radius * 4 * this.p.sin(this.p.PI / 6 + this.p.TWO_PI / 3)
-
-        //   let x3 =
-        //     body.radius *
-        //     4 *
-        //     this.p.cos(this.p.PI / 6 + (2 * this.p.TWO_PI) / 3)
-        //   let y3 =
-        //     body.radius *
-        //     4 *
-        //     this.p.sin(this.p.PI / 6 + (2 * this.p.TWO_PI) / 3)
-        //   this.p.triangle(x1, y1, x2, y2, x3, y3)
-        //   this.p.pop()
-        // }
       }
     }
-    // this.p.blendMode(this.p.BLEND)
   },
 
   drawCenter(b) {
-    const max = 4
-    if (b.x) {
-      // just a bomb
-      const r = b.radius
-      const c = 'red'
-      for (let i = 0; i < max; i++) {
-        if (i % 2 == 0) {
-          this.p.fill('white')
-        } else {
-          this.p.fill(c)
-        }
-        this.p.ellipse(b.x, b.y, r * (max - i))
-      }
-      return
-    }
+    // this.p.blendMode(this.p.DIFFERENCE)
     this.p.noStroke()
-
     const x = b.position.x
     const y = b.position.y
-    const r = b.radius
+    const r = b.radius * 4
+    if (r == 0) return
     const c = b.c?.replace(this.opac, '1')
-    for (let i = 0; i < max; i++) {
-      if (i % 2 == 0) {
-        if (this.target == 'outside') {
-          this.p.fill('white')
-        } else {
-          this.p.fill(c)
-        }
-      } else {
-        this.p.fill(c)
-      }
-      this.p.ellipse(x, y, r * (max - i))
+    if (this.target == 'outside') {
+      this.p.fill(c)
+      this.p.ellipse(x, y, r)
+      const star = this.starSVG[b.maxStarLvl]
+      this.p.image(star, x - r / 2, y - r / 2, r, r)
+    } else {
+      this.p.fill(c)
+      this.p.strokeWeight(2)
+      this.p.stroke('white')
+      this.p.ellipse(x, y, r)
     }
-    // this.p.push()
-    // const radius = b.radius * 4 + this.radiusMultiplyer
-    // this.p.translate(x, y)
-    // this.p.translate(0, radius / 2)
-    // this.p.rotate(b.velocity.heading() + this.p.PI / 2)
-    // for (let i = 0; i < b.maxStarLvl; i++) {
-    //   const rotated = i * (this.p.TWO_PI / b.maxStarLvl)
-    //   const xRotated = r * 1.5 * this.p.cos(rotated)
-    //   const yRotated = r * 1.5 * this.p.sin(rotated)
-    //   this.p.fill('white')
-    //   this.p.ellipse(xRotated, yRotated, r)
-    // }
-    // this.p.pop()
+    // this.p.blendMode(this.p.BLEND)
   },
 
   colorArrayToTxt(cc) {
@@ -1450,5 +1646,18 @@ export const Visuals = {
     }
 
     return this.lastFrameRate
+  },
+  async loadImages() {
+    this.starSVG ||= {}
+    for (let i = 0; i < STAR_SVGS.length; i++) {
+      const svg = STAR_SVGS[i]
+      await new Promise((resolve) => {
+        this.p.loadImage(svg, (img) => {
+          this.starSVG[i + 1] = img
+          resolve()
+        })
+      })
+    }
+    this.loaded = true
   }
 }
