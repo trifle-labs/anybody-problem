@@ -650,6 +650,7 @@ export const Visuals = {
     const secondsLeft = (this.startingFrame + this.timer - this.frames) / FPS
 
     if (this.gameOver) {
+      this.scoreSize = initialScoreSize
       p.textSize(100)
       // game over in the center of screen
       p.textAlign(p.CENTER)
