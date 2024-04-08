@@ -182,10 +182,6 @@ export class Anybody extends EventEmitter {
   addListener() {
     const { canvas } = this
 
-    this._handleGameClick ||= this.handleGameClick.bind(this)
-    this._handleGameKeyDown ||= this.handleGameKeyDown.bind(this)
-    this._handleNFClick ||= this.handleNFTClick.bind(this)
-
     // binding dummy handlers is necessary for p5 to listen to touchmove
     // and track mouseX and mouseY
     this.p.touchStarted = () => {}
@@ -193,14 +189,14 @@ export class Anybody extends EventEmitter {
     this.p.touchEnded = () => {}
 
     if (typeof window !== 'undefined' && this.mode == 'game') {
-      canvas.canvas.removeEventListener('click', this._handleNFTlick)
-      canvas.canvas.addEventListener('click', this._handleGameClick)
-      canvas.canvas.addEventListener('touchend', this._handleGameClick)
-      window.addEventListener('keydown', this._handleGameKeyDown)
+      canvas.canvas.removeEventListener('click', this.handleNFTlick)
+      canvas.canvas.addEventListener('click', this.handleGameClick)
+      canvas.canvas.addEventListener('touchend', this.handleGameClick)
+      window.addEventListener('keydown', this.handleGameKeyDown)
     } else {
-      canvas.canvas.removeEventListener('click', this._handleGameClick)
-      window?.removeEventListener('keydown', this._handleGameKeyDown)
-      canvas.canvas.addEventListener('click', this._handleGameClick)
+      canvas.canvas.removeEventListener('click', this.handleGameClick)
+      window?.removeEventListener('keydown', this.handleGameKeyDown)
+      canvas.canvas.addEventListener('click', this.handleGameClick)
     }
   }
 
@@ -216,7 +212,7 @@ export class Anybody extends EventEmitter {
     return { x, y }
   }
 
-  handleGameClick(e) {
+  handleGameClick = (e) => {
     if (this.gameOver) {
       this.clearValues()
       this.sound?.stop()
@@ -228,11 +224,11 @@ export class Anybody extends EventEmitter {
     this.missileClick(x, y)
   }
 
-  handleNFTClick() {
+  handleNFTClick = () => {
     this.setPause()
   }
 
-  handleGameKeyDown(e) {
+  handleGameKeyDown = (e) => {
     if (e.code == 'Space') {
       e.preventDefault()
       this.setPause()
