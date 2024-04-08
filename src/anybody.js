@@ -5,6 +5,8 @@ import Sound from './sound.js'
 import { Visuals, FPS } from './visuals.js'
 import { _validateSeed, Calculations } from './calculations.js'
 
+const GAME_LENGTH = 60 // seconds
+
 export class Anybody extends EventEmitter {
   constructor(p, options = {}) {
     super()
@@ -38,7 +40,7 @@ export class Anybody extends EventEmitter {
       util: false,
       optimistic: false,
       paused: true,
-      timer: 60 * FPS, // 60 seconds * 50 frames per second
+      timer: GAME_LENGTH * FPS,
       aimHelper: false,
       target: 'outside', // 'outside' or 'inside'
       showLives: true, // true or false
@@ -85,6 +87,7 @@ export class Anybody extends EventEmitter {
     this.justStopped = false
     this.bgColor = null
     this.loadTime = Date.now()
+    this.gameOver = false
   }
 
   // run once at initilization
@@ -206,6 +209,13 @@ export class Anybody extends EventEmitter {
   }
 
   handleGameClick(e) {
+    if (this.gameOver) {
+      this.clearValues()
+      this.sound?.stop()
+      this.init()
+      !this.util && this.start()
+      return
+    }
     const { x, y } = this.getXY(e)
     this.missileClick(x, y)
   }

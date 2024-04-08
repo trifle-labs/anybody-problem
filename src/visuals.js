@@ -450,6 +450,12 @@ export const Visuals = {
         this.windowWidth / 2,
         this.windowHeight / 2 - 60
       )
+      p.textSize(50)
+      p.text(
+        'Click to play again',
+        this.windowWidth / 2,
+        this.windowHeight / 2 + 60
+      )
       p.pop()
       return
     }
