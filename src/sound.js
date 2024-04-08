@@ -86,10 +86,10 @@ const bubble = new URL(
   '/public/sound/fx/DSC_GST_one_shot_perc_water.mp3',
   import.meta.url
 ).href
-const coin = new URL(
-  '/public/sound/fx/ESM_Game_Notification_83_Coin_Blip_Select_Tap_Button.mp3',
-  import.meta.url
-).href
+// const coin = new URL(
+//   '/public/sound/fx/ESM_Game_Notification_83_Coin_Blip_Select_Tap_Button.mp3',
+//   import.meta.url
+// ).href
 
 const SONGS = {
   whistle: {
@@ -136,6 +136,7 @@ const SONGS = {
   ipod: {
     bpm: 113,
     interval: '4m',
+    gameoverSpeed: 0.5,
     parts: [
       [
         [ipod_2_T1, 0.9, 0],
@@ -216,15 +217,27 @@ export default class Sound {
   }
 
   playExplosion() {
-    this.playOneShot(coin, -16)
+    this.playOneShot(bubble, -36, { playbackRate: 2.3 })
+    this.playOneShot(bubble, -36, { playbackRate: 4.5 })
+    this.playOneShot(bubble, -16, { playbackRate: 0.2 })
+    setTimeout(() => {
+      this.playOneShot(bubble, -26, { playbackRate: 1 })
+      this.playOneShot(bubble, -26, { playbackRate: 5.5 })
+    }, 100)
+    setTimeout(() => {
+      this.playOneShot(bubble, -26, { playbackRate: 2.3 })
+      this.playOneShot(bubble, -26, { playbackRate: 5.5 })
+    }, 300)
   }
 
-  async playOneShot(url, volume) {
+  async playOneShot(url, volume, opts = false) {
     this.oneShots = this.oneShots || {}
-    if (!this.oneShots[url]) {
-      this.oneShots[url] = new Player({
+    const key = `${url}-${volume}-${opts && JSON.stringify(opts)}`
+    if (!this.oneShots[key]) {
+      this.oneShots[key] = new Player({
         url,
-        volume
+        volume,
+        ...opts
       }).toDestination()
     }
 
@@ -232,8 +245,37 @@ export default class Sound {
     const now = Date.now()
     await loaded()
     if (Date.now() - now < 20) {
-      this.oneShots[url].start()
+      this.oneShots[key].start()
     }
+  }
+
+  async playGameOver() {
+    if (this.playedGameOver) return
+    this.playedGameOver = true
+    // const song = this.currentSong
+    Transport.stop()
+    this.voices?.forEach((voice) => voice.player.stop())
+
+    // speed up the voices
+
+    const playbackRate = this.currentSong.gameoverSpeed || 2
+    this.voices.forEach((voice) => {
+      voice.player.playbackRate = playbackRate
+    })
+    Transport.bpm.value *= playbackRate
+
+    Transport.start()
+
+    // play the bubble sample as a descending melody
+    this.playOneShot(ipod_hiss, -20)
+    this.playOneShot(bubble, -26, { playbackRate: 4 })
+    await new Promise((resolve) => setTimeout(resolve, 200))
+    this.playOneShot(bubble, -26, { playbackRate: 1 })
+    await new Promise((resolve) => setTimeout(resolve, 200))
+    this.playOneShot(bubble, -26, { playbackRate: 0.8 })
+    await new Promise((resolve) => setTimeout(resolve, 200))
+    this.playOneShot(bubble, -26, { playbackRate: 0.6 })
+    await new Promise((resolve) => setTimeout(resolve, 1000))
   }
 
   voiceFromFile(file) {
@@ -260,12 +302,14 @@ export default class Sound {
     this.voices = null
     this.currentMeasure = 0
     this.currentSong = null
+    this.playedGameOver = false
   }
 
   async play(song) {
     // only start if it hasn't started yet
     if (Transport.state === 'started') return
     await start()
+    this.playingGameOver = false
 
     // if song is different from last one, dispose of old voices
     if (this.currentSong && this.currentSong !== song) {
@@ -345,7 +389,7 @@ export default class Sound {
 
       // panning
       const panRange = 1.4 // 2 is max, hard L/R panning
-      voice.panVol.pan.linearRampTo(xFactor * panRange - panRange / 2, 0.1)
+      voice.panVol.pan.linearRampTo(xFactor * panRange - panRange / 2, 0.5)
     })
   }
 }

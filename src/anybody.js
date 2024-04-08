@@ -5,6 +5,8 @@ import Sound from './sound.js'
 import { Visuals, FPS } from './visuals.js'
 import { _validateSeed, Calculations } from './calculations.js'
 
+const GAME_LENGTH = 60 // seconds
+
 export class Anybody extends EventEmitter {
   constructor(p, options = {}) {
     super()
@@ -39,7 +41,7 @@ export class Anybody extends EventEmitter {
       optimistic: false,
       paused: true,
       globalStyle: 'default', // 'default', 'psycho'
-      timer: 60 * FPS, // 60 seconds * 50 frames per second
+      timer: GAME_LENGTH * FPS,
       aimHelper: false,
       target: 'outside', // 'outside' or 'inside'
       showLives: false, // true or false
@@ -85,6 +87,7 @@ export class Anybody extends EventEmitter {
     this.showIt = true
     this.justStopped = false
     this.loadTime = Date.now()
+    this.gameOver = false
     this.firstFrame = true
     this.loaded = false
   }
@@ -177,37 +180,62 @@ export class Anybody extends EventEmitter {
   }
 
   addListener() {
-    // const body = document.getElementsByClassName('p5Canvas')[0]
-    const canvas = document.querySelector('canvas')
-    // const canvas = document.getElementById('defaultCanvas0')
+    const { canvas } = this.p
 
-    this.p.touchStarted = () => {
-      // this.setPause()
-      // return false
-    }
+    // binding dummy handlers is necessary for p5 to listen to touchmove
+    // and track mouseX and mouseY
+    this.p.touchStarted = () => {}
     this.p.touchMoved = () => {}
     this.p.touchEnded = () => {}
 
     if (typeof window !== 'undefined' && this.mode == 'game') {
-      canvas.removeEventListener('click', this.setPause)
-      canvas.removeEventListener('click', this.missileClick)
-      canvas.addEventListener('click', this.missileClick.bind(this))
-      window.addEventListener('keydown', (e) => {
-        // spacebar
-        if (e.code == 'Space') {
-          e.preventDefault()
-          this.setPause()
-        }
-      })
+      canvas.removeEventListener('click', this.handleNFTlick)
+      canvas.addEventListener('click', this.handleGameClick)
+      canvas.addEventListener('touchend', this.handleGameClick)
+      window.addEventListener('keydown', this.handleGameKeyDown)
     } else {
-      canvas.removeEventListener('click', this.missileClick)
-      canvas.removeEventListener('click', this.setPause)
-      canvas.addEventListener('click', this.setPause.bind(this))
+      canvas.removeEventListener('click', this.handleGameClick)
+      window?.removeEventListener('keydown', this.handleGameKeyDown)
+      canvas.addEventListener('click', this.handleGameClick)
+    }
+  }
+
+  getXY(e) {
+    // e may be a touch event or a click event
+    let x = e.offsetX || e.pageX
+    let y = e.offsetY || e.pageY
+    const rect = e.target.getBoundingClientRect()
+    const actualWidth = rect.width
+    x = (x * this.windowWidth) / actualWidth
+    y = (y * this.windowWidth) / actualWidth
+
+    return { x, y }
+  }
+
+  handleGameClick = (e) => {
+    if (this.gameOver) {
+      this.clearValues()
+      this.sound?.stop()
+      this.init()
+      !this.util && this.start()
+      return
+    }
+    const { x, y } = this.getXY(e)
+    this.missileClick(x, y)
+  }
+
+  handleNFTClick = () => {
+    this.setPause()
+  }
+
+  handleGameKeyDown = (e) => {
+    if (e.code == 'Space') {
+      e.preventDefault()
+      this.setPause()
     }
   }
 
   setPause(newPauseState = !this.paused) {
-    console.log('setPause', newPauseState)
     if (typeof newPauseState !== 'boolean') {
       newPauseState = !this.paused
     }
@@ -500,7 +528,7 @@ export class Anybody extends EventEmitter {
     this.p.background('white')
   }
 
-  missileClick(e) {
+  missileClick(x, y) {
     if (this.paused) {
       this.setPause(false)
       return
@@ -517,12 +545,9 @@ export class Anybody extends EventEmitter {
       // remove latest missile from missileInits
       this.missileInits.pop()
     }
-    const canvas = document.querySelector('canvas')
+
     this.thisLevelMissileCount++
     this.missileCount++
-    const actualWidth = canvas.offsetWidth
-    const x = (e.offsetX * this.windowWidth) / actualWidth
-    const y = (e.offsetY * this.windowWidth) / actualWidth
     const radius = 10
 
     const b = {

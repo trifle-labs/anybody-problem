@@ -2,6 +2,7 @@ export const FPS = 50
 
 const WITHERING_STEPS = 3000
 const FACE_PNGS = [
+  // [tired, normal, ecstatic]
   [
     new URL('/public/faces/face1_1.png', import.meta.url).href,
     new URL('/public/faces/face1_2.png', import.meta.url).href,
@@ -274,9 +275,10 @@ export const Visuals = {
     } else {
       this.justPaused = false
     }
-    if (this.frames - this.startingFrame >= this.timer) {
+    if (this.frames - this.startingFrame + FPS >= this.timer) {
       this.witherAllBodies()
       this.gameOver = true
+      this.sound?.playGameOver()
     }
     if (
       !this.won &&
@@ -284,6 +286,7 @@ export const Visuals = {
       this.bodies.reduce((a, c) => a + c.radius, 0) == 0
     ) {
       this.witherAllBodies()
+      this.sound?.playGameOver()
       this.gameOver = true
       this.won = true
     }
@@ -425,6 +428,7 @@ export const Visuals = {
       this.windowHeight
     )
 
+    // Grid lines
     const totalLines = 6
     // this.p.stroke('black')
     this.p.stroke('white')
@@ -646,6 +650,7 @@ export const Visuals = {
     const secondsLeft = (this.startingFrame + this.timer - this.frames) / FPS
 
     if (this.gameOver) {
+      this.scoreSize = initialScoreSize
       p.textSize(100)
       // game over in the center of screen
       p.textAlign(p.CENTER)
@@ -653,6 +658,12 @@ export const Visuals = {
         this.won ? 'SUCCESS' : 'GAME OVER',
         this.windowWidth / 2,
         this.windowHeight / 2 - 60
+      )
+      p.textSize(50)
+      p.text(
+        'Click to play again',
+        this.windowWidth / 2,
+        this.windowHeight / 2 + 60
       )
       p.pop()
       return
@@ -679,7 +690,8 @@ export const Visuals = {
   drawGun() {
     this.p.stroke('rgba(200,200,200,1)')
     this.p.strokeCap(this.p.SQUARE)
-    const canvas = document.querySelector('canvas')
+    const { canvas } = this.p
+
     // Bottom left corner coordinates
     let startX = 0
     let startY = this.windowHeight
@@ -733,14 +745,24 @@ export const Visuals = {
   },
 
   drawExplosions() {
-    for (let i = 0; i < this.explosions.length; i++) {
-      const _explosion = this.explosions[i]
+    const { p, explosions } = this
+
+    for (let i = 0; i < explosions.length; i++) {
+      const _explosion = explosions[i]
       const bomb = _explosion[0]
-      this.p.fill(`rgba(255,0,0,0.${110 - bomb.i})`)
-      this.p.ellipse(bomb.x, bomb.y, bomb.i * 2, bomb.i * 2)
+      p.fill('rgba(255,255,255,0.5)')
+      p.stroke('white')
+      p.strokeWeight(2)
+      p.ellipse(bomb.x, bomb.y, bomb.i * 2, bomb.i * 2)
+      p.ellipse(bomb.x, bomb.y, bomb.i * 1.8, bomb.i * 1.8)
+      p.ellipse(bomb.x, bomb.y, bomb.i * 1.6, bomb.i * 1.6)
+      p.ellipse(bomb.x, bomb.y, bomb.i * 1.4, bomb.i * 1.4)
+      p.ellipse(bomb.x, bomb.y, bomb.i * 1.6, bomb.i * 1.6)
+      p.fill('rgba(255,255,255,0.9)')
+      p.ellipse(bomb.x, bomb.y, bomb.i * 1.4, bomb.i * 1.4)
       _explosion.shift()
       if (_explosion.length == 0) {
-        this.explosions.splice(i, 1)
+        explosions.splice(i, 1)
       }
     }
   },
