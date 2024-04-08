@@ -276,19 +276,14 @@ export const Visuals = {
       this.justPaused = false
     }
     if (this.frames - this.startingFrame + FPS >= this.timer) {
-      this.witherAllBodies()
-      this.gameOver = true
-      this.sound?.playGameOver()
+      this.handleGameOver({ won: false })
     }
     if (
       !this.won &&
       this.mode == 'game' &&
       this.bodies.reduce((a, c) => a + c.radius, 0) == 0
     ) {
-      this.witherAllBodies()
-      this.sound?.playGameOver()
-      this.gameOver = true
-      this.won = true
+      this.handleGameOver({ won: true })
     }
     this.firstFrame = false
   },
