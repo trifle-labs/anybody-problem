@@ -193,14 +193,14 @@ export class Anybody extends EventEmitter {
     this.p.touchEnded = () => {}
 
     if (typeof window !== 'undefined' && this.mode == 'game') {
-      canvas.removeEventListener('click', this._handleNFTlick)
-      canvas.addEventListener('click', this._handleGameClick)
-      canvas.addEventListener('touchend', this._handleGameClick)
+      canvas.canvas.removeEventListener('click', this._handleNFTlick)
+      canvas.canvas.addEventListener('click', this._handleGameClick)
+      canvas.canvas.addEventListener('touchend', this._handleGameClick)
       window.addEventListener('keydown', this._handleGameKeyDown)
     } else {
-      canvas.removeEventListener('click', this._handleGameClick)
+      canvas.canvas.removeEventListener('click', this._handleGameClick)
       window?.removeEventListener('keydown', this._handleGameKeyDown)
-      canvas.addEventListener('click', this._handleGameClick)
+      canvas.canvas.addEventListener('click', this._handleGameClick)
     }
   }
 
