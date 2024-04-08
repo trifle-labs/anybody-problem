@@ -412,6 +412,19 @@ describe('Problem Tests', function () {
     }
   })
 
+  it('returns starData correctly', async () => {
+    const signers = await ethers.getSigners()
+    const deployedContracts = await deployContracts()
+    const { Problems: problems } = deployedContracts
+    const { problemId } = await mintProblem(signers, deployedContracts)
+    await problems.updateSolverAddress(signers[0].address)
+    for (let i = 0; i < 4; i++) {
+      await problems.levelUp(problemId)
+    }
+    const starData = await problems.getProblemStarData(problemId)
+    expect(starData.length).to.equal(3)
+  })
+
   it('mints bodies that contain valid values', async () => {
     const { Problems: problems } = await deployContracts()
     await problems.updatePaused(false)
