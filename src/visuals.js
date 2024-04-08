@@ -315,7 +315,7 @@ export const Visuals = {
   },
 
   drawStarBg() {
-    this.p.background('rgb(10,10,10)')
+    this.p.background('rgb(10,10,100)')
     // this.p.background('white')
     if (!this.starBG) {
       this.starBG = this.p.createGraphics(this.windowWidth, this.windowHeight)
@@ -361,6 +361,35 @@ export const Visuals = {
 
     const Ytop = basicY - this.windowHeight
     const Ybottom = basicY + this.windowHeight
+
+    this.confirmedStarPositions ||= []
+    for (let i = 0; i < this.starPositions?.length; i++) {
+      if (i < this.confirmedStarPositions.length) continue
+
+      const starBody = this.starPositions[i]
+      // console.log('draw star position', { starBody })
+      const star = this.starSVG[starBody.maxStarLvl]
+      // console.log({ star, starBG: this.starBG })
+      // newElement.fill('red')
+      if (basicX == 0) {
+        const newElement = this.p.createGraphics(
+          this.windowWidth,
+          this.windowHeight
+        )
+        newElement.image(this.starBG, 0, 0, this.windowWidth, this.windowHeight)
+        newElement.image(
+          star,
+          starBody.position.x,
+          starBody.position.y,
+          100,
+          100
+        )
+        this.starBG = newElement
+        this.confirmedStarPositions.push(this.starPositions[i])
+      } else {
+        this.p.image(star, starBody.position.x, starBody.position.y, 100, 100)
+      }
+    }
 
     this.p.image(
       this.starBG,
@@ -804,6 +833,23 @@ export const Visuals = {
     this.ghostEyes(radius)
   },
 
+  // Function to apply mask color to the image
+  maskImage(img, maskColor) {
+    img.loadPixels() // Load the image's pixel data
+
+    for (let i = 0; i < img.pixels.length; i += 4) {
+      if (img.pixels[i + 3] == 0) continue // Skip transparent pixels (alpha = 0
+      // Replace RGB values with the mask color's RGB, preserve the original alpha
+      img.pixels[i] = maskColor[0] // R
+      img.pixels[i + 1] = maskColor[1] // G
+      img.pixels[i + 2] = maskColor[2] // B
+      img.pixels[i + 3] = 255 // TODO: could be 100% or 1
+      // Alpha remains unchanged to preserve transparency
+    }
+
+    img.updatePixels() // Update the image with the new pixel values
+  },
+
   drawPngFace(radius, body, offset) {
     this.pngFaces ||= new Array(FACE_PNGS.length)
       .fill(null)
@@ -837,18 +883,32 @@ export const Visuals = {
 
     const face = this.pngFaces[faceIdx][expression]
     if (!face) {
+      this.pngFaces[faceIdx][expression] = 'loading'
       const png = FACE_PNGS[faceIdx][expression]
       this.p.loadImage(png, (img) => {
-        this.pngFaces[faceIdx][expression] = img
+        console.log({ img })
+        const bgSize = img.width * 1.2
+        const imgCopy = img.get()
+        this.maskImage(imgCopy, [255, 255, 255])
+        const tinted = this.p.createGraphics(bgSize, bgSize)
+        const cc = this.getTintFromColor(body.c)
+        tinted.tint(cc[0], cc[1], cc[2])
+        tinted.image(imgCopy, 0, 0, bgSize, bgSize)
+        tinted.noTint()
+        const offset = (bgSize - img.width) / 2
+        tinted.image(img, offset, offset)
+        this.pngFaces[faceIdx][expression] = tinted
       })
     }
-    if (face) {
+    if (face && face !== 'loading') {
+      // this.p.createGraphics(face.width, face.height)
+      const faceSize = radius
       this.bodiesGraphic.image(
         face,
-        -radius / 3,
-        -radius / 3 + offset,
-        radius / 1.5,
-        radius / 1.5
+        -faceSize / 2,
+        -faceSize / 2 + offset,
+        faceSize,
+        faceSize
       )
     }
   },
@@ -924,6 +984,13 @@ export const Visuals = {
     this.bodiesGraphic.textSize(radius / 4)
     this.bodiesGraphic.textAlign(this.p.CENTER, this.p.CENTER)
     this.bodiesGraphic.text(body.life, 0, radius)
+  },
+
+  getTintFromColor(c) {
+    const cc = c
+      .split(',')
+      .map((c) => parseFloat(c.replace(')', '').replace('rgba(', '')))
+    return [cc[0], cc[1], cc[2], cc[2]]
   },
 
   drawLevels(radius, body, offset) {
@@ -1017,7 +1084,8 @@ export const Visuals = {
 
   drawBodyStyle1(radius, body, offset) {
     this.bodiesGraphic.noStroke()
-    this.bodiesGraphic.fill(body.c)
+    const c = body.c //body.radius == 0 ? body.c : body.c.replace(this.opac, '1')
+    this.bodiesGraphic.fill(c)
     this.bodiesGraphic.ellipse(0, offset, radius, radius)
   },
 
@@ -1055,12 +1123,16 @@ export const Visuals = {
     this.bodiesGraphic.pop()
   },
 
+  getBodyRadius(actualRadius) {
+    return actualRadius * 4 + this.radiusMultiplyer
+  },
+
   drawBodiesLooped(body, drawFunction) {
     drawFunction = drawFunction.bind(this)
     const bodyRadius = this.bodyCopies.filter(
       (b) => b.bodyIndex == body.bodyIndex
     )[0]?.radius
-    const radius = bodyRadius * 4 + this.radiusMultiplyer
+    const radius = this.getBodyRadius(bodyRadius)
     drawFunction(body.position.x, body.position.y, body.velocity, radius, body)
 
     let loopedX = false,
@@ -1155,6 +1227,25 @@ export const Visuals = {
     }
   },
 
+  async drawBodyAsStar(body) {
+    const star = this.starSVG[body.starLvl]
+    if (!star) {
+      const svg = STAR_SVGS[body.starLvl - 1]
+      this.p.loadImage(svg, (img) => {
+        this.starSVG[body.starLvl] = img
+      })
+    }
+    if (star && star !== 'loading') {
+      this.bodiesGraphic.image(
+        star,
+        body.position.x - body.radius * 2,
+        body.position.y - body.radius * 2,
+        body.radius,
+        body.radius
+      )
+    }
+  },
+
   async drawBodies(attachToCanvas = true) {
     this.bodiesGraphic ||= this.p.createGraphics(
       this.windowWidth,
@@ -1166,13 +1257,9 @@ export const Visuals = {
     for (let i = 0; i < this.bodies.length; i++) {
       // const body = this.bodies.sort((a, b) => b.radius - a.radius)[i]
       const body = this.bodies[i]
-      if (this.gameOver || this.won) {
-        if (
-          this.witheringBodies.filter((b) => b.bodyIndex == body.bodyIndex)
-            .length > 0
-        )
-          continue
-      }
+      // after final proof is sent, don't draw upgradable bodies
+      if (this.finalBatchSent && body.maxStarLvl == body.starLvl) continue
+
       this.drawBodiesLooped(body, this.drawBody)
 
       const bodyCopy = JSON.parse(
@@ -1421,7 +1508,7 @@ export const Visuals = {
         const bodyCopy = this.bodyCopies.filter(
           (b) => b.bodyIndex == body.bodyIndex
         )[0]
-        const radius = bodyCopy.radius * 4 + this.radiusMultiplyer
+        const radius = this.getBodyRadius(bodyCopy.radius)
 
         // this.p.ellipse(body.position.x, body.position.y, radius, radius)
         this.p.push()
@@ -1474,6 +1561,7 @@ export const Visuals = {
     if (r == 0) return
     const c = b.c?.replace(this.opac, '1')
     if (this.target == 'outside') {
+      // this.p.fill('red')
       this.p.fill(c)
       this.p.ellipse(x, y, r)
 
@@ -1497,9 +1585,9 @@ export const Visuals = {
         this.p.image(star, x - r / 2, y - r / 2, r, r)
       }
     } else {
-      this.p.fill(c)
-      this.p.strokeWeight(2)
-      this.p.stroke('white')
+      // this.p.fill(c)
+      this.p.strokeWeight(0)
+      this.p.fill('rgba(255,255,255,1)')
       this.p.ellipse(x, y, r)
     }
   },

@@ -101,6 +101,11 @@ export class Anybody extends EventEmitter {
     this.startingFrame = this.alreadyRun
     // const vectorLimitScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
     this.setPause(this.paused)
+    // setTimeout(() => {
+    //   for (let i = 0; i < this.bodies.length; i++) {
+    //     this.bodies[i].radius = 0
+    //   }
+    // }, 6000)
   }
 
   start() {
@@ -330,8 +335,27 @@ export class Anybody extends EventEmitter {
       this.bodies.reduce((a, c) => a + c.radius, 0) == 0
     ) {
       this.finalBatchSent = true
+      this.storeStarPositions()
     }
     return results
+  }
+
+  storeStarPositions() {
+    this.starPositions ||= []
+    for (let i = 0; i < this.bodies.length; i++) {
+      const body = this.bodies[i]
+      if (body.starLvl == body.maxStarLvl) {
+        this.starPositions.push(
+          JSON.parse(
+            JSON.stringify(
+              body,
+              (key, value) =>
+                typeof value === 'bigint' ? value.toString() : value // return everything else unchanged
+            )
+          )
+        )
+      }
+    }
   }
 
   generateBodies() {
