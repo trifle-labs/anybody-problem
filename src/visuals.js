@@ -349,9 +349,9 @@ export const Visuals = {
     }
 
     const basicX =
-      ((this.frames / FPS) * (this.frames / FPS)) % this.windowWidth
+      Math.floor((this.frames / FPS) * (this.frames / FPS)) % this.windowWidth
     const basicY =
-      ((this.frames / FPS) * (this.frames / FPS)) % this.windowHeight
+      Math.floor((this.frames / FPS) * (this.frames / FPS)) % this.windowHeight
 
     // const basicX = this.accumX % this.windowWidth
     // const basicY = this.accumY % this.windowHeight
@@ -365,12 +365,8 @@ export const Visuals = {
     this.confirmedStarPositions ||= []
     for (let i = 0; i < this.starPositions?.length; i++) {
       if (i < this.confirmedStarPositions.length) continue
-
       const starBody = this.starPositions[i]
-      // console.log('draw star position', { starBody })
       const star = this.starSVG[starBody.maxStarLvl]
-      // console.log({ star, starBG: this.starBG })
-      // newElement.fill('red')
       if (basicX == 0) {
         const newElement = this.p.createGraphics(
           this.windowWidth,
@@ -886,23 +882,24 @@ export const Visuals = {
       this.pngFaces[faceIdx][expression] = 'loading'
       const png = FACE_PNGS[faceIdx][expression]
       this.p.loadImage(png, (img) => {
-        console.log({ img })
-        const bgSize = img.width * 1.2
-        const imgCopy = img.get()
-        this.maskImage(imgCopy, [255, 255, 255])
-        const tinted = this.p.createGraphics(bgSize, bgSize)
-        const cc = this.getTintFromColor(body.c)
-        tinted.tint(cc[0], cc[1], cc[2])
-        tinted.image(imgCopy, 0, 0, bgSize, bgSize)
-        tinted.noTint()
-        const offset = (bgSize - img.width) / 2
-        tinted.image(img, offset, offset)
-        this.pngFaces[faceIdx][expression] = tinted
+        // to make masked background
+
+        // const bgSize = img.width * 1.2
+        // const imgCopy = img.get()
+        // this.maskImage(imgCopy, [255, 255, 255])
+        // const tinted = this.p.createGraphics(bgSize, bgSize)
+        // const cc = this.getTintFromColor(body.c)
+        // tinted.tint(cc[0], cc[1], cc[2])
+        // tinted.image(imgCopy, 0, 0, bgSize, bgSize)
+        // tinted.noTint()
+        // const offset = (bgSize - img.width) / 2
+        // tinted.image(img, offset, offset)
+        // this.pngFaces[faceIdx][expression] = tinted
+        this.pngFaces[faceIdx][expression] = img
       })
     }
     if (face && face !== 'loading') {
-      // this.p.createGraphics(face.width, face.height)
-      const faceSize = radius
+      const faceSize = radius / 1.5
       this.bodiesGraphic.image(
         face,
         -faceSize / 2,
@@ -1084,8 +1081,7 @@ export const Visuals = {
 
   drawBodyStyle1(radius, body, offset) {
     this.bodiesGraphic.noStroke()
-    const c = body.c //body.radius == 0 ? body.c : body.c.replace(this.opac, '1')
-    this.bodiesGraphic.fill(c)
+    this.bodiesGraphic.fill(body.c)
     this.bodiesGraphic.ellipse(0, offset, radius, radius)
   },
 
@@ -1230,6 +1226,7 @@ export const Visuals = {
   async drawBodyAsStar(body) {
     const star = this.starSVG[body.starLvl]
     if (!star) {
+      this.starSVG[body.starLvl] = 'loading'
       const svg = STAR_SVGS[body.starLvl - 1]
       this.p.loadImage(svg, (img) => {
         this.starSVG[body.starLvl] = img
@@ -1259,7 +1256,6 @@ export const Visuals = {
       const body = this.bodies[i]
       // after final proof is sent, don't draw upgradable bodies
       if (this.finalBatchSent && body.maxStarLvl == body.starLvl) continue
-
       this.drawBodiesLooped(body, this.drawBody)
 
       const bodyCopy = JSON.parse(
@@ -1561,7 +1557,6 @@ export const Visuals = {
     if (r == 0) return
     const c = b.c?.replace(this.opac, '1')
     if (this.target == 'outside') {
-      // this.p.fill('red')
       this.p.fill(c)
       this.p.ellipse(x, y, r)
 
@@ -1585,9 +1580,9 @@ export const Visuals = {
         this.p.image(star, x - r / 2, y - r / 2, r, r)
       }
     } else {
-      // this.p.fill(c)
-      this.p.strokeWeight(0)
-      this.p.fill('rgba(255,255,255,1)')
+      this.p.fill(c)
+      this.p.strokeWeight(2)
+      this.p.stroke('white')
       this.p.ellipse(x, y, r)
     }
   },
