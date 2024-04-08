@@ -175,7 +175,8 @@ export class Anybody extends EventEmitter {
     this._handleGameKeyDown ||= this.handleGameKeyDown.bind(this)
     this._handleNFClick ||= this.handleNFTClick.bind(this)
 
-    // these dummy handlers are necessary for p5 to track mouseX and mouseY
+    // binding dummy handlers is necessary for p5 to listen to touchmove
+    // and track mouseX and mouseY
     this.p.touchStarted = () => {}
     this.p.touchMoved = () => {}
     this.p.touchEnded = () => {}
