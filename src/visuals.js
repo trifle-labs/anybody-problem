@@ -236,7 +236,7 @@ export const Visuals = {
 
     if (
       this.mode == 'game' &&
-      this.frames - this.startingFrame < this.timer &&
+      this.frames - this.startingFrame + FPS < this.timer &&
       this.bodies.reduce((a, c) => a + c.radius, 0) != 0
     ) {
       this.drawGun()
@@ -634,7 +634,6 @@ export const Visuals = {
   drawScore() {
     const { p } = this
     p.push()
-    p.translate(20, 10)
     p.fill('white')
     p.noStroke()
 
@@ -646,20 +645,22 @@ export const Visuals = {
 
     if (this.gameOver) {
       this.scoreSize = initialScoreSize
-      p.textSize(100)
+      p.textSize(128)
       // game over in the center of screen
       p.textAlign(p.CENTER)
       p.text(
         this.won ? 'SUCCESS' : 'GAME OVER',
         this.windowWidth / 2,
-        this.windowHeight / 2 - 60
+        this.windowHeight / 2 - 69 // place the crease of the R on the line
       )
-      p.textSize(50)
-      p.text(
-        'Click to play again',
-        this.windowWidth / 2,
-        this.windowHeight / 2 + 60
-      )
+      p.textSize(40)
+      if (this.showPlayAgain) {
+        p.text(
+          'Click to play again',
+          this.windowWidth / 2,
+          this.windowHeight / 2 + 60
+        )
+      }
       p.pop()
       return
     }
@@ -677,7 +678,7 @@ export const Visuals = {
     }
     p.textSize(this.scoreSize)
 
-    p.text(secondsLeft.toFixed(0), 0, 0)
+    p.text(secondsLeft.toFixed(0), 20, 10)
 
     p.pop()
   },
