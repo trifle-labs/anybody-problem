@@ -278,7 +278,7 @@ export const Visuals = {
     if (this.frames - this.startingFrame + FPS >= this.timer) {
       this.witherAllBodies()
       this.gameOver = true
-      this.sound?.playGameOver()
+      this.sound?.playGameOver({ won: false })
     }
     if (
       !this.won &&
@@ -286,7 +286,7 @@ export const Visuals = {
       this.bodies.reduce((a, c) => a + c.radius, 0) == 0
     ) {
       this.witherAllBodies()
-      this.sound?.playGameOver()
+      this.sound?.playGameOver({ won: true })
       this.gameOver = true
       this.won = true
     }

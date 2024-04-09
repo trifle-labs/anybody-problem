@@ -3,6 +3,7 @@ const {
   Transport,
   Player,
   PanVol,
+  Panner,
   Reverb,
   Compressor,
   Volume,
@@ -77,7 +78,7 @@ const orbit_10_DT6 = new URL(
   import.meta.url
 ).href
 
-// const coinBox = new URL('/public/sound/fx/coin-box.mp3', import.meta.url).href
+const coinBox = new URL('/public/sound/fx/coin-box.mp3', import.meta.url).href
 const bongoHard = new URL(
   '/public/sound/fx/SC_CP_perc_bongo_loud_tap.mp3',
   import.meta.url
@@ -86,10 +87,34 @@ const bubble = new URL(
   '/public/sound/fx/DSC_GST_one_shot_perc_water.mp3',
   import.meta.url
 ).href
-// const coin = new URL(
-//   '/public/sound/fx/ESM_Game_Notification_83_Coin_Blip_Select_Tap_Button.mp3',
+const coin = new URL(
+  '/public/sound/fx/ESM_Game_Notification_83_Coin_Blip_Select_Tap_Button.mp3',
+  import.meta.url
+).href
+// const bottlerocket = new URL(
+//   '/public/sound/fx/space/BottleRocket_BW.60057.mp3',
 //   import.meta.url
 // ).href
+// const bottlerocket1 = new URL(
+//   '/public/sound/fx/space/BottleRocket_BW.60058.mp3',
+//   import.meta.url
+// ).href
+const bottlerocket2 = new URL(
+  '/public/sound/fx/space/BottleRocket_S011FI.5.mp3',
+  import.meta.url
+).href
+// const heavy = new URL(
+//   '/public/sound/fx/space/ESM_GW_heavy_weapon_one_shot_rocket_launcher_launching_3_rocket_shot_clicky_long_gas_3.mp3',
+//   import.meta.url
+// ).href
+const bomb = new URL(
+  '/public/sound/fx/space/ESM_Builder_Game_Fireworks_Bomb_Explosion_2_Fire_Bomb_Explosive_War_Battle_Rocket_Mortar_Tank_Cannon.mp3',
+  import.meta.url
+).href
+const affirmative = new URL(
+  '/public/sound/fx/space/ESM_Digital_Game_Affirmation_Sound_Sci_fi_Military_Robotic_Robot_Cyber_Futuristic_Transition.mp3',
+  import.meta.url
+).href
 
 const SONGS = {
   whistle: {
@@ -167,6 +192,11 @@ const SONGS = {
 const TRACK_VOLUME = -0.6 //db
 const MAX_VOLUME = 0 //db
 const INTRO_LENGTH = 1 // measures
+const PAN_RANGE = 1.4 // 2 is hard L/R panning
+
+function random(arr) {
+  return arr[Math.floor(Math.random() * arr.length)]
+}
 
 export default class Sound {
   currentMeasure = 0
@@ -212,22 +242,49 @@ export default class Sound {
     this.playOneShot(bongoHard, -22)
   }
 
-  playMissile() {
-    this.playOneShot(bubble, -26)
+  async playMissile() {
+    this.missilePanner = this.missilePanner || new Panner().connect(this.master)
+    this.missilePanner.pan.value = -PAN_RANGE / 2
+    let player
+    if (this.anybody.sfx === 'space') {
+      player = await this.playOneShot(bottlerocket2, -24, {
+        playbackRate: random([1, 2, 3])
+      })
+    } else {
+      player = await this.playOneShot(bubble, -26, {
+        playbackRate: random([1, 0.9, 1.3])
+      })
+    }
+    // pan sound left to right
+    if (player) {
+      player.disconnect()
+      player.connect(this.missilePanner)
+      this.missilePanner.pan.rampTo(PAN_RANGE / 2, 0.3)
+    }
   }
 
-  playExplosion() {
-    this.playOneShot(bubble, -36, { playbackRate: 2.3 })
-    this.playOneShot(bubble, -36, { playbackRate: 4.5 })
-    this.playOneShot(bubble, -16, { playbackRate: 0.2 })
-    setTimeout(() => {
-      this.playOneShot(bubble, -26, { playbackRate: 1 })
-      this.playOneShot(bubble, -26, { playbackRate: 5.5 })
-    }, 100)
-    setTimeout(() => {
-      this.playOneShot(bubble, -26, { playbackRate: 2.3 })
-      this.playOneShot(bubble, -26, { playbackRate: 5.5 })
-    }, 300)
+  async playExplosion(x) {
+    if (this.anybody.sfx === 'space') {
+      const player = await this.playOneShot(bomb, -20, {
+        playbackRate: random([1, 1.4, 0.8])
+      })
+      const panner = new Panner().connect(this.master)
+      player.disconnect()
+      player.connect(panner)
+      panner.pan.value = (x / this.anybody.windowWidth) * 2 - 1
+    } else {
+      this.playOneShot(bubble, -36, { playbackRate: 2.3 })
+      this.playOneShot(bubble, -36, { playbackRate: 4.5 })
+      this.playOneShot(bubble, -16, { playbackRate: 0.2 })
+      setTimeout(() => {
+        this.playOneShot(bubble, -26, { playbackRate: 1 })
+        this.playOneShot(bubble, -26, { playbackRate: 5.5 })
+      }, 100)
+      setTimeout(() => {
+        this.playOneShot(bubble, -26, { playbackRate: 2.3 })
+        this.playOneShot(bubble, -26, { playbackRate: 5.5 })
+      }, 300)
+    }
   }
 
   async playOneShot(url, volume, opts = false) {
@@ -244,12 +301,13 @@ export default class Sound {
     // play if it's been loaded or loads quickly, otherwise load and skip
     const now = Date.now()
     await loaded()
-    if (Date.now() - now < 20) {
+    if (Date.now() - now < 40) {
       this.oneShots[key].start()
+      return this.oneShots[key]
     }
   }
 
-  async playGameOver() {
+  async playGameOver({ win }) {
     if (this.playedGameOver) return
     this.playedGameOver = true
     // const song = this.currentSong
@@ -266,16 +324,28 @@ export default class Sound {
 
     Transport.start()
 
-    // play the bubble sample as a descending melody
-    this.playOneShot(ipod_hiss, -20)
-    this.playOneShot(bubble, -26, { playbackRate: 4 })
-    await new Promise((resolve) => setTimeout(resolve, 200))
-    this.playOneShot(bubble, -26, { playbackRate: 1 })
-    await new Promise((resolve) => setTimeout(resolve, 200))
-    this.playOneShot(bubble, -26, { playbackRate: 0.8 })
-    await new Promise((resolve) => setTimeout(resolve, 200))
-    this.playOneShot(bubble, -26, { playbackRate: 0.6 })
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    if (this.anybody.sfx === 'space') {
+      console.log('ok')
+      this.playOneShot(affirmative, -22, { playbackRate: 1 })
+      this.playOneShot(affirmative, -22, { playbackRate: 2 })
+      this.playOneShot(affirmative, -22, { playbackRate: 0.5 })
+    } else {
+      if (win) {
+        this.playOneShot(coin, -20)
+        this.playOneShot(coinBox, -20)
+      } else {
+        // play the bubble sample as a descending melody
+        this.playOneShot(ipod_hiss, -20)
+        this.playOneShot(bubble, -26, { playbackRate: 4 })
+        await new Promise((resolve) => setTimeout(resolve, 200))
+        this.playOneShot(bubble, -26, { playbackRate: 1 })
+        await new Promise((resolve) => setTimeout(resolve, 200))
+        this.playOneShot(bubble, -26, { playbackRate: 0.8 })
+        await new Promise((resolve) => setTimeout(resolve, 200))
+        this.playOneShot(bubble, -26, { playbackRate: 0.6 })
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+      }
+    }
   }
 
   voiceFromFile(file) {
@@ -388,8 +458,7 @@ export default class Sound {
       const xFactor = x / anybody.windowWidth
 
       // panning
-      const panRange = 1.4 // 2 is max, hard L/R panning
-      voice.panVol.pan.linearRampTo(xFactor * panRange - panRange / 2, 0.5)
+      voice.panVol.pan.linearRampTo(xFactor * PAN_RANGE - PAN_RANGE / 2, 0.5)
     })
   }
 }

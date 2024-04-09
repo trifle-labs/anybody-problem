@@ -5,7 +5,7 @@ import Sound from './sound.js'
 import { Visuals, FPS } from './visuals.js'
 import { _validateSeed, Calculations } from './calculations.js'
 
-const GAME_LENGTH = 60 // seconds
+const GAME_LENGTH = 3 // seconds
 
 export class Anybody extends EventEmitter {
   constructor(p, options = {}) {
@@ -45,7 +45,8 @@ export class Anybody extends EventEmitter {
       aimHelper: false,
       target: 'outside', // 'outside' or 'inside'
       showLives: false, // true or false
-      faceRotation: 'hitcycle' // 'time' or 'hitcycle' or 'mania'
+      faceRotation: 'hitcycle', // 'time' or 'hitcycle' or 'mania'
+      sfx: 'space' // 'space' or 'bubble'
     }
 
     // Merge the default options with the provided options
