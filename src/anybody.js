@@ -236,6 +236,14 @@ export class Anybody extends EventEmitter {
     }
   }
 
+  handleGameOver = ({ won }) => {
+    this.witherAllBodies()
+    this.sound?.playGameOver({ won })
+    this.gameOver = true
+    this.won = won
+    this.emit('gameOver', { won })
+  }
+
   setPause(newPauseState = !this.paused) {
     if (typeof newPauseState !== 'boolean') {
       newPauseState = !this.paused

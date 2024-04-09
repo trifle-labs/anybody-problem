@@ -4861,7 +4861,7 @@ cipher-base@^1.0.0, cipher-base@^1.0.1, cipher-base@^1.0.3:
 
 circom_runtime@0.1.24:
   version "0.1.24"
-  resolved "git+ssh://git@github.com/okwme/circom_runtime.git#f9bdd820708ea0c9a67c36d754217e7c26fd37ab"
+  resolved "git+ssh://git@github.com/iden3/circom_runtime.git#2695bd73f536814e3d806b01af440a1243d900b9"
   dependencies:
     ffjavascript "0.2.60"
 
