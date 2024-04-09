@@ -289,6 +289,7 @@ export const Visuals = {
       this.sound?.playGameOver()
       this.gameOver = true
       this.won = true
+      this.emit('won')
     }
     this.firstFrame = false
   },
