@@ -240,6 +240,7 @@ export class Anybody extends EventEmitter {
     this.sound?.playGameOver()
     this.gameOver = true
     this.won = won
+    this.emit('gameOver', {won})
   }
 
   setPause(newPauseState = !this.paused) {
