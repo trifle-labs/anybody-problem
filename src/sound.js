@@ -325,7 +325,6 @@ export default class Sound {
     Transport.start()
 
     if (this.anybody.sfx === 'space') {
-      console.log('ok')
       this.playOneShot(affirmative, -22, { playbackRate: 1 })
       this.playOneShot(affirmative, -22, { playbackRate: 2 })
       this.playOneShot(affirmative, -22, { playbackRate: 0.5 })

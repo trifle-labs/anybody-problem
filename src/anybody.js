@@ -5,7 +5,7 @@ import Sound from './sound.js'
 import { Visuals, FPS } from './visuals.js'
 import { _validateSeed, Calculations } from './calculations.js'
 
-const GAME_LENGTH = 3 // seconds
+const GAME_LENGTH = 60 // seconds
 
 export class Anybody extends EventEmitter {
   constructor(p, options = {}) {
@@ -105,7 +105,7 @@ export class Anybody extends EventEmitter {
     this.startingFrame = this.alreadyRun
     // const vectorLimitScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
     this.loadImages()
-    this.setPause(this.paused)
+    this.setPause(this.paused, true)
     // setTimeout(() => {
     //   for (let i = 0; i < this.bodies.length; i++) {
     //     this.bodies[i].radius = 0
@@ -119,7 +119,7 @@ export class Anybody extends EventEmitter {
     this.runSteps(this.preRun)
     // this.paintAtOnce(this.paintSteps)
     if (this.freeze) {
-      this.setPause(true)
+      this.setPause(true, true)
     }
     this.storeInits()
   }
@@ -244,7 +244,7 @@ export class Anybody extends EventEmitter {
     this.emit('gameOver', { won })
   }
 
-  setPause(newPauseState = !this.paused) {
+  setPause(newPauseState = !this.paused, mute = false) {
     if (typeof newPauseState !== 'boolean') {
       newPauseState = !this.paused
     }
@@ -253,10 +253,10 @@ export class Anybody extends EventEmitter {
     this.emit('paused', this.paused)
     if (newPauseState) {
       this.p?.noLoop()
-      this.sound?.pause()
+      if (!mute) this.sound?.pause()
     } else {
       this.p?.loop()
-      this.sound?.resume()
+      if (!mute) this.sound?.resume()
     }
   }
 
