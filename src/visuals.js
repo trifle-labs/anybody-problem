@@ -671,20 +671,29 @@ export const Visuals = {
   drawWinScreen() {
     const { p } = this
     p.push()
+    p.noStroke()
+    p.fill('white')
+
     p.textSize(128)
-    p.textAlign(p.CENTER)
-    p.text('SUCCESS', this.windowWidth / 2, this.windowHeight / 2 + 69)
+    p.textAlign(p.CENTER, p.TOP)
+    p.textStyle(p.BOLDITALIC)
+    p.text('SUCCESS', this.windowWidth / 2, 90)
 
     // draw stats
-    p.textSize(40)
-    p.text(this.statsText, this.windowWidth / 2, this.windowHeight / 2 + 60)
+    p.textSize(60)
+    p.textAlign(p.LEFT, p.TOP)
+    for (const [i, line] of this.statsText.split('\n').entries()) {
+      p.text(line, this.windowWidth / 2 - 300, 320 + 80 * i)
+    }
+
+    p.textAlign(p.CENTER)
 
     // play again button
     if (this.showPlayAgain) {
       p.text(
         'Click to play again',
         this.windowWidth / 2,
-        this.windowHeight / 2 + 120
+        this.windowHeight / 2 + 220
       )
     }
 
@@ -695,7 +704,7 @@ export const Visuals = {
     const { p } = this
     p.push()
     p.noStroke()
-    p.fill(this.randomColor())
+    p.fill(this.randomColor(100))
 
     p.textSize(128)
     // game over in the center of screen

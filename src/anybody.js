@@ -246,9 +246,33 @@ export class Anybody extends EventEmitter {
     this.witherAllBodies()
     this.sound?.playGameOver({ won })
     this.gameOver = true
-    this.won = won
-    this.setShowPlayAgain()
+    this.won = true
+    void this.setStatsText()
+    void this.setShowPlayAgain()
     this.emit('gameOver', { won })
+  }
+
+  setStatsText = async () => {
+    const stats = this.calculateStats()
+    const statLines = [
+      `Bodies included: ${stats.bodiesIncluded}`,
+      `Bodies boost: ${stats.bodiesBoost}`,
+      `Speed boost: ${stats.speedBoost}`,
+      `Dust: ${stats.dust}`
+    ]
+    const toShow = statLines.join('\n')
+
+    console.log({ toShow })
+
+    for (let i = 0; i < toShow.length; i++) {
+      await new Promise((resolve) => setTimeout(resolve, 10))
+      this.statsText = toShow.slice(0, i + 1)
+      // play a sound on new line
+      if (toShow[i] == '\n') {
+        await new Promise((resolve) => setTimeout(resolve, 100))
+        this.sound?.playExplosion()
+      }
+    }
   }
 
   setShowPlayAgain = async () => {
