@@ -45,7 +45,8 @@ export class Anybody extends EventEmitter {
       aimHelper: false,
       target: 'outside', // 'outside' or 'inside'
       showLives: false, // true or false
-      faceRotation: 'hitcycle' // 'time' or 'hitcycle' or 'mania'
+      faceRotation: 'hitcycle', // 'time' or 'hitcycle' or 'mania'
+      sfx: 'bubble' // 'space' or 'bubble'
     }
 
     // Merge the default options with the provided options
@@ -105,7 +106,7 @@ export class Anybody extends EventEmitter {
     this.startingFrame = this.alreadyRun
     // const vectorLimitScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
     this.loadImages()
-    this.setPause(this.paused)
+    this.setPause(this.paused, true)
     // setTimeout(() => {
     //   for (let i = 0; i < this.bodies.length; i++) {
     //     this.bodies[i].radius = 0
@@ -119,7 +120,7 @@ export class Anybody extends EventEmitter {
     this.runSteps(this.preRun)
     // this.paintAtOnce(this.paintSteps)
     if (this.freeze) {
-      this.setPause(true)
+      this.setPause(true, true)
     }
     this.storeInits()
   }
@@ -238,7 +239,7 @@ export class Anybody extends EventEmitter {
 
   handleGameOver = ({ won }) => {
     this.witherAllBodies()
-    this.sound?.playGameOver()
+    this.sound?.playGameOver({ won })
     this.gameOver = true
     this.won = won
     this.setShowPlayAgain()
@@ -250,7 +251,7 @@ export class Anybody extends EventEmitter {
     this.showPlayAgain = true
   }
 
-  setPause(newPauseState = !this.paused) {
+  setPause(newPauseState = !this.paused, mute = false) {
     if (typeof newPauseState !== 'boolean') {
       newPauseState = !this.paused
     }
@@ -259,10 +260,10 @@ export class Anybody extends EventEmitter {
     this.emit('paused', this.paused)
     if (newPauseState) {
       this.p?.noLoop()
-      this.sound?.pause()
+      if (!mute) this.sound?.pause()
     } else {
       this.p?.loop()
-      this.sound?.resume()
+      if (!mute) this.sound?.resume()
     }
   }
 

@@ -347,14 +347,12 @@ export const Calculations = {
       const minDist = missile.radius == 0n ? 0n : body.radius * 2n
       if (distance < minDist) {
         missile.radius = 0n
+        const x = this.convertScaledBigIntToFloat(body.position.x)
+        const y = this.convertScaledBigIntToFloat(body.position.y)
         this.explosions.push(
-          _explosion(
-            this.convertScaledBigIntToFloat(body.position.x),
-            this.convertScaledBigIntToFloat(body.position.y),
-            this.convertScaledBigIntToFloat(body.radius)
-          )
+          _explosion(x, y, this.convertScaledBigIntToFloat(body.radius))
         )
-        this.sound?.playExplosion()
+        this.sound?.playExplosion(x, y)
 
         body.starLvl += 1
 
