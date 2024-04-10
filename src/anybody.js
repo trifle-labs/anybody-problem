@@ -46,7 +46,7 @@ export class Anybody extends EventEmitter {
       target: 'outside', // 'outside' or 'inside'
       showLives: false, // true or false
       faceRotation: 'hitcycle', // 'time' or 'hitcycle' or 'mania'
-      sfx: 'space' // 'space' or 'bubble'
+      sfx: 'bubble' // 'space' or 'bubble'
     }
 
     // Merge the default options with the provided options

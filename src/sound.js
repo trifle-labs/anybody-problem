@@ -268,6 +268,7 @@ export default class Sound {
       const player = await this.playOneShot(bomb, -20, {
         playbackRate: random([1, 1.4, 0.8])
       })
+      if (!player) return
       const panner = new Panner().connect(this.master)
       player.disconnect()
       player.connect(panner)
@@ -276,14 +277,12 @@ export default class Sound {
       this.playOneShot(bubble, -36, { playbackRate: 2.3 })
       this.playOneShot(bubble, -36, { playbackRate: 4.5 })
       this.playOneShot(bubble, -16, { playbackRate: 0.2 })
-      setTimeout(() => {
-        this.playOneShot(bubble, -26, { playbackRate: 1 })
-        this.playOneShot(bubble, -26, { playbackRate: 5.5 })
-      }, 100)
-      setTimeout(() => {
-        this.playOneShot(bubble, -26, { playbackRate: 2.3 })
-        this.playOneShot(bubble, -26, { playbackRate: 5.5 })
-      }, 300)
+      await new Promise((resolve) => setTimeout(resolve, 100))
+      this.playOneShot(bubble, -26, { playbackRate: 1 })
+      this.playOneShot(bubble, -26, { playbackRate: 5.5 })
+      await new Promise((resolve) => setTimeout(resolve, 200))
+      this.playOneShot(bubble, -26, { playbackRate: 2.3 })
+      this.playOneShot(bubble, -26, { playbackRate: 5.5 })
     }
   }
 
@@ -310,13 +309,12 @@ export default class Sound {
   async playGameOver({ win }) {
     if (this.playedGameOver) return
     this.playedGameOver = true
-    // const song = this.currentSong
     Transport.stop()
     this.voices?.forEach((voice) => voice.player.stop())
 
     // speed up the voices
 
-    const playbackRate = this.currentSong.gameoverSpeed || 2
+    const playbackRate = this.currentSong?.gameoverSpeed || 2
     this.voices.forEach((voice) => {
       voice.player.playbackRate = playbackRate
     })
