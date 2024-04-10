@@ -260,9 +260,9 @@ export class Anybody extends EventEmitter {
   setStatsText = async () => {
     const stats = this.calculateStats()
     const statLines = [
-      `Bodies included: ${stats.bodiesIncluded}`,
-      `Bodies boost: ${stats.bodiesBoost}`,
-      `Speed boost: ${stats.speedBoost}`,
+      `Bodies Included: ${stats.bodiesIncluded}`,
+      `Bodies Boost: ${stats.bodiesBoost}`,
+      `Speed Boost: ${stats.speedBoost}`,
       `Dust: ${stats.dust}`
     ]
     const toShow = statLines.join('\n')
@@ -273,7 +273,7 @@ export class Anybody extends EventEmitter {
       this.sound?.playStat()
       // play a sound on new line
       if (toShow[i] == '\n') {
-        await new Promise((resolve) => setTimeout(resolve, 1000))
+        await new Promise((resolve) => setTimeout(resolve, 800))
         this.sound?.playStat()
       }
     }

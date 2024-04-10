@@ -677,13 +677,13 @@ export const Visuals = {
     p.textSize(128)
     p.textAlign(p.CENTER, p.TOP)
     p.textStyle(p.BOLDITALIC)
-    p.text('SUCCESS', this.windowWidth / 2, 90)
+    p.text('SUCCESS', this.windowWidth / 2, 180)
 
     // draw stats
-    p.textSize(60)
+    p.textSize(64)
     p.textAlign(p.LEFT, p.TOP)
     for (const [i, line] of this.statsText.split('\n').entries()) {
-      p.text(line, this.windowWidth / 2 - 300, 320 + 90 * i)
+      p.text(line, this.windowWidth / 2 - 300, 340 + 82 * i)
     }
 
     // play again button
@@ -691,7 +691,7 @@ export const Visuals = {
       p.text(
         'Click to play again',
         this.windowWidth / 2 - 300,
-        this.windowHeight / 2 + 240
+        this.windowHeight / 2 + 220
       )
     }
 
