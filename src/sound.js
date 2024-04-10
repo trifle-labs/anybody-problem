@@ -329,7 +329,7 @@ export default class Sound {
     } else {
       if (win) {
         this.playOneShot(coin, -20)
-        this.playOneShot(coinBox, -20)
+        this.playOneShot(coinBox, -26)
       } else {
         // play the bubble sample as a descending melody
         this.playOneShot(ipod_hiss, -20)
@@ -342,6 +342,34 @@ export default class Sound {
         this.playOneShot(bubble, -26, { playbackRate: 0.6 })
         await new Promise((resolve) => setTimeout(resolve, 1000))
       }
+    }
+  }
+
+  async playStart() {
+    if (this.anybody.sfx === 'space') {
+      this.playOneShot(affirmative, -22, { playbackRate: 1 })
+      this.playOneShot(affirmative, -22, { playbackRate: 2 })
+      this.playOneShot(affirmative, -22, { playbackRate: 0.5 })
+    } else {
+      this.playOneShot(coin, -20)
+    }
+  }
+
+  async playStat() {
+    if (this.anybody.sfx === 'space') {
+      this.playOneShot(bottlerocket2, -24, {
+        playbackRate: random([5, 10, 7])
+      })
+    } else {
+      this.playOneShot(bubble, -26, { playbackRate: random([3, 5, 10.5]) })
+    }
+  }
+
+  async playSuccess() {
+    if (this.anybody.sfx === 'space') {
+      this.playOneShot(affirmative, -22, { playbackRate: 1 })
+    } else {
+      this.playOneShot(coinBox, -28)
     }
   }
 

@@ -683,17 +683,15 @@ export const Visuals = {
     p.textSize(60)
     p.textAlign(p.LEFT, p.TOP)
     for (const [i, line] of this.statsText.split('\n').entries()) {
-      p.text(line, this.windowWidth / 2 - 300, 320 + 80 * i)
+      p.text(line, this.windowWidth / 2 - 300, 320 + 90 * i)
     }
-
-    p.textAlign(p.CENTER)
 
     // play again button
     if (this.showPlayAgain) {
       p.text(
         'Click to play again',
-        this.windowWidth / 2,
-        this.windowHeight / 2 + 220
+        this.windowWidth / 2 - 300,
+        this.windowHeight / 2 + 240
       )
     }
 
@@ -1271,6 +1269,7 @@ export const Visuals = {
       body.witherSteps++
       if (body.witherSteps > WITHERING_STEPS) {
         this.witheringBodies = this.witheringBodies.filter((b) => b !== body)
+        p.pop()
         continue
       }
 

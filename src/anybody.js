@@ -93,6 +93,7 @@ export class Anybody extends EventEmitter {
     this.loaded = false
     this.showPlayAgain = false
     this.handledGameOver = false
+    this.statsText = ''
   }
 
   // run once at initilization
@@ -216,12 +217,13 @@ export class Anybody extends EventEmitter {
   }
 
   handleGameClick = (e) => {
-    if (this.gameOver) {
+    if (this.gameOver && this.showPlayAgain) {
       // play again
       this.clearValues()
       this.sound?.stop()
       this.init()
       !this.util && this.start()
+      this.sound?.playStart()
       return
     }
     const { x, y } = this.getXY(e)
@@ -247,8 +249,11 @@ export class Anybody extends EventEmitter {
     this.sound?.playGameOver({ won })
     this.gameOver = true
     this.won = true
-    void this.setStatsText()
-    void this.setShowPlayAgain()
+    if (this.won) {
+      void this.setStatsText()
+    } else {
+      void this.setShowPlayAgain()
+    }
     this.emit('gameOver', { won })
   }
 
@@ -262,21 +267,23 @@ export class Anybody extends EventEmitter {
     ]
     const toShow = statLines.join('\n')
 
-    console.log({ toShow })
-
     for (let i = 0; i < toShow.length; i++) {
-      await new Promise((resolve) => setTimeout(resolve, 10))
+      await new Promise((resolve) => setTimeout(resolve, 50))
       this.statsText = toShow.slice(0, i + 1)
+      this.sound?.playStat()
       // play a sound on new line
       if (toShow[i] == '\n') {
-        await new Promise((resolve) => setTimeout(resolve, 100))
-        this.sound?.playExplosion()
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+        this.sound?.playStat()
       }
     }
+
+    await this.setShowPlayAgain(1000)
+    this.sound?.playSuccess()
   }
 
-  setShowPlayAgain = async () => {
-    await new Promise((resolve) => setTimeout(resolve, 2000))
+  setShowPlayAgain = async (timeout = 2000) => {
+    await new Promise((resolve) => setTimeout(resolve, timeout))
     this.showPlayAgain = true
   }
 
