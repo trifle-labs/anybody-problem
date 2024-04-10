@@ -315,7 +315,7 @@ export default class Sound {
     // speed up the voices
 
     const playbackRate = this.currentSong?.gameoverSpeed || 2
-    this.voices.forEach((voice) => {
+    this.voices?.forEach((voice) => {
       voice.player.playbackRate = playbackRate
     })
     Transport.bpm.value *= playbackRate

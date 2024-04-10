@@ -5,7 +5,7 @@ import Sound from './sound.js'
 import { Visuals, FPS } from './visuals.js'
 import { _validateSeed, Calculations } from './calculations.js'
 
-const GAME_LENGTH = 60 // seconds
+const GAME_LENGTH = 2 // seconds
 
 export class Anybody extends EventEmitter {
   constructor(p, options = {}) {
@@ -92,6 +92,7 @@ export class Anybody extends EventEmitter {
     this.firstFrame = true
     this.loaded = false
     this.showPlayAgain = false
+    this.handledGameOver = false
   }
 
   // run once at initilization
@@ -238,6 +239,9 @@ export class Anybody extends EventEmitter {
   }
 
   handleGameOver = ({ won }) => {
+    if (this.handledGameOver) return
+    this.handledGameOver = true
+
     this.witherAllBodies()
     this.sound?.playGameOver({ won })
     this.gameOver = true
