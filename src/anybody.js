@@ -217,6 +217,7 @@ export class Anybody extends EventEmitter {
 
   handleGameClick = (e) => {
     if (this.gameOver) {
+      // play again
       this.clearValues()
       this.sound?.stop()
       this.init()
