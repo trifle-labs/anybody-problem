@@ -4861,7 +4861,8 @@ cipher-base@^1.0.0, cipher-base@^1.0.1, cipher-base@^1.0.3:
 
 circom_runtime@0.1.24:
   version "0.1.24"
-  resolved "git+ssh://git@github.com/iden3/circom_runtime.git#2695bd73f536814e3d806b01af440a1243d900b9"
+  resolved "https://registry.yarnpkg.com/circom_runtime/-/circom_runtime-0.1.24.tgz#60ca8a31c3675802fbab5a0bcdeb02556e510733"
+  integrity sha512-H7/7I2J/cBmRnZm9docOCGhfxzS61BEm4TMCWcrZGsWNBQhePNfQq88Oj2XpUfzmBTCd8pRvRb3Mvazt3TMrJw==
   dependencies:
     ffjavascript "0.2.60"
 
