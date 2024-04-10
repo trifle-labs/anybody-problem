@@ -91,6 +91,7 @@ export class Anybody extends EventEmitter {
     this.gameOver = false
     this.firstFrame = true
     this.loaded = false
+    this.showPlayAgain = false
   }
 
   // run once at initilization
@@ -241,7 +242,13 @@ export class Anybody extends EventEmitter {
     this.sound?.playGameOver({ won })
     this.gameOver = true
     this.won = won
+    this.setShowPlayAgain()
     this.emit('gameOver', { won })
+  }
+
+  setShowPlayAgain = async () => {
+    await new Promise((resolve) => setTimeout(resolve, 2000))
+    this.showPlayAgain = true
   }
 
   setPause(newPauseState = !this.paused, mute = false) {
