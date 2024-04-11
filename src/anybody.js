@@ -91,6 +91,8 @@ export class Anybody extends EventEmitter {
     this.firstFrame = true
     this.loaded = false
     this.showPlayAgain = false
+    this.handledGameOver = false
+    this.statsText = ''
     this.hasStarted = false
   }
 
@@ -215,11 +217,8 @@ export class Anybody extends EventEmitter {
   }
 
   handleGameClick = (e) => {
-    if (this.gameOver) {
-      this.clearValues()
-      this.sound?.stop()
-      this.init()
-      !this.util && this.start()
+    if (this.gameOver && this.showPlayAgain) {
+      this.playAgain()
       return
     }
     const { x, y } = this.getXY(e)
@@ -238,16 +237,56 @@ export class Anybody extends EventEmitter {
   }
 
   handleGameOver = ({ won }) => {
+    if (this.handledGameOver) return
+    this.handledGameOver = true
+
     this.witherAllBodies()
     this.sound?.playGameOver({ won })
     this.gameOver = true
     this.won = won
-    this.setShowPlayAgain()
+    if (this.won) {
+      void this.setStatsText()
+    } else {
+      void this.setShowPlayAgain()
+    }
     this.emit('gameOver', { won, ticks: this.frames - this.startingFrame })
   }
 
-  setShowPlayAgain = async () => {
-    await new Promise((resolve) => setTimeout(resolve, 2000))
+  playAgain = () => {
+    this.clearValues()
+    this.sound?.stop()
+    this.init()
+    !this.util && this.start()
+    this.sound?.playStart()
+  }
+
+  setStatsText = async () => {
+    const stats = this.calculateStats()
+    const statLines = [
+      `Bodies Included: ${stats.bodiesIncluded}`,
+      `Bodies Boost: ${stats.bodiesBoost <= 1 ? '-' : `${stats.bodiesBoost}x`}`,
+      `Speed Boost: ${stats.speedBoost <= 1 ? '-' : `${stats.speedBoost}x`}`,
+      `Dust: ${stats.dust}`
+    ]
+    const toShow = statLines.join('\n')
+
+    for (let i = 0; i < toShow.length; i++) {
+      await new Promise((resolve) => setTimeout(resolve, 50))
+      this.statsText = toShow.slice(0, i + 1)
+      this.sound?.playStat()
+      // play a sound on new line
+      if (toShow[i] == '\n') {
+        await new Promise((resolve) => setTimeout(resolve, 800))
+        this.sound?.playStat()
+      }
+    }
+
+    await this.setShowPlayAgain(1000)
+    this.sound?.playSuccess()
+  }
+
+  setShowPlayAgain = async (timeout = 2000) => {
+    await new Promise((resolve) => setTimeout(resolve, timeout))
     this.showPlayAgain = true
   }
 
@@ -588,7 +627,44 @@ export class Anybody extends EventEmitter {
       }
     }
   }
+
+  calculateStats = () => {
+    // n.b. this needs to match the contract in check_boost.cjs
+    const BODY_BOOST = [
+      0, // 0th body, just for easier indexing
+      0, // 1st body
+      0, // 2nd body
+      1, // 3rd body
+      2, // 4th body
+      4, // 5th body
+      8, // 6th body
+      16, // 7th body
+      32, // 8th body
+      64, //9th body
+      128 // 10th body
+    ]
+
+    const SPEED_BOOST = [
+      6, // <10s left
+      5, // <20s left
+      4, // <30s left
+      3, // <40s left
+      2, // <50s left
+      1 // < 60s left
+    ]
+
+    const bodiesIncluded = this.bodies.length
+    const bodiesBoost = BODY_BOOST[bodiesIncluded]
+
+    const secondsLeft = (this.startingFrame + this.timer - this.frames) / FPS
+    const speedBoost = SPEED_BOOST[Math.floor(secondsLeft / 10)]
+
+    let dust = bodiesIncluded * bodiesBoost * speedBoost
+
+    return { bodiesIncluded, bodiesBoost, speedBoost, dust }
+  }
 }
+
 if (typeof window !== 'undefined') {
   window.Anybody = Anybody
 }

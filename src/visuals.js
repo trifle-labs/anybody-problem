@@ -195,10 +195,6 @@ export const Visuals = {
       this.setPause(true)
       return
     }
-    if (!this.firstFrame && !this.hasStarted) {
-      this.hasStarted = true
-      this.started()
-    }
 
     this.frames++
     const results = this.step(this.bodies, this.missiles)
@@ -273,6 +269,9 @@ export const Visuals = {
       if (didNotJustPause) {
         this.finish()
       }
+      // if (this.optimistic) {
+      //   this.started()
+      // }
     } else {
       this.justPaused = false
     }
@@ -646,23 +645,8 @@ export const Visuals = {
 
     if (this.gameOver) {
       this.scoreSize = initialScoreSize
-      p.textSize(128)
-      // game over in the center of screen
-      p.textAlign(p.CENTER)
-      p.text(
-        this.won ? 'SUCCESS' : 'GAME OVER',
-        this.windowWidth / 2,
-        this.windowHeight / 2 - 69 // place the crease of the R on the line
-      )
-      p.textSize(40)
-      if (this.showPlayAgain) {
-        p.text(
-          'Click to play again',
-          this.windowWidth / 2,
-          this.windowHeight / 2 + 60
-        )
-      }
       p.pop()
+      this.won ? this.drawWinScreen() : this.drawLoseScreen()
       return
     }
 
@@ -680,6 +664,64 @@ export const Visuals = {
     p.textSize(this.scoreSize)
 
     p.text(secondsLeft.toFixed(0), 20, 10)
+
+    p.pop()
+  },
+
+  drawWinScreen() {
+    const { p } = this
+    p.push()
+    p.noStroke()
+    p.fill('white')
+
+    p.textSize(128)
+    p.textAlign(p.CENTER, p.TOP)
+    p.textStyle(p.BOLDITALIC)
+    p.text('SUCCESS', this.windowWidth / 2, 180)
+
+    // draw stats
+    p.textSize(64)
+    p.textAlign(p.LEFT, p.TOP)
+    for (const [i, line] of this.statsText.split('\n').entries()) {
+      p.text(line, this.windowWidth / 2 - 300, 340 + 82 * i)
+    }
+
+    // play again button
+    if (this.showPlayAgain) {
+      p.text(
+        'Click to play again',
+        this.windowWidth / 2 - 300,
+        this.windowHeight / 2 + 220
+      )
+    }
+
+    p.pop()
+  },
+
+  drawLoseScreen() {
+    const { p } = this
+    p.push()
+    p.noStroke()
+    p.fill(this.randomColor(100))
+
+    p.textSize(128)
+    // game over in the center of screen
+    p.textStyle(p.BOLDITALIC)
+    p.textAlign(p.CENTER)
+
+    p.text(
+      'GAME OVER',
+      this.windowWidth / 2,
+      this.windowHeight / 2 + 44 // place the crease of the R on the line
+    )
+    p.textSize(40)
+    if (this.showPlayAgain) {
+      p.text(
+        'Click to play again',
+        this.windowWidth / 2,
+        this.windowHeight / 2 + 100
+      )
+    }
 
     p.pop()
   },
@@ -1227,6 +1269,7 @@ export const Visuals = {
       body.witherSteps++
       if (body.witherSteps > WITHERING_STEPS) {
         this.witheringBodies = this.witheringBodies.filter((b) => b !== body)
+        p.pop()
         continue
       }
 
