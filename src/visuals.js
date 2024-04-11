@@ -694,7 +694,7 @@ export const Visuals = {
     p.textSize(64)
     for (const [i, line] of this.statsText.split('\n').entries()) {
       // print each stat line with left aligned label, right aligned stat
-      if (line.match(/1x$/)) {
+      if (line.match(/1x/)) {
         // gray text
         p.fill('rgba(255,255,255,0.5)')
       } else {
@@ -716,8 +716,8 @@ export const Visuals = {
       this.drawButton({
         text: 'retry',
         x: this.windowWidth / 2 - 140,
-        y: this.windowHeight / 2 + 220,
-        height: 100,
+        y: this.windowHeight / 2 + 200,
+        height: 90,
         width: 280,
         onClick: () => this.playAgain()
       })
@@ -742,6 +742,7 @@ export const Visuals = {
     // on click, button background should be slightly opaque black
     p.push()
     p.stroke('white')
+    p.textSize(48)
     p.strokeWeight(4)
     if (button.hover) {
       p.fill('rgba(255,255,255,0.5)')

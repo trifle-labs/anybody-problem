@@ -285,9 +285,9 @@ export class Anybody extends EventEmitter {
   playAgain = () => {
     this.clearValues()
     this.sound?.stop()
+    this.sound?.playStart()
     this.init()
     !this.util && this.start()
-    this.sound?.playStart()
   }
 
   setStatsText = async () => {
