@@ -688,7 +688,7 @@ export const Visuals = {
 
     p.textSize(128)
     p.textAlign(p.CENTER, p.TOP)
-    p.text('SUCCESS', this.windowWidth / 2 - 8, 180) // adjust by 8 to center SF Pro weirdness
+    p.text('SUCCESS', this.windowWidth / 2 - 8, 190) // adjust by 8 to center SF Pro weirdness
 
     // draw a white box behind the stats, with border radius
     p.fill('white')
@@ -701,8 +701,8 @@ export const Visuals = {
     for (const [i, line] of this.statsText.split('\n').entries()) {
       // print each stat line with left aligned label, right aligned stat
       if (line.match(/1x/)) {
-        // gray text
-        p.fill('rgba(0,0,0,0.5)')
+        // gray text if 1x multiplier
+        p.fill('rgba(0,0,0,0.3)')
       } else {
         p.fill('black')
       }

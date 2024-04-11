@@ -314,12 +314,12 @@ export class Anybody extends EventEmitter {
     const toShow = statLines.join('\n')
 
     for (let i = 0; i < toShow.length; i++) {
-      await new Promise((resolve) => setTimeout(resolve, 5))
+      await new Promise((resolve) => setTimeout(resolve, 50))
       this.statsText = toShow.slice(0, i + 1)
       this.sound?.playStat()
       // play a sound on new line
       if (toShow[i] == '\n') {
-        await new Promise((resolve) => setTimeout(resolve, 80))
+        await new Promise((resolve) => setTimeout(resolve, 800))
         this.sound?.playStat()
       }
     }
