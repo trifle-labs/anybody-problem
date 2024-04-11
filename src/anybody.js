@@ -218,12 +218,7 @@ export class Anybody extends EventEmitter {
 
   handleGameClick = (e) => {
     if (this.gameOver && this.showPlayAgain) {
-      // play again
-      this.clearValues()
-      this.sound?.stop()
-      this.init()
-      !this.util && this.start()
-      this.sound?.playStart()
+      this.playAgain()
       return
     }
     const { x, y } = this.getXY(e)
@@ -255,6 +250,14 @@ export class Anybody extends EventEmitter {
       void this.setShowPlayAgain()
     }
     this.emit('gameOver', { won, ticks: this.frames - this.startingFrame })
+  }
+
+  playAgain = () => {
+    this.clearValues()
+    this.sound?.stop()
+    this.init()
+    !this.util && this.start()
+    this.sound?.playStart()
   }
 
   setStatsText = async () => {

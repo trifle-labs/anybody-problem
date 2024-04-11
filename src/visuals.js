@@ -195,10 +195,6 @@ export const Visuals = {
       this.setPause(true)
       return
     }
-    if (!this.firstFrame && !this.hasStarted) {
-      this.hasStarted = true
-      this.started()
-    }
 
     this.frames++
     const results = this.step(this.bodies, this.missiles)
@@ -273,6 +269,9 @@ export const Visuals = {
       if (didNotJustPause) {
         this.finish()
       }
+      // if (this.optimistic) {
+      //   this.started()
+      // }
     } else {
       this.justPaused = false
     }
