@@ -18,13 +18,13 @@ import { Anybody } from '../src/anybody.js'
 describe('Solver Tests', function () {
   this.timeout(50000000)
 
-  it('has the correct problems, tocks addresses', async () => {
+  it('has the correct problems, dust addresses', async () => {
     const deployedContracts = await deployContracts()
 
     const { Solver: solver } = deployedContracts
 
     for (const [name, contract] of Object.entries(deployedContracts)) {
-      if (name === 'Problems' || name === 'Tocks') {
+      if (name === 'Problems' || name === 'Dust') {
         const functionName = name.toLowerCase()
         let storedAddress = await solver[`${functionName}()`]()
         const actualAddress = contract.address
@@ -42,12 +42,12 @@ describe('Solver Tests', function () {
     ).to.be.revertedWith('Ownable: caller is not the owner')
 
     await expect(
-      solver.connect(addr1).updateTocksAddress(addr1.address)
+      solver.connect(addr1).updateDustAddress(addr1.address)
     ).to.be.revertedWith('Ownable: caller is not the owner')
 
     await expect(solver.updateProblemsAddress(addr1.address)).to.not.be.reverted
 
-    await expect(solver.updateTocksAddress(addr1.address)).to.not.be.reverted
+    await expect(solver.updateDustAddress(addr1.address)).to.not.be.reverted
   })
 
   it('fallback and receive functions revert', async () => {
@@ -65,7 +65,7 @@ describe('Solver Tests', function () {
     const {
       Problems: problems
       // Solver: solver,
-      // Tocks: tocks
+      // Dust: dust
     } = deployedContracts
     const { problemId } = await mintProblem(signers, deployedContracts)
 
@@ -95,15 +95,15 @@ describe('Solver Tests', function () {
     // const receipt = await tx.wait()
     await tx.wait()
 
-    // user earned new balance in Tocks token
-    // const tockCount = getParsedEventLogs(receipt, tocks, 'Transfer')[0].args
+    // user earned new balance in Dust token
+    // const dustCount = getParsedEventLogs(receipt, dust, 'Transfer')[0].args
     //   .value
     // const { bodyCount: newBodyCount } = await problems.problems(problemId)
     // const decimals = await solver.decimals()
     // const boostAmount = await solver.bodyBoost(newBodyCount)
-    // const expectedTockCount = boostAmount.mul(decimals.mul(ticksRun))
-    // expect(tockCount).to.equal(expectedTockCount)
-    // expect(tockCount.gt(0)).to.equal(true)
+    // const expectedDustCount = boostAmount.mul(decimals.mul(ticksRun))
+    // expect(dustCount).to.equal(expectedDustCount)
+    // expect(dustCount.gt(0)).to.equal(true)
 
     const { tickCount: tickCountAfter } = await problems.problems(problemId)
 
@@ -130,11 +130,7 @@ describe('Solver Tests', function () {
   it('shoots 3 missiles and hits 3 bodies in 1 proof', async () => {
     const signers = await ethers.getSigners()
     const deployedContracts = await deployContracts()
-    const {
-      Problems: problems,
-      Solver: solver,
-      Tocks: tocks
-    } = deployedContracts
+    const { Problems: problems, Solver: solver, Dust: dust } = deployedContracts
     const { problemId } = await mintProblem(signers, deployedContracts)
 
     // we're spoofing the solver address to overwrite the starting positions of the bodies
@@ -224,10 +220,10 @@ describe('Solver Tests', function () {
 
     const receipt = await tx.wait()
 
-    // user earned new balance in Tocks token
-    const tockCount = getParsedEventLogs(receipt, tocks, 'Transfer')[0].args
+    // user earned new balance in Dust token
+    const dustCount = getParsedEventLogs(receipt, dust, 'Transfer')[0].args
       .value
-    expect(tockCount.gt(0)).to.equal(true)
+    expect(dustCount.gt(0)).to.equal(true)
 
     await expect(tx).to.emit(solver, 'Solved')
     // .withArgs(problemId, runningTickCount, ticksRun)
@@ -239,14 +235,14 @@ describe('Solver Tests', function () {
     const {
       Problems: problems
       // Solver: solver,
-      // Tocks: tocks
+      // Dust: dust
     } = deployedContracts
     const { problemId } = await mintProblem(signers, deployedContracts)
 
     const { bodyCount, tickCount } = await problems.problems(problemId)
     const ticksRun = await getTicksRun(bodyCount.toNumber())
     const totalTicks = 2 * ticksRun
-    // let totalTockCount = ethers.BigNumber.from(0),
+    // let totalDustCount = ethers.BigNumber.from(0),
     let runningTickCount = tickCount
     for (let i = 0; i < totalTicks; i += ticksRun) {
       const bodyData = []
@@ -274,16 +270,16 @@ describe('Solver Tests', function () {
       await tx.wait()
       runningTickCount = runningTickCount.add(ticksRun)
 
-      // user earned new balance in Tocks token
-      // const tockCount = getParsedEventLogs(receipt, tocks, 'Transfer')[0].args
+      // user earned new balance in Dust token
+      // const dustCount = getParsedEventLogs(receipt, dust, 'Transfer')[0].args
       //   .value
-      // totalTockCount = totalTockCount.add(tockCount)
+      // totalDustCount = totalDustCount.add(dustCount)
       // const { bodyCount: newBodyCount } = await problems.problems(problemId)
 
       // const decimals = await solver.decimals()
       // const boostAmount = await solver.bodyBoost(newBodyCount)
-      // const expectedTockCount = boostAmount.mul(decimals.mul(ticksRun))
-      // expect(tockCount).to.equal(expectedTockCount)
+      // const expectedDustCount = boostAmount.mul(decimals.mul(ticksRun))
+      // expect(dustCount).to.equal(expectedDustCount)
 
       // confirm new values are stored correctly
       for (let j = 0; j < bodyCount; j++) {
@@ -298,8 +294,8 @@ describe('Solver Tests', function () {
       }
     }
 
-    // const tockBalance = await tocks.balanceOf(signers[0].address)
-    // expect(tockBalance).to.equal(totalTockCount)
+    // const dustBalance = await dust.balanceOf(signers[0].address)
+    // expect(dustBalance).to.equal(totalDustCount)
 
     // confirm tickCount has been incremented by correct amount
     const { tickCount: newTickCount } = await problems.problems(problemId)
@@ -311,7 +307,7 @@ describe('Solver Tests', function () {
     const {
       Problems: problems,
       Solver: solver,
-      Tocks: tocks,
+      Dust: dust,
       Bodies: bodies
     } = deployedContracts
     const { problemId } = await mintProblem(signers, deployedContracts)
@@ -319,11 +315,11 @@ describe('Solver Tests', function () {
     const { bodyCount, tickCount } = await problems.problems(problemId)
 
     const initialBodyCount = bodyCount
-    let totalTockCount = 0,
+    let totalDustCount = 0,
       runningTickCount = tickCount
     const totalBodies = 10 - bodyCount
     // make a proof for each body quantity
-    // mint enough tocks to mint and add a new body before next loop
+    // mint enough dust to mint and add a new body before next loop
     for (let i = 0; i <= totalBodies; i++) {
       const { bodyCount } = await problems.problems(problemId)
       // console.log({ bodyCount: bodyCount.toString(), initialBodyCount: initialBodyCount.toString(), i, add: initialBodyCount.add(i).toString() })
@@ -352,15 +348,15 @@ describe('Solver Tests', function () {
       let receipt = await tx.wait()
       runningTickCount = parseInt(runningTickCount) + parseInt(ticksRun)
 
-      // user earned new balance in Tocks token
-      // const tockCount = getParsedEventLogs(receipt, tocks, 'Transfer')[0].args
+      // user earned new balance in Dust token
+      // const dustCount = getParsedEventLogs(receipt, dust, 'Transfer')[0].args
       //   .value
 
-      // totalTockCount = tockCount.add(totalTockCount)
+      // totalDustCount = dustCount.add(totalDustCount)
       // const decimals = await solver.decimals()
       // const boostAmount = await solver.bodyBoost(bodyCount)
-      // const expectedTockCount = boostAmount.mul(decimals.mul(ticksRun))
-      // expect(tockCount).to.equal(expectedTockCount)
+      // const expectedDustCount = boostAmount.mul(decimals.mul(ticksRun))
+      // expect(dustCount).to.equal(expectedDustCount)
 
       // confirm new values are stored correctly
       for (let j = 0; j < bodyCount; j++) {
@@ -382,11 +378,11 @@ describe('Solver Tests', function () {
           problemId
         )
         receipt = await tx.wait()
-        const additionalTock = getParsedEventLogs(receipt, tocks, 'Transfer')[0]
+        const additionalDust = getParsedEventLogs(receipt, dust, 'Transfer')[0]
           .args.value
-        totalTockCount = additionalTock.add(totalTockCount)
+        totalDustCount = additionalDust.add(totalDustCount)
         const decimals = await bodies.decimals()
-        const bodyCost = await bodies.tockPrice(bodyCount)
+        const bodyCost = await bodies.dustPrice(bodyCount)
         const bodyCostDecimals = bodyCost.mul(decimals)
         tx = await problems.mintBodyToProblem(problemId)
         receipt = await tx.wait()
@@ -395,16 +391,16 @@ describe('Solver Tests', function () {
         await expect(tx)
           .to.emit(bodies, 'Transfer')
           .withArgs(ethers.constants.AddressZero, signers[0].address, bodyId)
-        const tockPaid = getParsedEventLogs(receipt, tocks, 'Transfer')[0].args
+        const dustPaid = getParsedEventLogs(receipt, dust, 'Transfer')[0].args
           .value
-        expect(tockPaid).to.equal(bodyCostDecimals)
+        expect(dustPaid).to.equal(bodyCostDecimals)
       }
     }
     await expect(prepareMintBody(signers, deployedContracts, problemId)).to.be
       .reverted
-    await tocks.updateSolverAddress(signers[0].address)
-    await tocks.mint(signers[0].address, (15_625_000n * 10n ** 18n).toString())
-    await tocks.updateSolverAddress(solver.address)
+    await dust.updateSolverAddress(signers[0].address)
+    await dust.mint(signers[0].address, (15_625_000n * 10n ** 18n).toString())
+    await dust.updateSolverAddress(solver.address)
 
     await expect(problems.mintBodyToProblem(problemId)).to.be.revertedWith(
       'Cannot have more than 10 bodies'
@@ -464,7 +460,7 @@ describe('Solver Tests', function () {
       const body = await problems.getProblemBodyData(problemId, bodyId)
       bodyData.push(body)
     }
-    const ticksRunA = getTicksRun(bodyData.length)
+    const ticksRunA = await getTicksRun(bodyData.length)
 
     // console.log({ bodyData })
     ;({ tx } = await generateAndSubmitProof(
@@ -491,7 +487,7 @@ describe('Solver Tests', function () {
       const body = await problems.getProblemBodyData(problemId, bodyId)
       bodyData.push(body)
     }
-    const ticksRunB = getTicksRun(bodyData.length)
+    const ticksRunB = await getTicksRun(bodyData.length)
     // console.log({ bodyData })
     ;({ tx } = await generateAndSubmitProof(
       expect,
@@ -519,7 +515,7 @@ describe('Solver Tests', function () {
       const body = await problems.getProblemBodyData(problemId, bodyId)
       bodyData.push(body)
     }
-    const ticksRunC = getTicksRun(bodyData.length)
+    const ticksRunC = await getTicksRun(bodyData.length)
     try {
       await generateAndSubmitProof(
         expect,

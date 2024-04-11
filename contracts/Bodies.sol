@@ -3,14 +3,14 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./Tocks.sol";
+import "./Dust.sol";
 import "./Problems.sol";
 
 // import "hardhat/console.sol";
 
 contract Bodies is ERC721, Ownable {
     address payable public problems;
-    address public tocks;
+    address public dust;
 
     struct Body {
         uint256 problemId;
@@ -23,7 +23,7 @@ contract Bodies is ERC721, Ownable {
 
     uint256 public counter;
     uint256 public constant decimals = 10 ** 18;
-    uint256[10] public tockPrice = [
+    uint256[10] public dustPrice = [
         0, // 1st body
         0, // 2nd body
         0, // 3rd body
@@ -80,9 +80,9 @@ contract Bodies is ERC721, Ownable {
 
     // TODO: add metadata
 
-    function updateTockPrice(uint256 index, uint256 price) public onlyOwner {
+    function updateDustPrice(uint256 index, uint256 price) public onlyOwner {
         require(index < 10, "Invalid index");
-        tockPrice[index] = price;
+        dustPrice[index] = price;
     }
 
     function updateBodyLife(uint256 index, uint256 life) public onlyOwner {
@@ -94,8 +94,8 @@ contract Bodies is ERC721, Ownable {
         problems = problems_;
     }
 
-    function updateTocksAddress(address tocks_) public onlyOwner {
-        tocks = tocks_;
+    function updateDustAddress(address dust_) public onlyOwner {
+        dust = dust_;
     }
 
     function generateSeed(uint256 tokenId) public view returns (bytes32) {
@@ -105,9 +105,9 @@ contract Bodies is ERC721, Ownable {
 
     function processPayment(address from, uint256 mintedBodyIndex) internal {
         require(mintedBodyIndex < 10, "Problem already minted 10 bodies");
-        uint256 problemPrice = tockPrice[mintedBodyIndex] * decimals;
+        uint256 problemPrice = dustPrice[mintedBodyIndex] * decimals;
         if (problemPrice > 0) {
-            Tocks(tocks).burn(from, problemPrice);
+            Dust(dust).burn(from, problemPrice);
         }
     }
 

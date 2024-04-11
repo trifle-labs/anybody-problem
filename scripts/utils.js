@@ -75,7 +75,7 @@ const initContracts = async (getSigners = true) => {
     ;[owner] = await hre.ethers.getSigners()
   }
 
-  const contractNames = ['Problems', 'Bodies', 'Tocks', 'Solver', 'Metadata']
+  const contractNames = ['Problems', 'Bodies', 'Dust', 'Solver', 'Metadata']
   for (let i = 3; i <= 10; i++) {
     contractNames.push(`Game_${i}_20Verifier.sol`)
   }
@@ -120,15 +120,15 @@ const deployContracts = async () => {
   // Metadata (no args)
   // Problems (metadata.address, address[10] verifiers)
   // Bodies(problems.address)
-  // Tocks (problems.address, bodies.address)
-  // Solver (problems.address, tocks.address)
+  // Dust (problems.address, bodies.address)
+  // Solver (problems.address, dust.address)
 
   // Problems.updateBodies(bodies.address)
   // Problems.updateSolver(solver.address)
 
-  // Bodies.updateTocks(tocks.address)
+  // Bodies.updateDust(dust.address)
 
-  // Tocks.updateSolver(solver.address)
+  // Dust.updateSolver(solver.address)
 
   const returnObject = {}
   const verifiers = []
@@ -186,26 +186,26 @@ const deployContracts = async () => {
       `Bodies deployed at ${bodiesAddress} with problemsAddress ${problemsAddress} and metadataAddress ${metadataAddress}`
     )
 
-  // deploy Tocks
-  const Tocks = await hre.ethers.getContractFactory('Tocks')
-  const tocks = await Tocks.deploy(problemsAddress, bodiesAddress)
-  await tocks.deployed()
-  const tocksAddress = tocks.address
-  returnObject['Tocks'] = tocks
+  // deploy Dust
+  const Dust = await hre.ethers.getContractFactory('Dust')
+  const dust = await Dust.deploy(problemsAddress, bodiesAddress)
+  await dust.deployed()
+  const dustAddress = dust.address
+  returnObject['Dust'] = dust
   !testing &&
     log(
-      `Tocks deployed at ${tocksAddress} with problemsAddress ${problemsAddress} and bodiesAddress ${bodiesAddress}`
+      `Dust deployed at ${dustAddress} with problemsAddress ${problemsAddress} and bodiesAddress ${bodiesAddress}`
     )
 
   // deploy Solver
   const Solver = await hre.ethers.getContractFactory('Solver')
-  const solver = await Solver.deploy(problemsAddress, tocksAddress)
+  const solver = await Solver.deploy(problemsAddress, dustAddress)
   await solver.deployed()
   const solverAddress = solver.address
   returnObject['Solver'] = solver
   !testing &&
     log(
-      `Solver deployed at ${solverAddress} with problemsAddress ${problemsAddress} and tocksAddress ${tocksAddress}`
+      `Solver deployed at ${solverAddress} with problemsAddress ${problemsAddress} and dustAddress ${dustAddress}`
     )
 
   // configure Metadata
@@ -219,12 +219,12 @@ const deployContracts = async () => {
   !testing && log(`Problems configured with solverAddress ${solverAddress}`)
 
   // configure Bodies
-  await bodies.updateTocksAddress(tocksAddress)
-  !testing && log(`Bodies configured with tocksAddress ${tocksAddress}`)
+  await bodies.updateDustAddress(dustAddress)
+  !testing && log(`Bodies configured with dustAddress ${dustAddress}`)
 
-  // configure Tocks
-  await tocks.updateSolverAddress(solverAddress)
-  !testing && log(`Tocks configured with solverAddress ${solverAddress}`)
+  // configure Dust
+  await dust.updateSolverAddress(solverAddress)
+  !testing && log(`Dust configured with solverAddress ${solverAddress}`)
 
   // verify contract if network ID is mainnet goerli or sepolia
   if (
@@ -251,12 +251,12 @@ const deployContracts = async () => {
         constructorArguments: [problemsAddress]
       },
       {
-        name: 'Tocks',
+        name: 'Dust',
         constructorArguments: [problemsAddress, bodiesAddress]
       },
       {
         name: 'Solver',
-        constructorArguments: [problemsAddress, tocksAddress]
+        constructorArguments: [problemsAddress, dustAddress]
       }
     ]
 
@@ -314,17 +314,17 @@ const prepareMintBody = async (signers, deployedContracts, problemId, acct) => {
   acct = acct || owner
   const {
     Problems: problems,
-    Tocks: tocks,
+    Dust: dust,
     Bodies: bodies,
     Solver: solver
   } = deployedContracts
   const { mintedBodiesIndex } = await problems.problems(problemId)
   const decimals = await bodies.decimals()
-  const tockPrice = await bodies.tockPrice(mintedBodiesIndex)
-  const tockPriceWithDecimals = tockPrice.mul(decimals)
-  await tocks.updateSolverAddress(owner.address)
-  const tx = await tocks.mint(acct.address, tockPriceWithDecimals)
-  await tocks.updateSolverAddress(solver.address)
+  const dustPrice = await bodies.dustPrice(mintedBodiesIndex)
+  const dustPriceWithDecimals = dustPrice.mul(decimals)
+  await dust.updateSolverAddress(owner.address)
+  const tx = await dust.mint(acct.address, dustPriceWithDecimals)
+  await dust.updateSolverAddress(solver.address)
   return { tx }
 }
 
@@ -393,10 +393,10 @@ const generateProof = async (
   // const tickRatePerBody = tickRate / bodyCount
   // console.log(`Tick rate per body: ${tickRatePerBody.toFixed(2)} ticks/s`)
   // const boostAmount = await solver.bodyBoost(bodyCount)
-  // const tockRate = boostAmount * tickRate
-  // console.log(`Tock rate: ${tockRate.toFixed(2)} tocks/s`)
-  // const tockRatePerBody = tockRate / bodyCount
-  // console.log(`Tock rate per body: ${tockRatePerBody.toFixed(2)} tocks/s`)
+  // const dustRate = boostAmount * tickRate
+  // console.log(`Dust rate: ${dustRate.toFixed(2)} dust/s`)
+  // const dustRatePerBody = dustRate / bodyCount
+  // console.log(`Dust rate per body: ${dustRatePerBody.toFixed(2)} dust/s`)
   return { inputData, bodyFinal, dataResult }
 }
 

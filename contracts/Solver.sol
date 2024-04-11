@@ -14,12 +14,12 @@ import {Groth16Verifier as Groth16Verifier10} from "./Game_10_20Verifier.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "./Problems.sol";
-import "./Tocks.sol";
+import "./Dust.sol";
 import "hardhat/console.sol";
 
 contract Solver is Ownable {
     address payable public problems;
-    address public tocks;
+    address public dust;
     uint256 public constant decimals = 10 ** 18;
 
     uint256[11] public bodyBoost = [
@@ -52,9 +52,9 @@ contract Solver is Ownable {
         uint256 indexed winnings
     );
 
-    constructor(address payable problems_, address tocks_) {
+    constructor(address payable problems_, address dust_) {
         problems = problems_;
-        tocks = tocks_;
+        dust = dust_;
     }
 
     fallback() external {
@@ -65,8 +65,8 @@ contract Solver is Ownable {
         problems = problems_;
     }
 
-    function updateTocksAddress(address tocks_) public onlyOwner {
-        tocks = tocks_;
+    function updateDustAddress(address dust_) public onlyOwner {
+        dust = dust_;
     }
 
     function inProgress(uint256 problemId) public view returns (bool) {
@@ -283,9 +283,9 @@ contract Solver is Ownable {
         // beat the level
         if(bodiesGone == bodyCount) {
           // bonus for beating level in half time
-          uint256 bonus = ticksInThisMatch <= (maxTick / 2) ? 2 : 1;
-          uint256 winnings = bodyCount * bonus * bodyBoost[bodyCount] * decimals;
-          Tocks(tocks).mint(
+          uint256 speedBoost = getSpeedBoost(ticksInThisMatch);
+          uint256 winnings = bodyCount * speedBoost * bodyBoost[bodyCount] * decimals;
+          Dust(dust).mint(
               msg.sender,
               winnings
           );
@@ -293,6 +293,22 @@ contract Solver is Ownable {
           Problems(problems).levelUp(problemId);
           delete matches[problemId];
           emit Solved(problemId, ticksInThisMatch, winnings);
+        }
+    }
+
+    function getSpeedBoost(uint256 ticks) public pure returns (uint256) {
+        if (ticks < maxTick / 6) {
+          return 6;
+        } else if (ticks < maxTick / 5) {
+          return 5;
+        } else if (ticks < maxTick / 4) {
+          return 4;
+        } else if (ticks < maxTick / 3) {
+          return 3;
+        } else if (ticks < maxTick / 2) {
+          return 2;
+        } else {
+          return 1;
         }
     }
 

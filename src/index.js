@@ -44,17 +44,13 @@ export const Solver = {
   }
 }
 
-import TocksABI from '../contractData/ABI-11155111-Tocks.json'
-import TocksForma from '../contractData/80085-Tocks.json'
-import TocksLocal from '../contractData/12345-Tocks.json'
-import TocksSepolia from '../contractData/11155111-Tocks.json'
+import DustABI from '../contractData/ABI-11155111-Dust.json'
+import DustSepolia from '../contractData/11155111-Dust.json'
 
-export const Tocks = {
-  abi: TocksABI,
+export const Dust = {
+  abi: DustABI,
   networks: {
-    80085: TocksForma,
-    12345: TocksLocal,
-    11155111: TocksSepolia
+    11155111: DustSepolia
   }
 }
 
@@ -78,6 +74,6 @@ export const Metadata = {
 //   Problems,
 //   Bodies,
 //   Solver,
-//   Tocks,
+//   Dust,
 //   Metadata
 // }
