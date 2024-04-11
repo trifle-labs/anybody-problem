@@ -1,0 +1,1394 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for contracts/Nft_4_20Verifier.sol</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../prettify.css" />
+    <link rel="stylesheet" href="../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../index.html">all files</a> / <a href="index.html">contracts/</a> Nft_4_20Verifier.sol
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">100% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>0/0</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">100% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>0/0</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>0/1</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>0/1</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line high'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253
+254
+255
+256
+257
+258
+259
+260
+261
+262
+263
+264
+265
+266
+267
+268
+269
+270
+271
+272
+273
+274
+275
+276
+277
+278
+279
+280
+281
+282
+283
+284
+285
+286
+287
+288
+289
+290
+291
+292
+293
+294
+295
+296
+297
+298
+299
+300
+301
+302
+303
+304
+305
+306
+307
+308
+309
+310
+311
+312
+313
+314
+315
+316
+317
+318
+319
+320
+321
+322
+323
+324
+325
+326
+327
+328
+329
+330
+331
+332
+333
+334
+335
+336
+337
+338
+339
+340
+341
+342
+343
+344
+345
+346
+347
+348
+349
+350
+351
+352
+353
+354
+355
+356
+357
+358
+359
+360
+361
+362
+363
+364
+365
+366
+367
+368
+369
+370
+371
+372
+373
+374
+375
+376
+377
+378
+379
+380
+381
+382
+383
+384
+385
+386
+387
+388
+389
+390
+391
+392
+393
+394
+395
+396
+397
+398
+399
+400
+401
+402
+403
+404
+405
+406
+407
+408
+409
+410
+411
+412
+413
+414
+415
+416
+417
+418
+419
+420
+421
+422
+423
+424
+425
+426
+427
+428
+429
+430
+431
+432
+433
+434
+435
+436
+437
+438
+439
+440
+441
+442
+443
+444</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// SPDX-License-Identifier: GPL-3.0
+/*
+    Copyright 2021 0KIMS association.
+&nbsp;
+    This file is generated with [snarkJS](https://github.com/iden3/snarkjs).
+&nbsp;
+    snarkJS is a free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+&nbsp;
+    snarkJS is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+    or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public
+    License for more details.
+&nbsp;
+    You should have received a copy of the GNU General Public License
+    along with snarkJS. If not, see &lt;https://www.gnu.org/licenses/&gt;.
+*/
+&nbsp;
+pragma solidity &gt;=0.7.0 &lt;0.9.0;
+&nbsp;
+contract Groth16Verifier {
+    // Scalar field size
+    uint256 constant r    = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
+    // Base field size
+    uint256 constant q   = 21888242871839275222246405745257275088696311157297823662689037894645226208583;
+&nbsp;
+    // Verification Key data
+    uint256 constant alphax  = 20491192805390485299153009773594534940189261866228447918068658471970481763042;
+    uint256 constant alphay  = 9383485363053290200918347156157836566562967994039712273449902621266178545958;
+    uint256 constant betax1  = 4252822878758300859123897981450591353533073413197771768651442665752259397132;
+    uint256 constant betax2  = 6375614351688725206403948262868962793625744043794305715222011528459656738731;
+    uint256 constant betay1  = 21847035105528745403288232691147584728191162732299865338377159692350059136679;
+    uint256 constant betay2  = 10505242626370262277552901082094356697409835680220590971873171140371331206856;
+    uint256 constant gammax1 = 11559732032986387107991004021392285783925812861821192530917403151452391805634;
+    uint256 constant gammax2 = 10857046999023057135944570762232829481370756359578518086990519993285655852781;
+    uint256 constant gammay1 = 4082367875863433681332203403145435568316851327593401208105741076214120093531;
+    uint256 constant gammay2 = 8495653923123431417604973247489272438418190587263600148770280649306958101930;
+    uint256 constant deltax1 = 6026350380076869284610202997173175347336811813586682179133627875775499294054;
+    uint256 constant deltax2 = 5621722209097048267018598253994550405645205563703109368362815561042725691728;
+    uint256 constant deltay1 = 2067694598757653559190637234915015532116487837330179281185071863153321255443;
+    uint256 constant deltay2 = 14522821313289267714992641813844100863239152874535910133671815682020508437868;
+&nbsp;
+    
+    uint256 constant IC0x = 6803534104668391709447170165007045078999892925608388926799595914660799746769;
+    uint256 constant IC0y = 18412270423633390699496432853664296687884451473695007418790263785070207972045;
+    
+    uint256 constant IC1x = 19034105411645890081875374219746285853432421516971410381660424676639153509350;
+    uint256 constant IC1y = 18672700598039293516979316256079673342888419950179004512758476103206772145123;
+    
+    uint256 constant IC2x = 2598617520348231364348901926871437390444974427158745363750946364734921874086;
+    uint256 constant IC2y = 2089017966694923933645663071459381907630289419858117941268259274994422703229;
+    
+    uint256 constant IC3x = 2379561561102536175641265522634060417746215782579466042735714312870791196692;
+    uint256 constant IC3y = 18246807625011160841800900505174620880968223494969215636448049908410012601524;
+    
+    uint256 constant IC4x = 10335171730045419531102983400355424492538462710073413340845290186961921549453;
+    uint256 constant IC4y = 1069572073474459095993552983804190370281351382646918538773902638322658875119;
+    
+    uint256 constant IC5x = 10718664570833526468371552674380887537576524717524439302681894155873759986462;
+    uint256 constant IC5y = 17263347470110977762624921351234689368863594856058107229083342204130037543833;
+    
+    uint256 constant IC6x = 10669283243987143083971007605880867545285326205761423872275849121205621849392;
+    uint256 constant IC6y = 81231192284715147770749748554523450033418616744177124468780200359537807055;
+    
+    uint256 constant IC7x = 18672207415914514936803402643594206439591161459111350643400891722533215486729;
+    uint256 constant IC7y = 1729400479489627385523470092248448038235818602366585249432050354520253873388;
+    
+    uint256 constant IC8x = 10589929718781859187113851636611504630691549043860683859915234415534942192870;
+    uint256 constant IC8y = 5143161803464793360121123027280408536609758001731130619086058885593270652703;
+    
+    uint256 constant IC9x = 6203261732884069742202047287806833595427841264419211987490887226104516337199;
+    uint256 constant IC9y = 4884322981138167146116901799914959957155248701823814423593093497390274984949;
+    
+    uint256 constant IC10x = 21841311863966479608619978436173695700108735740134082795095638096800352038015;
+    uint256 constant IC10y = 10450971886300004016458453333657281725625085973011811550772337359277983143125;
+    
+    uint256 constant IC11x = 7448086254836196719449773421972435741854527350389414245951723229049582657822;
+    uint256 constant IC11y = 21769396790058407165283577684077594550430174450916279784341977665088651527542;
+    
+    uint256 constant IC12x = 15343082790396226054304596673148566109260162829703650457908412992383580763450;
+    uint256 constant IC12y = 6939754683075990853870949683163681169057287055623257937315604940904500598488;
+    
+    uint256 constant IC13x = 18532365167873478647228281101492373775344021660111475480264514652930871588787;
+    uint256 constant IC13y = 7577170110848204663323596977219545859023485199904679660111144527162144858702;
+    
+    uint256 constant IC14x = 20272496941050427161937776184072826893580839222876156751340289076283457845113;
+    uint256 constant IC14y = 6947536237496082006931372301313167702630019433499825807230521636116436496263;
+    
+    uint256 constant IC15x = 15832651593623074600825853087652353270643264737395605596794435550838485355144;
+    uint256 constant IC15y = 16827035707849960311839174956844435243384594579164355725878243317143143093897;
+    
+    uint256 constant IC16x = 17517423579609638598825126171273827175832949010336827028637259835386579732223;
+    uint256 constant IC16y = 18245343776335095615489740253723244442136567448934194499240144084207911266438;
+    
+    uint256 constant IC17x = 18429348887907673342424972463989570063003143977440807808995238388295352589604;
+    uint256 constant IC17y = 8852819755815965775878640839699039280905552127788956528089945058965919806722;
+    
+    uint256 constant IC18x = 11659863449094650866511285379681963585489519722669082635355609033639220787058;
+    uint256 constant IC18y = 15097098371024872668161287991671010925741747542150163474265029938685102987237;
+    
+    uint256 constant IC19x = 13514679291677087940360954221269010122013132909364216177201965386061570355472;
+    uint256 constant IC19y = 450130294940327961926013929897074472683942832315812485732598578304260237233;
+    
+    uint256 constant IC20x = 19659127175968195486670501131254880204937844122628939472913084191518431167841;
+    uint256 constant IC20y = 19674742802065010070940064840738748904947937939821288933012320696631203686704;
+    
+    uint256 constant IC21x = 4606474550796142466676310120427189449921680195356889581462263258945288069106;
+    uint256 constant IC21y = 15292746454982484332698624922312130817149038527351522271382467785484625155973;
+    
+    uint256 constant IC22x = 20230344458014116525525422407170475498298788036146823961580001675263939286664;
+    uint256 constant IC22y = 13533326137836915567678943317347384570630743175360944849228418262741767949089;
+    
+    uint256 constant IC23x = 8143787447143611238594286361809558113219193139629632107385643513451830964460;
+    uint256 constant IC23y = 11641865818768734612698451709543177068916361867085594085195697834231908677842;
+    
+    uint256 constant IC24x = 9448530824248342397062594343104556393301111358918819667612250401814512856722;
+    uint256 constant IC24y = 20969068631375605665724850066706393671066928891876689969622640600895548858297;
+    
+    uint256 constant IC25x = 18305952422235720278971027337842209196092181284114301906920770436751863818359;
+    uint256 constant IC25y = 20204480773318255272393376528010469964511200658961071316020536363961811364106;
+    
+    uint256 constant IC26x = 19146281366048808770070648396078969604673276840371791033926696417766419469144;
+    uint256 constant IC26y = 16669539566834957832687165106801540983197061433734904879135539184412247607044;
+    
+    uint256 constant IC27x = 19320670414981064060377999292485399353632171866423342652228888789388421373265;
+    uint256 constant IC27y = 21611820786408096828077460837029980799425262023410623678598393435469059715165;
+    
+    uint256 constant IC28x = 14836513190265515971321494616410780046916822839497886990364132616323677701957;
+    uint256 constant IC28y = 12812981293486880144497737756678267146492165094310209171709665322948946095246;
+    
+    uint256 constant IC29x = 20813824641241866951989184520198943959895596257443877838933698314260602118472;
+    uint256 constant IC29y = 16572267762286478614927758286532039409494333314409614436900368081115855733789;
+    
+    uint256 constant IC30x = 17077224324118597059863514907613815646626668185882691614502453179121085406131;
+    uint256 constant IC30y = 18614339567559039785222721147446259601375867401187473431890914152299377649665;
+    
+    uint256 constant IC31x = 15530490571551471182947675078763210950873390045320095479430251623305633168577;
+    uint256 constant IC31y = 8043684678265057452190306753721716429712240776354211614293660203515870519332;
+    
+    uint256 constant IC32x = 12021491326989648147732479510923424309902883620576487826062104350685437938903;
+    uint256 constant IC32y = 17763602669782088568159541559853083978259401723100137679167931722260739732339;
+    
+    uint256 constant IC33x = 13639684408825126496573309002475079394262088521082329324554327183805035251519;
+    uint256 constant IC33y = 6461525206862177491031536304433845452485189515467722694986574241903707869794;
+    
+    uint256 constant IC34x = 19810470948934188063539688526820912506958188774473937743419226060824480539961;
+    uint256 constant IC34y = 9342573142153195172557341761237381429342073967744424330924094932862418291579;
+    
+    uint256 constant IC35x = 7915239645088706694171574837005964727163796131074501245139102405324158482925;
+    uint256 constant IC35y = 2360565054800004615218262957452522085106655205496177643499960485061105997933;
+    
+    uint256 constant IC36x = 13455315001800865522161260183786212425315526813513537942903662854283749095736;
+    uint256 constant IC36y = 10723047632097086867954808859319779599381394668209755448177393659883388848286;
+    
+    uint256 constant IC37x = 6802053108719734017179101278585195543970476276540976308447819915685951575408;
+    uint256 constant IC37y = 18500165076070728685270565385179282121866097192855779986233230381871275270477;
+    
+    uint256 constant IC38x = 18942919158800469759746983611285701647074810591187172848015370920117299055788;
+    uint256 constant IC38y = 5487045110693162290470896102312786388285037276857511040332849557300561874422;
+    
+    uint256 constant IC39x = 3610226443203271384856365580973960512532193089809731338577920264025709978713;
+    uint256 constant IC39y = 318751394466165829383366618973134914185632619642435003502538440753299301051;
+    
+    uint256 constant IC40x = 18076955375239637223208109598018949824163726040013260250896114400911473350977;
+    uint256 constant IC40y = 14244437759991686701244913780817947875321923196928914209453121068528765613058;
+    
+ 
+    // Memory data
+    uint16 constant pVk = 0;
+    uint16 constant pPairing = 128;
+&nbsp;
+    uint16 constant pLastMem = 896;
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function verifyProof(uint[2] calldata _pA, uint[2][2] calldata _pB, uint[2] calldata _pC, uint[40] calldata _pubSignals) public view returns (bool) {</span>
+        assembly {
+            function checkField(v) {
+                if iszero(lt(v, q)) {
+                    mstore(0, 0)
+                    return(0, 0x20)
+                }
+            }
+            
+            // G1 function to multiply a G1 value(x,y) to value in an address
+            function g1_mulAccC(pR, x, y, s) {
+                let success
+                let mIn := mload(0x40)
+                mstore(mIn, x)
+                mstore(add(mIn, 32), y)
+                mstore(add(mIn, 64), s)
+&nbsp;
+                success := staticcall(sub(gas(), 2000), 7, mIn, 96, mIn, 64)
+&nbsp;
+                if iszero(success) {
+                    mstore(0, 0)
+                    return(0, 0x20)
+                }
+&nbsp;
+                mstore(add(mIn, 64), mload(pR))
+                mstore(add(mIn, 96), mload(add(pR, 32)))
+&nbsp;
+                success := staticcall(sub(gas(), 2000), 6, mIn, 128, pR, 64)
+&nbsp;
+                if iszero(success) {
+                    mstore(0, 0)
+                    return(0, 0x20)
+                }
+            }
+&nbsp;
+            function checkPairing(pA, pB, pC, pubSignals, pMem) -&gt; isOk {
+                let _pPairing := add(pMem, pPairing)
+                let _pVk := add(pMem, pVk)
+&nbsp;
+                mstore(_pVk, IC0x)
+                mstore(add(_pVk, 32), IC0y)
+&nbsp;
+                // Compute the linear combination vk_x
+                
+                g1_mulAccC(_pVk, IC1x, IC1y, calldataload(add(pubSignals, 0)))
+                
+                g1_mulAccC(_pVk, IC2x, IC2y, calldataload(add(pubSignals, 32)))
+                
+                g1_mulAccC(_pVk, IC3x, IC3y, calldataload(add(pubSignals, 64)))
+                
+                g1_mulAccC(_pVk, IC4x, IC4y, calldataload(add(pubSignals, 96)))
+                
+                g1_mulAccC(_pVk, IC5x, IC5y, calldataload(add(pubSignals, 128)))
+                
+                g1_mulAccC(_pVk, IC6x, IC6y, calldataload(add(pubSignals, 160)))
+                
+                g1_mulAccC(_pVk, IC7x, IC7y, calldataload(add(pubSignals, 192)))
+                
+                g1_mulAccC(_pVk, IC8x, IC8y, calldataload(add(pubSignals, 224)))
+                
+                g1_mulAccC(_pVk, IC9x, IC9y, calldataload(add(pubSignals, 256)))
+                
+                g1_mulAccC(_pVk, IC10x, IC10y, calldataload(add(pubSignals, 288)))
+                
+                g1_mulAccC(_pVk, IC11x, IC11y, calldataload(add(pubSignals, 320)))
+                
+                g1_mulAccC(_pVk, IC12x, IC12y, calldataload(add(pubSignals, 352)))
+                
+                g1_mulAccC(_pVk, IC13x, IC13y, calldataload(add(pubSignals, 384)))
+                
+                g1_mulAccC(_pVk, IC14x, IC14y, calldataload(add(pubSignals, 416)))
+                
+                g1_mulAccC(_pVk, IC15x, IC15y, calldataload(add(pubSignals, 448)))
+                
+                g1_mulAccC(_pVk, IC16x, IC16y, calldataload(add(pubSignals, 480)))
+                
+                g1_mulAccC(_pVk, IC17x, IC17y, calldataload(add(pubSignals, 512)))
+                
+                g1_mulAccC(_pVk, IC18x, IC18y, calldataload(add(pubSignals, 544)))
+                
+                g1_mulAccC(_pVk, IC19x, IC19y, calldataload(add(pubSignals, 576)))
+                
+                g1_mulAccC(_pVk, IC20x, IC20y, calldataload(add(pubSignals, 608)))
+                
+                g1_mulAccC(_pVk, IC21x, IC21y, calldataload(add(pubSignals, 640)))
+                
+                g1_mulAccC(_pVk, IC22x, IC22y, calldataload(add(pubSignals, 672)))
+                
+                g1_mulAccC(_pVk, IC23x, IC23y, calldataload(add(pubSignals, 704)))
+                
+                g1_mulAccC(_pVk, IC24x, IC24y, calldataload(add(pubSignals, 736)))
+                
+                g1_mulAccC(_pVk, IC25x, IC25y, calldataload(add(pubSignals, 768)))
+                
+                g1_mulAccC(_pVk, IC26x, IC26y, calldataload(add(pubSignals, 800)))
+                
+                g1_mulAccC(_pVk, IC27x, IC27y, calldataload(add(pubSignals, 832)))
+                
+                g1_mulAccC(_pVk, IC28x, IC28y, calldataload(add(pubSignals, 864)))
+                
+                g1_mulAccC(_pVk, IC29x, IC29y, calldataload(add(pubSignals, 896)))
+                
+                g1_mulAccC(_pVk, IC30x, IC30y, calldataload(add(pubSignals, 928)))
+                
+                g1_mulAccC(_pVk, IC31x, IC31y, calldataload(add(pubSignals, 960)))
+                
+                g1_mulAccC(_pVk, IC32x, IC32y, calldataload(add(pubSignals, 992)))
+                
+                g1_mulAccC(_pVk, IC33x, IC33y, calldataload(add(pubSignals, 1024)))
+                
+                g1_mulAccC(_pVk, IC34x, IC34y, calldataload(add(pubSignals, 1056)))
+                
+                g1_mulAccC(_pVk, IC35x, IC35y, calldataload(add(pubSignals, 1088)))
+                
+                g1_mulAccC(_pVk, IC36x, IC36y, calldataload(add(pubSignals, 1120)))
+                
+                g1_mulAccC(_pVk, IC37x, IC37y, calldataload(add(pubSignals, 1152)))
+                
+                g1_mulAccC(_pVk, IC38x, IC38y, calldataload(add(pubSignals, 1184)))
+                
+                g1_mulAccC(_pVk, IC39x, IC39y, calldataload(add(pubSignals, 1216)))
+                
+                g1_mulAccC(_pVk, IC40x, IC40y, calldataload(add(pubSignals, 1248)))
+                
+&nbsp;
+                // -A
+                mstore(_pPairing, calldataload(pA))
+                mstore(add(_pPairing, 32), mod(sub(q, calldataload(add(pA, 32))), q))
+&nbsp;
+                // B
+                mstore(add(_pPairing, 64), calldataload(pB))
+                mstore(add(_pPairing, 96), calldataload(add(pB, 32)))
+                mstore(add(_pPairing, 128), calldataload(add(pB, 64)))
+                mstore(add(_pPairing, 160), calldataload(add(pB, 96)))
+&nbsp;
+                // alpha1
+                mstore(add(_pPairing, 192), alphax)
+                mstore(add(_pPairing, 224), alphay)
+&nbsp;
+                // beta2
+                mstore(add(_pPairing, 256), betax1)
+                mstore(add(_pPairing, 288), betax2)
+                mstore(add(_pPairing, 320), betay1)
+                mstore(add(_pPairing, 352), betay2)
+&nbsp;
+                // vk_x
+                mstore(add(_pPairing, 384), mload(add(pMem, pVk)))
+                mstore(add(_pPairing, 416), mload(add(pMem, add(pVk, 32))))
+&nbsp;
+&nbsp;
+                // gamma2
+                mstore(add(_pPairing, 448), gammax1)
+                mstore(add(_pPairing, 480), gammax2)
+                mstore(add(_pPairing, 512), gammay1)
+                mstore(add(_pPairing, 544), gammay2)
+&nbsp;
+                // C
+                mstore(add(_pPairing, 576), calldataload(pC))
+                mstore(add(_pPairing, 608), calldataload(add(pC, 32)))
+&nbsp;
+                // delta2
+                mstore(add(_pPairing, 640), deltax1)
+                mstore(add(_pPairing, 672), deltax2)
+                mstore(add(_pPairing, 704), deltay1)
+                mstore(add(_pPairing, 736), deltay2)
+&nbsp;
+&nbsp;
+                let success := staticcall(sub(gas(), 2000), 8, _pPairing, 768, _pPairing, 0x20)
+&nbsp;
+                isOk := and(success, mload(_pPairing))
+            }
+&nbsp;
+            let pMem := mload(0x40)
+            mstore(0x40, add(pMem, pLastMem))
+&nbsp;
+            // Validate that all evaluations ∈ F
+            
+            checkField(calldataload(add(_pubSignals, 0)))
+            
+            checkField(calldataload(add(_pubSignals, 32)))
+            
+            checkField(calldataload(add(_pubSignals, 64)))
+            
+            checkField(calldataload(add(_pubSignals, 96)))
+            
+            checkField(calldataload(add(_pubSignals, 128)))
+            
+            checkField(calldataload(add(_pubSignals, 160)))
+            
+            checkField(calldataload(add(_pubSignals, 192)))
+            
+            checkField(calldataload(add(_pubSignals, 224)))
+            
+            checkField(calldataload(add(_pubSignals, 256)))
+            
+            checkField(calldataload(add(_pubSignals, 288)))
+            
+            checkField(calldataload(add(_pubSignals, 320)))
+            
+            checkField(calldataload(add(_pubSignals, 352)))
+            
+            checkField(calldataload(add(_pubSignals, 384)))
+            
+            checkField(calldataload(add(_pubSignals, 416)))
+            
+            checkField(calldataload(add(_pubSignals, 448)))
+            
+            checkField(calldataload(add(_pubSignals, 480)))
+            
+            checkField(calldataload(add(_pubSignals, 512)))
+            
+            checkField(calldataload(add(_pubSignals, 544)))
+            
+            checkField(calldataload(add(_pubSignals, 576)))
+            
+            checkField(calldataload(add(_pubSignals, 608)))
+            
+            checkField(calldataload(add(_pubSignals, 640)))
+            
+            checkField(calldataload(add(_pubSignals, 672)))
+            
+            checkField(calldataload(add(_pubSignals, 704)))
+            
+            checkField(calldataload(add(_pubSignals, 736)))
+            
+            checkField(calldataload(add(_pubSignals, 768)))
+            
+            checkField(calldataload(add(_pubSignals, 800)))
+            
+            checkField(calldataload(add(_pubSignals, 832)))
+            
+            checkField(calldataload(add(_pubSignals, 864)))
+            
+            checkField(calldataload(add(_pubSignals, 896)))
+            
+            checkField(calldataload(add(_pubSignals, 928)))
+            
+            checkField(calldataload(add(_pubSignals, 960)))
+            
+            checkField(calldataload(add(_pubSignals, 992)))
+            
+            checkField(calldataload(add(_pubSignals, 1024)))
+            
+            checkField(calldataload(add(_pubSignals, 1056)))
+            
+            checkField(calldataload(add(_pubSignals, 1088)))
+            
+            checkField(calldataload(add(_pubSignals, 1120)))
+            
+            checkField(calldataload(add(_pubSignals, 1152)))
+            
+            checkField(calldataload(add(_pubSignals, 1184)))
+            
+            checkField(calldataload(add(_pubSignals, 1216)))
+            
+            checkField(calldataload(add(_pubSignals, 1248)))
+            
+            checkField(calldataload(add(_pubSignals, 1280)))
+            
+&nbsp;
+            // Validate all evaluations
+            let isValid := checkPairing(_pA, _pB, _pC, _pubSignals, pMem)
+&nbsp;
+            mstore(0, isValid)
+             return(0, 0x20)
+         }
+     }
+ }
+&nbsp;</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Thu Apr 11 2024 10:51:19 GMT+0200 (Central European Summer Time)
+</div>
+</div>
+<script src="../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../sorter.js"></script>
+</body>
+</html>

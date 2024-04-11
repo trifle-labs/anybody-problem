@@ -45,15 +45,11 @@ export const Solver = {
 }
 
 import DustABI from '../contractData/ABI-11155111-Dust.json'
-import DustForma from '../contractData/80085-Dust.json'
-import DustLocal from '../contractData/12345-Dust.json'
 import DustSepolia from '../contractData/11155111-Dust.json'
 
 export const Dust = {
   abi: DustABI,
   networks: {
-    80085: DustForma,
-    12345: DustLocal,
     11155111: DustSepolia
   }
 }
