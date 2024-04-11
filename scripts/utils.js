@@ -75,7 +75,7 @@ const initContracts = async (getSigners = true) => {
     ;[owner] = await hre.ethers.getSigners()
   }
 
-  const contractNames = ['Problems', 'Bodies', 'Tocks', 'Solver', 'Metadata']
+  const contractNames = ['Problems', 'Bodies', 'Dust', 'Solver', 'Metadata']
   for (let i = 3; i <= 10; i++) {
     contractNames.push(`Game_${i}_20Verifier.sol`)
   }
@@ -120,15 +120,15 @@ const deployContracts = async () => {
   // Metadata (no args)
   // Problems (metadata.address, address[10] verifiers)
   // Bodies(problems.address)
-  // Tocks (problems.address, bodies.address)
-  // Solver (problems.address, tocks.address)
+  // Dust (problems.address, bodies.address)
+  // Solver (problems.address, dust.address)
 
   // Problems.updateBodies(bodies.address)
   // Problems.updateSolver(solver.address)
 
-  // Bodies.updateTocks(tocks.address)
+  // Bodies.updateTocks(dust.address)
 
-  // Tocks.updateSolver(solver.address)
+  // Dust.updateSolver(solver.address)
 
   const returnObject = {}
   const verifiers = []
@@ -186,15 +186,15 @@ const deployContracts = async () => {
       `Bodies deployed at ${bodiesAddress} with problemsAddress ${problemsAddress} and metadataAddress ${metadataAddress}`
     )
 
-  // deploy Tocks
-  const Tocks = await hre.ethers.getContractFactory('Tocks')
-  const tocks = await Tocks.deploy(problemsAddress, bodiesAddress)
-  await tocks.deployed()
-  const tocksAddress = tocks.address
-  returnObject['Tocks'] = tocks
+  // deploy Dust
+  const Dust = await hre.ethers.getContractFactory('Dust')
+  const dust = await Dust.deploy(problemsAddress, bodiesAddress)
+  await dust.deployed()
+  const tocksAddress = dust.address
+  returnObject['Dust'] = dust
   !testing &&
     log(
-      `Tocks deployed at ${tocksAddress} with problemsAddress ${problemsAddress} and bodiesAddress ${bodiesAddress}`
+      `Dust deployed at ${tocksAddress} with problemsAddress ${problemsAddress} and bodiesAddress ${bodiesAddress}`
     )
 
   // deploy Solver
@@ -222,9 +222,9 @@ const deployContracts = async () => {
   await bodies.updateTocksAddress(tocksAddress)
   !testing && log(`Bodies configured with tocksAddress ${tocksAddress}`)
 
-  // configure Tocks
-  await tocks.updateSolverAddress(solverAddress)
-  !testing && log(`Tocks configured with solverAddress ${solverAddress}`)
+  // configure Dust
+  await dust.updateSolverAddress(solverAddress)
+  !testing && log(`Dust configured with solverAddress ${solverAddress}`)
 
   // verify contract if network ID is mainnet goerli or sepolia
   if (
@@ -251,7 +251,7 @@ const deployContracts = async () => {
         constructorArguments: [problemsAddress]
       },
       {
-        name: 'Tocks',
+        name: 'Dust',
         constructorArguments: [problemsAddress, bodiesAddress]
       },
       {
@@ -314,7 +314,7 @@ const prepareMintBody = async (signers, deployedContracts, problemId, acct) => {
   acct = acct || owner
   const {
     Problems: problems,
-    Tocks: tocks,
+    Dust: dust,
     Bodies: bodies,
     Solver: solver
   } = deployedContracts
@@ -322,9 +322,9 @@ const prepareMintBody = async (signers, deployedContracts, problemId, acct) => {
   const decimals = await bodies.decimals()
   const tockPrice = await bodies.tockPrice(mintedBodiesIndex)
   const tockPriceWithDecimals = tockPrice.mul(decimals)
-  await tocks.updateSolverAddress(owner.address)
-  const tx = await tocks.mint(acct.address, tockPriceWithDecimals)
-  await tocks.updateSolverAddress(solver.address)
+  await dust.updateSolverAddress(owner.address)
+  const tx = await dust.mint(acct.address, tockPriceWithDecimals)
+  await dust.updateSolverAddress(solver.address)
   return { tx }
 }
 
@@ -394,9 +394,9 @@ const generateProof = async (
   // console.log(`Tick rate per body: ${tickRatePerBody.toFixed(2)} ticks/s`)
   // const boostAmount = await solver.bodyBoost(bodyCount)
   // const tockRate = boostAmount * tickRate
-  // console.log(`Tock rate: ${tockRate.toFixed(2)} tocks/s`)
+  // console.log(`Dust rate: ${tockRate.toFixed(2)} dust/s`)
   // const tockRatePerBody = tockRate / bodyCount
-  // console.log(`Tock rate per body: ${tockRatePerBody.toFixed(2)} tocks/s`)
+  // console.log(`Dust rate per body: ${tockRatePerBody.toFixed(2)} dust/s`)
   return { inputData, bodyFinal, dataResult }
 }
 

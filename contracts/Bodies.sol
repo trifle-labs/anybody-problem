@@ -3,14 +3,14 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./Tocks.sol";
+import "./Dust.sol";
 import "./Problems.sol";
 
 // import "hardhat/console.sol";
 
 contract Bodies is ERC721, Ownable {
     address payable public problems;
-    address public tocks;
+    address public dust;
 
     struct Body {
         uint256 problemId;
@@ -95,7 +95,7 @@ contract Bodies is ERC721, Ownable {
     }
 
     function updateTocksAddress(address tocks_) public onlyOwner {
-        tocks = tocks_;
+        dust = tocks_;
     }
 
     function generateSeed(uint256 tokenId) public view returns (bytes32) {
@@ -107,7 +107,7 @@ contract Bodies is ERC721, Ownable {
         require(mintedBodyIndex < 10, "Problem already minted 10 bodies");
         uint256 problemPrice = tockPrice[mintedBodyIndex] * decimals;
         if (problemPrice > 0) {
-            Tocks(tocks).burn(from, problemPrice);
+            Dust(dust).burn(from, problemPrice);
         }
     }
 

@@ -15,19 +15,19 @@ let tx
 describe('Problem Tests', function () {
   this.timeout(50000000)
 
-  it('has the correct verifiers metadata, bodies, tocks, solver addresses', async () => {
+  it('has the correct verifiers metadata, bodies, dust, solver addresses', async () => {
     const deployedContracts = await deployContracts()
 
     const { Problems: problems } = deployedContracts
     for (const [name, contract] of Object.entries(deployedContracts)) {
       if (name === 'Problems') continue
-      if (name === 'Tocks') continue
+      if (name === 'Dust') continue
       let storedAddress
       if (name.indexOf('Verifier') > -1) {
         const bodyCount = name.split('_')[1]
         storedAddress = await problems.verifiers(
           bodyCount,
-          getTicksRun(bodyCount)
+          await getTicksRun(bodyCount)
         )
       } else {
         const functionName = name.toLowerCase()

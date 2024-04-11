@@ -1,13 +1,10 @@
-import snarkjs from '../public/snarkjs.min.js'
+import { groth16 } from 'snarkjs'
 // const groth16 = {}
 
 export async function exportCallDataGroth16(input, wasmPath, zkeyPath) {
   const { proof: _proof, publicSignals: _publicSignals } =
-    await snarkjs.groth16.fullProve(input, wasmPath, zkeyPath)
-  const calldata = await snarkjs.groth16.exportSolidityCallData(
-    _proof,
-    _publicSignals
-  )
+    await groth16.fullProve(input, wasmPath, zkeyPath)
+  const calldata = await groth16.exportSolidityCallData(_proof, _publicSignals)
 
   const argv = calldata
     .replace(/["[\]\s]/g, '')
@@ -34,7 +31,7 @@ export async function verify(verificationPath, publicSignals, proof) {
     return res.json()
   })
 
-  const res = await snarkjs.groth16.verify(vkey, publicSignals, proof)
+  const res = await groth16.verify(vkey, publicSignals, proof)
   return res
 }
 
