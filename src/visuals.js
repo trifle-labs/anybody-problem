@@ -212,7 +212,12 @@ export const Visuals = {
       this.p.blendMode(this.p.BLEND)
     }
 
-    if (this.mode == 'game' && this.target == 'inside' && !this.firstFrame) {
+    if (
+      this.mode == 'game' &&
+      this.target == 'inside' &&
+      !this.firstFrame &&
+      this.globalStyle !== 'psycho'
+    ) {
       for (let i = 0; i < this.bodies.length; i++) {
         const body = this.bodies[i]
         this.drawCenter(body)
@@ -222,7 +227,12 @@ export const Visuals = {
       this.drawBodies()
     }
 
-    if (this.mode == 'game' && this.target == 'outside' && !this.firstFrame) {
+    if (
+      this.mode == 'game' &&
+      this.target == 'outside' &&
+      !this.firstFrame &&
+      this.globalStyle !== 'psycho'
+    ) {
       for (let i = 0; i < this.bodies.length; i++) {
         const body = this.bodies[i]
         this.drawCenter(body)
@@ -852,21 +862,6 @@ export const Visuals = {
     this.p.image(this.bodiesGraphic, 0, 0)
     this.bodiesGraphic.clear()
   },
-
-  convertColor(c, isGrey = true) {
-    const cc = c.replace('rgba(', '').replace(')', '')
-    const r =
-      parseInt(cc.split(',')[0]) +
-      Math.floor((isGrey ? this.getGrey() : this.getNotGrey()) / 2)
-    const g =
-      parseInt(cc.split(',')[1]) +
-      Math.floor((isGrey ? this.getGrey() : this.getNotGrey()) / 2)
-    const b =
-      parseInt(cc.split(',')[2]) +
-      Math.floor((isGrey ? this.getGrey() : this.getNotGrey()) / 2)
-    return [r, g, b]
-    // this.bodiesGraphic.color(r, g, b)
-  },
   componentToHex(c) {
     var hex = parseInt(c).toString(16)
     return hex.length == 1 ? '0' + hex : hex
@@ -891,16 +886,17 @@ export const Visuals = {
       : null
   },
 
-  invertColor(c) {
-    let [r, g, b] = c.replace('rgba(', '').split(',').slice(0, 3)
-    const hexColor = this.rgbToHex(r, g, b)
-    const invert = (parseInt(hexColor) ^ 0xffffff).toString(16).padStart(6, '0')
-    const invertRGB = this.hexToRgb(invert)
-    // r = r - 255
-    // g = g - 255
-    // b = b - 255
-    const newColor = this.p.color(invertRGB.r, invertRGB.g, invertRGB.b)
-    return newColor
+  invertColorRGB(c) {
+    throw new Error(`invert color is not meant for HSL colors (${c})`)
+    // let [r, g, b] = c.replace('rgba(', '').split(',').slice(0, 3)
+    // const hexColor = this.rgbToHex(r, g, b)
+    // const invert = (parseInt(hexColor) ^ 0xffffff).toString(16).padStart(6, '0')
+    // const invertRGB = this.hexToRgb(invert)
+    // // r = r - 255
+    // // g = g - 255
+    // // b = b - 255
+    // const newColor = this.p.color(invertRGB.r, invertRGB.g, invertRGB.b)
+    // return newColor
   },
 
   ghostEyes(radius) {
@@ -1060,7 +1056,7 @@ export const Visuals = {
     this.bodiesGraphic.stroke(c)
     this.bodiesGraphic.text(face, -radius / 2.4, radius / 8)
 
-    const invertedC = this.invertColor(c)
+    const invertedC = this.invertColorRGB(c)
     this.bodiesGraphic.fill(invertedC)
     this.bodiesGraphic.noStroke()
     this.bodiesGraphic.text(face, -radius / 2.4, radius / 8)
@@ -1075,7 +1071,7 @@ export const Visuals = {
   getTintFromColor(c) {
     const cc = c
       .split(',')
-      .map((c) => parseFloat(c.replace(')', '').replace('rgba(', '')))
+      .map((c) => parseFloat(c.replace(')', '').replace('hsla(', '')))
     return [cc[0], cc[1], cc[2], cc[2]]
   },
 
@@ -1172,6 +1168,9 @@ export const Visuals = {
     this.bodiesGraphic.noStroke()
     this.bodiesGraphic.fill(body.c)
     this.bodiesGraphic.ellipse(0, offset, radius, radius)
+    if (this.globalStyle == 'psycho' && this.target == 'inside') {
+      this.drawCenter(body, this.bodiesGraphic, 0, offset)
+    }
   },
 
   moveAndRotate_PopAfter(graphic, x, y, v) {
@@ -1587,7 +1586,7 @@ export const Visuals = {
           const hueColor = (parseInt(c.split(',')[1]) + this.frames) % 360
           finalColor = this.p.color(hueColor, 60, 100) // Saturation and brightness at 100 for pure spectral colors
         } else {
-          finalColor = c //this.convertColor(c)
+          finalColor = c
         }
         this.p.fill(finalColor)
         // if (this.mode == 'nft') {
@@ -1639,32 +1638,43 @@ export const Visuals = {
     }
   },
 
-  drawCenter(b) {
+  brighten(c, amount = 20) {
+    let cc = c
+      .split(',')
+      .map((c) => parseFloat(c.replace(')', '').replace('hsla(', '')))
+    cc[2] = cc[2] + amount
+    cc[1] = cc[1] + '%'
+    cc[2] = cc[2] + '%'
+    return `hsla(${cc.join(',')})`
+  },
+
+  drawCenter(b, p = this.p, x, y) {
     // this.p.blendMode(this.p.DIFFERENCE)
-    this.p.noStroke()
-    const x = b.position.x
-    const y = b.position.y
+    p.noStroke()
+    x = x == undefined ? b.position.x : x
+    y = y == undefined ? b.position.y : y
     const r = b.radius * 4
     if (r == 0) return
-    const c = b.c?.replace(this.opac, '1')
+    let c = this.brighten(b.c).replace(this.opac, 1)
+
     if (this.target == 'outside') {
-      this.p.fill(c)
-      this.p.ellipse(x, y, r)
+      p.fill(c)
+      p.ellipse(x, y, r)
       const star = this.starSVG[b.maxStarLvl]
-      this.p.image(star, x - r / 2, y - r / 2, r, r)
+      p.image(star, x - r / 2, y - r / 2, r, r)
     } else {
-      this.p.fill(c)
-      this.p.strokeWeight(2)
-      this.p.stroke('white')
-      this.p.ellipse(x, y, r)
+      p.fill(c)
+      // p.strokeWeight(2)
+      // p.stroke('white')
+      p.ellipse(x, y, r)
     }
-    // this.p.blendMode(this.p.BLEND)
+    // p.blendMode(p.BLEND)
   },
 
   colorArrayToTxt(cc) {
     // let cc = baseColor.map(c => c + start + (chunk * i))
     cc.push(this.opac)
-    cc = `rgba(${cc.join(',')})`
+    cc = `hsla(${cc.join(',')})`
     return cc
   },
 
