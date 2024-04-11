@@ -261,8 +261,8 @@ export class Anybody extends EventEmitter {
     const stats = this.calculateStats()
     const statLines = [
       `Bodies Included: ${stats.bodiesIncluded}`,
-      `Bodies Boost: ${stats.bodiesBoost}`,
-      `Speed Boost: ${stats.speedBoost}`,
+      `Bodies Boost: ${stats.bodiesBoost <= 1 ? '-' : stats.bodiesBoost}`,
+      `Speed Boost: ${stats.speedBoost <= 1 ? '-' : stats.speedBoost}`,
       `Dust: ${stats.dust}`
     ]
     const toShow = statLines.join('\n')
