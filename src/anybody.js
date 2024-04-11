@@ -14,6 +14,20 @@ export class Anybody extends EventEmitter {
     Object.assign(this, Visuals)
     Object.assign(this, Calculations)
 
+    this.setOptions(options)
+
+    // Add other constructor logic here
+    this.p = p
+    // this.p.blendMode(this.p.DIFFERENCE)
+
+    !this.util && this.prepareP5()
+    this.clearValues()
+    this.sound = new Sound(this)
+    this.init()
+    !this.util && this.start()
+  }
+
+  setOptions(options = {}) {
     const defaultOptions = {
       inputData: null,
       bodyData: null,
@@ -47,22 +61,10 @@ export class Anybody extends EventEmitter {
       faceRotation: 'hitcycle', // 'time' or 'hitcycle' or 'mania'
       sfx: 'bubble' // 'space' or 'bubble'
     }
-
     // Merge the default options with the provided options
     const mergedOptions = { ...defaultOptions, ...options }
-
     // Assign the merged options to the instance properties
     Object.assign(this, mergedOptions)
-
-    // Add other constructor logic here
-    this.p = p
-    // this.p.blendMode(this.p.DIFFERENCE)
-
-    !this.util && this.prepareP5()
-    this.clearValues()
-    this.sound = new Sound(this)
-    this.init()
-    !this.util && this.start()
   }
 
   // run whenever the class should be reset
@@ -252,7 +254,12 @@ export class Anybody extends EventEmitter {
     this.emit('gameOver', { won, ticks: this.frames - this.startingFrame })
   }
 
-  playAgain = () => {
+  playAgain = (options) => {
+    if (options) {
+      // TODO: maybe save initial options so that we can reuse them and just update specific values?
+      // that could get messy tho too...
+      this.setOptions(options)
+    }
     this.clearValues()
     this.sound?.stop()
     this.init()
