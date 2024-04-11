@@ -42,7 +42,7 @@ export class Anybody extends EventEmitter {
       globalStyle: 'default', // 'default', 'psycho'
       timer: GAME_LENGTH * FPS,
       aimHelper: false,
-      target: 'outside', // 'outside' or 'inside'
+      target: 'inside', // 'outside' or 'inside'
       showLives: false, // true or false
       faceRotation: 'hitcycle', // 'time' or 'hitcycle' or 'mania'
       sfx: 'bubble' // 'space' or 'bubble'
@@ -444,7 +444,7 @@ export class Anybody extends EventEmitter {
     for (let i = 0; i < this.startingBodies; i++) {
       // cs.push(`hsla(${this.random(0, 360)}, 100%, 50%, ${this.opac})`)
 
-      cs.push(this.colorArrayToTxt(this.randomColor(50, 250)))
+      cs.push(this.colorArrayToTxt(this.randomColor()))
     }
 
     for (let i = 0; i < this.startingBodies; i++) {
@@ -503,7 +503,7 @@ export class Anybody extends EventEmitter {
       starLvl: b.starLvl?.toNumber(),
       maxStarLvl: b.maxStarLvl?.toNumber(),
       mintedBodyIndex: b.mintedBodyIndex.toNumber(),
-      c: this.colorArrayToTxt(this.randomColor(0, 200, bodyRNG))
+      c: this.colorArrayToTxt(this.randomColor(0, 359, bodyRNG))
     }
   }
 
@@ -512,13 +512,14 @@ export class Anybody extends EventEmitter {
     // return Math.floor(Math.random() * (upper - lower + 1)) + lower;
   }
 
-  randomColor(min = 0, max = 255, rng = this.rng) {
+  randomColor(min = 0, max = 359, rng = this.rng) {
     const color = []
+
     // let c = Math.floor(this.random(min, max, rng))
-    for (let i = 0; i < 3; i++) {
-      let c = this.random(min, max, rng)
-      color.push(c)
-    }
+    let c = this.random(min, max, rng)
+    color.push(c) // Hue
+    color.push(this.random(0, 100, rng) + '%') // Saturation
+    color.push(this.random(40, 80, rng) + '%') // Lightness
     return color
   }
   randomPosition() {
