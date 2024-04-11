@@ -243,7 +243,7 @@ export class Anybody extends EventEmitter {
     this.gameOver = true
     this.won = won
     this.setShowPlayAgain()
-    this.emit('gameOver', { won })
+    this.emit('gameOver', { won, ticks: this.frames - this.startingFrame })
   }
 
   setShowPlayAgain = async () => {
