@@ -33,7 +33,7 @@ describe('Bodies Tests', function () {
     const { Bodies: bodies } = await deployContracts()
 
     await expect(
-      bodies.connect(addr1).updateTockPrice(0, 0)
+      bodies.connect(addr1).updateDustPrice(0, 0)
     ).to.be.revertedWith('Ownable: caller is not the owner')
 
     await expect(
@@ -41,29 +41,29 @@ describe('Bodies Tests', function () {
     ).to.be.revertedWith('Ownable: caller is not the owner')
 
     await expect(
-      bodies.connect(addr1).updateTocksAddress(addr1.address)
+      bodies.connect(addr1).updateDustAddress(addr1.address)
     ).to.be.revertedWith('Ownable: caller is not the owner')
 
-    await expect(bodies.updateTockPrice(0, 0)).to.not.be.reverted
+    await expect(bodies.updateDustPrice(0, 0)).to.not.be.reverted
 
     await expect(bodies.updateProblemsAddress(addr1.address)).to.not.be.reverted
 
-    await expect(bodies.updateTocksAddress(addr1.address)).to.not.be.reverted
+    await expect(bodies.updateDustAddress(addr1.address)).to.not.be.reverted
   })
 
   it('updates dust price correctly', async () => {
     const { Bodies: bodies } = await deployContracts()
-    const tockPriceIndex = 0
+    const dustPriceIndex = 0
     const newPrice = 1000
-    const oldPrice = await bodies.tockPrice(tockPriceIndex)
+    const oldPrice = await bodies.dustPrice(dustPriceIndex)
     expect(oldPrice.toNumber()).to.not.equal(newPrice)
-    await bodies.updateTockPrice(tockPriceIndex, newPrice)
-    const updatedPrice = await bodies.tockPrice(tockPriceIndex)
+    await bodies.updateDustPrice(dustPriceIndex, newPrice)
+    const updatedPrice = await bodies.dustPrice(dustPriceIndex)
     expect(updatedPrice.toNumber()).to.equal(newPrice)
 
     const outOfRangeIndex = 10
     await expect(
-      bodies.updateTockPrice(outOfRangeIndex, newPrice)
+      bodies.updateDustPrice(outOfRangeIndex, newPrice)
     ).to.be.revertedWith('Invalid index')
   })
 
@@ -161,9 +161,9 @@ describe('Bodies Tests', function () {
     await dust.updateSolverAddress(owner.address)
     const { mintedBodiesIndex } = await problems.problems(problemId)
     // NOTE: purposefully forgot to multiply by decimals here
-    const tockPrice = await bodies.tockPrice(mintedBodiesIndex)
+    const dustPrice = await bodies.dustPrice(mintedBodiesIndex)
 
-    await dust.mint(acct1.address, tockPrice)
+    await dust.mint(acct1.address, dustPrice)
 
     let promise = problems.connect(acct1).mintBodyOutsideProblem(problemId)
 
@@ -172,12 +172,12 @@ describe('Bodies Tests', function () {
     )
 
     const decimals = await bodies.decimals()
-    const updatedPrice = tockPrice.mul(decimals)
-    const difference = updatedPrice.sub(tockPrice)
+    const updatedPrice = dustPrice.mul(decimals)
+    const difference = updatedPrice.sub(dustPrice)
     await dust.mint(acct1.address, difference)
 
-    const tockBalance = await dust.balanceOf(acct1.address)
-    expect(tockBalance).to.equal(updatedPrice)
+    const dustBalance = await dust.balanceOf(acct1.address)
+    expect(dustBalance).to.equal(updatedPrice)
 
     promise = problems.connect(acct1).mintBodyOutsideProblem(problemId)
     await expect(promise).to.not.be.reverted
@@ -203,8 +203,8 @@ describe('Bodies Tests', function () {
     expect(seed).to.not.equal(0)
 
     // all dust were spent
-    const tockBalanceAfter = await dust.balanceOf(acct1.address)
-    expect(tockBalanceAfter).to.equal(0)
+    const dustBalanceAfter = await dust.balanceOf(acct1.address)
+    expect(dustBalanceAfter).to.equal(0)
   })
 
   it('fails when you try to mint a body for a problem you do not own', async () => {

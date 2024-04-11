@@ -44,17 +44,17 @@ export const Solver = {
   }
 }
 
-import TocksABI from '../contractData/ABI-11155111-Dust.json'
-import TocksForma from '../contractData/80085-Dust.json'
-import TocksLocal from '../contractData/12345-Dust.json'
-import TocksSepolia from '../contractData/11155111-Dust.json'
+import DustABI from '../contractData/ABI-11155111-Dust.json'
+import DustForma from '../contractData/80085-Dust.json'
+import DustLocal from '../contractData/12345-Dust.json'
+import DustSepolia from '../contractData/11155111-Dust.json'
 
 export const Dust = {
-  abi: TocksABI,
+  abi: DustABI,
   networks: {
-    80085: TocksForma,
-    12345: TocksLocal,
-    11155111: TocksSepolia
+    80085: DustForma,
+    12345: DustLocal,
+    11155111: DustSepolia
   }
 }
 

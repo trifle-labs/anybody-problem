@@ -22,7 +22,7 @@ contract Dust is ERC20, Ownable {
     constructor(
         address payable problems_,
         address bodies_
-    ) ERC20("Dust", "TOCK") {
+    ) ERC20("Dust", "DUST") {
         updateProblemsAddress(problems_);
         updateBodiesAddress(bodies_);
     }

@@ -42,12 +42,12 @@ describe('Solver Tests', function () {
     ).to.be.revertedWith('Ownable: caller is not the owner')
 
     await expect(
-      solver.connect(addr1).updateTocksAddress(addr1.address)
+      solver.connect(addr1).updateDustAddress(addr1.address)
     ).to.be.revertedWith('Ownable: caller is not the owner')
 
     await expect(solver.updateProblemsAddress(addr1.address)).to.not.be.reverted
 
-    await expect(solver.updateTocksAddress(addr1.address)).to.not.be.reverted
+    await expect(solver.updateDustAddress(addr1.address)).to.not.be.reverted
   })
 
   it('fallback and receive functions revert', async () => {
@@ -96,14 +96,14 @@ describe('Solver Tests', function () {
     await tx.wait()
 
     // user earned new balance in Dust token
-    // const tockCount = getParsedEventLogs(receipt, dust, 'Transfer')[0].args
+    // const dustCount = getParsedEventLogs(receipt, dust, 'Transfer')[0].args
     //   .value
     // const { bodyCount: newBodyCount } = await problems.problems(problemId)
     // const decimals = await solver.decimals()
     // const boostAmount = await solver.bodyBoost(newBodyCount)
-    // const expectedTockCount = boostAmount.mul(decimals.mul(ticksRun))
-    // expect(tockCount).to.equal(expectedTockCount)
-    // expect(tockCount.gt(0)).to.equal(true)
+    // const expectedDustCount = boostAmount.mul(decimals.mul(ticksRun))
+    // expect(dustCount).to.equal(expectedDustCount)
+    // expect(dustCount.gt(0)).to.equal(true)
 
     const { tickCount: tickCountAfter } = await problems.problems(problemId)
 
@@ -221,9 +221,9 @@ describe('Solver Tests', function () {
     const receipt = await tx.wait()
 
     // user earned new balance in Dust token
-    const tockCount = getParsedEventLogs(receipt, dust, 'Transfer')[0].args
+    const dustCount = getParsedEventLogs(receipt, dust, 'Transfer')[0].args
       .value
-    expect(tockCount.gt(0)).to.equal(true)
+    expect(dustCount.gt(0)).to.equal(true)
 
     await expect(tx).to.emit(solver, 'Solved')
     // .withArgs(problemId, runningTickCount, ticksRun)
@@ -242,7 +242,7 @@ describe('Solver Tests', function () {
     const { bodyCount, tickCount } = await problems.problems(problemId)
     const ticksRun = await getTicksRun(bodyCount.toNumber())
     const totalTicks = 2 * ticksRun
-    // let totalTockCount = ethers.BigNumber.from(0),
+    // let totalDustCount = ethers.BigNumber.from(0),
     let runningTickCount = tickCount
     for (let i = 0; i < totalTicks; i += ticksRun) {
       const bodyData = []
@@ -271,15 +271,15 @@ describe('Solver Tests', function () {
       runningTickCount = runningTickCount.add(ticksRun)
 
       // user earned new balance in Dust token
-      // const tockCount = getParsedEventLogs(receipt, dust, 'Transfer')[0].args
+      // const dustCount = getParsedEventLogs(receipt, dust, 'Transfer')[0].args
       //   .value
-      // totalTockCount = totalTockCount.add(tockCount)
+      // totalDustCount = totalDustCount.add(dustCount)
       // const { bodyCount: newBodyCount } = await problems.problems(problemId)
 
       // const decimals = await solver.decimals()
       // const boostAmount = await solver.bodyBoost(newBodyCount)
-      // const expectedTockCount = boostAmount.mul(decimals.mul(ticksRun))
-      // expect(tockCount).to.equal(expectedTockCount)
+      // const expectedDustCount = boostAmount.mul(decimals.mul(ticksRun))
+      // expect(dustCount).to.equal(expectedDustCount)
 
       // confirm new values are stored correctly
       for (let j = 0; j < bodyCount; j++) {
@@ -294,8 +294,8 @@ describe('Solver Tests', function () {
       }
     }
 
-    // const tockBalance = await dust.balanceOf(signers[0].address)
-    // expect(tockBalance).to.equal(totalTockCount)
+    // const dustBalance = await dust.balanceOf(signers[0].address)
+    // expect(dustBalance).to.equal(totalDustCount)
 
     // confirm tickCount has been incremented by correct amount
     const { tickCount: newTickCount } = await problems.problems(problemId)
@@ -315,7 +315,7 @@ describe('Solver Tests', function () {
     const { bodyCount, tickCount } = await problems.problems(problemId)
 
     const initialBodyCount = bodyCount
-    let totalTockCount = 0,
+    let totalDustCount = 0,
       runningTickCount = tickCount
     const totalBodies = 10 - bodyCount
     // make a proof for each body quantity
@@ -349,14 +349,14 @@ describe('Solver Tests', function () {
       runningTickCount = parseInt(runningTickCount) + parseInt(ticksRun)
 
       // user earned new balance in Dust token
-      // const tockCount = getParsedEventLogs(receipt, dust, 'Transfer')[0].args
+      // const dustCount = getParsedEventLogs(receipt, dust, 'Transfer')[0].args
       //   .value
 
-      // totalTockCount = tockCount.add(totalTockCount)
+      // totalDustCount = dustCount.add(totalDustCount)
       // const decimals = await solver.decimals()
       // const boostAmount = await solver.bodyBoost(bodyCount)
-      // const expectedTockCount = boostAmount.mul(decimals.mul(ticksRun))
-      // expect(tockCount).to.equal(expectedTockCount)
+      // const expectedDustCount = boostAmount.mul(decimals.mul(ticksRun))
+      // expect(dustCount).to.equal(expectedDustCount)
 
       // confirm new values are stored correctly
       for (let j = 0; j < bodyCount; j++) {
@@ -378,11 +378,11 @@ describe('Solver Tests', function () {
           problemId
         )
         receipt = await tx.wait()
-        const additionalTock = getParsedEventLogs(receipt, dust, 'Transfer')[0]
+        const additionalDust = getParsedEventLogs(receipt, dust, 'Transfer')[0]
           .args.value
-        totalTockCount = additionalTock.add(totalTockCount)
+        totalDustCount = additionalDust.add(totalDustCount)
         const decimals = await bodies.decimals()
-        const bodyCost = await bodies.tockPrice(bodyCount)
+        const bodyCost = await bodies.dustPrice(bodyCount)
         const bodyCostDecimals = bodyCost.mul(decimals)
         tx = await problems.mintBodyToProblem(problemId)
         receipt = await tx.wait()
@@ -391,9 +391,9 @@ describe('Solver Tests', function () {
         await expect(tx)
           .to.emit(bodies, 'Transfer')
           .withArgs(ethers.constants.AddressZero, signers[0].address, bodyId)
-        const tockPaid = getParsedEventLogs(receipt, dust, 'Transfer')[0].args
+        const dustPaid = getParsedEventLogs(receipt, dust, 'Transfer')[0].args
           .value
-        expect(tockPaid).to.equal(bodyCostDecimals)
+        expect(dustPaid).to.equal(bodyCostDecimals)
       }
     }
     await expect(prepareMintBody(signers, deployedContracts, problemId)).to.be

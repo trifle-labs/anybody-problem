@@ -52,9 +52,9 @@ contract Solver is Ownable {
         uint256 indexed winnings
     );
 
-    constructor(address payable problems_, address tocks_) {
+    constructor(address payable problems_, address dust_) {
         problems = problems_;
-        dust = tocks_;
+        dust = dust_;
     }
 
     fallback() external {
@@ -65,8 +65,8 @@ contract Solver is Ownable {
         problems = problems_;
     }
 
-    function updateTocksAddress(address tocks_) public onlyOwner {
-        dust = tocks_;
+    function updateDustAddress(address dust_) public onlyOwner {
+        dust = dust_;
     }
 
     function inProgress(uint256 problemId) public view returns (bool) {

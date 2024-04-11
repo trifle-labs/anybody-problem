@@ -59,10 +59,10 @@ async function main() {
     const tickRatePerBody = tickRate / bodyCount
     console.log(`Tick rate per body: ${tickRatePerBody.toFixed(2)} ticks/s`)
     const boostAmount = bodyBoost[bodyCount]
-    const tockRate = boostAmount * tickRate
-    console.log(`Dust rate: ${tockRate.toFixed(2)} dust/s`)
-    const tockRatePerBody = tockRate / bodyCount
-    console.log(`Dust rate per body: ${tockRatePerBody.toFixed(2)} dust/s`)
+    const dustRate = boostAmount * tickRate
+    console.log(`Dust rate: ${dustRate.toFixed(2)} dust/s`)
+    const dustRatePerBody = dustRate / bodyCount
+    console.log(`Dust rate per body: ${dustRatePerBody.toFixed(2)} dust/s`)
     console.log('wait 10 seconds\n\n')
     await new Promise((resolve) => setTimeout(resolve, 10_000))
   }
