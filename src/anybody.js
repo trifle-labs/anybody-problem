@@ -7,6 +7,15 @@ import { _validateSeed, Calculations } from './calculations.js'
 
 const GAME_LENGTH = 2 // seconds
 
+function intersectsButton(button, x, y) {
+  return (
+    x > button.x &&
+    x < button.x + button.width &&
+    y > button.y &&
+    y < button.y + button.height
+  )
+}
+
 export class Anybody extends EventEmitter {
   constructor(p, options = {}) {
     super()
@@ -193,6 +202,8 @@ export class Anybody extends EventEmitter {
     this.p.touchStarted = () => {}
     this.p.mouseMoved = this.handleMouseMove
     this.p.touchMoved = this.handleMouseMove
+    this.p.mousePressed = this.handleMousePressed
+    this.p.mouseReleased = this.handleMouseReleased
     this.p.touchEnded = () => {}
 
     if (typeof window !== 'undefined' && this.mode == 'game') {
@@ -224,11 +235,22 @@ export class Anybody extends EventEmitter {
     // check if mouse is inside any of the buttons
     for (const key in this.buttons) {
       const button = this.buttons[key]
-      button.hover =
-        x > button.x &&
-        x < button.x + button.width &&
-        y > button.y &&
-        y < button.y + button.height
+      button.hover = intersectsButton(button, x, y)
+    }
+  }
+
+  handleMousePressed = (e) => {
+    const { x, y } = this.getXY(e)
+    for (const key in this.buttons) {
+      const button = this.buttons[key]
+      button.active = intersectsButton(button, x, y)
+    }
+  }
+
+  handleMouseReleased = () => {
+    for (const key in this.buttons) {
+      const button = this.buttons[key]
+      if (button.active) button.active = false
     }
   }
 
@@ -237,17 +259,8 @@ export class Anybody extends EventEmitter {
     // if mouse is inside of a button, call the button's handler
     for (const key in this.buttons) {
       const button = this.buttons[key]
-      if (
-        x > button.x &&
-        x < button.x + button.width &&
-        y > button.y &&
-        y < button.y + button.height
-      ) {
-        button.active = true
+      if (intersectsButton(button, x, y)) {
         button.onClick()
-        setTimeout(() => {
-          if (button?.active) button.active = false
-        }, 100)
         return
       }
     }
@@ -301,12 +314,12 @@ export class Anybody extends EventEmitter {
     const toShow = statLines.join('\n')
 
     for (let i = 0; i < toShow.length; i++) {
-      await new Promise((resolve) => setTimeout(resolve, 50))
+      await new Promise((resolve) => setTimeout(resolve, 5))
       this.statsText = toShow.slice(0, i + 1)
       this.sound?.playStat()
       // play a sound on new line
       if (toShow[i] == '\n') {
-        await new Promise((resolve) => setTimeout(resolve, 800))
+        await new Promise((resolve) => setTimeout(resolve, 80))
         this.sound?.playStat()
       }
     }

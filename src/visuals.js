@@ -688,35 +688,55 @@ export const Visuals = {
 
     p.textSize(128)
     p.textAlign(p.CENTER, p.TOP)
-    p.text('SUCCESS', this.windowWidth / 2, 180)
+    p.text('SUCCESS', this.windowWidth / 2 - 8, 180) // adjust by 8 to center SF Pro weirdness
+
+    // draw a white box behind the stats, with border radius
+    p.fill('white')
+    p.rect(this.windowWidth / 2 - 320, 350, 640, 300, 20, 20, 20, 20)
 
     // draw stats
-    p.textSize(64)
+    p.textSize(48)
+    p.textStyle(p.BOLD)
+    p.fill('black')
     for (const [i, line] of this.statsText.split('\n').entries()) {
       // print each stat line with left aligned label, right aligned stat
       if (line.match(/1x/)) {
         // gray text
-        p.fill('rgba(255,255,255,0.5)')
+        p.fill('rgba(0,0,0,0.5)')
       } else {
-        p.fill('white')
+        p.fill('black')
+      }
+      // last line has a bar on top
+      const leading = 64
+      let barPadding = 0
+      const xLeft = this.windowWidth / 2 - 300
+      const xRight = this.windowWidth / 2 + 300
+      const y = 374 + leading * i
+      if (i === 3) {
+        p.stroke('black')
+        p.strokeWeight(4)
+        p.line(xLeft, y, xRight, y)
+        p.noStroke()
+        barPadding = 20
       }
       for (const [j, stat] of line.split(':').entries()) {
         if (j === 0) {
           p.textAlign(p.LEFT, p.TOP)
-          p.text(stat, this.windowWidth / 2 - 300, 340 + 82 * i)
+          p.text(stat, xLeft, y + barPadding)
         } else {
           p.textAlign(p.RIGHT, p.TOP)
-          p.text(stat, this.windowWidth / 2 + 300, 340 + 82 * i)
+          p.text(stat, xRight, y + barPadding)
         }
       }
     }
 
     // play again button
     if (this.showPlayAgain) {
+      p.textStyle(p.BOLDITALIC)
       this.drawButton({
         text: 'retry',
         x: this.windowWidth / 2 - 140,
-        y: this.windowHeight / 2 + 200,
+        y: this.windowHeight / 2 + 205,
         height: 90,
         width: 280,
         onClick: () => this.playAgain()
@@ -737,17 +757,14 @@ export const Visuals = {
       button = this.buttons[key]
     }
 
-    // button should be transparent with white outline, white text
-    // on hover, button background should be slightly opaque white
-    // on click, button background should be slightly opaque black
     p.push()
     p.stroke('white')
     p.textSize(48)
-    p.strokeWeight(4)
+    p.strokeWeight(button.active ? 1 : 4)
     if (button.hover) {
       p.fill('rgba(255,255,255,0.5)')
     } else {
-      p.fill('rgba(255,255,255,0.3)')
+      p.noFill()
     }
     p.rect(x, y, width, height, 10)
     p.noStroke()
@@ -1528,7 +1545,6 @@ export const Visuals = {
     // ghost version
 
     const id = radius + '-' + finalColor
-    console.log()
     if (!this.tailGraphics) {
       this.tailGraphics = {}
     }
