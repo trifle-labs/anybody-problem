@@ -279,9 +279,9 @@ export const Visuals = {
       if (didNotJustPause) {
         this.finish()
       }
-      // if (this.optimistic) {
-      //   this.started()
-      // }
+      if (this.optimistic) {
+        this.started()
+      }
     } else {
       this.justPaused = false
     }
