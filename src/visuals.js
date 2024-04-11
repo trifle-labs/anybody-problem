@@ -206,6 +206,9 @@ export const Visuals = {
     this.missiles = results.missiles || []
 
     this.p.noFill()
+    this.p.textStyle(this.p.BOLDITALIC)
+    // this.p.textFont('Instrument Serif, serif')
+
     this.drawBg()
     if (this.globalStyle == 'psycho') {
       this.p.blendMode(this.p.DIFFERENCE)
@@ -650,7 +653,6 @@ export const Visuals = {
 
     const initialScoreSize = 60
     this.scoreSize ||= initialScoreSize
-    p.textStyle(p.BOLDITALIC)
     p.textAlign(p.LEFT, p.TOP)
     const secondsLeft = (this.startingFrame + this.timer - this.frames) / FPS
 
@@ -673,7 +675,6 @@ export const Visuals = {
       p.fill(255, 255, 255, 150)
     }
     p.textSize(this.scoreSize)
-
     p.text(secondsLeft.toFixed(0), 20, 10)
 
     p.pop()
@@ -687,25 +688,71 @@ export const Visuals = {
 
     p.textSize(128)
     p.textAlign(p.CENTER, p.TOP)
-    p.textStyle(p.BOLDITALIC)
     p.text('SUCCESS', this.windowWidth / 2, 180)
 
     // draw stats
     p.textSize(64)
-    p.textAlign(p.LEFT, p.TOP)
     for (const [i, line] of this.statsText.split('\n').entries()) {
-      p.text(line, this.windowWidth / 2 - 300, 340 + 82 * i)
+      // print each stat line with left aligned label, right aligned stat
+      if (line.match(/1x$/)) {
+        // gray text
+        p.fill('rgba(255,255,255,0.5)')
+      } else {
+        p.fill('white')
+      }
+      for (const [j, stat] of line.split(':').entries()) {
+        if (j === 0) {
+          p.textAlign(p.LEFT, p.TOP)
+          p.text(stat, this.windowWidth / 2 - 300, 340 + 82 * i)
+        } else {
+          p.textAlign(p.RIGHT, p.TOP)
+          p.text(stat, this.windowWidth / 2 + 300, 340 + 82 * i)
+        }
+      }
     }
 
     // play again button
     if (this.showPlayAgain) {
-      p.text(
-        'Click to play again',
-        this.windowWidth / 2 - 300,
-        this.windowHeight / 2 + 220
-      )
+      this.drawButton({
+        text: 'retry',
+        x: this.windowWidth / 2 - 140,
+        y: this.windowHeight / 2 + 220,
+        height: 100,
+        width: 280,
+        onClick: () => this.playAgain()
+      })
     }
 
+    p.pop()
+  },
+
+  drawButton({ text, x, y, height, width, onClick }) {
+    const { p } = this
+
+    // register the button if it's not registered
+    const key = `${x}-${y}-${height}-${width}`
+    let button = this.buttons[key]
+    if (!button) {
+      this.buttons[key] = { x, y, height, width, onClick }
+      button = this.buttons[key]
+    }
+
+    // button should be transparent with white outline, white text
+    // on hover, button background should be slightly opaque white
+    // on click, button background should be slightly opaque black
+    p.push()
+    p.stroke('white')
+    p.strokeWeight(4)
+    if (button.hover) {
+      p.fill('rgba(255,255,255,0.5)')
+    } else {
+      p.fill('rgba(255,255,255,0.3)')
+    }
+    p.rect(x, y, width, height, 10)
+    p.noStroke()
+    p.fill('white')
+    p.textAlign(p.CENTER, p.CENTER)
+    p.text(text, x + width / 2, y + height / 2)
     p.pop()
   },
 
@@ -717,7 +764,6 @@ export const Visuals = {
 
     p.textSize(128)
     // game over in the center of screen
-    p.textStyle(p.BOLDITALIC)
     p.textAlign(p.CENTER)
 
     p.text(
