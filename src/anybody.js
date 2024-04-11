@@ -38,7 +38,6 @@ export class Anybody extends EventEmitter {
       freeze: false,
       stopEvery: 0,
       util: false,
-      optimistic: false,
       paused: true,
       globalStyle: 'default', // 'default', 'psycho'
       timer: GAME_LENGTH * FPS,
@@ -92,6 +91,7 @@ export class Anybody extends EventEmitter {
     this.firstFrame = true
     this.loaded = false
     this.showPlayAgain = false
+    this.hasStarted = false
   }
 
   // run once at initilization
@@ -336,38 +336,32 @@ export class Anybody extends EventEmitter {
     // this.finished = true
     // this.setPause(true)
     this.calculateBodyFinal()
-    if (!this.optimistic) {
-      const missileInits = []
-      if (this.mode == 'game') {
-        let missileIndex = 0
-        for (
-          let i = this.alreadyRun;
-          i < this.alreadyRun + this.stopEvery;
-          i++
-        ) {
-          if (this.missileInits[missileIndex]?.step == i) {
-            const missile = this.missileInits[missileIndex]
-            missileInits.push([
-              missile.x,
-              missile.y,
-              missile.vx,
-              missile.vy,
-              missile.radius
-            ])
-            missileIndex++
-          } else {
-            missileInits.push([0, 0, 0, 0, 0])
-          }
+    const missileInits = []
+    if (this.mode == 'game') {
+      let missileIndex = 0
+      for (let i = this.alreadyRun; i < this.alreadyRun + this.stopEvery; i++) {
+        if (this.missileInits[missileIndex]?.step == i) {
+          const missile = this.missileInits[missileIndex]
+          missileInits.push([
+            missile.x,
+            missile.y,
+            missile.vx,
+            missile.vy,
+            missile.radius
+          ])
+          missileIndex++
+        } else {
+          missileInits.push([0, 0, 0, 0, 0])
         }
-        missileInits.push([0, 0, 0, 0, 0])
       }
-      results = {
-        missiles: JSON.parse(JSON.stringify(missileInits)),
-        bodyInits: JSON.parse(JSON.stringify(this.bodyInits)),
-        bodyFinal: JSON.parse(JSON.stringify(this.bodyFinal))
-      }
-      this.emit('finished', results)
+      missileInits.push([0, 0, 0, 0, 0])
     }
+    results = {
+      missiles: JSON.parse(JSON.stringify(missileInits)),
+      bodyInits: JSON.parse(JSON.stringify(this.bodyInits)),
+      bodyFinal: JSON.parse(JSON.stringify(this.bodyFinal))
+    }
+    this.emit('finished', results)
     this.bodyInits = JSON.parse(JSON.stringify(this.bodyFinal))
     this.alreadyRun = this.frames
     this.missileInits = this.processMissileInits(this.missiles).map((m) => {
