@@ -153,12 +153,9 @@ export class Anybody extends EventEmitter {
 
   processInits(bodies) {
     return this.convertBodiesToBigInts(bodies).map((b) => {
-      // console.log({ b1: b })
       b = this.convertScaledBigIntBodyToArray(b)
-      // console.log({ b2: b })
       b[2] = BigInt(b[2]).toString()
       b[3] = BigInt(b[3]).toString()
-      // console.log({ vy_b: b[3] })
       return b
     })
   }

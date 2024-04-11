@@ -732,7 +732,6 @@ export const Visuals = {
 
     // play again button
     if (this.showPlayAgain) {
-      p.textStyle(p.BOLDITALIC)
       this.drawButton({
         text: 'retry',
         x: this.windowWidth / 2 - 140,
@@ -758,6 +757,7 @@ export const Visuals = {
     }
 
     p.push()
+    p.textStyle(p.BOLDITALIC)
     p.stroke('white')
     p.textSize(48)
     p.strokeWeight(button.active ? 1 : 4)
@@ -791,11 +791,14 @@ export const Visuals = {
     )
     p.textSize(40)
     if (this.showPlayAgain) {
-      p.text(
-        'Click to play again',
-        this.windowWidth / 2,
-        this.windowHeight / 2 + 100
-      )
+      this.drawButton({
+        text: 'retry',
+        x: this.windowWidth / 2 - 140,
+        y: this.windowHeight / 2 + 120,
+        height: 90,
+        width: 280,
+        onClick: () => this.playAgain()
+      })
     }
 
     p.pop()
