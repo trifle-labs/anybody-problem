@@ -51,7 +51,7 @@ contract Problems is ERC721, Ownable {
     }
 
     mapping(uint256 => Problem) public problems;
-    // mapping is body count to tocks to address
+    // mapping is body count to dust to address
     mapping(uint256 => mapping(uint256 => address)) public verifiers;
 
     uint256 public constant maxVector = 10;
@@ -117,7 +117,7 @@ contract Problems is ERC721, Ownable {
         proceedRecipient = msg.sender;
         metadata = metadata_;
         for (uint256 i = 0; i < verifiers_.length; i++) {
-            require(verifiersTicks[i] > 0, "Invalid verifier tocks");
+            require(verifiersTicks[i] > 0, "Invalid verifier dust");
             require(verifiers_[i] != address(0), "Invalid verifier");
             verifiers[verifiersBodies[i]][verifiersTicks[i]] = verifiers_[i];
         }

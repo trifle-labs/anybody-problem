@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract Tocks is ERC20, Ownable {
+contract Dust is ERC20, Ownable {
     address public solver;
     address payable public problems;
     address public bodies;
@@ -22,7 +22,7 @@ contract Tocks is ERC20, Ownable {
     constructor(
         address payable problems_,
         address bodies_
-    ) ERC20("Tocks", "TOCK") {
+    ) ERC20("Dust", "DUST") {
         updateProblemsAddress(problems_);
         updateBodiesAddress(bodies_);
     }

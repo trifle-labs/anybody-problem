@@ -137,14 +137,14 @@ You should see something like:
     ✔ has the correct output
 
   Bodies Tests
-    ✔ has the correct bodies, tocks addresses
+    ✔ has the correct bodies, dust addresses
     ✔ onlyOwner functions are really only Owner
-    ✔ updates tock price correctly
+    ✔ updates dust price correctly
     ✔ has all the correct interfaces
     ✔ fallback and receive functions revert
     ✔ onlyProblem functions can only be called by Problems address
     ✔ matches seeds between Bodies and Problems contracts
-    ✔ mints a new body after receiving Tocks
+    ✔ mints a new body after receiving Dust
     ✔ fails when you try to mint a body for a problem you do not own
     ✔ validate second mint event
     ✔ succeeds adding a body into a problem
@@ -188,7 +188,7 @@ You should see something like:
     ✔ NftVerifier.sol works
 
   Problem Tests
-    ✔ has the correct verifiers metadata, bodies, tocks, solver addresses
+    ✔ has the correct verifiers metadata, bodies, dust, solver addresses
     ✔ onlyOwner functions are really only Owner
     ✔ onlySolver functions are really only Solver
     ✔ has all the correct interfaces
@@ -210,7 +210,7 @@ You should see something like:
     ✔ mints a body via mintBodyToProblem
 
   Solver Tests
-    ✔ has the correct problems, tocks addresses
+    ✔ has the correct problems, dust addresses
     ✔ onlyOwner functions are really only Owner
     ✔ fallback and receive functions revert
     ✔ creates a proof for 3 bodies
@@ -252,56 +252,56 @@ Currently the project is targeting [powersOfTau28_hez_final_20.ptau](https://git
 | nft_3_20                      | 33_060                 |                                        |
 | nft_4_20                      | 55_480                 |                                        |
 
-### Tick to Tock Body Boost Chart
+### Tick to Dust Body Boost Chart
 
 ```
 Generated proof in 0m 3s 121ms for 20 ticks with 3 bodies
 Tick rate: 6.41 ticks/s
 Tick rate per body: 2.14 ticks/s
-Tock rate: 6.41 tocks/s
-Tock rate per body: 2.14 tocks/s
+Dust rate: 6.41 dust/s
+Dust rate per body: 2.14 dust/s
 
 Generated proof in 0m 3s 894ms for 20 ticks with 4 bodies
 Tick rate: 5.14 ticks/s
 Tick rate per body: 1.28 ticks/s
-Tock rate: 10.27 tocks/s
-Tock rate per body: 2.57 tocks/s
+Dust rate: 10.27 dust/s
+Dust rate per body: 2.57 dust/s
 
 Generated proof in 0m 6s 701ms for 20 ticks with 5 bodies
 Tick rate: 2.98 ticks/s
 Tick rate per body: 0.60 ticks/s
-Tock rate: 11.94 tocks/s
-Tock rate per body: 2.39 tocks/s
+Dust rate: 11.94 dust/s
+Dust rate per body: 2.39 dust/s
 
 Generated proof in 0m 7s 910ms for 20 ticks with 6 bodies
 Tick rate: 2.53 ticks/s
 Tick rate per body: 0.42 ticks/s
-Tock rate: 20.23 tocks/s
-Tock rate per body: 3.37 tocks/s
+Dust rate: 20.23 dust/s
+Dust rate per body: 3.37 dust/s
 
 Generated proof in 0m 12s 961ms for 20 ticks with 7 bodies
 Tick rate: 1.54 ticks/s
 Tick rate per body: 0.22 ticks/s
-Tock rate: 24.69 tocks/s
-Tock rate per body: 3.53 tocks/s
+Dust rate: 24.69 dust/s
+Dust rate per body: 3.53 dust/s
 
 Generated proof in 0m 14s 497ms for 20 ticks with 8 bodies
 Tick rate: 1.38 ticks/s
 Tick rate per body: 0.17 ticks/s
-Tock rate: 44.15 tocks/s
-Tock rate per body: 5.52 tocks/s
+Dust rate: 44.15 dust/s
+Dust rate per body: 5.52 dust/s
 
 Generated proof in 0m 16s 339ms for 20 ticks with 9 bodies
 Tick rate: 1.22 ticks/s
 Tick rate per body: 0.14 ticks/s
-Tock rate: 78.34 tocks/s
-Tock rate per body: 8.70 tocks/s
+Dust rate: 78.34 dust/s
+Dust rate per body: 8.70 dust/s
 
 Generated proof in 0m 25s 522ms for 20 ticks with 10 bodies
 Tick rate: 0.78 ticks/s
 Tick rate per body: 0.08 ticks/s
-Tock rate: 100.31 tocks/s
-Tock rate per body: 10.03 tocks/s
+Dust rate: 100.31 dust/s
+Dust rate per body: 10.03 dust/s
 ```
 
 # built using circom-starter
