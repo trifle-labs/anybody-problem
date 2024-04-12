@@ -206,6 +206,9 @@ export const Visuals = {
     this.missiles = results.missiles || []
 
     this.p.noFill()
+    this.p.textStyle(this.p.BOLDITALIC)
+    // this.p.textFont('Instrument Serif, serif')
+
     this.drawBg()
     if (this.globalStyle == 'psycho') {
       this.p.blendMode(this.p.DIFFERENCE)
@@ -650,7 +653,6 @@ export const Visuals = {
 
     const initialScoreSize = 60
     this.scoreSize ||= initialScoreSize
-    p.textStyle(p.BOLDITALIC)
     p.textAlign(p.LEFT, p.TOP)
     const secondsLeft = (this.startingFrame + this.timer - this.frames) / FPS
 
@@ -673,7 +675,6 @@ export const Visuals = {
       p.fill(255, 255, 255, 150)
     }
     p.textSize(this.scoreSize)
-
     p.text(secondsLeft.toFixed(0), 20, 10)
 
     p.pop()
@@ -687,25 +688,89 @@ export const Visuals = {
 
     p.textSize(128)
     p.textAlign(p.CENTER, p.TOP)
-    p.textStyle(p.BOLDITALIC)
-    p.text('SUCCESS', this.windowWidth / 2, 180)
+    p.text('SUCCESS', this.windowWidth / 2 - 8, 190) // adjust by 8 to center SF Pro weirdness
+
+    // draw a white box behind the stats, with border radius
+    p.fill('white')
+    p.rect(this.windowWidth / 2 - 320, 350, 640, 300, 20, 20, 20, 20)
 
     // draw stats
-    p.textSize(64)
-    p.textAlign(p.LEFT, p.TOP)
+    p.textSize(48)
+    p.textStyle(p.BOLD)
+    p.fill('black')
     for (const [i, line] of this.statsText.split('\n').entries()) {
-      p.text(line, this.windowWidth / 2 - 300, 340 + 82 * i)
+      // print each stat line with left aligned label, right aligned stat
+      if (line.match(/1x/)) {
+        // gray text if 1x multiplier
+        p.fill('rgba(0,0,0,0.3)')
+      } else {
+        p.fill('black')
+      }
+      // last line has a bar on top
+      const leading = 64
+      let barPadding = 0
+      const xLeft = this.windowWidth / 2 - 300
+      const xRight = this.windowWidth / 2 + 300
+      const y = 374 + leading * i
+      if (i === 3) {
+        p.stroke('black')
+        p.strokeWeight(4)
+        p.line(xLeft, y, xRight, y)
+        p.noStroke()
+        barPadding = 20
+      }
+      for (const [j, stat] of line.split(':').entries()) {
+        if (j === 0) {
+          p.textAlign(p.LEFT, p.TOP)
+          p.text(stat, xLeft, y + barPadding)
+        } else {
+          p.textAlign(p.RIGHT, p.TOP)
+          p.text(stat, xRight, y + barPadding)
+        }
+      }
     }
 
     // play again button
     if (this.showPlayAgain) {
-      p.text(
-        'Click to play again',
-        this.windowWidth / 2 - 300,
-        this.windowHeight / 2 + 220
-      )
+      this.drawButton({
+        text: 'retry',
+        x: this.windowWidth / 2 - 140,
+        y: this.windowHeight / 2 + 205,
+        height: 90,
+        width: 280,
+        onClick: () => this.playAgain()
+      })
     }
 
+    p.pop()
+  },
+
+  drawButton({ text, x, y, height, width, onClick }) {
+    const { p } = this
+
+    // register the button if it's not registered
+    const key = `${x}-${y}-${height}-${width}`
+    let button = this.buttons[key]
+    if (!button) {
+      this.buttons[key] = { x, y, height, width, onClick }
+      button = this.buttons[key]
+    }
+
+    p.push()
+    p.textStyle(p.BOLDITALIC)
+    p.stroke('white')
+    p.textSize(48)
+    p.strokeWeight(button.active ? 1 : 4)
+    if (button.hover) {
+      p.fill('rgba(255,255,255,0.5)')
+    } else {
+      p.noFill()
+    }
+    p.rect(x, y, width, height, 10)
+    p.noStroke()
+    p.fill('white')
+    p.textAlign(p.CENTER, p.CENTER)
+    p.text(text, x + width / 2, y + height / 2)
     p.pop()
   },
 
@@ -717,7 +782,6 @@ export const Visuals = {
 
     p.textSize(128)
     // game over in the center of screen
-    p.textStyle(p.BOLDITALIC)
     p.textAlign(p.CENTER)
 
     p.text(
@@ -727,11 +791,14 @@ export const Visuals = {
     )
     p.textSize(40)
     if (this.showPlayAgain) {
-      p.text(
-        'Click to play again',
-        this.windowWidth / 2,
-        this.windowHeight / 2 + 100
-      )
+      this.drawButton({
+        text: 'retry',
+        x: this.windowWidth / 2 - 140,
+        y: this.windowHeight / 2 + 120,
+        height: 90,
+        width: 280,
+        onClick: () => this.playAgain()
+      })
     }
 
     p.pop()
@@ -1481,7 +1548,6 @@ export const Visuals = {
     // ghost version
 
     const id = radius + '-' + finalColor
-    console.log()
     if (!this.tailGraphics) {
       this.tailGraphics = {}
     }

@@ -7,6 +7,15 @@ import { _validateSeed, Calculations } from './calculations.js'
 
 const GAME_LENGTH = 60 // seconds
 
+function intersectsButton(button, x, y) {
+  return (
+    x > button.x &&
+    x < button.x + button.width &&
+    y > button.y &&
+    y < button.y + button.height
+  )
+}
+
 export class Anybody extends EventEmitter {
   constructor(p, options = {}) {
     super()
@@ -59,7 +68,8 @@ export class Anybody extends EventEmitter {
       target: 'inside', // 'outside' or 'inside'
       showLives: false, // true or false
       faceRotation: 'hitcycle', // 'time' or 'hitcycle' or 'mania'
-      sfx: 'bubble' // 'space' or 'bubble'
+      sfx: 'bubble', // 'space' or 'bubble'
+      ownerPresent: false
     }
     // Merge the default options with the provided options
     const mergedOptions = { ...defaultOptions, ...options }
@@ -96,6 +106,7 @@ export class Anybody extends EventEmitter {
     this.handledGameOver = false
     this.statsText = ''
     this.hasStarted = false
+    this.buttons = {}
   }
 
   // run once at initilization
@@ -144,12 +155,9 @@ export class Anybody extends EventEmitter {
 
   processInits(bodies) {
     return this.convertBodiesToBigInts(bodies).map((b) => {
-      // console.log({ b1: b })
       b = this.convertScaledBigIntBodyToArray(b)
-      // console.log({ b2: b })
       b[2] = BigInt(b[2]).toString()
       b[3] = BigInt(b[3]).toString()
-      // console.log({ vy_b: b[3] })
       return b
     })
   }
@@ -191,7 +199,10 @@ export class Anybody extends EventEmitter {
     // binding dummy handlers is necessary for p5 to listen to touchmove
     // and track mouseX and mouseY
     this.p.touchStarted = () => {}
-    this.p.touchMoved = () => {}
+    this.p.mouseMoved = this.handleMouseMove
+    this.p.touchMoved = this.handleMouseMove
+    this.p.mousePressed = this.handleMousePressed
+    this.p.mouseReleased = this.handleMouseReleased
     this.p.touchEnded = () => {}
 
     if (typeof window !== 'undefined' && this.mode == 'game') {
@@ -218,12 +229,41 @@ export class Anybody extends EventEmitter {
     return { x, y }
   }
 
-  handleGameClick = (e) => {
-    if (this.gameOver && this.showPlayAgain) {
-      this.playAgain()
-      return
-    }
+  handleMouseMove = (e) => {
     const { x, y } = this.getXY(e)
+    // check if mouse is inside any of the buttons
+    for (const key in this.buttons) {
+      const button = this.buttons[key]
+      button.hover = intersectsButton(button, x, y)
+    }
+  }
+
+  handleMousePressed = (e) => {
+    const { x, y } = this.getXY(e)
+    for (const key in this.buttons) {
+      const button = this.buttons[key]
+      button.active = intersectsButton(button, x, y)
+    }
+  }
+
+  handleMouseReleased = () => {
+    for (const key in this.buttons) {
+      const button = this.buttons[key]
+      if (button.active) button.active = false
+    }
+  }
+
+  handleGameClick = (e) => {
+    const { x, y } = this.getXY(e)
+    // if mouse is inside of a button, call the button's handler
+    for (const key in this.buttons) {
+      const button = this.buttons[key]
+      if (intersectsButton(button, x, y)) {
+        button.onClick()
+        return
+      }
+    }
+
     this.missileClick(x, y)
   }
 
@@ -267,17 +307,17 @@ export class Anybody extends EventEmitter {
     }
     this.clearValues()
     this.sound?.stop()
+    this.sound?.playStart()
     this.init()
     !this.util && this.start()
-    this.sound?.playStart()
   }
 
   setStatsText = async (stats) => {
     const statLines = [
-      `Bodies Included: ${stats.bodiesIncluded}`,
-      `Bodies Boost: ${stats.bodiesBoost <= 1 ? '-' : `${stats.bodiesBoost}x`}`,
-      `Speed Boost: ${stats.speedBoost <= 1 ? '-' : `${stats.speedBoost}x`}`,
-      `Dust: ${stats.dust}`
+      `bodies: ${stats.bodiesIncluded}`,
+      `bodies bonus: ${stats.bodiesBoost}x`,
+      `speed bonus: ${stats.speedBoost}x`,
+      `DU$T: ${stats.dust}`
     ]
     const toShow = statLines.join('\n')
 
@@ -297,6 +337,7 @@ export class Anybody extends EventEmitter {
   }
 
   setShowPlayAgain = async (timeout = 2000) => {
+    if (this.ownerPresent) return // retry button in vue frontend
     await new Promise((resolve) => setTimeout(resolve, timeout))
     this.showPlayAgain = true
   }
