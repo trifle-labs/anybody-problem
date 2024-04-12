@@ -107,6 +107,8 @@ export class Anybody extends EventEmitter {
     this.statsText = ''
     this.hasStarted = false
     this.buttons = {}
+    this.won = false
+    this.finalBatchSent = false
   }
 
   // run once at initilization
