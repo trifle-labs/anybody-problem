@@ -128,8 +128,6 @@ export class Anybody extends EventEmitter {
 
   start() {
     this.addListeners()
-    this.runSteps(this.preRun)
-    // this.paintAtOnce(this.paintSteps)
     if (this.freeze) {
       this.setPause(true, true)
     }
@@ -165,25 +163,6 @@ export class Anybody extends EventEmitter {
       b[3] = BigInt(b[3]).toString()
       return b
     })
-  }
-
-  runSteps(n = this.preRun) {
-    let runIndex = 0
-    let keepSimulating = true
-    this.showIt = false
-    while (keepSimulating) {
-      runIndex++
-      if (runIndex > n) {
-        keepSimulating = false
-        this.showIt = true
-        // n > 0 && console.log(`${n.toLocaleString()} runs`)
-      } else {
-        const results = this.step(this.bodies, this.missiles)
-        this.frames++
-        this.bodies = results.bodies
-        this.missiles = results.missiles || []
-      }
-    }
   }
 
   addListeners() {

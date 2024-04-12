@@ -846,24 +846,6 @@ export const Visuals = {
     }
   },
 
-  paintAtOnce(n = this.paintSteps) {
-    this.bodiesGraphic ||= this.p.createGraphics(
-      this.windowWidth,
-      this.windowHeight
-    )
-
-    for (let i = 0; i < n; i++) {
-      const results = this.step(this.bodies, this.missiles)
-      this.bodies = results.bodies
-      this.missiles = results.missiles || []
-      this.drawBodies(false)
-      this.drawWitheringBodies()
-      this.frames++
-    }
-
-    this.p.image(this.bodiesGraphic, 0, 0)
-    this.bodiesGraphic.clear()
-  },
   componentToHex(c) {
     var hex = parseInt(c).toString(16)
     return hex.length == 1 ? '0' + hex : hex
