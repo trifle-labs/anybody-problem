@@ -246,12 +246,19 @@ export class Anybody extends EventEmitter {
     this.sound?.playGameOver({ won })
     this.gameOver = true
     this.won = won
+    var dust = 0
     if (this.won) {
-      void this.setStatsText()
+      const stats = this.calculateStats()
+      dust = stats.dust
+      void this.setStatsText(stats)
     } else {
       void this.setShowPlayAgain()
     }
-    this.emit('gameOver', { won, ticks: this.frames - this.startingFrame })
+    this.emit('gameOver', {
+      won,
+      ticks: this.frames - this.startingFrame,
+      dust
+    })
   }
 
   playAgain = (options) => {
@@ -265,8 +272,7 @@ export class Anybody extends EventEmitter {
     this.sound?.playStart()
   }
 
-  setStatsText = async () => {
-    const stats = this.calculateStats()
+  setStatsText = async (stats) => {
     const statLines = [
       `Bodies Included: ${stats.bodiesIncluded}`,
       `Bodies Boost: ${stats.bodiesBoost <= 1 ? '-' : `${stats.bodiesBoost}x`}`,
@@ -651,12 +657,12 @@ export class Anybody extends EventEmitter {
     ]
 
     const SPEED_BOOST = [
-      6, // <10s left
-      5, // <20s left
-      4, // <30s left
-      3, // <40s left
-      2, // <50s left
-      1 // < 60s left
+      1, // <10s left
+      2, // <20s left
+      3, // <30s left
+      4, // <40s left
+      5, // <50s left
+      6 // < 60s left
     ]
 
     const bodiesIncluded = this.bodies.length
