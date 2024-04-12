@@ -256,8 +256,6 @@ export class Anybody extends EventEmitter {
 
   playAgain = (options) => {
     if (options) {
-      // TODO: maybe save initial options so that we can reuse them and just update specific values?
-      // that could get messy tho too...
       this.setOptions(options)
     }
     this.clearValues()
