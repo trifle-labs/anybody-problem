@@ -206,7 +206,7 @@ export default class Sound {
     if (typeof window === 'undefined') return
     this.anybody = anybody
     window.addEventListener('keydown', this.handleKeyDown)
-    const rng = new Prando(anybody.seed.toString(16))
+    const rng = new Prando(anybody.seed?.toString(16))
     const songs = Object.values(SONGS)
     const rand = rng.nextInt(0, songs.length - 1)
     this.currentSong = songs[rand]
