@@ -316,7 +316,7 @@ export class Anybody extends EventEmitter {
     const statLines = [
       `bodies: ${stats.bodiesIncluded}`,
       `bodies bonus: ${stats.bodiesBoost}x`,
-      `speed bonus: ${stats.speedBoost}x`,
+      `speed bonus (${stats.timeTook}s): ${stats.speedBoost}x`,
       `DU$T: ${stats.dust}`
     ]
     const toShow = statLines.join('\n')
@@ -708,13 +708,14 @@ export class Anybody extends EventEmitter {
 
     const bodiesIncluded = this.bodies.length
     const bodiesBoost = BODY_BOOST[bodiesIncluded]
-
-    const secondsLeft = (this.startingFrame + this.timer - this.frames) / FPS
-    const speedBoost = SPEED_BOOST[Math.floor(secondsLeft / 10)]
-
+    const { startingFrame, timer, frames } = this
+    const secondsLeft = (startingFrame + timer - frames) / FPS
+    const timeTook = (frames - startingFrame) / FPS
+    const speedBoostIndex = Math.floor(secondsLeft / 10)
+    const speedBoost = SPEED_BOOST[speedBoostIndex]
     let dust = bodiesIncluded * bodiesBoost * speedBoost
 
-    return { bodiesIncluded, bodiesBoost, speedBoost, dust }
+    return { bodiesIncluded, bodiesBoost, speedBoost, dust, timeTook }
   }
 }
 
