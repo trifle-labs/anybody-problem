@@ -652,12 +652,12 @@ export class Anybody extends EventEmitter {
     ]
 
     const SPEED_BOOST = [
-      6, // <10s left
-      5, // <20s left
-      4, // <30s left
-      3, // <40s left
-      2, // <50s left
-      1 // < 60s left
+      1, // <10s left
+      2, // <20s left
+      3, // <30s left
+      4, // <40s left
+      5, // <50s left
+      6 // < 60s left
     ]
 
     const bodiesIncluded = this.bodies.length
