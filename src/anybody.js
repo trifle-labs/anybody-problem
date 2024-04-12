@@ -82,10 +82,6 @@ export class Anybody extends EventEmitter {
     this.opac = this.globalStyle == 'psycho' ? 1 : 0.1
     this.tailLength = 30
     this.tailMod = this.globalStyle == 'psycho' ? 2 : 1
-    this.thisLevelMissileCount = 0
-    this.thisLevelSec = 0
-    this.totalSec = 0
-    this.allLevelSec = []
     this.explosions = []
     this.missiles = []
     this.missileInits = []
@@ -98,7 +94,6 @@ export class Anybody extends EventEmitter {
     this.frames = 0
     this.showIt = true
     this.justStopped = false
-    this.loadTime = Date.now()
     this.gameOver = false
     this.firstFrame = true
     this.loaded = false
@@ -132,14 +127,22 @@ export class Anybody extends EventEmitter {
   }
 
   start() {
-    this.addListener()
-    this.startTick()
+    this.addListeners()
     this.runSteps(this.preRun)
     // this.paintAtOnce(this.paintSteps)
     if (this.freeze) {
       this.setPause(true, true)
     }
     this.storeInits()
+  }
+
+  destroy() {
+    this.setPause(true)
+    this.p.noLoop()
+    this.removeListener()
+    this.sound.stop()
+    this.sound = null
+    this.p.remove()
   }
 
   storeInits() {
@@ -183,19 +186,7 @@ export class Anybody extends EventEmitter {
     }
   }
 
-  startTick() {
-    if (this.mode == 'game') {
-      this.tickInterval && clearInterval(this.tickInterval)
-      this.tickInterval = setInterval(this.tick.bind(this), 1000)
-    }
-  }
-
-  tick() {
-    this.thisLevelSec++
-    this.totalSec++
-  }
-
-  addListener() {
+  addListeners() {
     const { canvas } = this.p
 
     // binding dummy handlers is necessary for p5 to listen to touchmove
@@ -208,7 +199,7 @@ export class Anybody extends EventEmitter {
     this.p.touchEnded = () => {}
 
     if (typeof window !== 'undefined' && this.mode == 'game') {
-      canvas.removeEventListener('click', this.handleNFTlick)
+      canvas.removeEventListener('click', this.handleNFTClick)
       canvas.addEventListener('click', this.handleGameClick)
       canvas.addEventListener('touchend', this.handleGameClick)
       window.addEventListener('keydown', this.handleGameKeyDown)
@@ -217,6 +208,15 @@ export class Anybody extends EventEmitter {
       window?.removeEventListener('keydown', this.handleGameKeyDown)
       canvas.addEventListener('click', this.handleGameClick)
     }
+  }
+
+  removeListener() {
+    const { canvas } = this.p
+    canvas?.removeEventListener('click', this.handleNFTClick)
+    canvas?.removeEventListener('click', this.handleGameClick)
+    canvas?.removeEventListener('touchend', this.handleGameClick)
+    window?.removeEventListener('keydown', this.handleGameKeyDown)
+    window?.removeEventListener('keydown', this.sound.handleKeyDown)
   }
 
   getXY(e) {
@@ -312,6 +312,7 @@ export class Anybody extends EventEmitter {
     this.sound?.playStart()
     this.init()
     !this.util && this.start()
+    this.setPause(false)
   }
 
   setStatsText = async (stats) => {
@@ -369,33 +370,7 @@ export class Anybody extends EventEmitter {
     if (this.missiles.length > 0 && this.missiles[0].radius == 0) {
       this.missiles.splice(0, 1)
     }
-
-    if (
-      this.mode == 'game' &&
-      this.bodies.reduce((a, c) => a + c.radius, 0) == 0
-    ) {
-      // this.nextLevel()
-      // if (!this.finished) {
-      //   this.finish()
-      // }
-      // this.setPause(true)
-    }
     return { bodies: this.bodies, missiles: this.missiles }
-  }
-
-  nextLevel() {
-    const level = {
-      thisLevelMissileCount: this.thisLevelMissileCount,
-      thisLevelSec: this.thisLevelSec
-    }
-    this.allLevelSec.unshift(level)
-    this.thisLevelSec = 0
-    this.thisLevelMissileCount = 0
-    this.startingBodies += 1
-    this.missiles = []
-    this.bodies = []
-    this.witheringBodies = []
-    this.generateBodies()
   }
 
   started() {
@@ -650,7 +625,6 @@ export class Anybody extends EventEmitter {
       this.missileInits.pop()
     }
 
-    this.thisLevelMissileCount++
     this.missileCount++
     const radius = 10
 
