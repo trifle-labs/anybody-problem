@@ -194,6 +194,7 @@ contract Solver is Ownable {
         if (!currentMatch.inProgress) {
           currentMatch.inProgress = true;
           currentMatch.startingTick = previousTickCount;
+          matches[problemId] = currentMatch;
         }
 
         uint256 newTotalTicks = previousTickCount + tickCount;
@@ -297,15 +298,15 @@ contract Solver is Ownable {
     }
 
     function getSpeedBoost(uint256 ticks) public pure returns (uint256) {
-        if (ticks < maxTick / 6) {
+        if (ticks <= 1 * maxTick / 6) {
           return 6;
-        } else if (ticks < maxTick / 5) {
+        } else if (ticks <= 2 * maxTick / 6) {
           return 5;
-        } else if (ticks < maxTick / 4) {
+        } else if (ticks <= 3 * maxTick / 6) {
           return 4;
-        } else if (ticks < maxTick / 3) {
+        } else if (ticks <= 4 * maxTick / 6) {
           return 3;
-        } else if (ticks < maxTick / 2) {
+        } else if (ticks <= 5 * maxTick / 6) {
           return 2;
         } else {
           return 1;

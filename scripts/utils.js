@@ -20,9 +20,9 @@ const proverTickIndex = {
   10: 50
 }
 
-const getTicksRun = async (bodyCount) => {
+const getTicksRun = async (bodyCount, ignoreTesting = false) => {
   const networkInfo = await hre.ethers.provider.getNetwork()
-  if (networkInfo['chainId'] == 12345) {
+  if (!ignoreTesting && networkInfo['chainId'] == 12345) {
     return 20
   } else {
     return proverTickIndex[bodyCount]
@@ -106,10 +106,9 @@ const decodeUri = (decodedJson) => {
   return text
 }
 
-const deployContracts = async () => {
+const deployContracts = async (ignoreTesting = false) => {
   var networkinfo = await hre.ethers.provider.getNetwork()
-  const testing = networkinfo['chainId'] == 12345
-
+  const testing = !ignoreTesting && networkinfo['chainId'] == 12345
   // const [owner] = await hre.ethers.getSigners()
 
   // order of deployment + constructor arguments
@@ -136,7 +135,7 @@ const deployContracts = async () => {
   const verifiersBodies = []
 
   for (let i = 3; i <= 10; i++) {
-    const ticks = await getTicksRun(i)
+    const ticks = await getTicksRun(i, ignoreTesting)
     const name = `Game_${i}_${ticks}Verifier`
     const path = `contracts/${name}.sol:Groth16Verifier`
     const verifier = await hre.ethers.getContractFactory(path)

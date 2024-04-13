@@ -67,7 +67,7 @@ export class Anybody extends EventEmitter {
       aimHelper: false,
       target: 'inside', // 'outside' or 'inside'
       showLives: false, // true or false
-      faceRotation: 'hitcycle', // 'time' or 'hitcycle' or 'mania'
+      faceRotation: 'mania', // 'time' or 'hitcycle' or 'mania'
       sfx: 'bubble', // 'space' or 'bubble'
       ownerPresent: false
     }
@@ -80,7 +80,7 @@ export class Anybody extends EventEmitter {
   // run whenever the class should be reset
   clearValues() {
     this.opac = this.globalStyle == 'psycho' ? 1 : 0.1
-    this.tailLength = 30
+    this.tailLength = 60
     this.tailMod = this.globalStyle == 'psycho' ? 2 : 1
     this.explosions = []
     this.missiles = []
@@ -119,11 +119,7 @@ export class Anybody extends EventEmitter {
     // const vectorLimitScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
     this.loadImages()
     this.setPause(this.paused, true)
-    // setTimeout(() => {
-    //   for (let i = 0; i < this.bodies.length; i++) {
-    //     this.bodies[i].radius = 0
-    //   }
-    // }, 6000)
+    this.storeInits()
   }
 
   start() {
@@ -133,7 +129,6 @@ export class Anybody extends EventEmitter {
     if (this.freeze) {
       this.setPause(true, true)
     }
-    this.storeInits()
   }
 
   destroy() {
@@ -303,7 +298,7 @@ export class Anybody extends EventEmitter {
     })
   }
 
-  playAgain = (options) => {
+  restart = (options, beginPaused = true) => {
     if (options) {
       this.setOptions(options)
     }
@@ -311,8 +306,10 @@ export class Anybody extends EventEmitter {
     this.sound?.stop()
     this.sound?.playStart()
     this.init()
-    !this.util && this.start()
-    this.setPause(false)
+    this.draw()
+    if (!beginPaused) {
+      this.setPause(false)
+    }
   }
 
   setStatsText = async (stats) => {
@@ -320,7 +317,7 @@ export class Anybody extends EventEmitter {
       `bodies: ${stats.bodiesIncluded}`,
       `bodies bonus: ${stats.bodiesBoost}x`,
       `speed bonus (${stats.timeTook}s): ${stats.speedBoost}x`,
-      `DU$T: ${stats.dust}`
+      `DU$T earned: ${stats.dust}`
     ]
     const toShow = statLines.join('\n')
 
@@ -551,8 +548,6 @@ export class Anybody extends EventEmitter {
   bodyDataToBodies(b) {
     const bodyId = b.bodyId.toNumber()
     const bodyIndex = b.bodyIndex.toNumber()
-    const seed = b.seed
-    const bodyRNG = new Prando(seed.toString(16))
     const px = b.px.toNumber() / parseInt(this.scalingFactor)
     const py = b.py.toNumber() / parseInt(this.scalingFactor)
     const vx =
@@ -571,8 +566,16 @@ export class Anybody extends EventEmitter {
       starLvl: b.starLvl?.toNumber(),
       maxStarLvl: b.maxStarLvl?.toNumber(),
       mintedBodyIndex: b.mintedBodyIndex.toNumber(),
-      c: this.colorArrayToTxt(this.randomColor(0, 359, bodyRNG))
+      c: this.getBodyColor(b.seed)
     }
+  }
+
+  getBodyColor(seed) {
+    if (typeof seed !== 'string') {
+      seed = seed.toString(16)
+    }
+    const bodyRNG = new Prando(seed)
+    return this.colorArrayToTxt(this.randomColor(0, 359, bodyRNG))
   }
 
   random(min, max, rng = this.rng) {

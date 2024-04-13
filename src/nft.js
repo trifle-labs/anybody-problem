@@ -1,4 +1,4 @@
-import Q5 from './q5.js'
+import Q5 from './q5.min.js'
 import { Anybody } from './anybody.js'
 
 const q5 = new Q5()
