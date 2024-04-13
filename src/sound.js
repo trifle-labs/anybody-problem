@@ -11,6 +11,7 @@ const {
   start,
   loaded
 } = Tone
+import Prando from 'prando'
 
 const whistle_8_T7 = new URL(
   '/public/sound/whistle/whistle_8_T7.mp3',
@@ -205,6 +206,10 @@ export default class Sound {
     if (typeof window === 'undefined') return
     this.anybody = anybody
     window.addEventListener('keydown', this.handleKeyDown)
+    const rng = new Prando(anybody.seed?.toString(16))
+    const songs = Object.values(SONGS)
+    const rand = rng.nextInt(0, songs.length - 1)
+    this.currentSong = songs[rand]
   }
 
   handleKeyDown = (e) => {
@@ -228,11 +233,7 @@ export default class Sound {
   // this function must be called in response to a user action
   // otherwise safari and chrome will block the audio
   resume() {
-    const randomSong =
-      Object.values(SONGS)[
-        Math.floor(Math.random() * Object.values(SONGS).length)
-      ]
-    this.play(randomSong)
+    this.play(this.currentSong)
     this.playOneShot(bongoHard, -20)
   }
 
@@ -396,7 +397,6 @@ export default class Sound {
     })
     this.voices = null
     this.currentMeasure = 0
-    this.currentSong = null
     this.playedGameOver = false
   }
 
