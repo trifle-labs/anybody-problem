@@ -40,6 +40,7 @@ export class Anybody extends EventEmitter {
     const defaultOptions = {
       inputData: null,
       bodyData: null,
+      starData: null,
       // Add default properties and their initial values here
       startingBodies: 3,
       seed: null,
@@ -66,7 +67,7 @@ export class Anybody extends EventEmitter {
       timer: GAME_LENGTH * FPS,
       aimHelper: false,
       target: 'inside', // 'outside' or 'inside'
-      showLives: false, // true or false
+      showLevels: false, // true or false
       faceRotation: 'mania', // 'time' or 'hitcycle' or 'mania'
       sfx: 'bubble', // 'space' or 'bubble'
       ownerPresent: false
@@ -79,6 +80,8 @@ export class Anybody extends EventEmitter {
 
   // run whenever the class should be reset
   clearValues() {
+    this.initialScoreSize = 60
+    this.scoreSize = this.initialScoreSize
     this.opac = this.globalStyle == 'psycho' ? 1 : 0.1
     this.tailLength = 60
     this.tailMod = this.globalStyle == 'psycho' ? 2 : 1
@@ -284,9 +287,13 @@ export class Anybody extends EventEmitter {
     this.gameOver = true
     this.won = won
     var dust = 0
+    var timeTook = 0
+    var framesTook = 0
     if (this.won) {
       const stats = this.calculateStats()
       dust = stats.dust
+      timeTook = stats.timeTook
+      framesTook = stats.framesTook
       void this.setStatsText(stats)
     } else {
       void this.setShowPlayAgain()
@@ -294,7 +301,9 @@ export class Anybody extends EventEmitter {
     this.emit('gameOver', {
       won,
       ticks: this.frames - this.startingFrame,
-      dust
+      dust,
+      timeTook,
+      framesTook
     })
   }
 
@@ -314,8 +323,9 @@ export class Anybody extends EventEmitter {
 
   setStatsText = async (stats) => {
     const statLines = [
-      `bodies: ${stats.bodiesIncluded}`,
-      `bodies bonus: ${stats.bodiesBoost}x`,
+      // `total bodies: ${stats.bodiesIncluded}`,
+      `¸¸♬·¯·♩¸¸♪·¯·♫¸¸♬·¯·♩¸¸♪·¯·♫¸¸`,
+      `${stats.bodiesIncluded} body score: ${stats.bodiesBoost}`,
       `speed bonus (${stats.timeTook}s): ${stats.speedBoost}x`,
       `DU$T earned: ${stats.dust}`
     ]
@@ -570,12 +580,17 @@ export class Anybody extends EventEmitter {
     }
   }
 
-  getBodyColor(seed) {
+  getBodyColor(seed, replaceOpacity = false) {
     if (typeof seed !== 'string') {
       seed = seed.toString(16)
     }
     const bodyRNG = new Prando(seed)
-    return this.colorArrayToTxt(this.randomColor(0, 359, bodyRNG))
+    const randomC = this.randomColor(0, 359, bodyRNG)
+    const colorString = this.colorArrayToTxt(randomC)
+    if (replaceOpacity) {
+      return colorString.replace(this.opac, '1')
+    }
+    return colorString
   }
 
   random(min, max, rng = this.rng) {
@@ -689,12 +704,20 @@ export class Anybody extends EventEmitter {
     const bodiesBoost = BODY_BOOST[bodiesIncluded]
     const { startingFrame, timer, frames } = this
     const secondsLeft = (startingFrame + timer - frames) / FPS
-    const timeTook = (frames - startingFrame) / FPS
+    const framesTook = frames - startingFrame
+    const timeTook = framesTook / FPS
     const speedBoostIndex = Math.floor(secondsLeft / 10)
     const speedBoost = SPEED_BOOST[speedBoostIndex]
-    let dust = bodiesIncluded * bodiesBoost * speedBoost
+    let dust = /*bodiesIncluded **/ bodiesBoost * speedBoost
 
-    return { bodiesIncluded, bodiesBoost, speedBoost, dust, timeTook }
+    return {
+      bodiesIncluded,
+      bodiesBoost,
+      speedBoost,
+      dust,
+      timeTook,
+      framesTook
+    }
   }
 }
 

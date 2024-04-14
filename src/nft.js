@@ -7,7 +7,7 @@ window.anybody
 q5.setup = () => {
   window.anybody = new Anybody(q5, {
     mode: 'game',
-    // showLives: true,
+    // showLevels: true,
     // target: 'inside',
     // globalStyle: 'psycho',
     alreadyRun: Math.floor(Math.random() * 20000),

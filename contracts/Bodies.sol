@@ -53,7 +53,7 @@ contract Bodies is ERC721, Ownable {
         uint256 indexed bodyId,
         uint256 indexed problemId,
         uint256 indexed mintedBodyIndex,
-        uint256 life,
+        uint256 maxStarLvl,
         bytes32 seed,
         bool addedToProblem
     );
@@ -85,9 +85,9 @@ contract Bodies is ERC721, Ownable {
         dustPrice[index] = price;
     }
 
-    function updateBodyLife(uint256 index, uint256 life) public onlyOwner {
+    function updateBodyMaxStarLvl(uint256 index, uint256 maxStarLvl) public onlyOwner {
         require(index < 10, "Invalid index");
-        starLvls[index] = life;
+        starLvls[index] = maxStarLvl;
     }
 
     function updateProblemsAddress(address payable problems_) public onlyOwner {
@@ -141,24 +141,24 @@ contract Bodies is ERC721, Ownable {
         address owner,
         uint256 problemId,
         uint256 mintedBodyIndex
-    ) public onlyProblems returns (uint256 bodyId, uint256 life, bytes32 seed) {
+    ) public onlyProblems returns (uint256 bodyId, uint256 maxStarLvl, bytes32 seed) {
         // NOTE: Problems already confirms this problem exists and is owned by the owner
         processPayment(owner, mintedBodyIndex);
         counter++; // bodyId
-        life = starLvls[mintedBodyIndex];
+        maxStarLvl = starLvls[mintedBodyIndex];
         seed = generateSeed(counter);
         bodies[counter] = Body({
             problemId: problemId,
             mintedBodyIndex: mintedBodyIndex,
             starLvl: 0,
-            maxStarLvl: life,
+            maxStarLvl: maxStarLvl,
             seed: seed
         });
 
         _mint(owner, counter);
         _transfer(owner, address(this), counter);
-        emit bodyBorn(counter, problemId, mintedBodyIndex, life, seed, true);
-        return (counter, life, seed);
+        emit bodyBorn(counter, problemId, mintedBodyIndex, maxStarLvl, seed, true);
+        return (counter, maxStarLvl, seed);
     }
 
     function moveBodyToProblem(

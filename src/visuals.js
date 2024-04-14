@@ -313,10 +313,14 @@ export const Visuals = {
       notPaused &&
       framesIsAtStopEveryInterval &&
       didNotJustPause &&
-      this.frames - this.startingFrame < this.timer
+      this.frames - this.startingFrame <= this.timer
     ) {
+      console.log('should post finish')
       if (didNotJustPause) {
+        console.log('did post finish')
         this.finish()
+      } else {
+        console.log('did not post finish because', { didNotJustPause })
       }
     } else {
       this.justPaused = false
@@ -504,31 +508,87 @@ export const Visuals = {
   },
 
   drawStarOnTopOfBG(x, y, v, radius, b) {
-    const star = this.starSVG[b.maxStarLvl]
-    if (star) {
-      this.p.image(this.tintImage(star, b.c), x, y, radius, radius)
+    const faceIdx = b.mintedBodyIndex || b.bodyIndex
+    const expression = 1
+    const with_mouth = expression * 2
+    const face = this.pngFaces[faceIdx][with_mouth]
+
+    // const star = this.starSVG[b.maxStarLvl]
+    if (face) {
+      this.p.image(face, x, y, radius, radius)
     }
   },
 
   drawStarOnBG(x, y, v, radius, b) {
-    let star = this.starSVG[b.maxStarLvl]
-    if (!star) return
-    star = this.tintImage(star, b.c)
-    const newElement = this.p.createGraphics(
-      this.windowWidth,
-      this.windowHeight
-    )
-    newElement.image(this.starBG, 0, 0, this.windowWidth, this.windowHeight)
-    // const resize = 1.2
-    // newElement.image(
-    //   this.starSVG[b.maxStarLvl],
-    //   x + (radius - radius * resize) / 2,
-    //   y + (radius - radius * resize) / 2,
-    //   radius * resize,
-    //   radius * resize
-    // )
-    newElement.image(star, x, y, radius, radius)
-    this.starBG = newElement
+    const faceIdx = b.mintedBodyIndex || b.bodyIndex
+    const expression = 1
+    const with_mouth = expression * 2
+    this.pngFaces ||= new Array(FACE_PNGS.length)
+      .fill(null)
+      .map(() => new Array(FACE_PNGS[0].length))
+    const face = this.pngFaces[faceIdx][with_mouth]
+
+    if (!face) {
+      this.pngFaces[faceIdx][with_mouth] = 'loading'
+      const png = FACE_PNGS[faceIdx][with_mouth]
+      this.p.loadImage(png, (face) => {
+        // to make masked background
+
+        // const bgSize = img.width * 1.2
+        // const imgCopy = img.get()
+        // this.maskImage(imgCopy, [255, 255, 255])
+        // const tinted = this.p.createGraphics(bgSize, bgSize)
+        // const cc = this.getTintFromColor(body.c)
+        // tinted.tint(cc[0], cc[1], cc[2])
+        // tinted.image(imgCopy, 0, 0, bgSize, bgSize)
+        // tinted.noTint()
+        // const offset = (bgSize - img.width) / 2
+        // tinted.image(img, offset, offset)
+        // this.pngFaces[faceIdx][expression] = tinted
+        this.pngFaces[faceIdx][with_mouth] = face
+        // let star = this.starSVG[b.maxStarLvl]
+        // if (!star) return
+        // star = this.tintImage(star, b.c)
+        const newElement = this.p.createGraphics(
+          this.windowWidth,
+          this.windowHeight
+        )
+        newElement.image(this.starBG, 0, 0, this.windowWidth, this.windowHeight)
+        // const resize = 1.2
+        // newElement.image(
+        //   this.starSVG[b.maxStarLvl],
+        //   x + (radius - radius * resize) / 2,
+        //   y + (radius - radius * resize) / 2,
+        //   radius * resize,
+        //   radius * resize
+        // )
+        newElement.fill(b.c.replace(this.opac, '1'))
+        newElement.ellipse(x, y, radius, radius)
+        newElement.image(face, x - radius / 2, y - radius / 2, radius, radius)
+        this.starBG = newElement
+      })
+    } else {
+      // let star = this.starSVG[b.maxStarLvl]
+      // if (!star) return
+      // star = this.tintImage(star, b.c)
+      const newElement = this.p.createGraphics(
+        this.windowWidth,
+        this.windowHeight
+      )
+      newElement.image(this.starBG, 0, 0, this.windowWidth, this.windowHeight)
+      // const resize = 1.2
+      // newElement.image(
+      //   this.starSVG[b.maxStarLvl],
+      //   x + (radius - radius * resize) / 2,
+      //   y + (radius - radius * resize) / 2,
+      //   radius * resize,
+      //   radius * resize
+      // )
+      newElement.fill(b.c.replace(this.opac, '1'))
+      newElement.ellipse(x, y, radius, radius)
+      newElement.image(face, x - radius / 2, y - radius / 2, radius, radius)
+      this.starBG = newElement
+    }
   },
 
   drawStaticBg() {
@@ -616,14 +676,11 @@ export const Visuals = {
     p.push()
     p.fill('white')
     p.noStroke()
-
-    const initialScoreSize = 60
-    this.scoreSize ||= initialScoreSize
     p.textAlign(p.LEFT, p.TOP)
     const secondsLeft = (this.startingFrame + this.timer - this.frames) / FPS
 
     if (this.gameOver) {
-      this.scoreSize = initialScoreSize
+      this.scoreSize = this.initialScoreSize
       p.pop()
       this.won ? this.drawWinScreen() : this.drawLoseScreen()
       return
@@ -669,6 +726,7 @@ export const Visuals = {
       if (line.match(/1x/)) {
         // gray text if 1x multiplier
         p.fill('rgba(0,0,0,0.3)')
+        p.fill('black')
       } else {
         p.fill('black')
       }
@@ -971,7 +1029,7 @@ export const Visuals = {
   },
 
   isMissileClose(body) {
-    const minDistance = 200
+    const minDistance = 300
     let closeEnough = false
     for (let i = 0; i < this.missiles.length; i++) {
       const missile = this.missiles[i]
@@ -1129,7 +1187,7 @@ export const Visuals = {
     this.bodiesGraphic.fill('white')
     this.bodiesGraphic.textSize(radius / 4)
     this.bodiesGraphic.textAlign(this.p.CENTER, this.p.CENTER)
-    this.bodiesGraphic.text(body.life, 0, radius)
+    this.bodiesGraphic.text(body.starLvl, 0, radius)
   },
 
   getTintFromColor(c) {
@@ -1140,72 +1198,84 @@ export const Visuals = {
   },
 
   drawLevels(radius, body, offset) {
+    if (body.radius !== 0) return
     this.bodiesGraphic.push()
     this.bodiesGraphic.translate(0, offset)
     this.bodiesGraphic.rotate(3 * (this.p.PI / 2))
-    const distance = radius / 1.5
+    const distance = radius / 1
     radius = radius - this.radiusMultiplyer
-    const blackTransparent = 'rgba(0,0,0,0.5)'
+    // const blackTransparent = 'rgba(0,0,0,0.5)'
     const whiteTransparent = 'rgba(255,255,255,0.5)'
+    this.bodiesGraphic.fill('transparent')
+    this.bodiesGraphic.stroke(whiteTransparent)
+    this.bodiesGraphic.strokeWeight(1)
+    this.bodiesGraphic.ellipse(0, 0, distance * 2)
     for (let i = 0; i < body.maxStarLvl; i++) {
-      this.bodiesGraphic.strokeWeight(3)
-      this.bodiesGraphic.stroke(whiteTransparent)
-      const rotateOffset = this.frames / 50
+      this.bodiesGraphic.strokeWeight(0)
+      this.bodiesGraphic.noStroke()
+      // this.bodiesGraphic.stroke(whiteTransparent)
+      const rotateOffset = this.frames / 80
       const rotated =
         i * (this.bodiesGraphic.TWO_PI / body.maxStarLvl) + rotateOffset
       const xRotated = distance * Math.cos(rotated)
       const yRotated = distance * Math.sin(rotated)
 
-      let c = body.c
+      // let c = body.c
+      let c = body.c.replace(this.opac, '1')
+
       if (body.radius == 0) {
         if (i < body.starLvl) {
           // this.bodiesGraphic.fill(body.c.replace(this.opac, '1'))
-          if (i == body.starLvl - 1) {
-            c = 'rgba(255,255,255,1)'
-            this.bodiesGraphic.fill('white')
-          } else {
-            c = body.c.replace(this.opac, '1')
-            this.bodiesGraphic.fill(body.c.replace(this.opac, '1'))
-          }
+          // if (i == body.starLvl - 1) {
+          //   c = 'rgba(255,255,255,1)'
+          //   this.bodiesGraphic.fill('white')
+          // } else {
+          // c = body.c.replace(this.opac, '1')
+          this.bodiesGraphic.fill(c)
+          // }
         } else {
-          c = blackTransparent
-          this.bodiesGraphic.fill(blackTransparent)
+          c = 'black'
+          this.bodiesGraphic.strokeWeight(1)
+          this.bodiesGraphic.stroke(whiteTransparent)
+          this.bodiesGraphic.fill(c)
         }
       } else {
         if (i > 0 && i - 1 < body.starLvl) {
-          c = body.c.replace(this.opac, '1')
-          this.bodiesGraphic.fill(body.c.replace(this.opac, '1'))
-        } else {
-          c = blackTransparent
           this.bodiesGraphic.fill(c)
+        } else {
+          c = 'black'
+          this.bodiesGraphic.strokeWeight(1)
+          this.bodiesGraphic.stroke(whiteTransparent)
+          this.bodiesGraphic.fill(c)
+          // c = blackTransparent
         }
       }
 
-      this.bodiesGraphic.ellipse(xRotated, yRotated, radius)
-      this.starSVG ||= []
-      const star = this.starSVG[body.maxStarLvl]
-      if (!star) {
-        const svg = STAR_SVGS[body.maxStarLvl - 1]
-        this.p.loadImage(svg, (img) => {
-          // this is a hack to tint the svg
-          // const g = this.p.createGraphics(img.width, img.height)
-          // const cc = c
-          //   .split(',')
-          //   .map((c) => parseFloat(c.replace(')', '').replace('rgba(', '')))
-          // g.tint(cc[0], cc[1], cc[2], cc[3] * 255)
-          // g.image(img, 0, 0)
-          this.starSVG[body.maxStarLvl] = img //g
-        })
-      }
-      if (star && star !== 'loading') {
-        this.bodiesGraphic.image(
-          star,
-          xRotated - radius / 2,
-          yRotated - radius / 2,
-          radius,
-          radius
-        )
-      }
+      this.bodiesGraphic.ellipse(xRotated, yRotated, radius / 2)
+      // this.starSVG ||= []
+      // const star = this.starSVG[body.maxStarLvl]
+      // if (!star) {
+      //   const svg = STAR_SVGS[body.maxStarLvl - 1]
+      //   this.p.loadImage(svg, (img) => {
+      //     // this is a hack to tint the svg
+      //     // const g = this.p.createGraphics(img.width, img.height)
+      //     // const cc = c
+      //     //   .split(',')
+      //     //   .map((c) => parseFloat(c.replace(')', '').replace('rgba(', '')))
+      //     // g.tint(cc[0], cc[1], cc[2], cc[3] * 255)
+      //     // g.image(img, 0, 0)
+      //     this.starSVG[body.maxStarLvl] = img //g
+      //   })
+      // }
+      // if (star && star !== 'loading') {
+      //   this.bodiesGraphic.image(
+      //     star,
+      //     xRotated - radius / 2,
+      //     yRotated - radius / 2,
+      //     radius,
+      //     radius
+      //   )
+      // }
 
       // this.bodiesGraphic.fill('white')
       // this.bodiesGraphic.textSize(50)
@@ -1255,9 +1325,6 @@ export const Visuals = {
 
     const offset = this.getOffset(radius)
 
-    if (this.showLives) {
-      this.drawLevels(radius, body, offset)
-    }
     switch (body.bodyStyle) {
       default:
         this.drawBodyStyle1(radius, body, offset)
@@ -1266,6 +1333,10 @@ export const Visuals = {
       this.drawPngFace(radius, body, offset)
     } else {
       this.drawGlyphFace(radius, body)
+    }
+
+    if (this.showLevels) {
+      this.drawLevels(radius, body, offset)
     }
 
     this.bodiesGraphic.pop()
@@ -1739,7 +1810,6 @@ export const Visuals = {
         const teeth = 10
         const toothSize = r / 4.5
         // if (closeEnough) {
-
         p.fill(darker)
         p.ellipse(x, y, r)
         for (let i = 0; i < teeth; i++) {
@@ -1762,6 +1832,20 @@ export const Visuals = {
         p.strokeWeight(r / 12)
         p.noFill()
         p.ellipse(x, y, r)
+      } else {
+        p.strokeWeight(0)
+        const count = 3
+        for (let i = 0; i < count; i++) {
+          if (i % 2 == 1) {
+            p.fill('white')
+          } else {
+            p.fill(darker)
+          }
+          p.ellipse(x, y, r - (i * r) / count)
+        }
+        // let star = this.starSVG[b.maxStarLvl]
+        // star = this.tintImage(star, darker)
+        // p.image(star, x - r / 2, y - r / 2, r, r)
       }
     }
     // p.blendMode(p.BLEND)
@@ -1796,16 +1880,17 @@ export const Visuals = {
     return this.lastFrameRate
   },
   async loadImages() {
-    this.starSVG ||= {}
-    for (let i = 0; i < STAR_SVGS.length; i++) {
-      const svg = STAR_SVGS[i]
-      await new Promise((resolve) => {
-        this.p.loadImage(svg, (img) => {
-          this.starSVG[i + 1] = img
-          resolve()
-        })
-      })
-    }
-    this.loaded = true
+    return
+    // this.starSVG ||= {}
+    // for (let i = 0; i < STAR_SVGS.length; i++) {
+    //   const svg = STAR_SVGS[i]
+    //   await new Promise((resolve) => {
+    //     this.p.loadImage(svg, (img) => {
+    //       this.starSVG[i + 1] = img
+    //       resolve()
+    //     })
+    //   })
+    // }
+    // this.loaded = true
   }
 }
