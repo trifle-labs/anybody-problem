@@ -315,12 +315,8 @@ export const Visuals = {
       didNotJustPause &&
       this.frames - this.startingFrame <= this.timer
     ) {
-      console.log('should post finish')
       if (didNotJustPause) {
-        console.log('did post finish')
         this.finish()
-      } else {
-        console.log('did not post finish because', { didNotJustPause })
       }
     } else {
       this.justPaused = false
