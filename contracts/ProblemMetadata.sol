@@ -59,24 +59,21 @@ contract ProblemMetadata is Ownable {
                     "data:application/json;base64,",
                     Base64.encode(
                         abi.encodePacked(
-                            '{"name":"',
-                            getName(tokenId),
-                            '", "description": "asdf", "image": "',
-                            getSVG(tokenId),
-                            '",',
-                            '"animation_url": "',
-                            getHTML(tokenId),
-                            '",',
-                            '"attributes": ',
-                            getAttributes(tokenId),
-                            "}"
+                            '{"name":"',getName(tokenId), '",',
+                            '"description": "Anybody Problem (https://anybody.trifle.life)",',
+                            '"image": "',getSVG(tokenId),'",',
+                            '"image_url": "',getSVG(tokenId),'",',
+                            '"home_url": "https://anybody.trifle.life",',
+                            '"external_url": "https://anybody.trifle.life",',
+                            // '"animation_url": "', getHTML(tokenId), '",',
+                            '"attributes": ', getAttributes(tokenId), '}'
                         )
                     )
                 )
             );
     }
 
-    function getName(uint256 tokenId) public view returns (string memory) {
+    function getName(uint256 tokenId) public pure returns (string memory) {
         return
             string(
                 abi.encodePacked("Problem #", StringsExtended.toString(tokenId))
@@ -250,16 +247,22 @@ contract ProblemMetadata is Ownable {
     function getAttributes(
         uint256 tokenId
     ) internal view returns (string memory) {
-        uint256 value = 0;
-        uint256 value2 = 1;
+        (bytes32 seed, uint256 bodyCount, uint256 mintedBodiesIndex, uint256 tickCount) = Problems(problems).problems(tokenId);
+        uint256 problemStarCount = Problems(problems).getProblemStarCount(tokenId);
         return
             string(
                 abi.encodePacked(
                     "[",
-                    '{"trait_type":"ASDF","value":"',
-                    value,
-                    '"}, {"trait_type":"ASDF2","value":"',
-                    value2,
+                    '{"trait_type":"seed","value":"',
+                    StringsExtended.toHexStringWithPrefix(uint256(seed), 32),
+                    '"}, {"trait_type":"bodyCount","value":"',
+                    StringsExtended.toString(bodyCount),
+                    '"}, {"trait_type":"mintedBodiesIndex","value":"',
+                    StringsExtended.toString(mintedBodiesIndex),
+                    '"}, {"trait_type":"tickCount","value":"',
+                    StringsExtended.toString(tickCount),
+                    '"}, {"trait_type":"starCount","value":"',
+                    StringsExtended.toString(problemStarCount),
                     '"}]'
                 )
             );

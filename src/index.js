@@ -46,31 +46,37 @@ export const Solver = {
 
 import DustABI from '../contractData/ABI-11155111-Dust.json'
 import DustSepolia from '../contractData/11155111-Dust.json'
+import DustLocal from '../contractData/12345-Dust.json'
 
 export const Dust = {
   abi: DustABI,
   networks: {
-    11155111: DustSepolia
+    11155111: DustSepolia,
+    12345: DustLocal
   }
 }
 
 import ProblemMetadataABI from '../contractData/ABI-11155111-ProblemMetadata.json'
 import ProblemMetadataSepolia from '../contractData/11155111-ProblemMetadata.json'
+import ProblemMetadataLocal from '../contractData/12345-ProblemMetadata.json'
 
 export const ProblemMetadata = {
   abi: ProblemMetadataABI,
   networks: {
-    11155111: ProblemMetadataSepolia
+    11155111: ProblemMetadataSepolia,
+    12345: ProblemMetadataLocal
   }
 }
 
 import BodyMetadataABI from '../contractData/ABI-11155111-BodyMetadata.json'
 import BodyMetadataSepolia from '../contractData/11155111-BodyMetadata.json'
+import BodyMetadataLocal from '../contractData/12345-BodyMetadata.json'
 
 export const BodyMetadata = {
   abi: BodyMetadataABI,
   networks: {
-    11155111: BodyMetadataSepolia
+    11155111: BodyMetadataSepolia,
+    12345: BodyMetadataLocal
   }
 }
 

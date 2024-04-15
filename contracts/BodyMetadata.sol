@@ -43,24 +43,21 @@ contract BodyMetadata is Ownable {
                     "data:application/json;base64,",
                     Base64.encode(
                         abi.encodePacked(
-                            '{"name":"',
-                            getName(tokenId),
-                            '", "description": "asdf", "image": "',
-                            getSVG(tokenId),
-                            '",',
-                            '"animation_url": "',
-                            getHTML(tokenId),
-                            '",',
-                            '"attributes": ',
-                            getAttributes(tokenId),
-                            "}"
+                            '{"name":"', getName(tokenId), '",',
+                            '"description": "Anybody Problem (https://anybody.trifle.life)",',
+                            '"image": "', getSVG(tokenId), '",',
+                            '"image_url": "', getSVG(tokenId), '",',
+                            '"home_url": "https://anybody.trifle.life",',
+                            '"external_url": "https://anybody.trifle.life",',
+                            // '"animation_url": "', getHTML(tokenId), '",',
+                            '"attributes": ',getAttributes(tokenId),"}"
                         )
                     )
                 )
             );
     }
 
-    function getName(uint256 tokenId) public view returns (string memory) {
+    function getName(uint256 tokenId) public pure returns (string memory) {
         return
             string(
                 abi.encodePacked("Body #", StringsExtended.toString(tokenId))
