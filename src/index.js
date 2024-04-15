@@ -54,17 +54,23 @@ export const Dust = {
   }
 }
 
-import MetadataABI from '../contractData/ABI-11155111-Metadata.json'
-import MetadataForma from '../contractData/80085-Metadata.json'
-import MetadataLocal from '../contractData/12345-Metadata.json'
-import MetadataSepolia from '../contractData/11155111-Metadata.json'
+import ProblemMetadataABI from '../contractData/ABI-11155111-ProblemMetadata.json'
+import ProblemMetadataSepolia from '../contractData/11155111-ProblemMetadata.json'
 
-export const Metadata = {
-  abi: MetadataABI,
+export const ProblemMetadata = {
+  abi: ProblemMetadataABI,
   networks: {
-    80085: MetadataForma,
-    12345: MetadataLocal,
-    11155111: MetadataSepolia
+    11155111: ProblemMetadataSepolia
+  }
+}
+
+import BodyMetadataABI from '../contractData/ABI-11155111-BodyMetadata.json'
+import BodyMetadataSepolia from '../contractData/11155111-BodyMetadata.json'
+
+export const BodyMetadata = {
+  abi: BodyMetadataABI,
+  networks: {
+    11155111: BodyMetadataSepolia
   }
 }
 
@@ -75,5 +81,6 @@ export const Metadata = {
 //   Bodies,
 //   Solver,
 //   Dust,
-//   Metadata
+//   ProblemMetadata,
+//   BodyMetadata
 // }

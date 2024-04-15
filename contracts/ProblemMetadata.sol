@@ -7,12 +7,12 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./StringsExtended.sol";
 import "hardhat/console.sol";
 
-/// @title Metadata
+/// @title ProblemMetadata
 /// @notice
 /// @author @okwme
-/// @dev The updateable and replaceable metadata contract
+/// @dev The updateable and replaceable problemMetadata contract
 
-contract Metadata is Ownable {
+contract ProblemMetadata is Ownable {
     address payable public problems;
     uint256 constant radiusMultiplyer = 100;
 
@@ -26,10 +26,10 @@ contract Metadata is Ownable {
     //     baseURI = baseURI_;
     // }
 
-    // /// @dev generates the metadata
+    // /// @dev generates the problemMetadata
     // /// @param tokenId the tokenId
-    // /// @return _ the metadata
-    // function getMetadata(uint256 tokenId) public view returns (string memory) {
+    // /// @return _ the problemMetadata
+    // function getProblemMetadata(uint256 tokenId) public view returns (string memory) {
     //     return
     //         string(
     //             abi.encodePacked(baseURI, StringsExtended.toString(tokenId), ".json")
@@ -48,9 +48,9 @@ contract Metadata is Ownable {
         return Problems(problems).ownerOf(id) != address(0);
     }
 
-    /// @dev generates the metadata
+    /// @dev generates the problemMetadata
     /// @param tokenId the tokenId
-    function getMetadata(
+    function getProblemMetadata(
         uint256 tokenId
     ) public view existsModifier(tokenId) returns (string memory) {
         return
@@ -209,7 +209,7 @@ contract Metadata is Ownable {
                     pyString,
                     '" cx="',
                     pxString,
-                    '" fill="#',
+                    '" fill="',
                     seedToColor(body.seed),
                     '" />'
                 )
@@ -219,13 +219,32 @@ contract Metadata is Ownable {
         return path;
     }
 
-    function seedToColor(bytes32 seed) public view returns (string memory) {
-        string memory result = StringsExtended.toHexString(
-            uint256(seed) & 0xffffff,
-            3
+    function seedToColor(bytes32 seed) public pure returns (string memory) {
+        uint256 blocker = 0xffff;
+        uint256 color = (uint256(seed) & blocker) % 360;
+        uint256 saturation = ((uint256(seed) >> 16) & blocker) % 100;
+        uint256 lightness = (((uint256(seed) >> 32) & blocker) % 40) + 40;
+        string memory result = string(
+          abi.encodePacked(
+            "hsl(",
+            StringsExtended.toString(color),
+            ",",
+            StringsExtended.toString(saturation),
+            "%,",
+            StringsExtended.toString(lightness),
+            "%)"
+          )
         );
         return result;
     }
+
+    // function seedToColor(bytes32 seed) public view returns (string memory) {
+    //     string memory result = StringsExtended.toHexString(
+    //         uint256(seed) & 0xffffff,
+    //         3
+    //     );
+    //     return result;
+    // }
 
     /// @dev generates the attributes as JSON String
     function getAttributes(

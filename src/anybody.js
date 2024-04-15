@@ -584,13 +584,12 @@ export class Anybody extends EventEmitter {
     if (typeof seed !== 'string') {
       seed = seed.toString(16)
     }
-    const bodyRNG = new Prando(seed)
-    const randomC = this.randomColor(0, 359, bodyRNG)
-    const colorString = this.colorArrayToTxt(randomC)
-    if (replaceOpacity) {
-      return colorString.replace(this.opac, '1')
-    }
-    return colorString
+    const blocker = 0xffff
+    const color = (BigInt(seed) & BigInt(blocker)) % 360n
+    const saturation = ((BigInt(seed) >> 16n) & BigInt(blocker)) % 100n
+    const lightness = (((BigInt(seed) >> 32n) & BigInt(blocker)) % 40n) + 40n
+    const result = `hsla(${color.toString()}, ${saturation.toString()}%, ${lightness.toString()}%,${replaceOpacity ? '1' : this.opac})`
+    return result
   }
 
   random(min, max, rng = this.rng) {

@@ -177,7 +177,12 @@ You should see something like:
     ✔ produces a witness with valid constraints
     ✔ has the correct output
 
-  Metadata Tests
+  ProblemMetadata Tests
+    ✔ has the correct problems address
+    ✔ onlyOwner functions are really only Owner
+    ✔ creates an SVG
+
+  BoodyMetadata Tests
     ✔ has the correct problems address
     ✔ onlyOwner functions are really only Owner
     ✔ creates an SVG
@@ -188,7 +193,7 @@ You should see something like:
     ✔ NftVerifier.sol works
 
   Problem Tests
-    ✔ has the correct verifiers metadata, bodies, dust, solver addresses
+    ✔ has the correct verifiers problemMetadata, bodies, dust, solver addresses
     ✔ onlyOwner functions are really only Owner
     ✔ onlySolver functions are really only Solver
     ✔ has all the correct interfaces

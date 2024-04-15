@@ -10,6 +10,7 @@ import "./Problems.sol";
 
 contract Bodies is ERC721, Ownable {
     address payable public problems;
+    address public bodyMetadata;
     address public dust;
 
     struct Body {
@@ -70,7 +71,8 @@ contract Bodies is ERC721, Ownable {
     //     uint256 indexed mintedBodyIndex
     // );
 
-    constructor(address payable problems_) ERC721("Bodies", "BOD") {
+    constructor(address bodyMetadata_, address payable problems_) ERC721("Bodies", "BOD") {
+        updateBodyMetadataAddress(bodyMetadata_);
         updateProblemsAddress(problems_);
     }
 
@@ -92,6 +94,10 @@ contract Bodies is ERC721, Ownable {
 
     function updateProblemsAddress(address payable problems_) public onlyOwner {
         problems = problems_;
+    }
+
+    function updateBodyMetadataAddress(address bodyMetadata_) public onlyOwner {
+        bodyMetadata = bodyMetadata_;
     }
 
     function updateDustAddress(address dust_) public onlyOwner {

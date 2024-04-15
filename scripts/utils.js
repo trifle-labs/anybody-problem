@@ -75,7 +75,14 @@ const initContracts = async (getSigners = true) => {
     ;[owner] = await hre.ethers.getSigners()
   }
 
-  const contractNames = ['Problems', 'Bodies', 'Dust', 'Solver', 'Metadata']
+  const contractNames = [
+    'Problems',
+    'Bodies',
+    'Dust',
+    'Solver',
+    'ProblemMetadata',
+    'BodyMetadata'
+  ]
   for (let i = 3; i <= 10; i++) {
     contractNames.push(`Game_${i}_20Verifier.sol`)
   }
@@ -116,9 +123,10 @@ const deployContracts = async (ignoreTesting = false) => {
   // Nft_3_20Verifier (no args)
   // ...
   // Nft_10_20Verifier (no args)
-  // Metadata (no args)
-  // Problems (metadata.address, address[10] verifiers)
-  // Bodies(problems.address)
+  // ProblemMetadata (no args)
+  // BodyMetadata (no args)
+  // Problems (problemMetadata.address, address[10] verifiers)
+  // Bodies(bodyMetadata.address, problems.address)
   // Dust (problems.address, bodies.address)
   // Solver (problems.address, dust.address)
 
@@ -148,18 +156,27 @@ const deployContracts = async (ignoreTesting = false) => {
     returnObject[name] = verifierContract
   }
 
-  // deploy Metadata
-  const Metadata = await hre.ethers.getContractFactory('Metadata')
-  const metadata = await Metadata.deploy()
-  await metadata.deployed()
-  var metadataAddress = metadata.address
-  returnObject['Metadata'] = metadata
-  !testing && log('Metadata Deployed at ' + String(metadataAddress))
+  // deploy ProblemMetadata
+  const ProblemMetadata = await hre.ethers.getContractFactory('ProblemMetadata')
+  const problemMetadata = await ProblemMetadata.deploy()
+  await problemMetadata.deployed()
+  var problemMetadataAddress = problemMetadata.address
+  returnObject['ProblemMetadata'] = problemMetadata
+  !testing &&
+    log('ProblemMetadata Deployed at ' + String(problemMetadataAddress))
+
+  // deploy BodyMetadata
+  const BodyMetadata = await hre.ethers.getContractFactory('BodyMetadata')
+  const bodyMetadata = await BodyMetadata.deploy()
+  await bodyMetadata.deployed()
+  var bodyMetadataAddress = bodyMetadata.address
+  returnObject['BodyMetadata'] = bodyMetadata
+  !testing && log('BodyMetadata Deployed at ' + String(bodyMetadataAddress))
 
   // deploy Problems
   const Problems = await hre.ethers.getContractFactory('Problems')
   const problems = await Problems.deploy(
-    metadataAddress,
+    problemMetadataAddress,
     verifiers,
     verifiersTicks,
     verifiersBodies
@@ -171,18 +188,18 @@ const deployContracts = async (ignoreTesting = false) => {
     log(
       'Problems Deployed at ' +
         String(problemsAddress) +
-        ` with metadata ${metadataAddress} and verifiers ${verifiers} and verifiersTicks ${verifiersTicks} and verifiersBodies ${verifiersBodies}`
+        ` with problemMetadata ${problemMetadataAddress} and verifiers ${verifiers} and verifiersTicks ${verifiersTicks} and verifiersBodies ${verifiersBodies}`
     )
 
   // deploy Bodies
   const Bodies = await hre.ethers.getContractFactory('Bodies')
-  const bodies = await Bodies.deploy(problemsAddress)
+  const bodies = await Bodies.deploy(bodyMetadataAddress, problemsAddress)
   await bodies.deployed()
   const bodiesAddress = bodies.address
   returnObject['Bodies'] = bodies
   !testing &&
     log(
-      `Bodies deployed at ${bodiesAddress} with problemsAddress ${problemsAddress} and metadataAddress ${metadataAddress}`
+      `Bodies deployed at ${bodiesAddress} with bodyMetadata ${bodyMetadataAddress} and problemsAddress ${problemsAddress}`
     )
 
   // deploy Dust
@@ -207,9 +224,17 @@ const deployContracts = async (ignoreTesting = false) => {
       `Solver deployed at ${solverAddress} with problemsAddress ${problemsAddress} and dustAddress ${dustAddress}`
     )
 
-  // configure Metadata
-  await metadata.updateProblemsAddress(problemsAddress)
-  !testing && log(`Metadata configured with problemsAddress ${problemsAddress}`)
+  // configure ProblemMetadata
+  await problemMetadata.updateProblemsAddress(problemsAddress)
+  !testing &&
+    log(`ProblemMetadata configured with problemsAddress ${problemsAddress}`)
+
+  // configure BodiesMetadata
+  await bodyMetadata.updateProblemsAddress(problemsAddress)
+  !testing &&
+    log(`BodyMetadata configured with problemsAddress ${problemsAddress}`)
+  await bodyMetadata.updateBodiesAddress(bodiesAddress)
+  !testing && log(`BodyMetadata configured with bodiesAddress ${bodiesAddress}`)
 
   // configure Problems
   await problems.updateBodiesAddress(bodiesAddress)
@@ -233,13 +258,17 @@ const deployContracts = async (ignoreTesting = false) => {
   ) {
     const verificationData = [
       {
-        name: 'Metadata',
+        name: 'ProblemMetadata',
+        constructorArguments: []
+      },
+      {
+        name: 'BodyMetadata',
         constructorArguments: []
       },
       {
         name: 'Problems',
         constructorArguments: [
-          metadataAddress,
+          problemMetadataAddress,
           verifiers,
           verifiersTicks,
           verifiersBodies
@@ -247,7 +276,7 @@ const deployContracts = async (ignoreTesting = false) => {
       },
       {
         name: 'Bodies',
-        constructorArguments: [problemsAddress]
+        constructorArguments: [bodyMetadataAddress, problemsAddress]
       },
       {
         name: 'Dust',
