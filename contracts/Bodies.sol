@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./Dust.sol";
 import "./Problems.sol";
+import "./BodyMetadata.sol";
 
 // import "hardhat/console.sol";
 
@@ -80,7 +81,12 @@ contract Bodies is ERC721, Ownable {
         revert("no fallback function");
     }
 
-    // TODO: add metadata
+
+    function tokenURI(
+        uint256 id
+    ) public view override(ERC721) returns (string memory) {
+        return BodyMetadata(bodyMetadata).getBodyMetadata(id);
+    }
 
     function updateDustPrice(uint256 index, uint256 price) public onlyOwner {
         require(index < 10, "Invalid index");

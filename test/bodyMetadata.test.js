@@ -5,6 +5,7 @@ const { ethers } = hre
 import { deployContracts, mintProblem } from '../scripts/utils.js'
 import fs from 'fs'
 import prettier from 'prettier'
+import { DOMParser } from 'xmldom'
 // let tx
 describe('BodyMetadata Tests', function () {
   this.timeout(50000000)
@@ -36,7 +37,46 @@ describe('BodyMetadata Tests', function () {
       .reverted
   })
 
-  it.only('creates an SVG', async function () {
+  it('has valid json', async function () {
+    const signers = await ethers.getSigners()
+
+    const deployedContracts = await deployContracts()
+    await mintProblem(signers, deployedContracts)
+    const { BodyMetadata: bodyMetadata, Bodies: bodies } = deployedContracts
+
+    const bodyId = 1
+
+    const base64Json = await bodyMetadata.getBodyMetadata(bodyId)
+
+    const utf8Json = Buffer.from(
+      base64Json.replace('data:application/json;base64,', ''),
+      'base64'
+    ).toString('utf-8')
+    const json = JSON.parse(utf8Json)
+    const base64SVG = json.image
+    const SVG = Buffer.from(
+      base64SVG.replace('data:image/svg+xml;base64,', ''),
+      'base64'
+    ).toString('utf-8')
+    const isValidSVG = (svg) => {
+      try {
+        const parser = new DOMParser()
+        const doc = parser.parseFromString(svg, 'image/svg+xml')
+        return doc.documentElement.tagName.toLowerCase() === 'svg'
+      } catch (error) {
+        console.log({ error })
+        return false
+      }
+    }
+
+    const isSVGValid = isValidSVG(SVG)
+    expect(isSVGValid).to.be.true
+    const jsonSeed = json.attributes[4].value
+    const { seed } = await bodies.bodies(bodyId)
+    expect(jsonSeed).to.equal(seed.toString())
+  })
+
+  it('creates an SVG', async function () {
     const signers = await ethers.getSigners()
     const deployedContracts = await deployContracts()
     const { BodyMetadata: bodyMetadata } = deployedContracts
