@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?><svg
+  xmlns="http://www.w3.org/2000/svg"
+  height="100%"
+  width="100%"
+  viewBox="0 0 1000 1000"
+  style="background-color: grey"
+>
+  <style></style>
+  <style>
+    @keyframes moveEllipse1 {
+      0% {
+        transform-origin: 500px 500px;
+        transform: rotate(0deg) translate(0px, 10px);
+      }
+      100% {
+        transform-origin: 500px 500px;
+        transform: rotate(360deg) translate(0px, 10px);
+      }
+    }
+    ellipse#id-1 {
+      animation: moveEllipse1 4s infinite linear;
+      animation-delay: -0s;
+    }
+  </style>
+  <ellipse
+    id="id-1"
+    ry="128.0"
+    rx="128.0"
+    cy="500"
+    cx="500"
+    fill="hsl(148,10%,62%)"
+  />
+  <text x="50" y="550" class="name">Body #1</text>
+</svg>

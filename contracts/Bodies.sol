@@ -5,11 +5,13 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./Dust.sol";
 import "./Problems.sol";
+import "./BodyMetadata.sol";
 
 // import "hardhat/console.sol";
 
 contract Bodies is ERC721, Ownable {
     address payable public problems;
+    address public bodyMetadata;
     address public dust;
 
     struct Body {
@@ -53,7 +55,7 @@ contract Bodies is ERC721, Ownable {
         uint256 indexed bodyId,
         uint256 indexed problemId,
         uint256 indexed mintedBodyIndex,
-        uint256 life,
+        uint256 maxStarLvl,
         bytes32 seed,
         bool addedToProblem
     );
@@ -70,7 +72,8 @@ contract Bodies is ERC721, Ownable {
     //     uint256 indexed mintedBodyIndex
     // );
 
-    constructor(address payable problems_) ERC721("Bodies", "BOD") {
+    constructor(address bodyMetadata_, address payable problems_) ERC721("Bodies", "BOD") {
+        updateBodyMetadataAddress(bodyMetadata_);
         updateProblemsAddress(problems_);
     }
 
@@ -78,20 +81,29 @@ contract Bodies is ERC721, Ownable {
         revert("no fallback function");
     }
 
-    // TODO: add metadata
+
+    function tokenURI(
+        uint256 id
+    ) public view override(ERC721) returns (string memory) {
+        return BodyMetadata(bodyMetadata).getBodyMetadata(id);
+    }
 
     function updateDustPrice(uint256 index, uint256 price) public onlyOwner {
         require(index < 10, "Invalid index");
         dustPrice[index] = price;
     }
 
-    function updateBodyLife(uint256 index, uint256 life) public onlyOwner {
+    function updateBodyMaxStarLvl(uint256 index, uint256 maxStarLvl) public onlyOwner {
         require(index < 10, "Invalid index");
-        starLvls[index] = life;
+        starLvls[index] = maxStarLvl;
     }
 
     function updateProblemsAddress(address payable problems_) public onlyOwner {
         problems = problems_;
+    }
+
+    function updateBodyMetadataAddress(address bodyMetadata_) public onlyOwner {
+        bodyMetadata = bodyMetadata_;
     }
 
     function updateDustAddress(address dust_) public onlyOwner {
@@ -141,24 +153,24 @@ contract Bodies is ERC721, Ownable {
         address owner,
         uint256 problemId,
         uint256 mintedBodyIndex
-    ) public onlyProblems returns (uint256 bodyId, uint256 life, bytes32 seed) {
+    ) public onlyProblems returns (uint256 bodyId, uint256 maxStarLvl, bytes32 seed) {
         // NOTE: Problems already confirms this problem exists and is owned by the owner
         processPayment(owner, mintedBodyIndex);
         counter++; // bodyId
-        life = starLvls[mintedBodyIndex];
+        maxStarLvl = starLvls[mintedBodyIndex];
         seed = generateSeed(counter);
         bodies[counter] = Body({
             problemId: problemId,
             mintedBodyIndex: mintedBodyIndex,
             starLvl: 0,
-            maxStarLvl: life,
+            maxStarLvl: maxStarLvl,
             seed: seed
         });
 
         _mint(owner, counter);
         _transfer(owner, address(this), counter);
-        emit bodyBorn(counter, problemId, mintedBodyIndex, life, seed, true);
-        return (counter, life, seed);
+        emit bodyBorn(counter, problemId, mintedBodyIndex, maxStarLvl, seed, true);
+        return (counter, maxStarLvl, seed);
     }
 
     function moveBodyToProblem(

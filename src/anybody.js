@@ -40,6 +40,7 @@ export class Anybody extends EventEmitter {
     const defaultOptions = {
       inputData: null,
       bodyData: null,
+      starData: null,
       // Add default properties and their initial values here
       startingBodies: 3,
       seed: null,
@@ -66,8 +67,8 @@ export class Anybody extends EventEmitter {
       timer: GAME_LENGTH * FPS,
       aimHelper: false,
       target: 'inside', // 'outside' or 'inside'
-      showLives: false, // true or false
-      faceRotation: 'hitcycle', // 'time' or 'hitcycle' or 'mania'
+      showLevels: false, // true or false
+      faceRotation: 'mania', // 'time' or 'hitcycle' or 'mania'
       sfx: 'bubble', // 'space' or 'bubble'
       ownerPresent: false
     }
@@ -79,8 +80,10 @@ export class Anybody extends EventEmitter {
 
   // run whenever the class should be reset
   clearValues() {
+    this.initialScoreSize = 60
+    this.scoreSize = this.initialScoreSize
     this.opac = this.globalStyle == 'psycho' ? 1 : 0.1
-    this.tailLength = 30
+    this.tailLength = 60
     this.tailMod = this.globalStyle == 'psycho' ? 2 : 1
     this.explosions = []
     this.missiles = []
@@ -119,11 +122,7 @@ export class Anybody extends EventEmitter {
     // const vectorLimitScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
     this.loadImages()
     this.setPause(this.paused, true)
-    // setTimeout(() => {
-    //   for (let i = 0; i < this.bodies.length; i++) {
-    //     this.bodies[i].radius = 0
-    //   }
-    // }, 6000)
+    this.storeInits()
   }
 
   start() {
@@ -133,7 +132,6 @@ export class Anybody extends EventEmitter {
     if (this.freeze) {
       this.setPause(true, true)
     }
-    this.storeInits()
   }
 
   destroy() {
@@ -289,9 +287,13 @@ export class Anybody extends EventEmitter {
     this.gameOver = true
     this.won = won
     var dust = 0
+    var timeTook = 0
+    var framesTook = 0
     if (this.won) {
       const stats = this.calculateStats()
       dust = stats.dust
+      timeTook = stats.timeTook
+      framesTook = stats.framesTook
       void this.setStatsText(stats)
     } else {
       void this.setShowPlayAgain()
@@ -299,11 +301,13 @@ export class Anybody extends EventEmitter {
     this.emit('gameOver', {
       won,
       ticks: this.frames - this.startingFrame,
-      dust
+      dust,
+      timeTook,
+      framesTook
     })
   }
 
-  playAgain = (options) => {
+  restart = (options, beginPaused = true) => {
     if (options) {
       this.setOptions(options)
     }
@@ -311,16 +315,19 @@ export class Anybody extends EventEmitter {
     this.sound?.stop()
     this.sound?.playStart()
     this.init()
-    !this.util && this.start()
-    this.setPause(false)
+    this.draw()
+    if (!beginPaused) {
+      this.setPause(false)
+    }
   }
 
   setStatsText = async (stats) => {
     const statLines = [
-      `bodies: ${stats.bodiesIncluded}`,
-      `bodies bonus: ${stats.bodiesBoost}x`,
+      // `total bodies: ${stats.bodiesIncluded}`,
+      `¸¸♬·¯·♩¸¸♪·¯·♫¸¸♬·¯·♩¸¸♪·¯`,
+      `${stats.bodiesIncluded} body score: ${stats.bodiesBoost}`,
       `speed bonus (${stats.timeTook}s): ${stats.speedBoost}x`,
-      `DU$T: ${stats.dust}`
+      `DU$T earned: ${stats.dust}`
     ]
     const toShow = statLines.join('\n')
 
@@ -551,8 +558,6 @@ export class Anybody extends EventEmitter {
   bodyDataToBodies(b) {
     const bodyId = b.bodyId.toNumber()
     const bodyIndex = b.bodyIndex.toNumber()
-    const seed = b.seed
-    const bodyRNG = new Prando(seed.toString(16))
     const px = b.px.toNumber() / parseInt(this.scalingFactor)
     const py = b.py.toNumber() / parseInt(this.scalingFactor)
     const vx =
@@ -571,8 +576,20 @@ export class Anybody extends EventEmitter {
       starLvl: b.starLvl?.toNumber(),
       maxStarLvl: b.maxStarLvl?.toNumber(),
       mintedBodyIndex: b.mintedBodyIndex.toNumber(),
-      c: this.colorArrayToTxt(this.randomColor(0, 359, bodyRNG))
+      c: this.getBodyColor(b.seed)
     }
+  }
+
+  getBodyColor(seed, replaceOpacity = false) {
+    if (typeof seed !== 'string') {
+      seed = seed.toString(16)
+    }
+    const blocker = 0xffff
+    const color = (BigInt(seed) & BigInt(blocker)) % 360n
+    const saturation = ((BigInt(seed) >> 16n) & BigInt(blocker)) % 100n
+    const lightness = (((BigInt(seed) >> 32n) & BigInt(blocker)) % 40n) + 40n
+    const result = `hsla(${color.toString()}, ${saturation.toString()}%, ${lightness.toString()}%,${replaceOpacity ? '1' : this.opac})`
+    return result
   }
 
   random(min, max, rng = this.rng) {
@@ -686,12 +703,20 @@ export class Anybody extends EventEmitter {
     const bodiesBoost = BODY_BOOST[bodiesIncluded]
     const { startingFrame, timer, frames } = this
     const secondsLeft = (startingFrame + timer - frames) / FPS
-    const timeTook = (frames - startingFrame) / FPS
+    const framesTook = frames - startingFrame
+    const timeTook = framesTook / FPS
     const speedBoostIndex = Math.floor(secondsLeft / 10)
     const speedBoost = SPEED_BOOST[speedBoostIndex]
-    let dust = bodiesIncluded * bodiesBoost * speedBoost
+    let dust = /*bodiesIncluded **/ bodiesBoost * speedBoost
 
-    return { bodiesIncluded, bodiesBoost, speedBoost, dust, timeTook }
+    return {
+      bodiesIncluded,
+      bodiesBoost,
+      speedBoost,
+      dust,
+      timeTook,
+      framesTook
+    }
   }
 }
 

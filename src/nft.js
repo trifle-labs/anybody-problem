@@ -1,4 +1,4 @@
-import Q5 from './q5.js'
+import Q5 from './q5.min.js'
 import { Anybody } from './anybody.js'
 
 const q5 = new Q5()
@@ -7,7 +7,7 @@ window.anybody
 q5.setup = () => {
   window.anybody = new Anybody(q5, {
     mode: 'game',
-    // showLives: true,
+    // showLevels: true,
     // target: 'inside',
     // globalStyle: 'psycho',
     alreadyRun: Math.floor(Math.random() * 20000),

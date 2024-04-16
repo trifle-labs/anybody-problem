@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "./Metadata.sol";
+import "./ProblemMetadata.sol";
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -19,7 +19,7 @@ contract Problems is ERC721, Ownable {
 
     address public bodies;
     address public solver;
-    address public metadata;
+    address public problemMetadata;
 
     address public proceedRecipient;
 
@@ -95,7 +95,7 @@ contract Problems is ERC721, Ownable {
     modifier initialized() {
         require(solver != address(0), "Not initialized");
         require(bodies != address(0), "Not initialized");
-        require(metadata != address(0), "Not initialized");
+        require(problemMetadata != address(0), "Not initialized");
         require(proceedRecipient != address(0), "Not initialized");
         _;
     }
@@ -108,14 +108,14 @@ contract Problems is ERC721, Ownable {
     );
 
     constructor(
-        address metadata_,
+        address problemMetadata_,
         address[] memory verifiers_,
         uint256[] memory verifiersTicks,
         uint256[] memory verifiersBodies
     ) ERC721("Anybody Problem", "ANY") {
-        require(metadata_ != address(0), "Invalid metadata");
+        require(problemMetadata_ != address(0), "Invalid problemMetadata");
         proceedRecipient = msg.sender;
-        metadata = metadata_;
+        problemMetadata = problemMetadata_;
         for (uint256 i = 0; i < verifiers_.length; i++) {
             require(verifiersTicks[i] > 0, "Invalid verifier dust");
             require(verifiers_[i] != address(0), "Invalid verifier");
@@ -130,7 +130,7 @@ contract Problems is ERC721, Ownable {
     function tokenURI(
         uint256 id
     ) public view override(ERC721) returns (string memory) {
-        return Metadata(metadata).getMetadata(id);
+        return ProblemMetadata(problemMetadata).getProblemMetadata(id);
     }
 
     function updatePrice(uint256 price_) public onlyOwner {
@@ -157,8 +157,8 @@ contract Problems is ERC721, Ownable {
         solver = solver_;
     }
 
-    function updateMetadataAddress(address metadata_) public onlyOwner {
-        metadata = metadata_;
+    function updateProblemMetadataAddress(address problemMetadata_) public onlyOwner {
+        problemMetadata = problemMetadata_;
     }
 
     function updateBodiesAddress(address bodies_) public onlyOwner {
@@ -409,7 +409,7 @@ contract Problems is ERC721, Ownable {
 
         // NOTE: radius is a function of the seed of the body so it stays the
         // same no matter what problem it enters
-    function genRadius(bytes32 seed) internal pure returns (uint256) {
+    function genRadius(bytes32 seed) public pure returns (uint256) {
         // TODO: confirm whether radius should remain only one of 3 sizes
         uint256 randRadius = randomRange(1, 3, seed);
         randRadius = (randRadius) * 5 + startingRadius;
@@ -475,6 +475,11 @@ contract Problems is ERC721, Ownable {
         uint256 problemId
     ) public view returns (Body[] memory) {
         return problems[problemId].starData;
+    }
+    function getProblemStarCount(
+      uint256 problemId
+    ) public view returns (uint256 starCount) {
+      return problems[problemId].starData.length;
     }
 
     function updateProblemBodyCount(

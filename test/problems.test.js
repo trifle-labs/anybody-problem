@@ -15,7 +15,7 @@ let tx
 describe('Problem Tests', function () {
   this.timeout(50000000)
 
-  it('has the correct verifiers metadata, bodies, dust, solver addresses', async () => {
+  it('has the correct verifiers problemMetadata, bodies, dust, solver addresses', async () => {
     const deployedContracts = await deployContracts()
 
     const { Problems: problems } = deployedContracts
@@ -69,7 +69,7 @@ describe('Problem Tests', function () {
     ).to.be.revertedWith('Ownable: caller is not the owner')
 
     await expect(
-      problems.connect(addr1).updateMetadataAddress(addr1.address)
+      problems.connect(addr1).updateProblemMetadataAddress(addr1.address)
     ).to.be.revertedWith('Ownable: caller is not the owner')
 
     await expect(
@@ -91,7 +91,7 @@ describe('Problem Tests', function () {
 
     await expect(problems.updateSolverAddress(addr1.address)).to.not.be.reverted
 
-    await expect(problems.updateMetadataAddress(addr1.address)).to.not.be
+    await expect(problems.updateProblemMetadataAddress(addr1.address)).to.not.be
       .reverted
 
     await expect(problems.updateBodiesAddress(addr1.address)).to.not.be.reverted
@@ -166,7 +166,8 @@ describe('Problem Tests', function () {
     expect(bodyData.py).to.equal(newBodyData.py)
     expect(bodyData.vx).to.equal(newBodyData.vx)
     expect(bodyData.vy).to.equal(newBodyData.vy)
-    expect(bodyData.life).to.equal(newBodyData.life)
+    expect(bodyData.starLvl).to.equal(newBodyData.starLvl)
+    expect(bodyData.maxStarLvl).to.equal(newBodyData.maxStarLvl)
     expect(bodyData.radius).to.equal(newBodyData.radius)
     expect(bodyData.seed).to.equal(newBodyData.seed)
   })
@@ -192,10 +193,11 @@ describe('Problem Tests', function () {
 
   it("emits 'EthMoved' events when eth is moved", async () => {
     const [, addr1] = await ethers.getSigners()
-    const { Problems: problems, Metadata: metadata } = await deployContracts()
+    const { Problems: problems, ProblemMetadata: problemMetadata } =
+      await deployContracts()
 
-    // set splitter to metadata address which cannot recive eth
-    await problems.updateProceedRecipientAddress(metadata.address)
+    // set splitter to problemMetadata address which cannot recive eth
+    await problems.updateProceedRecipientAddress(problemMetadata.address)
 
     await problems.updatePaused(false)
     await problems.updateStartDate(0)
@@ -207,7 +209,7 @@ describe('Problem Tests', function () {
     tx = problems['mint()']({ value: correctPrice })
     await expect(tx)
       .to.emit(problems, 'EthMoved')
-      .withArgs(metadata.address, false, '0x', correctPrice)
+      .withArgs(problemMetadata.address, false, '0x', correctPrice)
 
     // problems still has the eth
     const balanceAfter = await ethers.provider.getBalance(problems.address)

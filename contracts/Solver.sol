@@ -47,9 +47,10 @@ contract Solver is Ownable {
     mapping(uint256 => Match) public matches;
 
     event Solved(
+        address indexed solver,
         uint256 indexed problemId,
-        uint256 indexed ticksInThisMatch,
-        uint256 indexed winnings
+        uint256 ticksInThisMatch,
+        uint256 winnings
     );
 
     constructor(address payable problems_, address dust_) {
@@ -194,6 +195,7 @@ contract Solver is Ownable {
         if (!currentMatch.inProgress) {
           currentMatch.inProgress = true;
           currentMatch.startingTick = previousTickCount;
+          matches[problemId] = currentMatch;
         }
 
         uint256 newTotalTicks = previousTickCount + tickCount;
@@ -284,7 +286,7 @@ contract Solver is Ownable {
         if(bodiesGone == bodyCount) {
           // bonus for beating level in half time
           uint256 speedBoost = getSpeedBoost(ticksInThisMatch);
-          uint256 winnings = bodyCount * speedBoost * bodyBoost[bodyCount] * decimals;
+          uint256 winnings = /*bodyCount **/ speedBoost * bodyBoost[bodyCount] * decimals;
           Dust(dust).mint(
               msg.sender,
               winnings
@@ -292,20 +294,20 @@ contract Solver is Ownable {
           Problems(problems).restoreRadius(problemId);
           Problems(problems).levelUp(problemId);
           delete matches[problemId];
-          emit Solved(problemId, ticksInThisMatch, winnings);
+          emit Solved(msg.sender, problemId, ticksInThisMatch, winnings);
         }
     }
 
     function getSpeedBoost(uint256 ticks) public pure returns (uint256) {
-        if (ticks < maxTick / 6) {
+        if (ticks <= 1 * maxTick / 6) {
           return 6;
-        } else if (ticks < maxTick / 5) {
+        } else if (ticks <= 2 * maxTick / 6) {
           return 5;
-        } else if (ticks < maxTick / 4) {
+        } else if (ticks <= 3 * maxTick / 6) {
           return 4;
-        } else if (ticks < maxTick / 3) {
+        } else if (ticks <= 4 * maxTick / 6) {
           return 3;
-        } else if (ticks < maxTick / 2) {
+        } else if (ticks <= 5 * maxTick / 6) {
           return 2;
         } else {
           return 1;
