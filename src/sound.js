@@ -190,8 +190,8 @@ const SONGS = {
   }
 }
 
-const TRACK_VOLUME = -0.6 //db
-const MAX_VOLUME = 0 //db
+const TRACK_VOLUME = 3 //db
+const MAX_VOLUME = 8 //db
 const INTRO_LENGTH = 1 // measures
 const PAN_RANGE = 1.4 // 2 is hard L/R panning
 
