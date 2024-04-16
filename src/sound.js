@@ -30,7 +30,7 @@ const whistle_12_T11 = new URL(
   import.meta.url
 ).href
 const whistle_8_T7_B = new URL(
-  '/public/sound/whistle/`whistle_8_T7_b`.mp3',
+  '/public/sound/whistle/whistle_8_T7_B.mp3',
   import.meta.url
 ).href
 
