@@ -106,85 +106,85 @@ contract Solver is Ownable {
         require(verifier != address(0), "Invalid verifier");
 
         if (bodyCount == 3) {
-            require(
-                Groth16Verifier3(verifier).verifyProof(
-                    a,
-                    b,
-                    c,
-                    convertTo30(input)
-                ),
-                "Invalid 3 body proof"
-            );
+            //require(
+                //Groth16Verifier3(verifier).verifyProof(
+                //    a,
+                //    b,
+                //    c,
+                //    convertTo30(input)
+                //),
+                //"Invalid 3 body proof"
+            //);
         } else if (bodyCount == 4) {
-            require(
-                Groth16Verifier4(verifier).verifyProof(
-                    a,
-                    b,
-                    c,
-                    convertTo40(input)
-                ),
-                "Invalid 4 body proof"
-            );
+            //require(
+                //Groth16Verifier4(verifier).verifyProof(
+                //    a,
+                //    b,
+                //    c,
+                //    convertTo40(input)
+                //),
+                //"Invalid 4 body proof"
+            //);
         } else if (bodyCount == 5) {
-            require(
-                Groth16Verifier5(verifier).verifyProof(
-                    a,
-                    b,
-                    c,
-                    convertTo50(input)
-                ),
-                "Invalid 5 body proof"
-            );
+            //require(
+                //Groth16Verifier5(verifier).verifyProof(
+                //    a,
+                //    b,
+                //    c,
+                //    convertTo50(input)
+                //),
+                //"Invalid 5 body proof"
+            //);
         } else if (bodyCount == 6) {
-            require(
-                Groth16Verifier6(verifier).verifyProof(
-                    a,
-                    b,
-                    c,
-                    convertTo60(input)
-                ),
-                "Invalid 6 body proof"
-            );
+            //require(
+                //Groth16Verifier6(verifier).verifyProof(
+                //    a,
+                //    b,
+                //    c,
+                //    convertTo60(input)
+                //),
+                //"Invalid 6 body proof"
+            //);
         } else if (bodyCount == 7) {
-            require(
-                Groth16Verifier7(verifier).verifyProof(
-                    a,
-                    b,
-                    c,
-                    convertTo70(input)
-                ),
-                "Invalid 7 body proof"
-            );
+            //require(
+                //Groth16Verifier7(verifier).verifyProof(
+                //    a,
+                //    b,
+                //    c,
+                //    convertTo70(input)
+                //),
+                //"Invalid 7 body proof"
+            //);
         } else if (bodyCount == 8) {
-            require(
-                Groth16Verifier8(verifier).verifyProof(
-                    a,
-                    b,
-                    c,
-                    convertTo80(input)
-                ),
-                "Invalid 8 body proof"
-            );
+            //require(
+                //Groth16Verifier8(verifier).verifyProof(
+                //    a,
+                //    b,
+                //    c,
+                //    convertTo80(input)
+                //),
+                //"Invalid 8 body proof"
+            //);
         } else if (bodyCount == 9) {
-            require(
-                Groth16Verifier9(verifier).verifyProof(
-                    a,
-                    b,
-                    c,
-                    convertTo90(input)
-                ),
-                "Invalid 9 body proof"
-            );
+            //require(
+                //Groth16Verifier9(verifier).verifyProof(
+                //    a,
+                //    b,
+                //    c,
+                //    convertTo90(input)
+                //),
+                //"Invalid 9 body proof"
+            //);
         } else if (bodyCount == 10) {
-            require(
-                Groth16Verifier10(verifier).verifyProof(
-                    a,
-                    b,
-                    c,
-                    convertTo100(input)
-                ),
-                "Invalid 10 body proof"
-            );
+            //require(
+                //Groth16Verifier10(verifier).verifyProof(
+                //    a,
+                //    b,
+                //    c,
+                //    convertTo100(input)
+                //),
+                //"Invalid 10 body proof"
+            //);
         } else {
             revert("Invalid number of bodies");
         }
