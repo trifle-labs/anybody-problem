@@ -470,10 +470,10 @@ export const Visuals = {
     )
 
     // Grid lines
-    const totalLines = 6
+    const boxCount = 6
     // this.p.stroke('black')
     this.p.stroke('white')
-    for (let i = 0; i < totalLines; i++) {
+    for (let i = 1; i < boxCount; i++) {
       if (i % 5 == 5) {
         this.p.strokeWeight(1)
         // this.starBG.stroke(`hsl(${i * (360 / totalLines)}, 100%, 50%)`)
@@ -481,16 +481,16 @@ export const Visuals = {
         this.p.strokeWeight(1)
       }
       this.p.line(
-        i * (this.windowWidth / totalLines),
+        i * (this.windowWidth / boxCount),
         0,
-        i * (this.windowWidth / totalLines),
+        i * (this.windowWidth / boxCount),
         this.windowHeight
       )
       this.p.line(
         0,
-        i * (this.windowHeight / totalLines),
+        i * (this.windowHeight / boxCount),
         this.windowWidth,
-        i * (this.windowHeight / totalLines)
+        i * (this.windowHeight / boxCount)
       )
     }
   },
@@ -828,6 +828,8 @@ export const Visuals = {
     this.p.stroke('rgba(200,200,200,1)')
     this.p.strokeCap(this.p.SQUARE)
     const { canvas } = this.p
+
+    if (this.p.mouseX <= 0 && this.p.mouseY <= 0) return
 
     // Bottom left corner coordinates
     let startX = 0
