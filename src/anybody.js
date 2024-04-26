@@ -20,8 +20,15 @@ export class Anybody extends EventEmitter {
   constructor(p, options = {}) {
     super()
 
-    Object.assign(this, Visuals)
-    Object.assign(this, Calculations)
+    const methods = {}
+    Object.assign(methods, Visuals)
+    Object.assign(methods, Calculations)
+    Object.keys(methods).forEach((key) => {
+      if (typeof this[key] === 'function') {
+        this[key] = this[key].bind(this)
+      }
+    })
+    Object.assign(this, methods)
 
     this.setOptions(options)
 
