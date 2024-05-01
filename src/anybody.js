@@ -323,10 +323,9 @@ export class Anybody extends EventEmitter {
 
   setStatsText = async (stats) => {
     const statLines = [
-      // `total bodies: ${stats.bodiesIncluded}`,
-      `¸¸♬·¯·♩¸¸♪·¯·♫¸¸♬·¯·♩¸¸♪·¯`,
+      `¸¸♬·¯·♩¸♪··♫¸¸♫··♪¸♩·¯·♬¸¸`,
       `${stats.bodiesIncluded} body score: ${stats.bodiesBoost}`,
-      `speed bonus (${stats.timeTook}s): ${stats.speedBoost}x`,
+      `speed bonus (${stats.timeTook.toFixed(2)}s): ${stats.speedBoost}x`,
       `DU$T earned: ${stats.dust}`
     ]
     const toShow = statLines.join('\n')
