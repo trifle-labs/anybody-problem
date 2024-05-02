@@ -80,6 +80,7 @@ export class Anybody extends EventEmitter {
 
   // run whenever the class should be reset
   clearValues() {
+    this.speedFactor = 3
     this.initialScoreSize = 60
     this.scoreSize = this.initialScoreSize
     this.opac = this.globalStyle == 'psycho' ? 1 : 0.1
@@ -651,7 +652,7 @@ export class Anybody extends EventEmitter {
       velocity: this.p.createVector(x, y - this.windowWidth),
       radius
     }
-    b.velocity.limit(10)
+    b.velocity.limit(10 * this.speedFactor)
     this.missiles.push(b)
     this.sound?.playMissile()
     this.missileInits.push(...this.processMissileInits([b]))

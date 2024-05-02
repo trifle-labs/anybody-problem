@@ -1,5 +1,4 @@
-export const FPS = 50
-
+export const FPS = 50 / 3
 const WITHERING_STEPS = 3000
 const FACE_PNGS = [
   // [tired, tired_no_mouth, normal, normal_no_mouth, ecstatic, ecstatic_no_mouth]
