@@ -250,6 +250,9 @@ export const Visuals = {
     if (this.globalStyle == 'psycho') {
       this.p.blendMode(this.p.BLEND)
     }
+    if (!this.firstFrame) {
+      this.drawBodies()
+    }
 
     if (
       this.mode == 'game' &&
@@ -261,9 +264,6 @@ export const Visuals = {
         const body = this.bodies[i]
         this.drawCenter(body)
       }
-    }
-    if (!this.firstFrame) {
-      this.drawBodies()
     }
 
     if (
@@ -1298,7 +1298,11 @@ export const Visuals = {
 
   drawBodyStyle1(radius, body, offset) {
     this.bodiesGraphic.noStroke()
-    this.bodiesGraphic.fill(body.c)
+
+    const c =
+      body.radius !== 0 ? body.c : this.replaceOpacity(body.c, this.deadOpacity)
+
+    this.bodiesGraphic.fill(c)
     this.bodiesGraphic.ellipse(0, offset, radius, radius)
     if (this.globalStyle == 'psycho' && this.target == 'inside') {
       this.drawCenter(body, this.bodiesGraphic, 0, offset)
@@ -1716,20 +1720,17 @@ export const Visuals = {
           )
             continue
         }
-        const c = body.c
-        let finalColor
-        if (this.colorStyle == 'squiggle') {
-          const hueColor = (parseInt(c.split(',')[1]) + this.frames) % 360
-          finalColor = this.p.color(hueColor, 60, 100) // Saturation and brightness at 100 for pure spectral colors
-        } else {
-          finalColor = c
-        }
-        this.p.fill(finalColor)
+        if (body.radius == 0) continue
+        const c =
+          body.radius !== 0
+            ? this.replaceOpacity(body.c, 1)
+            : this.replaceOpacity(body.c, this.deadOpacity)
+        this.p.fill(c)
         // if (this.mode == 'nft') {
         const bodyCopy = this.bodyCopies.filter(
           (b) => b.bodyIndex == body.bodyIndex
         )[0]
-        const radius = this.getBodyRadius(bodyCopy.radius)
+        const radius = this.getBodyRadius(bodyCopy.radius) * 1
 
         // this.p.ellipse(body.position.x, body.position.y, radius, radius)
         this.p.push()
@@ -1746,7 +1747,7 @@ export const Visuals = {
               body.position.y,
               body.velocity,
               radius,
-              finalColor,
+              c,
               offset
             )
             break
@@ -1756,7 +1757,7 @@ export const Visuals = {
               body.position.y,
               body.velocity,
               radius,
-              finalColor,
+              c,
               offset
             )
             break
@@ -1766,12 +1767,29 @@ export const Visuals = {
               body.position.y,
               body.velocity,
               radius,
-              finalColor,
+              c,
               offset
             )
         }
       }
     }
+  },
+
+  replaceOpacity(c, opacity) {
+    const isHSLA = c.includes('hsla')
+    const prefix = isHSLA ? 'hsla' : 'rgba'
+    let cc = c
+      .split(',')
+      .map((c) => parseFloat(c.replace(')', '').replace(prefix + '(', '')))
+    if (cc.length !== 4) {
+      throw new Error('Color must have alpha value format, instead it has ' + c)
+    }
+    cc[3] = opacity
+    if (isHSLA) {
+      cc[1] = cc[1] + '%'
+      cc[2] = cc[2] + '%'
+    }
+    return `${prefix}(${cc.join(',')})`
   },
 
   brighten(c, amount = 20) {

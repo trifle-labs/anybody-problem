@@ -80,10 +80,11 @@ export class Anybody extends EventEmitter {
 
   // run whenever the class should be reset
   clearValues() {
+    this.deadOpacity = '0.5'
     this.initialScoreSize = 60
     this.scoreSize = this.initialScoreSize
-    this.opac = this.globalStyle == 'psycho' ? 1 : 0.1
-    this.tailLength = 60
+    this.opac = this.globalStyle == 'psycho' ? 1 : 1
+    this.tailLength = 500
     this.tailMod = this.globalStyle == 'psycho' ? 2 : 1
     this.explosions = []
     this.missiles = []
