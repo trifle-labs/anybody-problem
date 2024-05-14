@@ -1482,6 +1482,7 @@ export const Visuals = {
       const body = this.bodies[i]
       // after final proof is sent, don't draw upgradable bodies
       if (this.finalBatchSent && body.maxStarLvl == body.starLvl) continue
+      if (body.radius == 0) continue
       const bodyRadius = this.bodyCopies.filter(
         (b) => b.bodyIndex == body.bodyIndex
       )[0]?.radius
@@ -1723,14 +1724,14 @@ export const Visuals = {
         if (body.radius == 0) continue
         const c =
           body.radius !== 0
-            ? this.replaceOpacity(body.c, 1)
+            ? this.replaceOpacity(body.c, this.deadOpacity)
             : this.replaceOpacity(body.c, this.deadOpacity)
         this.p.fill(c)
         // if (this.mode == 'nft') {
         const bodyCopy = this.bodyCopies.filter(
           (b) => b.bodyIndex == body.bodyIndex
         )[0]
-        const radius = this.getBodyRadius(bodyCopy.radius) * 1
+        const radius = this.getBodyRadius(bodyCopy.radius) * 1.1
 
         // this.p.ellipse(body.position.x, body.position.y, radius, radius)
         this.p.push()
