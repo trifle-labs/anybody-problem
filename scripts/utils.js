@@ -10,6 +10,8 @@ const correctPrice = ethers.utils.parseEther('0.01')
 // const splitterAddress = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266'
 
 const proverTickIndex = {
+  1: 2000,
+  2: 750,
   3: 500,
   4: 300,
   5: 100,
@@ -142,7 +144,7 @@ const deployContracts = async (ignoreTesting = false) => {
   const verifiersTicks = []
   const verifiersBodies = []
 
-  for (let i = 3; i <= 10; i++) {
+  for (let i = 1; i <= 10; i++) {
     const ticks = await getTicksRun(i, ignoreTesting)
     const name = `Game_${i}_${ticks}Verifier`
     const path = `contracts/${name}.sol:Groth16Verifier`
@@ -215,13 +217,13 @@ const deployContracts = async (ignoreTesting = false) => {
 
   // deploy Solver
   const Solver = await hre.ethers.getContractFactory('Solver')
-  const solver = await Solver.deploy(problemsAddress, dustAddress)
+  const solver = await Solver.deploy(problemsAddress)
   await solver.deployed()
   const solverAddress = solver.address
   returnObject['Solver'] = solver
   !testing &&
     log(
-      `Solver deployed at ${solverAddress} with problemsAddress ${problemsAddress} and dustAddress ${dustAddress}`
+      `Solver deployed at ${solverAddress} with problemsAddress ${problemsAddress}`
     )
 
   // configure ProblemMetadata
@@ -241,10 +243,6 @@ const deployContracts = async (ignoreTesting = false) => {
   !testing && log(`Problems configured with bodiesAddress ${bodiesAddress}`)
   await problems.updateSolverAddress(solverAddress)
   !testing && log(`Problems configured with solverAddress ${solverAddress}`)
-
-  // configure Bodies
-  await bodies.updateDustAddress(dustAddress)
-  !testing && log(`Bodies configured with dustAddress ${dustAddress}`)
 
   // configure Dust
   await dust.updateSolverAddress(solverAddress)
@@ -284,7 +282,7 @@ const deployContracts = async (ignoreTesting = false) => {
       },
       {
         name: 'Solver',
-        constructorArguments: [problemsAddress, dustAddress]
+        constructorArguments: [problemsAddress]
       }
     ]
 

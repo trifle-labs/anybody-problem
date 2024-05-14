@@ -14,6 +14,7 @@ contract Problems is ERC721, Ownable {
     bool public paused;
     // TODO: update with actual start date
     uint256 public startDate = 0; //4070908800; // Thu Jan 01 2099 00:00:00 GMT+0000 (___ CEST Berlin, ___ London, ___ NYC, ___ LA)
+    uint256 constant public SECONDS_IN_A_DAY = 86400;
 
     uint256 public problemSupply;
 
@@ -35,23 +36,22 @@ contract Problems is ERC721, Ownable {
         uint256 vx;
         uint256 vy;
         uint256 radius;
-        uint256 starLvl;
-        uint256 maxStarLvl;
         bytes32 seed;
     }
 
     struct Problem {
+        bool solved;
         bytes32 seed;
+        uint256 day;
         uint256 bodyCount;
         uint256 mintedBodiesIndex;
-        Body[] starData;
         mapping(uint256 => Body) bodyData;
         uint256[10] bodyIds;
         uint256 tickCount;
     }
 
     mapping(uint256 => Problem) public problems;
-    // mapping is body count to dust to address
+    // mapping is body count to tickcount to address
     mapping(uint256 => mapping(uint256 => address)) public verifiers;
 
     uint256 public constant maxVector = 10;
@@ -68,8 +68,6 @@ contract Problems is ERC721, Ownable {
         uint256 px,
         uint256 py,
         uint256 radius,
-        uint256 starLvl,
-        uint256 maxStarLvl,
         bytes32 seed
     );
 
@@ -77,8 +75,6 @@ contract Problems is ERC721, Ownable {
         uint256 problemId,
         uint256 tick,
         uint256 bodyId,
-        uint256 starLvl,
-        uint256 maxStarLvl,
         bytes32 seed
     );
 
@@ -117,7 +113,7 @@ contract Problems is ERC721, Ownable {
         proceedRecipient = msg.sender;
         problemMetadata = problemMetadata_;
         for (uint256 i = 0; i < verifiers_.length; i++) {
-            require(verifiersTicks[i] > 0, "Invalid verifier dust");
+            require(verifiersTicks[i] > 0, "Invalid verifier");
             require(verifiers_[i] != address(0), "Invalid verifier");
             verifiers[verifiersBodies[i]][verifiersTicks[i]] = verifiers_[i];
         }
@@ -125,6 +121,10 @@ contract Problems is ERC721, Ownable {
 
     receive() external payable {
         mint();
+    }
+
+    function currentDay() public view returns (uint256) {
+        return block.timestamp - (block.timestamp % SECONDS_IN_A_DAY);
     }
 
     function tokenURI(
@@ -208,153 +208,46 @@ contract Problems is ERC721, Ownable {
     function _internalMint(address recipient) internal {
         problemSupply++;
         _mint(recipient, problemSupply);
-
-        for (
-            uint256 mintedBodyIndex = 0;
-            mintedBodyIndex < 3;
-            mintedBodyIndex++
-        ) {
-            (uint256 bodyId, uint256 maxStarLvl, bytes32 bodySeed) = Bodies(bodies)
-                .mintAndAddToProblem(
-                    recipient,
-                    problemSupply, // problemId
-                    mintedBodyIndex
-                );
-            _addBody(
-                problemSupply, // problemId
-                bodyId,
-                mintedBodyIndex,
-                0, // starLvl is 0 for initial bodies
-                maxStarLvl,
-                bodySeed,
-                mintedBodyIndex, // bodyIndex == mintedBodyIndex when minting
-                1
-            );
-        }
+        
+        problems[problemSupply].day = currentDay();
         problems[problemSupply].seed = generateSeed(problemSupply);
-        problems[problemSupply].bodyCount = 3;
+
+        (uint256 bodyId, bytes32 bodySeed) = Bodies(bodies)
+            .mintAndAddToProblem(
+                recipient,
+                problemSupply, // problemId
+                0
+            );
+        _addBody(
+            problemSupply, // problemId
+            bodyId,
+            0,
+            bodySeed,
+            0 // bodyIndex == mintedBodyIndex when minting
+        );
     }
 
-    function mintBodyToProblem(uint256 problemId) public notWhileInPlay(problemId) {
+    function mintBodyToProblem(uint256 problemId) internal {
         require(!paused, "Paused");
-        require(ownerOf(problemId) == msg.sender, "Not problem owner");
-        require(
-            problems[problemId].bodyCount < 10,
-            "Cannot have more than 10 bodies"
-        );
         uint256 mintedBodyIndex = problems[problemId].mintedBodiesIndex;
         // TODO: confirm this should be 10 instead of 9
         require(mintedBodyIndex < 10, "Problem already minted 10 bodies");
-        (uint256 bodyId, uint256 maxStarLvl, bytes32 bodySeed) = Bodies(bodies)
-            .mintAndAddToProblem(msg.sender, problemId, mintedBodyIndex);
+        address owner = ownerOf(problemId);
+        (uint256 bodyId, bytes32 bodySeed) = Bodies(bodies)
+            .mintAndAddToProblem(owner, problemId, mintedBodyIndex);
         uint256 bodyIndex = problems[problemId].bodyCount;
 
         _addBody(
             problemId,
             bodyId,
             mintedBodyIndex,
-            0,
-            maxStarLvl,
             bodySeed,
-            bodyIndex,
-            1
-        );
-    }
-
-    function mintBodyOutsideProblem(uint256 problemId) public notWhileInPlay(problemId) {
-        require(!paused, "Paused");
-        require(ownerOf(problemId) == msg.sender, "Not problem owner");
-        require(
-            problems[problemId].bodyCount < 10,
-            "Cannot have more than 10 bodies"
-        ); // TODO: confirm this should be 10 instead of 9
-        uint256 mintedBodyIndex = problems[problemId].mintedBodiesIndex;
-        require(mintedBodyIndex < 10, "Problem already minted 10 bodies");
-        Bodies(bodies).mint(msg.sender, problemId, mintedBodyIndex);
-        problems[problemId].mintedBodiesIndex++;
-    }
-
-    function addExistingBody(uint256 problemId, uint256 bodyId) public {
-        require(!paused, "Paused");
-        require(ownerOf(problemId) == msg.sender, "Not problem owner");
-        require(
-            problems[problemId].bodyCount < 10,
-            "Cannot have more than 10 bodies"
-        );
-        (uint256 mintedBodyIndex, uint256 starLvl, uint256 maxStarLvl, bytes32 seed) = Bodies(bodies)
-            .moveBodyToProblem(bodyId, msg.sender, problemId);
-        uint256 bodyIndex = problems[problemId].bodyCount;
-        _addBody(problemId, bodyId, mintedBodyIndex, starLvl, maxStarLvl, seed, bodyIndex, 0);
-    }
-
-    function convertBodiesToStars(uint256 problemId) public notWhileInPlay(problemId) {
-        require(ownerOf(problemId) == msg.sender, "Not problem owner");
-        for (uint256 i = 0; i < problems[problemId].bodyCount; i++) {
-            uint256 bodyId = problems[problemId].bodyIds[i];
-            if (problems[problemId].bodyData[bodyId].starLvl == problems[problemId].bodyData[bodyId].maxStarLvl) {
-                Body memory bodyData = problems[problemId].bodyData[bodyId];
-                internalRemoveBody(problemId, bodyId);
-                problems[problemId].starData.push(bodyData);
-            }
-        }
-    }
-
-    function removeBody(uint256 problemId, uint256 bodyId) public notWhileInPlay(problemId) {
-        require(
-            problems[problemId].bodyCount > 3,
-            "Cannot have less than 3 bodies"
-        );
-        require(ownerOf(problemId) == msg.sender, "Not problem owner");
-        internalRemoveBody(problemId, bodyId);
-    }
-
-    function internalRemoveBody(uint256 problemId, uint256 bodyId) internal {
-        require(!paused, "Paused");
-
-        Body memory bodyData = problems[problemId].bodyData[bodyId];
-        require(bodyData.bodyId == bodyId, "Body not in problem");
-
-        Bodies(bodies).moveBodyFromProblem(
-            msg.sender,
-            bodyId,
-            problemId,
-            bodyData.starLvl
-        );
-        emit bodyRemoved(
-            problemId,
-            problems[problemId].tickCount,
-            bodyId,
-            bodyData.starLvl,
-            bodyData.maxStarLvl,
-            problems[problemId].seed
-        );
-        uint256 bodyIndex = problems[problemId].bodyData[bodyId].bodyIndex;
-        problems[problemId].bodyCount--;
-        problems[problemId].bodyIds = _removeElement(
-            problems[problemId].bodyIds,
             bodyIndex
         );
-        delete problems[problemId].bodyData[bodyId];
-
-        // TODO: add tests for this
-        // TODO: confirm this is necessary, maybe another way to ensure order of
-        // bodies is by just sorting by ID whenever proof is generated
-        for (uint256 i = bodyIndex; i < problems[problemId].bodyCount; i++) {
-            problems[problemId]
-                .bodyData[problems[problemId].bodyIds[i]]
-                .bodyIndex = i;
-        }
     }
 
-    function _removeElement(
-        uint256[10] memory array,
-        uint256 index
-    ) internal pure returns (uint256[10] memory) {
-        for (uint256 i = index; i < array.length - 1; i++) {
-            array[i] = array[i + 1];
-        }
-        delete array[array.length - 1];
-        return array;
+    function getLevelSeed(uint256 day, uint256 mintedBodiesIndex, uint256 bodyIndex) public pure returns (bytes32) {
+        return keccak256(abi.encodePacked(day, mintedBodiesIndex, bodyIndex));
     }
 
     /**
@@ -362,36 +255,28 @@ contract Problems is ERC721, Ownable {
      * @param problemId The ID of the problem.
      * @param bodyId The ID of the body to be added.
      * @param mintedBodyIndex The nth body minted from this problem.
-     * @param starLvl The starLvl of the body.
-     * @param maxStarLvl The maxStarLvl of the body.
      * @param bodySeed The seed of the body.
      * @param bodyIndex The index of the body in the problem's body list.
-     * @param incrementBodiesProduced The number of bodies produced to increment the problem's counter.
      */
     function _addBody(
         uint256 problemId,
         uint256 bodyId,
         uint256 mintedBodyIndex,
-        uint256 starLvl,
-        uint256 maxStarLvl,
         bytes32 bodySeed,
-        uint256 bodyIndex,
-        uint256 incrementBodiesProduced
+        uint256 bodyIndex
     ) internal {
-        // getRandomValues adds seed, px, py & radius to bodyData
-        // vx and vy are left empty to be 0 when a body is added
-        Body memory bodyData = getRandomValues(bodySeed);
-
+        bytes32 levelSeed = getLevelSeed(problems[problemId].day, problems[problemId].mintedBodiesIndex, bodyIndex);
+        Body memory bodyData = getRandomValues(levelSeed, problems[problemId].mintedBodiesIndex);
+        
+        bodyData.seed = bodySeed;
         bodyData.bodyId = bodyId;
         bodyData.mintedBodyIndex = mintedBodyIndex;
-        bodyData.starLvl = starLvl;
-        bodyData.maxStarLvl = maxStarLvl;
         bodyData.bodyIndex = bodyIndex;
 
         problems[problemId].bodyData[bodyId] = bodyData;
         problems[problemId].bodyIds[bodyIndex] = bodyId;
         problems[problemId].bodyCount++;
-        problems[problemId].mintedBodiesIndex += incrementBodiesProduced;
+        problems[problemId].mintedBodiesIndex += 1;
 
         emit bodyAdded(
             problemId,
@@ -401,8 +286,6 @@ contract Problems is ERC721, Ownable {
             bodyData.px,
             bodyData.py,
             bodyData.radius,
-            bodyData.starLvl,
-            bodyData.maxStarLvl,
             bodySeed
         );
     }
@@ -416,30 +299,27 @@ contract Problems is ERC721, Ownable {
         return randRadius * scalingFactor;
     }
 
-    // NOTE: this function uses i as input for radius, which means it's possible
-    // for an owner to remove a body at index 0 and add back with a greater index
-    // the greater index may collide with the index originally used or another body
-    // the result is that there may be bodies with the same radius which is acceptable
-    function getRandomValues(bytes32 seed) public view returns (Body memory) {
+    // NOTE: this function uses a seed consisting of the day + the mintedBodyIndex + 
+    // actual bodyIndex which means that all problems of the same level on the same day 
+    // will have bodies with the same positions, velocities and radii.
+    function getRandomValues(bytes32 rand, uint256 bodyIndex) public pure returns (Body memory) {
         Body memory body;
-        body.seed = seed;
 
-        uint256 r = genRadius(seed);
-
-        // this ensures location is random each time body is added to problem
-        bytes32 rand = keccak256(
-            abi.encodePacked(seed, blockhash(block.number - 1))
-        );
-        uint256 x = randomRange(0, windowWidth, rand);
+        body.radius = genRadius(rand);
 
         rand = keccak256(abi.encodePacked(rand));
-        uint256 y = randomRange(0, windowWidth, rand);
+        body.px = randomRange(0, windowWidth, rand);
 
-        body.px = x;
-        body.py = y;
-        body.vx = maxVector * scalingFactor; // NOTE: this is offset by maxVector so actually is 0
-        body.vy = maxVector * scalingFactor; // NOTE: this is offset by maxVector so actually is 0
-        body.radius = r;
+        rand = keccak256(abi.encodePacked(rand));
+        body.py = randomRange(0, windowWidth, rand);
+
+        uint256 velocityMax = bodyIndex == 0 ? maxVector * 2 / 3 : maxVector * 2;
+
+        rand = keccak256(abi.encodePacked(rand));
+        body.vx = randomRange(0,velocityMax, rand) * scalingFactor; // NOTE: this is offset by maxVector
+
+        rand = keccak256(abi.encodePacked(rand));
+        body.vy = randomRange(0,velocityMax, rand) * scalingFactor;
 
         return body;
     }
@@ -469,17 +349,6 @@ contract Problems is ERC721, Ownable {
         uint256 bodyId
     ) public view returns (Body memory) {
         return problems[problemId].bodyData[bodyId];
-    }
-
-    function getProblemStarData(
-        uint256 problemId
-    ) public view returns (Body[] memory) {
-        return problems[problemId].starData;
-    }
-    function getProblemStarCount(
-      uint256 problemId
-    ) public view returns (uint256 starCount) {
-      return problems[problemId].starData.length;
     }
 
     function updateProblemBodyCount(
@@ -521,18 +390,24 @@ contract Problems is ERC721, Ownable {
     }
 
     function levelUp(uint256 problemId) public onlySolver {
-      uint256 deletionCount = 0;
       uint256 bodyCount = problems[problemId].bodyCount;
-       for (uint256 i = 0; i < bodyCount; i++) {
-            uint256 bodyId = problems[problemId].bodyIds[i - deletionCount];
-            problems[problemId].bodyData[bodyId].starLvl++;
-            if (problems[problemId].bodyData[bodyId].starLvl == problems[problemId].bodyData[bodyId].maxStarLvl) {
-                Body memory bodyData = problems[problemId].bodyData[bodyId];
-                internalRemoveBody(problemId, bodyId);
-                deletionCount++;
-                problems[problemId].starData.push(bodyData);
-            }
-        }
+      if (bodyCount == 10) {
+        problemSolved(problemId);
+      } else {
+        mintBodyToProblem(problemId);
+      }
+    }
+
+    function problemSolved(uint256 problemId) internal {
+      problems[problemId].solved = true;
+      for (uint256 i = 0; i < 10; i++) {
+        uint256 bodyId = problems[problemId].bodyIds[i];
+        Bodies(bodies).moveBodyFromProblem(
+          ownerOf(problemId),
+          bodyId,
+          problemId
+        );
+      }
     }
 
     /// @dev if mint fails to send eth to splitter, admin can recover

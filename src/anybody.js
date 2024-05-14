@@ -42,7 +42,7 @@ export class Anybody extends EventEmitter {
       bodyData: null,
       starData: null,
       // Add default properties and their initial values here
-      startingBodies: 3,
+      startingBodies: 1,
       seed: null,
       windowWidth: 1000,
       windowHeight: 1000,
@@ -539,10 +539,20 @@ export class Anybody extends EventEmitter {
       const radius = j * 5 + startingRadius
       const maxStarLvl = this.random(3, 10, new Prando())
       const starLvl = this.random(0, maxStarLvl - 1, new Prando())
+
+      const vectorMax =
+        (i == 0 ? this.vectorLimit / 3 : this.vectorLimit) *
+        Number(this.scalingFactor)
+      const vx =
+        this.random(-vectorMax, vectorMax, new Prando()) /
+        Number(this.scalingFactor)
+      const vy =
+        this.random(-vectorMax, vectorMax, new Prando()) /
+        Number(this.scalingFactor)
       const body = {
         bodyIndex: i,
         position: this.createVector(ss[i][0], ss[i][1]),
-        velocity: this.createVector(0, 0),
+        velocity: this.createVector(vx, vy),
         radius,
         starLvl,
         maxStarLvl,

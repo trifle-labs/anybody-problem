@@ -2,6 +2,8 @@
 
 pragma solidity ^0.8.0;
 
+import {Groth16Verifier as Groth16Verifier1} from "./Game_1_20Verifier.sol";
+import {Groth16Verifier as Groth16Verifier2} from "./Game_2_20Verifier.sol";
 import {Groth16Verifier as Groth16Verifier3} from "./Game_3_20Verifier.sol";
 import {Groth16Verifier as Groth16Verifier4} from "./Game_4_20Verifier.sol";
 import {Groth16Verifier as Groth16Verifier5} from "./Game_5_20Verifier.sol";
@@ -14,12 +16,10 @@ import {Groth16Verifier as Groth16Verifier10} from "./Game_10_20Verifier.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "./Problems.sol";
-import "./Dust.sol";
 import "hardhat/console.sol";
 
 contract Solver is Ownable {
     address payable public problems;
-    address public dust;
     uint256 public constant decimals = 10 ** 18;
 
     uint256[11] public bodyBoost = [
@@ -49,13 +49,11 @@ contract Solver is Ownable {
     event Solved(
         address indexed solver,
         uint256 indexed problemId,
-        uint256 ticksInThisMatch,
-        uint256 winnings
+        uint256 ticksInThisMatch
     );
 
-    constructor(address payable problems_, address dust_) {
+    constructor(address payable problems_) {
         problems = problems_;
-        dust = dust_;
     }
 
     fallback() external {
@@ -66,9 +64,6 @@ contract Solver is Ownable {
         problems = problems_;
     }
 
-    function updateDustAddress(address dust_) public onlyOwner {
-        dust = dust_;
-    }
 
     function inProgress(uint256 problemId) public view returns (bool) {
         return matches[problemId].inProgress;
@@ -93,8 +88,9 @@ contract Solver is Ownable {
         address owner = Problems(problems).ownerOf(problemId);
         require(owner == msg.sender, "Not the owner");
 
-        (, uint256 bodyCount, , uint256 previousTickCount) = Problems(problems)
+        (bool solved, , , uint256 bodyCount, , uint256 previousTickCount) = Problems(problems)
             .problems(problemId);
+        require(!solved, "Already solved");
 
         uint256 numberOfInputs = bodyCount * 5 * 2;
         require(input.length == numberOfInputs, "Invalid input length");
@@ -105,7 +101,27 @@ contract Solver is Ownable {
 
         require(verifier != address(0), "Invalid verifier");
 
-        if (bodyCount == 3) {
+        if (bodyCount == 1) {
+            //require(
+                //Groth16Verifier1(verifier).verifyProof(
+                //    a,
+                //    b,
+                //    c,
+                //    convertTo10(input)
+                //),
+                //"Invalid 1 body proof"
+            //);
+        } else if (bodyCount == 2) {
+            //require(
+                //Groth16Verifier2(verifier).verifyProof(
+                //    a,
+                //    b,
+                //    c,
+                //    convertTo20(input)
+                //),
+                //"Invalid 2 body proof"
+            //);
+        } else if (bodyCount == 3) {
             //require(
                 //Groth16Verifier3(verifier).verifyProof(
                 //    a,
@@ -284,17 +300,10 @@ contract Solver is Ownable {
 
         // beat the level
         if(bodiesGone == bodyCount) {
-          // bonus for beating level in half time
-          uint256 speedBoost = getSpeedBoost(ticksInThisMatch);
-          uint256 winnings = /*bodyCount **/ speedBoost * bodyBoost[bodyCount] * decimals;
-          Dust(dust).mint(
-              msg.sender,
-              winnings
-          );
           Problems(problems).restoreRadius(problemId);
           Problems(problems).levelUp(problemId);
           delete matches[problemId];
-          emit Solved(msg.sender, problemId, ticksInThisMatch, winnings);
+          emit Solved(msg.sender, problemId, ticksInThisMatch);
         }
     }
 
@@ -318,6 +327,26 @@ contract Solver is Ownable {
       require(msg.sender == Problems(problems).ownerOf(problemId), "Not the owner");
       Problems(problems).restoreRadius(problemId);
       delete matches[problemId];
+    }
+
+    function convertTo10(
+        uint[] memory input
+    ) internal pure returns (uint[10] memory) {
+        uint[10] memory input_;
+        for (uint256 i = 0; i < 10; i++) {
+            input_[i] = input[i];
+        }
+        return input_;
+    }
+
+    function convertTo20(
+        uint[] memory input
+    ) internal pure returns (uint[20] memory) {
+        uint[20] memory input_;
+        for (uint256 i = 0; i < 20; i++) {
+            input_[i] = input[i];
+        }
+        return input_;
     }
 
     function convertTo30(

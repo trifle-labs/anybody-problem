@@ -105,7 +105,7 @@ contract BodyMetadata is Ownable {
         string memory path = "";
         uint256 scalingFactor = Problems(problems).scalingFactor();
 
-          (uint256 body_problemId, uint256 body_mintedBodyIndex, uint256 body_starLvl, uint256 body_maxStarLvl, bytes32 body_seed) = Bodies(bodies).bodies(tokenId);
+          (uint256 body_problemId, uint256 body_mintedBodyIndex, bytes32 body_seed) = Bodies(bodies).bodies(tokenId);
           uint256 body_radius = Problems(problems).genRadius(body_seed);
           uint256 scaledRadius = body_radius *
               4 +
@@ -198,7 +198,7 @@ contract BodyMetadata is Ownable {
         uint256 tokenId
     ) internal view returns (string memory) {
           uint256 scalingFactor = Problems(problems).scalingFactor();
-          (uint256 body_problemId, uint256 body_mintedBodyIndex, uint256 body_starLvl, uint256 body_maxStarLvl, bytes32 body_seed) = Bodies(bodies).bodies(tokenId);
+          (uint256 body_problemId, uint256 body_mintedBodyIndex, bytes32 body_seed) = Bodies(bodies).bodies(tokenId);
           uint256 body_radius = Problems(problems).genRadius(body_seed);
           uint256 scaledRadius = body_radius *
               4 +
@@ -214,10 +214,6 @@ contract BodyMetadata is Ownable {
                     StringsExtended.toString(body_problemId),
                     '"}, {"trait_type":"mintedBodyIndex","value":"',
                     StringsExtended.toString(body_mintedBodyIndex),
-                    '"}, {"trait_type":"starLvl","value":"',
-                    StringsExtended.toString(body_starLvl),
-                    '"}, {"trait_type":"maxStarLvl","value":"',
-                    StringsExtended.toString(body_maxStarLvl),
                     '"}, {"trait_type":"seed","value":"',
                     StringsExtended.toHexStringWithPrefix(uint256(body_seed), 32),
                     '"}, {"trait_type":"radius","value":"',

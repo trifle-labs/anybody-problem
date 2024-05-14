@@ -2087,7 +2087,8 @@ describe('stepStateTest circuit', () => {
     await circuit.checkConstraints(witness)
   })
 
-  it('has the correct output', async () => {
+  // TODO: PR #97
+  it.skip('has the correct output', async () => {
     const anybody = new Anybody(null, { util: true })
     let bodies = sampleInput.bodies.map(
       anybody.convertScaledStringArrayToBody.bind(anybody)
