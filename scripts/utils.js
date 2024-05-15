@@ -252,7 +252,8 @@ const deployContracts = async (ignoreTesting = false) => {
   if (
     networkinfo['chainId'] == 5 ||
     networkinfo['chainId'] == 1 ||
-    networkinfo['chainId'] == 11155111
+    networkinfo['chainId'] == 11155111 ||
+    networkinfo['chainId'] == 17069
   ) {
     const verificationData = [
       {
@@ -295,9 +296,9 @@ const deployContracts = async (ignoreTesting = false) => {
 const verifyContracts = async (returnObject) => {
   const blocksToWaitBeforeVerify = 0
   const verificationData = returnObject.verificationData
-  const solver = returnObject.Solver
+  const problemMetadata = returnObject.ProblemMetadata
   for (let i = 0; i < verificationData.length; i++) {
-    await solver.deployTransaction.wait(blocksToWaitBeforeVerify)
+    await problemMetadata.deployTransaction.wait(blocksToWaitBeforeVerify)
     log(`Verifying ${verificationData[i].name} Contract`)
     try {
       await hre.run('verify:verify', {
@@ -333,25 +334,6 @@ const mintProblem = async (signers, deployedContracts, acct) => {
   const problemId = getParsedEventLogs(receipt, problems, 'Transfer')[0].args
     .tokenId
   return { receipt, problemId }
-}
-
-const prepareMintBody = async (signers, deployedContracts, problemId, acct) => {
-  const [owner] = signers
-  acct = acct || owner
-  const {
-    Problems: problems,
-    Dust: dust,
-    Bodies: bodies,
-    Solver: solver
-  } = deployedContracts
-  const { mintedBodiesIndex } = await problems.problems(problemId)
-  const decimals = await bodies.decimals()
-  const dustPrice = await bodies.dustPrice(mintedBodiesIndex)
-  const dustPriceWithDecimals = dustPrice.mul(decimals)
-  await dust.updateSolverAddress(owner.address)
-  const tx = await dust.mint(acct.address, dustPriceWithDecimals)
-  await dust.updateSolverAddress(solver.address)
-  return { tx }
 }
 
 const generateWitness = async (
@@ -474,7 +456,6 @@ export {
   proverTickIndex,
   generateProof,
   generateAndSubmitProof,
-  prepareMintBody,
   mintProblem,
   getParsedEventLogs,
   decodeUri,

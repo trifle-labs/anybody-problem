@@ -73,9 +73,17 @@ const config = {
       gasPrice: 1_000_000_000 // 1 GWEI
     },
     sepolia: {
-      url: 'https://sepolia.rpc.grove.city/v1/' + process.env.grove,
+      // url: 'https://sepolia.infura.io/v3/' + process.env.INFURA_API_KEY,
+      // url: 'https://sepolia.rpc.grove.city/v1/' + process.env.grove,
+      url: 'https://ethereum-sepolia.blockpi.network/v1/rpc/public',
       accounts: { mnemonic: process.env.deploymentKey },
-      gasPrice: 10_000_000_000 // 10 GWEI
+      gasPrice: 150_000_000_000, // 150 GWEI
+      gas: 12_000_000
+    },
+    garnet: {
+      url: 'https://rpc.garnetchain.com	',
+      accounts: { mnemonic: process.env.deploymentKey },
+      gasPrice: 10_000_000 // 0.01 GWEI
     }
   },
   gasReporter: {
@@ -86,9 +94,17 @@ const config = {
     enabled: true
   },
   etherscan: {
-    // Your API key for Etherscan
-    // Obtain one at https://etherscan.io/
-    apiKey: process.env.etherscanApiNew
+    apiKey: process.env.etherscanApiNew,
+    customChains: [
+      {
+        network: 'garnet',
+        chainId: 17069,
+        urls: {
+          apiURL: 'https://explorer.garnetchain.com/api/',
+          browserURL: 'https://explorer.garnetchain.com'
+        }
+      }
+    ]
   },
   contractSizer: {
     alphaSort: true,
