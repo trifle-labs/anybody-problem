@@ -12,7 +12,7 @@ q5.setup = () => {
     // globalStyle: 'psycho',
     alreadyRun: Math.floor(Math.random() * 20000),
     // seed: 0n,
-    startingBodies: 1 //Math.floor(Math.random() * 9) + 1
+    startingBodies: Math.floor(Math.random() * 9) + 1
   })
 }
 q5.draw = () => {

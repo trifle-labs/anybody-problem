@@ -4,6 +4,7 @@ import EventEmitter from 'events'
 import Sound from './sound.js'
 import { Visuals, FPS } from './visuals.js'
 import { _validateSeed, Calculations } from './calculations.js'
+// import wc from './witness_calculator.js'
 
 const GAME_LENGTH = 60 // seconds
 
@@ -123,9 +124,32 @@ export class Anybody extends EventEmitter {
     this.loadImages()
     this.setPause(this.paused, true)
     this.storeInits()
+    // this.prepareWitness()
   }
 
-  start() {
+  // async prepareWitness() {
+  //   // const wasmFile = `/public/game_10_1.wasm`
+  //   const wasmFile = new URL('./game_10_1.wasm', import.meta.url).href
+  //   console.log({ wasmFile })
+  //   const response = await fetch(wasmFile)
+  //   console.log({ response })
+  //   const buffer = await response.arrayBuffer()
+  //   console.log({ buffer })
+  //   // let wasm = await fetch(new URL('./game_10_1.wasm', import.meta.url).href)
+  //   // console.log({ wasm })
+  //   this.witnessCalculator = await wc(buffer)
+  //   console.log({ witnessCalculator: this.witnessCalculator })
+  //   // const w = await witnessCalculator.calculateWitness(input, 0);
+  //   // for (let i = 0; i < w.length; i++) {
+  //   //   console.log(w[i]);
+  //   // }
+  //   // const buff = await witnessCalculator.calculateWTNSBin(input, 0)
+  //   // writeFile(process.argv[4], buff, function (err) {
+  //   //   if (err) throw err
+  //   // })
+  // }
+
+  async start() {
     this.addListeners()
     this.runSteps(this.preRun)
     // this.paintAtOnce(this.paintSteps)
@@ -276,6 +300,16 @@ export class Anybody extends EventEmitter {
       e.preventDefault()
       this.setPause()
     }
+    if (
+      e.code === 'KeyR' &&
+      !e.shiftKey &&
+      !e.altKey &&
+      !e.ctrlKey &&
+      !e.metaKey
+    ) {
+      // confirm('Are you sure you want to restart?') && this.restart()
+      this.restart()
+    }
   }
 
   handleGameOver = ({ won }) => {
@@ -369,6 +403,12 @@ export class Anybody extends EventEmitter {
   }
 
   step() {
+    // const { bodies, missiles } = await this.circomStep(
+    //   this.bodies,
+    //   this.missiles
+    // )
+    // this.bodies = bodies
+    // this.missiles = missiles || []
     this.bodies = this.forceAccumulator(this.bodies)
     var results = this.detectCollision(this.bodies, this.missiles)
     this.bodies = results.bodies
@@ -543,12 +583,8 @@ export class Anybody extends EventEmitter {
       const vectorMax =
         (i == 0 ? this.vectorLimit / 3 : this.vectorLimit) *
         Number(this.scalingFactor)
-      const vx =
-        this.random(-vectorMax, vectorMax, new Prando()) /
-        Number(this.scalingFactor)
-      const vy =
-        this.random(-vectorMax, vectorMax, new Prando()) /
-        Number(this.scalingFactor)
+      const vx = this.random(-vectorMax, vectorMax) / Number(this.scalingFactor)
+      const vy = this.random(-vectorMax, vectorMax) / Number(this.scalingFactor)
       const body = {
         bodyIndex: i,
         position: this.createVector(ss[i][0], ss[i][1]),

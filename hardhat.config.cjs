@@ -81,7 +81,7 @@ const config = {
       gas: 12_000_000
     },
     garnet: {
-      url: 'https://rpc.garnetchain.com	',
+      url: 'https://rpc.garnetchain.com',
       accounts: { mnemonic: process.env.deploymentKey },
       gasPrice: 10_000_000 // 0.01 GWEI
     }
