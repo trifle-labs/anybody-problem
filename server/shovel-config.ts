@@ -41,7 +41,8 @@ const solTypeToPgType = {
   address: 'bytea',
   uint256: 'numeric',
   bytes32: 'bytea',
-  int: 'int'
+  int: 'int',
+  bool: 'bool'
 }
 
 function camelToSnakeCase(str: string) {
@@ -54,12 +55,19 @@ async function integrationFor(
   tableName: string
 ): Promise<Integration> {
   const contract = contracts[contractName]
+  console.assert(contract, `Contract ${contractName} not found`)
   const event = contract.interface.getEvent(eventName)
+  console.assert(
+    event,
+    `Event ${eventName} not found in contract ${contractName}`
+  )
   const columns = event.inputs
     .map((input) => {
+      const pgType = solTypeToPgType[input.type]
+      console.assert(pgType, `Unsupported type ${input.type}`)
       return {
         name: camelToSnakeCase(input.name),
-        type: solTypeToPgType[input.type],
+        type: pgType,
         indexed: input.indexed
       }
     })
@@ -108,10 +116,14 @@ async function integrationFor(
 }
 
 ;(async () => {
-  let integrations = [
-    await integrationFor('Solver', 'Solved', 'solver_solved')
-    // await integrationFor('Problems', 'bodyAdded', 'problems_body_added')
-  ]
+  let integrations = await Promise.all([
+    integrationFor('Problems', 'Transfer', 'problems_transfer'),
+    integrationFor('Bodies', 'Transfer', 'bodies_transfer'),
+    integrationFor('Solver', 'Solved', 'solver_solved'),
+    integrationFor('Bodies', 'bodyBorn', 'bodies_body_born'),
+    integrationFor('Problems', 'bodyAdded', 'problems_body_added'),
+    integrationFor('Problems', 'bodyRemoved', 'problems_body_removed')
+  ])
 
   const config = makeConfig({
     pg_url: 'postgres:///shovel',
