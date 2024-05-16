@@ -44,6 +44,10 @@ const solTypeToPgType = {
   int: 'int'
 }
 
+function camelToSnakeCase(str: string) {
+  return str.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`)
+}
+
 async function integrationFor(
   contractName: string,
   eventName: string,
@@ -54,7 +58,7 @@ async function integrationFor(
   const columns = event.inputs
     .map((input) => {
       return {
-        name: input.name,
+        name: camelToSnakeCase(input.name),
         type: solTypeToPgType[input.type],
         indexed: input.indexed
       }
@@ -66,23 +70,20 @@ async function integrationFor(
         indexed: true
       }
     ])
-    .filter((input) => !/[A-Z]/.test(input.name))
 
   const table: Table = {
     name: tableName,
     columns
   }
 
-  const inputs = event.inputs
-    .map((input) => {
-      return {
-        name: input.name,
-        type: input.type,
-        indexed: input.indexed,
-        column: input.name
-      }
-    })
-    .filter((input) => !/[A-Z]/.test(input.name))
+  const inputs = event.inputs.map((input) => {
+    return {
+      name: input.name,
+      type: input.type,
+      indexed: input.indexed,
+      column: camelToSnakeCase(input.name)
+    }
+  })
 
   return {
     enabled: true,

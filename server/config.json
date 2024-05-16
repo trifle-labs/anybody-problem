@@ -19,6 +19,12 @@
         "name": "solver_solved",
         "columns": [
           { "name": "solver", "type": "bytea", "indexed": true },
+          { "name": "problem_id", "type": "numeric", "indexed": true },
+          {
+            "name": "ticks_in_this_match",
+            "type": "numeric",
+            "indexed": false
+          },
           { "name": "winnings", "type": "numeric", "indexed": false },
           { "name": "log_addr", "type": "bytea", "indexed": true }
         ]
@@ -41,6 +47,18 @@
             "type": "address",
             "indexed": true,
             "column": "solver"
+          },
+          {
+            "name": "problemId",
+            "type": "uint256",
+            "indexed": true,
+            "column": "problem_id"
+          },
+          {
+            "name": "ticksInThisMatch",
+            "type": "uint256",
+            "indexed": false,
+            "column": "ticks_in_this_match"
           },
           {
             "name": "winnings",
