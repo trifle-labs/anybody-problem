@@ -20,8 +20,8 @@ const sepolia: Source = {
   name: 'sepolia',
   chain_id: 11155111,
   url: 'https://ethereum-sepolia-rpc.publicnode.com',
-  batch_size: 10,
-  concurrency: 2
+  batch_size: 300,
+  concurrency: 10
 }
 
 const network = sepolia.chain_id
@@ -39,7 +39,9 @@ const contracts = Object.fromEntries(
 
 const solTypeToPgType = {
   address: 'bytea',
-  uint256: 'numeric'
+  uint256: 'numeric',
+  bytes32: 'bytea',
+  int: 'int'
 }
 
 async function integrationFor(
@@ -58,30 +60,33 @@ async function integrationFor(
       }
     })
     .concat([
-      { name: 'tx_hash', type: 'bytea', indexed: false },
       {
         name: 'log_addr',
         type: 'bytea',
         indexed: true
       }
     ])
+    .filter((input) => !/[A-Z]/.test(input.name))
+
   const table: Table = {
     name: tableName,
     columns
   }
 
-  const inputs = event.inputs.map((input) => {
-    return {
-      name: input.name,
-      type: input.type,
-      indexed: input.indexed,
-      column: input.name
-    }
-  })
+  const inputs = event.inputs
+    .map((input) => {
+      return {
+        name: input.name,
+        type: input.type,
+        indexed: input.indexed,
+        column: input.name
+      }
+    })
+    .filter((input) => !/[A-Z]/.test(input.name))
 
   return {
     enabled: true,
-    name: 'solver',
+    name: tableName,
     sources: [{ name: sepolia.name, start: 0n }],
     table,
     block: [
@@ -90,19 +95,22 @@ async function integrationFor(
         column: 'log_addr',
         filter_op: 'contains',
         filter_arg: [(await contract.getAddress()) as any]
-      },
-      { name: 'tx_hash', column: 'tx_hash' }
+      }
     ],
     event: {
       type: 'event',
       name: eventName,
+      anonymous: false,
       inputs
     }
   }
 }
 
 ;(async () => {
-  let integrations = [await integrationFor('Solver', 'Solved', 'solved')]
+  let integrations = [
+    await integrationFor('Solver', 'Solved', 'solver_solved')
+    // await integrationFor('Problems', 'bodyAdded', 'problems_body_added')
+  ]
 
   const config = makeConfig({
     pg_url: 'postgres:///shovel',

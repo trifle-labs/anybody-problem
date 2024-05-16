@@ -6,23 +6,20 @@
       "name": "sepolia",
       "chain_id": 11155111,
       "url": "https://ethereum-sepolia-rpc.publicnode.com",
-      "batch_size": 10,
-      "concurrency": 2
+      "batch_size": 300,
+      "concurrency": 10
     }
   ],
   "integrations": [
     {
       "enabled": true,
-      "name": "solver",
+      "name": "solver_solved",
       "sources": [{ "name": "sepolia", "start": "0" }],
       "table": {
-        "name": "solved",
+        "name": "solver_solved",
         "columns": [
           { "name": "solver", "type": "bytea", "indexed": true },
-          { "name": "problemId", "type": "numeric", "indexed": true },
-          { "name": "ticksInThisMatch", "type": "numeric", "indexed": false },
           { "name": "winnings", "type": "numeric", "indexed": false },
-          { "name": "tx_hash", "type": "bytea", "indexed": false },
           { "name": "log_addr", "type": "bytea", "indexed": true }
         ]
       },
@@ -32,30 +29,18 @@
           "column": "log_addr",
           "filter_op": "contains",
           "filter_arg": ["0xEdEC8B4f9AB038b2BD9c63388a77c48bF1e92D66"]
-        },
-        { "name": "tx_hash", "column": "tx_hash" }
+        }
       ],
       "event": {
         "type": "event",
         "name": "Solved",
+        "anonymous": false,
         "inputs": [
           {
             "name": "solver",
             "type": "address",
             "indexed": true,
             "column": "solver"
-          },
-          {
-            "name": "problemId",
-            "type": "uint256",
-            "indexed": true,
-            "column": "problemId"
-          },
-          {
-            "name": "ticksInThisMatch",
-            "type": "uint256",
-            "indexed": false,
-            "column": "ticksInThisMatch"
           },
           {
             "name": "winnings",
