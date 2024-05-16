@@ -5,16 +5,16 @@
     {
       "name": "sepolia",
       "chain_id": 11155111,
-      "url": "https://ethereum-sepolia-rpc.publicnode.com",
-      "batch_size": 300,
-      "concurrency": 10
+      "url": "https://rpc2.sepolia.org",
+      "batch_size": 1000,
+      "concurrency": 1
     }
   ],
   "integrations": [
     {
       "enabled": true,
       "name": "solver_solved",
-      "sources": [{ "name": "sepolia", "start": "0" }],
+      "sources": [{ "name": "sepolia", "start": "5716604" }],
       "table": {
         "name": "solver_solved",
         "columns": [

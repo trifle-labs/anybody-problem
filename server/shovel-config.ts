@@ -19,9 +19,9 @@ const mainnet: Source = {
 const sepolia: Source = {
   name: 'sepolia',
   chain_id: 11155111,
-  url: 'https://ethereum-sepolia-rpc.publicnode.com',
-  batch_size: 300,
-  concurrency: 10
+  url: 'https://rpc2.sepolia.org', // 'https://ethereum-sepolia-rpc.publicnode.com' rate limited
+  batch_size: 1000,
+  concurrency: 1
 }
 
 const network = sepolia.chain_id
@@ -88,7 +88,7 @@ async function integrationFor(
   return {
     enabled: true,
     name: tableName,
-    sources: [{ name: sepolia.name, start: 0n }],
+    sources: [{ name: sepolia.name, start: BigInt('5716604') }], // 5716604 is the block number of the Solver contract deployment
     table,
     block: [
       {
