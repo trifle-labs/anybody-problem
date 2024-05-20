@@ -1,0 +1,379 @@
+{
+  "dashboard": {},
+  "pg_url": "postgres:///shovel",
+  "eth_sources": [
+    {
+      "name": "sepolia",
+      "chain_id": 11155111,
+      "url": "https://rpc2.sepolia.org",
+      "batch_size": 1000,
+      "concurrency": 1
+    }
+  ],
+  "integrations": [
+    {
+      "enabled": true,
+      "name": "problems_transfer",
+      "sources": [{ "name": "sepolia", "start": "5716604" }],
+      "table": {
+        "name": "problems_transfer",
+        "columns": [
+          { "name": "from", "type": "bytea", "indexed": true },
+          { "name": "to", "type": "bytea", "indexed": true },
+          { "name": "token_id", "type": "numeric", "indexed": true },
+          { "name": "log_addr", "type": "bytea", "indexed": true }
+        ]
+      },
+      "block": [
+        {
+          "name": "log_addr",
+          "column": "log_addr",
+          "filter_op": "contains",
+          "filter_arg": ["0xF010416e279545E32E9a127b434DE5A46996E3af"]
+        }
+      ],
+      "event": {
+        "type": "event",
+        "name": "Transfer",
+        "anonymous": false,
+        "inputs": [
+          {
+            "name": "from",
+            "type": "address",
+            "indexed": true,
+            "column": "from"
+          },
+          { "name": "to", "type": "address", "indexed": true, "column": "to" },
+          {
+            "name": "tokenId",
+            "type": "uint256",
+            "indexed": true,
+            "column": "token_id"
+          }
+        ]
+      }
+    },
+    {
+      "enabled": true,
+      "name": "bodies_transfer",
+      "sources": [{ "name": "sepolia", "start": "5716604" }],
+      "table": {
+        "name": "bodies_transfer",
+        "columns": [
+          { "name": "from", "type": "bytea", "indexed": true },
+          { "name": "to", "type": "bytea", "indexed": true },
+          { "name": "token_id", "type": "numeric", "indexed": true },
+          { "name": "log_addr", "type": "bytea", "indexed": true }
+        ]
+      },
+      "block": [
+        {
+          "name": "log_addr",
+          "column": "log_addr",
+          "filter_op": "contains",
+          "filter_arg": ["0x3Fa45962C5090b06394331467808751E77E9Ef57"]
+        }
+      ],
+      "event": {
+        "type": "event",
+        "name": "Transfer",
+        "anonymous": false,
+        "inputs": [
+          {
+            "name": "from",
+            "type": "address",
+            "indexed": true,
+            "column": "from"
+          },
+          { "name": "to", "type": "address", "indexed": true, "column": "to" },
+          {
+            "name": "tokenId",
+            "type": "uint256",
+            "indexed": true,
+            "column": "token_id"
+          }
+        ]
+      }
+    },
+    {
+      "enabled": true,
+      "name": "solver_solved",
+      "sources": [{ "name": "sepolia", "start": "5716604" }],
+      "table": {
+        "name": "solver_solved",
+        "columns": [
+          { "name": "solver", "type": "bytea", "indexed": true },
+          { "name": "problem_id", "type": "numeric", "indexed": true },
+          {
+            "name": "ticks_in_this_match",
+            "type": "numeric",
+            "indexed": false
+          },
+          { "name": "winnings", "type": "numeric", "indexed": false },
+          { "name": "log_addr", "type": "bytea", "indexed": true }
+        ]
+      },
+      "block": [
+        {
+          "name": "log_addr",
+          "column": "log_addr",
+          "filter_op": "contains",
+          "filter_arg": ["0xEdEC8B4f9AB038b2BD9c63388a77c48bF1e92D66"]
+        }
+      ],
+      "event": {
+        "type": "event",
+        "name": "Solved",
+        "anonymous": false,
+        "inputs": [
+          {
+            "name": "solver",
+            "type": "address",
+            "indexed": true,
+            "column": "solver"
+          },
+          {
+            "name": "problemId",
+            "type": "uint256",
+            "indexed": true,
+            "column": "problem_id"
+          },
+          {
+            "name": "ticksInThisMatch",
+            "type": "uint256",
+            "indexed": false,
+            "column": "ticks_in_this_match"
+          },
+          {
+            "name": "winnings",
+            "type": "uint256",
+            "indexed": false,
+            "column": "winnings"
+          }
+        ]
+      }
+    },
+    {
+      "enabled": true,
+      "name": "bodies_body_born",
+      "sources": [{ "name": "sepolia", "start": "5716604" }],
+      "table": {
+        "name": "bodies_body_born",
+        "columns": [
+          { "name": "body_id", "type": "numeric", "indexed": true },
+          { "name": "problem_id", "type": "numeric", "indexed": true },
+          { "name": "minted_body_index", "type": "numeric", "indexed": true },
+          { "name": "max_star_lvl", "type": "numeric", "indexed": false },
+          { "name": "seed", "type": "bytea", "indexed": false },
+          { "name": "added_to_problem", "type": "bool", "indexed": false },
+          { "name": "log_addr", "type": "bytea", "indexed": true }
+        ]
+      },
+      "block": [
+        {
+          "name": "log_addr",
+          "column": "log_addr",
+          "filter_op": "contains",
+          "filter_arg": ["0x3Fa45962C5090b06394331467808751E77E9Ef57"]
+        }
+      ],
+      "event": {
+        "type": "event",
+        "name": "bodyBorn",
+        "anonymous": false,
+        "inputs": [
+          {
+            "name": "bodyId",
+            "type": "uint256",
+            "indexed": true,
+            "column": "body_id"
+          },
+          {
+            "name": "problemId",
+            "type": "uint256",
+            "indexed": true,
+            "column": "problem_id"
+          },
+          {
+            "name": "mintedBodyIndex",
+            "type": "uint256",
+            "indexed": true,
+            "column": "minted_body_index"
+          },
+          {
+            "name": "maxStarLvl",
+            "type": "uint256",
+            "indexed": false,
+            "column": "max_star_lvl"
+          },
+          {
+            "name": "seed",
+            "type": "bytes32",
+            "indexed": false,
+            "column": "seed"
+          },
+          {
+            "name": "addedToProblem",
+            "type": "bool",
+            "indexed": false,
+            "column": "added_to_problem"
+          }
+        ]
+      }
+    },
+    {
+      "enabled": true,
+      "name": "problems_body_added",
+      "sources": [{ "name": "sepolia", "start": "5716604" }],
+      "table": {
+        "name": "problems_body_added",
+        "columns": [
+          { "name": "problem_id", "type": "numeric", "indexed": false },
+          { "name": "body_id", "type": "numeric", "indexed": false },
+          { "name": "minted_body_index", "type": "numeric", "indexed": false },
+          { "name": "tick", "type": "numeric", "indexed": false },
+          { "name": "px", "type": "numeric", "indexed": false },
+          { "name": "py", "type": "numeric", "indexed": false },
+          { "name": "radius", "type": "numeric", "indexed": false },
+          { "name": "star_lvl", "type": "numeric", "indexed": false },
+          { "name": "max_star_lvl", "type": "numeric", "indexed": false },
+          { "name": "seed", "type": "bytea", "indexed": false },
+          { "name": "log_addr", "type": "bytea", "indexed": true }
+        ]
+      },
+      "block": [
+        {
+          "name": "log_addr",
+          "column": "log_addr",
+          "filter_op": "contains",
+          "filter_arg": ["0xF010416e279545E32E9a127b434DE5A46996E3af"]
+        }
+      ],
+      "event": {
+        "type": "event",
+        "name": "bodyAdded",
+        "anonymous": false,
+        "inputs": [
+          {
+            "name": "problemId",
+            "type": "uint256",
+            "indexed": false,
+            "column": "problem_id"
+          },
+          {
+            "name": "bodyId",
+            "type": "uint256",
+            "indexed": false,
+            "column": "body_id"
+          },
+          {
+            "name": "mintedBodyIndex",
+            "type": "uint256",
+            "indexed": false,
+            "column": "minted_body_index"
+          },
+          {
+            "name": "tick",
+            "type": "uint256",
+            "indexed": false,
+            "column": "tick"
+          },
+          { "name": "px", "type": "uint256", "indexed": false, "column": "px" },
+          { "name": "py", "type": "uint256", "indexed": false, "column": "py" },
+          {
+            "name": "radius",
+            "type": "uint256",
+            "indexed": false,
+            "column": "radius"
+          },
+          {
+            "name": "starLvl",
+            "type": "uint256",
+            "indexed": false,
+            "column": "star_lvl"
+          },
+          {
+            "name": "maxStarLvl",
+            "type": "uint256",
+            "indexed": false,
+            "column": "max_star_lvl"
+          },
+          {
+            "name": "seed",
+            "type": "bytes32",
+            "indexed": false,
+            "column": "seed"
+          }
+        ]
+      }
+    },
+    {
+      "enabled": true,
+      "name": "problems_body_removed",
+      "sources": [{ "name": "sepolia", "start": "5716604" }],
+      "table": {
+        "name": "problems_body_removed",
+        "columns": [
+          { "name": "problem_id", "type": "numeric", "indexed": false },
+          { "name": "tick", "type": "numeric", "indexed": false },
+          { "name": "body_id", "type": "numeric", "indexed": false },
+          { "name": "star_lvl", "type": "numeric", "indexed": false },
+          { "name": "max_star_lvl", "type": "numeric", "indexed": false },
+          { "name": "seed", "type": "bytea", "indexed": false },
+          { "name": "log_addr", "type": "bytea", "indexed": true }
+        ]
+      },
+      "block": [
+        {
+          "name": "log_addr",
+          "column": "log_addr",
+          "filter_op": "contains",
+          "filter_arg": ["0xF010416e279545E32E9a127b434DE5A46996E3af"]
+        }
+      ],
+      "event": {
+        "type": "event",
+        "name": "bodyRemoved",
+        "anonymous": false,
+        "inputs": [
+          {
+            "name": "problemId",
+            "type": "uint256",
+            "indexed": false,
+            "column": "problem_id"
+          },
+          {
+            "name": "tick",
+            "type": "uint256",
+            "indexed": false,
+            "column": "tick"
+          },
+          {
+            "name": "bodyId",
+            "type": "uint256",
+            "indexed": false,
+            "column": "body_id"
+          },
+          {
+            "name": "starLvl",
+            "type": "uint256",
+            "indexed": false,
+            "column": "star_lvl"
+          },
+          {
+            "name": "maxStarLvl",
+            "type": "uint256",
+            "indexed": false,
+            "column": "max_star_lvl"
+          },
+          {
+            "name": "seed",
+            "type": "bytes32",
+            "indexed": false,
+            "column": "seed"
+          }
+        ]
+      }
+    }
+  ]
+}
