@@ -10,7 +10,7 @@ const correctPrice = ethers.utils.parseEther('0.01')
 // const splitterAddress = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266'
 
 const proverTickIndex = {
-  1: 2000,
+  1: 750,
   2: 750,
   3: 500,
   4: 300,
@@ -425,17 +425,21 @@ const generateAndSubmitProof = async (
     bodyData,
     'game'
   )
-
   for (let i = 0; i < dataResult.Input.length; i++) {
-    if (i < dataResult.Input.length / 2) {
+    const speedIndex = (dataResult.Input.length - 1) / 2
+    if (i < speedIndex) {
       const bodyIndex = Math.floor(i / 5)
       const body = bodyFinal[bodyIndex]
-      const bodyDataIndex = i - bodyIndex * 5
+      const bodyDataIndex = i % 5
       expect(dataResult.Input[i]).to.equal(body[bodyDataIndex].toString())
+    } else if (i == speedIndex) {
+      // TODO: check the speed here?
+      continue
     } else {
-      const bodyIndex = Math.floor((i - dataResult.Input.length / 2) / 5)
+      const ii = i - speedIndex
+      const bodyIndex = Math.floor((ii - 1) / 5)
       const body = inputData.bodies[bodyIndex]
-      const bodyDataIndex = i - dataResult.Input.length / 2 - bodyIndex * 5
+      const bodyDataIndex = (ii - 1) % 5
       expect(dataResult.Input[i]).to.equal(body[bodyDataIndex].toString())
     }
   }

@@ -9,11 +9,11 @@
   <style>
     @keyframes moveEllipse1 {
       0% {
-        transform-origin: 609.356px 204.718px;
+        transform-origin: 194.34px 965.94px;
         transform: rotate(0deg) translate(0px, 10px);
       }
       100% {
-        transform-origin: 609.356px 204.718px;
+        transform-origin: 194.34px 965.94px;
         transform: rotate(360deg) translate(0px, 10px);
       }
     }
@@ -24,11 +24,11 @@
   </style>
   <ellipse
     id="id-1"
-    ry="128.0"
-    rx="128.0"
-    cy="204.718"
-    cx="609.356"
-    fill="hsl(308,38%,43%)"
+    ry="148.0"
+    rx="148.0"
+    cy="965.940"
+    cx="194.34"
+    fill="hsl(346,88%,49%)"
   />
   <text x="50" y="550" class="name">Problem #1</text>
 </svg>
