@@ -144,7 +144,7 @@ export const Calculations = {
     }
 
     // console.log('before limiter')
-    // console.dir({ bodies_0: convertScaledBigIntBodyToArray(bodies[0]) }, { depth: null })
+    // console.dir({ bodies_0: this.convertScaledBigIntBodyToArray(bodies[0]) }, { depth: null })
 
     // const xOffset = bodies[bodies.length - 1].position.x
     // const yOffset = bodies[bodies.length - 1].position.y
@@ -291,16 +291,21 @@ export const Calculations = {
     return bodyArray.map((b) => b.toString())
   },
 
+  convertScaledStringToBigInt(value) {
+    return BigInt(value)
+  },
+
   convertScaledStringArrayToFloat(body) {
     const maxVectorScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
+    body = body.map(this.convertScaledStringToBigInt.bind(this))
     return {
       position: {
         x: this.convertScaledBigIntToFloat(body[0]),
         y: this.convertScaledBigIntToFloat(body[1])
       },
       velocity: {
-        x: this.convertScaledBigIntToFloat(body[2]) - maxVectorScaled,
-        y: this.convertScaledBigIntToFloat(body[3]) - maxVectorScaled
+        x: this.convertScaledBigIntToFloat(body[2] - maxVectorScaled),
+        y: this.convertScaledBigIntToFloat(body[3] - maxVectorScaled)
       },
       radius: this.convertScaledBigIntToFloat(body[4])
     }

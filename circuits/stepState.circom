@@ -11,6 +11,8 @@ template StepState(totalBodies, steps) {
   signal input missiles[steps + 1][5];
 
   signal output out_bodies[totalBodies][5];
+  var time_tmp = 0;
+  signal output time;
 
   component forceAccumulator[steps];
   component calculateMissile[steps];
@@ -21,6 +23,9 @@ template StepState(totalBodies, steps) {
 
   component mux[steps];
   component isZero[steps];
+
+  component isZeroStep[steps][totalBodies];
+  component isZeroDone[steps];
 
   for (var i = 0; i < steps; i++) {
     // log("tmp_body[0][0]", tmp_body[0][0]);
@@ -48,16 +53,30 @@ template StepState(totalBodies, steps) {
       detectCollision[i].bodies[j][2] <== forceAccumulator[i].out_bodies[j][4]; // radius
     }
 
+    var totalRadius = 0;
+
     // Some bodies may have lost radius due to collision, so we need to update the bodies
     // TODO: check whether it's possible to reduce constraint by removing velocity here
     // tmp_bodies[i + 1] <== detectCollision[i].out_bodies;
+    // ALSO check whether each radius == 0, if so then the totalRadius of all of them is 0
     for (var j = 0; j < totalBodies; j++) {
-      tmp_body[j][0] = detectCollision[i].out_bodies[j][0];
-      tmp_body[j][1] = detectCollision[i].out_bodies[j][1];
-      tmp_body[j][2] = forceAccumulator[i].out_bodies[j][2];
-      tmp_body[j][3] = forceAccumulator[i].out_bodies[j][3];
-      tmp_body[j][4] = detectCollision[i].out_bodies[j][2];
+      tmp_body[j][0] = detectCollision[i].out_bodies[j][0]; // x
+      tmp_body[j][1] = detectCollision[i].out_bodies[j][1]; // y
+      tmp_body[j][2] = forceAccumulator[i].out_bodies[j][2]; // xv
+      tmp_body[j][3] = forceAccumulator[i].out_bodies[j][3]; // yv
+      tmp_body[j][4] = detectCollision[i].out_bodies[j][2]; // radius
+      isZeroStep[i][j] = IsZero();
+      isZeroStep[i][j].in <== detectCollision[i].out_bodies[j][2];
+      totalRadius = totalRadius + isZeroStep[i][j].out;
     }
+    // log("totalRadius", totalRadius);
+    // If the total Radius of all the bodies is 0, begin counting how many steps.
+    // This time_tmp will be the number of seconds since the game ended and can be 
+    // subgracted from total time to understand how long the game lasted.
+    isZeroDone[i] = IsZero();
+    isZeroDone[i].in <== totalBodies - totalRadius;
+    time_tmp = time_tmp + isZeroDone[i].out;
+    // log("time_tmp", time_tmp);
 
     // NOTE: Check whether the missile radius is now 0 meaning that it has collided with a
     // body
@@ -96,5 +115,6 @@ template StepState(totalBodies, steps) {
     tmp_missile[4] = mux[i].out[4];
 
   }
+  time <== steps - time_tmp;
   out_bodies <== tmp_body;
 }

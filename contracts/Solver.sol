@@ -49,6 +49,7 @@ contract Solver is Ownable {
     event Solved(
         address indexed solver,
         uint256 indexed problemId,
+        uint256 indexed level,
         uint256 ticksInThisMatch
     );
 
@@ -303,7 +304,7 @@ contract Solver is Ownable {
           Problems(problems).restoreRadius(problemId);
           Problems(problems).levelUp(problemId);
           delete matches[problemId];
-          emit Solved(msg.sender, problemId, ticksInThisMatch);
+          emit Solved(msg.sender, problemId, bodyCount, ticksInThisMatch);
         }
     }
 
