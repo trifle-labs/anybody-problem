@@ -17,7 +17,15 @@ const sepolia: Source = {
   concurrency: 1
 }
 
-const network = sepolia.chain_id
+const garnet: Source = {
+  name: 'garnet',
+  chain_id: 17069,
+  url: 'https://rpc.garnetchain.com',
+  batch_size: 1000,
+  concurrency: 1
+}
+
+const network = garnet.chain_id
 const contracts = Object.fromEntries(
   [Problems, Bodies, Solver].map((contract) => {
     const abi = contract.abi.abi
@@ -87,7 +95,7 @@ async function integrationFor(
   return {
     enabled: true,
     name: tableName,
-    sources: [{ name: sepolia.name, start: BigInt('5716604') }], // 5716604 is the block number of the Solver contract deployment
+    sources: [{ name: garnet.name, start: BigInt('2067803') }],
     table,
     block: [
       {
@@ -125,7 +133,7 @@ async function integrationFor(
 
   const config = makeConfig({
     pg_url: 'postgres:///shovel',
-    sources: [sepolia],
+    sources: [garnet],
     integrations: integrations
   })
 
