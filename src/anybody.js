@@ -357,13 +357,17 @@ export class Anybody extends EventEmitter {
     }
   }
 
+  doubleTextInverted(text) {
+    return text.slice(0, -1) + text.split('').reverse().join('')
+  }
+
   setStatsText = async (stats) => {
     const statLines = [
       // `total bodies: ${stats.bodiesIncluded}`,
-      `¸¸♬·¯·♩¸¸♪·¯·♫¸¸♬·¯·♩¸¸♪·¯`,
-      `${stats.bodiesIncluded} body score: ${stats.bodiesBoost}`,
-      `speed bonus (${stats.timeTook}s): ${stats.speedBoost}x`,
-      `DU$T earned: ${stats.dust}`
+      this.doubleTextInverted(`¸♩·¯·♬¸¸♬·¯·♩¸¸♪¯`),
+      `${stats.bodiesIncluded} bodies cleared`,
+      `in ${stats.timeTook} sec 🐎`,
+      `👈👈 Save Your Game👈👈`
     ]
     const toShow = statLines.join('\n')
 

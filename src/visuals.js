@@ -595,7 +595,7 @@ export const Visuals = {
     p.rect(this.windowWidth / 2 - 320, 350, 640, 300, 20, 20, 20, 20)
 
     // draw stats
-    p.textSize(50)
+    p.textSize(48)
     p.textStyle(p.BOLD)
     p.fill('black')
     for (const [i, line] of this.statsText.split('\n').entries()) {
