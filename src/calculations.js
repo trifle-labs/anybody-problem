@@ -9,6 +9,85 @@ export const Calculations = {
     return bodies
   },
 
+  // async circomStep(bodies, missiles) {
+  //   // console.log('incoming', { bodies, missiles })
+  //   // this.witnessCalculator = false
+
+  //   // const vectorLimitScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
+
+  //   if (this.witnessCalculator) {
+  //     bodies = this.convertBodiesToBigInts(bodies)
+  //     missiles = this.convertBodiesToBigInts(missiles)
+  //     // console.log({ bodies, missiles })
+  //     const witnessBodies = bodies.map((b) => {
+  //       b = this.convertScaledBigIntBodyToArray(b)
+  //       b[2] = BigInt(b[2]).toString()
+  //       b[3] = BigInt(b[3]).toString()
+  //       return b
+  //     })
+  //     const empty = ['0', '0', '0', '0', '0']
+  //     const witnessMissiles = missiles.map((b) => {
+  //       b = this.convertScaledBigIntBodyToArray(b)
+  //       b[2] = BigInt(b[2]).toString()
+  //       b[3] = BigInt(b[3]).toString()
+  //       return b
+  //     })
+  //     const startingMissileLength = witnessMissiles.length
+  //     for (let i = 0; i < 2 - startingMissileLength; i++) {
+  //       witnessMissiles.push(empty)
+  //     }
+  //     const startingLength = witnessBodies.length
+  //     if (witnessBodies.length < 10) {
+  //       for (let i = 0; i < 10 - startingLength; i++) {
+  //         witnessBodies.push(empty)
+  //       }
+  //     }
+
+  //     // console.log({
+  //     // witnessBodies,
+  //     // witnessMissiles: JSON.parse(JSON.stringify(witnessMissiles))
+  //     // })
+  //     const results = await this.witnessCalculator.calculateWitness(
+  //       { bodies: witnessBodies, missiles: witnessMissiles },
+  //       0
+  //     )
+  //     // console.log({ results })
+
+  //     witnessMissiles[0][0] = results[results.length - 3].toString()
+  //     witnessMissiles[0][1] = results[results.length - 4].toString()
+  //     // console.log({ witnessMissilesUpdated: witnessMissiles })
+  //     const convertedMissile = this.convertScaledStringArrayToBody(
+  //       witnessMissiles[0]
+  //     )
+  //     // console.log({ convertedMissile })
+
+  //     // console.log({ missilesConvertedBackToBodies: missiles })
+  //     if (missiles.length > 0) {
+  //       missiles[0].position.x = convertedMissile.position.x
+  //       missiles[0].position.y = convertedMissile.position.y
+  //       missiles[0].radius = convertedMissile.radius
+  //       missiles = this.convertBigIntsToBodies(missiles)
+  //     }
+
+  //     // console.log({ results, missiles })
+  //     for (let i = 0; i < startingLength; i++) {
+  //       const body = []
+  //       for (let j = 0; j < 5; j++) {
+  //         body.push(results[1 + i * 5 + j])
+  //       }
+  //       const convertedBody = this.convertScaledStringArrayToBody(body)
+  //       bodies[i].position.x = convertedBody.position.x
+  //       bodies[i].position.y = convertedBody.position.y
+  //       bodies[i].velocity.x = convertedBody.velocity.x
+  //       bodies[i].velocity.y = convertedBody.velocity.y
+  //       bodies[i].radius = convertedBody.radius
+  //     }
+  //     bodies = this.convertBigIntsToBodies(bodies)
+  //   }
+  //   // console.log({ bodies, missiles })
+  //   return { bodies, missiles }
+  // },
+
   forceAccumulatorBigInts(bodies) {
     const vectorLimitScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
     let accumulativeForces = []
@@ -65,7 +144,7 @@ export const Calculations = {
     }
 
     // console.log('before limiter')
-    // console.dir({ bodies_0: convertScaledBigIntBodyToArray(bodies[0]) }, { depth: null })
+    // console.dir({ bodies_0: this.convertScaledBigIntBodyToArray(bodies[0]) }, { depth: null })
 
     // const xOffset = bodies[bodies.length - 1].position.x
     // const yOffset = bodies[bodies.length - 1].position.y
@@ -212,16 +291,21 @@ export const Calculations = {
     return bodyArray.map((b) => b.toString())
   },
 
+  convertScaledStringToBigInt(value) {
+    return BigInt(value)
+  },
+
   convertScaledStringArrayToFloat(body) {
     const maxVectorScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
+    body = body.map(this.convertScaledStringToBigInt.bind(this))
     return {
       position: {
         x: this.convertScaledBigIntToFloat(body[0]),
         y: this.convertScaledBigIntToFloat(body[1])
       },
       velocity: {
-        x: this.convertScaledBigIntToFloat(body[2]) - maxVectorScaled,
-        y: this.convertScaledBigIntToFloat(body[3]) - maxVectorScaled
+        x: this.convertScaledBigIntToFloat(body[2] - maxVectorScaled),
+        y: this.convertScaledBigIntToFloat(body[3] - maxVectorScaled)
       },
       radius: this.convertScaledBigIntToFloat(body[4])
     }

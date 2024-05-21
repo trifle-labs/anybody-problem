@@ -4,6 +4,7 @@ import EventEmitter from 'events'
 import Sound from './sound.js'
 import { Visuals, FPS } from './visuals.js'
 import { _validateSeed, Calculations } from './calculations.js'
+// import wc from './witness_calculator.js'
 
 const GAME_LENGTH = 60 // seconds
 
@@ -42,7 +43,7 @@ export class Anybody extends EventEmitter {
       bodyData: null,
       starData: null,
       // Add default properties and their initial values here
-      startingBodies: 3,
+      startingBodies: 1,
       seed: null,
       windowWidth: 1000,
       windowHeight: 1000,
@@ -52,6 +53,7 @@ export class Anybody extends EventEmitter {
       G: 100, // Gravitational constant
       mode: 'nft', // game or nft
       admin: false,
+      solved: false,
       clearBG: true,
       colorStyle: '!squiggle', // squiggle or !squiggle
       preRun: 0,
@@ -107,6 +109,7 @@ export class Anybody extends EventEmitter {
     this.buttons = {}
     this.won = false
     this.finalBatchSent = false
+    this.solved = false
   }
 
   // run once at initilization
@@ -123,9 +126,32 @@ export class Anybody extends EventEmitter {
     this.loadImages()
     this.setPause(this.paused, true)
     this.storeInits()
+    // this.prepareWitness()
   }
 
-  start() {
+  // async prepareWitness() {
+  //   // const wasmFile = `/public/game_10_1.wasm`
+  //   const wasmFile = new URL('./game_10_1.wasm', import.meta.url).href
+  //   console.log({ wasmFile })
+  //   const response = await fetch(wasmFile)
+  //   console.log({ response })
+  //   const buffer = await response.arrayBuffer()
+  //   console.log({ buffer })
+  //   // let wasm = await fetch(new URL('./game_10_1.wasm', import.meta.url).href)
+  //   // console.log({ wasm })
+  //   this.witnessCalculator = await wc(buffer)
+  //   console.log({ witnessCalculator: this.witnessCalculator })
+  //   // const w = await witnessCalculator.calculateWitness(input, 0);
+  //   // for (let i = 0; i < w.length; i++) {
+  //   //   console.log(w[i]);
+  //   // }
+  //   // const buff = await witnessCalculator.calculateWTNSBin(input, 0)
+  //   // writeFile(process.argv[4], buff, function (err) {
+  //   //   if (err) throw err
+  //   // })
+  // }
+
+  async start() {
     this.addListeners()
     this.runSteps(this.preRun)
     // this.paintAtOnce(this.paintSteps)
@@ -276,6 +302,16 @@ export class Anybody extends EventEmitter {
       e.preventDefault()
       this.setPause()
     }
+    if (
+      e.code === 'KeyR' &&
+      !e.shiftKey &&
+      !e.altKey &&
+      !e.ctrlKey &&
+      !e.metaKey
+    ) {
+      // confirm('Are you sure you want to restart?') && this.restart()
+      this.restart()
+    }
   }
 
   handleGameOver = ({ won }) => {
@@ -321,13 +357,17 @@ export class Anybody extends EventEmitter {
     }
   }
 
+  doubleTextInverted(text) {
+    return text.slice(0, -1) + text.split('').reverse().join('')
+  }
+
   setStatsText = async (stats) => {
     const statLines = [
       // `total bodies: ${stats.bodiesIncluded}`,
-      `¸¸♬·¯·♩¸¸♪·¯·♫¸¸♬·¯·♩¸¸♪·¯`,
-      `${stats.bodiesIncluded} body score: ${stats.bodiesBoost}`,
-      `speed bonus (${stats.timeTook}s): ${stats.speedBoost}x`,
-      `DU$T earned: ${stats.dust}`
+      this.doubleTextInverted(`¸♩·¯·♬¸¸♬·¯·♩¸¸♪¯`),
+      `${stats.bodiesIncluded} bodies cleared`,
+      `in ${stats.timeTook} sec 🐎`,
+      `👈👈 Save Your Game👈👈`
     ]
     const toShow = statLines.join('\n')
 
@@ -369,6 +409,12 @@ export class Anybody extends EventEmitter {
   }
 
   step() {
+    // const { bodies, missiles } = await this.circomStep(
+    //   this.bodies,
+    //   this.missiles
+    // )
+    // this.bodies = bodies
+    // this.missiles = missiles || []
     this.bodies = this.forceAccumulator(this.bodies)
     var results = this.detectCollision(this.bodies, this.missiles)
     this.bodies = results.bodies
@@ -539,10 +585,16 @@ export class Anybody extends EventEmitter {
       const radius = j * 5 + startingRadius
       const maxStarLvl = this.random(3, 10, new Prando())
       const starLvl = this.random(0, maxStarLvl - 1, new Prando())
+
+      const vectorMax =
+        (i == 0 ? this.vectorLimit / 3 : this.vectorLimit) *
+        Number(this.scalingFactor)
+      const vx = this.random(-vectorMax, vectorMax) / Number(this.scalingFactor)
+      const vy = this.random(-vectorMax, vectorMax) / Number(this.scalingFactor)
       const body = {
         bodyIndex: i,
         position: this.createVector(ss[i][0], ss[i][1]),
-        velocity: this.createVector(0, 0),
+        velocity: this.createVector(vx, vy),
         radius,
         starLvl,
         maxStarLvl,
