@@ -15,7 +15,7 @@ contract Problems is ERC721, Ownable {
     // TODO: update with actual start date
     uint256 public startDate = 0; //4070908800; // Thu Jan 01 2099 00:00:00 GMT+0000 (___ CEST Berlin, ___ London, ___ NYC, ___ LA)
     uint256 constant public SECONDS_IN_A_DAY = 86400;
-
+    uint256 constant public MAX_BODY_COUNT = 2; // TODO: change back to 10
     uint256 public problemSupply;
 
     address public bodies;
@@ -230,8 +230,7 @@ contract Problems is ERC721, Ownable {
     function mintBodyToProblem(uint256 problemId) internal {
         require(!paused, "Paused");
         uint256 mintedBodyIndex = problems[problemId].mintedBodiesIndex;
-        // TODO: confirm this should be 10 instead of 9
-        require(mintedBodyIndex < 10, "Problem already minted 10 bodies");
+        require(mintedBodyIndex < MAX_BODY_COUNT, "Problem already minted 10 bodies");
         address owner = ownerOf(problemId);
         (uint256 bodyId, bytes32 bodySeed) = Bodies(bodies)
             .mintAndAddToProblem(owner, problemId, mintedBodyIndex);
@@ -313,13 +312,12 @@ contract Problems is ERC721, Ownable {
         rand = keccak256(abi.encodePacked(rand));
         body.py = randomRange(0, windowWidth, rand);
 
-        uint256 velocityMax = bodyIndex == 0 ? maxVector * 2 / 3 : maxVector * 2;
+         // this is actually a range of -1/2 to 1/2 of maxVector since negative offset
+        rand = keccak256(abi.encodePacked(rand));
+        body.vx = randomRange(0, maxVector * scalingFactor, rand);
 
         rand = keccak256(abi.encodePacked(rand));
-        body.vx = randomRange(0,velocityMax, rand) * scalingFactor; // NOTE: this is offset by maxVector
-
-        rand = keccak256(abi.encodePacked(rand));
-        body.vy = randomRange(0,velocityMax, rand) * scalingFactor;
+        body.vy = randomRange(0, maxVector * scalingFactor, rand);
 
         return body;
     }
@@ -391,7 +389,7 @@ contract Problems is ERC721, Ownable {
 
     function levelUp(uint256 problemId) public onlySolver {
       uint256 bodyCount = problems[problemId].bodyCount;
-      if (bodyCount == 10) {
+      if (bodyCount == MAX_BODY_COUNT) {
         problemSolved(problemId);
       } else {
         mintBodyToProblem(problemId);
@@ -400,7 +398,7 @@ contract Problems is ERC721, Ownable {
 
     function problemSolved(uint256 problemId) internal {
       problems[problemId].solved = true;
-      for (uint256 i = 0; i < 10; i++) {
+      for (uint256 i = 0; i < MAX_BODY_COUNT; i++) {
         uint256 bodyId = problems[problemId].bodyIds[i];
         Bodies(bodies).moveBodyFromProblem(
           ownerOf(problemId),

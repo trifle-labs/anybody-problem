@@ -10,9 +10,9 @@ const correctPrice = ethers.utils.parseEther('0.01')
 // const splitterAddress = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266'
 
 const proverTickIndex = {
-  1: 750,
-  2: 750,
-  3: 500,
+  1: 300,
+  2: 300,
+  3: 300,
   4: 300,
   5: 100,
   6: 100,

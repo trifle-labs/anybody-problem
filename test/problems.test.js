@@ -2,7 +2,7 @@ import { expect } from 'chai'
 import hre from 'hardhat'
 const ethers = hre.ethers
 // const { describe, it } = require('mocha')
-
+// import { Anybody } from '../src/anybody.js'
 import {
   getTicksRun,
   deployContracts,
@@ -445,6 +445,23 @@ describe('Problem Tests', function () {
 
     const bodyIDs = await problems.getProblemBodyIds(problemId)
 
+    // // batch fetch
+    // const fetches = await Promise.all([
+    //   problems.problems(problemId),
+    //   problems.getProblemBodyIds(problemId)
+    // ])
+    // const bodyIds = fetches[1]
+    // // batch fetch bodys' data
+    // const bodyData = await Promise.all(
+    //   bodyIds
+    //     .slice(0, bodyCount)
+    //     .map((id) => problems.getProblemBodyData(problemId, id))
+    // )
+    // const anybody = new Anybody(null, {
+    //   util: true,
+    //   bodyData
+    // })
+
     const maxVectorScaled = maxVector.mul(scalingFactor)
     for (let i = 0; i < bodyCount; i++) {
       const currentBodyId = bodyIDs[i]
@@ -480,20 +497,22 @@ describe('Problem Tests', function () {
     const deployedContracts = await deployContracts()
     const { Problems: problems, Bodies: bodies } = deployedContracts
     const { problemId } = await mintProblem(signers, deployedContracts)
+    const maxBodies = await problems.MAX_BODY_COUNT()
+
     // set solver to be owner
     const [owner] = signers
     await problems.updateSolverAddress(owner.address)
-    for (let i = 0; i < 9; i++) {
+    for (let i = 0; i < maxBodies.sub(1).toNumber(); i++) {
       await problems.levelUp(problemId)
     }
 
     const { bodyCount } = await problems.problems(problemId)
-    expect(bodyCount).to.equal(10)
+    expect(bodyCount).to.equal(maxBodies)
 
     await problems.levelUp(problemId)
 
     const bodyBalance = await bodies.balanceOf(owner.address)
-    expect(bodyBalance).to.equal(10)
+    expect(bodyBalance).to.equal(maxBodies)
 
     const { solved } = await problems.problems(problemId)
     expect(solved).to.be.true
