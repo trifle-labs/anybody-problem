@@ -302,32 +302,17 @@ contract Solver is Ownable {
 
         // beat the level
         if(bodiesGone == bodyCount) {
-          Problems(problems).restoreRadius(problemId);
-          Problems(problems).levelUp(problemId);
+          Problems(problems).levelUp(problemId, ticksInThisMatch);
+          Problems(problems).restoreValues(problemId);
           delete matches[problemId];
           emit Solved(msg.sender, problemId, bodyCount, ticksInThisMatch);
         }
     }
 
-    function getSpeedBoost(uint256 ticks) public pure returns (uint256) {
-        if (ticks <= 1 * maxTick / 6) {
-          return 6;
-        } else if (ticks <= 2 * maxTick / 6) {
-          return 5;
-        } else if (ticks <= 3 * maxTick / 6) {
-          return 4;
-        } else if (ticks <= 4 * maxTick / 6) {
-          return 3;
-        } else if (ticks <= 5 * maxTick / 6) {
-          return 2;
-        } else {
-          return 1;
-        }
-    }
-
     function deleteMatch(uint256 problemId) public {
       require(msg.sender == Problems(problems).ownerOf(problemId), "Not the owner");
-      Problems(problems).restoreRadius(problemId);
+      require(matches[problemId].inProgress, "Match not in progress");
+      Problems(problems).restoreValues(problemId);
       delete matches[problemId];
     }
 

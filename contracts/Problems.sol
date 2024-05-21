@@ -15,7 +15,7 @@ contract Problems is ERC721, Ownable {
     // TODO: update with actual start date
     uint256 public startDate = 0; //4070908800; // Thu Jan 01 2099 00:00:00 GMT+0000 (___ CEST Berlin, ___ London, ___ NYC, ___ LA)
     uint256 constant public SECONDS_IN_A_DAY = 86400;
-    uint256 constant public MAX_BODY_COUNT = 2; // TODO: change back to 10
+    uint256 constant public MAX_BODY_COUNT = 3; // TODO: change back to 10
     uint256 public problemSupply;
 
     address public bodies;
@@ -47,6 +47,7 @@ contract Problems is ERC721, Ownable {
         uint256 mintedBodiesIndex;
         mapping(uint256 => Body) bodyData;
         uint256[10] bodyIds;
+        uint256[10] times;
         uint256 tickCount;
     }
 
@@ -265,7 +266,8 @@ contract Problems is ERC721, Ownable {
         uint256 bodyIndex
     ) internal {
         bytes32 levelSeed = getLevelSeed(problems[problemId].day, problems[problemId].mintedBodiesIndex, bodyIndex);
-        Body memory bodyData = getRandomValues(levelSeed, problems[problemId].mintedBodiesIndex);
+          bytes32 bodyIndexRand = keccak256(abi.encodePacked(problems[problemId].day, bodyIndex));
+        Body memory bodyData = getRandomValues(levelSeed, bodyIndexRand);
         
         bodyData.seed = bodySeed;
         bodyData.bodyId = bodyId;
@@ -301,10 +303,10 @@ contract Problems is ERC721, Ownable {
     // NOTE: this function uses a seed consisting of the day + the mintedBodyIndex + 
     // actual bodyIndex which means that all problems of the same level on the same day 
     // will have bodies with the same positions, velocities and radii.
-    function getRandomValues(bytes32 rand, uint256 bodyIndex) public pure returns (Body memory) {
+    function getRandomValues(bytes32 rand, bytes32 bodyIndexRand) public pure returns (Body memory) {
         Body memory body;
 
-        body.radius = genRadius(rand);
+        body.radius = genRadius(bodyIndexRand);
 
         rand = keccak256(abi.encodePacked(rand));
         body.px = randomRange(0, windowWidth, rand);
@@ -340,6 +342,12 @@ contract Problems is ERC721, Ownable {
         uint256 problemId
     ) public view returns (uint256[10] memory) {
         return problems[problemId].bodyIds;
+    }
+
+    function getProblemTimes(
+        uint256 problemId
+    ) public view returns (uint256[10] memory) {
+        return problems[problemId].times;
     }
 
     function getProblemBodyData(
@@ -378,17 +386,26 @@ contract Problems is ERC721, Ownable {
         problems[problemId].bodyData[bodyId] = body;
     }
 
-    function restoreRadius(uint256 problemId) public onlySolver {
-        for (uint256 i = 0; i < problems[problemId].bodyCount; i++) {
-            uint256 bodyId = problems[problemId].bodyIds[i];
-            problems[problemId].bodyData[bodyId].radius = genRadius(
-                problems[problemId].bodyData[bodyId].seed
-            );
-        }
+    function restoreValues(uint256 problemId) public onlySolver {
+
+      uint256 max = problems[problemId].bodyCount  == MAX_BODY_COUNT ? MAX_BODY_COUNT : problems[problemId].bodyCount - 1;
+      // -1 because the newly added body is already in the correct level position
+      for (uint256 i = 0; i < max; i++) {
+        uint256 bodyId = problems[problemId].bodyIds[i];
+        bytes32 levelSeed = getLevelSeed(problems[problemId].day, problems[problemId].mintedBodiesIndex, i);
+        bytes32 bodyIndexRand = keccak256(abi.encodePacked(problems[problemId].day, i));
+        Body memory bodyData = getRandomValues(levelSeed, bodyIndexRand);
+        problems[problemId].bodyData[bodyId].px = bodyData.px;
+        problems[problemId].bodyData[bodyId].py = bodyData.py;
+        problems[problemId].bodyData[bodyId].vx = bodyData.vx;
+        problems[problemId].bodyData[bodyId].vy = bodyData.vy;
+        problems[problemId].bodyData[bodyId].radius = bodyData.radius;
+      }
     }
 
-    function levelUp(uint256 problemId) public onlySolver {
+    function levelUp(uint256 problemId, uint256 time) public onlySolver {
       uint256 bodyCount = problems[problemId].bodyCount;
+      problems[problemId].times[bodyCount] = time;
       if (bodyCount == MAX_BODY_COUNT) {
         problemSolved(problemId);
       } else {

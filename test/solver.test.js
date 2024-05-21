@@ -517,7 +517,8 @@ describe('Solver Tests', function () {
 
     const initialBodyCount = bodyCount
     let runningTickCount = tickCount
-    const totalBodies = 10 - bodyCount
+    const MAX_BODY_COUNT = await problems.MAX_BODY_COUNT()
+    const totalBodies = MAX_BODY_COUNT - bodyCount
     // make a proof for each body quantity
     // mint enough dust to mint and add a new body before next loop
     for (let i = 0; i <= totalBodies; i++) {
@@ -543,7 +544,7 @@ describe('Solver Tests', function () {
       )
       await tx.wait()
       runningTickCount = parseInt(runningTickCount) + parseInt(ticksRun)
-
+      const maxBodies = await problems.MAX_BODY_COUNT()
       // confirm new values are stored correctly
       for (let j = 0; j < bodyCount; j++) {
         const bodyId = bodyIds[j]
@@ -557,9 +558,9 @@ describe('Solver Tests', function () {
       }
 
       // add new body
-      if (bodyCount.lt(10)) {
+      if (bodyCount.lt(maxBodies.toNumber())) {
         await problems.updateSolverAddress(signers[0].address)
-        tx = await problems.levelUp(problemId)
+        tx = await problems.levelUp(problemId, ticksRun)
         let receipt = await tx.wait()
         const bodyId = getParsedEventLogs(receipt, bodies, 'Transfer')[0].args
           .tokenId
@@ -582,23 +583,6 @@ describe('Solver Tests', function () {
         const boosted = 2 ** (i - 3)
         expect(boostAmount.eq(boosted)).to.equal(true)
       }
-    }
-  })
-  it('has the correct speed boost amount', async () => {
-    const deployedContracts = await deployContracts()
-    const { Solver: solver } = deployedContracts
-    // chunks of 500
-    const expectedResults = [
-      { ticks: 500, boost: 6 },
-      { ticks: 1000, boost: 5 },
-      { ticks: 1500, boost: 4 },
-      { ticks: 2000, boost: 3 },
-      { ticks: 2500, boost: 2 },
-      { ticks: 3000, boost: 1 }
-    ]
-    for (const { ticks, boost } of expectedResults) {
-      const speedBoost = await solver.getSpeedBoost(ticks)
-      expect(speedBoost.eq(boost)).to.equal(true)
     }
   })
 
@@ -639,7 +623,7 @@ describe('Solver Tests', function () {
     // console.log({ bodyFinal })
     // await expect(tx).to.emit(solver, 'Solved').withArgs(problemId, 0, ticksRunA)
     await problems.updateSolverAddress(signers[0].address)
-    tx = await problems.levelUp(problemId)
+    tx = await problems.levelUp(problemId, ticksRunA)
 
     receipt = await tx.wait()
     // const newBodyId = await getParsedEventLogs(receipt, bodies, 'Transfer')[0]

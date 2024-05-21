@@ -503,13 +503,13 @@ describe('Problem Tests', function () {
     const [owner] = signers
     await problems.updateSolverAddress(owner.address)
     for (let i = 0; i < maxBodies.sub(1).toNumber(); i++) {
-      await problems.levelUp(problemId)
+      await problems.levelUp(problemId, 100)
     }
 
     const { bodyCount } = await problems.problems(problemId)
     expect(bodyCount).to.equal(maxBodies)
 
-    await problems.levelUp(problemId)
+    await problems.levelUp(problemId, 100)
 
     const bodyBalance = await bodies.balanceOf(owner.address)
     expect(bodyBalance).to.equal(maxBodies)

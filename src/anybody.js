@@ -53,6 +53,7 @@ export class Anybody extends EventEmitter {
       G: 100, // Gravitational constant
       mode: 'nft', // game or nft
       admin: false,
+      solved: false,
       clearBG: true,
       colorStyle: '!squiggle', // squiggle or !squiggle
       preRun: 0,
@@ -108,6 +109,7 @@ export class Anybody extends EventEmitter {
     this.buttons = {}
     this.won = false
     this.finalBatchSent = false
+    this.solved = false
   }
 
   // run once at initilization
