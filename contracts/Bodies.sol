@@ -92,23 +92,23 @@ contract Bodies is ERC721, Ownable {
         return (counter, seed);
     }
 
-    function moveBodyToProblem(
-        uint256 bodyId,
-        address owner,
-        uint256 problemId
-    )
-        public
-        onlyProblems
-        returns (uint256 mintedBodyIndex, bytes32 seed)
-    {
-        require(ownerOf(bodyId) == owner, "Not body owner");
-        bodies[bodyId].problemId = problemId;
-        _transfer(owner, address(this), bodyId);
-        return (
-            bodies[bodyId].mintedBodyIndex,
-            bodies[bodyId].seed
-        );
-    }
+    // function moveBodyToProblem(
+    //     uint256 bodyId,
+    //     address owner,
+    //     uint256 problemId
+    // )
+    //     public
+    //     onlyProblems
+    //     returns (uint256 mintedBodyIndex, bytes32 seed)
+    // {
+    //     require(ownerOf(bodyId) == owner, "Not body owner");
+    //     bodies[bodyId].problemId = problemId;
+    //     _transfer(owner, address(this), bodyId);
+    //     return (
+    //         bodies[bodyId].mintedBodyIndex,
+    //         bodies[bodyId].seed
+    //     );
+    // }
 
     function moveBodyFromProblem(
         address owner,
