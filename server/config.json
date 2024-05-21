@@ -51,7 +51,8 @@
             "column": "token_id"
           }
         ]
-      }
+      },
+      "notification": { "columns": ["log_addr"] }
     },
     {
       "enabled": true,
@@ -93,7 +94,8 @@
             "column": "token_id"
           }
         ]
-      }
+      },
+      "notification": { "columns": ["log_addr"] }
     },
     {
       "enabled": true,
@@ -151,7 +153,8 @@
             "column": "winnings"
           }
         ]
-      }
+      },
+      "notification": { "columns": ["log_addr"] }
     },
     {
       "enabled": true,
@@ -219,7 +222,8 @@
             "column": "added_to_problem"
           }
         ]
-      }
+      },
+      "notification": { "columns": ["log_addr"] }
     },
     {
       "enabled": true,
@@ -305,7 +309,8 @@
             "column": "seed"
           }
         ]
-      }
+      },
+      "notification": { "columns": ["log_addr"] }
     },
     {
       "enabled": true,
@@ -373,7 +378,8 @@
             "column": "seed"
           }
         ]
-      }
+      },
+      "notification": { "columns": ["log_addr"] }
     }
   ]
 }

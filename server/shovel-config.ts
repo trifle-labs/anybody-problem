@@ -1,13 +1,6 @@
 import { makeConfig, toJSON } from '@indexsupply/shovel-config'
 import type { Source, Table, Integration } from '@indexsupply/shovel-config'
-import {
-  Problems,
-  Bodies,
-  Solver,
-  Dust,
-  ProblemMetadata,
-  BodyMetadata
-} from './contracts'
+import { Problems, Bodies, Solver } from './contracts'
 import { ethers } from 'ethers'
 
 const mainnet: Source = {
@@ -26,15 +19,13 @@ const sepolia: Source = {
 
 const network = sepolia.chain_id
 const contracts = Object.fromEntries(
-  [Problems, Bodies, Solver, Dust, ProblemMetadata, BodyMetadata].map(
-    (contract) => {
-      const abi = contract.abi.abi
-      return [
-        contract.abi.contractName,
-        new ethers.Contract(contract.networks[network].address, abi)
-      ]
-    }
-  )
+  [Problems, Bodies, Solver].map((contract) => {
+    const abi = contract.abi.abi
+    return [
+      contract.abi.contractName,
+      new ethers.Contract(contract.networks[network].address, abi)
+    ]
+  })
 )
 
 const solTypeToPgType = {
@@ -111,6 +102,13 @@ async function integrationFor(
       name: eventName,
       anonymous: false,
       inputs
+    },
+    notification: {
+      columns: ['log_addr']
+
+      // event.inputs.map((input) => {
+      //   return camelToSnakeCase(input.name)
+      // })
     }
   }
 }

@@ -4,10 +4,17 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "shovel": "bun run shovel-config.ts > config.json && ./shovel --config config.json"
+    "shovel": "bun run shovel-config.ts > config.json && ./shovel --config config.json",
+    "dev": "bun run --hot src/index.ts"
   },
   "devDependencies": {
     "@indexsupply/shovel-config": "^0.0.16",
+    "@types/bun": "latest",
+    "@types/pg": "^8.11.6",
     "ethers": "^6.12.1"
+  },
+  "dependencies": {
+    "hono": "^4.3.8",
+    "pg": "^8.11.5"
   }
 }

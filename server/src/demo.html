@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>SSE Example</title>
+  </head>
+
+  <body>
+    <h1>SSE Example</h1>
+    <div id="sse-data"></div>
+
+    <script>
+      const baseURL = 'http://localhost:3000'
+      const sseData = document.getElementById('sse-data')
+
+      const eventSource = new EventSource(`${baseURL}/sse`)
+
+      eventSource.onmessage = (event) => {
+        sseData.innerHTML += event.data + '<br>'
+      }
+
+      eventSource.addEventListener('close', (event) => {
+        console.log('Received "close" event. Closing connection...')
+        eventSource.close()
+      })
+
+      eventSource.onerror = (error) => {
+        console.error('EventSource error:', error)
+      }
+    </script>
+  </body>
+</html>
