@@ -119,21 +119,23 @@ async function integrationFor(
   }
 }
 
-;(async () => {
-  let integrations = await Promise.all([
-    integrationFor('Problems', 'Transfer', 'problems_transfer'),
-    integrationFor('Bodies', 'Transfer', 'bodies_transfer'),
-    integrationFor('Solver', 'Solved', 'solver_solved'),
-    integrationFor('Bodies', 'bodyBorn', 'bodies_body_born'),
-    integrationFor('Problems', 'bodyAdded', 'problems_body_added'),
-    integrationFor('Problems', 'bodyRemoved', 'problems_body_removed')
-  ])
+if (process.env.OUTPUT) {
+  ;(async () => {
+    let integrations = await Promise.all([
+      integrationFor('Problems', 'Transfer', 'problems_transfer'),
+      integrationFor('Bodies', 'Transfer', 'bodies_transfer'),
+      integrationFor('Solver', 'Solved', 'solver_solved'),
+      integrationFor('Bodies', 'bodyBorn', 'bodies_body_born'),
+      integrationFor('Problems', 'bodyAdded', 'problems_body_added'),
+      integrationFor('Problems', 'bodyRemoved', 'problems_body_removed')
+    ])
 
-  const config = makeConfig({
-    pg_url: 'postgres:///shovel',
-    sources: [source],
-    integrations: integrations
-  })
+    const config = makeConfig({
+      pg_url: 'postgres:///shovel',
+      sources: [source],
+      integrations: integrations
+    })
 
-  console.log(toJSON(config))
-})()
+    console.log(toJSON(config))
+  })()
+}

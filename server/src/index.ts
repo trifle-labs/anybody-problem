@@ -5,21 +5,30 @@ import db from './db'
 import { wallet } from './wallet'
 import { leaderboard, updateLeaderboard } from './leaderboard'
 import { source } from '../shovel-config'
+import { publish, addSubscriber, unsubscribe } from './publish'
 
-// Optimization ideas to explore if we need to scale:
-// - Only push SSE when change effects leaderboard or user's wallet
+// This is a read-only API server that serves the leaderboard and wallet state.
+// It uses Server Sent Events (SSE) to push updates to the client.
+
+// Design:
+// - Shared process state for the leaderboard
+// - Leaderboard re-queries the DB on each contract event
+// - These queries will touch more records
+// - Publish leaderboard and wallet states to all subscribers on each contract event
+
+// Optimization ideas to explore if we need to scale further:
+// - Add indexes to the DB for the most common queries
+// - Bigger server
+// - Only publish SSE when change effects leaderboard or user's wallet
 // - Cache aggregated state and incrementally update with each DB notification
-
-const app = new Hono()
+// - Materialized view for leaderboard to scale horizontally
 
 async function setupListener() {
   await db.connect()
   db.on('notification', async (msg) => {
-    console.log('Received notification:', msg)
+    console.log('[DB notification]', msg)
     await updateLeaderboard()
-    for (const subscriber of subscribers) {
-      subscriber.enqueue(`lets-update`)
-    }
+    await publish()
   })
   db.query(`LISTEN "${source.name}-problems_transfer"`)
   db.query(`LISTEN "${source.name}-problems_body_added"`)
@@ -33,18 +42,12 @@ setupListener()
 
 // uncomment to test the connection
 // setInterval(async () => {
-//   for (const subscriber of subscribers) {
-//     console.log('Sending update to subscriber')
-//     subscriber.enqueue(`lets-update`)
-//   }
 //   await updateLeaderboard()
+//   await publish()
 // }, 3000)
 
 let id = 0
-// TODO: subscribers should be removed when the connection is closed
-const subscribers = new Set<ReadableStreamDefaultController>()
-
-async function* streamGenerator(address) {
+async function* streamGenerator(address?: string) {
   yield {
     data: JSON.stringify({
       leaderboard,
@@ -57,10 +60,10 @@ async function* streamGenerator(address) {
 
   const clientStream = new ReadableStream({
     start(controller) {
-      subscribers.add(controller)
+      addSubscriber(controller)
     },
     cancel() {
-      subscribers.delete(this)
+      unsubscribe(this)
     }
   })
   for await (const _chunk of clientStream) {
@@ -76,14 +79,16 @@ async function* streamGenerator(address) {
   }
 }
 
-function streamHandler(address = null) {
+function streamHandler(address?: string) {
   return async (stream: SSEStreamingApi) => {
     for await (const message of streamGenerator(address)) {
-      console.log('Sending message:', message)
+      console.log('Updating subscriber', message)
       await stream.writeSSE(message)
     }
   }
 }
+
+const app = new Hono()
 
 app.get('/sse/:address', async (c) => {
   const address = c.req.param('address')

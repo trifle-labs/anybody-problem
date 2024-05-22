@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
+  "type": "module",
   "scripts": {
-    "shovel": "bun run shovel-config.ts > config.json && ./shovel --config config.json",
+    "shovel": "OUTPUT=1 bun run shovel-config.ts > config.json && ./shovel --config config.json",
     "dev": "bun run --hot src/index.ts"
   },
   "devDependencies": {

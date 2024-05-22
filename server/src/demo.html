@@ -13,7 +13,9 @@
       const baseURL = 'http://localhost:8712'
       const sseData = document.getElementById('sse-data')
 
-      const eventSource = new EventSource(`${baseURL}/sse`)
+      const eventSource = new EventSource(
+        `${baseURL}/sse/0xfa398d672936dcf428116f687244034961545d91`
+      )
 
       eventSource.onmessage = (event) => {
         console.log('Received message:', event.data)

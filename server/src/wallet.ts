@@ -11,7 +11,9 @@ async function queryOwnedProblems(address?: string) {
           "to",
           ROW_NUMBER() OVER (PARTITION BY token_id ORDER BY block_num DESC, tx_idx DESC, log_idx DESC) AS rn
       FROM
-      problems_transfer
+        problems_transfer
+      WHERE
+        "to" = decode($1, 'hex')
   ),
   current_owners AS (
       SELECT
@@ -20,7 +22,6 @@ async function queryOwnedProblems(address?: string) {
           latest_transactions
       WHERE
           rn = 1
-          AND "to" = decode($1, 'hex')
   ),
   latest_body_status AS (
       SELECT
@@ -77,14 +78,16 @@ async function queryOwnedProblems(address?: string) {
   console.log(
     'wallet.ts queryOwnedProblems problems.rows: ',
     address,
-    problems.rows
+    problems.rows.length
   )
 
   return problems.rows
 }
 
 export async function wallet(address?: string) {
+  console.log('wallet.ts wallet address: ', address)
+  const [problems] = await Promise.all([queryOwnedProblems(address)])
   return {
-    problems: await queryOwnedProblems(address)
+    problems
   }
 }
