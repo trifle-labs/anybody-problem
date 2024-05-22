@@ -10,7 +10,7 @@ q5.setup = () => {
     // showLevels: true,
     // target: 'inside',
     // globalStyle: 'psycho',
-    alreadyRun: Math.floor(Math.random() * 20000),
+    alreadyRun: 0, //Math.floor(Math.random() * 20000),
     // seed: 0n,
     startingBodies: Math.floor(Math.random() * 9) + 1
   })

@@ -248,7 +248,7 @@ export const Visuals = {
     }
   },
 
-  drawStarBg() {
+  drawBg() {
     // this.p.background('rgb(10,10,100)')
     this.p.background('rgb(10,10,10)')
     // this.p.background('white')
@@ -515,12 +515,6 @@ export const Visuals = {
     this.p.background(255)
   },
 
-  drawBg() {
-    this.drawStarBg()
-    // this.drawSolidBg()
-    // this.drawStaticBg()
-  },
-
   getColorDir(chunk) {
     return Math.floor(this.frames / (255 * chunk)) % 2 == 0
   },
@@ -562,7 +556,8 @@ export const Visuals = {
     p.fill('white')
     p.noStroke()
     p.textAlign(p.LEFT, p.TOP)
-    const secondsLeft = (this.startingFrame + this.timer - this.frames) / FPS
+    const runningFrames = this.frames - this.startingFrame
+    const seconds = runningFrames / FPS
 
     if (this.gameOver) {
       this.scoreSize = this.initialScoreSize
@@ -572,18 +567,20 @@ export const Visuals = {
     }
 
     // make the timer bigger as time runs out
-    if (secondsLeft <= 9 && this.scoreSize < 420) {
+    if (seconds >= 51 && this.scoreSize < 420) {
       this.scoreSize += 5
       p.fill(255, 255, 255, 150)
-    } else if (secondsLeft < 30 && this.scoreSize < 160) {
+    } else if (seconds > 30 && this.scoreSize < 160) {
       this.scoreSize += 2
       p.fill(255, 255, 255, 150)
-    } else if (secondsLeft < 50 && this.scoreSize < 80) {
+    } else if (seconds > 50 && this.scoreSize < 80) {
       this.scoreSize += 1
       p.fill(255, 255, 255, 150)
     }
     p.textSize(this.scoreSize)
-    p.text(secondsLeft.toFixed(0), 20, 10)
+    if (runningFrames > 2) {
+      p.text(seconds.toFixed(2) + 's', 20, 10)
+    }
 
     p.pop()
   },
