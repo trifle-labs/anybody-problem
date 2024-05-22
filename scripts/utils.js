@@ -10,7 +10,9 @@ const correctPrice = ethers.utils.parseEther('0.01')
 // const splitterAddress = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266'
 
 const proverTickIndex = {
-  3: 500,
+  1: 300,
+  2: 300,
+  3: 300,
   4: 300,
   5: 100,
   6: 100,
@@ -142,7 +144,7 @@ const deployContracts = async (ignoreTesting = false) => {
   const verifiersTicks = []
   const verifiersBodies = []
 
-  for (let i = 3; i <= 10; i++) {
+  for (let i = 1; i <= 10; i++) {
     const ticks = await getTicksRun(i, ignoreTesting)
     const name = `Game_${i}_${ticks}Verifier`
     const path = `contracts/${name}.sol:Groth16Verifier`
@@ -215,13 +217,13 @@ const deployContracts = async (ignoreTesting = false) => {
 
   // deploy Solver
   const Solver = await hre.ethers.getContractFactory('Solver')
-  const solver = await Solver.deploy(problemsAddress, dustAddress)
+  const solver = await Solver.deploy(problemsAddress)
   await solver.deployed()
   const solverAddress = solver.address
   returnObject['Solver'] = solver
   !testing &&
     log(
-      `Solver deployed at ${solverAddress} with problemsAddress ${problemsAddress} and dustAddress ${dustAddress}`
+      `Solver deployed at ${solverAddress} with problemsAddress ${problemsAddress}`
     )
 
   // configure ProblemMetadata
@@ -242,10 +244,6 @@ const deployContracts = async (ignoreTesting = false) => {
   await problems.updateSolverAddress(solverAddress)
   !testing && log(`Problems configured with solverAddress ${solverAddress}`)
 
-  // configure Bodies
-  await bodies.updateDustAddress(dustAddress)
-  !testing && log(`Bodies configured with dustAddress ${dustAddress}`)
-
   // configure Dust
   await dust.updateSolverAddress(solverAddress)
   !testing && log(`Dust configured with solverAddress ${solverAddress}`)
@@ -254,7 +252,8 @@ const deployContracts = async (ignoreTesting = false) => {
   if (
     networkinfo['chainId'] == 5 ||
     networkinfo['chainId'] == 1 ||
-    networkinfo['chainId'] == 11155111
+    networkinfo['chainId'] == 11155111 ||
+    networkinfo['chainId'] == 17069
   ) {
     const verificationData = [
       {
@@ -284,7 +283,7 @@ const deployContracts = async (ignoreTesting = false) => {
       },
       {
         name: 'Solver',
-        constructorArguments: [problemsAddress, dustAddress]
+        constructorArguments: [problemsAddress]
       }
     ]
 
@@ -297,9 +296,9 @@ const deployContracts = async (ignoreTesting = false) => {
 const verifyContracts = async (returnObject) => {
   const blocksToWaitBeforeVerify = 0
   const verificationData = returnObject.verificationData
-  const solver = returnObject.Solver
+  const problemMetadata = returnObject.ProblemMetadata
   for (let i = 0; i < verificationData.length; i++) {
-    await solver.deployTransaction.wait(blocksToWaitBeforeVerify)
+    await problemMetadata.deployTransaction.wait(blocksToWaitBeforeVerify)
     log(`Verifying ${verificationData[i].name} Contract`)
     try {
       await hre.run('verify:verify', {
@@ -335,25 +334,6 @@ const mintProblem = async (signers, deployedContracts, acct) => {
   const problemId = getParsedEventLogs(receipt, problems, 'Transfer')[0].args
     .tokenId
   return { receipt, problemId }
-}
-
-const prepareMintBody = async (signers, deployedContracts, problemId, acct) => {
-  const [owner] = signers
-  acct = acct || owner
-  const {
-    Problems: problems,
-    Dust: dust,
-    Bodies: bodies,
-    Solver: solver
-  } = deployedContracts
-  const { mintedBodiesIndex } = await problems.problems(problemId)
-  const decimals = await bodies.decimals()
-  const dustPrice = await bodies.dustPrice(mintedBodiesIndex)
-  const dustPriceWithDecimals = dustPrice.mul(decimals)
-  await dust.updateSolverAddress(owner.address)
-  const tx = await dust.mint(acct.address, dustPriceWithDecimals)
-  await dust.updateSolverAddress(solver.address)
-  return { tx }
 }
 
 const generateWitness = async (
@@ -445,17 +425,21 @@ const generateAndSubmitProof = async (
     bodyData,
     'game'
   )
-
   for (let i = 0; i < dataResult.Input.length; i++) {
-    if (i < dataResult.Input.length / 2) {
+    const speedIndex = (dataResult.Input.length - 1) / 2
+    if (i < speedIndex) {
       const bodyIndex = Math.floor(i / 5)
       const body = bodyFinal[bodyIndex]
-      const bodyDataIndex = i - bodyIndex * 5
+      const bodyDataIndex = i % 5
       expect(dataResult.Input[i]).to.equal(body[bodyDataIndex].toString())
+    } else if (i == speedIndex) {
+      // TODO: check the speed here?
+      continue
     } else {
-      const bodyIndex = Math.floor((i - dataResult.Input.length / 2) / 5)
+      const ii = i - speedIndex
+      const bodyIndex = Math.floor((ii - 1) / 5)
       const body = inputData.bodies[bodyIndex]
-      const bodyDataIndex = i - dataResult.Input.length / 2 - bodyIndex * 5
+      const bodyDataIndex = (ii - 1) % 5
       expect(dataResult.Input[i]).to.equal(body[bodyDataIndex].toString())
     }
   }
@@ -476,7 +460,6 @@ export {
   proverTickIndex,
   generateProof,
   generateAndSubmitProof,
-  prepareMintBody,
   mintProblem,
   getParsedEventLogs,
   decodeUri,

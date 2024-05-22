@@ -71,7 +71,7 @@ describe('BodyMetadata Tests', function () {
 
     const isSVGValid = isValidSVG(SVG)
     expect(isSVGValid).to.be.true
-    const jsonSeed = json.attributes[4].value
+    const jsonSeed = json.attributes[2].value
     const { seed } = await bodies.bodies(bodyId)
     expect(jsonSeed).to.equal(seed.toString())
   })

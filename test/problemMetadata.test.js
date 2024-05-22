@@ -43,7 +43,7 @@ describe('ProblemMetadata Tests', function () {
       base64Json.replace('data:application/json;base64,', ''),
       'base64'
     ).toString('utf-8')
-
+    // console.dir({ utf8Json }, { depth: null })
     const json = JSON.parse(utf8Json)
     // console.dir({ json }, { depth: null })
     const base64SVG = json.image
@@ -65,7 +65,7 @@ describe('ProblemMetadata Tests', function () {
 
     const isSVGValid = isValidSVG(SVG)
     expect(isSVGValid).to.be.true
-    const jsonSeed = json.attributes[0].value
+    const jsonSeed = json.attributes[1].value
     const { seed } = await problems.problems(problemId)
     expect(jsonSeed).to.equal(seed.toString())
   })

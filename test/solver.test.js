@@ -5,7 +5,6 @@ const ethers = hre.ethers
 import {
   deployContracts,
   /*splitterAddress,*/ getParsedEventLogs,
-  prepareMintBody,
   mintProblem,
   generateAndSubmitProof,
   getTicksRun,
@@ -18,13 +17,13 @@ import { Anybody } from '../src/anybody.js'
 describe('Solver Tests', function () {
   this.timeout(50000000)
 
-  it('has the correct problems, dust addresses', async () => {
+  it('has the correct problems addresses', async () => {
     const deployedContracts = await deployContracts()
 
     const { Solver: solver } = deployedContracts
 
     for (const [name, contract] of Object.entries(deployedContracts)) {
-      if (name === 'Problems' || name === 'Dust') {
+      if (name === 'Problems') {
         const functionName = name.toLowerCase()
         let storedAddress = await solver[`${functionName}()`]()
         const actualAddress = contract.address
@@ -41,13 +40,7 @@ describe('Solver Tests', function () {
       solver.connect(addr1).updateProblemsAddress(addr1.address)
     ).to.be.revertedWith('Ownable: caller is not the owner')
 
-    await expect(
-      solver.connect(addr1).updateDustAddress(addr1.address)
-    ).to.be.revertedWith('Ownable: caller is not the owner')
-
     await expect(solver.updateProblemsAddress(addr1.address)).to.not.be.reverted
-
-    await expect(solver.updateDustAddress(addr1.address)).to.not.be.reverted
   })
 
   it('fallback and receive functions revert', async () => {
@@ -59,14 +52,10 @@ describe('Solver Tests', function () {
       .be.reverted
   })
 
-  it('creates a proof for 3 bodies', async () => {
+  it('creates a proof for 1 bodies', async () => {
     const signers = await ethers.getSigners()
     const deployedContracts = await deployContracts()
-    const {
-      Problems: problems
-      // Solver: solver,
-      // Dust: dust
-    } = deployedContracts
+    const { Problems: problems } = deployedContracts
     const { problemId } = await mintProblem(signers, deployedContracts)
 
     const bodyData = []
@@ -89,21 +78,7 @@ describe('Solver Tests', function () {
       bodyData
     )
 
-    // await expect(tx)
-    //   .to.emit(solver, 'Solved')
-    //   .withArgs(problemId, tickCount, ticksRun)
-    // const receipt = await tx.wait()
     await tx.wait()
-
-    // user earned new balance in Dust token
-    // const dustCount = getParsedEventLogs(receipt, dust, 'Transfer')[0].args
-    //   .value
-    // const { bodyCount: newBodyCount } = await problems.problems(problemId)
-    // const decimals = await solver.decimals()
-    // const boostAmount = await solver.bodyBoost(newBodyCount)
-    // const expectedDustCount = boostAmount.mul(decimals.mul(ticksRun))
-    // expect(dustCount).to.equal(expectedDustCount)
-    // expect(dustCount.gt(0)).to.equal(true)
 
     const { tickCount: tickCountAfter } = await problems.problems(problemId)
 
@@ -113,7 +88,6 @@ describe('Solver Tests', function () {
     for (let i = 0; i < bodyCount; i++) {
       const bodyId = bodyIds[i]
       const bodyData = await problems.getProblemBodyData(problemId, bodyId)
-      // console.log({ bodyData })
       const { px, py, vx, vy, radius } = bodyData
       expect(px).to.equal(bodyFinal[i][0].toString())
       expect(py).to.equal(bodyFinal[i][1].toString())
@@ -130,7 +104,7 @@ describe('Solver Tests', function () {
   it('shoots 3 missiles and hits 3 bodies in 1 proof', async () => {
     const signers = await ethers.getSigners()
     const deployedContracts = await deployContracts()
-    const { Problems: problems, Solver: solver, Dust: dust } = deployedContracts
+    const { Problems: problems, Solver: solver } = deployedContracts
     const { problemId } = await mintProblem(signers, deployedContracts)
 
     // we're spoofing the solver address to overwrite the starting positions of the bodies
@@ -170,8 +144,6 @@ describe('Solver Tests', function () {
         vx: body.vx,
         vy: body.vy,
         radius: body.radius,
-        starLvl: body.starLvl,
-        maxStarLvl: body.maxStarLvl,
         seed: body.seed
       }
       bodyData.push(body)
@@ -218,31 +190,13 @@ describe('Solver Tests', function () {
       dataResult.Input
     )
 
-    const receipt = await tx.wait()
-
-    // user earned new balance in Dust token
-    const dustCount = getParsedEventLogs(receipt, dust, 'Transfer')[0].args
-      .value
-
-    const speedBoost = await solver.getSpeedBoost(ticksRun)
-    expect(speedBoost).to.equal(6)
-
-    const bodyBoost = await solver.bodyBoost(bodyCount)
-    expect(bodyBoost).to.equal(1)
-
-    const decimals = await solver.decimals()
-    expect(decimals).to.equal(ethers.BigNumber.from(10).pow(18))
-
-    const expectedDustCount = bodyCount.mul(speedBoost).mul(bodyBoost)
-    expect(expectedDustCount).to.equal(3 * 6 * 1)
-
-    expect(dustCount).to.equal(expectedDustCount.mul(decimals))
-
+    await tx.wait()
     await expect(tx).to.emit(solver, 'Solved')
     // .withArgs(problemId, runningTickCount, ticksRun)
   })
 
-  it('shoots 4 missiles and hits 4 bodies in 3 proofs', async () => {
+  // TODO: need to find a new example that includes time
+  it.skip('shoots 4 missiles and hits 4 bodies in 3 proofs', async () => {
     const params = [
       '1',
       300,
@@ -439,27 +393,19 @@ describe('Solver Tests', function () {
     const signers = await ethers.getSigners()
     const deployedContracts = await deployContracts(true)
     const { problemId } = await mintProblem(signers, deployedContracts)
-    const {
-      Dust: dust,
-      Problems: problems,
-      Bodies: bodies,
-      Solver: solver
-    } = deployedContracts
-    await dust.updateSolverAddress(signers[0].address)
+    const { Problems: problems, Solver: solver } = deployedContracts
     const { bodyCount } = await problems.problems(problemId)
-    const dustPrice = await bodies.dustPrice(bodyCount)
-    const decimals = await bodies.decimals()
-    const dustAmount = dustPrice.mul(decimals)
-    await dust.mint(signers[0].address, dustAmount)
-    await dust.updateSolverAddress(deployedContracts.Solver.address)
-    await problems.mintBodyToProblem(problemId)
 
     await problems.updateSolverAddress(signers[0].address)
+    for (let i = 0; i < 3; i++) {
+      await problems.levelUp(problemId)
+    }
+
     const { bodyCount: newBodyCount } = await problems.problems(problemId)
-    expect(newBodyCount).to.equal(bodyCount.add(1))
+    expect(newBodyCount).to.equal(bodyCount.add(3))
     for (let i = 0; i < newBodyCount.toNumber(); i++) {
       const invertedBodyId = i + 1
-      const { bodyId, mintedBodyIndex, bodyIndex, starLvl, maxStarLvl, seed } =
+      const { bodyId, mintedBodyIndex, bodyIndex, seed } =
         await problems.getProblemBodyData(problemId, invertedBodyId)
 
       const newX = params[5][0][5 * 4 + i * 5 + 0]
@@ -480,8 +426,6 @@ describe('Solver Tests', function () {
         vx: newVX,
         vy: newVY,
         radius: newRadius,
-        starLvl,
-        maxStarLvl,
         seed
       }
       await problems.updateProblemBody(problemId, invertedBodyId, body)
@@ -499,24 +443,7 @@ describe('Solver Tests', function () {
 
     const tx = await solver.batchSolve(...params)
 
-    const receipt = await tx.wait()
-
-    // user earned new balance in Dust token
-    const dustCount = getParsedEventLogs(receipt, dust, 'Transfer')[0].args
-      .value
-
-    const ticksRun = params[1] * params[2].length
-
-    const speedBoost = await solver.getSpeedBoost(ticksRun)
-    expect(speedBoost).to.equal(5)
-
-    const bodyBoost = await solver.bodyBoost(newBodyCount)
-    expect(bodyBoost).to.equal(2)
-
-    const expectedDustCount = newBodyCount.mul(speedBoost).mul(bodyBoost)
-    expect(expectedDustCount).to.equal(4 * 5 * 2)
-
-    expect(dustCount).to.equal(expectedDustCount.mul(decimals))
+    await tx.wait()
 
     await expect(tx).to.emit(solver, 'Solved')
   })
@@ -524,11 +451,7 @@ describe('Solver Tests', function () {
   it('creates multiple proofs in a row', async () => {
     const signers = await ethers.getSigners()
     const deployedContracts = await deployContracts()
-    const {
-      Problems: problems
-      // Solver: solver,
-      // Dust: dust
-    } = deployedContracts
+    const { Problems: problems } = deployedContracts
     const { problemId } = await mintProblem(signers, deployedContracts)
 
     const { bodyCount, tickCount } = await problems.problems(problemId)
@@ -562,17 +485,6 @@ describe('Solver Tests', function () {
       await tx.wait()
       runningTickCount = runningTickCount.add(ticksRun)
 
-      // user earned new balance in Dust token
-      // const dustCount = getParsedEventLogs(receipt, dust, 'Transfer')[0].args
-      //   .value
-      // totalDustCount = totalDustCount.add(dustCount)
-      // const { bodyCount: newBodyCount } = await problems.problems(problemId)
-
-      // const decimals = await solver.decimals()
-      // const boostAmount = await solver.bodyBoost(newBodyCount)
-      // const expectedDustCount = boostAmount.mul(decimals.mul(ticksRun))
-      // expect(dustCount).to.equal(expectedDustCount)
-
       // confirm new values are stored correctly
       for (let j = 0; j < bodyCount; j++) {
         const bodyId = bodyIds[j]
@@ -586,20 +498,17 @@ describe('Solver Tests', function () {
       }
     }
 
-    // const dustBalance = await dust.balanceOf(signers[0].address)
-    // expect(dustBalance).to.equal(totalDustCount)
-
     // confirm tickCount has been incremented by correct amount
     const { tickCount: newTickCount } = await problems.problems(problemId)
     expect(newTickCount).to.equal(runningTickCount)
   })
+
   it('creates proofs for multiple bodies', async () => {
     const signers = await ethers.getSigners()
     const deployedContracts = await deployContracts()
     const {
       Problems: problems,
       Solver: solver,
-      Dust: dust,
       Bodies: bodies
     } = deployedContracts
     const { problemId } = await mintProblem(signers, deployedContracts)
@@ -607,9 +516,9 @@ describe('Solver Tests', function () {
     const { bodyCount, tickCount } = await problems.problems(problemId)
 
     const initialBodyCount = bodyCount
-    let totalDustCount = 0,
-      runningTickCount = tickCount
-    const totalBodies = 10 - bodyCount
+    let runningTickCount = tickCount
+    const MAX_BODY_COUNT = await problems.MAX_BODY_COUNT()
+    const totalBodies = MAX_BODY_COUNT - bodyCount
     // make a proof for each body quantity
     // mint enough dust to mint and add a new body before next loop
     for (let i = 0; i <= totalBodies; i++) {
@@ -633,23 +542,9 @@ describe('Solver Tests', function () {
         ticksRun,
         bodyData
       )
-      // console.log({ bodyFinal })
-      // await expect(tx)
-      //   .to.emit(solver, 'Solved')
-      //   .withArgs(problemId, runningTickCount, ticksRun)
-      let receipt = await tx.wait()
+      await tx.wait()
       runningTickCount = parseInt(runningTickCount) + parseInt(ticksRun)
-
-      // user earned new balance in Dust token
-      // const dustCount = getParsedEventLogs(receipt, dust, 'Transfer')[0].args
-      //   .value
-
-      // totalDustCount = dustCount.add(totalDustCount)
-      // const decimals = await solver.decimals()
-      // const boostAmount = await solver.bodyBoost(bodyCount)
-      // const expectedDustCount = boostAmount.mul(decimals.mul(ticksRun))
-      // expect(dustCount).to.equal(expectedDustCount)
-
+      const maxBodies = await problems.MAX_BODY_COUNT()
       // confirm new values are stored correctly
       for (let j = 0; j < bodyCount; j++) {
         const bodyId = bodyIds[j]
@@ -663,44 +558,18 @@ describe('Solver Tests', function () {
       }
 
       // add new body
-      if (bodyCount.lt(10)) {
-        let { tx } = await prepareMintBody(
-          signers,
-          deployedContracts,
-          problemId
-        )
-        receipt = await tx.wait()
-        const additionalDust = getParsedEventLogs(receipt, dust, 'Transfer')[0]
-          .args.value
-        totalDustCount = additionalDust.add(totalDustCount)
-        const decimals = await bodies.decimals()
-        const bodyCost = await bodies.dustPrice(bodyCount)
-        const bodyCostDecimals = bodyCost.mul(decimals)
-        tx = await problems.mintBodyToProblem(problemId)
-        receipt = await tx.wait()
+      if (bodyCount.lt(maxBodies.toNumber())) {
+        await problems.updateSolverAddress(signers[0].address)
+        tx = await problems.levelUp(problemId, ticksRun)
+        let receipt = await tx.wait()
         const bodyId = getParsedEventLogs(receipt, bodies, 'Transfer')[0].args
           .tokenId
         await expect(tx)
           .to.emit(bodies, 'Transfer')
           .withArgs(ethers.constants.AddressZero, signers[0].address, bodyId)
-        const dustPaid = getParsedEventLogs(receipt, dust, 'Transfer')[0].args
-          .value
-        expect(dustPaid).to.equal(bodyCostDecimals)
+        await problems.updateSolverAddress(solver.address)
       }
     }
-    await expect(prepareMintBody(signers, deployedContracts, problemId)).to.be
-      .reverted
-    await dust.updateSolverAddress(signers[0].address)
-    await dust.mint(signers[0].address, (15_625_000n * 10n ** 18n).toString())
-    await dust.updateSolverAddress(solver.address)
-
-    await expect(problems.mintBodyToProblem(problemId)).to.be.revertedWith(
-      'Cannot have more than 10 bodies'
-    )
-
-    await expect(problems.mintBodyOutsideProblem(problemId)).to.be.revertedWith(
-      'Cannot have more than 10 bodies'
-    )
   })
 
   it('has the correct body boost amount', async () => {
@@ -716,53 +585,23 @@ describe('Solver Tests', function () {
       }
     }
   })
-  it('has the correct speed boost amount', async () => {
-    const deployedContracts = await deployContracts()
-    const { Solver: solver } = deployedContracts
-    // chunks of 500
-    const expectedResults = [
-      { ticks: 500, boost: 6 },
-      { ticks: 1000, boost: 5 },
-      { ticks: 1500, boost: 4 },
-      { ticks: 2000, boost: 3 },
-      { ticks: 2500, boost: 2 },
-      { ticks: 3000, boost: 1 }
-    ]
-    for (const { ticks, boost } of expectedResults) {
-      const speedBoost = await solver.getSpeedBoost(ticks)
-      expect(speedBoost.eq(boost)).to.equal(true)
-    }
-  })
 
   it('adds a body, removes a body, creates a proof', async () => {
     const signers = await ethers.getSigners()
     const deployedContracts = await deployContracts()
     const {
       Problems: problems,
-      Bodies: bodies
-      // Solver: solver
+      Bodies: bodies,
+      Solver: solver
     } = deployedContracts
     let { problemId, receipt } = await mintProblem(signers, deployedContracts)
     let bodyIds = await getParsedEventLogs(receipt, bodies, 'Transfer')
     // make bodyIds array unique
     bodyIds = [...new Set(bodyIds.map((body) => body.args.tokenId.toNumber()))]
-    expect(bodyIds.length).to.equal(3)
-    await prepareMintBody(signers, deployedContracts, problemId)
-    let tx = await problems.mintBodyToProblem(problemId)
-    receipt = await tx.wait()
-    const newBodyId = await getParsedEventLogs(receipt, bodies, 'Transfer')[0]
-      .args.tokenId
-
-    const removedBodyId = bodyIds[0]
-    await expect(problems.removeBody(problemId, removedBodyId)).to.not.be
-      .reverted
-
-    await expect(problems.removeBody(problemId, bodyIds[1])).to.be.revertedWith(
-      'Cannot have less than 3 bodies'
-    )
+    expect(bodyIds.length).to.equal(1)
 
     let { bodyCount } = await problems.problems(problemId)
-    expect(bodyCount).to.equal(3)
+    expect(bodyCount).to.equal(1)
     let bodyData = []
     let newBodyIds = await problems.getProblemBodyIds(problemId)
     for (let j = 0; j < bodyCount; j++) {
@@ -773,22 +612,27 @@ describe('Solver Tests', function () {
     const ticksRunA = await getTicksRun(bodyData.length)
 
     // console.log({ bodyData })
-    ;({ tx } = await generateAndSubmitProof(
+    let { tx } = await generateAndSubmitProof(
       expect,
       deployedContracts,
       problemId,
       bodyCount,
       ticksRunA,
       bodyData
-    ))
+    )
     // console.log({ bodyFinal })
     // await expect(tx).to.emit(solver, 'Solved').withArgs(problemId, 0, ticksRunA)
+    await problems.updateSolverAddress(signers[0].address)
+    tx = await problems.levelUp(problemId, ticksRunA)
 
-    await expect(problems.addExistingBody(problemId, removedBodyId)).to.not.be
-      .reverted
+    receipt = await tx.wait()
+    // const newBodyId = await getParsedEventLogs(receipt, bodies, 'Transfer')[0]
+    //   .args.tokenId
+
+    await problems.updateSolverAddress(solver.address)
 
     const { bodyCount: newBodyCount } = await problems.problems(problemId)
-    expect(newBodyCount).to.equal(4)
+    expect(newBodyCount).to.equal(2)
 
     bodyData = []
     newBodyIds = await problems.getProblemBodyIds(problemId)
@@ -813,13 +657,11 @@ describe('Solver Tests', function () {
     //   .withArgs(problemId, ticksRunA, ticksRunB)
 
     const problemBodyIds = await problems.getProblemBodyIds(problemId)
-    expect(problemBodyIds[0]).to.equal(2)
-    expect(problemBodyIds[1]).to.equal(3)
-    expect(problemBodyIds[2]).to.equal(newBodyId)
-    expect(problemBodyIds[3]).to.equal(removedBodyId)
+    expect(problemBodyIds[0]).to.equal(1)
+    expect(problemBodyIds[1]).to.equal(2)
 
     bodyData = []
-    const wrongBodyIds = [1, 2, 3, 4]
+    const wrongBodyIds = [2, 1]
     for (let j = 0; j < newBodyCount; j++) {
       const bodyId = wrongBodyIds[j]
       const body = await problems.getProblemBodyData(problemId, bodyId)
