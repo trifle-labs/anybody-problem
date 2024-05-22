@@ -95,7 +95,7 @@ async function integrationFor(
   return {
     enabled: true,
     name: tableName,
-    sources: [{ name: garnet.name, start: BigInt('2067803') }],
+    sources: [{ name: garnet.name, start: BigInt('2067803') }], // 5716600 for sepolia, 2067803 for garnet
     table,
     block: [
       {
@@ -113,10 +113,6 @@ async function integrationFor(
     },
     notification: {
       columns: ['log_addr']
-
-      // event.inputs.map((input) => {
-      //   return camelToSnakeCase(input.name)
-      // })
     }
   }
 }

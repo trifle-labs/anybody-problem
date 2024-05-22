@@ -6,16 +6,17 @@
   </head>
 
   <body>
-    <h1>SSE Example</h1>
+    <h1>Problems</h1>
     <div id="sse-data"></div>
 
     <script>
-      const baseURL = 'http://localhost:3000'
+      const baseURL = 'http://localhost:8712'
       const sseData = document.getElementById('sse-data')
 
       const eventSource = new EventSource(`${baseURL}/sse`)
 
       eventSource.onmessage = (event) => {
+        console.log('Received message:', event.data)
         sseData.innerHTML += event.data + '<br>'
       }
 
