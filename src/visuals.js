@@ -131,6 +131,9 @@ export const Visuals = {
     if (this.globalStyle == 'psycho') {
       this.p.blendMode(this.p.BLEND)
     }
+    if (!this.firstFrame) {
+      this.drawBodies()
+    }
 
     if (
       this.mode == 'game' &&
@@ -142,9 +145,6 @@ export const Visuals = {
         const body = this.bodies[i]
         this.drawCenter(body)
       }
-    }
-    if (!this.firstFrame) {
-      this.drawBodies()
     }
 
     if (
@@ -216,15 +216,23 @@ export const Visuals = {
   },
   drawPause() {
     if (this.paused) {
-      this.p.noStroke()
-      this.p.strokeWeight(0)
-      this.p.fill('rgba(0,0,0,0.4)')
-      this.p.rect(0, 0, this.windowWidth, this.windowHeight)
-      this.p.push()
       this.p.fill('white')
-      this.p.translate(this.windowWidth / 2, this.windowHeight / 2)
-      this.p.triangle(-100, -100, -100, 100, 100, 0)
-      this.p.pop()
+      this.p.textSize(128)
+      // p.text('SUCCESS', this.windowWidth / 2 - 8, 190) // adjust by 8 to center SF Pro weirdness
+      this.p.textAlign(this.p.CENTER, this.p.TOP)
+      this.p.text(
+        'START',
+        this.windowWidth / 2,
+        this.windowHeight / 2 - 128 / 2
+      )
+      // this.p.noStroke()
+      // this.p.strokeWeight(0)
+      // this.p.fill('rgba(0,0,0,0.4)')
+      // this.p.rect(0, 0, this.windowWidth, this.windowHeight)
+      // this.p.push()
+      // this.p.translate(this.windowWidth / 2, this.windowHeight / 2)
+      // this.p.triangle(-100, -100, -100, 100, 100, 0)
+      // this.p.pop()
     }
   },
   drawBodyOutlines() {
@@ -350,30 +358,30 @@ export const Visuals = {
       this.windowHeight
     )
 
-    // Grid lines
-    const boxCount = 6
-    // this.p.stroke('black')
-    this.p.stroke('white')
-    for (let i = 1; i < boxCount; i++) {
-      if (i % 5 == 5) {
-        this.p.strokeWeight(1)
-        // this.starBG.stroke(`hsl(${i * (360 / totalLines)}, 100%, 50%)`)
-      } else {
-        this.p.strokeWeight(1)
-      }
-      this.p.line(
-        i * (this.windowWidth / boxCount),
-        0,
-        i * (this.windowWidth / boxCount),
-        this.windowHeight
-      )
-      this.p.line(
-        0,
-        i * (this.windowHeight / boxCount),
-        this.windowWidth,
-        i * (this.windowHeight / boxCount)
-      )
-    }
+    // // Grid lines
+    // const boxCount = 6
+    // // this.p.stroke('black')
+    // this.p.stroke('white')
+    // for (let i = 1; i < boxCount; i++) {
+    //   if (i % 5 == 5) {
+    //     this.p.strokeWeight(1)
+    //     // this.starBG.stroke(`hsl(${i * (360 / totalLines)}, 100%, 50%)`)
+    //   } else {
+    //     this.p.strokeWeight(1)
+    //   }
+    //   this.p.line(
+    //     i * (this.windowWidth / boxCount),
+    //     0,
+    //     i * (this.windowWidth / boxCount),
+    //     this.windowHeight
+    //   )
+    //   this.p.line(
+    //     0,
+    //     i * (this.windowHeight / boxCount),
+    //     this.windowWidth,
+    //     i * (this.windowHeight / boxCount)
+    //   )
+    // }
   },
 
   tintImage(img, color) {
@@ -1179,7 +1187,11 @@ export const Visuals = {
 
   drawBodyStyle1(radius, body, offset) {
     this.bodiesGraphic.noStroke()
-    this.bodiesGraphic.fill(body.c)
+
+    const c =
+      body.radius !== 0 ? body.c : this.replaceOpacity(body.c, this.deadOpacity)
+
+    this.bodiesGraphic.fill(c)
     this.bodiesGraphic.ellipse(0, offset, radius, radius)
     if (this.globalStyle == 'psycho' && this.target == 'inside') {
       this.drawCenter(body, this.bodiesGraphic, 0, offset)
@@ -1359,6 +1371,7 @@ export const Visuals = {
       const body = this.bodies[i]
       // after final proof is sent, don't draw upgradable bodies
       if (this.finalBatchSent && body.maxStarLvl == body.starLvl) continue
+      if (body.radius == 0) continue
       const bodyRadius = this.bodyCopies.filter(
         (b) => b.bodyIndex == body.bodyIndex
       )[0]?.radius
@@ -1597,20 +1610,17 @@ export const Visuals = {
           )
             continue
         }
-        const c = body.c
-        let finalColor
-        if (this.colorStyle == 'squiggle') {
-          const hueColor = (parseInt(c.split(',')[1]) + this.frames) % 360
-          finalColor = this.p.color(hueColor, 60, 100) // Saturation and brightness at 100 for pure spectral colors
-        } else {
-          finalColor = c
-        }
-        this.p.fill(finalColor)
+        if (body.radius == 0) continue
+        const c =
+          body.radius !== 0
+            ? this.replaceOpacity(body.c, this.deadOpacity)
+            : this.replaceOpacity(body.c, this.deadOpacity)
+        this.p.fill(c)
         // if (this.mode == 'nft') {
         const bodyCopy = this.bodyCopies.filter(
           (b) => b.bodyIndex == body.bodyIndex
         )[0]
-        const radius = this.getBodyRadius(bodyCopy.radius)
+        const radius = this.getBodyRadius(bodyCopy.radius) * 1.1
 
         // this.p.ellipse(body.position.x, body.position.y, radius, radius)
         this.p.push()
@@ -1627,7 +1637,7 @@ export const Visuals = {
               body.position.y,
               body.velocity,
               radius,
-              finalColor,
+              c,
               offset
             )
             break
@@ -1637,7 +1647,7 @@ export const Visuals = {
               body.position.y,
               body.velocity,
               radius,
-              finalColor,
+              c,
               offset
             )
             break
@@ -1647,12 +1657,29 @@ export const Visuals = {
               body.position.y,
               body.velocity,
               radius,
-              finalColor,
+              c,
               offset
             )
         }
       }
     }
+  },
+
+  replaceOpacity(c, opacity) {
+    const isHSLA = c.includes('hsla')
+    const prefix = isHSLA ? 'hsla' : 'rgba'
+    let cc = c
+      .split(',')
+      .map((c) => parseFloat(c.replace(')', '').replace(prefix + '(', '')))
+    if (cc.length !== 4) {
+      throw new Error('Color must have alpha value format, instead it has ' + c)
+    }
+    cc[3] = opacity
+    if (isHSLA) {
+      cc[1] = cc[1] + '%'
+      cc[2] = cc[2] + '%'
+    }
+    return `${prefix}(${cc.join(',')})`
   },
 
   brighten(c, amount = 20) {
