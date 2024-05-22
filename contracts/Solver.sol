@@ -50,7 +50,8 @@ contract Solver is Ownable {
         address indexed solver,
         uint256 indexed problemId,
         uint256 indexed level,
-        uint256 ticksInThisMatch
+        uint256 ticksInThisMatch,
+        uint256 day
     );
 
     constructor(address payable problems_) {
@@ -89,9 +90,10 @@ contract Solver is Ownable {
         address owner = Problems(problems).ownerOf(problemId);
         require(owner == msg.sender, "Not the owner");
 
-        (bool solved, , , uint256 bodyCount, , uint256 previousTickCount) = Problems(problems)
+        (bool solved, , uint256 day, uint256 bodyCount, , uint256 previousTickCount) = Problems(problems)
             .problems(problemId);
         require(!solved, "Already solved");
+        require(Problems(problems).currentDay() == day, "No longer accepting submissions for today");
 
         uint256 numberOfInputs = bodyCount * 5 * 2 + 1;
         require(input.length == numberOfInputs, "Invalid input length");
@@ -305,7 +307,7 @@ contract Solver is Ownable {
           Problems(problems).levelUp(problemId, ticksInThisMatch);
           Problems(problems).restoreValues(problemId);
           delete matches[problemId];
-          emit Solved(msg.sender, problemId, bodyCount, ticksInThisMatch);
+          emit Solved(msg.sender, problemId, bodyCount, ticksInThisMatch, day);
         }
     }
 
