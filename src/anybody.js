@@ -608,6 +608,19 @@ export class Anybody extends EventEmitter {
     // .sort((a, b) => b.radius - a.radius)
   }
 
+  getFaceIdx(seed) {
+    const face = this.random(0, 1000, new Prando(seed))
+    const faceDistribution = [200, 400, 600, 700, 800, 850, 900, 950, 980, 1000]
+    let faceIndex = 0
+    for (let i = 0; i < faceDistribution.length; i++) {
+      if (face < faceDistribution[i]) {
+        faceIndex = i
+        break
+      }
+    }
+    return faceIndex
+  }
+
   bodyDataToBodies(b) {
     const bodyId = b.bodyId.toNumber()
     const bodyIndex = b.bodyIndex.toNumber()
@@ -620,7 +633,10 @@ export class Anybody extends EventEmitter {
       (b.vy.toNumber() - this.vectorLimit * parseInt(this.scalingFactor)) /
       parseInt(this.scalingFactor)
     const radius = b.radius.toNumber() / parseInt(this.scalingFactor)
+    const faceIndex = this.getFaceIdx(b.seed)
     return {
+      seed: b.seed,
+      faceIndex,
       bodyId: bodyId,
       bodyIndex: bodyIndex,
       position: this.createVector(px, py),

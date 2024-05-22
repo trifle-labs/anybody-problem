@@ -940,16 +940,17 @@ export const Visuals = {
     this.pngFaces ||= new Array(FACE_PNGS.length)
       .fill(null)
       .map(() => new Array(FACE_PNGS[0].length))
-    const faceIdx = body.mintedBodyIndex || body.bodyIndex
-
+    const faceIdx = body.faceIndex || body.mintedBodyIndex || body.bodyIndex
     // faceRotation: 'time' | 'hitcycle' | 'mania'
     // time: start sleepy and get happier as time goes on
     // hit: rotate to a new face each time (expression is starLvl % 3)
     // mania: when body is hit, cycle wildly until end of game
     let hit = body.radius === 0
-    let expression = Math.ceil(
+    let expression = 1
+    /*Math.ceil(
       (2 * (hit ? body.starLvl - 1 : body.starLvl)) / body.maxStarLvl
     ) // 0 sleepy, 1 normal, 2 ecstatic
+    */
     const framesLeft = this.startingFrame + this.timer - this.frames
     switch (this.faceRotation) {
       case 'time':
@@ -1739,6 +1740,27 @@ export const Visuals = {
         p.noFill()
         p.ellipse(x, y, r)
       } else {
+        // const width = r / 2
+        // const rotatedAngle = b.velocity.heading()
+        // p.push()
+        // p.translate(x, y)
+        // p.rotate(rotatedAngle + p.PI / 2)
+        // const teeth = 6
+        // for (let i = 0; i < teeth; i++) {
+        //   p.fill('white')
+        //   const xx = 0 - width / (teeth / 2) + ((i % (teeth / 2)) * width) / 2
+        //   const yy =
+        //     -width / (teeth / 2) - ((i < teeth / 2 ? -1 : 1) * width) / 5
+        //   p.ellipse(xx - width / teeth / 2, yy + width / 4, width / (teeth / 3))
+        // }
+        // p.fill(darker)
+        // p.rect(0 - width / 1.5, 0 - width / 1.5, width * 1.5, width / 3)
+        // p.rect(0 - width / 1.5, 0 + width / 4, width * 1.5, width / 3)
+        // p.strokeWeight(15)
+        // p.noFill()
+        // p.stroke(darker)
+        // p.ellipse(0, 0, r - 7)
+        // p.pop()
         p.strokeWeight(0)
         const count = 3
         for (let i = 0; i < count; i++) {
