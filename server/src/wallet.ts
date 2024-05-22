@@ -74,5 +74,11 @@ export async function queryOwnedProblems(address?: string) {
     [address.replace(/^0x/, '')]
   )
 
+  console.log(
+    'wallet.ts queryOwnedProblems problems.rows: ',
+    address,
+    problems.rows
+  )
+
   return problems.rows
 }

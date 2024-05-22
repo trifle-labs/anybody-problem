@@ -24,6 +24,7 @@ async function setupListener() {
 
   await updateLeaderboard()
 }
+setupListener()
 
 // uncomment to test the connection
 // setInterval(async () => {
@@ -34,9 +35,8 @@ async function setupListener() {
 //   await updateLeaderboard()
 // }, 3000)
 
-setupListener()
-
 let id = 0
+// TODO: subscribers should be removed when the connection is closed
 const subscribers = new Set<ReadableStreamDefaultController>()
 
 async function* streamGenerator(address) {
@@ -44,7 +44,8 @@ async function* streamGenerator(address) {
   yield {
     data: JSON.stringify({
       leaderboard,
-      problems
+      problems,
+      address
     }),
     event: 'message',
     id: String(id++)
@@ -62,7 +63,8 @@ async function* streamGenerator(address) {
     yield {
       data: JSON.stringify({
         leaderboard,
-        problems
+        problems: await queryOwnedProblems(address),
+        address
       }),
       event: 'message',
       id: String(id++)
@@ -81,12 +83,10 @@ function streamHandler(address = null) {
 
 app.get('/sse/:address', async (c) => {
   const address = c.req.param('address')
-  c.res.headers.set('Access-Control-Allow-Origin', '*') // Add CORS headers if necessary
   return streamSSE(c, streamHandler(address))
 })
 
 app.get('/sse', async (c) => {
-  c.res.headers.set('Access-Control-Allow-Origin', '*') // Add CORS headers if necessary
   return streamSSE(c, streamHandler())
 })
 
