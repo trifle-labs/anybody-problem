@@ -29,7 +29,7 @@
           "name": "log_addr",
           "column": "log_addr",
           "filter_op": "contains",
-          "filter_arg": ["0xa8B3e0dcC767C3D4FF33e9D9F72ca457EB3f579e"]
+          "filter_arg": ["0x9D39e8bC0AB500D7d694c02298AE47Add0a783Cd"]
         }
       ],
       "event": {
@@ -72,7 +72,7 @@
           "name": "log_addr",
           "column": "log_addr",
           "filter_op": "contains",
-          "filter_arg": ["0x18133dD32220C81cb49577AAB9b5b85a65339AC0"]
+          "filter_arg": ["0xD3fbb528CaC7Cf8B58203dA42127a5ff43a6AdB9"]
         }
       ],
       "event": {
@@ -112,6 +112,7 @@
             "type": "numeric",
             "indexed": false
           },
+          { "name": "day", "type": "numeric", "indexed": false },
           { "name": "log_addr", "type": "bytea", "indexed": true }
         ]
       },
@@ -120,7 +121,7 @@
           "name": "log_addr",
           "column": "log_addr",
           "filter_op": "contains",
-          "filter_arg": ["0xe9DBc186058B26ac7c3227421c04ebb5eCC1b070"]
+          "filter_arg": ["0x77c1FD2029F86561D5eB40D89FEe3344841d9804"]
         }
       ],
       "event": {
@@ -151,6 +152,12 @@
             "type": "uint256",
             "indexed": false,
             "column": "ticks_in_this_match"
+          },
+          {
+            "name": "day",
+            "type": "uint256",
+            "indexed": false,
+            "column": "day"
           }
         ]
       },
@@ -176,7 +183,7 @@
           "name": "log_addr",
           "column": "log_addr",
           "filter_op": "contains",
-          "filter_arg": ["0x18133dD32220C81cb49577AAB9b5b85a65339AC0"]
+          "filter_arg": ["0xD3fbb528CaC7Cf8B58203dA42127a5ff43a6AdB9"]
         }
       ],
       "event": {
@@ -241,7 +248,7 @@
           "name": "log_addr",
           "column": "log_addr",
           "filter_op": "contains",
-          "filter_arg": ["0xa8B3e0dcC767C3D4FF33e9D9F72ca457EB3f579e"]
+          "filter_arg": ["0x9D39e8bC0AB500D7d694c02298AE47Add0a783Cd"]
         }
       ],
       "event": {
@@ -310,7 +317,7 @@
           "name": "log_addr",
           "column": "log_addr",
           "filter_op": "contains",
-          "filter_arg": ["0xa8B3e0dcC767C3D4FF33e9D9F72ca457EB3f579e"]
+          "filter_arg": ["0x9D39e8bC0AB500D7d694c02298AE47Add0a783Cd"]
         }
       ],
       "event": {

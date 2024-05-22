@@ -25,7 +25,7 @@ const garnet: Source = {
   concurrency: 1
 }
 
-const source = garnet
+export const source = garnet
 
 const network = source.chain_id
 const contracts = Object.fromEntries(

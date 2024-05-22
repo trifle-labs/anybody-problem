@@ -2,8 +2,13 @@ import { Hono } from 'hono'
 import { serveStatic } from 'hono/bun'
 import { SSEStreamingApi, streamSSE } from 'hono/streaming'
 import db from './db'
-import { queryOwnedProblems } from './wallet'
+import { wallet } from './wallet'
 import { leaderboard, updateLeaderboard } from './leaderboard'
+import { source } from '../shovel-config'
+
+// Optimization ideas to explore if we need to scale:
+// - Only push SSE when change effects leaderboard or user's wallet
+// - Cache aggregated state and incrementally update with each DB notification
 
 const app = new Hono()
 
@@ -16,11 +21,11 @@ async function setupListener() {
       subscriber.enqueue(`lets-update`)
     }
   })
-  db.query('LISTEN "sepolia-problems_transfer"')
-  db.query('LISTEN "sepolia-problems_body_added"')
-  db.query('LISTEN "sepolia-problems_body_removed"')
-  db.query('LISTEN "sepolia-solver_solved"')
-  db.query('LISTEN "sepolia-bodies_transfer"')
+  db.query(`LISTEN "${source.name}-problems_transfer"`)
+  db.query(`LISTEN "${source.name}-problems_body_added"`)
+  db.query(`LISTEN "${source.name}-problems_body_removed"`)
+  db.query(`LISTEN "${source.name}-solver_solved"`)
+  db.query(`LISTEN "${source.name}-bodies_transfer"`)
 
   await updateLeaderboard()
 }
@@ -40,11 +45,10 @@ let id = 0
 const subscribers = new Set<ReadableStreamDefaultController>()
 
 async function* streamGenerator(address) {
-  const problems = await queryOwnedProblems(address)
   yield {
     data: JSON.stringify({
       leaderboard,
-      problems,
+      wallet: await wallet(address),
       address
     }),
     event: 'message',
@@ -59,11 +63,11 @@ async function* streamGenerator(address) {
       subscribers.delete(this)
     }
   })
-  for await (const chunk of clientStream) {
+  for await (const _chunk of clientStream) {
     yield {
       data: JSON.stringify({
         leaderboard,
-        problems: await queryOwnedProblems(address),
+        wallet: await wallet(address),
         address
       }),
       event: 'message',
@@ -92,8 +96,7 @@ app.get('/sse', async (c) => {
 
 app.get('/wallet/:address', async (c) => {
   const address = c.req.param('address')
-  const problems = await queryOwnedProblems(address)
-  return c.json({ problems })
+  return c.json(await wallet(address))
 })
 
 app.get('/', serveStatic({ path: './src/demo.html' }))

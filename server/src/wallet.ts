@@ -1,6 +1,6 @@
 import db from './db'
 
-export async function queryOwnedProblems(address?: string) {
+async function queryOwnedProblems(address?: string) {
   if (!address) return []
 
   const problems = await db.query(
@@ -81,4 +81,10 @@ export async function queryOwnedProblems(address?: string) {
   )
 
   return problems.rows
+}
+
+export async function wallet(address?: string) {
+  return {
+    problems: await queryOwnedProblems(address)
+  }
 }
