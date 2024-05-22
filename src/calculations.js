@@ -346,6 +346,8 @@ export const Calculations = {
       newBody.mintedBodyIndex = body.mintedBodyIndex
       newBody.starLvl = body.starLvl
       newBody.maxStarLvl = body.maxStarLvl
+      newBody.seed = body.seed
+      newBody.faceIndex = body.faceIndex
       bodies.push(newBody)
     }
     return bodies
@@ -385,6 +387,8 @@ export const Calculations = {
       newBody.mintedBodyIndex = body.mintedBodyIndex
       newBody.c = body.c
       newBody.bodyIndex = body.bodyIndex
+      newBody.seed = body.seed
+      newBody.faceIndex = body.faceIndex
 
       bigBodies.push(newBody)
     }

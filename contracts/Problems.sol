@@ -61,6 +61,12 @@ contract Problems is ERC721, Ownable {
     // uint256 public constant maxRadius = 13;
     uint256 public constant startingRadius = 2;
 
+    event problemCreated(
+        uint256 problemId,
+        uint256 day,
+        bytes32 seed
+    );
+
     event bodyAdded(
         uint256 problemId,
         uint256 bodyId,
@@ -212,6 +218,8 @@ contract Problems is ERC721, Ownable {
         
         problems[problemSupply].day = currentDay();
         problems[problemSupply].seed = generateSeed(problemSupply);
+
+        emit problemCreated(problemSupply, problems[problemSupply].day, problems[problemSupply].seed);
 
         (uint256 bodyId, bytes32 bodySeed) = Bodies(bodies)
             .mintAndAddToProblem(
