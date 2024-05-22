@@ -6,7 +6,7 @@
   </head>
 
   <body>
-    <h1>Problems</h1>
+    <h1>Problems leaderboard + my problems</h1>
     <div id="sse-data"></div>
 
     <script>
@@ -17,7 +17,7 @@
 
       eventSource.onmessage = (event) => {
         console.log('Received message:', event.data)
-        sseData.innerHTML += event.data + '<br>'
+        sseData.innerHTML += event.data + '<br><br><br>'
       }
 
       eventSource.addEventListener('close', (event) => {
