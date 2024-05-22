@@ -12,7 +12,7 @@ const mainnet: Source = {
 const sepolia: Source = {
   name: 'sepolia',
   chain_id: 11155111,
-  url: 'https://rpc2.sepolia.org', // 'https://ethereum-sepolia-rpc.publicnode.com' rate limited
+  url: 'https://rpc2.sepolia.org',
   batch_size: 1000,
   concurrency: 1
 }

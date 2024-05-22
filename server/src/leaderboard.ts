@@ -5,6 +5,7 @@ export const leaderboard = {
 }
 
 export async function updateLeaderboard() {
+  const start = Date.now()
   const mostProblems = await db.query(
     `
   WITH latest_transactions AS (
@@ -30,4 +31,6 @@ export async function updateLeaderboard() {
   )
 
   leaderboard.mostProblems = mostProblems.rows
+
+  console.log('leaderboard updated in', Date.now() - start, 'ms')
 }

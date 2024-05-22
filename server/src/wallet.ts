@@ -1,6 +1,6 @@
 import db from './db'
 
-async function queryOwnedProblems(address?: string) {
+async function getOwnedBodies(address?: string) {
   if (!address) return []
 
   const problems = await db.query(
@@ -85,9 +85,8 @@ async function queryOwnedProblems(address?: string) {
 }
 
 export async function wallet(address?: string) {
-  console.log('wallet.ts wallet address: ', address)
-  const [problems] = await Promise.all([queryOwnedProblems(address)])
-  return {
-    problems
-  }
+  const start = Date.now()
+  const bodies = await getOwnedBodies(address)
+  console.log(`wallet ${address} queried ${Date.now() - start}ms`)
+  return { bodies }
 }

@@ -82,7 +82,6 @@ async function* streamGenerator(address?: string) {
 function streamHandler(address?: string) {
   return async (stream: SSEStreamingApi) => {
     for await (const message of streamGenerator(address)) {
-      console.log('Updating subscriber', message)
       await stream.writeSSE(message)
     }
   }
