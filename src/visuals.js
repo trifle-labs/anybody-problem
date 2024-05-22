@@ -335,15 +335,23 @@ export const Visuals = {
   },
   drawPause() {
     if (this.paused) {
-      this.p.noStroke()
-      this.p.strokeWeight(0)
-      this.p.fill('rgba(0,0,0,0.4)')
-      this.p.rect(0, 0, this.windowWidth, this.windowHeight)
-      this.p.push()
       this.p.fill('white')
-      this.p.translate(this.windowWidth / 2, this.windowHeight / 2)
-      this.p.triangle(-100, -100, -100, 100, 100, 0)
-      this.p.pop()
+      this.p.textSize(128)
+      // p.text('SUCCESS', this.windowWidth / 2 - 8, 190) // adjust by 8 to center SF Pro weirdness
+      this.p.textAlign(this.p.CENTER, this.p.TOP)
+      this.p.text(
+        'START',
+        this.windowWidth / 2,
+        this.windowHeight / 2 - 128 / 2
+      )
+      // this.p.noStroke()
+      // this.p.strokeWeight(0)
+      // this.p.fill('rgba(0,0,0,0.4)')
+      // this.p.rect(0, 0, this.windowWidth, this.windowHeight)
+      // this.p.push()
+      // this.p.translate(this.windowWidth / 2, this.windowHeight / 2)
+      // this.p.triangle(-100, -100, -100, 100, 100, 0)
+      // this.p.pop()
     }
   },
   drawBodyOutlines() {
@@ -469,30 +477,30 @@ export const Visuals = {
       this.windowHeight
     )
 
-    // Grid lines
-    const boxCount = 6
-    // this.p.stroke('black')
-    this.p.stroke('white')
-    for (let i = 1; i < boxCount; i++) {
-      if (i % 5 == 5) {
-        this.p.strokeWeight(1)
-        // this.starBG.stroke(`hsl(${i * (360 / totalLines)}, 100%, 50%)`)
-      } else {
-        this.p.strokeWeight(1)
-      }
-      this.p.line(
-        i * (this.windowWidth / boxCount),
-        0,
-        i * (this.windowWidth / boxCount),
-        this.windowHeight
-      )
-      this.p.line(
-        0,
-        i * (this.windowHeight / boxCount),
-        this.windowWidth,
-        i * (this.windowHeight / boxCount)
-      )
-    }
+    // // Grid lines
+    // const boxCount = 6
+    // // this.p.stroke('black')
+    // this.p.stroke('white')
+    // for (let i = 1; i < boxCount; i++) {
+    //   if (i % 5 == 5) {
+    //     this.p.strokeWeight(1)
+    //     // this.starBG.stroke(`hsl(${i * (360 / totalLines)}, 100%, 50%)`)
+    //   } else {
+    //     this.p.strokeWeight(1)
+    //   }
+    //   this.p.line(
+    //     i * (this.windowWidth / boxCount),
+    //     0,
+    //     i * (this.windowWidth / boxCount),
+    //     this.windowHeight
+    //   )
+    //   this.p.line(
+    //     0,
+    //     i * (this.windowHeight / boxCount),
+    //     this.windowWidth,
+    //     i * (this.windowHeight / boxCount)
+    //   )
+    // }
   },
 
   tintImage(img, color) {
