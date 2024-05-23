@@ -106,6 +106,6 @@ app.get('/wallet/:address', async (c) => {
 app.get('/', serveStatic({ path: './src/demo.html' }))
 
 export default {
-  port: 8712,
+  port: process.env.PORT || 8712,
   fetch: app.fetch
 }
