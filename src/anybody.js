@@ -54,6 +54,8 @@ export class Anybody extends EventEmitter {
       mode: 'nft', // game or nft
       admin: false,
       solved: false,
+      solvedTime: null,
+      solver: null,
       clearBG: true,
       colorStyle: '!squiggle', // squiggle or !squiggle
       preRun: 0,
@@ -110,7 +112,6 @@ export class Anybody extends EventEmitter {
     this.buttons = {}
     this.won = false
     this.finalBatchSent = false
-    this.solved = false
   }
 
   // run once at initilization
@@ -153,6 +154,7 @@ export class Anybody extends EventEmitter {
   // }
 
   async start() {
+    if (this.solved) return
     this.addListeners()
     this.runSteps(this.preRun)
     // this.paintAtOnce(this.paintSteps)

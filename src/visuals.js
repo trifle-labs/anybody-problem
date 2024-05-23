@@ -100,6 +100,10 @@ const STAR_SVGS = [
 
 export const Visuals = {
   async draw() {
+    if (this.solved) {
+      this.showSolved()
+      return
+    }
     if (!this.showIt) return
     if (this.bodies.length < 1) {
       this.p.textSize(40)
@@ -213,6 +217,14 @@ export const Visuals = {
       this.handleGameOver({ won: true })
     }
     this.firstFrame = false
+  },
+  showSolved() {
+    console.log('show solved')
+    this.p.textSize(128)
+    this.p.fill('black')
+    this.p.textAlign(this.p.CENTER, this.p.TOP)
+    this.p.text('SOLVED', this.windowWidth / 2, this.windowHeight / 2 - 128 / 2)
+    this.p.noLoop()
   },
   drawPause() {
     if (this.paused) {

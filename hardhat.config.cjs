@@ -77,7 +77,7 @@ const config = {
       // url: 'https://sepolia.rpc.grove.city/v1/' + process.env.grove,
       url: 'https://ethereum-sepolia.blockpi.network/v1/rpc/public',
       accounts: { mnemonic: process.env.deploymentKey },
-      gasPrice: 150_000_000_000, // 150 GWEI
+      gasPrice: 60_000_000_000, // 60 GWEI
       gas: 12_000_000
     },
     garnet: {
