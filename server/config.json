@@ -1,6 +1,6 @@
 {
   "dashboard": {},
-  "pg_url": "postgres:///shovel",
+  "pg_url": "$DATABASE_URL",
   "eth_sources": [
     {
       "name": "garnet",

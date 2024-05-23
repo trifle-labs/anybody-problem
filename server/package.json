@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "shovel": "OUTPUT=1 bun run shovel-config.ts > config.json && ./shovel --config config.json",
-    "dev": "bun run --hot src/index.ts"
+    "dev": "bun run --hot src/index.ts",
+    "start": "./shovel --config config.json & bun run src/index.ts"
   },
   "devDependencies": {
     "@indexsupply/shovel-config": "^0.0.16",
@@ -16,6 +17,8 @@
   },
   "dependencies": {
     "hono": "^4.3.8",
-    "pg": "^8.11.5"
-  }
+    "pg": "^8.11.5",
+    "anybody-problem": "git+https://github.com/okwme/anybody-problem.git"
+  },
+  "trustedDependencies": []
 }

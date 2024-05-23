@@ -1,6 +1,11 @@
 import { makeConfig, toJSON } from '@indexsupply/shovel-config'
-import type { Source, Table, Integration } from '@indexsupply/shovel-config'
-import { Problems, Bodies, Solver } from './contracts'
+import type {
+  Source,
+  Table,
+  Integration,
+  PGColumnType
+} from '@indexsupply/shovel-config'
+import { Problems, Bodies, Solver } from './src/contracts'
 import { ethers } from 'ethers'
 
 const mainnet: Source = {
@@ -38,7 +43,7 @@ const contracts = Object.fromEntries(
   })
 )
 
-const solTypeToPgType = {
+const solTypeToPgType: Record<string, PGColumnType> = {
   address: 'bytea',
   uint256: 'numeric',
   bytes32: 'bytea',
@@ -64,7 +69,7 @@ async function integrationFor(
   )
   const columns = event.inputs
     .map((input) => {
-      const pgType = solTypeToPgType[input.type]
+      const pgType = solTypeToPgType[input.type as keyof typeof solTypeToPgType]
       console.assert(pgType, `Unsupported type ${input.type}`)
       return {
         name: camelToSnakeCase(input.name),
@@ -131,7 +136,7 @@ if (process.env.OUTPUT) {
     ])
 
     const config = makeConfig({
-      pg_url: 'postgres:///shovel',
+      pg_url: '$DATABASE_URL',
       sources: [source],
       integrations: integrations
     })
