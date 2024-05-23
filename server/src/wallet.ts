@@ -75,18 +75,13 @@ async function getOwnedBodies(address?: string) {
     [address.replace(/^0x/, '')]
   )
 
-  console.log(
-    'wallet.ts queryOwnedProblems problems.rows: ',
-    address,
-    problems.rows.length
-  )
-
   return problems.rows
 }
 
 export async function wallet(address?: string) {
+  if (!address) return {}
   const start = Date.now()
   const bodies = await getOwnedBodies(address)
-  console.log(`wallet ${address} queried ${Date.now() - start}ms`)
+  console.log('wallet', address, 'queried in', Date.now() - start, 'ms')
   return { bodies }
 }

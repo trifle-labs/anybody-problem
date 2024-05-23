@@ -7,13 +7,13 @@ import { leaderboard, updateLeaderboard } from './leaderboard'
 import { source } from '../shovel-config'
 import { publish, addSubscriber, unsubscribe } from './publish'
 
-// This is a read-only API server that serves the leaderboard and wallet state.
+// This is a read-only API server that serves the leaderboard and wallet states.
 // It uses Server Sent Events (SSE) to push updates to the client.
 
-// Design:
+// Design notes:
 // - Shared process state for the leaderboard
 // - Leaderboard re-queries the DB on each contract event
-// - These queries will touch more records
+// - Leaderboard queries touch more records
 // - Publish leaderboard and wallet states to all subscribers on each contract event
 
 // Optimization ideas to explore if we need to scale further:
