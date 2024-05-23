@@ -1,6 +1,8 @@
 import { expect } from 'chai'
 import hre from 'hardhat'
 const ethers = hre.ethers
+// import helpers from '@nomicfoundation/hardhat-network-helpers'
+
 // const { describe, it } = require('mocha')
 // import { Anybody } from '../src/anybody.js'
 import {
@@ -166,6 +168,21 @@ describe('Problem Tests', function () {
     expect(bodyData.radius).to.equal(newBodyData.radius)
     expect(bodyData.seed).to.equal(newBodyData.seed)
   })
+
+  // it('checks the initial velocity for lots of different days', async () => {
+  //   const signers = await ethers.getSigners()
+  //   // const [owner, addr1] = signers
+  //   const deployedContracts = await deployContracts()
+  //   const { problems } = deployedContracts
+  //   const _24hours = 24 * 60 * 60
+
+  //   for (let i = 0; i < 10; i++) {
+  //     const currentTime = await helpers.time.latest()
+  //     const newTimestamp = currentTime + i * _24hours
+  //     await helpers.time.increaseTo(newTimestamp)
+  //     const { problemId } = await mintProblem(signers, deployedContracts)
+  //   }
+  // })
 
   it('has all the correct interfaces', async () => {
     const interfaces = [

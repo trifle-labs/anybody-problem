@@ -144,7 +144,9 @@ const deployContracts = async (ignoreTesting = false) => {
   const verifiersTicks = []
   const verifiersBodies = []
 
-  for (let i = 1; i <= 10; i++) {
+  const maxbodies = 5 // TODO: make back to 10 when verifier contracts are fixed
+
+  for (let i = 1; i <= maxbodies; i++) {
     const ticks = await getTicksRun(i, ignoreTesting)
     const name = `Game_${i}_${ticks}Verifier`
     const path = `contracts/${name}.sol:Groth16Verifier`

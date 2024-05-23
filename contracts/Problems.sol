@@ -255,7 +255,7 @@ contract Problems is ERC721, Ownable {
     }
 
     function getLevelSeed(uint256 day, uint256 mintedBodiesIndex, uint256 bodyIndex) public pure returns (bytes32) {
-        return keccak256(abi.encodePacked(day, mintedBodiesIndex, bodyIndex));
+        return keccak256(abi.encodePacked(day, mintedBodiesIndex, bodyIndex, 'foobar'));
     }
 
     /**
@@ -324,10 +324,10 @@ contract Problems is ERC721, Ownable {
 
          // this is actually a range of -1/2 to 1/2 of maxVector since negative offset
         rand = keccak256(abi.encodePacked(rand));
-        body.vx = randomRange(0, maxVector * scalingFactor, rand);
+        body.vx =  maxVector * scalingFactor;// - randomRange(0, maxVector * scalingFactor, rand);
 
         rand = keccak256(abi.encodePacked(rand));
-        body.vy = randomRange(0, maxVector * scalingFactor, rand);
+        body.vy =  maxVector * scalingFactor;// - randomRange(0, maxVector * scalingFactor, rand);
 
         return body;
     }
