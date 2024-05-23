@@ -1,25 +1,30 @@
 import db from './db'
 
-type DailyScore = {
+type LeaderboardLine = {
   problemId: string
-  time: string
   tokenId: string
   owner: string
 }
 
+type SpeedScore = LeaderboardLine & { ticks: number }
+
+type SolvedScore = LeaderboardLine & { solved: number }
+
+type StreakScore = LeaderboardLine & { streak: number }
+
 type DailyLeaderboard = {
-  oneBody: DailyScore[]
-  twoBody: DailyScore[]
-  threeBody: DailyScore[]
-  cumulative: DailyScore[]
+  oneBody: SpeedScore[]
+  twoBody: SpeedScore[]
+  threeBody: SpeedScore[]
+  cumulative: SpeedScore[]
 }
 
 type Leaderboard = {
   daily: Record<number, DailyLeaderboard>
   allTime: {
-    mostSolved: any[]
-    currentStreak: any[]
-    fastest: any[]
+    mostSolved: SolvedScore[]
+    currentStreak: StreakScore[]
+    fastest: SpeedScore[]
   }
 }
 
@@ -150,10 +155,10 @@ async function calculateDailyLeaderboard(day: number) {
   LEFT JOIN current_owners ON leaderboard.problem_id = current_owners.token_id
   `)
 
-  function scores(rows: any[]): DailyScore[] {
+  function scores(rows: any[]): SpeedScore[] {
     return rows.map((r: any) => ({
       problemId: r.problem_id,
-      time: r.time,
+      ticks: r.time,
       tokenId: r.token_id,
       owner: r.owner
     }))
@@ -169,12 +174,23 @@ async function calculateDailyLeaderboard(day: number) {
   }
 }
 
+async function calculateAllTimeLeaderboard(
+  today: number
+): Promise<Leaderboard['allTime']> {
+  return {
+    mostSolved: [],
+    currentStreak: [],
+    fastest: []
+  }
+}
+
 export async function updateLeaderboard() {
   const start = Date.now()
 
+  const seasonStart = 1716336000
+
   // calculate daily leaderboards
   const today = beginningOfTodayInUTCSeconds()
-  const seasonStart = 1716336000
   const daysSoFar: number[] = []
   for (let i = seasonStart; i < today; i += 86400) {
     daysSoFar.push(i)
@@ -195,6 +211,8 @@ export async function updateLeaderboard() {
   )
 
   // calculate all-time leaderboards
+  const allTime = await calculateAllTimeLeaderboard(today)
+  leaderboard.allTime = allTime
 
   console.log('leaderboard updated in', Date.now() - start, 'ms')
 }
