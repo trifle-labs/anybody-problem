@@ -10,7 +10,7 @@
     <div id="sse-data"></div>
 
     <script>
-      const baseURL = 'http://localhost:8712'
+      const baseURL = document.location.origin
       const sseData = document.getElementById('sse-data')
 
       const eventSource = new EventSource(
