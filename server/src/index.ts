@@ -6,6 +6,7 @@ import { wallet } from './wallet'
 import { leaderboard, updateLeaderboard } from './leaderboard'
 import { source } from '../shovel-config'
 import { publish, addSubscriber, unsubscribe } from './publish'
+import { cors } from 'hono/cors'
 
 // This is a read-only API server that serves the leaderboard and wallet states.
 // It uses Server Sent Events (SSE) to push updates to the client.
@@ -88,6 +89,14 @@ function streamHandler(address?: string) {
 }
 
 const app = new Hono()
+app.use(
+  '*',
+  cors({
+    origin: ['http://localhost', 'https://anybody.trifle.life'],
+    allowMethods: ['GET'],
+    allowHeaders: ['Content-Type', 'Authorization']
+  })
+)
 
 app.get('/sse/:address', async (c) => {
   const address = c.req.param('address')
