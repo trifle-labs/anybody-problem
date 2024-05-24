@@ -92,7 +92,11 @@ const app = new Hono()
 app.use(
   '*',
   cors({
-    origin: ['http://localhost', 'https://anybody.trifle.life'],
+    origin: [
+      'http://localhost',
+      'https://anybody.trifle.life',
+      'https://starfish-app-3vq2e.ondigitalocean.app'
+    ],
     allowMethods: ['GET'],
     allowHeaders: ['Content-Type', 'Authorization']
   })
