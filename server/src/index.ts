@@ -97,17 +97,17 @@ app.use(
       'https://anybody.trifle.life',
       'https://starfish-app-3vq2e.ondigitalocean.app'
     ],
-    allowMethods: ['GET'],
+    allowMethods: ['GET', 'POST'],
     allowHeaders: ['Content-Type', 'Authorization']
   })
 )
 
-app.get('/sse/:address', async (c) => {
+app.post('/sse/:address', async (c) => {
   const address = c.req.param('address')
   return streamSSE(c, streamHandler(address))
 })
 
-app.get('/sse', async (c) => {
+app.post('/sse', async (c) => {
   return streamSSE(c, streamHandler())
 })
 
