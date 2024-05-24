@@ -1,11 +1,13 @@
 import { Pool } from 'pg'
 
-console.log('cert', process.env.CA_CERT)
-
 const pgClient = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: process.env.NODE_ENV === 'production',
+  user: process.env.PGUSER,
+  host: process.env.PGHOST,
+  database: process.env.PGDATABASE,
+  password: process.env.PGPASSWORD,
+  port: parseInt(process.env.PGPORT),
+  ssl: process.env.NODE_ENV === 'production' && {
+    rejectUnauthorized: true,
     ca: process.env.CA_CERT
   }
 })
