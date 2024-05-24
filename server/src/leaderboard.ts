@@ -2,7 +2,6 @@ import db from './db'
 
 type LeaderboardLine = {
   problemId: string
-  tokenId: string
   owner: string
 }
 
@@ -159,7 +158,6 @@ async function calculateDailyLeaderboard(day: number) {
     return rows.map((r: any) => ({
       problemId: r.problem_id,
       ticks: r.time,
-      tokenId: r.token_id,
       owner: r.owner
     }))
   }
@@ -177,10 +175,112 @@ async function calculateDailyLeaderboard(day: number) {
 async function calculateAllTimeLeaderboard(
   today: number
 ): Promise<Leaderboard['allTime']> {
+  const n = 10
+  const result = await db.query(`
+  WITH most_solved AS (
+    SELECT 
+        problem_id,
+        COUNT(*) AS solve_count
+    FROM 
+        solver_solved
+    GROUP BY 
+        problem_id
+    ORDER BY 
+        solve_count DESC
+    LIMIT ${n}
+),
+current_streaks AS (
+    SELECT
+        problem_id,
+        MAX(streak_length) AS current_streak
+    FROM (
+        SELECT
+            problem_id,
+            COUNT(*) AS streak_length
+        FROM (
+            SELECT
+                problem_id,
+                day,
+                ROW_NUMBER() OVER (PARTITION BY problem_id ORDER BY day) - 
+                ROW_NUMBER() OVER (PARTITION BY problem_id, day ORDER BY day) AS streak
+            FROM
+                solver_solved
+            WHERE
+                day <= ${today}
+        ) AS subquery
+        GROUP BY
+            problem_id, streak
+        HAVING
+            MAX(day) = ${today}
+    ) AS streaks
+    GROUP BY 
+        problem_id
+    ORDER BY 
+        current_streak DESC
+    LIMIT ${n}
+),
+fastest_completed AS (
+    SELECT 
+        problem_id,
+        SUM(ticks_in_this_match) AS total_time
+    FROM 
+        solver_solved
+    GROUP BY 
+        problem_id
+    HAVING 
+        COUNT(level) = 3
+    ORDER BY 
+        total_time ASC
+    LIMIT ${n}
+),
+leaderboard AS (
+  SELECT 
+      'Most Solved' AS category,
+      problem_id,
+      solve_count AS metric
+  FROM 
+      most_solved
+  UNION ALL
+  SELECT 
+      'Current Streak' AS category,
+      problem_id,
+      current_streak AS metric
+  FROM 
+      current_streaks
+  UNION ALL
+  SELECT 
+      'Fastest Completed Problem' AS category,
+      problem_id,
+      total_time AS metric
+  FROM 
+      fastest_completed
+)
+SELECT 
+    *
+FROM
+  leaderboard`)
   return {
-    mostSolved: [],
-    currentStreak: [],
-    fastest: []
+    mostSolved: result.rows
+      .filter((r: any) => r.category === 'Most Solved')
+      .map((r: any) => ({
+        problemId: r.problem_id,
+        solved: parseInt(r.metric, 10),
+        owner: r.owner
+      })),
+    currentStreak: result.rows
+      .filter((r: any) => r.category === 'Current Streak')
+      .map((r: any) => ({
+        problemId: r.problem_id,
+        streak: parseInt(r.metric, 10),
+        owner: r.owner
+      })),
+    fastest: result.rows
+      .filter((r: any) => r.category === 'Fastest Completed Problem')
+      .map((r: any) => ({
+        problemId: r.problem_id,
+        ticks: parseInt(r.metric, 10),
+        owner: r.owner
+      }))
   }
 }
 
