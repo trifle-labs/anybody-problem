@@ -1,6 +1,6 @@
-import { Pool } from 'pg'
+import { Client } from 'pg'
 
-const pgClient = new Pool({
+const pgClient = new Client({
   user: process.env.PGUSER,
   host: process.env.PGHOST,
   database: process.env.PGDATABASE,
