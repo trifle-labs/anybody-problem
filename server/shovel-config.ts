@@ -7,6 +7,7 @@ import type {
 } from '@indexsupply/shovel-config'
 import { Problems, Bodies, Solver } from './src/contracts'
 import { ethers } from 'ethers'
+import { camelToSnakeCase } from './src/util'
 
 const mainnet: Source = {
   name: 'mainnet',
@@ -30,19 +31,6 @@ const garnet: Source = {
   concurrency: 1
 }
 
-export const source = garnet
-
-const network = source.chain_id
-const contracts = Object.fromEntries(
-  [Problems, Bodies, Solver].map((contract) => {
-    const abi = contract.abi.abi
-    return [
-      contract.abi.contractName,
-      new ethers.Contract(contract.networks[network].address, abi)
-    ]
-  })
-)
-
 const solTypeToPgType: Record<string, PGColumnType> = {
   address: 'bytea',
   uint256: 'numeric',
@@ -51,18 +39,37 @@ const solTypeToPgType: Record<string, PGColumnType> = {
   bool: 'bool'
 }
 
-function camelToSnakeCase(str: string) {
-  return str.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`)
+const STARTING_BLOCK = {
+  // mainnet: BigInt('2067803')
+  sepolia: BigInt('5716600'),
+  garnet: BigInt('2067803')
 }
+
+export type Chain = 'mainnet' | 'sepolia' | 'garnet'
+
+export const sources = [sepolia, garnet]
+
+const contracts = Object.fromEntries(
+  [Problems, Bodies, Solver].map((contract) => {
+    const abi = contract.abi.abi
+    return [
+      contract.abi.contractName,
+      sources.map(
+        (s) => new ethers.Contract(contract.networks[s.chain_id].address, abi)
+      )
+    ]
+  })
+)
 
 async function integrationFor(
   contractName: string,
-  eventName: string,
-  tableName: string
+  eventName: string
 ): Promise<Integration> {
+  const tableName = camelToSnakeCase(`${contractName}_${eventName}`)
+
   const contract = contracts[contractName]
   console.assert(contract, `Contract ${contractName} not found`)
-  const event = contract.interface.getEvent(eventName)
+  const event = contract[0].interface.getEvent(eventName)
   console.assert(
     event,
     `Event ${eventName} not found in contract ${contractName}`
@@ -102,14 +109,19 @@ async function integrationFor(
   return {
     enabled: true,
     name: tableName,
-    sources: [{ name: source.name, start: BigInt('2067803') }], // 5716600 for sepolia, 2067803 for garnet
+    sources: sources.map((s) => ({
+      name: s.name,
+      start: STARTING_BLOCK[s.name]
+    })),
     table,
     block: [
       {
         name: 'log_addr',
         column: 'log_addr',
         filter_op: 'contains',
-        filter_arg: [(await contract.getAddress()) as any]
+        filter_arg: (await Promise.all(
+          contract.map((c) => c.getAddress())
+        )) as any[]
       }
     ],
     event: {
@@ -127,17 +139,17 @@ async function integrationFor(
 if (process.env.OUTPUT) {
   ;(async () => {
     let integrations = await Promise.all([
-      integrationFor('Problems', 'Transfer', 'problems_transfer'),
-      integrationFor('Bodies', 'Transfer', 'bodies_transfer'),
-      integrationFor('Solver', 'Solved', 'solver_solved'),
-      integrationFor('Bodies', 'bodyBorn', 'bodies_body_born'),
-      integrationFor('Problems', 'bodyAdded', 'problems_body_added'),
-      integrationFor('Problems', 'bodyRemoved', 'problems_body_removed')
+      integrationFor('Problems', 'Transfer'),
+      integrationFor('Bodies', 'Transfer'),
+      integrationFor('Solver', 'Solved'),
+      integrationFor('Bodies', 'bodyBorn'),
+      integrationFor('Problems', 'bodyAdded'),
+      integrationFor('Problems', 'bodyRemoved')
     ])
 
     const config = makeConfig({
       pg_url: '$DATABASE_URL',
-      sources: [source],
+      sources,
       integrations: integrations
     })
 

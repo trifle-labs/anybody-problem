@@ -3,6 +3,13 @@
   "pg_url": "$DATABASE_URL",
   "eth_sources": [
     {
+      "name": "sepolia",
+      "chain_id": 11155111,
+      "url": "https://rpc2.sepolia.org",
+      "batch_size": 1000,
+      "concurrency": 1
+    },
+    {
       "name": "garnet",
       "chain_id": 17069,
       "url": "https://rpc.garnetchain.com",
@@ -14,7 +21,10 @@
     {
       "enabled": true,
       "name": "problems_transfer",
-      "sources": [{ "name": "garnet", "start": "2067803" }],
+      "sources": [
+        { "name": "sepolia", "start": "5716600" },
+        { "name": "garnet", "start": "2067803" }
+      ],
       "table": {
         "name": "problems_transfer",
         "columns": [
@@ -29,7 +39,10 @@
           "name": "log_addr",
           "column": "log_addr",
           "filter_op": "contains",
-          "filter_arg": ["0x9D39e8bC0AB500D7d694c02298AE47Add0a783Cd"]
+          "filter_arg": [
+            "0xF010416e279545E32E9a127b434DE5A46996E3af",
+            "0x9D39e8bC0AB500D7d694c02298AE47Add0a783Cd"
+          ]
         }
       ],
       "event": {
@@ -57,7 +70,10 @@
     {
       "enabled": true,
       "name": "bodies_transfer",
-      "sources": [{ "name": "garnet", "start": "2067803" }],
+      "sources": [
+        { "name": "sepolia", "start": "5716600" },
+        { "name": "garnet", "start": "2067803" }
+      ],
       "table": {
         "name": "bodies_transfer",
         "columns": [
@@ -72,7 +88,10 @@
           "name": "log_addr",
           "column": "log_addr",
           "filter_op": "contains",
-          "filter_arg": ["0xD3fbb528CaC7Cf8B58203dA42127a5ff43a6AdB9"]
+          "filter_arg": [
+            "0x3Fa45962C5090b06394331467808751E77E9Ef57",
+            "0xD3fbb528CaC7Cf8B58203dA42127a5ff43a6AdB9"
+          ]
         }
       ],
       "event": {
@@ -100,7 +119,10 @@
     {
       "enabled": true,
       "name": "solver_solved",
-      "sources": [{ "name": "garnet", "start": "2067803" }],
+      "sources": [
+        { "name": "sepolia", "start": "5716600" },
+        { "name": "garnet", "start": "2067803" }
+      ],
       "table": {
         "name": "solver_solved",
         "columns": [
@@ -121,7 +143,10 @@
           "name": "log_addr",
           "column": "log_addr",
           "filter_op": "contains",
-          "filter_arg": ["0x77c1FD2029F86561D5eB40D89FEe3344841d9804"]
+          "filter_arg": [
+            "0xEdEC8B4f9AB038b2BD9c63388a77c48bF1e92D66",
+            "0x77c1FD2029F86561D5eB40D89FEe3344841d9804"
+          ]
         }
       ],
       "event": {
@@ -166,7 +191,10 @@
     {
       "enabled": true,
       "name": "bodies_body_born",
-      "sources": [{ "name": "garnet", "start": "2067803" }],
+      "sources": [
+        { "name": "sepolia", "start": "5716600" },
+        { "name": "garnet", "start": "2067803" }
+      ],
       "table": {
         "name": "bodies_body_born",
         "columns": [
@@ -183,7 +211,10 @@
           "name": "log_addr",
           "column": "log_addr",
           "filter_op": "contains",
-          "filter_arg": ["0xD3fbb528CaC7Cf8B58203dA42127a5ff43a6AdB9"]
+          "filter_arg": [
+            "0x3Fa45962C5090b06394331467808751E77E9Ef57",
+            "0xD3fbb528CaC7Cf8B58203dA42127a5ff43a6AdB9"
+          ]
         }
       ],
       "event": {
@@ -228,7 +259,10 @@
     {
       "enabled": true,
       "name": "problems_body_added",
-      "sources": [{ "name": "garnet", "start": "2067803" }],
+      "sources": [
+        { "name": "sepolia", "start": "5716600" },
+        { "name": "garnet", "start": "2067803" }
+      ],
       "table": {
         "name": "problems_body_added",
         "columns": [
@@ -248,7 +282,10 @@
           "name": "log_addr",
           "column": "log_addr",
           "filter_op": "contains",
-          "filter_arg": ["0x9D39e8bC0AB500D7d694c02298AE47Add0a783Cd"]
+          "filter_arg": [
+            "0xF010416e279545E32E9a127b434DE5A46996E3af",
+            "0x9D39e8bC0AB500D7d694c02298AE47Add0a783Cd"
+          ]
         }
       ],
       "event": {
@@ -301,7 +338,10 @@
     {
       "enabled": true,
       "name": "problems_body_removed",
-      "sources": [{ "name": "garnet", "start": "2067803" }],
+      "sources": [
+        { "name": "sepolia", "start": "5716600" },
+        { "name": "garnet", "start": "2067803" }
+      ],
       "table": {
         "name": "problems_body_removed",
         "columns": [
@@ -317,7 +357,10 @@
           "name": "log_addr",
           "column": "log_addr",
           "filter_op": "contains",
-          "filter_arg": ["0x9D39e8bC0AB500D7d694c02298AE47Add0a783Cd"]
+          "filter_arg": [
+            "0xF010416e279545E32E9a127b434DE5A46996E3af",
+            "0x9D39e8bC0AB500D7d694c02298AE47Add0a783Cd"
+          ]
         }
       ],
       "event": {

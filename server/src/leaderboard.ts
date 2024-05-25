@@ -1,3 +1,4 @@
+import { Chain } from '../shovel-config'
 import db from './db'
 
 type LeaderboardLine = {
@@ -44,7 +45,7 @@ function beginningOfTodayInUTCSeconds(): number {
   return Math.floor(startOfTodayUTC.getTime() / 1000)
 }
 
-async function calculateDailyLeaderboard(day: number) {
+async function calculateDailyLeaderboard(day: number, chain: Chain) {
   const result = await db.query(`
   WITH fastest_times AS (
     SELECT 
@@ -56,6 +57,7 @@ async function calculateDailyLeaderboard(day: number) {
     WHERE 
         level IN (1, 2, 3)
         AND day = ${day}
+        AND src_name = '${chain}'
     GROUP BY 
         problem_id, level
   ),
@@ -67,6 +69,7 @@ async function calculateDailyLeaderboard(day: number) {
           solver_solved
       WHERE 
           day = ${day}
+          AND src_name = '${chain}'
       GROUP BY 
           problem_id
       HAVING 
@@ -137,6 +140,7 @@ async function calculateDailyLeaderboard(day: number) {
       problems_transfer
     WHERE
       token_id IN (SELECT problem_id FROM leaderboard)
+      AND src_name = '${chain}'
   ),
   current_owners AS (
       SELECT
@@ -173,7 +177,8 @@ async function calculateDailyLeaderboard(day: number) {
 }
 
 async function calculateAllTimeLeaderboard(
-  today: number
+  today: number,
+  chain: Chain
 ): Promise<Leaderboard['allTime']> {
   const n = 10
   const result = await db.query(`
@@ -183,6 +188,8 @@ async function calculateAllTimeLeaderboard(
         COUNT(*) AS solve_count
     FROM 
         solver_solved
+    WHERE
+        src_name = '${chain}'
     GROUP BY 
         problem_id
     ORDER BY 
@@ -207,6 +214,7 @@ current_streaks AS (
                 solver_solved
             WHERE
                 day <= ${today}
+                AND src_name = '${chain}'
         ) AS subquery
         GROUP BY
             problem_id, streak
@@ -225,6 +233,8 @@ fastest_completed AS (
         SUM(ticks_in_this_match) AS total_time
     FROM 
         solver_solved
+    WHERE
+        src_name = '${chain}'
     GROUP BY 
         problem_id
     HAVING 
@@ -284,7 +294,7 @@ FROM
   }
 }
 
-export async function updateLeaderboard() {
+export async function updateLeaderboard(chain: Chain) {
   const start = Date.now()
 
   const seasonStart = 1716336000
@@ -298,7 +308,7 @@ export async function updateLeaderboard() {
 
   const dailies = await Promise.all(
     daysSoFar.map(async (day) => {
-      return calculateDailyLeaderboard(day)
+      return calculateDailyLeaderboard(day, chain)
     })
   )
 
@@ -311,8 +321,8 @@ export async function updateLeaderboard() {
   )
 
   // calculate all-time leaderboards
-  const allTime = await calculateAllTimeLeaderboard(today)
+  const allTime = await calculateAllTimeLeaderboard(today, chain)
   leaderboard.allTime = allTime
 
-  console.log('leaderboard updated in', Date.now() - start, 'ms')
+  console.log(chain, 'leaderboard updated in', Date.now() - start, 'ms')
 }

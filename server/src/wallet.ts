@@ -1,6 +1,7 @@
+import { Chain } from '../shovel-config'
 import db from './db'
 
-async function getOwnedBodies(address?: string) {
+async function getOwnedBodies(chain: Chain, address?: string) {
   if (!address) return []
 
   const problems = await db.query(
@@ -14,6 +15,7 @@ async function getOwnedBodies(address?: string) {
         problems_transfer
       WHERE
         "to" = decode($1, 'hex')
+        AND src_name = '${chain}'
   ),
   current_owners AS (
       SELECT
@@ -33,6 +35,7 @@ async function getOwnedBodies(address?: string) {
           'added' AS status
       FROM
       problems_body_added ba
+      WHERE src_name = '${chain}'
       UNION ALL
       SELECT
           br.problem_id,
@@ -43,6 +46,7 @@ async function getOwnedBodies(address?: string) {
           'removed' AS status
       FROM
       problems_body_removed br
+      WHERE src_name = '${chain}'
   ),
   body_final_status AS (
       SELECT
@@ -78,10 +82,10 @@ async function getOwnedBodies(address?: string) {
   return problems.rows
 }
 
-export async function wallet(address?: string) {
+export async function wallet(chain: Chain, address?: string) {
   if (!address) return {}
   const start = Date.now()
-  const bodies = await getOwnedBodies(address)
+  const bodies = await getOwnedBodies(chain, address)
   console.log('wallet', address, 'queried in', Date.now() - start, 'ms')
   return { bodies }
 }

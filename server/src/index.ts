@@ -4,7 +4,7 @@ import { SSEStreamingApi, streamSSE } from 'hono/streaming'
 import db from './db'
 import { wallet } from './wallet'
 import { leaderboard, updateLeaderboard } from './leaderboard'
-import { source } from '../shovel-config'
+import { Chain, sources } from '../shovel-config'
 import { publish, addSubscriber, unsubscribe } from './publish'
 import { cors } from 'hono/cors'
 
@@ -28,17 +28,24 @@ async function setupListener() {
   await db.connect()
   db.on('notification', async (msg) => {
     console.log('[DB notification]', msg)
-    await updateLeaderboard()
+    await Promise.all(
+      sources.map((source) => updateLeaderboard(source.name as Chain))
+    )
     await publish()
   })
-  db.query(`LISTEN "${source.name}-problems_transfer"`)
-  db.query(`LISTEN "${source.name}-problems_body_added"`)
-  db.query(`LISTEN "${source.name}-problems_body_removed"`)
-  db.query(`LISTEN "${source.name}-solver_solved"`)
-  db.query(`LISTEN "${source.name}-bodies_transfer"`)
+  for (const source of sources) {
+    db.query(`LISTEN "${source.name}-problems_transfer"`)
+    db.query(`LISTEN "${source.name}-problems_body_added"`)
+    db.query(`LISTEN "${source.name}-problems_body_removed"`)
+    db.query(`LISTEN "${source.name}-solver_solved"`)
+    db.query(`LISTEN "${source.name}-bodies_transfer"`)
+  }
 
-  await updateLeaderboard()
+  await Promise.all(
+    sources.map((source) => updateLeaderboard(source.name as Chain))
+  )
 }
+
 setupListener()
 
 // uncomment to test the connection
@@ -48,11 +55,11 @@ setupListener()
 // }, 3000)
 
 let id = 0
-async function* streamGenerator(address?: string) {
+async function* streamGenerator(chain: Chain, address?: string) {
   yield {
     data: JSON.stringify({
       leaderboard,
-      wallet: await wallet(address),
+      wallet: await wallet(chain, address),
       address
     }),
     event: 'message',
@@ -71,7 +78,7 @@ async function* streamGenerator(address?: string) {
     yield {
       data: JSON.stringify({
         leaderboard,
-        wallet: await wallet(address),
+        wallet: await wallet(chain, address),
         address
       }),
       event: 'message',
@@ -80,9 +87,9 @@ async function* streamGenerator(address?: string) {
   }
 }
 
-function streamHandler(address?: string) {
+function streamHandler(chain: Chain, address?: string) {
   return async (stream: SSEStreamingApi) => {
-    for await (const message of streamGenerator(address)) {
+    for await (const message of streamGenerator(chain, address)) {
       await stream.writeSSE(message)
     }
   }
@@ -102,18 +109,21 @@ app.use(
   })
 )
 
-app.post('/sse/:address', async (c) => {
+app.post('/sse/:chain/:address', async (c) => {
   const address = c.req.param('address')
-  return streamSSE(c, streamHandler(address))
+  const chain = c.req.param('chain') as Chain
+  return streamSSE(c, streamHandler(chain, address))
 })
 
-app.post('/sse', async (c) => {
-  return streamSSE(c, streamHandler())
+app.post('/sse/:chain', async (c) => {
+  const chain = c.req.param('chain') as Chain
+  return streamSSE(c, streamHandler(chain))
 })
 
-app.get('/wallet/:address', async (c) => {
+app.get('/wallet/:chain/:address', async (c) => {
   const address = c.req.param('address')
-  return c.json(await wallet(address))
+  const chain = c.req.param('chain') as Chain
+  return c.json(await wallet(chain, address))
 })
 
 app.get('/', serveStatic({ path: './src/demo.html' }))
