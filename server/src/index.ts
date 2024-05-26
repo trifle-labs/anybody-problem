@@ -100,7 +100,7 @@ app.use(
   '*',
   cors({
     origin: [
-      'http://localhost',
+      'http://localhost:5173',
       'https://anybody.trifle.life',
       'https://starfish-app-3vq2e.ondigitalocean.app'
     ],
