@@ -342,6 +342,11 @@ export class Anybody extends EventEmitter {
       timeTook,
       framesTook
     })
+    if (won) {
+      this.startingBodies++
+    } else {
+      this.startingBodies = 2
+    }
   }
 
   restart = (options, beginPaused = true) => {
