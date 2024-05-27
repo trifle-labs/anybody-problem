@@ -368,6 +368,7 @@ export class Anybody extends EventEmitter {
       this.doubleTextInverted(`¸♩·¯·♬¸¸♬·¯·♩¸¸♪¯`),
       `${stats.bodiesIncluded} bodies cleared`,
       `in ${stats.timeTook} sec 🐎`,
+      `with ${stats.missilesShot} missiles 🚀`,
       `👈👈 Save Your Game👈👈`
     ]
     const toShow = statLines.join('\n')
@@ -582,8 +583,8 @@ export class Anybody extends EventEmitter {
 
       // const j = i
       // const j = this.random(0, 2)
-      const j = Math.floor(this.random(1, 3))
-      const radius = j * 5 + startingRadius
+      const j = Math.floor(this.random(1, 4))
+      const radius = i == 0 ? 22 : j * 5 + startingRadius
       const maxStarLvl = this.random(3, 10, new Prando())
       const starLvl = this.random(0, maxStarLvl - 1, new Prando())
 
@@ -704,12 +705,12 @@ export class Anybody extends EventEmitter {
     ) {
       return
     }
-    if (this.missiles.length > 0 && !this.admin) {
-      // this is a hack to prevent multiple missiles from being fired
-      this.missiles = []
-      // remove latest missile from missileInits
-      this.missileInits.pop()
-    }
+    // if (this.missiles.length > 0 && !this.admin) {
+    //   // this is a hack to prevent multiple missiles from being fired
+    //   this.missiles = []
+    //   // remove latest missile from missileInits
+    //   this.missileInits.pop()
+    // }
 
     this.missileCount++
     const radius = 10
@@ -720,8 +721,14 @@ export class Anybody extends EventEmitter {
       velocity: this.p.createVector(x, y - this.windowWidth),
       radius
     }
-    b.velocity.limit(10)
+    // b.velocity.limit(10)
+    b.velocity.setMag(15)
     this.missiles.push(b)
+
+    const bodyCount = this.bodies.filter((b) => b.radius !== 0).length - 1
+    this.missiles = this.missiles.slice(0, bodyCount)
+    // this.missiles = this.missiles.slice(-bodyCount)
+
     this.sound?.playMissile()
     this.missileInits.push(...this.processMissileInits([b]))
   }
@@ -778,7 +785,13 @@ export class Anybody extends EventEmitter {
     const speedBoost = SPEED_BOOST[speedBoostIndex]
     let dust = /*bodiesIncluded **/ bodiesBoost * speedBoost
 
+    const missilesShot = this.missileInits.reduce(
+      (p, c) => (c[0] == 0 ? p : p + 1),
+      0
+    )
+
     return {
+      missilesShot,
       bodiesIncluded,
       bodiesBoost,
       speedBoost,

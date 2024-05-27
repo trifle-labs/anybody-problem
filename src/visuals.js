@@ -202,13 +202,16 @@ export const Visuals = {
     } else {
       this.justPaused = false
     }
-    if (this.frames - this.startingFrame + FPS >= this.timer) {
+    if (
+      this.frames - this.startingFrame + FPS >= this.timer ||
+      this.bodies[0].radius == 0
+    ) {
       this.handleGameOver({ won: false })
     }
     if (
       !this.won &&
       this.mode == 'game' &&
-      this.bodies.reduce((a, c) => a + c.radius, 0) == 0
+      this.bodies.slice(1).reduce((a, c) => a + c.radius, 0) == 0
     ) {
       this.handleGameOver({ won: true })
     }
@@ -597,7 +600,7 @@ export const Visuals = {
 
     // draw a white box behind the stats, with border radius
     p.fill('white')
-    p.rect(this.windowWidth / 2 - 320, 350, 640, 300, 20, 20, 20, 20)
+    p.rect(this.windowWidth / 2 - 320, 340, 640, 350, 20, 20, 20, 20)
 
     // draw stats
     p.textSize(48)
@@ -618,13 +621,13 @@ export const Visuals = {
       const xLeft = this.windowWidth / 2 - 300
       const xRight = this.windowWidth / 2 + 300
       const y = 374 + leading * i
-      if (i === 3) {
-        p.stroke('black')
-        p.strokeWeight(4)
-        p.line(xLeft, y, xRight, y)
-        p.noStroke()
-        barPadding = 20
-      }
+      // if (i === 3) {
+      //   p.stroke('black')
+      //   p.strokeWeight(4)
+      //   p.line(xLeft, y, xRight, y)
+      //   p.noStroke()
+      //   barPadding = 20
+      // }
       for (const [j, stat] of line.split(':').entries()) {
         if (j === 0) {
           p.textAlign(p.LEFT, p.TOP)
@@ -641,7 +644,7 @@ export const Visuals = {
       this.drawButton({
         text: 'retry',
         x: this.windowWidth / 2 - 140,
-        y: this.windowHeight / 2 + 205,
+        y: this.windowHeight / 2 + 225,
         height: 90,
         width: 280,
         onClick: () => this.restart(null, false)
@@ -1186,9 +1189,11 @@ export const Visuals = {
   drawBodyStyle1(radius, body, offset) {
     this.bodiesGraphic.noStroke()
 
-    const c =
+    let c =
       body.radius !== 0 ? body.c : this.replaceOpacity(body.c, this.deadOpacity)
-
+    if (body.bodyIndex == 0) {
+      c = 'white'
+    }
     this.bodiesGraphic.fill(c)
     this.bodiesGraphic.ellipse(0, offset, radius, radius)
     if (this.globalStyle == 'psycho' && this.target == 'inside') {
@@ -1596,11 +1601,22 @@ export const Visuals = {
   },
 
   drawTails() {
+    if (this.allCopiesOfBodies && this.allCopiesOfBodies.length > 0) {
+      const allCopiesOfBodies =
+        this.allCopiesOfBodies[this.allCopiesOfBodies.length - 1]
+      const body = allCopiesOfBodies[0]
+      if (body.bodyIndex == 0) {
+        this.p.noFill()
+        this.p.stroke('white')
+        this.p.strokeWeight(10)
+        this.p.ellipse(body.position.x, body.position.y, body.radius * 10)
+      }
+    }
     for (let i = 0; i < this.allCopiesOfBodies.length; i++) {
       const copyOfBodies = this.allCopiesOfBodies[i]
-
       for (let j = 0; j < copyOfBodies.length; j++) {
         const body = copyOfBodies[j]
+        if (body.bodyIndex == 0) continue
         if (this.gameOver || this.won) {
           if (
             this.witheringBodies.filter((b) => b.bodyIndex == body.bodyIndex)
@@ -1609,7 +1625,7 @@ export const Visuals = {
             continue
         }
         if (body.radius == 0) continue
-        const c =
+        let c =
           body.radius !== 0
             ? this.replaceOpacity(body.c, this.deadOpacity)
             : this.replaceOpacity(body.c, this.deadOpacity)
@@ -1699,7 +1715,6 @@ export const Visuals = {
     const r = b.radius * 4
     if (r == 0) return
     let c = this.brighten(b.c).replace(this.opac, 1)
-
     if (this.target == 'outside') {
       p.fill(c)
       p.ellipse(x, y, r)
@@ -1707,6 +1722,9 @@ export const Visuals = {
       p.image(star, x - r / 2, y - r / 2, r, r)
     } else {
       let darker = this.brighten(b.c, -30).replace(this.opac, 1)
+      if (b.bodyIndex == 0) {
+        darker = 'black'
+      }
       p.fill(darker)
       p.ellipse(x, y, r)
       if (closeEnough) {

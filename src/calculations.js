@@ -409,46 +409,48 @@ export const Calculations = {
     if (missiles.length == 0) {
       return { bodies, missiles }
     }
-    const missile = missiles[0]
-    missile.position.x += missile.velocity.x
-    missile.position.y += missile.velocity.y
+    for (let i = 0; i < missiles.length; i++) {
+      const missile = missiles[i]
+      missile.position.x += missile.velocity.x
+      missile.position.y += missile.velocity.y
 
-    if (
-      missile.position.x > BigInt(this.windowWidth) * this.scalingFactor ||
-      missile.position.y < 0n
-    ) {
-      missile.radius = 0n
-    }
-
-    for (let j = 0; j < bodies.length; j++) {
-      const body = bodies[j]
-      const distance = _approxDist(
-        missile.position.x,
-        missile.position.y,
-        body.position.x,
-        body.position.y
-      )
-      // NOTE: this is to match the circuit. If the missile is gone, set minDist to 0
-      // Need to make sure comparison of distance is < and not <= for this to work
-      // because they may by chance be at the exact same coordinates and should still
-      // not trigger an _explosion since the missile is already gone.
-      const minDist = missile.radius == 0n ? 0n : body.radius * 2n
-      if (distance < minDist) {
+      if (
+        missile.position.x > BigInt(this.windowWidth) * this.scalingFactor ||
+        missile.position.y < 0n
+      ) {
         missile.radius = 0n
-        const x = this.convertScaledBigIntToFloat(body.position.x)
-        const y = this.convertScaledBigIntToFloat(body.position.y)
-        this.explosions.push(
-          _explosion(x, y, this.convertScaledBigIntToFloat(body.radius))
-        )
-        this.sound?.playExplosion(x, y)
-
-        body.starLvl += 1
-
-        bodies[j].radius = 0n
       }
-    }
 
-    missiles[0] = missile
+      for (let j = 0; j < bodies.length; j++) {
+        const body = bodies[j]
+        const distance = _approxDist(
+          missile.position.x,
+          missile.position.y,
+          body.position.x,
+          body.position.y
+        )
+        // NOTE: this is to match the circuit. If the missile is gone, set minDist to 0
+        // Need to make sure comparison of distance is < and not <= for this to work
+        // because they may by chance be at the exact same coordinates and should still
+        // not trigger an _explosion since the missile is already gone.
+        const minDist = missile.radius == 0n ? 0n : body.radius * 2n
+        if (distance < minDist) {
+          missile.radius = 0n
+          const x = this.convertScaledBigIntToFloat(body.position.x)
+          const y = this.convertScaledBigIntToFloat(body.position.y)
+          this.explosions.push(
+            _explosion(x, y, this.convertScaledBigIntToFloat(body.radius))
+          )
+          this.sound?.playExplosion(x, y)
+
+          body.starLvl += 1
+
+          bodies[j].radius = 0n
+        }
+      }
+
+      missiles[i] = missile
+    }
     return { bodies, missiles }
   }
 }
