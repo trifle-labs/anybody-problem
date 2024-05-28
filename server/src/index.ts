@@ -23,6 +23,7 @@ import { cors } from 'hono/cors'
 // - Only publish SSE when change effects leaderboard or user's wallet
 // - Cache aggregated state and incrementally update with each DB notification
 // - Materialized view for leaderboard to scale horizontally
+// - Do not calculate wallets, pass the events to the client and let the client calculate the wallets
 
 async function setupListener() {
   await db.connect()

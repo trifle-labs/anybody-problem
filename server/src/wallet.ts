@@ -25,7 +25,7 @@ async function getOwnedBodies(chain: Chain, address?: string) {
       WHERE
           rn = 1
   ),
-  latest_body_status AS (
+  body_add_remove_events AS (
       SELECT
           ba.problem_id,
           ba.body_id,
@@ -55,7 +55,7 @@ async function getOwnedBodies(chain: Chain, address?: string) {
           status,
           ROW_NUMBER() OVER (PARTITION BY problem_id, body_id ORDER BY block_num DESC, tx_idx DESC, log_idx DESC) AS rn
       FROM
-          latest_body_status
+          body_add_remove_events
   )
   SELECT
       ba.problem_id,
