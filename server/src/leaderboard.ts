@@ -28,6 +28,8 @@ type Leaderboard = {
   }
 }
 
+const MAX_BODIES = 3
+
 export const leaderboard: Leaderboard = {
   daily: {},
   allTime: {
@@ -71,7 +73,7 @@ async function calculateDailyLeaderboard(day: number, chain: Chain) {
       GROUP BY 
           problem_id
       HAVING 
-          COUNT(level) = 3
+          COUNT(level) = ${MAX_BODIES}
   ),
   ranked_fastest_times AS (
       SELECT 
@@ -236,7 +238,7 @@ fastest_completed AS (
     GROUP BY 
         problem_id
     HAVING 
-        COUNT(level) = 3
+        COUNT(level) = ${MAX_BODIES}
     ORDER BY 
         total_time ASC
     LIMIT ${n}
