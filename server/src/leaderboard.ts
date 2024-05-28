@@ -29,6 +29,7 @@ type Leaderboard = {
 }
 
 const MAX_BODIES = 3
+const DAILY_CATEGORY_LIMIT = 3
 
 export const leaderboard: Leaderboard = {
   daily: {},
@@ -100,7 +101,7 @@ async function calculateDailyLeaderboard(day: number, chain: Chain) {
     FROM 
         ranked_fastest_times
     WHERE 
-        level = 1 AND rank <= 3
+        level = 1 AND rank <= ${DAILY_CATEGORY_LIMIT}
     UNION ALL
     SELECT 
         'Level 2' AS category,
@@ -109,7 +110,7 @@ async function calculateDailyLeaderboard(day: number, chain: Chain) {
     FROM 
         ranked_fastest_times
     WHERE 
-        level = 2 AND rank <= 3
+        level = 2 AND rank <= ${DAILY_CATEGORY_LIMIT}
     UNION ALL
     SELECT 
         'Level 3' AS category,
@@ -118,7 +119,7 @@ async function calculateDailyLeaderboard(day: number, chain: Chain) {
     FROM 
         ranked_fastest_times
     WHERE 
-        level = 3 AND rank <= 3
+        level = 3 AND rank <= ${DAILY_CATEGORY_LIMIT}
     UNION ALL
     SELECT 
         'Cumulative' AS category,
@@ -127,7 +128,7 @@ async function calculateDailyLeaderboard(day: number, chain: Chain) {
     FROM 
         ranked_cumulative_times
     WHERE 
-        rank <= 3
+        rank <= ${DAILY_CATEGORY_LIMIT}
     ORDER BY 
         category, time
   ),
