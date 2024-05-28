@@ -1,2 +1,4 @@
 shovel
-
+node_modules
+*.js
+*.log

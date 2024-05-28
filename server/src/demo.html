@@ -1,0 +1,33 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>SSE Example</title>
+  </head>
+
+  <body>
+    <h1>Problems leaderboard + my problems</h1>
+    <pre id="sse-data"></pre>
+
+    <script type="module">
+      const sseData = document.getElementById('sse-data')
+
+      const response = await fetch(
+        '/sse/sepolia/0xfa398d672936dcf428116f687244034961545d91',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/event-stream' }
+        }
+      )
+      const reader = response.body
+        .pipeThrough(new TextDecoderStream())
+        .getReader()
+      while (true) {
+        const { value, done } = await reader.read()
+        if (done) break
+        sseData.innerHTML += value + '<br><br><br>'
+        window.scrollTo(0, document.body.scrollHeight)
+      }
+    </script>
+  </body>
+</html>
