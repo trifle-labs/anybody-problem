@@ -311,6 +311,9 @@ export class Anybody extends EventEmitter {
       !e.metaKey
     ) {
       // confirm('Are you sure you want to restart?') && this.restart()
+      if (!this.gameOver) {
+        this.startingBodies = 2
+      }
       this.restart()
     }
   }
@@ -320,21 +323,19 @@ export class Anybody extends EventEmitter {
     this.handledGameOver = true
 
     this.witherAllBodies()
-    this.sound?.playGameOver({ won })
+    // this.sound?.playGameOver({ won })
     this.gameOver = true
     this.won = won
     var dust = 0
     var timeTook = 0
     var framesTook = 0
-    if (this.won) {
-      const stats = this.calculateStats()
-      dust = stats.dust
-      timeTook = stats.timeTook
-      framesTook = stats.framesTook
-      void this.setStatsText(stats)
-    } else {
-      void this.setShowPlayAgain()
-    }
+
+    const stats = this.calculateStats()
+    dust = stats.dust
+    timeTook = stats.timeTook
+    framesTook = stats.framesTook
+    void this.setStatsText(stats)
+    void this.setShowPlayAgain()
     this.emit('gameOver', {
       won,
       ticks: this.frames - this.startingFrame,
@@ -354,7 +355,7 @@ export class Anybody extends EventEmitter {
       this.setOptions(options)
     }
     this.clearValues()
-    this.sound?.stop()
+    // this.sound?.stop()
     this.sound?.playStart()
     this.init()
     this.draw()
@@ -371,23 +372,23 @@ export class Anybody extends EventEmitter {
     const statLines = [
       // `total bodies: ${stats.bodiesIncluded}`,
       this.doubleTextInverted(`¸♩·¯·♬¸¸♬·¯·♩¸¸♪¯`),
-      `${stats.bodiesIncluded} bodies cleared`,
+      `${stats.bodiesIncluded - 1} bodies cleared`,
       `in ${stats.timeTook} sec 🐎`,
       `with ${stats.missilesShot} missiles 🚀`,
       `👈👈 Save Your Game👈👈`
     ]
     const toShow = statLines.join('\n')
-
-    for (let i = 0; i < toShow.length; i++) {
-      await new Promise((resolve) => setTimeout(resolve, 50))
-      this.statsText = toShow.slice(0, i + 1)
-      this.sound?.playStat()
-      // play a sound on new line
-      if (toShow[i] == '\n') {
-        await new Promise((resolve) => setTimeout(resolve, 800))
-        this.sound?.playStat()
-      }
-    }
+    this.statsText = toShow
+    // for (let i = 0; i < toShow.length; i++) {
+    //   await new Promise((resolve) => setTimeout(resolve, 50))
+    //   this.statsText = toShow.slice(0, i + 1)
+    //   this.sound?.playStat()
+    //   // play a sound on new line
+    //   if (toShow[i] == '\n') {
+    //     await new Promise((resolve) => setTimeout(resolve, 800))
+    //     this.sound?.playStat()
+    //   }
+    // }
 
     await this.setShowPlayAgain(1000)
     this.sound?.playSuccess()
@@ -730,9 +731,10 @@ export class Anybody extends EventEmitter {
     b.velocity.setMag(15)
     this.missiles.push(b)
 
-    const bodyCount = this.bodies.filter((b) => b.radius !== 0).length - 1
-    this.missiles = this.missiles.slice(0, bodyCount)
+    // const bodyCount = this.bodies.filter((b) => b.radius !== 0).length - 1
+    // this.missiles = this.missiles.slice(0, bodyCount)
     // this.missiles = this.missiles.slice(-bodyCount)
+    this.missiles = this.missiles.slice(-1)
 
     this.sound?.playMissile()
     this.missileInits.push(...this.processMissileInits([b]))
