@@ -37,12 +37,10 @@ export const leaderboard: Leaderboard = {
   }
 }
 
-function beginningOfTodayInUTCSeconds(): number {
-  const now = new Date()
-  const startOfTodayUTC = new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
-  )
-  return Math.floor(startOfTodayUTC.getTime() / 1000)
+function currentDayInUnixTime() {
+  const date = new Date()
+  date.setUTCHours(0, 0, 0, 0)
+  return date.getTime() / 1000
 }
 
 async function calculateDailyLeaderboard(day: number, chain: Chain) {
@@ -300,7 +298,7 @@ export async function updateLeaderboard(chain: Chain) {
   const seasonStart = 1716336000
 
   // calculate daily leaderboards
-  const today = beginningOfTodayInUTCSeconds()
+  const today = currentDayInUnixTime()
   const daysSoFar: number[] = []
   for (let i = seasonStart; i < today; i += 86400) {
     daysSoFar.push(i)
