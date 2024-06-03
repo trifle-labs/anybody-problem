@@ -12,6 +12,7 @@ template StepState(totalBodies, steps) {
   signal input bodies[totalBodies][5];
   signal input missiles[steps + 1][3]; // just vx, vy, radius (which is 0 or 1 essentially)
   signal input inflightMissile[5];
+  signal output outflightMissile[5];
 
   // ensure that inflight missile is same as first missile.
   // if inflight missile is not 0, then first missile is allowed to start at a non-corner position.
@@ -164,4 +165,5 @@ template StepState(totalBodies, steps) {
   }
   time <== steps - time_tmp;
   out_bodies <== tmp_body;
+  outflightMissile <== tmp_missile;
 }
