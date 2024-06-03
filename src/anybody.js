@@ -2,7 +2,7 @@ import Prando from 'prando'
 
 import EventEmitter from 'events'
 import Sound from './sound.js'
-import { Visuals, FPS } from './visuals.js'
+import { Visuals } from './visuals.js'
 import { _validateSeed, Calculations } from './calculations.js'
 
 const GAME_LENGTH = 60 // seconds
@@ -64,7 +64,6 @@ export class Anybody extends EventEmitter {
       util: false,
       paused: true,
       globalStyle: 'default', // 'default', 'psycho'
-      timer: GAME_LENGTH * FPS,
       aimHelper: false,
       target: 'inside', // 'outside' or 'inside'
       showLevels: false, // true or false
@@ -80,11 +79,13 @@ export class Anybody extends EventEmitter {
 
   // run whenever the class should be reset
   clearValues() {
-    this.speedFactor = 3
+    this.speedFactor = 2
     this.initialScoreSize = 60
     this.scoreSize = this.initialScoreSize
     this.opac = this.globalStyle == 'psycho' ? 1 : 0.1
     this.tailLength = 60
+    this.FPS = 50 / this.speedFactor
+    this.timer = GAME_LENGTH * this.FPS
     this.tailMod = this.globalStyle == 'psycho' ? 2 : 1
     this.explosions = []
     this.missiles = []
@@ -620,7 +621,7 @@ export class Anybody extends EventEmitter {
   }
 
   prepareP5() {
-    this.p.frameRate(FPS)
+    this.p.frameRate(this.FPS)
     this.p.createCanvas(this.windowWidth, this.windowWidth)
     this.p.background('white')
   }
@@ -703,9 +704,9 @@ export class Anybody extends EventEmitter {
     const bodiesIncluded = this.bodies.length
     const bodiesBoost = BODY_BOOST[bodiesIncluded]
     const { startingFrame, timer, frames } = this
-    const secondsLeft = (startingFrame + timer - frames) / FPS
+    const secondsLeft = (startingFrame + timer - frames) / this.FPS
     const framesTook = frames - startingFrame
-    const timeTook = framesTook / FPS
+    const timeTook = framesTook / this.FPS
     const speedBoostIndex = Math.floor(secondsLeft / 10)
     const speedBoost = SPEED_BOOST[speedBoostIndex]
     let dust = /*bodiesIncluded **/ bodiesBoost * speedBoost
