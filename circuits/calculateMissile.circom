@@ -38,7 +38,7 @@ template CalculateMissile() {
   var windowWidthScaled = windowWidth * scalingFactor; // maxBits: 20 (maxNum: 1_000_000)
 
   // TODO: confirm the max vector of missiles (may change frequently)
-  var maxVector = 10; // maxBits: 4
+  var maxVector = 20; // maxBits: 4
   var maxVectorScaled = maxVector * scalingFactor; // maxBits: 14 (maxNum: 10_000)
   // log("maxVectorScaled", maxVectorScaled);
 

@@ -2,7 +2,7 @@ import Prando from 'prando'
 
 import EventEmitter from 'events'
 import Sound from './sound.js'
-import { Visuals, FPS } from './visuals.js'
+import { Visuals } from './visuals.js'
 import { _validateSeed, Calculations } from './calculations.js'
 // import wc from './witness_calculator.js'
 
@@ -66,7 +66,6 @@ export class Anybody extends EventEmitter {
       util: false,
       paused: true,
       globalStyle: 'default', // 'default', 'psycho'
-      timer: GAME_LENGTH * FPS,
       aimHelper: false,
       target: 'inside', // 'outside' or 'inside'
       showLevels: false, // true or false
@@ -82,6 +81,9 @@ export class Anybody extends EventEmitter {
 
   // run whenever the class should be reset
   clearValues() {
+    this.speedFactor = 2
+    this.FPS = 50 / this.speedFactor
+    this.timer = GAME_LENGTH * this.FPS
     this.deadOpacity = '0.9'
     this.initialScoreSize = 60
     this.scoreSize = this.initialScoreSize
@@ -693,7 +695,7 @@ export class Anybody extends EventEmitter {
   }
 
   prepareP5() {
-    this.p.frameRate(FPS)
+    this.p.frameRate(this.FPS)
     this.p.createCanvas(this.windowWidth, this.windowWidth)
     this.p.background('white')
   }
@@ -726,7 +728,7 @@ export class Anybody extends EventEmitter {
       radius
     }
     // b.velocity.limit(10)
-    b.velocity.setMag(15)
+    b.velocity.setMag(10 * this.speedFactor)
     this.missiles.push(b)
 
     // const bodyCount = this.bodies.filter((b) => b.radius !== 0).length - 1
@@ -783,9 +785,9 @@ export class Anybody extends EventEmitter {
     const bodiesIncluded = this.bodies.length
     const bodiesBoost = BODY_BOOST[bodiesIncluded]
     const { startingFrame, timer, frames } = this
-    const secondsLeft = (startingFrame + timer - frames) / FPS
+    const secondsLeft = (startingFrame + timer - frames) / this.FPS
     const framesTook = frames - startingFrame
-    const timeTook = framesTook / FPS
+    const timeTook = framesTook / this.FPS
     const speedBoostIndex = Math.floor(secondsLeft / 10)
     const speedBoost = SPEED_BOOST[speedBoostIndex]
     let dust = /*bodiesIncluded **/ bodiesBoost * speedBoost
