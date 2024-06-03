@@ -11,7 +11,8 @@ import { Anybody } from '../src/anybody.js'
 // const p = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
 const steps = 20
 
-describe('nft circuit', () => {
+// Doesn't make sense to use while stepState returns a time parameter
+describe.skip('nft circuit', () => {
   let circuit
   // NOTE: velocities are offset by 10_000 to avoid negative numbers
   const sampleInput = {

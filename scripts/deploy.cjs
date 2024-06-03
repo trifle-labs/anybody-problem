@@ -69,7 +69,8 @@ async function main() {
   const [deployer] = await hre.ethers.getSigners()
   console.log({ deployer: deployer.address })
   console.log('Deploy to chain:')
-  console.log(await hre.ethers.provider.getNetwork())
+  const networkInfo = await hre.ethers.provider.getNetwork()
+  console.log({ networkInfo })
   const { deployContracts, verifyContracts } = await import('./utils.js')
 
   const deployedContracts = await deployContracts()

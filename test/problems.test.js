@@ -2,26 +2,25 @@ import { expect } from 'chai'
 import hre from 'hardhat'
 const ethers = hre.ethers
 // const { describe, it } = require('mocha')
-
+// import { Anybody } from '../src/anybody.js'
 import {
   getTicksRun,
   deployContracts,
   correctPrice,
-  /*splitterAddress,*/ getParsedEventLogs,
-  prepareMintBody,
   mintProblem
 } from '../scripts/utils.js'
 let tx
 describe('Problem Tests', function () {
   this.timeout(50000000)
 
-  it('has the correct verifiers problemMetadata, bodies, dust, solver addresses', async () => {
+  it('has the correct verifiers problemMetadata, bodies, solver addresses', async () => {
     const deployedContracts = await deployContracts()
 
     const { Problems: problems } = deployedContracts
     for (const [name, contract] of Object.entries(deployedContracts)) {
       if (name === 'Problems') continue
       if (name === 'Dust') continue
+      if (name === 'BodyMetadata') continue
       let storedAddress
       if (name.indexOf('Verifier') > -1) {
         const bodyCount = name.split('_')[1]
@@ -30,7 +29,7 @@ describe('Problem Tests', function () {
           await getTicksRun(bodyCount)
         )
       } else {
-        const functionName = name.toLowerCase()
+        const functionName = name.charAt(0).toLowerCase() + name.slice(1)
         storedAddress = await problems[`${functionName}()`]()
       }
       const actualAddress = contract.address
@@ -149,8 +148,6 @@ describe('Problem Tests', function () {
       vx: 13,
       vy: 14,
       radius: 15,
-      starLvl: 0,
-      maxStarLvl: 100,
       seed: '0x' + (666).toString(16).padStart(64, '0')
     }
     await expect(
@@ -166,8 +163,6 @@ describe('Problem Tests', function () {
     expect(bodyData.py).to.equal(newBodyData.py)
     expect(bodyData.vx).to.equal(newBodyData.vx)
     expect(bodyData.vy).to.equal(newBodyData.vy)
-    expect(bodyData.starLvl).to.equal(newBodyData.starLvl)
-    expect(bodyData.maxStarLvl).to.equal(newBodyData.maxStarLvl)
     expect(bodyData.radius).to.equal(newBodyData.radius)
     expect(bodyData.seed).to.equal(newBodyData.seed)
   })
@@ -414,19 +409,6 @@ describe('Problem Tests', function () {
     }
   })
 
-  it('returns starData correctly', async () => {
-    const signers = await ethers.getSigners()
-    const deployedContracts = await deployContracts()
-    const { Problems: problems } = deployedContracts
-    const { problemId } = await mintProblem(signers, deployedContracts)
-    await problems.updateSolverAddress(signers[0].address)
-    for (let i = 0; i < 4; i++) {
-      await problems.levelUp(problemId)
-    }
-    const starData = await problems.getProblemStarData(problemId)
-    expect(starData.length).to.equal(3)
-  })
-
   it('mints bodies that contain valid values', async () => {
     const { Problems: problems } = await deployContracts()
     await problems.updatePaused(false)
@@ -434,10 +416,24 @@ describe('Problem Tests', function () {
     await problems['mint()']({ value: correctPrice })
     const problemId = await problems.problemSupply()
     const problem = await problems.problems(problemId)
-    const { seed, bodyCount, tickCount, mintedBodiesIndex } = problem
+    const { solved, seed, day, bodyCount, tickCount, mintedBodiesIndex } =
+      problem
+    expect(solved).to.be.false
+    const currentDay = await problems.currentDay()
+    expect(day).to.equal(currentDay)
+
+    function currentDayInUnixTime() {
+      const date = new Date()
+      date.setUTCHours(0, 0, 0, 0)
+      return date.getTime() / 1000
+    }
+
+    const jsCurrentDay = currentDayInUnixTime()
+    expect(day).to.equal(jsCurrentDay)
+
     expect(parseInt(seed, 16)).to.not.equal(0)
-    expect(bodyCount).to.equal(3)
-    expect(mintedBodiesIndex).to.equal(3)
+    expect(bodyCount).to.equal(1)
+    expect(mintedBodiesIndex).to.equal(1)
     expect(tickCount).to.equal(0)
 
     const scalingFactor = await problems.scalingFactor()
@@ -449,7 +445,24 @@ describe('Problem Tests', function () {
 
     const bodyIDs = await problems.getProblemBodyIds(problemId)
 
-    const initialVelocity = maxVector.mul(scalingFactor)
+    // // batch fetch
+    // const fetches = await Promise.all([
+    //   problems.problems(problemId),
+    //   problems.getProblemBodyIds(problemId)
+    // ])
+    // const bodyIds = fetches[1]
+    // // batch fetch bodys' data
+    // const bodyData = await Promise.all(
+    //   bodyIds
+    //     .slice(0, bodyCount)
+    //     .map((id) => problems.getProblemBodyData(problemId, id))
+    // )
+    // const anybody = new Anybody(null, {
+    //   util: true,
+    //   bodyData
+    // })
+
+    const maxVectorScaled = maxVector.mul(scalingFactor)
     for (let i = 0; i < bodyCount; i++) {
       const currentBodyId = bodyIDs[i]
       const bodyData = await problems.getProblemBodyData(
@@ -469,8 +482,8 @@ describe('Problem Tests', function () {
 
       expect(px).to.not.equal(py)
 
-      expect(vx).to.equal(initialVelocity)
-      expect(vy).to.equal(initialVelocity)
+      expect(vx.lte(maxVectorScaled.mul(2))).to.be.true
+      expect(vy.lte(maxVectorScaled.mul(2))).to.be.true
 
       expect(radius).to.not.equal(0)
       expect(radius.lte(maxRadius.mul(scalingFactor))).to.be.true
@@ -482,72 +495,26 @@ describe('Problem Tests', function () {
   it('runs level up correctly', async () => {
     const signers = await ethers.getSigners()
     const deployedContracts = await deployContracts()
-    const { Problems: problems } = deployedContracts
+    const { Problems: problems, Bodies: bodies } = deployedContracts
     const { problemId } = await mintProblem(signers, deployedContracts)
+    const maxBodies = await problems.MAX_BODY_COUNT()
+
     // set solver to be owner
     const [owner] = signers
     await problems.updateSolverAddress(owner.address)
-    await problems.levelUp(problemId)
-    await problems.levelUp(problemId)
-    await problems.levelUp(problemId)
-    await problems.levelUp(problemId)
-
-    const { bodyCount } = await problems.problems(problemId)
-    expect(bodyCount).to.equal(0)
-  })
-
-  it('mints a body via mintBodyToProblem', async () => {
-    const signers = await ethers.getSigners()
-    // const [, acct1] = signers
-    const deployedContracts = await deployContracts()
-    const { Bodies: bodies, Problems: problems } = deployedContracts
-    const { problemId } = await mintProblem(signers, deployedContracts)
-
-    const scalingFactor = await problems.scalingFactor()
-    const maxVector = await problems.maxVector()
-    const startingRadius = await problems.startingRadius()
-    const maxRadius = ethers.BigNumber.from(3 * 5).add(startingRadius)
-
-    const windowWidth = await problems.windowWidth()
-    const initialVelocity = maxVector.mul(scalingFactor)
-
-    const bodyIds = await problems.getProblemBodyIds(problemId)
-    const { bodyCount } = await problems.problems(problemId)
-    await prepareMintBody(signers, deployedContracts, problemId)
-    const tx = await problems.mintBodyToProblem(problemId)
-    const receipt = await tx.wait()
-    const newBodyId = getParsedEventLogs(receipt, bodies, 'Transfer')[0].args
-      .tokenId
-    const { bodyCount: newBodyCount } = await problems.problems(problemId)
-    expect(newBodyCount).to.equal(bodyCount.add(1))
-
-    const newBodyIds = await problems.getProblemBodyIds(problemId)
-    for (let i = 0; i < newBodyCount; i++) {
-      const newBodyId = newBodyIds[i]
-      const oldBodyId = i >= bodyCount ? newBodyId : bodyIds[i]
-      expect(newBodyId).to.equal(oldBodyId)
+    for (let i = 0; i < maxBodies.sub(1).toNumber(); i++) {
+      await problems.levelUp(problemId, 100)
     }
 
-    const bodyData = await problems.getProblemBodyData(problemId, newBodyId)
-    const { bodyId, bodyIndex, px, py, vx, vy, radius, seed } = bodyData
+    const { bodyCount } = await problems.problems(problemId)
+    expect(bodyCount).to.equal(maxBodies)
 
-    expect(bodyId).to.equal(newBodyId)
-    expect(bodyIndex).to.equal(newBodyCount.sub(1))
+    await problems.levelUp(problemId, 100)
 
-    expect(px).to.not.equal(0)
-    expect(px.lt(windowWidth)).to.be.true
+    const bodyBalance = await bodies.balanceOf(owner.address)
+    expect(bodyBalance).to.equal(maxBodies)
 
-    expect(py).to.not.equal(0)
-    expect(py.lt(windowWidth)).to.be.true
-
-    expect(px).to.not.equal(py)
-
-    expect(vx).to.equal(initialVelocity)
-    expect(vy).to.equal(initialVelocity)
-
-    expect(radius).to.not.equal(0)
-    expect(radius.lte(maxRadius.mul(scalingFactor))).to.be.true
-
-    expect(seed).to.not.equal(0)
+    const { solved } = await problems.problems(problemId)
+    expect(solved).to.be.true
   })
 })

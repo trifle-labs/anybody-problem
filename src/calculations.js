@@ -9,6 +9,85 @@ export const Calculations = {
     return bodies
   },
 
+  // async circomStep(bodies, missiles) {
+  //   // console.log('incoming', { bodies, missiles })
+  //   // this.witnessCalculator = false
+
+  //   // const vectorLimitScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
+
+  //   if (this.witnessCalculator) {
+  //     bodies = this.convertBodiesToBigInts(bodies)
+  //     missiles = this.convertBodiesToBigInts(missiles)
+  //     // console.log({ bodies, missiles })
+  //     const witnessBodies = bodies.map((b) => {
+  //       b = this.convertScaledBigIntBodyToArray(b)
+  //       b[2] = BigInt(b[2]).toString()
+  //       b[3] = BigInt(b[3]).toString()
+  //       return b
+  //     })
+  //     const empty = ['0', '0', '0', '0', '0']
+  //     const witnessMissiles = missiles.map((b) => {
+  //       b = this.convertScaledBigIntBodyToArray(b)
+  //       b[2] = BigInt(b[2]).toString()
+  //       b[3] = BigInt(b[3]).toString()
+  //       return b
+  //     })
+  //     const startingMissileLength = witnessMissiles.length
+  //     for (let i = 0; i < 2 - startingMissileLength; i++) {
+  //       witnessMissiles.push(empty)
+  //     }
+  //     const startingLength = witnessBodies.length
+  //     if (witnessBodies.length < 10) {
+  //       for (let i = 0; i < 10 - startingLength; i++) {
+  //         witnessBodies.push(empty)
+  //       }
+  //     }
+
+  //     // console.log({
+  //     // witnessBodies,
+  //     // witnessMissiles: JSON.parse(JSON.stringify(witnessMissiles))
+  //     // })
+  //     const results = await this.witnessCalculator.calculateWitness(
+  //       { bodies: witnessBodies, missiles: witnessMissiles },
+  //       0
+  //     )
+  //     // console.log({ results })
+
+  //     witnessMissiles[0][0] = results[results.length - 3].toString()
+  //     witnessMissiles[0][1] = results[results.length - 4].toString()
+  //     // console.log({ witnessMissilesUpdated: witnessMissiles })
+  //     const convertedMissile = this.convertScaledStringArrayToBody(
+  //       witnessMissiles[0]
+  //     )
+  //     // console.log({ convertedMissile })
+
+  //     // console.log({ missilesConvertedBackToBodies: missiles })
+  //     if (missiles.length > 0) {
+  //       missiles[0].position.x = convertedMissile.position.x
+  //       missiles[0].position.y = convertedMissile.position.y
+  //       missiles[0].radius = convertedMissile.radius
+  //       missiles = this.convertBigIntsToBodies(missiles)
+  //     }
+
+  //     // console.log({ results, missiles })
+  //     for (let i = 0; i < startingLength; i++) {
+  //       const body = []
+  //       for (let j = 0; j < 5; j++) {
+  //         body.push(results[1 + i * 5 + j])
+  //       }
+  //       const convertedBody = this.convertScaledStringArrayToBody(body)
+  //       bodies[i].position.x = convertedBody.position.x
+  //       bodies[i].position.y = convertedBody.position.y
+  //       bodies[i].velocity.x = convertedBody.velocity.x
+  //       bodies[i].velocity.y = convertedBody.velocity.y
+  //       bodies[i].radius = convertedBody.radius
+  //     }
+  //     bodies = this.convertBigIntsToBodies(bodies)
+  //   }
+  //   // console.log({ bodies, missiles })
+  //   return { bodies, missiles }
+  // },
+
   forceAccumulatorBigInts(bodies) {
     const vectorLimitScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
     let accumulativeForces = []
@@ -85,7 +164,7 @@ export const Calculations = {
     }
 
     // console.log('before limiter')
-    // console.dir({ bodies_0: convertScaledBigIntBodyToArray(bodies[0]) }, { depth: null })
+    // console.dir({ bodies_0: this.convertScaledBigIntBodyToArray(bodies[0]) }, { depth: null })
 
     // const xOffset = bodies[bodies.length - 1].position.x
     // const yOffset = bodies[bodies.length - 1].position.y
@@ -232,16 +311,21 @@ export const Calculations = {
     return bodyArray.map((b) => b.toString())
   },
 
+  convertScaledStringToBigInt(value) {
+    return BigInt(value)
+  },
+
   convertScaledStringArrayToFloat(body) {
     const maxVectorScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
+    body = body.map(this.convertScaledStringToBigInt.bind(this))
     return {
       position: {
         x: this.convertScaledBigIntToFloat(body[0]),
         y: this.convertScaledBigIntToFloat(body[1])
       },
       velocity: {
-        x: this.convertScaledBigIntToFloat(body[2]) - maxVectorScaled,
-        y: this.convertScaledBigIntToFloat(body[3]) - maxVectorScaled
+        x: this.convertScaledBigIntToFloat(body[2] - maxVectorScaled),
+        y: this.convertScaledBigIntToFloat(body[3] - maxVectorScaled)
       },
       radius: this.convertScaledBigIntToFloat(body[4])
     }
@@ -282,6 +366,8 @@ export const Calculations = {
       newBody.mintedBodyIndex = body.mintedBodyIndex
       newBody.starLvl = body.starLvl
       newBody.maxStarLvl = body.maxStarLvl
+      newBody.seed = body.seed
+      newBody.faceIndex = body.faceIndex
       bodies.push(newBody)
     }
     return bodies
@@ -321,6 +407,8 @@ export const Calculations = {
       newBody.mintedBodyIndex = body.mintedBodyIndex
       newBody.c = body.c
       newBody.bodyIndex = body.bodyIndex
+      newBody.seed = body.seed
+      newBody.faceIndex = body.faceIndex
 
       bigBodies.push(newBody)
     }
@@ -341,46 +429,48 @@ export const Calculations = {
     if (missiles.length == 0) {
       return { bodies, missiles }
     }
-    const missile = missiles[0]
-    missile.position.x += missile.velocity.x
-    missile.position.y += missile.velocity.y
+    for (let i = 0; i < missiles.length; i++) {
+      const missile = missiles[i]
+      missile.position.x += missile.velocity.x
+      missile.position.y += missile.velocity.y
 
-    if (
-      missile.position.x > BigInt(this.windowWidth) * this.scalingFactor ||
-      missile.position.y < 0n
-    ) {
-      missile.radius = 0n
-    }
-
-    for (let j = 0; j < bodies.length; j++) {
-      const body = bodies[j]
-      const distance = _approxDist(
-        missile.position.x,
-        missile.position.y,
-        body.position.x,
-        body.position.y
-      )
-      // NOTE: this is to match the circuit. If the missile is gone, set minDist to 0
-      // Need to make sure comparison of distance is < and not <= for this to work
-      // because they may by chance be at the exact same coordinates and should still
-      // not trigger an _explosion since the missile is already gone.
-      const minDist = missile.radius == 0n ? 0n : body.radius * 2n
-      if (distance < minDist) {
+      if (
+        missile.position.x > BigInt(this.windowWidth) * this.scalingFactor ||
+        missile.position.y < 0n
+      ) {
         missile.radius = 0n
-        const x = this.convertScaledBigIntToFloat(body.position.x)
-        const y = this.convertScaledBigIntToFloat(body.position.y)
-        this.explosions.push(
-          _explosion(x, y, this.convertScaledBigIntToFloat(body.radius))
-        )
-        this.sound?.playExplosion(x, y)
-
-        body.starLvl += 1
-
-        bodies[j].radius = 0n
       }
-    }
 
-    missiles[0] = missile
+      for (let j = 0; j < bodies.length; j++) {
+        const body = bodies[j]
+        const distance = _approxDist(
+          missile.position.x,
+          missile.position.y,
+          body.position.x,
+          body.position.y
+        )
+        // NOTE: this is to match the circuit. If the missile is gone, set minDist to 0
+        // Need to make sure comparison of distance is < and not <= for this to work
+        // because they may by chance be at the exact same coordinates and should still
+        // not trigger an _explosion since the missile is already gone.
+        const minDist = missile.radius == 0n ? 0n : body.radius * 2n
+        if (distance < minDist) {
+          missile.radius = 0n
+          const x = this.convertScaledBigIntToFloat(body.position.x)
+          const y = this.convertScaledBigIntToFloat(body.position.y)
+          this.explosions.push(
+            _explosion(x, y, this.convertScaledBigIntToFloat(body.radius))
+          )
+          this.sound?.playExplosion(x, y)
+
+          body.starLvl += 1
+
+          bodies[j].radius = 0n
+        }
+      }
+
+      missiles[i] = missile
+    }
     return { bodies, missiles }
   }
 }

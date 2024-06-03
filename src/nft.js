@@ -2,6 +2,7 @@ import Q5 from './q5.min.js'
 import { Anybody } from './anybody.js'
 
 const q5 = new Q5()
+const seed = window.location.hash.slice(1)
 
 window.anybody
 q5.setup = () => {
@@ -11,9 +12,13 @@ q5.setup = () => {
     // target: 'inside',
     // globalStyle: 'psycho',
     alreadyRun: 0, //Math.floor(Math.random() * 20000),
-    // seed: 0n,
-    startingBodies: Math.floor(Math.random() * 7) + 3
+    seed: seed || null,
+    startingBodies: 2 //Math.floor(Math.random() * 8) + 2
   })
+  if (!seed) {
+    window.location.hash =
+      '0x' + window.anybody.seed.toString().padStart(64, '0')
+  }
 }
 q5.draw = () => {
   window.anybody.draw()

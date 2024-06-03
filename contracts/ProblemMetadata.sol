@@ -121,7 +121,9 @@ contract ProblemMetadata is Ownable {
         // const { seed, bodyCount, tickCount, mintedBodiesIndex } = problem
         string memory path = "";
         (
+            bool solved,
             bytes32 seed,
+            uint256 day,
             uint256 bodyCount,
             uint256 tickCount,
             uint256 mintedBodiesIndex
@@ -247,22 +249,23 @@ contract ProblemMetadata is Ownable {
     function getAttributes(
         uint256 tokenId
     ) internal view returns (string memory) {
-        (bytes32 seed, uint256 bodyCount, uint256 mintedBodiesIndex, uint256 tickCount) = Problems(problems).problems(tokenId);
-        uint256 problemStarCount = Problems(problems).getProblemStarCount(tokenId);
+        (bool solved, bytes32 seed, uint256 day, uint256 bodyCount, uint256 mintedBodiesIndex, uint256 tickCount) = Problems(problems).problems(tokenId);
         return
             string(
                 abi.encodePacked(
                     "[",
-                    '{"trait_type":"seed","value":"',
+                    '{"trait_type":"solved","value":',
+                    solved ? "true" : "false",
+                    '}, {"trait_type":"seed","value":"',
                     StringsExtended.toHexStringWithPrefix(uint256(seed), 32),
+                    '"}, {"trait_type":"day","value":"',
+                    StringsExtended.toString(day),
                     '"}, {"trait_type":"bodyCount","value":"',
                     StringsExtended.toString(bodyCount),
                     '"}, {"trait_type":"mintedBodiesIndex","value":"',
                     StringsExtended.toString(mintedBodiesIndex),
                     '"}, {"trait_type":"tickCount","value":"',
                     StringsExtended.toString(tickCount),
-                    '"}, {"trait_type":"starCount","value":"',
-                    StringsExtended.toString(problemStarCount),
                     '"}]'
                 )
             );

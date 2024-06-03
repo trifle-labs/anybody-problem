@@ -4,6 +4,7 @@ import EventEmitter from 'events'
 import Sound from './sound.js'
 import { Visuals } from './visuals.js'
 import { _validateSeed, Calculations } from './calculations.js'
+// import wc from './witness_calculator.js'
 
 const GAME_LENGTH = 60 // seconds
 
@@ -42,7 +43,7 @@ export class Anybody extends EventEmitter {
       bodyData: null,
       starData: null,
       // Add default properties and their initial values here
-      startingBodies: 3,
+      startingBodies: 1,
       seed: null,
       windowWidth: 1000,
       windowHeight: 1000,
@@ -52,6 +53,7 @@ export class Anybody extends EventEmitter {
       G: 100, // Gravitational constant
       mode: 'nft', // game or nft
       admin: false,
+      solved: false,
       clearBG: true,
       colorStyle: '!squiggle', // squiggle or !squiggle
       preRun: 0,
@@ -80,12 +82,13 @@ export class Anybody extends EventEmitter {
   // run whenever the class should be reset
   clearValues() {
     this.speedFactor = 2
-    this.initialScoreSize = 60
-    this.scoreSize = this.initialScoreSize
-    this.opac = this.globalStyle == 'psycho' ? 1 : 0.1
-    this.tailLength = 60
     this.FPS = 50 / this.speedFactor
     this.timer = GAME_LENGTH * this.FPS
+    this.deadOpacity = '0.9'
+    this.initialScoreSize = 60
+    this.scoreSize = this.initialScoreSize
+    this.opac = this.globalStyle == 'psycho' ? 1 : 1
+    this.tailLength = 1
     this.tailMod = this.globalStyle == 'psycho' ? 2 : 1
     this.explosions = []
     this.missiles = []
@@ -109,6 +112,7 @@ export class Anybody extends EventEmitter {
     this.buttons = {}
     this.won = false
     this.finalBatchSent = false
+    this.solved = false
   }
 
   // run once at initilization
@@ -125,9 +129,32 @@ export class Anybody extends EventEmitter {
     this.loadImages()
     this.setPause(this.paused, true)
     this.storeInits()
+    // this.prepareWitness()
   }
 
-  start() {
+  // async prepareWitness() {
+  //   // const wasmFile = `/public/game_10_1.wasm`
+  //   const wasmFile = new URL('./game_10_1.wasm', import.meta.url).href
+  //   console.log({ wasmFile })
+  //   const response = await fetch(wasmFile)
+  //   console.log({ response })
+  //   const buffer = await response.arrayBuffer()
+  //   console.log({ buffer })
+  //   // let wasm = await fetch(new URL('./game_10_1.wasm', import.meta.url).href)
+  //   // console.log({ wasm })
+  //   this.witnessCalculator = await wc(buffer)
+  //   console.log({ witnessCalculator: this.witnessCalculator })
+  //   // const w = await witnessCalculator.calculateWitness(input, 0);
+  //   // for (let i = 0; i < w.length; i++) {
+  //   //   console.log(w[i]);
+  //   // }
+  //   // const buff = await witnessCalculator.calculateWTNSBin(input, 0)
+  //   // writeFile(process.argv[4], buff, function (err) {
+  //   //   if (err) throw err
+  //   // })
+  // }
+
+  async start() {
     this.addListeners()
     this.runSteps(this.preRun)
     // this.paintAtOnce(this.paintSteps)
@@ -278,6 +305,19 @@ export class Anybody extends EventEmitter {
       e.preventDefault()
       this.setPause()
     }
+    if (
+      e.code === 'KeyR' &&
+      !e.shiftKey &&
+      !e.altKey &&
+      !e.ctrlKey &&
+      !e.metaKey
+    ) {
+      // confirm('Are you sure you want to restart?') && this.restart()
+      if (!this.gameOver) {
+        // this.startingBodies = 2
+      }
+      this.restart()
+    }
   }
 
   handleGameOver = ({ won }) => {
@@ -285,21 +325,19 @@ export class Anybody extends EventEmitter {
     this.handledGameOver = true
 
     this.witherAllBodies()
-    this.sound?.playGameOver({ won })
+    // this.sound?.playGameOver({ won })
     this.gameOver = true
     this.won = won
     var dust = 0
     var timeTook = 0
     var framesTook = 0
-    if (this.won) {
-      const stats = this.calculateStats()
-      dust = stats.dust
-      timeTook = stats.timeTook
-      framesTook = stats.framesTook
-      void this.setStatsText(stats)
-    } else {
-      void this.setShowPlayAgain()
-    }
+
+    const stats = this.calculateStats()
+    dust = stats.dust
+    timeTook = stats.timeTook
+    framesTook = stats.framesTook
+    void this.setStatsText(stats)
+    void this.setShowPlayAgain()
     this.emit('gameOver', {
       won,
       ticks: this.frames - this.startingFrame,
@@ -307,6 +345,9 @@ export class Anybody extends EventEmitter {
       timeTook,
       framesTook
     })
+    if (won) {
+      this.startingBodies++
+    }
   }
 
   restart = (options, beginPaused = true) => {
@@ -314,7 +355,7 @@ export class Anybody extends EventEmitter {
       this.setOptions(options)
     }
     this.clearValues()
-    this.sound?.stop()
+    // this.sound?.stop()
     this.sound?.playStart()
     this.init()
     this.draw()
@@ -323,26 +364,31 @@ export class Anybody extends EventEmitter {
     }
   }
 
+  doubleTextInverted(text) {
+    return text.slice(0, -1) + text.split('').reverse().join('')
+  }
+
   setStatsText = async (stats) => {
     const statLines = [
       // `total bodies: ${stats.bodiesIncluded}`,
-      `¸¸♬·¯·♩¸¸♪·¯·♫¸¸♬·¯·♩¸¸♪·¯`,
-      `${stats.bodiesIncluded} body score: ${stats.bodiesBoost}`,
-      `speed bonus (${stats.timeTook}s): ${stats.speedBoost}x`,
-      `DU$T earned: ${stats.dust}`
+      this.doubleTextInverted(`¸♩·¯·♬¸¸♬·¯·♩¸¸♪¯`),
+      `${stats.bodiesIncluded - 1} bodies cleared`,
+      `in ${stats.timeTook} sec 🐎`,
+      `with ${stats.missilesShot} missiles 🚀`,
+      `👈👈 Save Your Game👈👈`
     ]
     const toShow = statLines.join('\n')
-
-    for (let i = 0; i < toShow.length; i++) {
-      await new Promise((resolve) => setTimeout(resolve, 50))
-      this.statsText = toShow.slice(0, i + 1)
-      this.sound?.playStat()
-      // play a sound on new line
-      if (toShow[i] == '\n') {
-        await new Promise((resolve) => setTimeout(resolve, 800))
-        this.sound?.playStat()
-      }
-    }
+    this.statsText = toShow
+    // for (let i = 0; i < toShow.length; i++) {
+    //   await new Promise((resolve) => setTimeout(resolve, 50))
+    //   this.statsText = toShow.slice(0, i + 1)
+    //   this.sound?.playStat()
+    //   // play a sound on new line
+    //   if (toShow[i] == '\n') {
+    //     await new Promise((resolve) => setTimeout(resolve, 800))
+    //     this.sound?.playStat()
+    //   }
+    // }
 
     await this.setShowPlayAgain(1000)
     this.sound?.playSuccess()
@@ -371,6 +417,12 @@ export class Anybody extends EventEmitter {
   }
 
   step() {
+    // const { bodies, missiles } = await this.circomStep(
+    //   this.bodies,
+    //   this.missiles
+    // )
+    // this.bodies = bodies
+    // this.missiles = missiles || []
     this.bodies = this.forceAccumulator(this.bodies)
     var results = this.detectCollision(this.bodies, this.missiles)
     this.bodies = results.bodies
@@ -537,14 +589,20 @@ export class Anybody extends EventEmitter {
 
       // const j = i
       // const j = this.random(0, 2)
-      const j = Math.floor(this.random(1, 3))
-      const radius = j * 5 + startingRadius
+      const j = Math.floor(this.random(1, 4))
+      const radius = i == 0 ? 32 : j * 5 + startingRadius
       const maxStarLvl = this.random(3, 10, new Prando())
       const starLvl = this.random(0, maxStarLvl - 1, new Prando())
+
+      const vectorMax =
+        (i == 0 ? this.vectorLimit / 3 : this.vectorLimit) *
+        Number(this.scalingFactor)
+      const vx = this.random(-vectorMax, vectorMax) / Number(this.scalingFactor)
+      const vy = this.random(-vectorMax, vectorMax) / Number(this.scalingFactor)
       const body = {
         bodyIndex: i,
         position: this.createVector(ss[i][0], ss[i][1]),
-        velocity: this.createVector(0, 0),
+        velocity: this.createVector(vx, vy),
         radius,
         starLvl,
         maxStarLvl,
@@ -555,6 +613,19 @@ export class Anybody extends EventEmitter {
 
     this.bodies = bodies
     // .sort((a, b) => b.radius - a.radius)
+  }
+
+  getFaceIdx(seed) {
+    const face = this.random(0, 1000, new Prando(seed))
+    const faceDistribution = [200, 400, 600, 700, 800, 850, 900, 950, 980, 1000]
+    let faceIndex = 0
+    for (let i = 0; i < faceDistribution.length; i++) {
+      if (face < faceDistribution[i]) {
+        faceIndex = i
+        break
+      }
+    }
+    return faceIndex
   }
 
   bodyDataToBodies(b) {
@@ -569,7 +640,10 @@ export class Anybody extends EventEmitter {
       (b.vy.toNumber() - this.vectorLimit * parseInt(this.scalingFactor)) /
       parseInt(this.scalingFactor)
     const radius = b.radius.toNumber() / parseInt(this.scalingFactor)
+    const faceIndex = this.getFaceIdx(b.seed)
     return {
+      seed: b.seed,
+      faceIndex,
       bodyId: bodyId,
       bodyIndex: bodyIndex,
       position: this.createVector(px, py),
@@ -637,12 +711,12 @@ export class Anybody extends EventEmitter {
     ) {
       return
     }
-    if (this.missiles.length > 0 && !this.admin) {
-      // this is a hack to prevent multiple missiles from being fired
-      this.missiles = []
-      // remove latest missile from missileInits
-      this.missileInits.pop()
-    }
+    // if (this.missiles.length > 0 && !this.admin) {
+    //   // this is a hack to prevent multiple missiles from being fired
+    //   this.missiles = []
+    //   // remove latest missile from missileInits
+    //   this.missileInits.pop()
+    // }
 
     this.missileCount++
     const radius = 10
@@ -653,8 +727,15 @@ export class Anybody extends EventEmitter {
       velocity: this.p.createVector(x, y - this.windowWidth),
       radius
     }
-    b.velocity.limit(10 * this.speedFactor)
+    // b.velocity.limit(10)
+    b.velocity.setMag(10 * this.speedFactor)
     this.missiles.push(b)
+
+    // const bodyCount = this.bodies.filter((b) => b.radius !== 0).length - 1
+    // this.missiles = this.missiles.slice(0, bodyCount)
+    // this.missiles = this.missiles.slice(-bodyCount)
+    this.missiles = this.missiles.slice(-1)
+
     this.sound?.playMissile()
     this.missileInits.push(...this.processMissileInits([b]))
   }
@@ -711,7 +792,13 @@ export class Anybody extends EventEmitter {
     const speedBoost = SPEED_BOOST[speedBoostIndex]
     let dust = /*bodiesIncluded **/ bodiesBoost * speedBoost
 
+    const missilesShot = this.missileInits.reduce(
+      (p, c) => (c[0] == 0 ? p : p + 1),
+      0
+    )
+
     return {
+      missilesShot,
       bodiesIncluded,
       bodiesBoost,
       speedBoost,

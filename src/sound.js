@@ -302,8 +302,10 @@ export default class Sound {
     const now = Date.now()
     await loaded()
     if (Date.now() - now < 40) {
+      // if (!this.anybody.gameOver) {
       this.oneShots[key].start()
       return this.oneShots[key]
+      // }
     }
   }
 

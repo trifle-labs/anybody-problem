@@ -1,0 +1,13 @@
+{
+  "name": "anybody-api",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "shovel": "bun run shovel-config.ts > config.json && ./shovel --config config.json"
+  },
+  "devDependencies": {
+    "@indexsupply/shovel-config": "^0.0.16",
+    "ethers": "^6.12.1"
+  }
+}

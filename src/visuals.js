@@ -96,132 +96,13 @@ const STAR_SVGS = [
   new URL(`/public/stars/star10.svg`, import.meta.url).href
 ]
 
-// const stars = {
-//   1: `<path class="st1" d="M521.2,237.6c-8.4-4.6-18.3-5.7-27.6-3.6c-17.2,3.8-61.5,13.7-111.8,25c-6.7,1.5-13.5-2-16.2-8.2
-//   c-0.1-0.3-0.2-0.5-0.3-0.8c-2.9-6.5-0.4-14.3,5.7-18c33.5-20.6,69.8-43.1,96.6-60.4c6.1-3.9,11-9.3,14.2-15.8
-//   c6.3-12.7,10.5-34.3-13.4-58.2c0,0-22.9-20.9-48.5-13.4c-9.2,2.7-16.9,8.9-22.1,17c-9.5,15-34.3,53.8-62.1,97.8
-//   c-3.7,5.9-11.1,8.1-17.6,5.5c-0.1,0-0.2-0.1-0.2-0.1c-6.6-2.7-10.4-9.7-8.7-16.6c9.2-38.5,19-80.5,25.8-111.9
-//   c1.5-7.1,1.2-14.4-1.1-21.3C329.5,41.2,317.2,23,283.4,23c0,0-31,1.4-43.7,24.8c-4.6,8.4-5.7,18.3-3.6,27.6
-//   c3.8,17.3,13.7,61.9,25.1,112.4c1.5,6.8-2.1,13.8-8.6,16.4c-0.6,0.2-1.1,0.5-1.7,0.7c-6.5,2.7-14,0.4-17.7-5.6
-//   c-20.6-33.6-43.2-69.9-60.5-96.8c-3.9-6.1-9.3-11-15.8-14.2c-12.7-6.3-34.3-10.5-58.2,13.4c0,0-20.9,22.9-13.4,48.5
-//   c2.7,9.2,8.9,16.9,17,22.1c14.8,9.5,53.1,33.8,96.5,61.2c6,3.8,8.2,11.3,5.4,17.8c-0.1,0.2-0.2,0.5-0.3,0.7
-//   c-2.7,6.5-9.7,10.1-16.5,8.5C149.3,251.3,108,241.6,77,235c-7.1-1.5-14.4-1.2-21.3,1.1c-13.5,4.5-31.7,16.9-31.7,50.6
-//   c0,0,1.4,31,24.8,43.7c8.4,4.6,18.3,5.7,27.6,3.6c17-3.8,60.6-13.4,110.1-24.6c6.9-1.6,13.8,2.2,16.4,8.8c0.1,0.3,0.3,0.7,0.4,1
-//   c2.7,6.5,0.3,14-5.7,17.6c-33.1,20.4-68.9,42.5-95.3,59.6c-6.1,3.9-11,9.3-14.2,15.8c-6.3,12.7-10.5,34.3,13.4,58.2
-//   c0,0,22.9,20.9,48.5,13.4c9.2-2.7,16.9-8.9,22.1-17c9.3-14.6,33.1-52,60.1-94.6c3.8-5.9,11.3-8.2,17.7-5.4c0.5,0.2,1.1,0.5,1.6,0.7
-//   c6.5,2.7,10.1,9.7,8.5,16.5c-9,37.7-18.5,78.5-25.1,109.1c-1.5,7.1-1.2,14.4,1.1,21.3c4.5,13.5,16.9,31.7,50.6,31.7
-//   c0,0,31-1.4,43.7-24.8c4.6-8.4,5.7-18.3,3.6-27.6c-3.8-17-13.4-60.3-24.5-109.7c-1.5-6.8,2-13.7,8.5-16.3c0.8-0.3,1.7-0.7,2.5-1.1
-//   c6.5-2.9,14.2-0.5,17.9,5.6c20.2,32.9,42.2,68.2,59.1,94.4c3.9,6.1,9.3,11,15.8,14.2c12.7,6.3,34.3,10.5,58.2-13.4
-//   c0,0,20.9-22.9,13.4-48.5c-2.7-9.2-8.9-16.9-17-22.1c-14.7-9.4-52.5-33.5-95.6-60.7c-5.8-3.7-8.2-10.9-5.6-17.3
-//   c0.3-0.7,0.5-1.3,0.8-2c2.5-6.8,9.7-10.6,16.7-8.9c37.7,9,78.4,18.5,109,25.1c7.1,1.5,14.4,1.2,21.3-1.1
-//   c13.5-4.5,31.7-16.9,31.7-50.6C546.1,281.4,544.7,250.4,521.2,237.6z" />`,
-//   2: `<path class="st1" d="M536.1,223.4c0,0-10.4-19.9-73.2-32.4c-1.5-0.3-2.1,1.8-0.7,2.4c15.4,6.5,37.9,19.3,37.9,39c0,0,2,26-59,43
-//   c0,0-28.3,12.3-147.2,9.3c-0.3,0-5-0.4-1.8-5.7l0,0c30.5-19.7,131.4-90.5,151.7-179.1c0,0,8.5-33.9-24.7-37.5
-//   c0,0-21.5-6.7-74.7,28.9c-1.2,0.8-0.2,2.7,1.2,2.2c15.5-6.3,40.5-13.2,54.4,0.8c0,0,19.8,17-11.3,72.1c0,0-11.4,28.8-97.9,111
-//   c-0.2,0.1-5.6,3.5-5-3.1l0,0c7.7-35.7,28.8-156.9-19.4-233.8c0,0-18-30-44-9c0,0-19.9,10.4-32.4,73.2c-0.3,1.5,1.8,2.1,2.4,0.7
-//   c6.5-15.4,19.3-37.9,39-37.9c0,0,26-2,43,59c0,0,12.3,28.4,9.3,147.5c0,0.3-0.9,6.8-5.6,1.7l0,0c-19.4-30.2-90.4-131.6-179.3-152
-//   c0,0-33.9-8.5-37.5,24.7c0,0-6.7,21.5,28.9,74.7c0.8,1.2,2.7,0.2,2.2-1.2c-6.3-15.5-13.2-40.5,0.8-54.4c0,0,17-19.8,72.1,11.3
-//   c0,0,28.9,11.4,111.5,98.4c0.6,0.7,4.2,5-2.8,4.6l0,0c-34.6-7.5-157.1-29.4-234.6,19.2c0,0-30,18-9,44c0,0,10.4,19.9,73.2,32.4
-//   c1.5,0.3,2.1-1.8,0.7-2.4c-15.4-6.5-37.9-19.3-37.9-39c0,0-2-26,59-43c0,0,28.5-12.3,148.5-9.3c0.1,0,4.9,1.2,1.7,4.9l0,0
-//   c-28.9,18.5-132.3,90.1-153,179.9c0,0-8.5,33.9,24.7,37.5c0,0,21.5,6.7,74.7-28.9c1.2-0.8,0.2-2.7-1.2-2.2
-//   c-15.5,6.3-40.5,13.2-54.4-0.8c0,0-19.8-17,11.3-72.1c0,0,11.5-29,98.9-112c0.3-0.2,4.9-3.6,4.3,2.3l0,0
-//   c-7.3,33.2-30.1,157.3,19,235.6c0,0,18,30,44,9c0,0,19.9-10.4,32.4-73.2c0.3-1.5-1.8-2.1-2.4-0.7c-6.5,15.4-19.3,37.9-39,37.9
-//   c0,0-26,2-43-59c0,0-12.4-28.6-9.3-149.2c0.1-0.4,1.1-5.9,4.8-1.2l0,0c18.3,28.7,90,132.5,180,153.1c0,0,33.9,8.5,37.5-24.7
-//   c0,0,6.7-21.5-28.9-74.7c-0.8-1.2-2.7-0.2-2.2,1.2c6.3,15.5,13.2,40.5-0.8,54.4c0,0-17,19.8-72.1-11.3c0,0-29-11.5-112.1-99
-//   c-0.1-0.2-2.5-4.2,4.8-3.7v0c36.4,7.8,156.7,28.4,233.2-19.5C527.1,267.4,557.1,249.4,536.1,223.4z" />`,
-//   3: `<path class="st1" d="M525.7,283h-76.4c-2.4,0-3.5-3-1.8-4.6c0.6-0.6,1.3-1.2,1.9-1.8c0,0,83.5-71,8.9-164.6c-1-1.2-2.8-1.3-3.9-0.2
-//   l-53.5,53.5c-1.7,1.7-4.6,0.4-4.5-2c0-0.6,0.1-1.2,0.1-1.9c0,0,8.9-109.2-110.1-122.7c-1.6-0.2-2.9,1.1-2.9,2.6v75
-//   c0,2.4-2.9,3.5-4.6,1.8c-0.5-0.6-1.1-1.2-1.6-1.8c0,0-71-83.5-164.6-8.9c-1.2,1-1.3,2.8-0.2,3.9l54.2,54.2c1.7,1.7,0.4,4.6-2,4.5
-//   c-1-0.1-2.1-0.1-3.1-0.1c0,0-109.2-8.9-122.7,110.1c-0.2,1.6,1.1,2.9,2.6,2.9h74.9c2.4,0,3.5,2.9,1.8,4.5c0,0,0,0-0.1,0
-//   c0,0-83.5,71-8.9,164.6c1,1.2,2.8,1.3,3.9,0.2l53.5-53.5c1.7-1.7,4.6-0.4,4.5,2c-0.1,1.2-0.1,2.4-0.2,3.7
-//   c0,0-8.9,109.2,110.1,122.7c1.6,0.2,2.9-1.1,2.9-2.6v-75.9c0-2.4,2.9-3.5,4.6-1.8c0.6,0.6,1.1,1.2,1.7,1.8c0,0,71,83.5,164.6,8.9
-//   c1.2-1,1.3-2.8,0.2-3.9l-53.3-53.3c-1.7-1.7-0.4-4.6,2-4.5c0.6,0,1.2,0.1,1.9,0.1c0,0,109.2,8.9,122.7-110.1
-//   C528.4,284.4,527.2,283,525.7,283z" />`,
-//   4: ` <path class="st1" d="M286.4,291.8c6.1-20.9,28-82.3,80.2-114.8c1-0.7,1.2-2.1,0.2-2.9c-10.4-8.9-60.5-54.6-80.6-123.8
-//   c-0.5-1.7-3-1.8-3.5,0c-6.1,20.1-28.5,84.2-77.3,119.8c-1,0.7-1,2.2,0,2.9c10.8,7.8,60.6,47.2,77.5,118.7
-//   C283.3,293.5,285.8,293.6,286.4,291.8z" />
-//   <path class="st1" d="M274.9,298.3c-18-12.4-69.5-52.2-84.1-111.9c-0.3-1.2-1.6-1.8-2.7-1.1c-11.7,7.1-70.7,40.4-142.8,38.1
-//   c-1.8-0.1-2.6,2.3-1.1,3.3c17.3,12,71.1,53.3,89.7,110.7c0.4,1.2,1.8,1.7,2.8,0.9c10.8-7.8,63.7-42.9,137-36.6
-//   C275.6,301.8,276.4,299.4,274.9,298.3z" />
-//   <path class="st1" d="M277,310.3c-17.3,13.3-71.2,49.9-132.5,45.3c-1.2-0.1-2.2,1-1.9,2.2c3.1,13.4,16.6,79.8-8,147.6
-//   c-0.6,1.7,1.3,3.2,2.8,2.1c16.8-12.7,72.6-51.1,133.1-51.1c1.2,0,2.1-1.2,1.8-2.4c-4.1-12.7-21.1-73.9,7.5-141.6
-//   C280.5,310.8,278.5,309.2,277,310.3z" />
-//   <path class="st1" d="M288.7,313.6c7.3,20.5,25.8,83,2.7,140c-0.5,1.1,0.3,2.4,1.5,2.5c13.7,1.1,81,8.6,138.1,52.7
-//   c1.4,1.1,3.4-0.3,2.8-2c-7-19.9-26.5-84.8-8-142.3c0.4-1.2-0.5-2.4-1.7-2.4c-13.3,0-76.8-2.5-132.5-50.4
-//   C290.2,310.4,288.1,311.8,288.7,313.6z" />
-//   <path class="st1" d="M295,301.9c21.8-1,86.9-0.5,134.7,38.2c1,0.8,2.4,0.4,2.8-0.7c5-12.8,31.8-75,90.6-116.7
-//   c1.5-1.1,0.7-3.4-1.1-3.3c-21,0.9-88.8,0.6-138.5-33.8c-1-0.7-2.4-0.2-2.8,1c-3.9,12.8-24.7,72.7-86.9,112.1
-//   C292.4,299.5,293.2,302,295,301.9z" />`,
-//   5: `<polygon class="st1" points="218.3,196.6 291.6,179.8 249.9,242.3 288.5,306.8 216.1,286.5 166.8,343.1 163.7,268 94.6,238.6
-//   165.1,212.5 171.7,137.6 	" />
-//   <polygon class="st1" points="329.5,375.1 383.8,409.1 321,421.7 305.4,483.8 274,428 210.1,432.3 253.5,385.2 229.6,325.8
-//   287.8,352.6 337,311.4 	" />
-//   <polygon class="st1" points="385.5,453.1 404.3,464.9 382.6,469.2 377.2,490.7 366.4,471.4 344.3,472.9 359.3,456.6 351,436.1
-//   371.1,445.3 388.1,431.1 	" />
-//   <polygon class="st1" points="429.1,492.7 436.6,504.2 423.3,501 414.7,511.7 413.6,498 400.8,493.1 413.4,487.9 414.1,474.2
-//   423,484.6 436.2,481 	" />
-//   <polygon class="st1" points="472.1,484.2 482.7,492.9 469,493.9 464,506.6 458.9,493.9 445.2,493.1 455.7,484.3 452.3,471
-//   463.9,478.3 475.4,470.9 	" />
-//   <polygon class="st1" points="224.8,138.8 223.8,116.6 239.7,132 260.4,124.3 250.7,144.2 264.5,161.5 242.6,158.4 230.4,176.8
-//   226.6,155 205.2,149.1 	" />
-//   <polygon class="st1" points="232.6,80.4 237.8,67.7 242.7,80.5 256.4,81.5 245.8,90.2 249.1,103.5 237.5,96.1 225.9,103.3
-//   229.4,90 218.9,81.2 	" />
-//   <polygon class="st1" points="201.2,49.8 202.4,36.2 210.9,46.9 224.2,43.8 216.7,55.2 223.8,67 210.6,63.3 201.6,73.7 201,60
-//   188.4,54.7 	" />
-//   <polygon class="st1" points="154.7,379.3 188.9,376.9 165.7,402.2 178.5,434 147.3,419.7 121,441.7 125,407.6 95.9,389.4
-//   129.5,382.6 137.9,349.3 	" />
-//   <polygon class="st1" points="365.2,233.5 389.7,257.5 355.4,256.9 340.2,287.7 330.1,254.9 296.1,249.9 324.2,230.2 318.5,196.4
-//   345.9,217 376.3,201 	" />`,
-//   6: `<path class="st1" d="M491.5,218.2c-71.7-22.8-125.4,41.2-125.4,41.2c-0.5,0.7-1,1.5-1.4,2.1c-2.7,4.5-6.8,7.9-11.8,9.5l-30.8,10.1
-//   c-3.3,1.1-6.8,1.5-10.3,1.1c-4.5-6.6-11.1-11.5-18.9-13.8c-1-2.7-1.5-5.6-1.5-8.4v-32.4c0-5.2,2-10.2,5.4-14.1
-//   c0.5-0.6,1.1-1.3,1.6-2c0,0,44-71,0-132c0,0-13-17-28,0c0,0-50,49,0,132c0,0,0.6,1,1.6,2.3c2.9,3.7,4.4,8.3,4.4,13v32.8
-//   c0,3-0.8,5.8-2,8.5c-8.5,2.1-15.7,7.3-20.5,14.4c-2.8,0.1-5.7-0.3-8.4-1.2l-30.8-10.1c-5-1.6-9.1-5.1-11.8-9.5
-//   c-0.4-0.7-0.9-1.4-1.4-2.1c0,0-53.7-64-125.4-41.2c0,0-20.2,7-8.7,26.6c0,0,31,62.8,125.4,41.2c0,0,1.1-0.2,2.7-0.8
-//   c4.4-1.6,9.3-1.6,13.7-0.1l31.2,10.2c2.9,0.9,5.4,2.6,7.6,4.7c0,0.6-0.1,1.3-0.1,1.9c0,8.7,3.2,16.7,8.5,22.9
-//   c-0.8,2-1.9,3.8-3.1,5.5l-19.4,25.9c-3.1,4.2-7.7,7-12.8,8.1c-0.8,0.2-1.6,0.4-2.5,0.6c0,0-77.8,30.4-79.2,105.6
-//   c0,0,0.2,21.4,22.4,16.8c0,0,69.4-9.2,79.2-105.6c0,0,0.1-1.1,0.1-2.8c-0.1-4.7,1.4-9.3,4.3-13.1l19.7-26.2c1.5-2,3.4-3.7,5.6-4.9
-//   c3.8,1.4,8,2.2,12.3,2.2c5,0,9.8-1.1,14.1-2.9c2.7,1.4,5.1,3.2,6.9,5.7l19.7,26.2c2.8,3.8,4.4,8.4,4.3,13.1c0,1.7,0.1,2.8,0.1,2.8
-//   c9.8,96.4,79.2,105.6,79.2,105.6c22.2,4.6,22.4-16.8,22.4-16.8c-1.4-75.2-79.2-105.6-79.2-105.6c-0.9-0.2-1.7-0.5-2.5-0.6
-//   c-5.1-1.1-9.7-3.9-12.8-8.1l-19.4-25.9c-1.9-2.5-3.3-5.3-4-8.3c4-5.7,6.3-12.6,6.3-20.1c0,0,0-0.1,0-0.1c0.1-0.1,0.1-0.1,0.2-0.2
-//   c2.4-2.9,5.5-5.2,9.1-6.4l31.2-10.2c4.5-1.5,9.3-1.5,13.7,0.1c1.6,0.6,2.7,0.8,2.7,0.8c94.5,21.6,125.4-41.2,125.4-41.2
-//   C511.7,225.3,491.5,218.2,491.5,218.2z" />`,
-//   7: `<path class="st1" d="M283.5,35.5c-137,0-248,111-248,248s111,248,248,248s248-111,248-248S420.5,35.5,283.5,35.5z M374.7,438.8
-//   l-80.4-58.4c-6.4-4.7-15.2-4.7-21.6,0l-80.4,58.4c-14.4,10.5-33.8-3.6-28.3-20.5l30.7-94.6c2.5-7.6-0.2-15.9-6.7-20.5l-80.4-58.4
-//   c-14.4-10.5-7-33.2,10.8-33.2h99.4c8,0,15-5.1,17.5-12.7l30.7-94.6c5.5-16.9,29.4-16.9,34.9,0l30.7,94.6
-//   c2.5,7.6,9.5,12.7,17.5,12.7h99.4c17.8,0,25.2,22.8,10.8,33.2l-80.4,58.4c-6.4,4.7-9.1,13-6.7,20.5l30.7,94.6
-//   C408.5,435.2,389.1,449.2,374.7,438.8z" />`,
-//   8: `<path class="st1" d="M474.7,232.3c-3.1-2.4-4.4-6.4-3.2-10.1c22.8-72.8-30.2-84.4-30.2-84.4c-31.5-8.1-55.7,11.5-68.7,26.1
-//   c10.4-16.5,23-45.8,6-74.1c0,0-26.2-47.4-89.5-4.9c-3.2,2.2-7.5,2.1-10.6-0.2c-15.1-11.1-60.4-38-92,9.4c0,0-20.2,32,3.7,69.1
-//   c-13.2-14.5-37.1-33.4-68-25.4c0,0-53,11.7-30.2,84.4c1.2,3.7-0.1,7.8-3.2,10.1c-14.9,11.3-53.6,47.1-17.2,90.9
-//   c0,0,19.4,22.2,53.2,18.9c-16.4,9-34.3,24.7-36.5,51.1c0,0-6.4,53.8,69.8,56.3c3.9,0.1,7.3,2.7,8.5,6.4
-//   c5.8,17.8,26.8,66.2,80.2,46.2c0,0,29-11.7,36-46.8c7,35.1,36,46.8,36,46.8c53.3,20,74.4-28.3,80.2-46.2c1.2-3.7,4.6-6.3,8.5-6.4
-//   c76.2-2.5,69.8-56.3,69.8-56.3c-2.2-26.2-19.9-41.9-36.2-50.9c32.5,2.3,51.1-19.1,51.1-19.1C528.3,279.4,489.6,243.7,474.7,232.3z
-//    M307.2,308.8c-5.3-1.1-10.4,2.5-11.1,7.8l-13.6,104.7l-13.6-104.7c-0.7-5.3-5.8-9-11.1-7.8l-96,20.7l92.2-46.3
-//   c4.8-2.4,6.5-8.4,3.7-13L201.4,178c0,0-0.4-0.7-1.2-1.8c0.4,0.4,0.7,0.8,1.1,1.1l75.4,80.3c3.7,3.9,9.9,3.9,13.6-0.1l71.5-79.2
-//   l-56.1,91.8c-2.8,4.6-1.1,10.6,3.7,13l90.9,45.7L307.2,308.8z" />`,
-//   9: `<path class="st1" d="M556,283.9l-105-96.8L420.1,47.7L283.8,90.2L147.6,47.3l-31.3,139.3L11,283.1l105,96.8l30.9,139.4l136.3-42.5
-//   l136.2,42.9l31.3-139.3L556,283.9z M404.4,493.7L283.4,376.1L162,493.3l41.3-163.6L41,283.1l162.3-46.1L162.6,73.3l121.1,117.6
-//   L405,73.7l-41.3,163.6L526,283.9l-162.3,46.1L404.4,493.7z" />`,
-//   10: `<polygon class="st1" points="551.2,214.9 511.8,215.8 498.8,178.6 487.5,216.3 448.1,217.3 471.5,233.5 452.6,233.9 436.9,189.1
-//   423.3,234.6 375.9,235.7 402.9,254.4 319,254.4 292.4,172.7 320.3,193 305.6,147.9 344,120 296.6,120 290.7,102 313.8,118.7
-//   301.6,81.3 333.4,58.1 294.1,58.1 281.9,20.7 269.7,58.1 230.4,58.1 262.2,81.3 250.1,118.7 273.1,102 267.2,120 219.8,120
-//   258.2,147.9 243.5,193 271.4,172.7 244.8,254.4 161.7,254.4 189.8,236.9 142.5,233.5 131.1,187.4 113.2,231.3 94.4,229.9
-//   118.6,214.9 79.3,212.1 69.9,173.8 55,210.3 15.8,207.4 45.9,232.8 31,269.3 64.5,248.5 94.5,273.9 87.7,246.3 102.2,258.5
-//   84.3,302.4 124.6,277.4 160.9,308 152.6,274.5 221.9,324.9 196,404.7 187,373.4 170.8,418 123.4,416.4 160.8,445.6 154.3,463.3
-//   146.5,436 133,473 93.7,471.6 124.7,495.8 111.2,532.8 143.9,510.8 174.9,535 164,497.2 196.7,475.2 168.2,474.2 183.9,463.6
-//   221.3,492.8 208.2,447.2 247.5,420.7 211.7,419.4 281.9,368.4 352.1,419.4 316.9,420.7 356.3,447.2 343.2,492.8 380.6,463.6
-//   396.2,474.2 367.8,475.2 400.4,497.2 389.6,535 420.6,510.8 453.2,532.8 439.8,495.8 470.8,471.6 431.5,473 418,436 410.1,463.3
-//   403.7,445.6 441.1,416.4 393.7,418 377.5,373.4 368.2,405.8 341.9,324.9 411.4,274.4 401.3,308.1 439,279.3 478,306.3 462.3,261.6
-//   477.3,250.1 469.2,277.4 500.5,253.5 532.9,275.9 519.8,238.8 	" />`
-// }
-
 export const Visuals = {
   async draw() {
     if (!this.showIt) return
-    if (this.bodies.length < 3) {
+    if (this.bodies.length < 1) {
       this.p.textSize(40)
       this.p.text('Use the panel to the right to add Bodies -> -> ->', 100, 400)
-      this.p.text('(You need minimum 3 Bodies in your Problem)', 100, 500)
+      this.p.text('(You need minimum 1 Bodies in your Problem)', 100, 500)
       this.setPause(true)
       return
     }
@@ -238,7 +119,6 @@ export const Visuals = {
     this.p.noFill()
     this.p.textStyle(this.p.BOLDITALIC)
     // this.p.textFont('Instrument Serif, serif')
-
     this.drawBg()
     if (this.globalStyle == 'psycho') {
       this.p.blendMode(this.p.DIFFERENCE)
@@ -247,6 +127,9 @@ export const Visuals = {
 
     if (this.globalStyle == 'psycho') {
       this.p.blendMode(this.p.BLEND)
+    }
+    if (!this.firstFrame) {
+      this.drawBodies()
     }
 
     if (
@@ -259,9 +142,6 @@ export const Visuals = {
         const body = this.bodies[i]
         this.drawCenter(body)
       }
-    }
-    if (!this.firstFrame) {
-      this.drawBodies()
     }
 
     if (
@@ -319,13 +199,16 @@ export const Visuals = {
     } else {
       this.justPaused = false
     }
-    if (this.frames - this.startingFrame + this.FPS >= this.timer) {
+    if (
+      this.frames - this.startingFrame + this.FPS >= this.timer ||
+      this.bodies[0].radius == 0
+    ) {
       this.handleGameOver({ won: false })
     }
     if (
       !this.won &&
       this.mode == 'game' &&
-      this.bodies.reduce((a, c) => a + c.radius, 0) == 0
+      this.bodies.slice(1).reduce((a, c) => a + c.radius, 0) == 0
     ) {
       this.handleGameOver({ won: true })
     }
@@ -333,15 +216,23 @@ export const Visuals = {
   },
   drawPause() {
     if (this.paused) {
-      this.p.noStroke()
-      this.p.strokeWeight(0)
-      this.p.fill('rgba(0,0,0,0.4)')
-      this.p.rect(0, 0, this.windowWidth, this.windowHeight)
-      this.p.push()
       this.p.fill('white')
-      this.p.translate(this.windowWidth / 2, this.windowHeight / 2)
-      this.p.triangle(-100, -100, -100, 100, 100, 0)
-      this.p.pop()
+      this.p.textSize(128)
+      // p.text('SUCCESS', this.windowWidth / 2 - 8, 190) // adjust by 8 to center SF Pro weirdness
+      this.p.textAlign(this.p.CENTER, this.p.TOP)
+      this.p.text(
+        'START',
+        this.windowWidth / 2,
+        this.windowHeight / 2 - 128 / 2
+      )
+      // this.p.noStroke()
+      // this.p.strokeWeight(0)
+      // this.p.fill('rgba(0,0,0,0.4)')
+      // this.p.rect(0, 0, this.windowWidth, this.windowHeight)
+      // this.p.push()
+      // this.p.translate(this.windowWidth / 2, this.windowHeight / 2)
+      // this.p.triangle(-100, -100, -100, 100, 100, 0)
+      // this.p.pop()
     }
   },
   drawBodyOutlines() {
@@ -357,12 +248,13 @@ export const Visuals = {
     }
   },
 
-  drawStarBg() {
+  drawBg() {
     // this.p.background('rgb(10,10,100)')
     this.p.background('rgb(10,10,10)')
     // this.p.background('white')
     if (!this.starBG) {
       this.starBG = this.p.createGraphics(this.windowWidth, this.windowHeight)
+
       for (let i = 0; i < 200; i++) {
         // this.starBG.stroke('black')
         this.starBG.noStroke()
@@ -391,37 +283,34 @@ export const Visuals = {
       //   }
       // }
     }
-
-    const basicX =
-      Math.floor((this.frames / this.FPS) * (this.frames / this.FPS)) %
-      this.windowWidth
-    const basicY =
-      Math.floor((this.frames / this.FPS) * (this.frames / this.FPS)) %
-      this.windowHeight
+    const basicX = 0
+    // Math.floor((this.frames / FPS) * (this.frames / FPS)) % this.windowWidth
+    const basicY = 0
+    // Math.floor((this.frames / FPS) * (this.frames / FPS)) % this.windowHeight
 
     // const basicX = this.accumX % this.windowWidth
     // const basicY = this.accumY % this.windowHeight
 
-    const Xleft = basicX - this.windowWidth
-    const Xright = basicX + this.windowWidth
+    // const Xleft = basicX - this.windowWidth
+    // const Xright = basicX + this.windowWidth
 
-    const Ytop = basicY - this.windowHeight
-    const Ybottom = basicY + this.windowHeight
+    // const Ytop = basicY - this.windowHeight
+    // const Ybottom = basicY + this.windowHeight
 
-    this.confirmedStarPositions ||= []
-    for (let i = 0; i < this.starPositions?.length; i++) {
-      if (i < this.confirmedStarPositions.length) continue
-      const starBody = this.starPositions[i]
-      const radius = starBody.radius * 4
-      if (Xleft < 10) {
-        this.drawBodiesLooped(starBody, radius, this.drawStarOnBG)
-        if (this.loaded) {
-          this.confirmedStarPositions.push(this.starPositions[i])
-        }
-      } else {
-        this.drawBodiesLooped(starBody, radius, this.drawStarOnTopOfBG)
-      }
-    }
+    // this.confirmedStarPositions ||= []
+    // for (let i = 0; i < this.starPositions?.length; i++) {
+    //   if (i < this.confirmedStarPositions.length) continue
+    //   const starBody = this.starPositions[i]
+    //   const radius = starBody.radius * 4
+    //   if (Xleft < 10) {
+    //     this.drawBodiesLooped(starBody, radius, this.drawStarOnBG)
+    //     if (this.loaded) {
+    //       this.confirmedStarPositions.push(this.starPositions[i])
+    //     }
+    //   } else {
+    //     this.drawBodiesLooped(starBody, radius, this.drawStarOnTopOfBG)
+    //   }
+    // }
 
     this.p.image(
       this.starBG,
@@ -430,69 +319,69 @@ export const Visuals = {
       this.windowWidth,
       this.windowHeight
     )
-    this.p.image(
-      this.starBG,
-      Xleft,
-      basicY,
-      this.windowWidth,
-      this.windowHeight
-    )
-    this.p.image(
-      this.starBG,
-      Xright,
-      basicY,
-      this.windowWidth,
-      this.windowHeight
-    )
-    this.p.image(this.starBG, basicX, Ytop, this.windowWidth, this.windowHeight)
-    this.p.image(
-      this.starBG,
-      basicX,
-      Ybottom,
-      this.windowWidth,
-      this.windowHeight
-    )
-    this.p.image(this.starBG, Xleft, Ytop, this.windowWidth, this.windowHeight)
-    this.p.image(this.starBG, Xright, Ytop, this.windowWidth, this.windowHeight)
-    this.p.image(
-      this.starBG,
-      Xleft,
-      Ybottom,
-      this.windowWidth,
-      this.windowHeight
-    )
-    this.p.image(
-      this.starBG,
-      Xright,
-      Ybottom,
-      this.windowWidth,
-      this.windowHeight
-    )
+    // this.p.image(
+    //   this.starBG,
+    //   Xleft,
+    //   basicY,
+    //   this.windowWidth,
+    //   this.windowHeight
+    // )
+    // this.p.image(
+    //   this.starBG,
+    //   Xright,
+    //   basicY,
+    //   this.windowWidth,
+    //   this.windowHeight
+    // )
+    // this.p.image(this.starBG, basicX, Ytop, this.windowWidth, this.windowHeight)
+    // this.p.image(
+    //   this.starBG,
+    //   basicX,
+    //   Ybottom,
+    //   this.windowWidth,
+    //   this.windowHeight
+    // )
+    // this.p.image(this.starBG, Xleft, Ytop, this.windowWidth, this.windowHeight)
+    // this.p.image(this.starBG, Xright, Ytop, this.windowWidth, this.windowHeight)
+    // this.p.image(
+    //   this.starBG,
+    //   Xleft,
+    //   Ybottom,
+    //   this.windowWidth,
+    //   this.windowHeight
+    // )
+    // this.p.image(
+    //   this.starBG,
+    //   Xright,
+    //   Ybottom,
+    //   this.windowWidth,
+    //   this.windowHeight
+    // )
 
-    // Grid lines
-    const boxCount = 6
-    // this.p.stroke('black')
-    this.p.stroke('white')
-    for (let i = 1; i < boxCount; i++) {
-      if (i % 5 == 5) {
-        this.p.strokeWeight(1)
-        // this.starBG.stroke(`hsl(${i * (360 / totalLines)}, 100%, 50%)`)
-      } else {
-        this.p.strokeWeight(1)
-      }
-      this.p.line(
-        i * (this.windowWidth / boxCount),
-        0,
-        i * (this.windowWidth / boxCount),
-        this.windowHeight
-      )
-      this.p.line(
-        0,
-        i * (this.windowHeight / boxCount),
-        this.windowWidth,
-        i * (this.windowHeight / boxCount)
-      )
-    }
+    // // Grid lines
+    // const boxCount = 6
+    // // this.p.stroke('black')
+    // this.p.stroke('white')
+    // for (let i = 1; i < boxCount; i++) {
+    //   if (i % 5 == 5) {
+    //     this.p.strokeWeight(1)
+    //     // this.starBG.stroke(`hsl(${i * (360 / totalLines)}, 100%, 50%)`)
+    //   } else {
+    //     this.p.strokeWeight(1)
+    //   }
+    //   this.p.line(
+    //     i * (this.windowWidth / boxCount),
+    //     0,
+    //     i * (this.windowWidth / boxCount),
+    //     this.windowHeight
+    //   )
+    //   this.p.line(
+    //     0,
+    //     i * (this.windowHeight / boxCount),
+    //     this.windowWidth,
+    //     i * (this.windowHeight / boxCount)
+    //   )
+    // }
   },
 
   tintImage(img, color) {
@@ -626,12 +515,6 @@ export const Visuals = {
     this.p.background(255)
   },
 
-  drawBg() {
-    this.drawStarBg()
-    // this.drawSolidBg()
-    // this.drawStaticBg()
-  },
-
   getColorDir(chunk) {
     return Math.floor(this.frames / (255 * chunk)) % 2 == 0
   },
@@ -673,8 +556,10 @@ export const Visuals = {
     p.fill('white')
     p.noStroke()
     p.textAlign(p.LEFT, p.TOP)
-    const secondsLeft =
-      (this.startingFrame + this.timer - this.frames) / this.FPS
+
+    const runningFrames = this.frames - this.startingFrame
+    const seconds = runningFrames / this.FPS
+
 
     if (this.gameOver) {
       this.scoreSize = this.initialScoreSize
@@ -684,18 +569,20 @@ export const Visuals = {
     }
 
     // make the timer bigger as time runs out
-    if (secondsLeft <= 9 && this.scoreSize < 420) {
+    if (seconds >= 51 && this.scoreSize < 420) {
       this.scoreSize += 5
       p.fill(255, 255, 255, 150)
-    } else if (secondsLeft < 30 && this.scoreSize < 160) {
+    } else if (seconds > 30 && this.scoreSize < 160) {
       this.scoreSize += 2
       p.fill(255, 255, 255, 150)
-    } else if (secondsLeft < 50 && this.scoreSize < 80) {
+    } else if (seconds > 50 && this.scoreSize < 80) {
       this.scoreSize += 1
       p.fill(255, 255, 255, 150)
     }
     p.textSize(this.scoreSize)
-    p.text(secondsLeft.toFixed(0), 20, 10)
+    if (runningFrames > 2) {
+      p.text(seconds.toFixed(2) + 's', 20, 10)
+    }
 
     p.pop()
   },
@@ -712,7 +599,7 @@ export const Visuals = {
 
     // draw a white box behind the stats, with border radius
     p.fill('white')
-    p.rect(this.windowWidth / 2 - 320, 350, 640, 300, 20, 20, 20, 20)
+    p.rect(this.windowWidth / 2 - 320, 340, 640, 350, 20, 20, 20, 20)
 
     // draw stats
     p.textSize(48)
@@ -733,13 +620,13 @@ export const Visuals = {
       const xLeft = this.windowWidth / 2 - 300
       const xRight = this.windowWidth / 2 + 300
       const y = 374 + leading * i
-      if (i === 3) {
-        p.stroke('black')
-        p.strokeWeight(4)
-        p.line(xLeft, y, xRight, y)
-        p.noStroke()
-        barPadding = 20
-      }
+      // if (i === 3) {
+      //   p.stroke('black')
+      //   p.strokeWeight(4)
+      //   p.line(xLeft, y, xRight, y)
+      //   p.noStroke()
+      //   barPadding = 20
+      // }
       for (const [j, stat] of line.split(':').entries()) {
         if (j === 0) {
           p.textAlign(p.LEFT, p.TOP)
@@ -756,7 +643,7 @@ export const Visuals = {
       this.drawButton({
         text: 'retry',
         x: this.windowWidth / 2 - 140,
-        y: this.windowHeight / 2 + 205,
+        y: this.windowHeight / 2 + 225,
         height: 90,
         width: 280,
         onClick: () => this.restart(null, false)
@@ -1046,74 +933,97 @@ export const Visuals = {
     return closeEnough
   },
 
-  drawPngFace(radius, body, offset) {
-    const closeEnough = this.isMissileClose(body)
-    if (body.radius !== 0 && !closeEnough) return
-    this.pngFaces ||= new Array(FACE_PNGS.length)
-      .fill(null)
-      .map(() => new Array(FACE_PNGS[0].length))
-    const faceIdx = body.mintedBodyIndex || body.bodyIndex
+  drawPngFace(/*radius, body, offset*/) {
+    return
+    // if (body.bodyIndex == 0) return
+    // const closeEnough = true //this.isMissileClose(body)
+    // if (body.radius !== 0 && !closeEnough) return
+    // this.pngFaces ||= new Array(FACE_PNGS.length)
+    //   .fill(null)
+    //   .map(() => new Array(FACE_PNGS[0].length))
+    // const faceIdx = body.faceIndex || body.mintedBodyIndex || body.bodyIndex
+    // // faceRotation: 'time' | 'hitcycle' | 'mania'
+    // // time: start sleepy and get happier as time goes on
+    // // hit: rotate to a new face each time (expression is starLvl % 3)
+    // // mania: when body is hit, cycle wildly until end of game
+    // let hit = body.radius === 0
+    // let expression = 1
+    // /*Math.ceil(
+    //   (2 * (hit ? body.starLvl - 1 : body.starLvl)) / body.maxStarLvl
+    // ) // 0 sleepy, 1 normal, 2 ecstatic
+    // */
+    // const framesLeft = this.startingFrame + this.timer - this.frames
+    // switch (this.faceRotation) {
+    //   case 'time':
+    //     expression = 2 - Math.floor((framesLeft / this.timer) * 3)
+    //     break
+    //   case 'hitcycle':
+    //     expression = hit
+    //       ? expression + (Math.floor(this.frames / 10) % 2)
+    //       : expression
+    //     break
+    //   case 'mania':
+    //     // cycle every 10 frames when hit
+    //     expression = hit ? Math.floor(this.frames / 10) % 3 : expression
+    //     break
+    // }
+    // expression = expression % 3
+    // // const no_mouth = expression * 2 + 1
+    // const with_mouth = expression * 2
 
-    // faceRotation: 'time' | 'hitcycle' | 'mania'
-    // time: start sleepy and get happier as time goes on
-    // hit: rotate to a new face each time (expression is starLvl % 3)
-    // mania: when body is hit, cycle wildly until end of game
-    let hit = body.radius === 0
-    let expression = Math.ceil(
-      (2 * (hit ? body.starLvl - 1 : body.starLvl)) / body.maxStarLvl
-    ) // 0 sleepy, 1 normal, 2 ecstatic
-    const framesLeft = this.startingFrame + this.timer - this.frames
-    switch (this.faceRotation) {
-      case 'time':
-        expression = 2 - Math.floor((framesLeft / this.timer) * 3)
-        break
-      case 'hitcycle':
-        expression = hit
-          ? expression + (Math.floor(this.frames / 10) % 2)
-          : expression
-        break
-      case 'mania':
-        // cycle every 10 frames when hit
-        expression = hit ? Math.floor(this.frames / 10) % 3 : expression
-        break
-    }
-    expression = expression % 3
-    const no_mouth = expression * 2 + 1
-    const with_mouth = expression * 2
+    // // let closeEnough = this.isMissileClose(body)
+    // const whichFace = with_mouth //body.radius !== 0 ? no_mouth : with_mouth
+    // const face = this.pngFaces[faceIdx][whichFace]
+    // if (!face) {
+    //   this.pngFaces[faceIdx][whichFace] = 'loading'
+    //   const png = FACE_PNGS[faceIdx][whichFace]
+    //   this.p.loadImage(png, (img) => {
+    //     const origX = img.width
+    //     const origY = img.height
+    //     const scale = 1
+    //     const foo = this.p.createGraphics(origX / scale, origY / scale)
+    //     // foo.noSmooth()
+    //     // const ctx = foo.canvas.getContext('2d')
 
-    // let closeEnough = this.isMissileClose(body)
-    const whichFace = body.radius !== 0 ? no_mouth : with_mouth
-    const face = this.pngFaces[faceIdx][whichFace]
-    if (!face) {
-      this.pngFaces[faceIdx][whichFace] = 'loading'
-      const png = FACE_PNGS[faceIdx][whichFace]
-      this.p.loadImage(png, (img) => {
-        // to make masked background
+    //     // turn off image aliasing
+    //     // foo.drawingContext.msImageSmoothingEnabled = false
+    //     // foo.drawingContext.mozImageSmoothingEnabled = false
+    //     // foo.drawingContext.webkitImageSmoothingEnabled = false
+    //     // foo.drawingContext.imageSmoothingEnabled = false
 
-        // const bgSize = img.width * 1.2
-        // const imgCopy = img.get()
-        // this.maskImage(imgCopy, [255, 255, 255])
-        // const tinted = this.p.createGraphics(bgSize, bgSize)
-        // const cc = this.getTintFromColor(body.c)
-        // tinted.tint(cc[0], cc[1], cc[2])
-        // tinted.image(imgCopy, 0, 0, bgSize, bgSize)
-        // tinted.noTint()
-        // const offset = (bgSize - img.width) / 2
-        // tinted.image(img, offset, offset)
-        // this.pngFaces[faceIdx][expression] = tinted
-        this.pngFaces[faceIdx][whichFace] = img
-      })
-    }
-    if (face && face !== 'loading') {
-      const faceSize = radius / 1.5
-      this.bodiesGraphic.image(
-        face,
-        -faceSize / 2,
-        -faceSize / 2 + offset - (body.radius == 0 ? 0 : radius / 5),
-        faceSize,
-        faceSize
-      )
-    }
+    //     // foo.pixelDensity(0.1)
+    //     foo.image(img, 0, 0, origX / scale, origY / scale)
+    //     foo.loadPixels()
+    //     // to make masked background
+
+    //     // const bgSize = img.width * 1.2
+    //     // const imgCopy = img.get()
+    //     // this.maskImage(imgCopy, [255, 255, 255])
+    //     // const tinted = this.p.createGraphics(bgSize, bgSize)
+    //     // const cc = this.getTintFromColor(body.c)
+    //     // tinted.tint(cc[0], cc[1], cc[2])
+    //     // tinted.image(imgCopy, 0, 0, bgSize, bgSize)
+    //     // tinted.noTint()
+    //     // const offset = (bgSize - img.width) / 2
+    //     // tinted.image(img, offset, offset)
+    //     // this.pngFaces[faceIdx][expression] = tinted
+    //     this.pngFaces[faceIdx][whichFace] = foo
+    //   })
+    // }
+    // if (face && face !== 'loading') {
+    //   const faceSize = radius
+    //   // this.bodiesGraphic.drawingContext.msImageSmoothingEnabled = false
+    //   // this.bodiesGraphic.drawingContext.mozImageSmoothingEnabled = false
+    //   // this.bodiesGraphic.drawingContext.webkitImageSmoothingEnabled = false
+    //   // this.bodiesGraphic.drawingContext.imageSmoothingEnabled = false
+    //   this.bodiesGraphic.image(
+    //     face,
+    //     -faceSize / 2,
+    //     -faceSize / 2,
+    //     faceSize,
+    //     faceSize
+    //   )
+    // }
   },
 
   drawGlyphFace(radius, body) {
@@ -1299,7 +1209,29 @@ export const Visuals = {
 
   drawBodyStyle1(radius, body, offset) {
     this.bodiesGraphic.noStroke()
-    this.bodiesGraphic.fill(body.c)
+    let c =
+      body.radius !== 0 ? body.c : this.replaceOpacity(body.c, this.deadOpacity)
+    if (body.bodyIndex == 0) {
+      c = 'white'
+    }
+    this.bodiesGraphic.fill(c)
+    // const scale = 1
+    // const foo = this.p.createGraphics(radius / scale, radius / scale)
+    // foo.noStroke()
+    // foo.fill(c)
+    // foo.ellipse(
+    //   radius / scale / 2,
+    //   radius / scale / 2,
+    //   radius / scale,
+    //   radius / scale
+    // )
+    // this.bodiesGraphic.image(
+    //   foo,
+    //   -radius / 2,
+    //   -radius / 2 - offset,
+    //   radius,
+    //   radius
+    // )
     this.bodiesGraphic.ellipse(0, offset, radius, radius)
     if (this.globalStyle == 'psycho' && this.target == 'inside') {
       this.drawCenter(body, this.bodiesGraphic, 0, offset)
@@ -1398,6 +1330,17 @@ export const Visuals = {
     // }
 
     this.bodiesGraphic ||= p.createGraphics(this.windowWidth, this.windowHeight)
+
+    this.bodiesGraphic.drawingContext.msImageSmoothingEnabled = false
+    this.bodiesGraphic.drawingContext.mozImageSmoothingEnabled = false
+    this.bodiesGraphic.drawingContext.webkitImageSmoothingEnabled = false
+    this.bodiesGraphic.drawingContext.imageSmoothingEnabled = false
+    // this.bodiesGraphic.pixelDensity(0.2)
+
+    this.bodiesGraphic.drawingContext.msImageSmoothingEnabled = false
+    this.bodiesGraphic.drawingContext.mozImageSmoothingEnabled = false
+    this.bodiesGraphic.drawingContext.webkitImageSmoothingEnabled = false
+    this.bodiesGraphic.drawingContext.imageSmoothingEnabled = false
     this.bodiesGraphic.noStroke()
     for (const body of this.witheringBodies) {
       p.push()
@@ -1479,6 +1422,7 @@ export const Visuals = {
       const body = this.bodies[i]
       // after final proof is sent, don't draw upgradable bodies
       if (this.finalBatchSent && body.maxStarLvl == body.starLvl) continue
+      if (body.radius == 0) continue
       const bodyRadius = this.bodyCopies.filter(
         (b) => b.bodyIndex == body.bodyIndex
       )[0]?.radius
@@ -1599,19 +1543,22 @@ export const Visuals = {
     this.p.pop()
   },
 
-  drawTailStyle1(x, y, v, radius, finalColor, offset) {
+  drawTailStyle1(/*x, y, v, radius, finalColor, offset*/) {
+    return
     // finalColor = finalColor.replace(this.opac, '1')
-    this.p.push()
-    this.p.translate(x, y)
-    this.p.rotate(v.heading() + this.p.PI / 2)
+    // this.p.push()
+    // this.p.translate(x, y)
+    // this.p.rotate(v.heading() + this.p.PI / 2)
 
-    // this.p.rotate(angle)
-    this.p.fill(finalColor)
-    this.p.noStroke()
-    this.p.ellipse(0, offset, radius, radius)
+    // // this.p.rotate(angle)
+    // this.p.fill(finalColor)
+    // this.p.stroke(finalColor)
+    // // this.p.strokeWeight(10)
+    // // this.p.noFill()
+    // this.p.ellipse(0, offset, radius * 1.2)
 
-    // this.p.image(this.drawTails[id], -radius / 2, -radius)
-    this.p.pop()
+    // // this.p.image(this.drawTails[id], -radius / 2, -radius)
+    // this.p.pop()
   },
 
   drawTailStyleGhost(x, y, v, radius, finalColor) {
@@ -1705,11 +1652,22 @@ export const Visuals = {
   },
 
   drawTails() {
+    // if (this.allCopiesOfBodies && this.allCopiesOfBodies.length > 0) {
+    //   const allCopiesOfBodies =
+    //     this.allCopiesOfBodies[this.allCopiesOfBodies.length - 1]
+    //   const body = allCopiesOfBodies[0]
+    //   if (body.bodyIndex == 0) {
+    //     this.p.noFill()
+    //     this.p.stroke('white')
+    //     this.p.strokeWeight(10)
+    //     this.p.ellipse(body.position.x, body.position.y, body.radius * 10)
+    //   }
+    // }
     for (let i = 0; i < this.allCopiesOfBodies.length; i++) {
       const copyOfBodies = this.allCopiesOfBodies[i]
-
       for (let j = 0; j < copyOfBodies.length; j++) {
         const body = copyOfBodies[j]
+        if (body.bodyIndex == 0) continue
         if (this.gameOver || this.won) {
           if (
             this.witheringBodies.filter((b) => b.bodyIndex == body.bodyIndex)
@@ -1717,20 +1675,17 @@ export const Visuals = {
           )
             continue
         }
-        const c = body.c
-        let finalColor
-        if (this.colorStyle == 'squiggle') {
-          const hueColor = (parseInt(c.split(',')[1]) + this.frames) % 360
-          finalColor = this.p.color(hueColor, 60, 100) // Saturation and brightness at 100 for pure spectral colors
-        } else {
-          finalColor = c
-        }
-        this.p.fill(finalColor)
+        if (body.radius == 0) continue
+        let c =
+          body.radius !== 0
+            ? this.replaceOpacity(body.c, this.deadOpacity)
+            : this.replaceOpacity(body.c, this.deadOpacity)
+        this.p.fill(c)
         // if (this.mode == 'nft') {
         const bodyCopy = this.bodyCopies.filter(
           (b) => b.bodyIndex == body.bodyIndex
         )[0]
-        const radius = this.getBodyRadius(bodyCopy.radius)
+        const radius = this.getBodyRadius(bodyCopy.radius) * 1.1
 
         // this.p.ellipse(body.position.x, body.position.y, radius, radius)
         this.p.push()
@@ -1747,7 +1702,7 @@ export const Visuals = {
               body.position.y,
               body.velocity,
               radius,
-              finalColor,
+              c,
               offset
             )
             break
@@ -1757,7 +1712,7 @@ export const Visuals = {
               body.position.y,
               body.velocity,
               radius,
-              finalColor,
+              c,
               offset
             )
             break
@@ -1767,12 +1722,29 @@ export const Visuals = {
               body.position.y,
               body.velocity,
               radius,
-              finalColor,
+              c,
               offset
             )
         }
       }
     }
+  },
+
+  replaceOpacity(c, opacity) {
+    const isHSLA = c.includes('hsla')
+    const prefix = isHSLA ? 'hsla' : 'rgba'
+    let cc = c
+      .split(',')
+      .map((c) => parseFloat(c.replace(')', '').replace(prefix + '(', '')))
+    if (cc.length !== 4) {
+      throw new Error('Color must have alpha value format, instead it has ' + c)
+    }
+    cc[3] = opacity
+    if (isHSLA) {
+      cc[1] = cc[1] + '%'
+      cc[2] = cc[2] + '%'
+    }
+    return `${prefix}(${cc.join(',')})`
   },
 
   brighten(c, amount = 20) {
@@ -1786,7 +1758,7 @@ export const Visuals = {
   },
 
   drawCenter(b, p = this.p, x, y) {
-    let closeEnough = this.isMissileClose(b)
+    let closeEnough = false //this.isMissileClose(b)
     // this.p.blendMode(this.p.DIFFERENCE)
     p.noStroke()
     x = x == undefined ? b.position.x : x
@@ -1794,7 +1766,6 @@ export const Visuals = {
     const r = b.radius * 4
     if (r == 0) return
     let c = this.brighten(b.c).replace(this.opac, 1)
-
     if (this.target == 'outside') {
       p.fill(c)
       p.ellipse(x, y, r)
@@ -1802,6 +1773,13 @@ export const Visuals = {
       p.image(star, x - r / 2, y - r / 2, r, r)
     } else {
       let darker = this.brighten(b.c, -30).replace(this.opac, 1)
+      if (b.bodyIndex == 0) {
+        darker = '#FFF44F'
+
+        p.fill(darker)
+        p.ellipse(x, y, r)
+        return
+      }
       p.fill(darker)
       p.ellipse(x, y, r)
       if (closeEnough) {
@@ -1832,6 +1810,27 @@ export const Visuals = {
         p.noFill()
         p.ellipse(x, y, r)
       } else {
+        // const width = r / 2
+        // const rotatedAngle = b.velocity.heading()
+        // p.push()
+        // p.translate(x, y)
+        // p.rotate(rotatedAngle + p.PI / 2)
+        // const teeth = 6
+        // for (let i = 0; i < teeth; i++) {
+        //   p.fill('white')
+        //   const xx = 0 - width / (teeth / 2) + ((i % (teeth / 2)) * width) / 2
+        //   const yy =
+        //     -width / (teeth / 2) - ((i < teeth / 2 ? -1 : 1) * width) / 5
+        //   p.ellipse(xx - width / teeth / 2, yy + width / 4, width / (teeth / 3))
+        // }
+        // p.fill(darker)
+        // p.rect(0 - width / 1.5, 0 - width / 1.5, width * 1.5, width / 3)
+        // p.rect(0 - width / 1.5, 0 + width / 4, width * 1.5, width / 3)
+        // p.strokeWeight(15)
+        // p.noFill()
+        // p.stroke(darker)
+        // p.ellipse(0, 0, r - 7)
+        // p.pop()
         p.strokeWeight(0)
         const count = 3
         for (let i = 0; i < count; i++) {

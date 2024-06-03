@@ -2,6 +2,8 @@
 
 pragma solidity ^0.8.0;
 
+import {Groth16Verifier as Groth16Verifier1} from "./Game_1_20Verifier.sol";
+import {Groth16Verifier as Groth16Verifier2} from "./Game_2_20Verifier.sol";
 import {Groth16Verifier as Groth16Verifier3} from "./Game_3_20Verifier.sol";
 import {Groth16Verifier as Groth16Verifier4} from "./Game_4_20Verifier.sol";
 import {Groth16Verifier as Groth16Verifier5} from "./Game_5_20Verifier.sol";
@@ -14,12 +16,10 @@ import {Groth16Verifier as Groth16Verifier10} from "./Game_10_20Verifier.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "./Problems.sol";
-import "./Dust.sol";
 import "hardhat/console.sol";
 
 contract Solver is Ownable {
     address payable public problems;
-    address public dust;
     uint256 public constant decimals = 10 ** 18;
 
     uint256[11] public bodyBoost = [
@@ -49,13 +49,13 @@ contract Solver is Ownable {
     event Solved(
         address indexed solver,
         uint256 indexed problemId,
+        uint256 indexed level,
         uint256 ticksInThisMatch,
-        uint256 winnings
+        uint256 day
     );
 
-    constructor(address payable problems_, address dust_) {
+    constructor(address payable problems_) {
         problems = problems_;
-        dust = dust_;
     }
 
     fallback() external {
@@ -66,9 +66,6 @@ contract Solver is Ownable {
         problems = problems_;
     }
 
-    function updateDustAddress(address dust_) public onlyOwner {
-        dust = dust_;
-    }
 
     function inProgress(uint256 problemId) public view returns (bool) {
         return matches[problemId].inProgress;
@@ -93,10 +90,12 @@ contract Solver is Ownable {
         address owner = Problems(problems).ownerOf(problemId);
         require(owner == msg.sender, "Not the owner");
 
-        (, uint256 bodyCount, , uint256 previousTickCount) = Problems(problems)
+        (bool solved, , uint256 day, uint256 bodyCount, , uint256 previousTickCount) = Problems(problems)
             .problems(problemId);
+        require(!solved, "Already solved");
+        require(Problems(problems).currentDay() == day, "No longer accepting submissions for today");
 
-        uint256 numberOfInputs = bodyCount * 5 * 2;
+        uint256 numberOfInputs = bodyCount * 5 * 2 + 1;
         require(input.length == numberOfInputs, "Invalid input length");
         address verifier = Problems(problems).verifiers(
             bodyCount,
@@ -104,14 +103,41 @@ contract Solver is Ownable {
         );
 
         require(verifier != address(0), "Invalid verifier");
+        
+         // TODO: confirm index
+        address solver = address(uint160(input[bodyCount*5 + 1]));
+        require(solver == msg.sender, "Invalid solver");
 
-        if (bodyCount == 3) {
+
+        uint256 time = input[bodyCount * 5];
+
+        if (bodyCount == 1) {
+            //require(
+                //Groth16Verifier1(verifier).verifyProof(
+                //    a,
+                //    b,
+                //    c,
+                //    convertTo11(input)
+                //),
+                //"Invalid 1 body proof"
+            //);
+        } else if (bodyCount == 2) {
+            //require(
+                //Groth16Verifier2(verifier).verifyProof(
+                //    a,
+                //    b,
+                //    c,
+                //    convertTo21(input)
+                //),
+                //"Invalid 2 body proof"
+            //);
+        } else if (bodyCount == 3) {
             //require(
                 //Groth16Verifier3(verifier).verifyProof(
                 //    a,
                 //    b,
                 //    c,
-                //    convertTo30(input)
+                //    convertTo31(input)
                 //),
                 //"Invalid 3 body proof"
             //);
@@ -121,7 +147,7 @@ contract Solver is Ownable {
                 //    a,
                 //    b,
                 //    c,
-                //    convertTo40(input)
+                //    convertTo41(input)
                 //),
                 //"Invalid 4 body proof"
             //);
@@ -131,7 +157,7 @@ contract Solver is Ownable {
                 //    a,
                 //    b,
                 //    c,
-                //    convertTo50(input)
+                //    convertTo51(input)
                 //),
                 //"Invalid 5 body proof"
             //);
@@ -141,7 +167,7 @@ contract Solver is Ownable {
                 //    a,
                 //    b,
                 //    c,
-                //    convertTo60(input)
+                //    convertTo61(input)
                 //),
                 //"Invalid 6 body proof"
             //);
@@ -151,7 +177,7 @@ contract Solver is Ownable {
                 //    a,
                 //    b,
                 //    c,
-                //    convertTo70(input)
+                //    convertTo71(input)
                 //),
                 //"Invalid 7 body proof"
             //);
@@ -161,7 +187,7 @@ contract Solver is Ownable {
                 //    a,
                 //    b,
                 //    c,
-                //    convertTo80(input)
+                //    convertTo81(input)
                 //),
                 //"Invalid 8 body proof"
             //);
@@ -171,7 +197,7 @@ contract Solver is Ownable {
                 //    a,
                 //    b,
                 //    c,
-                //    convertTo90(input)
+                //    convertTo91(input)
                 //),
                 //"Invalid 9 body proof"
             //);
@@ -181,7 +207,7 @@ contract Solver is Ownable {
                 //    a,
                 //    b,
                 //    c,
-                //    convertTo100(input)
+                //    convertTo101(input)
                 //),
                 //"Invalid 10 body proof"
             //);
@@ -198,9 +224,8 @@ contract Solver is Ownable {
           matches[problemId] = currentMatch;
         }
 
-        uint256 newTotalTicks = previousTickCount + tickCount;
+        uint256 newTotalTicks = previousTickCount + time;
         uint256 ticksInThisMatch = newTotalTicks - currentMatch.startingTick;
-
         if(ticksInThisMatch > maxTick) {
           revert("Max tick exceeded");
         }
@@ -225,9 +250,9 @@ contract Solver is Ownable {
 
             // px
             // confirm previously stored values were used as input to the proof
-            // uint256 pxIndex = 5 * bodyCount + i * 5 + 0;
+            // uint256 pxIndex = 5 * bodyCount + i * 5 + 0 + 1 (for time);
             require(
-                bodyData.px == input[5 * bodyCount + i * 5 + 0],
+                bodyData.px == input[5 * bodyCount + i * 5 + 0 + 1],
                 "Invalid position x"
             );
             // update stored values
@@ -235,9 +260,9 @@ contract Solver is Ownable {
 
             // py
             // confirm previously stored values were used as input to the proof
-            // uint256 pyIndex = 5 * bodyCount + i * 5 + 1;
+            // uint256 pyIndex = 5 * bodyCount + i * 5 + 1 + 1 (for time);
             require(
-                bodyData.py == input[5 * bodyCount + i * 5 + 1],
+                bodyData.py == input[5 * bodyCount + i * 5 + 1 + 1],
                 "Invalid position y"
             );
             // update stored values
@@ -245,9 +270,9 @@ contract Solver is Ownable {
 
             // vx
             // confirm previously stored values were used as input to the proof
-            // uint256 vxIndex = 5 * bodyCount + i * 5 + 2;
+            // uint256 vxIndex = 5 * bodyCount + i * 5 + 2 + 1 (for time);
             require(
-                bodyData.vx == input[5 * bodyCount + i * 5 + 2],
+                bodyData.vx == input[5 * bodyCount + i * 5 + 2 + 1],
                 "Invalid vector x"
             );
             // update stored values
@@ -255,9 +280,9 @@ contract Solver is Ownable {
 
             // vy
             // confirm previously stored values were used as input to the proof
-            // uint256 vyIndex = 5 * bodyCount + i * 5 + 3;
+            // uint256 vyIndex = 5 * bodyCount + i * 5 + 3 + 1 (for time);
             require(
-                bodyData.vy == input[5 * bodyCount + i * 5 + 3],
+                bodyData.vy == input[5 * bodyCount + i * 5 + 3 + 1],
                 "Invalid vector y"
             );
             // update stored values
@@ -265,9 +290,9 @@ contract Solver is Ownable {
 
             // radius
             // confirm previously stored values were used as input to the proof
-            // uint256 radiusIndex = 5 * bodyCount + i * 5 + 4;
+            // uint256 radiusIndex = 5 * bodyCount + i * 5 + 4 + 1 (for time);
             require(
-                bodyData.radius == input[5 * bodyCount + i * 5 + 4],
+                bodyData.radius == input[5 * bodyCount + i * 5 + 4 + 1],
                 "Invalid radius"
             );
             // update stored values
@@ -284,117 +309,115 @@ contract Solver is Ownable {
 
         // beat the level
         if(bodiesGone == bodyCount) {
-          // bonus for beating level in half time
-          uint256 speedBoost = getSpeedBoost(ticksInThisMatch);
-          uint256 winnings = /*bodyCount **/ speedBoost * bodyBoost[bodyCount] * decimals;
-          Dust(dust).mint(
-              msg.sender,
-              winnings
-          );
-          Problems(problems).restoreRadius(problemId);
-          Problems(problems).levelUp(problemId);
+          Problems(problems).levelUp(problemId, ticksInThisMatch);
+          Problems(problems).restoreValues(problemId);
           delete matches[problemId];
-          emit Solved(msg.sender, problemId, ticksInThisMatch, winnings);
-        }
-    }
-
-    function getSpeedBoost(uint256 ticks) public pure returns (uint256) {
-        if (ticks <= 1 * maxTick / 6) {
-          return 6;
-        } else if (ticks <= 2 * maxTick / 6) {
-          return 5;
-        } else if (ticks <= 3 * maxTick / 6) {
-          return 4;
-        } else if (ticks <= 4 * maxTick / 6) {
-          return 3;
-        } else if (ticks <= 5 * maxTick / 6) {
-          return 2;
-        } else {
-          return 1;
+          emit Solved(msg.sender, problemId, bodyCount, ticksInThisMatch, day);
         }
     }
 
     function deleteMatch(uint256 problemId) public {
       require(msg.sender == Problems(problems).ownerOf(problemId), "Not the owner");
-      Problems(problems).restoreRadius(problemId);
+      require(matches[problemId].inProgress, "Match not in progress");
+      Problems(problems).restoreValues(problemId);
       delete matches[problemId];
     }
 
-    function convertTo30(
+    function convertTo11(
         uint[] memory input
-    ) internal pure returns (uint[30] memory) {
-        uint[30] memory input_;
-        for (uint256 i = 0; i < 30; i++) {
+    ) internal pure returns (uint[11] memory) {
+        uint[11] memory input_;
+        for (uint256 i = 0; i < 11; i++) {
             input_[i] = input[i];
         }
         return input_;
     }
 
-    function convertTo40(
+    function convertTo21(
         uint[] memory input
-    ) internal pure returns (uint[40] memory) {
-        uint[40] memory input_;
-        for (uint256 i = 0; i < 40; i++) {
+    ) internal pure returns (uint[21] memory) {
+        uint[21] memory input_;
+        for (uint256 i = 0; i < 21; i++) {
             input_[i] = input[i];
         }
         return input_;
     }
 
-    function convertTo50(
+    function convertTo31(
         uint[] memory input
-    ) internal pure returns (uint[50] memory) {
-        uint[50] memory input_;
-        for (uint256 i = 0; i < 50; i++) {
+    ) internal pure returns (uint[31] memory) {
+        uint[31] memory input_;
+        for (uint256 i = 0; i < 31; i++) {
             input_[i] = input[i];
         }
         return input_;
     }
 
-    function convertTo60(
+    function convertTo41(
         uint[] memory input
-    ) internal pure returns (uint[60] memory) {
-        uint[60] memory input_;
-        for (uint256 i = 0; i < 60; i++) {
+    ) internal pure returns (uint[41] memory) {
+        uint[41] memory input_;
+        for (uint256 i = 0; i < 41; i++) {
             input_[i] = input[i];
         }
         return input_;
     }
 
-    function convertTo70(
+    function convertTo51(
         uint[] memory input
-    ) internal pure returns (uint[70] memory) {
-        uint[70] memory input_;
-        for (uint256 i = 0; i < 70; i++) {
+    ) internal pure returns (uint[51] memory) {
+        uint[51] memory input_;
+        for (uint256 i = 0; i < 51; i++) {
             input_[i] = input[i];
         }
         return input_;
     }
 
-    function convertTo80(
+    function convertTo61(
         uint[] memory input
-    ) internal pure returns (uint[80] memory) {
-        uint[80] memory input_;
-        for (uint256 i = 0; i < 80; i++) {
+    ) internal pure returns (uint[61] memory) {
+        uint[61] memory input_;
+        for (uint256 i = 0; i < 61; i++) {
             input_[i] = input[i];
         }
         return input_;
     }
 
-    function convertTo90(
+    function convertTo71(
         uint[] memory input
-    ) internal pure returns (uint[90] memory) {
-        uint[90] memory input_;
-        for (uint256 i = 0; i < 90; i++) {
+    ) internal pure returns (uint[71] memory) {
+        uint[71] memory input_;
+        for (uint256 i = 0; i < 71; i++) {
             input_[i] = input[i];
         }
         return input_;
     }
 
-    function convertTo100(
+    function convertTo81(
         uint[] memory input
-    ) internal pure returns (uint[100] memory) {
-        uint[100] memory input_;
-        for (uint256 i = 0; i < 100; i++) {
+    ) internal pure returns (uint[81] memory) {
+        uint[81] memory input_;
+        for (uint256 i = 0; i < 81; i++) {
+            input_[i] = input[i];
+        }
+        return input_;
+    }
+
+    function convertTo91(
+        uint[] memory input
+    ) internal pure returns (uint[91] memory) {
+        uint[91] memory input_;
+        for (uint256 i = 0; i < 91; i++) {
+            input_[i] = input[i];
+        }
+        return input_;
+    }
+
+    function convertTo101(
+        uint[] memory input
+    ) internal pure returns (uint[101] memory) {
+        uint[101] memory input_;
+        for (uint256 i = 0; i < 101; i++) {
             input_[i] = input[i];
         }
         return input_;
