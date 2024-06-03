@@ -9,8 +9,9 @@ describe('stepStateTest circuit', () => {
   let circuit
 
   const totalSteps = 20
-  const missileStep = 3
+  const missileStep = 0
   const sampleInputBodies = [
+    ['126000', '32000', '12000', '2000', '8000'],
     ['226000', '42000', '11000', '1000', '7000']
     // ['363000', '658000', '6680', '13740', '75000'],
     // ['679000', '500000', '12290', '12520', '50000']
@@ -25,25 +26,27 @@ describe('stepStateTest circuit', () => {
     return m
   })
 
+  const k = sampleInputBodies.length - 1
   // copy position and velocity of body for missile
   sampleInputMissiles[missileStep] = JSON.parse(
-    JSON.stringify(sampleInputBodies[0])
+    JSON.stringify(sampleInputBodies[k])
   )
 
   // move position of missile by velocity of body, the number of missileSteps
   sampleInputMissiles[missileStep][0] = (
     parseInt(sampleInputMissiles[missileStep][0]) +
-    (parseInt(sampleInputBodies[0][2]) - 10000) * missileStep
+    (parseInt(sampleInputBodies[k][2]) - 10000) * missileStep
   ).toString()
   sampleInputMissiles[missileStep][1] = (
     parseInt(sampleInputMissiles[missileStep][1]) +
-    (parseInt(sampleInputBodies[0][3]) - 10000) * missileStep
+    (parseInt(sampleInputBodies[k][3]) - 10000) * missileStep
   ).toString()
 
   // set radius of missile
   sampleInputMissiles[missileStep][4] = '10000'
 
   const sampleInput = {
+    address: '0xFa398d672936Dcf428116F687244034961545D91',
     bodies: sampleInputBodies,
     missiles: sampleInputMissiles
   }
@@ -2106,7 +2109,7 @@ describe('stepStateTest circuit', () => {
     circuit = await wasm_tester(`circuits/game_${bodies}_${steps}.circom`)
   })
 
-  it.skip('produces a witness with valid constraints', async () => {
+  it('produces a witness with valid constraints', async () => {
     const witness = await circuit.calculateWitness(sampleInput, sanityCheck)
     // const inputs =
     //   sampleInput.bodies.length * sampleInput.bodies[0].length +
@@ -2122,6 +2125,7 @@ describe('stepStateTest circuit', () => {
 
   it('has the correct output when one body and missile positioned to hit and it returns correct number of steps', async () => {
     const anybody = new Anybody(null, { util: true })
+    console.dir({ sampleInput }, { depth: null })
     let bodies = sampleInput.bodies.map(
       anybody.convertScaledStringArrayToFloat.bind(anybody)
     )
@@ -2140,7 +2144,7 @@ describe('stepStateTest circuit', () => {
 
     // missile should have hit body
     // make sure that the body didn't wrap around screen before missile could hit it
-    expect(bodies[0].radius).to.eq(0)
+    expect(bodies[k].radius).to.eq(0)
 
     bodies = anybody.convertBodiesToBigInts(bodies)
     const out_bodies = bodies.map(

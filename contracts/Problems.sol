@@ -220,20 +220,35 @@ contract Problems is ERC721, Ownable {
         problems[problemSupply].seed = generateSeed(problemSupply);
 
         emit problemCreated(problemSupply, problems[problemSupply].day, problems[problemSupply].seed);
+        mintBodyToProblem(problemSupply);
+        mintBodyToProblem(problemSupply);
+        // (uint256 bodyId, bytes32 bodySeed) = Bodies(bodies)
+        //     .mintAndAddToProblem(
+        //         recipient,
+        //         problemSupply, // problemId
+        //         0
+        //     );
+        // _addBody(
+        //     problemSupply, // problemId
+        //     bodyId,
+        //     0,
+        //     bodySeed,
+        //     0 // bodyIndex == mintedBodyIndex when minting
+        // );
 
-        (uint256 bodyId, bytes32 bodySeed) = Bodies(bodies)
-            .mintAndAddToProblem(
-                recipient,
-                problemSupply, // problemId
-                0
-            );
-        _addBody(
-            problemSupply, // problemId
-            bodyId,
-            0,
-            bodySeed,
-            0 // bodyIndex == mintedBodyIndex when minting
-        );
+        // (uint256 bodyId2, bytes32 bodySeed2) = Bodies(bodies)
+        //     .mintAndAddToProblem(
+        //         recipient,
+        //         problemSupply, // problemId
+        //         1
+        //     );
+        // _addBody(
+        //     problemSupply, // problemId
+        //     bodyId2,
+        //     1,
+        //     bodySeed2,
+        //     1 // bodyIndex == mintedBodyIndex when minting
+        // );
     }
 
     function mintBodyToProblem(uint256 problemId) internal {

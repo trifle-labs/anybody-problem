@@ -82,11 +82,11 @@ export class Anybody extends EventEmitter {
 
   // run whenever the class should be reset
   clearValues() {
-    this.deadOpacity = '0.1'
+    this.deadOpacity = '0.9'
     this.initialScoreSize = 60
     this.scoreSize = this.initialScoreSize
-    this.opac = this.globalStyle == 'psycho' ? 1 : 0.1
-    this.tailLength = 10
+    this.opac = this.globalStyle == 'psycho' ? 1 : 1
+    this.tailLength = 1
     this.tailMod = this.globalStyle == 'psycho' ? 2 : 1
     this.explosions = []
     this.missiles = []
@@ -312,7 +312,7 @@ export class Anybody extends EventEmitter {
     ) {
       // confirm('Are you sure you want to restart?') && this.restart()
       if (!this.gameOver) {
-        this.startingBodies = 2
+        // this.startingBodies = 2
       }
       this.restart()
     }
@@ -345,8 +345,6 @@ export class Anybody extends EventEmitter {
     })
     if (won) {
       this.startingBodies++
-    } else {
-      this.startingBodies = 2
     }
   }
 
@@ -590,7 +588,7 @@ export class Anybody extends EventEmitter {
       // const j = i
       // const j = this.random(0, 2)
       const j = Math.floor(this.random(1, 4))
-      const radius = i == 0 ? 22 : j * 5 + startingRadius
+      const radius = i == 0 ? 32 : j * 5 + startingRadius
       const maxStarLvl = this.random(3, 10, new Prando())
       const starLvl = this.random(0, maxStarLvl - 1, new Prando())
 

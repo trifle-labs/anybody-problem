@@ -15,6 +15,10 @@ q5.setup = () => {
     seed: seed || null,
     startingBodies: 2 //Math.floor(Math.random() * 8) + 2
   })
+  if (!seed) {
+    window.location.hash =
+      '0x' + window.anybody.seed.toString().padStart(64, '0')
+  }
 }
 q5.draw = () => {
   window.anybody.draw()

@@ -121,7 +121,6 @@ export const Visuals = {
     this.p.noFill()
     this.p.textStyle(this.p.BOLDITALIC)
     // this.p.textFont('Instrument Serif, serif')
-
     this.drawBg()
     if (this.globalStyle == 'psycho') {
       this.p.blendMode(this.p.DIFFERENCE)
@@ -257,6 +256,7 @@ export const Visuals = {
     // this.p.background('white')
     if (!this.starBG) {
       this.starBG = this.p.createGraphics(this.windowWidth, this.windowHeight)
+
       for (let i = 0; i < 200; i++) {
         // this.starBG.stroke('black')
         this.starBG.noStroke()
@@ -286,34 +286,34 @@ export const Visuals = {
       // }
     }
 
-    const basicX =
-      Math.floor((this.frames / FPS) * (this.frames / FPS)) % this.windowWidth
-    const basicY =
-      Math.floor((this.frames / FPS) * (this.frames / FPS)) % this.windowHeight
+    const basicX = 0
+    // Math.floor((this.frames / FPS) * (this.frames / FPS)) % this.windowWidth
+    const basicY = 0
+    // Math.floor((this.frames / FPS) * (this.frames / FPS)) % this.windowHeight
 
     // const basicX = this.accumX % this.windowWidth
     // const basicY = this.accumY % this.windowHeight
 
-    const Xleft = basicX - this.windowWidth
-    const Xright = basicX + this.windowWidth
+    // const Xleft = basicX - this.windowWidth
+    // const Xright = basicX + this.windowWidth
 
-    const Ytop = basicY - this.windowHeight
-    const Ybottom = basicY + this.windowHeight
+    // const Ytop = basicY - this.windowHeight
+    // const Ybottom = basicY + this.windowHeight
 
-    this.confirmedStarPositions ||= []
-    for (let i = 0; i < this.starPositions?.length; i++) {
-      if (i < this.confirmedStarPositions.length) continue
-      const starBody = this.starPositions[i]
-      const radius = starBody.radius * 4
-      if (Xleft < 10) {
-        this.drawBodiesLooped(starBody, radius, this.drawStarOnBG)
-        if (this.loaded) {
-          this.confirmedStarPositions.push(this.starPositions[i])
-        }
-      } else {
-        this.drawBodiesLooped(starBody, radius, this.drawStarOnTopOfBG)
-      }
-    }
+    // this.confirmedStarPositions ||= []
+    // for (let i = 0; i < this.starPositions?.length; i++) {
+    //   if (i < this.confirmedStarPositions.length) continue
+    //   const starBody = this.starPositions[i]
+    //   const radius = starBody.radius * 4
+    //   if (Xleft < 10) {
+    //     this.drawBodiesLooped(starBody, radius, this.drawStarOnBG)
+    //     if (this.loaded) {
+    //       this.confirmedStarPositions.push(this.starPositions[i])
+    //     }
+    //   } else {
+    //     this.drawBodiesLooped(starBody, radius, this.drawStarOnTopOfBG)
+    //   }
+    // }
 
     this.p.image(
       this.starBG,
@@ -322,44 +322,44 @@ export const Visuals = {
       this.windowWidth,
       this.windowHeight
     )
-    this.p.image(
-      this.starBG,
-      Xleft,
-      basicY,
-      this.windowWidth,
-      this.windowHeight
-    )
-    this.p.image(
-      this.starBG,
-      Xright,
-      basicY,
-      this.windowWidth,
-      this.windowHeight
-    )
-    this.p.image(this.starBG, basicX, Ytop, this.windowWidth, this.windowHeight)
-    this.p.image(
-      this.starBG,
-      basicX,
-      Ybottom,
-      this.windowWidth,
-      this.windowHeight
-    )
-    this.p.image(this.starBG, Xleft, Ytop, this.windowWidth, this.windowHeight)
-    this.p.image(this.starBG, Xright, Ytop, this.windowWidth, this.windowHeight)
-    this.p.image(
-      this.starBG,
-      Xleft,
-      Ybottom,
-      this.windowWidth,
-      this.windowHeight
-    )
-    this.p.image(
-      this.starBG,
-      Xright,
-      Ybottom,
-      this.windowWidth,
-      this.windowHeight
-    )
+    // this.p.image(
+    //   this.starBG,
+    //   Xleft,
+    //   basicY,
+    //   this.windowWidth,
+    //   this.windowHeight
+    // )
+    // this.p.image(
+    //   this.starBG,
+    //   Xright,
+    //   basicY,
+    //   this.windowWidth,
+    //   this.windowHeight
+    // )
+    // this.p.image(this.starBG, basicX, Ytop, this.windowWidth, this.windowHeight)
+    // this.p.image(
+    //   this.starBG,
+    //   basicX,
+    //   Ybottom,
+    //   this.windowWidth,
+    //   this.windowHeight
+    // )
+    // this.p.image(this.starBG, Xleft, Ytop, this.windowWidth, this.windowHeight)
+    // this.p.image(this.starBG, Xright, Ytop, this.windowWidth, this.windowHeight)
+    // this.p.image(
+    //   this.starBG,
+    //   Xleft,
+    //   Ybottom,
+    //   this.windowWidth,
+    //   this.windowHeight
+    // )
+    // this.p.image(
+    //   this.starBG,
+    //   Xright,
+    //   Ybottom,
+    //   this.windowWidth,
+    //   this.windowHeight
+    // )
 
     // // Grid lines
     // const boxCount = 6
@@ -934,75 +934,97 @@ export const Visuals = {
     return closeEnough
   },
 
-  drawPngFace(radius, body, offset) {
-    const closeEnough = this.isMissileClose(body)
-    if (body.radius !== 0 && !closeEnough) return
-    this.pngFaces ||= new Array(FACE_PNGS.length)
-      .fill(null)
-      .map(() => new Array(FACE_PNGS[0].length))
-    const faceIdx = body.faceIndex || body.mintedBodyIndex || body.bodyIndex
-    // faceRotation: 'time' | 'hitcycle' | 'mania'
-    // time: start sleepy and get happier as time goes on
-    // hit: rotate to a new face each time (expression is starLvl % 3)
-    // mania: when body is hit, cycle wildly until end of game
-    let hit = body.radius === 0
-    let expression = 1
-    /*Math.ceil(
-      (2 * (hit ? body.starLvl - 1 : body.starLvl)) / body.maxStarLvl
-    ) // 0 sleepy, 1 normal, 2 ecstatic
-    */
-    const framesLeft = this.startingFrame + this.timer - this.frames
-    switch (this.faceRotation) {
-      case 'time':
-        expression = 2 - Math.floor((framesLeft / this.timer) * 3)
-        break
-      case 'hitcycle':
-        expression = hit
-          ? expression + (Math.floor(this.frames / 10) % 2)
-          : expression
-        break
-      case 'mania':
-        // cycle every 10 frames when hit
-        expression = hit ? Math.floor(this.frames / 10) % 3 : expression
-        break
-    }
-    expression = expression % 3
-    const no_mouth = expression * 2 + 1
-    const with_mouth = expression * 2
+  drawPngFace(/*radius, body, offset*/) {
+    return
+    // if (body.bodyIndex == 0) return
+    // const closeEnough = true //this.isMissileClose(body)
+    // if (body.radius !== 0 && !closeEnough) return
+    // this.pngFaces ||= new Array(FACE_PNGS.length)
+    //   .fill(null)
+    //   .map(() => new Array(FACE_PNGS[0].length))
+    // const faceIdx = body.faceIndex || body.mintedBodyIndex || body.bodyIndex
+    // // faceRotation: 'time' | 'hitcycle' | 'mania'
+    // // time: start sleepy and get happier as time goes on
+    // // hit: rotate to a new face each time (expression is starLvl % 3)
+    // // mania: when body is hit, cycle wildly until end of game
+    // let hit = body.radius === 0
+    // let expression = 1
+    // /*Math.ceil(
+    //   (2 * (hit ? body.starLvl - 1 : body.starLvl)) / body.maxStarLvl
+    // ) // 0 sleepy, 1 normal, 2 ecstatic
+    // */
+    // const framesLeft = this.startingFrame + this.timer - this.frames
+    // switch (this.faceRotation) {
+    //   case 'time':
+    //     expression = 2 - Math.floor((framesLeft / this.timer) * 3)
+    //     break
+    //   case 'hitcycle':
+    //     expression = hit
+    //       ? expression + (Math.floor(this.frames / 10) % 2)
+    //       : expression
+    //     break
+    //   case 'mania':
+    //     // cycle every 10 frames when hit
+    //     expression = hit ? Math.floor(this.frames / 10) % 3 : expression
+    //     break
+    // }
+    // expression = expression % 3
+    // // const no_mouth = expression * 2 + 1
+    // const with_mouth = expression * 2
 
-    // let closeEnough = this.isMissileClose(body)
-    const whichFace = body.radius !== 0 ? no_mouth : with_mouth
-    const face = this.pngFaces[faceIdx][whichFace]
-    if (!face) {
-      this.pngFaces[faceIdx][whichFace] = 'loading'
-      const png = FACE_PNGS[faceIdx][whichFace]
-      this.p.loadImage(png, (img) => {
-        // to make masked background
+    // // let closeEnough = this.isMissileClose(body)
+    // const whichFace = with_mouth //body.radius !== 0 ? no_mouth : with_mouth
+    // const face = this.pngFaces[faceIdx][whichFace]
+    // if (!face) {
+    //   this.pngFaces[faceIdx][whichFace] = 'loading'
+    //   const png = FACE_PNGS[faceIdx][whichFace]
+    //   this.p.loadImage(png, (img) => {
+    //     const origX = img.width
+    //     const origY = img.height
+    //     const scale = 1
+    //     const foo = this.p.createGraphics(origX / scale, origY / scale)
+    //     // foo.noSmooth()
+    //     // const ctx = foo.canvas.getContext('2d')
 
-        // const bgSize = img.width * 1.2
-        // const imgCopy = img.get()
-        // this.maskImage(imgCopy, [255, 255, 255])
-        // const tinted = this.p.createGraphics(bgSize, bgSize)
-        // const cc = this.getTintFromColor(body.c)
-        // tinted.tint(cc[0], cc[1], cc[2])
-        // tinted.image(imgCopy, 0, 0, bgSize, bgSize)
-        // tinted.noTint()
-        // const offset = (bgSize - img.width) / 2
-        // tinted.image(img, offset, offset)
-        // this.pngFaces[faceIdx][expression] = tinted
-        this.pngFaces[faceIdx][whichFace] = img
-      })
-    }
-    if (face && face !== 'loading') {
-      const faceSize = radius / 1.5
-      this.bodiesGraphic.image(
-        face,
-        -faceSize / 2,
-        -faceSize / 2 + offset - (body.radius == 0 ? 0 : radius / 5),
-        faceSize,
-        faceSize
-      )
-    }
+    //     // turn off image aliasing
+    //     // foo.drawingContext.msImageSmoothingEnabled = false
+    //     // foo.drawingContext.mozImageSmoothingEnabled = false
+    //     // foo.drawingContext.webkitImageSmoothingEnabled = false
+    //     // foo.drawingContext.imageSmoothingEnabled = false
+
+    //     // foo.pixelDensity(0.1)
+    //     foo.image(img, 0, 0, origX / scale, origY / scale)
+    //     foo.loadPixels()
+    //     // to make masked background
+
+    //     // const bgSize = img.width * 1.2
+    //     // const imgCopy = img.get()
+    //     // this.maskImage(imgCopy, [255, 255, 255])
+    //     // const tinted = this.p.createGraphics(bgSize, bgSize)
+    //     // const cc = this.getTintFromColor(body.c)
+    //     // tinted.tint(cc[0], cc[1], cc[2])
+    //     // tinted.image(imgCopy, 0, 0, bgSize, bgSize)
+    //     // tinted.noTint()
+    //     // const offset = (bgSize - img.width) / 2
+    //     // tinted.image(img, offset, offset)
+    //     // this.pngFaces[faceIdx][expression] = tinted
+    //     this.pngFaces[faceIdx][whichFace] = foo
+    //   })
+    // }
+    // if (face && face !== 'loading') {
+    //   const faceSize = radius
+    //   // this.bodiesGraphic.drawingContext.msImageSmoothingEnabled = false
+    //   // this.bodiesGraphic.drawingContext.mozImageSmoothingEnabled = false
+    //   // this.bodiesGraphic.drawingContext.webkitImageSmoothingEnabled = false
+    //   // this.bodiesGraphic.drawingContext.imageSmoothingEnabled = false
+    //   this.bodiesGraphic.image(
+    //     face,
+    //     -faceSize / 2,
+    //     -faceSize / 2,
+    //     faceSize,
+    //     faceSize
+    //   )
+    // }
   },
 
   drawGlyphFace(radius, body) {
@@ -1188,13 +1210,29 @@ export const Visuals = {
 
   drawBodyStyle1(radius, body, offset) {
     this.bodiesGraphic.noStroke()
-
     let c =
       body.radius !== 0 ? body.c : this.replaceOpacity(body.c, this.deadOpacity)
     if (body.bodyIndex == 0) {
       c = 'white'
     }
     this.bodiesGraphic.fill(c)
+    // const scale = 1
+    // const foo = this.p.createGraphics(radius / scale, radius / scale)
+    // foo.noStroke()
+    // foo.fill(c)
+    // foo.ellipse(
+    //   radius / scale / 2,
+    //   radius / scale / 2,
+    //   radius / scale,
+    //   radius / scale
+    // )
+    // this.bodiesGraphic.image(
+    //   foo,
+    //   -radius / 2,
+    //   -radius / 2 - offset,
+    //   radius,
+    //   radius
+    // )
     this.bodiesGraphic.ellipse(0, offset, radius, radius)
     if (this.globalStyle == 'psycho' && this.target == 'inside') {
       this.drawCenter(body, this.bodiesGraphic, 0, offset)
@@ -1293,6 +1331,17 @@ export const Visuals = {
     // }
 
     this.bodiesGraphic ||= p.createGraphics(this.windowWidth, this.windowHeight)
+
+    this.bodiesGraphic.drawingContext.msImageSmoothingEnabled = false
+    this.bodiesGraphic.drawingContext.mozImageSmoothingEnabled = false
+    this.bodiesGraphic.drawingContext.webkitImageSmoothingEnabled = false
+    this.bodiesGraphic.drawingContext.imageSmoothingEnabled = false
+    // this.bodiesGraphic.pixelDensity(0.2)
+
+    this.bodiesGraphic.drawingContext.msImageSmoothingEnabled = false
+    this.bodiesGraphic.drawingContext.mozImageSmoothingEnabled = false
+    this.bodiesGraphic.drawingContext.webkitImageSmoothingEnabled = false
+    this.bodiesGraphic.drawingContext.imageSmoothingEnabled = false
     this.bodiesGraphic.noStroke()
     for (const body of this.witheringBodies) {
       p.push()
@@ -1495,19 +1544,22 @@ export const Visuals = {
     this.p.pop()
   },
 
-  drawTailStyle1(x, y, v, radius, finalColor, offset) {
+  drawTailStyle1(/*x, y, v, radius, finalColor, offset*/) {
+    return
     // finalColor = finalColor.replace(this.opac, '1')
-    this.p.push()
-    this.p.translate(x, y)
-    this.p.rotate(v.heading() + this.p.PI / 2)
+    // this.p.push()
+    // this.p.translate(x, y)
+    // this.p.rotate(v.heading() + this.p.PI / 2)
 
-    // this.p.rotate(angle)
-    this.p.fill(finalColor)
-    this.p.noStroke()
-    this.p.ellipse(0, offset, radius, radius)
+    // // this.p.rotate(angle)
+    // this.p.fill(finalColor)
+    // this.p.stroke(finalColor)
+    // // this.p.strokeWeight(10)
+    // // this.p.noFill()
+    // this.p.ellipse(0, offset, radius * 1.2)
 
-    // this.p.image(this.drawTails[id], -radius / 2, -radius)
-    this.p.pop()
+    // // this.p.image(this.drawTails[id], -radius / 2, -radius)
+    // this.p.pop()
   },
 
   drawTailStyleGhost(x, y, v, radius, finalColor) {
@@ -1601,17 +1653,17 @@ export const Visuals = {
   },
 
   drawTails() {
-    if (this.allCopiesOfBodies && this.allCopiesOfBodies.length > 0) {
-      const allCopiesOfBodies =
-        this.allCopiesOfBodies[this.allCopiesOfBodies.length - 1]
-      const body = allCopiesOfBodies[0]
-      if (body.bodyIndex == 0) {
-        this.p.noFill()
-        this.p.stroke('white')
-        this.p.strokeWeight(10)
-        this.p.ellipse(body.position.x, body.position.y, body.radius * 10)
-      }
-    }
+    // if (this.allCopiesOfBodies && this.allCopiesOfBodies.length > 0) {
+    //   const allCopiesOfBodies =
+    //     this.allCopiesOfBodies[this.allCopiesOfBodies.length - 1]
+    //   const body = allCopiesOfBodies[0]
+    //   if (body.bodyIndex == 0) {
+    //     this.p.noFill()
+    //     this.p.stroke('white')
+    //     this.p.strokeWeight(10)
+    //     this.p.ellipse(body.position.x, body.position.y, body.radius * 10)
+    //   }
+    // }
     for (let i = 0; i < this.allCopiesOfBodies.length; i++) {
       const copyOfBodies = this.allCopiesOfBodies[i]
       for (let j = 0; j < copyOfBodies.length; j++) {
@@ -1707,7 +1759,7 @@ export const Visuals = {
   },
 
   drawCenter(b, p = this.p, x, y) {
-    let closeEnough = this.isMissileClose(b)
+    let closeEnough = false //this.isMissileClose(b)
     // this.p.blendMode(this.p.DIFFERENCE)
     p.noStroke()
     x = x == undefined ? b.position.x : x
@@ -1723,7 +1775,11 @@ export const Visuals = {
     } else {
       let darker = this.brighten(b.c, -30).replace(this.opac, 1)
       if (b.bodyIndex == 0) {
-        darker = 'black'
+        darker = '#FFF44F'
+
+        p.fill(darker)
+        p.ellipse(x, y, r)
+        return
       }
       p.fill(darker)
       p.ellipse(x, y, r)

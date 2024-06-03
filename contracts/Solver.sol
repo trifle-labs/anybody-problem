@@ -103,6 +103,11 @@ contract Solver is Ownable {
         );
 
         require(verifier != address(0), "Invalid verifier");
+        
+         // TODO: confirm index
+        address solver = address(uint160(input[bodyCount*5 + 1]));
+        require(solver == msg.sender, "Invalid solver");
+
 
         uint256 time = input[bodyCount * 5];
 

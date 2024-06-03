@@ -2,4 +2,4 @@ pragma circom 2.1.6;
 
 include "stepState.circom";
 
-component main { public [ bodies ]} = StepState(5, 100);
+component main { public [ bodies, address ]} = StepState(5, 100);

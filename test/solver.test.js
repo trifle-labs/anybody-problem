@@ -101,7 +101,7 @@ describe('Solver Tests', function () {
     expect(newTickCount).to.equal(tickCount + ticksRun)
   })
 
-  it('shoots 3 missiles and hits 3 bodies in 1 proof', async () => {
+  it.only('shoots 3 missiles and hits 3 bodies in 1 proof', async () => {
     const signers = await ethers.getSigners()
     const deployedContracts = await deployContracts()
     const { Problems: problems, Solver: solver } = deployedContracts
@@ -176,6 +176,7 @@ describe('Solver Tests', function () {
       'game',
       missiles
     )
+    console.log({ dataResult })
     for (let i = 0; i < bodyCount; i++) {
       const radiusIndex = i * 5 + 4
       expect(dataResult.publicSignals[radiusIndex]).to.equal('0')

@@ -28,7 +28,7 @@
     rx="148.0"
     cy="500"
     cx="500"
-    fill="hsl(349,34%,79%)"
+    fill="hsl(23,19%,55%)"
   />
   <text x="50" y="550" class="name">Body #1</text>
 </svg>
