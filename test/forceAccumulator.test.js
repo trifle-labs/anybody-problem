@@ -1,14 +1,8 @@
 // import hre from 'hardhat'
 
-import index from '../docs/index.cjs'
 import { wasm as wasm_tester } from 'circom_tester'
 
-const {
-  // calculateTime,
-  convertScaledStringArrayToBody,
-  convertScaledBigIntBodyToArray,
-  forceAccumulatorBigInts
-} = index
+import { Anybody } from '../src/anybody.js'
 
 // const p = 21888242871839275222246405745257275088548364400416034343698204186575808495617n
 
@@ -38,12 +32,15 @@ describe('forceAccumulatorMain circuit', () => {
   })
 
   it('has the correct output', async () => {
-    const bodies = sampleInput.bodies.map(convertScaledStringArrayToBody)
+    const anybody = new Anybody(null, { util: true })
+    const bodies = sampleInput.bodies.map(
+      anybody.convertScaledStringArrayToBody.bind(anybody)
+    )
     // console.dir({ bodies }, { depth: null })
 
-    const out_bodies = forceAccumulatorBigInts(bodies).map(
-      convertScaledBigIntBodyToArray
-    )
+    const out_bodies = anybody
+      .forceAccumulatorBigInts(bodies)
+      .map(anybody.convertScaledBigIntBodyToArray.bind(anybody))
     // console.log({ out_bodies })
     const expected = { out_bodies }
     const witness = await circuit.calculateWitness(sampleInput, sanityCheck)

@@ -53,6 +53,7 @@ template ForceAccumulator(totalBodies) { // max 10 = maxBits: 4
 
     component mux[totalIterations * 2];
     var ii = 0;
+    var time = 2; // maxBits: 2
     // NOTE: Below we're setting initial values for accumulate_body_forces to be the
     // maximum accumulated value possible (maximum value for force multiplied by 
     // totalIterations). This is an offset to avoid going into negative numbers so that
@@ -83,20 +84,20 @@ template ForceAccumulator(totalBodies) { // max 10 = maxBits: 4
 
         // accumulate the x forces
         mux[ii] = MultiMux1(2);
-        mux[ii].c[0][0] <== accumulated_body_forces[i][0] + force_x[1]; // maxBits: 70 (maxNum: 936_000_000_000_000_000_000) = 2 * maximum_accumulated_possible
-        mux[ii].c[0][1] <== accumulated_body_forces[i][0] - force_x[1]; // maxBits: 69 (maxNum: 468_000_000_000_000_000_000)
-        mux[ii].c[1][0] <== accumulated_body_forces[j][0] - force_x[1]; // maxBits: 69 (maxNum: 468_000_000_000_000_000_000)
-        mux[ii].c[1][1] <== accumulated_body_forces[j][0] + force_x[1]; // maxBits: 70 (maxNum: 936_000_000_000_000_000_000) = 2 * maximum_accumulated_possible
+        mux[ii].c[0][0] <== accumulated_body_forces[i][0] + (time * force_x[1]); // maxBits: 70 (maxNum: 936_000_000_000_000_000_000) = 2 * maximum_accumulated_possible
+        mux[ii].c[0][1] <== accumulated_body_forces[i][0] - (time * force_x[1]); // maxBits: 69 (maxNum: 468_000_000_000_000_000_000)
+        mux[ii].c[1][0] <== accumulated_body_forces[j][0] - (time * force_x[1]); // maxBits: 69 (maxNum: 468_000_000_000_000_000_000)
+        mux[ii].c[1][1] <== accumulated_body_forces[j][0] + (time * force_x[1]); // maxBits: 70 (maxNum: 936_000_000_000_000_000_000) = 2 * maximum_accumulated_possible
         mux[ii].s <== force_x[0];
         accumulated_body_forces[i][0] = mux[ii].out[0]; // maxBits: 70 (maxNum: 936_000_000_000_000_000_000)
         accumulated_body_forces[j][0] = mux[ii].out[1]; // maxBits: 70 (maxNum: 936_000_000_000_000_000_000)
 
         // accumulate the y forces
         mux[totalIterations + ii] = MultiMux1(2);
-        mux[totalIterations + ii].c[0][0] <== accumulated_body_forces[i][1] + force_y[1]; // maxBits: 70 (maxNum: 936_000_000_000_000_000_000) = 2 * maximum_accumulated_possible
-        mux[totalIterations + ii].c[0][1] <== accumulated_body_forces[i][1] - force_y[1]; // maxBits: 69 (maxNum: 468_000_000_000_000_000_000)
-        mux[totalIterations + ii].c[1][0] <== accumulated_body_forces[j][1] - force_y[1]; // maxBits: 69 (maxNum: 468_000_000_000_000_000_000)
-        mux[totalIterations + ii].c[1][1] <== accumulated_body_forces[j][1] + force_y[1]; // maxBits: 70 (maxNum: 936_000_000_000_000_000_000) = 2 * maximum_accumulated_possible
+        mux[totalIterations + ii].c[0][0] <== accumulated_body_forces[i][1] +  (time * force_y[1]); // maxBits: 70 (maxNum: 936_000_000_000_000_000_000) = 2 * maximum_accumulated_possible
+        mux[totalIterations + ii].c[0][1] <== accumulated_body_forces[i][1] -  (time * force_y[1]); // maxBits: 69 (maxNum: 468_000_000_000_000_000_000)
+        mux[totalIterations + ii].c[1][0] <== accumulated_body_forces[j][1] -  (time * force_y[1]); // maxBits: 69 (maxNum: 468_000_000_000_000_000_000)
+        mux[totalIterations + ii].c[1][1] <== accumulated_body_forces[j][1] +  (time * force_y[1]); // maxBits: 70 (maxNum: 936_000_000_000_000_000_000) = 2 * maximum_accumulated_possible
         mux[totalIterations + ii].s <== force_y[0];
         accumulated_body_forces[i][1] = mux[totalIterations + ii].out[0]; // maxBits: 70 (maxNum: 936_000_000_000_000_000_000)
         accumulated_body_forces[j][1] = mux[totalIterations + ii].out[1]; // maxBits: 70 (maxNum: 936_000_000_000_000_000_000)

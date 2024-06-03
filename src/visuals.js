@@ -1,5 +1,3 @@
-export const FPS = 50
-
 const WITHERING_STEPS = 3000
 const FACE_PNGS = [
   // [tired, tired_no_mouth, normal, normal_no_mouth, ecstatic, ecstatic_no_mouth]
@@ -165,7 +163,7 @@ export const Visuals = {
 
     if (
       this.mode == 'game' &&
-      this.frames - this.startingFrame + FPS < this.timer &&
+      this.frames - this.startingFrame + this.FPS < this.timer &&
       this.bodies.reduce((a, c) => a + c.radius, 0) != 0
     ) {
       this.drawGun()
@@ -202,7 +200,7 @@ export const Visuals = {
       this.justPaused = false
     }
     if (
-      this.frames - this.startingFrame + FPS >= this.timer ||
+      this.frames - this.startingFrame + this.FPS >= this.timer ||
       this.bodies[0].radius == 0
     ) {
       this.handleGameOver({ won: false })
@@ -285,7 +283,6 @@ export const Visuals = {
       //   }
       // }
     }
-
     const basicX = 0
     // Math.floor((this.frames / FPS) * (this.frames / FPS)) % this.windowWidth
     const basicY = 0
@@ -559,8 +556,10 @@ export const Visuals = {
     p.fill('white')
     p.noStroke()
     p.textAlign(p.LEFT, p.TOP)
+
     const runningFrames = this.frames - this.startingFrame
-    const seconds = runningFrames / FPS
+    const seconds = runningFrames / this.FPS
+
 
     if (this.gameOver) {
       this.scoreSize = this.initialScoreSize

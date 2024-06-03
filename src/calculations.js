@@ -94,16 +94,36 @@ export const Calculations = {
     for (let i = 0; i < bodies.length; i++) {
       accumulativeForces.push([0n, 0n])
     }
+    const time = BigInt(this.speedFactor)
     for (let i = 0; i < bodies.length; i++) {
       const body = bodies[i]
       for (let j = i + 1; j < bodies.length; j++) {
         const otherBody = bodies[j]
         const force = this.calculateForceBigInt(body, otherBody)
-        accumulativeForces[i] = _addVectors(accumulativeForces[i], force)
-        accumulativeForces[j] = _addVectors(accumulativeForces[j], [
-          -force[0],
-          -force[1]
-        ])
+        // const bodyVelocity = [
+        //   body.radius == 0n
+        //     ? 0n
+        //     : time * (force[0] / (body.radius / this.scalingFactor)),
+        //   body.radius == 0n
+        //     ? 0n
+        //     : time * (force[1] / (body.radius / this.scalingFactor))
+        // ]
+        // const otherBodyVelocity = [
+        //   otherBody.radius == 0n
+        //     ? 0n
+        //     : time * (-force[0] / (otherBody.radius / this.scalingFactor)),
+        //   otherBody.radius == 0n
+        //     ? 0n
+        //     : time * (-force[1] / (otherBody.radius / this.scalingFactor))
+        // ]
+        const bodyVelocity = [time * force[0], time * force[1]]
+        const otherBodyVelocity = [time * -force[0], time * -force[1]]
+
+        accumulativeForces[i] = _addVectors(accumulativeForces[i], bodyVelocity)
+        accumulativeForces[j] = _addVectors(
+          accumulativeForces[j],
+          otherBodyVelocity
+        )
       }
     }
     // console.log({ vectorLimitScaled })
