@@ -19,7 +19,7 @@ const sepolia: Source = {
   name: 'sepolia',
   chain_id: 11155111,
   url: 'https://rpc2.sepolia.org',
-  batch_size: 1000,
+  batch_size: 1,
   concurrency: 1
 }
 
@@ -41,13 +41,13 @@ const solTypeToPgType: Record<string, PGColumnType> = {
 
 const STARTING_BLOCK = {
   // mainnet: BigInt('2067803')
-  sepolia: BigInt('5716600'),
+  sepolia: BigInt('5774275'),
   garnet: BigInt('2067803')
 }
 
 export type Chain = 'mainnet' | 'sepolia' | 'garnet'
 
-export const sources = [sepolia, garnet]
+export const sources = [sepolia]
 
 const contracts = Object.fromEntries(
   [Problems, Bodies, Solver].map((contract) => {
@@ -139,12 +139,12 @@ async function integrationFor(
 if (process.env.OUTPUT) {
   ;(async function main() {
     let integrations = await Promise.all([
-      integrationFor('Problems', 'Transfer'),
-      integrationFor('Bodies', 'Transfer'),
-      integrationFor('Solver', 'Solved'),
-      integrationFor('Bodies', 'bodyBorn'),
-      integrationFor('Problems', 'bodyAdded'),
-      integrationFor('Problems', 'bodyRemoved')
+      // integrationFor('Problems', 'Transfer'),
+      // integrationFor('Bodies', 'Transfer'),
+      // integrationFor('Solver', 'Solved'),
+      // integrationFor('Bodies', 'bodyBorn'),
+      integrationFor('Problems', 'bodyAdded')
+      // integrationFor('Problems', 'bodyRemoved')
     ])
 
     const config = makeConfig({
