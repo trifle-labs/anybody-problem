@@ -16,7 +16,7 @@
     "ethers": "^6.12.1"
   },
   "dependencies": {
-    "hono": "^4.3.8",
+    "hono": "^4.4.3",
     "pg": "^8.11.5"
   },
   "trustedDependencies": []

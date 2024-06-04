@@ -137,7 +137,7 @@ async function integrationFor(
 }
 
 if (process.env.OUTPUT) {
-  ;(async () => {
+  ;(async function main() {
     let integrations = await Promise.all([
       integrationFor('Problems', 'Transfer'),
       integrationFor('Bodies', 'Transfer'),

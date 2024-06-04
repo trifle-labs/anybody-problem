@@ -6,6 +6,26 @@ type LeaderboardLine = {
   owner: string
 }
 
+type Body = {
+  problemId: string
+  bodyId: string
+  tick: number
+  px: number
+  py: number
+  radius: number
+  seed: string
+  owner: string
+  mintedBodyIndex: number
+}
+
+type Problems = Record<
+  string, // problemId
+  {
+    owner: string
+    bodies: Body[]
+  }
+>
+
 type SpeedScore = LeaderboardLine & { ticks: number }
 
 type SolvedScore = LeaderboardLine & { solved: number }
@@ -20,6 +40,7 @@ type DailyLeaderboard = {
 }
 
 type Leaderboard = {
+  problems: Problems
   daily: Record<number, DailyLeaderboard>
   allTime: {
     mostSolved: SolvedScore[]
@@ -31,14 +52,7 @@ type Leaderboard = {
 const MAX_BODIES = 3
 const DAILY_CATEGORY_LIMIT = 3
 
-export const leaderboard: Leaderboard = {
-  daily: {},
-  allTime: {
-    mostSolved: [],
-    currentStreak: [],
-    fastest: []
-  }
-}
+export const leaderboards: Record<Chain, Leaderboard> | {} = {}
 
 function currentDayInUnixTime() {
   const date = new Date()
@@ -295,6 +309,113 @@ FROM
   }
 }
 
+export async function getProblems(chain: Chain) {
+  const bodies = await db.query(
+    `
+    WITH latest_transactions AS (
+      SELECT
+          token_id,
+          "to",
+          ROW_NUMBER() OVER (PARTITION BY token_id ORDER BY block_num DESC, tx_idx DESC, log_idx DESC) AS rn
+      FROM
+        problems_transfer
+      WHERE
+        src_name = '${chain}'
+  ),
+  current_owners AS (
+      SELECT
+          "to",
+          token_id
+      FROM
+          latest_transactions
+      WHERE
+          rn = 1
+  ),
+  body_add_remove_events AS (
+      SELECT
+          ba.problem_id,
+          ba.body_id,
+          ba.block_num,
+          ba.tx_idx,
+          ba.log_idx,
+          'added' AS status
+      FROM
+      problems_body_added ba
+      WHERE src_name = '${chain}'
+      UNION ALL
+      SELECT
+          br.problem_id,
+          br.body_id,
+          br.block_num,
+          br.tx_idx,
+          br.log_idx,
+          'removed' AS status
+      FROM
+      problems_body_removed br
+      WHERE src_name = '${chain}'
+  ),
+  body_final_status AS (
+      SELECT
+          problem_id,
+          body_id,
+          status,
+          ROW_NUMBER() OVER (PARTITION BY problem_id, body_id ORDER BY block_num DESC, tx_idx DESC, log_idx DESC) AS rn
+      FROM
+          body_add_remove_events
+  )
+  SELECT
+      ba.problem_id,
+      ba.body_id,
+      ba.minted_body_index,
+      ba.tick,
+      ba.px,
+      ba.py,
+      ba.radius,
+      CONCAT('0x', encode(ba.seed, 'hex')) AS seed,
+      CONCAT('0x', encode(ba.log_addr, 'hex')) AS log_addr,
+      CONCAT('0x', encode(co."to", 'hex')) AS owner
+  FROM
+    problems_body_added ba
+  JOIN
+      current_owners co ON ba.problem_id = co.token_id
+  JOIN
+      body_final_status bfs ON ba.problem_id = bfs.problem_id AND ba.body_id = bfs.body_id
+  WHERE
+      bfs.rn = 1
+      AND bfs.status = 'added';`
+  )
+
+  function bodyFromRow(row: Record<string, string>): Body {
+    return {
+      problemId: row.problem_id,
+      bodyId: row.body_id,
+      tick: parseInt(row.tick),
+      px: parseInt(row.px),
+      py: parseInt(row.py),
+      radius: parseInt(row.radius),
+      seed: row.seed,
+      owner: row.owner,
+      mintedBodyIndex: parseInt(row.minted_body_index)
+    }
+  }
+
+  const problems: Problems = {}
+  for (const row of bodies.rows) {
+    const body = bodyFromRow(row)
+    const problem = problems[row.problem_id]
+    if (!problem) {
+      problems[row.problem_id] = {
+        owner: body.owner,
+        bodies: [body]
+      }
+    } else {
+      problem.bodies.push(body)
+    }
+  }
+
+  return problems
+}
+
 export async function updateLeaderboard(chain: Chain) {
   const start = Date.now()
 
@@ -313,7 +434,7 @@ export async function updateLeaderboard(chain: Chain) {
     })
   )
 
-  leaderboard.daily = daysSoFar.reduce(
+  const daily = daysSoFar.reduce(
     (acc, day, idx) => {
       acc[day] = dailies[idx]
       return acc
@@ -323,7 +444,12 @@ export async function updateLeaderboard(chain: Chain) {
 
   // calculate all-time leaderboards
   const allTime = await calculateAllTimeLeaderboard(today, chain)
-  leaderboard.allTime = allTime
+
+  leaderboards[chain] = {
+    daily,
+    allTime,
+    problems: await getProblems(chain)
+  }
 
   console.log(chain, 'leaderboard updated in', Date.now() - start, 'ms')
 }
