@@ -298,6 +298,10 @@ export const Calculations = {
 
   convertScaledBigIntBodyToArray(b) {
     const maxVectorScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
+    console.log({
+      x: _convertBigIntToModP(b.position.x),
+      y: _convertBigIntToModP(b.position.y)
+    })
     const bodyArray = []
     const noNegativeVelocityX = b.velocity.x + maxVectorScaled
     const noNegativeVelocityY = b.velocity.y + maxVectorScaled
@@ -313,6 +317,22 @@ export const Calculations = {
 
   convertScaledStringToBigInt(value) {
     return BigInt(value)
+  },
+
+  convertMissileScaledStringArrayToFloat(missile) {
+    const maxVectorScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
+    missile = missile.map(this.convertScaledStringToBigInt.bind(this))
+    return {
+      position: {
+        x: this.convertScaledBigIntToFloat(0),
+        y: this.convertScaledBigIntToFloat(this.windowWidth)
+      },
+      velocity: {
+        x: this.convertScaledBigIntToFloat(missile[0] - maxVectorScaled),
+        y: this.convertScaledBigIntToFloat(missile[1] - maxVectorScaled)
+      },
+      radius: this.convertScaledBigIntToFloat(missile[2])
+    }
   },
 
   convertScaledStringArrayToFloat(body) {

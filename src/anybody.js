@@ -47,7 +47,6 @@ export class Anybody extends EventEmitter {
       seed: null,
       windowWidth: 1000,
       windowHeight: 1000,
-      vectorLimit: 10,
       scalingFactor: 10n ** 3n,
       minDistanceSquared: 200 * 200,
       G: 100, // Gravitational constant
@@ -82,6 +81,8 @@ export class Anybody extends EventEmitter {
   // run whenever the class should be reset
   clearValues() {
     this.speedFactor = 2
+    this.speedLimit = 10
+    this.vectorLimit = this.speedLimit * this.speedFactor
     this.FPS = 50 / this.speedFactor
     this.timer = GAME_LENGTH * this.FPS
     this.deadOpacity = '0.9'
@@ -464,6 +465,10 @@ export class Anybody extends EventEmitter {
     let results = {}
     // this.finished = true
     // this.setPause(true)
+    const maxVectorScaled = parseInt(
+      this.convertFloatToScaledBigInt(this.vectorLimit)
+    ).toString()
+
     this.calculateBodyFinal()
     const missileInits = []
     if (this.mode == 'game') {
@@ -471,19 +476,13 @@ export class Anybody extends EventEmitter {
       for (let i = this.alreadyRun; i < this.alreadyRun + this.stopEvery; i++) {
         if (this.missileInits[missileIndex]?.step == i) {
           const missile = this.missileInits[missileIndex]
-          missileInits.push([
-            missile.x,
-            missile.y,
-            missile.vx,
-            missile.vy,
-            missile.radius
-          ])
+          missileInits.push([missile.vx, missile.vy, missile.radius])
           missileIndex++
         } else {
-          missileInits.push([0, 0, 0, 0, 0])
+          missileInits.push([maxVectorScaled, maxVectorScaled, '0'])
         }
       }
-      missileInits.push([0, 0, 0, 0, 0])
+      missileInits.push([maxVectorScaled, maxVectorScaled, '0'])
     }
     results = {
       missiles: JSON.parse(JSON.stringify(missileInits)),
@@ -728,7 +727,7 @@ export class Anybody extends EventEmitter {
       radius
     }
     // b.velocity.limit(10)
-    b.velocity.setMag(10 * this.speedFactor)
+    b.velocity.setMag(this.speedLimit * this.speedFactor)
     this.missiles.push(b)
 
     // const bodyCount = this.bodies.filter((b) => b.radius !== 0).length - 1

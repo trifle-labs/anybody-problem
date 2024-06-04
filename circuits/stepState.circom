@@ -34,17 +34,22 @@ template StepState(totalBodies, steps) {
   // NOTE: if there's an inflight missile, then the starting position should match
   // If there is not an inflight missile, then the starting position should be the corner
   component whatShouldStartingMissilePositionBe = MultiMux1(2);
-  whatShouldStartingMissilePositionBe.c[0][0] <== 0;
-  whatShouldStartingMissilePositionBe.c[0][1] <== inflightMissile[0];
-  whatShouldStartingMissilePositionBe.c[1][0] <== windowWidthScaled;
-  whatShouldStartingMissilePositionBe.c[1][1] <== inflightMissile[1];
-  whatShouldStartingMissilePositionBe.s <== inflightMissile[4]; // If inflight missile radius == 0, then starting position should equal corner
+  whatShouldStartingMissilePositionBe.c[0][0] <== inflightMissile[0];
+  whatShouldStartingMissilePositionBe.c[0][1] <== 0;
+
+  whatShouldStartingMissilePositionBe.c[1][0] <==  inflightMissile[1];
+  whatShouldStartingMissilePositionBe.c[1][1] <== windowWidthScaled;
+  component isMissileZero = IsZero();
+  isMissileZero.in <== inflightMissile[4];
+
+  whatShouldStartingMissilePositionBe.s <== isMissileZero.out; // If inflight missile radius == 0, then starting position should equal corner
 
   tmp_missile[0] = whatShouldStartingMissilePositionBe.out[0];
   tmp_missile[1] = whatShouldStartingMissilePositionBe.out[1];
   tmp_missile[2] = inflightMissile[2];
   tmp_missile[3] = inflightMissile[3];
   tmp_missile[4] = inflightMissile[4];
+
 
   signal preventReplay <== address * address;
 
@@ -67,15 +72,15 @@ template StepState(totalBodies, steps) {
   component andMissiles[steps];
 
   for (var i = 0; i < steps; i++) {
-    // for (var j = 0; j < totalBodies; j++) {
-    //   log("step", i);
-    //   log("body", j);
-    //   log("tmp_body[j][0]", tmp_body[j][0]);
-    //   log("tmp_body[j][1]", tmp_body[j][1]);
-    //   log("tmp_body[j][2]", tmp_body[j][2]);
-    //   log("tmp_body[j][3]", tmp_body[j][3]);
-    //   log("tmp_body[j][4]", tmp_body[j][4]);
-    // }
+    for (var j = 0; j < totalBodies; j++) {
+      log("step", i);
+      log("body", j);
+      log("tmp_body[j][0]", tmp_body[j][0]);
+      log("tmp_body[j][1]", tmp_body[j][1]);
+      log("tmp_body[j][2]", tmp_body[j][2]);
+      log("tmp_body[j][3]", tmp_body[j][3]);
+      log("tmp_body[j][4]", tmp_body[j][4]);
+    }
 
     forceAccumulator[i] = ForceAccumulator(totalBodies);
     forceAccumulator[i].bodies <== tmp_body;
@@ -83,6 +88,7 @@ template StepState(totalBodies, steps) {
     // velocity is constant
     calculateMissile[i] = CalculateMissile();
     calculateMissile[i].in_missile <== tmp_missile;
+
 
     // TODO: Ask WEI whether it's possible to skip this calculation if the radius is 0, 
     // meaning there is no missile (or at least reduce the constraints needed?)
@@ -166,4 +172,19 @@ template StepState(totalBodies, steps) {
   time <== steps - time_tmp;
   out_bodies <== tmp_body;
   outflightMissile <== tmp_missile;
+
+  log("time", time);
+  for (var j = 0; j < totalBodies; j++) {
+    log("out_bodies[j][0]", out_bodies[j][0]);
+    log("out_bodies[j][1]", out_bodies[j][1]);
+    log("out_bodies[j][2]", out_bodies[j][2]);
+    log("out_bodies[j][3]", out_bodies[j][3]);
+    log("out_bodies[j][4]", out_bodies[j][4]);
+  }
+  log("outflightMissile[0]", outflightMissile[0]);
+  log("outflightMissile[1]", outflightMissile[1]);
+  log("outflightMissile[2]", outflightMissile[2]);
+  log("outflightMissile[3]", outflightMissile[3]);
+  log("outflightMissile[4]", outflightMissile[4]);
+
 }

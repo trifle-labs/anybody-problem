@@ -28,16 +28,16 @@ template ForceAccumulator(totalBodies) { // max 10 = maxBits: 4
     signal output out_bodies[totalBodies][5];
     // [0] = position_x       | maxBits: 20 = windowWidthScaled (maxNum: 1_000_000)
     // [1] = position_y       | maxBits: 20 = windowWidthScaled (maxNum: 1_000_000)
-    // [2] = vector_x         | maxBits: 15 (maxNum: 20_000) = 2 * maxVector (maxVector offset by +maxVector so num is never negative)
-    // [3] = vector_y         | maxBits: 15 (maxNum: 20_000) = 2 * maxVector (maxVector offset by +maxVector so num is never negative)
+    // [2] = vector_x         | maxBits: 16 (maxNum: 40_000) = 2 * maxVector (maxVector offset by +maxVector so num is never negative)
+    // [3] = vector_y         | maxBits: 16 (maxNum: 40_000) = 2 * maxVector (maxVector offset by +maxVector so num is never negative)
     // [4] = radius           | maxBits: 14 = numBits(13 * scalingFactor) (maxNum: 13_000)
 
     // NOTE: scalingFactorFactor appears in calculateMissile, calculateForce as well
     var scalingFactorFactor = 3; // maxBits: 2
     var scalingFactor = 10**scalingFactorFactor; // maxBits: 10 (maxNum: 1_000)
 
-    var maxVector = 10; // maxBits: 4
-    var maxVectorScaled = 10 * scalingFactor; // maxBits: 14 (maxNum: 10_000)
+    var maxVector = 20; // maxBits: 5
+    var maxVectorScaled = maxVector * scalingFactor; // maxBits: 15 (maxNum: 20_000)
 
     // NOTE: windowWidth appears in calculateMissile, calculateForce, forceAccumulator as well and needs to match
     var windowWidth = 1000; // maxBits: 10
@@ -137,7 +137,8 @@ template ForceAccumulator(totalBodies) { // max 10 = maxBits: 4
       new_vector_y[i] <== bodies[i][3] + accumulated_body_forces[i][1]; // maxBits: 70 (maxNum: 936_000_000_000_000_020_000) = (2 * maximum_accumulated_possible) + (2 * maxVector)
       // log("bodies[i][2]", bodies[i][2]);
       // log("accumulated_body_forces[i][0]", accumulated_body_forces[i][0]);
-      // log("new_vector_x[i]", new_vector_x[i]);
+      log("new_vector_x[i]", new_vector_x[i]);
+      log("new_vector_y[i]", new_vector_y[i]);
       // limit the magnitude of the vector
       /* 
       NOTE: vectorLimitX needs to be limited by maxVectorScaled. However because new_vector_x

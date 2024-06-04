@@ -55,8 +55,10 @@ contract Problems is ERC721, Ownable {
     // mapping is body count to tickcount to address
     mapping(uint256 => mapping(uint256 => address)) public verifiers;
 
-    uint256 public constant maxVector = 10;
+    uint256 public constant speedFactor = 2;
     uint256 public constant scalingFactor = 10 ** 3;
+    uint256 public constant maxVector = 10 * speedFactor;
+    uint256 public constant maxVectorScaled = maxVector * scalingFactor;
     uint256 public constant windowWidth = 1000 * scalingFactor;
     // uint256 public constant maxRadius = 13;
     uint256 public constant startingRadius = 2;
@@ -339,10 +341,13 @@ contract Problems is ERC721, Ownable {
 
          // this is actually a range of -1/2 to 1/2 of maxVector since negative offset
         rand = keccak256(abi.encodePacked(rand));
-        body.vx = randomRange(0, maxVector * scalingFactor, rand);
+        // -maxVector = 0
+        // 0 = maxVector
+        // maxVector = 2 * maxVector
+        body.vx = randomRange(0, 2 * maxVector * scalingFactor, rand);
 
         rand = keccak256(abi.encodePacked(rand));
-        body.vy = randomRange(0, maxVector * scalingFactor, rand);
+        body.vy = randomRange(0, 2 * maxVector * scalingFactor, rand);
 
         return body;
     }

@@ -363,6 +363,7 @@ const generateWitness = async (
 }
 
 const generateProof = async (
+  address,
   seed,
   bodyCount,
   ticksRun,
@@ -381,16 +382,27 @@ const generateProof = async (
   anybody.runSteps(ticksRun)
   const results = anybody.finish()
   const inputData = {
+    address,
     bodies: results.bodyInits,
     missiles: missiles || results.missiles
   }
+  inputData.inflightMissile = [
+    '0',
+    (anybody.windowHeight * parseInt(anybody.scalingFactor)).toString(),
+    ...inputData.missiles[0]
+  ]
   const bodyFinal = results.bodyFinal
   // const startTime = Date.now()
+  console.dir(
+    { inputData, file: `${mode}_${bodyCount}_${ticksRun}` },
+    { depth: null }
+  )
   const dataResult = await exportCallDataGroth16(
     inputData,
     `./public/${mode}_${bodyCount}_${ticksRun}.wasm`,
     `./public/${mode}_${bodyCount}_${ticksRun}_final.zkey`
   )
+  console.dir({ dataResult }, { depth: null })
   // bodyCount = bodyCount.toNumber()
   // const endTime = Date.now()
   // const difference = endTime - startTime
@@ -409,6 +421,7 @@ const generateProof = async (
 }
 
 const generateAndSubmitProof = async (
+  address,
   expect,
   deployedContracts,
   problemId,
@@ -419,28 +432,54 @@ const generateAndSubmitProof = async (
   const { Problems: problems, Solver: solver } = deployedContracts
   const { seed } = await problems.problems(problemId)
   const { inputData, bodyFinal, dataResult } = await generateProof(
+    address,
     seed,
     bodyCount,
     ticksRun,
     bodyData,
     'game'
   )
+  // 0—4: missile output
+  // 5—9: body 1 output
+  // 10—14: body 2 output
+  // 15: time output (5 + bodyCount * 5 + 1)
+  // 16: address input (5 + bodyCount * 5 + 2)
+  // 17—21: body 1 input
+  // 22—26: body 2 input
+  // 27—31: missile input (5 + 2 * bodyCount * 5 + 2)
+
   for (let i = 0; i < dataResult.Input.length; i++) {
-    const speedIndex = (dataResult.Input.length - 1) / 2
-    if (i < speedIndex) {
-      const bodyIndex = Math.floor(i / 5)
+    const missileOutputIndex = 4
+    const bodyOutputIndex = 5 + bodyCount * 5
+    const timeOutputIndex = bodyOutputIndex + 1
+    const addressInputIndex = timeOutputIndex + 1
+    const bodyInputIndex = addressInputIndex + bodyCount * 5
+    const missileInputIndex = bodyInputIndex + 5
+    if (i < missileOutputIndex) {
+      // TODO: check the missile output here?
+      continue
+    } else if (i < bodyOutputIndex) {
+      const bodyIndex = Math.floor((i - 5) / 5)
       const body = bodyFinal[bodyIndex]
-      const bodyDataIndex = i % 5
+      const bodyDataIndex = (i - 5) % 5
       expect(dataResult.Input[i]).to.equal(body[bodyDataIndex].toString())
-    } else if (i == speedIndex) {
+    } else if (i == timeOutputIndex) {
       // TODO: check the speed here?
       continue
-    } else {
-      const ii = i - speedIndex
+    } else if (i == addressInputIndex) {
+      // TODO: check the address input here?
+      continue
+    } else if (i < bodyInputIndex) {
+      const ii = i - addressInputIndex
       const bodyIndex = Math.floor((ii - 1) / 5)
       const body = inputData.bodies[bodyIndex]
       const bodyDataIndex = (ii - 1) % 5
       expect(dataResult.Input[i]).to.equal(body[bodyDataIndex].toString())
+    } else if (i < missileInputIndex) {
+      // TODO: check the missile input here?
+      continue
+    } else {
+      throw new Error(`Invalid index ${i}`)
     }
   }
 

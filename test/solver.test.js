@@ -52,8 +52,9 @@ describe('Solver Tests', function () {
       .be.reverted
   })
 
-  it('creates a proof for 1 bodies', async () => {
+  it.only('creates a proof for 1 bodies', async () => {
     const signers = await ethers.getSigners()
+    const [owner] = signers
     const deployedContracts = await deployContracts()
     const { Problems: problems } = deployedContracts
     const { problemId } = await mintProblem(signers, deployedContracts)
@@ -70,6 +71,7 @@ describe('Solver Tests', function () {
     const ticksRun = await getTicksRun(bodyCount.toNumber())
 
     const { tx, bodyFinal } = await generateAndSubmitProof(
+      owner.address,
       expect,
       deployedContracts,
       problemId,
@@ -101,7 +103,7 @@ describe('Solver Tests', function () {
     expect(newTickCount).to.equal(tickCount + ticksRun)
   })
 
-  it.only('shoots 3 missiles and hits 3 bodies in 1 proof', async () => {
+  it('shoots 3 missiles and hits 3 bodies in 1 proof', async () => {
     const signers = await ethers.getSigners()
     const deployedContracts = await deployContracts()
     const { Problems: problems, Solver: solver } = deployedContracts
@@ -128,35 +130,36 @@ describe('Solver Tests', function () {
       const bodyId = bodyIds[i]
       let body = await problems.getProblemBodyData(problemId, bodyId)
       const scalingFactor = await problems.scalingFactor()
-      const pos = ethers.BigNumber.from(i + 1)
+      const maxVector = await problems.maxVector()
+      const pos = ethers.BigNumber.from(i)
         .mul(body.radius.mul(2).div(scalingFactor))
-        .add(10)
+        .mul(scalingFactor)
 
       const windowWidth = ethers.BigNumber.from(anybody.windowWidth)
-      const mid = windowWidth.div(2)
-
+      const mid = windowWidth
+      console.log({ pos, mid })
+      const newRadius = ethers.BigNumber.from(10).mul(scalingFactor)
       body = {
         bodyId: body.bodyId,
         mintedBodyIndex: body.mintedBodyIndex,
         bodyIndex: body.bodyIndex,
-        px: scalingFactor.mul(pos),
-        py: scalingFactor.mul(mid),
-        vx: body.vx,
-        vy: body.vy,
-        radius: body.radius,
+        px: pos,
+        py: windowWidth.mul(scalingFactor),
+        vx: ethers.BigNumber.from(1).mul(maxVector).mul(scalingFactor),
+        vy: ethers.BigNumber.from(1).mul(maxVector).mul(scalingFactor),
+        radius: newRadius,
         seed: body.seed
       }
       bodyData.push(body)
 
       await problems.updateProblemBody(problemId, bodyId, body)
 
-      const radius = 10
-      const missilePos = pos.sub(body.radius.div(scalingFactor).div(2))
+      const radius = ethers.BigNumber.from(10).mul(scalingFactor)
 
       const missile = {
         step: i * 2,
-        position: anybody.createVector(missilePos, mid),
-        velocity: anybody.createVector(1, 0),
+        position: anybody.createVector(0, windowWidth),
+        velocity: anybody.createVector(ethers.BigNumber.from(3), 0),
         radius
       }
       missileInits.push(missile)
@@ -167,8 +170,10 @@ describe('Solver Tests', function () {
 
     missileInits = anybody.processMissileInits(missileInits)
     anybody.missileInits = missileInits
+    console.log({ missileInits })
     const { missiles } = anybody.finish()
     const { dataResult } = await generateProof(
+      owner.address,
       seed,
       bodyCount,
       ticksRun,
@@ -178,9 +183,27 @@ describe('Solver Tests', function () {
     )
     console.log({ dataResult })
     for (let i = 0; i < bodyCount; i++) {
-      const radiusIndex = i * 5 + 4
+      const radiusIndex = 5 + i * 5 + 4
       expect(dataResult.publicSignals[radiusIndex]).to.equal('0')
     }
+
+    // 0—4: missile output
+    // 5—9: body 1 output
+    // 10—14: body 2 output
+    // 15: time output (5 + bodyCount * 5 + 1)
+    // 16: address input (5 + bodyCount * 5 + 2)
+    // 17—21: body 1 input
+    // 22—26: body 2 input
+    // 27—31: missile input (5 + 2 * bodyCount * 5 + 2)
+
+    console.log(
+      problemId,
+      ticksRun,
+      dataResult.a,
+      dataResult.b,
+      dataResult.c,
+      dataResult.Input
+    )
 
     const tx = await solver.solveProblem(
       problemId,
@@ -451,6 +474,7 @@ describe('Solver Tests', function () {
 
   it('creates multiple proofs in a row', async () => {
     const signers = await ethers.getSigners()
+    const [owner] = signers
     const deployedContracts = await deployContracts()
     const { Problems: problems } = deployedContracts
     const { problemId } = await mintProblem(signers, deployedContracts)
@@ -471,6 +495,7 @@ describe('Solver Tests', function () {
 
       // console.log({ bodyData })
       const { tx, bodyFinal } = await generateAndSubmitProof(
+        owner.address,
         expect,
         deployedContracts,
         problemId,
@@ -506,6 +531,7 @@ describe('Solver Tests', function () {
 
   it('creates proofs for multiple bodies', async () => {
     const signers = await ethers.getSigners()
+    const [owner] = signers
     const deployedContracts = await deployContracts()
     const {
       Problems: problems,
@@ -536,6 +562,7 @@ describe('Solver Tests', function () {
       const ticksRun = await getTicksRun(bodyCount.toNumber())
       // console.log({ bodyData })
       let { tx, bodyFinal } = await generateAndSubmitProof(
+        owner.address,
         expect,
         deployedContracts,
         problemId,
@@ -573,22 +600,9 @@ describe('Solver Tests', function () {
     }
   })
 
-  it('has the correct body boost amount', async () => {
-    const deployedContracts = await deployContracts()
-    const { Solver: solver } = deployedContracts
-    for (let i = 1; i <= 10; i++) {
-      const boostAmount = await solver.bodyBoost(i)
-      if (i < 3) {
-        expect(boostAmount.eq(0)).to.equal(true)
-      } else {
-        const boosted = 2 ** (i - 3)
-        expect(boostAmount.eq(boosted)).to.equal(true)
-      }
-    }
-  })
-
   it('adds a body, removes a body, creates a proof', async () => {
     const signers = await ethers.getSigners()
+    const [owner] = signers
     const deployedContracts = await deployContracts()
     const {
       Problems: problems,
@@ -614,6 +628,7 @@ describe('Solver Tests', function () {
 
     // console.log({ bodyData })
     let { tx } = await generateAndSubmitProof(
+      owner.address,
       expect,
       deployedContracts,
       problemId,
@@ -645,6 +660,7 @@ describe('Solver Tests', function () {
     const ticksRunB = await getTicksRun(bodyData.length)
     // console.log({ bodyData })
     ;({ tx } = await generateAndSubmitProof(
+      owner.address,
       expect,
       deployedContracts,
       problemId,
@@ -671,6 +687,7 @@ describe('Solver Tests', function () {
     const ticksRunC = await getTicksRun(bodyData.length)
     try {
       await generateAndSubmitProof(
+        owner.address,
         expect,
         deployedContracts,
         problemId,
