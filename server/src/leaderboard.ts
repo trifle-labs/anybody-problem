@@ -442,14 +442,21 @@ export async function updateLeaderboard(chain: Chain) {
     {} as Record<number, DailyLeaderboard>
   )
 
-  // calculate all-time leaderboards
   const allTime = await calculateAllTimeLeaderboard(today, chain)
+  const problems = await getProblems(chain)
 
   leaderboards[chain] = {
     daily,
     allTime,
-    problems: await getProblems(chain)
+    problems
   }
 
-  console.log(chain, 'leaderboard updated in', Date.now() - start, 'ms')
+  console.log(
+    chain,
+    'leaderboard updated in',
+    Date.now() - start,
+    'ms with',
+    Object.keys(problems).length,
+    'problems'
+  )
 }
