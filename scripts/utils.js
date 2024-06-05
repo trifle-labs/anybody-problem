@@ -80,7 +80,6 @@ const initContracts = async (getSigners = true) => {
   const contractNames = [
     'Problems',
     'Bodies',
-    'Dust',
     'Solver',
     'ProblemMetadata',
     'BodyMetadata'
@@ -129,22 +128,16 @@ const deployContracts = async (ignoreTesting = false) => {
   // BodyMetadata (no args)
   // Problems (problemMetadata.address, address[10] verifiers)
   // Bodies(bodyMetadata.address, problems.address)
-  // Dust (problems.address, bodies.address)
-  // Solver (problems.address, dust.address)
 
   // Problems.updateBodies(bodies.address)
   // Problems.updateSolver(solver.address)
-
-  // Bodies.updateDust(dust.address)
-
-  // Dust.updateSolver(solver.address)
 
   const returnObject = {}
   const verifiers = []
   const verifiersTicks = []
   const verifiersBodies = []
 
-  for (let i = 1; i <= 10; i++) {
+  for (let i = 2; i <= 10; i++) {
     const ticks = await getTicksRun(i, ignoreTesting)
     const name = `Game_${i}_${ticks}Verifier`
     const path = `contracts/${name}.sol:Groth16Verifier`
@@ -204,17 +197,6 @@ const deployContracts = async (ignoreTesting = false) => {
       `Bodies deployed at ${bodiesAddress} with bodyMetadata ${bodyMetadataAddress} and problemsAddress ${problemsAddress}`
     )
 
-  // deploy Dust
-  const Dust = await hre.ethers.getContractFactory('Dust')
-  const dust = await Dust.deploy(problemsAddress, bodiesAddress)
-  await dust.deployed()
-  const dustAddress = dust.address
-  returnObject['Dust'] = dust
-  !testing &&
-    log(
-      `Dust deployed at ${dustAddress} with problemsAddress ${problemsAddress} and bodiesAddress ${bodiesAddress}`
-    )
-
   // deploy Solver
   const Solver = await hre.ethers.getContractFactory('Solver')
   const solver = await Solver.deploy(problemsAddress)
@@ -244,16 +226,13 @@ const deployContracts = async (ignoreTesting = false) => {
   await problems.updateSolverAddress(solverAddress)
   !testing && log(`Problems configured with solverAddress ${solverAddress}`)
 
-  // configure Dust
-  await dust.updateSolverAddress(solverAddress)
-  !testing && log(`Dust configured with solverAddress ${solverAddress}`)
-
   // verify contract if network ID is mainnet goerli or sepolia
   if (
     networkinfo['chainId'] == 5 ||
     networkinfo['chainId'] == 1 ||
     networkinfo['chainId'] == 11155111 ||
-    networkinfo['chainId'] == 17069
+    networkinfo['chainId'] == 17069 ||
+    networkinfo['chainId'] == 84532
   ) {
     const verificationData = [
       {
@@ -276,10 +255,6 @@ const deployContracts = async (ignoreTesting = false) => {
       {
         name: 'Bodies',
         constructorArguments: [bodyMetadataAddress, problemsAddress]
-      },
-      {
-        name: 'Dust',
-        constructorArguments: [problemsAddress, bodiesAddress]
       },
       {
         name: 'Solver',
@@ -371,6 +346,7 @@ const generateProof = async (
   mode = 'nft',
   missiles = null
 ) => {
+  console.log('generateProof')
   const anybody = new Anybody(null, {
     bodyData,
     seed,
@@ -392,11 +368,12 @@ const generateProof = async (
     ...inputData.missiles[0]
   ]
   const bodyFinal = results.bodyFinal
+  const outflightMissile = results.outflightMissiles
   // const startTime = Date.now()
-  console.dir(
-    { inputData, file: `${mode}_${bodyCount}_${ticksRun}` },
-    { depth: null }
-  )
+  console.dir({ inputData }, { depth: null })
+  console.dir({ bodyFinal }, { depth: null })
+  console.dir({ outflightMissile }, { depth: null })
+  console.log(`ensure that ${mode}_${bodyCount}_${ticksRun} exists`)
   const dataResult = await exportCallDataGroth16(
     inputData,
     `./public/${mode}_${bodyCount}_${ticksRun}.wasm`,
@@ -413,10 +390,6 @@ const generateProof = async (
   // const tickRatePerBody = tickRate / bodyCount
   // console.log(`Tick rate per body: ${tickRatePerBody.toFixed(2)} ticks/s`)
   // const boostAmount = await solver.bodyBoost(bodyCount)
-  // const dustRate = boostAmount * tickRate
-  // console.log(`Dust rate: ${dustRate.toFixed(2)} dust/s`)
-  // const dustRatePerBody = dustRate / bodyCount
-  // console.log(`Dust rate per body: ${dustRatePerBody.toFixed(2)} dust/s`)
   return { inputData, bodyFinal, dataResult }
 }
 
@@ -429,6 +402,7 @@ const generateAndSubmitProof = async (
   ticksRun,
   bodyData
 ) => {
+  console.log('generateAndSubmitProof')
   const { Problems: problems, Solver: solver } = deployedContracts
   const { seed } = await problems.problems(problemId)
   const { inputData, bodyFinal, dataResult } = await generateProof(
@@ -448,34 +422,55 @@ const generateAndSubmitProof = async (
   // 22—26: body 2 input
   // 27—31: missile input (5 + 2 * bodyCount * 5 + 2)
 
+  const missileOutputIndex = 4
+  const bodyOutputIndex = missileOutputIndex + bodyCount * 5
+  const timeOutputIndex = bodyOutputIndex + 1
+  const addressInputIndex = timeOutputIndex + 1
+  const bodyInputIndex = addressInputIndex + bodyCount * 5
+  const missileInputIndex = bodyInputIndex + 5
+
+  // console.log({
+  //   missileOutputIndex,
+  //   bodyOutputIndex,
+  //   timeOutputIndex,
+  //   addressInputIndex,
+  //   bodyInputIndex,
+  //   missileInputIndex
+  // })
+
   for (let i = 0; i < dataResult.Input.length; i++) {
-    const missileOutputIndex = 4
-    const bodyOutputIndex = 5 + bodyCount * 5
-    const timeOutputIndex = bodyOutputIndex + 1
-    const addressInputIndex = timeOutputIndex + 1
-    const bodyInputIndex = addressInputIndex + bodyCount * 5
-    const missileInputIndex = bodyInputIndex + 5
-    if (i < missileOutputIndex) {
+    if (i <= missileOutputIndex) {
+      // console.log({ i }, '<= missileOutputIndex')
       // TODO: check the missile output here?
       continue
-    } else if (i < bodyOutputIndex) {
+    } else if (i <= bodyOutputIndex) {
+      // console.log({ i }, '<= bodyOutputIndex')
       const bodyIndex = Math.floor((i - 5) / 5)
       const body = bodyFinal[bodyIndex]
       const bodyDataIndex = (i - 5) % 5
+      // console.log({ i, bodyIndex, bodyDataIndex })
       expect(dataResult.Input[i]).to.equal(body[bodyDataIndex].toString())
-    } else if (i == timeOutputIndex) {
+    } else if (i <= timeOutputIndex) {
+      // console.log({ i }, '<= timeOutputIndex')
+
       // TODO: check the speed here?
       continue
-    } else if (i == addressInputIndex) {
+    } else if (i <= addressInputIndex) {
+      // console.log({ i }, '<= addressInputIndex')
+
       // TODO: check the address input here?
       continue
-    } else if (i < bodyInputIndex) {
+    } else if (i <= bodyInputIndex) {
+      // console.log({ i }, '<= bodyInputIndex')
+
       const ii = i - addressInputIndex
       const bodyIndex = Math.floor((ii - 1) / 5)
       const body = inputData.bodies[bodyIndex]
       const bodyDataIndex = (ii - 1) % 5
+      // console.log({ i, ii, bodyIndex, bodyDataIndex })
       expect(dataResult.Input[i]).to.equal(body[bodyDataIndex].toString())
-    } else if (i < missileInputIndex) {
+    } else if (i <= missileInputIndex) {
+      // console.log({ i }, '<= missileInputIndex')
       // TODO: check the missile input here?
       continue
     } else {

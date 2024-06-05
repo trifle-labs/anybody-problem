@@ -300,6 +300,10 @@ contract Solver is Ownable {
             );
             // update stored values
             bodyData.radius = input[5 + i * 5 + 4];
+
+            if (i == 0) {
+              require(bodyData.radius != 0, "You shot the body you should protect");
+            }
             Problems(problems).updateProblemBody(
                 problemId,
                 bodyIds[i],
@@ -311,7 +315,7 @@ contract Solver is Ownable {
         }
 
         // beat the level
-        if(bodiesGone == bodyCount) {
+        if(bodiesGone == bodyCount - 1) {
           Problems(problems).levelUp(problemId, ticksInThisMatch);
           Problems(problems).restoreValues(problemId);
           delete matches[problemId];

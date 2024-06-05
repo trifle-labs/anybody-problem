@@ -175,11 +175,11 @@ template StepState(totalBodies, steps) {
 
   log("time", time);
   for (var j = 0; j < totalBodies; j++) {
-    log("out_bodies[j][0]", out_bodies[j][0]);
-    log("out_bodies[j][1]", out_bodies[j][1]);
-    log("out_bodies[j][2]", out_bodies[j][2]);
-    log("out_bodies[j][3]", out_bodies[j][3]);
-    log("out_bodies[j][4]", out_bodies[j][4]);
+    log("final tmp_body[j][0]", tmp_body[j][0]);
+    log("final tmp_body[j][1]", tmp_body[j][1]);
+    log("final tmp_body[j][2]", tmp_body[j][2]);
+    log("final tmp_body[j][3]", tmp_body[j][3]);
+    log("final tmp_body[j][4]", tmp_body[j][4]);
   }
   log("outflightMissile[0]", outflightMissile[0]);
   log("outflightMissile[1]", outflightMissile[1]);

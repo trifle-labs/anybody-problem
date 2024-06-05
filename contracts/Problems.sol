@@ -132,6 +132,14 @@ contract Problems is ERC721, Ownable {
         mint();
     }
 
+    function getProblemDataByDay(uint256 day, uint256 bodyCount) public pure returns (Body[10] memory bodyData) {
+      for (uint256 i = 0; i < bodyCount; i++) {
+         bytes32 levelSeed = getLevelSeed(day, bodyCount - 1, i);
+          bytes32 bodyIndexRand = keccak256(abi.encodePacked(day, i));
+          bodyData[i] = getRandomValues(levelSeed, bodyIndexRand, i);
+      }
+    }
+
     function currentDay() public view returns (uint256) {
         return block.timestamp - (block.timestamp % SECONDS_IN_A_DAY);
     }
@@ -292,7 +300,7 @@ contract Problems is ERC721, Ownable {
     ) internal {
         bytes32 levelSeed = getLevelSeed(problems[problemId].day, problems[problemId].mintedBodiesIndex, bodyIndex);
           bytes32 bodyIndexRand = keccak256(abi.encodePacked(problems[problemId].day, bodyIndex));
-        Body memory bodyData = getRandomValues(levelSeed, bodyIndexRand);
+        Body memory bodyData = getRandomValues(levelSeed, bodyIndexRand, bodyIndex);
         
         bodyData.seed = bodySeed;
         bodyData.bodyId = bodyId;
@@ -318,20 +326,20 @@ contract Problems is ERC721, Ownable {
 
         // NOTE: radius is a function of the seed of the body so it stays the
         // same no matter what problem it enters
-    function genRadius(bytes32 seed) public pure returns (uint256) {
+    function genRadius(bytes32 seed, uint256 index) public pure returns (uint256) {
         // TODO: confirm whether radius should remain only one of 3 sizes
         uint256 randRadius = randomRange(1, 3, seed);
-        randRadius = (randRadius) * 5 + startingRadius;
+        randRadius = index == 0 ? 36 : (randRadius) * 5 + startingRadius;
         return randRadius * scalingFactor;
     }
 
     // NOTE: this function uses a seed consisting of the day + the mintedBodyIndex + 
     // actual bodyIndex which means that all problems of the same level on the same day 
     // will have bodies with the same positions, velocities and radii.
-    function getRandomValues(bytes32 rand, bytes32 bodyIndexRand) public pure returns (Body memory) {
+    function getRandomValues(bytes32 rand, bytes32 bodyIndexRand, uint256 index) public pure returns (Body memory) {
         Body memory body;
 
-        body.radius = genRadius(bodyIndexRand);
+        body.radius = genRadius(bodyIndexRand, index);
 
         rand = keccak256(abi.encodePacked(rand));
         body.px = randomRange(0, windowWidth, rand);
@@ -422,7 +430,7 @@ contract Problems is ERC721, Ownable {
         uint256 bodyId = problems[problemId].bodyIds[i];
         bytes32 levelSeed = getLevelSeed(problems[problemId].day, problems[problemId].mintedBodiesIndex, i);
         bytes32 bodyIndexRand = keccak256(abi.encodePacked(problems[problemId].day, i));
-        Body memory bodyData = getRandomValues(levelSeed, bodyIndexRand);
+        Body memory bodyData = getRandomValues(levelSeed, bodyIndexRand, i);
         problems[problemId].bodyData[bodyId].px = bodyData.px;
         problems[problemId].bodyData[bodyId].py = bodyData.py;
         problems[problemId].bodyData[bodyId].vx = bodyData.vx;

@@ -36,7 +36,8 @@ template ForceAccumulator(totalBodies) { // max 10 = maxBits: 4
     var scalingFactorFactor = 3; // maxBits: 2
     var scalingFactor = 10**scalingFactorFactor; // maxBits: 10 (maxNum: 1_000)
 
-    var maxVector = 20; // maxBits: 5
+    var time = 2; // maxBits: 2
+    var maxVector = 10 * time; // maxBits: 5
     var maxVectorScaled = maxVector * scalingFactor; // maxBits: 15 (maxNum: 20_000)
 
     // NOTE: windowWidth appears in calculateMissile, calculateForce, forceAccumulator as well and needs to match
@@ -46,14 +47,13 @@ template ForceAccumulator(totalBodies) { // max 10 = maxBits: 4
     var accumulated_body_forces[totalBodies][2];
     var totalIterations = totalBodies * (totalBodies - 1) / 2; // maxBits: 6 (maxNum: 45)
     component calculateForceComponent[totalIterations];
-    // signal force_x[totalIterations][2]; // maxBits: 64 (maxNum: 10_400_000_000_000_000_000)
-    // signal force_y[totalIterations][2]; // maxBits: 64 (maxNum: 10_400_000_000_000_000_000)
+    // signal force_x[totalIterations][2]; // maxBits: 64 (maxNum: 10_400_000_000_000_000_000) = out_forces max, unsigned
+    // signal force_y[totalIterations][2]; // maxBits: 64 (maxNum: 10_400_000_000_000_000_000) = out_forces max, unsigned
     var force_x[2];
     var force_y[2];
 
     component mux[totalIterations * 2];
     var ii = 0;
-    var time = 2; // maxBits: 2
     // NOTE: Below we're setting initial values for accumulate_body_forces to be the
     // maximum accumulated value possible (maximum value for force multiplied by 
     // totalIterations). This is an offset to avoid going into negative numbers so that
@@ -66,7 +66,7 @@ template ForceAccumulator(totalBodies) { // max 10 = maxBits: 4
     }
     for (var i = 0; i < totalBodies; i++) {
       // radius of body doesn't change
-      out_bodies[i][4] <== bodies[i][4]; // maxBits: 14 (maxNum: 13_000)
+      out_bodies[i][4] <== bodies[i][4]; // maxBits: 15 (maxNum: 32_000)
       for (var j  = i+1; j < totalBodies; j++) {
         // calculate the force between i and j
         calculateForceComponent[ii] = CalculateForce();
@@ -84,23 +84,23 @@ template ForceAccumulator(totalBodies) { // max 10 = maxBits: 4
 
         // accumulate the x forces
         mux[ii] = MultiMux1(2);
-        mux[ii].c[0][0] <== accumulated_body_forces[i][0] + (time * force_x[1]); // maxBits: 70 (maxNum: 936_000_000_000_000_000_000) = 2 * maximum_accumulated_possible
-        mux[ii].c[0][1] <== accumulated_body_forces[i][0] - (time * force_x[1]); // maxBits: 69 (maxNum: 468_000_000_000_000_000_000)
+        mux[ii].c[0][0] <== accumulated_body_forces[i][0] + (time * force_x[1]); // maxBits: 71 (maxNum: 1_404_000_000_000_000_000_000) = maximum_accumulated_possible + time (2) * maximum_accumulated_possible
+        mux[ii].c[0][1] <== accumulated_body_forces[i][0] - (time * force_x[1]); // maxBits: 69 (maxNum: 468_000_000_000_000_000_000) = maximum_accumulated_possible
         mux[ii].c[1][0] <== accumulated_body_forces[j][0] - (time * force_x[1]); // maxBits: 69 (maxNum: 468_000_000_000_000_000_000)
-        mux[ii].c[1][1] <== accumulated_body_forces[j][0] + (time * force_x[1]); // maxBits: 70 (maxNum: 936_000_000_000_000_000_000) = 2 * maximum_accumulated_possible
+        mux[ii].c[1][1] <== accumulated_body_forces[j][0] + (time * force_x[1]); // maxBits: 71 (maxNum: 1_404_000_000_000_000_000_000) = maximum_accumulated_possible + time (2) * maximum_accumulated_possible
         mux[ii].s <== force_x[0];
-        accumulated_body_forces[i][0] = mux[ii].out[0]; // maxBits: 70 (maxNum: 936_000_000_000_000_000_000)
-        accumulated_body_forces[j][0] = mux[ii].out[1]; // maxBits: 70 (maxNum: 936_000_000_000_000_000_000)
+        accumulated_body_forces[i][0] = mux[ii].out[0]; // maxBits: 71 (maxNum: 1_404_000_000_000_000_000_000)
+        accumulated_body_forces[j][0] = mux[ii].out[1]; // maxBits: 71 (maxNum: 1_404_000_000_000_000_000_000)
 
         // accumulate the y forces
         mux[totalIterations + ii] = MultiMux1(2);
-        mux[totalIterations + ii].c[0][0] <== accumulated_body_forces[i][1] +  (time * force_y[1]); // maxBits: 70 (maxNum: 936_000_000_000_000_000_000) = 2 * maximum_accumulated_possible
+        mux[totalIterations + ii].c[0][0] <== accumulated_body_forces[i][1] +  (time * force_y[1]); // maxBits: 71 (maxNum: 1_404_000_000_000_000_000_000) = maximum_accumulated_possible + time (2) * maximum_accumulated_possible
         mux[totalIterations + ii].c[0][1] <== accumulated_body_forces[i][1] -  (time * force_y[1]); // maxBits: 69 (maxNum: 468_000_000_000_000_000_000)
         mux[totalIterations + ii].c[1][0] <== accumulated_body_forces[j][1] -  (time * force_y[1]); // maxBits: 69 (maxNum: 468_000_000_000_000_000_000)
-        mux[totalIterations + ii].c[1][1] <== accumulated_body_forces[j][1] +  (time * force_y[1]); // maxBits: 70 (maxNum: 936_000_000_000_000_000_000) = 2 * maximum_accumulated_possible
+        mux[totalIterations + ii].c[1][1] <== accumulated_body_forces[j][1] +  (time * force_y[1]); // maxBits: 71 (maxNum: 1_404_000_000_000_000_000_000) = maximum_accumulated_possible + time (2) * maximum_accumulated_possible
         mux[totalIterations + ii].s <== force_y[0];
-        accumulated_body_forces[i][1] = mux[totalIterations + ii].out[0]; // maxBits: 70 (maxNum: 936_000_000_000_000_000_000)
-        accumulated_body_forces[j][1] = mux[totalIterations + ii].out[1]; // maxBits: 70 (maxNum: 936_000_000_000_000_000_000)
+        accumulated_body_forces[i][1] = mux[totalIterations + ii].out[0]; // maxBits: 71 (maxNum: 1_404_000_000_000_000_000_000) = maximum_accumulated_possible + time (2) * maximum_accumulated_possible
+        accumulated_body_forces[j][1] = mux[totalIterations + ii].out[1]; // maxBits: 71 (maxNum: 1_404_000_000_000_000_000_000) = maximum_accumulated_possible + time (2) * maximum_accumulated_possible
 
         ii = ii + 1;
       }
@@ -133,12 +133,12 @@ template ForceAccumulator(totalBodies) { // max 10 = maxBits: 4
       new_vector is a combination of the current vector which is offset by maxVectorScaled
       and the accumulated_body_forces which is offset by maximum_accumulated_possible
       */
-      new_vector_x[i] <== bodies[i][2] + accumulated_body_forces[i][0]; // maxBits: 70 (maxNum: 936_000_000_000_000_020_000) = (2 * maximum_accumulated_possible) + (2 * maxVector)
-      new_vector_y[i] <== bodies[i][3] + accumulated_body_forces[i][1]; // maxBits: 70 (maxNum: 936_000_000_000_000_020_000) = (2 * maximum_accumulated_possible) + (2 * maxVector)
+      new_vector_x[i] <== bodies[i][2] + accumulated_body_forces[i][0]; // maxBits: 71 (maxNum: 1_404_000_000_000_000_040_000) = (2 * maximum_accumulated_possible) + (2 * maxVector)
+      new_vector_y[i] <== bodies[i][3] + accumulated_body_forces[i][1]; // maxBits: 71 (maxNum: 1_404_000_000_000_000_040_000) = (2 * maximum_accumulated_possible) + (2 * maxVector)
       // log("bodies[i][2]", bodies[i][2]);
       // log("accumulated_body_forces[i][0]", accumulated_body_forces[i][0]);
-      log("new_vector_x[i]", new_vector_x[i]);
-      log("new_vector_y[i]", new_vector_y[i]);
+      // log("new_vector_x[i]", new_vector_x[i]);
+      // log("new_vector_y[i]", new_vector_y[i]);
       // limit the magnitude of the vector
       /* 
       NOTE: vectorLimitX needs to be limited by maxVectorScaled. However because new_vector_x
@@ -147,14 +147,14 @@ template ForceAccumulator(totalBodies) { // max 10 = maxBits: 4
       result will still contain the maxVectorScaled offset that will prevent the vector from
       becoming negative.
       */
-      vectorLimiterX[i] = Limiter(70);
+      vectorLimiterX[i] = Limiter(71);
       // log("new_vector_x", i, new_vector_x[i]);
       // log("new_vector_x[i] + maxVectorScaled", i, new_vector_x[i] + maxVectorScaled);
       // log("limit", "maxVectorScaled + maxVectorScaled + maximum_accumulated_possible", maxVectorScaled + maxVectorScaled + maximum_accumulated_possible);
       // log("rather", "maxVectorScaled + maxVectorScaled + maximum_accumulated_possible", maxVectorScaled + maxVectorScaled + maximum_accumulated_possible);
-      vectorLimiterX[i].in <== new_vector_x[i]; // maxBits: 70 (maxNum: 936_000_000_000_000_020_000) double max_accum + max velocity + offset
-      vectorLimiterX[i].limit <== 2 * maxVectorScaled + maximum_accumulated_possible; // maxBits: 69 (maxNum: 468_000_000_000_000_020_000)
-      vectorLimiterX[i].rather <== 2 * maxVectorScaled + maximum_accumulated_possible; // maxBits: 69 (maxNum: 468_000_000_000_000_020_000)
+      vectorLimiterX[i].in <== new_vector_x[i]; // maxBits: 71 (maxNum: 1_404_000_000_000_000_000_000)
+      vectorLimiterX[i].limit <== 2 * maxVectorScaled + maximum_accumulated_possible; // maxBits: 69 (maxNum: 468_000_000_000_000_040_000)
+      vectorLimiterX[i].rather <== 2 * maxVectorScaled + maximum_accumulated_possible; // maxBits: 69 (maxNum: 468_000_000_000_000_040_000)
       // out_bodies[i][2] <== vectorLimiterX[i].out - maximum_accumulated_possible; // maxBits: 15 (maxNum: 20_000)
       
       // isZero[i]  = IsZero();
@@ -174,7 +174,7 @@ template ForceAccumulator(totalBodies) { // max 10 = maxBits: 4
       // log("vectorLimiterX[i].in", "vectorLimiterX[i].out - maximum_accumulated_possible", vectorLimiterX[i].out - maximum_accumulated_possible);
       // log("maxVectorScaled.limit", "maxVectorScaled", maxVectorScaled);
       // log("maxVectorScaled.rather", "maxVectorScaled", maxVectorScaled);
-      vectorLowerLimiterX[i].in <== vectorLimiterX[i].out - maximum_accumulated_possible + maxVectorScaled; // maxBits: 14 (maxNum: 20_000)
+      vectorLowerLimiterX[i].in <== vectorLimiterX[i].out - maximum_accumulated_possible + maxVectorScaled; // maxBits: 15 (maxNum: 20_000)
       vectorLowerLimiterX[i].limit <== maxVectorScaled; // maxBits: 13 (maxNum: 10_000)
       vectorLowerLimiterX[i].rather <== maxVectorScaled; // maxBits: 13 (maxNum: 10_000)
       // log("vectorLowerLimiterX[i].out", vectorLowerLimiterX[i].out);
@@ -182,24 +182,24 @@ template ForceAccumulator(totalBodies) { // max 10 = maxBits: 4
       out_bodies[i][2] <== vectorLowerLimiterX[i].out - maxVectorScaled; // maxBits: 15 (maxNum: 20_000)
 
       // NOTE: same as above
-      vectorLimiterY[i] = Limiter(70);
+      vectorLimiterY[i] = Limiter(71);
       // log("new_vector_y", i, new_vector_y[i]);
       // log("new_vector_y[i] + maxVectorScaled", i, new_vector_y[i] + maxVectorScaled);
       // log("limit", "maxVectorScaled + maxVectorScaled + maximum_accumulated_possible", maxVectorScaled + maxVectorScaled + maximum_accumulated_possible);
       // log("rather", "maxVectorScaled + maxVectorScaled + maximum_accumulated_possible", maxVectorScaled + maxVectorScaled + maximum_accumulated_possible);
-      vectorLimiterY[i].in <== new_vector_y[i]; // maxBits: 70 (maxNum: 936_000_000_000_000_020_000)
+      vectorLimiterY[i].in <== new_vector_y[i]; // maxBits: 71 (maxNum: 1_404_000_000_000_000_000_000)
       vectorLimiterY[i].limit <== 2 * maxVectorScaled + maximum_accumulated_possible; // maxBits: 69 (maxNum: 468_000_000_000_000_020_000)
       vectorLimiterY[i].rather <== 2 * maxVectorScaled + maximum_accumulated_possible; // maxBits: 69 (maxNum: 468_000_000_000_000_020_000)
       // out_bodies[i][3] <== vectorLimiterY[i].out - maximum_accumulated_possible; // maxBits: 15 (maxNum: 20_000)
 
-      vectorLowerLimiterY[i] = LowerLimiter(15);
+      vectorLowerLimiterY[i] = LowerLimiter(16);
       // log("vectorLimiterY[i].out", i, vectorLimiterY[i].out);
       // log("vectorLimiterY[i].in", "vectorLimiterY[i].out - maximum_accumulated_possible", vectorLimiterY[i].out - maximum_accumulated_possible);
       // log("maxVectorScaled.limit", "maxVectorScaled", maxVectorScaled);
       // log("maxVectorScaled.rather", "maxVectorScaled", maxVectorScaled);
-      vectorLowerLimiterY[i].in <== vectorLimiterY[i].out - maximum_accumulated_possible + maxVectorScaled; // maxBits: 14 (maxNum: 20_000)
-      vectorLowerLimiterY[i].limit <== maxVectorScaled; // maxBits: 13 (maxNum: 10_000)
-      vectorLowerLimiterY[i].rather <== maxVectorScaled; // maxBits: 13 (maxNum: 10_000)
+      vectorLowerLimiterY[i].in <== vectorLimiterY[i].out - maximum_accumulated_possible + maxVectorScaled; // maxBits: 16 (maxNum: 40_000 = 468_000_000_000_000_020_000 - 468_000_000_000_000_000_000 + 20_000)
+      vectorLowerLimiterY[i].limit <== maxVectorScaled; // maxBits: 15 (maxNum: 20_000)
+      vectorLowerLimiterY[i].rather <== maxVectorScaled; // maxBits: 15 (maxNum: 20_000)
       // log("vectorLowerLimiterY[i].out", vectorLowerLimiterY[i].out);
       // log("out_bodies[i][3]", "vectorLowerLimiterY[i].out - maxVectorScaled", vectorLowerLimiterY[i].out - maxVectorScaled);
       out_bodies[i][3] <== vectorLowerLimiterY[i].out - maxVectorScaled; // maxBits: 15 (maxNum: 20_000)
@@ -216,21 +216,21 @@ template ForceAccumulator(totalBodies) { // max 10 = maxBits: 4
 
       +bodies[i][0] is the actual position of the body (maxNum: 1_000_000)
       +out_bodies[i][2] is the x vector of the body with an additional maxVectorScaled offset (maxNum: 20_000)
-      -maxVectorScaled has to be removed to account for the vector offset (maxNum: 10_000)
-      +maxVectorScaled is added to ensure that the position is never negative (maxNum: 10_000)
+      -maxVectorScaled has to be removed to account for the vector offset (maxNum: 20_000)
+      +maxVectorScaled is added to ensure that the position is never negative (maxNum: 20_000)
 
       maxVectorScaled will need to be removed from the final position value
       */
       positionLimiterX[i] = Limiter(20);
       positionLimiterX[i].in <== bodies[i][0] + out_bodies[i][2]; // maxBits: 20 (maxNum: 1_020_000)
-      positionLimiterX[i].limit <== windowWidthScaled + maxVectorScaled; // maxBits: 20 (maxNum: 1_010_000)
-      positionLimiterX[i].rather <== maxVectorScaled; // maxBits: 14 (maxNum: 10_000)
+      positionLimiterX[i].limit <== windowWidthScaled + maxVectorScaled; // maxBits: 20 (maxNum: 1_020_000)
+      positionLimiterX[i].rather <== maxVectorScaled; // maxBits: 15 (maxNum: 20_000)
 
       // NOTE: maxVectorScaled is still included, needs to be removed at end of lowerLimiter
       positionLowerLimiterX[i] = LowerLimiter(20);
-      positionLowerLimiterX[i].in <== bodies[i][0] + out_bodies[i][2]; // maxBits: 20 (maxNum: 1_020_000)
-      positionLowerLimiterX[i].limit <== maxVectorScaled; // maxBits: 14 (maxNum: 10_000)
-      positionLowerLimiterX[i].rather <== windowWidthScaled + maxVectorScaled; // maxBits: 20 (maxNum: 1_010_000)
+      positionLowerLimiterX[i].in <== bodies[i][0] + out_bodies[i][2]; // maxBits: 20 (maxNum: 1_040_000)
+      positionLowerLimiterX[i].limit <== maxVectorScaled; // maxBits: 15 (maxNum: 20_000)
+      positionLowerLimiterX[i].rather <== windowWidthScaled + maxVectorScaled; // maxBits: 20 (maxNum: 1_020_000)
       // out_bodies[i][0] <== positionLowerLimiterX[i].out;
     
       isZeroX[i]  = IsZero();
@@ -261,14 +261,14 @@ template ForceAccumulator(totalBodies) { // max 10 = maxBits: 4
       // NOTE: same as above
       positionLimiterY[i] = Limiter(20);
       positionLimiterY[i].in <== bodies[i][1] + out_bodies[i][3]; // maxBits: 20 (maxNum: 1_020_000)
-      positionLimiterY[i].limit <== windowWidthScaled + maxVectorScaled; // maxBits: 20 (maxNum: 1_010_000)
-      positionLimiterY[i].rather <== maxVectorScaled; // maxBits: 14 (maxNum: 10_000)
+      positionLimiterY[i].limit <== windowWidthScaled + maxVectorScaled; // maxBits: 20 (maxNum: 1_020_000)
+      positionLimiterY[i].rather <== maxVectorScaled; // maxBits: 15 (maxNum: 20_000)
 
       // NOTE: maxVectorScaled is still included, needs to be removed at end of calculation
       positionLowerLimiterY[i] = LowerLimiter(20);
       positionLowerLimiterY[i].in <== bodies[i][1] + out_bodies[i][3]; // maxBits: 20 (maxNum: 1_020_000)
-      positionLowerLimiterY[i].limit <== maxVectorScaled; // maxBits: 14 (maxNum: 10_000)
-      positionLowerLimiterY[i].rather <== windowWidthScaled + maxVectorScaled; // maxBits: 20 (maxNum: 1_010_000)
+      positionLowerLimiterY[i].limit <== maxVectorScaled; // maxBits: 15 (maxNum: 20_000)
+      positionLowerLimiterY[i].rather <== windowWidthScaled + maxVectorScaled; // maxBits: 20 (maxNum: 1_020_000)
       // out_bodies[i][1] <== positionLowerLimiterY[i].out;
 
           

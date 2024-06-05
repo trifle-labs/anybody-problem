@@ -2,7 +2,7 @@ require('@nomiclabs/hardhat-waffle')
 require('hardhat-gas-reporter')
 require('hardhat-contract-sizer')
 require('dotenv').config()
-require('@nomiclabs/hardhat-etherscan')
+require('@nomicfoundation/hardhat-verify')
 require('solidity-coverage')
 
 // const util = require("util");
@@ -72,13 +72,20 @@ const config = {
       accounts: { mnemonic: process.env.deploymentKey },
       gasPrice: 1_000_000_000 // 1 GWEI
     },
+    baseSepolia: {
+      // network ID: 84532
+      // url: 'https://sepolia.base.org',
+      url: 'https://public.stackup.sh/api/v1/node/base-sepolia',
+      accounts: { mnemonic: process.env.deploymentKey },
+      gasPrice: 1_000_000_000 // 1 GWEI
+    },
     sepolia: {
       // url: 'https://sepolia.infura.io/v3/' + process.env.INFURA_API_KEY,
       // url: 'https://sepolia.rpc.grove.city/v1/' + process.env.grove,
       url: 'https://ethereum-sepolia.blockpi.network/v1/rpc/public',
       accounts: { mnemonic: process.env.deploymentKey },
-      gasPrice: 150_000_000_000, // 150 GWEI
-      gas: 12_000_000
+      gasPrice: 100_000_000_000 // 100 GWEI
+      // gas: 12_000_000
     },
     garnet: {
       url: 'https://rpc.garnetchain.com',
@@ -93,8 +100,15 @@ const config = {
     coinmarketcap: '38b60711-0559-45f4-8bda-e72f446c8278',
     enabled: true
   },
+  sourcify: {
+    enabled: false
+  },
   etherscan: {
-    apiKey: process.env.etherscanApiNew,
+    apiKey: {
+      mainnet: process.env.etherscanApiNew,
+      baseSepolia: process.env.etherscanApiBase
+    },
+
     customChains: [
       {
         network: 'garnet',
@@ -104,6 +118,15 @@ const config = {
           browserURL: 'https://explorer.garnetchain.com'
         }
       }
+      // {
+      //   network: 'baseSepolia',
+      //   chainId: 84532,
+
+      //   urls: {
+      //     apiURL: 'https://api-sepolia.basescan.org/api',
+      //     browserURL: 'https://sepolia.basescan.org'
+      //   }
+      // }
     ]
   },
   contractSizer: {

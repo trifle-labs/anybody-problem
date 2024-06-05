@@ -52,7 +52,7 @@ describe('Solver Tests', function () {
       .be.reverted
   })
 
-  it.only('creates a proof for 1 bodies', async () => {
+  it('creates a proof for 1 bodies', async () => {
     const signers = await ethers.getSigners()
     const [owner] = signers
     const deployedContracts = await deployContracts()
@@ -482,7 +482,6 @@ describe('Solver Tests', function () {
     const { bodyCount, tickCount } = await problems.problems(problemId)
     const ticksRun = await getTicksRun(bodyCount.toNumber())
     const totalTicks = 2 * ticksRun
-    // let totalDustCount = ethers.BigNumber.from(0),
     let runningTickCount = tickCount
     for (let i = 0; i < totalTicks; i += ticksRun) {
       const bodyData = []
@@ -547,10 +546,14 @@ describe('Solver Tests', function () {
     const MAX_BODY_COUNT = await problems.MAX_BODY_COUNT()
     const totalBodies = MAX_BODY_COUNT - bodyCount
     // make a proof for each body quantity
-    // mint enough dust to mint and add a new body before next loop
     for (let i = 0; i <= totalBodies; i++) {
       const { bodyCount } = await problems.problems(problemId)
-      // console.log({ bodyCount: bodyCount.toString(), initialBodyCount: initialBodyCount.toString(), i, add: initialBodyCount.add(i).toString() })
+      console.log({
+        bodyCount: bodyCount.toString(),
+        initialBodyCount: initialBodyCount.toString(),
+        i,
+        add: initialBodyCount.add(i).toString()
+      })
       expect(bodyCount.toString()).to.equal(initialBodyCount.add(i).toString())
       const bodyData = []
       const bodyIds = await problems.getProblemBodyIds(problemId)

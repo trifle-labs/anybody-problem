@@ -30,8 +30,8 @@ export class Anybody extends EventEmitter {
     this.p = p
     // this.p.blendMode(this.p.DIFFERENCE)
 
-    !this.util && this.prepareP5()
     this.clearValues()
+    !this.util && this.prepareP5()
     this.sound = new Sound(this)
     this.init()
     !this.util && this.start()
@@ -83,7 +83,7 @@ export class Anybody extends EventEmitter {
     this.speedFactor = 2
     this.speedLimit = 10
     this.vectorLimit = this.speedLimit * this.speedFactor
-    this.FPS = 50 / this.speedFactor
+    this.FPS = 25
     this.timer = GAME_LENGTH * this.FPS
     this.deadOpacity = '0.9'
     this.initialScoreSize = 60
@@ -249,13 +249,15 @@ export class Anybody extends EventEmitter {
 
   getXY(e) {
     // e may be a touch event or a click event
+    if (e.touches) {
+      e = e.touches[0] || e.changedTouches[0]
+    }
     let x = e.offsetX || e.pageX
     let y = e.offsetY || e.pageY
     const rect = e.target.getBoundingClientRect()
     const actualWidth = rect.width
     x = (x * this.windowWidth) / actualWidth
     y = (y * this.windowWidth) / actualWidth
-
     return { x, y }
   }
 
@@ -471,11 +473,13 @@ export class Anybody extends EventEmitter {
 
     this.calculateBodyFinal()
     const missileInits = []
+    // TODO: what about when the game begins with a missileInit that isn't in corner?
     if (this.mode == 'game') {
       let missileIndex = 0
       for (let i = this.alreadyRun; i < this.alreadyRun + this.stopEvery; i++) {
         if (this.missileInits[missileIndex]?.step == i) {
           const missile = this.missileInits[missileIndex]
+          console.log({ missile })
           missileInits.push([missile.vx, missile.vy, missile.radius])
           missileIndex++
         } else {
@@ -484,18 +488,24 @@ export class Anybody extends EventEmitter {
       }
       missileInits.push([maxVectorScaled, maxVectorScaled, '0'])
     }
+    console.log({ missileInits: JSON.parse(JSON.stringify(missileInits)) })
     results = {
       missiles: JSON.parse(JSON.stringify(missileInits)),
       bodyInits: JSON.parse(JSON.stringify(this.bodyInits)),
       bodyFinal: JSON.parse(JSON.stringify(this.bodyFinal))
     }
-    this.emit('finished', results)
+    const stats = this.calculateStats()
+    const time = stats.timeTook
+    results.time = time
+
     this.bodyInits = JSON.parse(JSON.stringify(this.bodyFinal))
     this.alreadyRun = this.frames
     this.missileInits = this.processMissileInits(this.missiles).map((m) => {
       m.step = this.frames
       return m
     })
+    results.outflightMissiles = JSON.parse(JSON.stringify(this.missileInits))
+    this.emit('finished', results)
     this.bodyFinal = []
     // this.setPause(false)
     if (
@@ -726,10 +736,12 @@ export class Anybody extends EventEmitter {
       velocity: this.p.createVector(x, y - this.windowWidth),
       radius
     }
-    // b.velocity.limit(10)
-    b.velocity.setMag(this.speedLimit * this.speedFactor)
+    console.log({ b: JSON.parse(JSON.stringify(b)) })
+    console.log(this.speedLimit * this.speedFactor)
+    // b.velocity.setMag(this.speedLimit * this.speedFactor)
+    b.velocity.limit(this.speedLimit * this.speedFactor)
+    console.log({ b: JSON.parse(JSON.stringify(b)) })
     this.missiles.push(b)
-
     // const bodyCount = this.bodies.filter((b) => b.radius !== 0).length - 1
     // this.missiles = this.missiles.slice(0, bodyCount)
     // this.missiles = this.missiles.slice(-bodyCount)

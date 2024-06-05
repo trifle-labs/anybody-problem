@@ -106,11 +106,11 @@ contract BodyMetadata is Ownable {
         uint256 scalingFactor = Problems(problems).scalingFactor();
 
           (uint256 body_problemId, uint256 body_mintedBodyIndex, bytes32 body_seed) = Bodies(bodies).bodies(tokenId);
-          uint256 body_radius = Problems(problems).genRadius(body_seed);
-          uint256 scaledRadius = body_radius *
-              4 +
-              radiusMultiplyer *
-              scalingFactor;
+          uint256 body_radius = Problems(problems).genRadius(body_seed, body_mintedBodyIndex);
+          uint256 scaledRadius = body_radius;// *
+              // 4 +
+              // radiusMultiplyer *
+              // scalingFactor;
           uint256 radiusRounded = (scaledRadius / scalingFactor);
           string memory radius = StringsExtended.toString(radiusRounded);
           string memory radiusDecimalsString = StringsExtended.toString(
@@ -199,11 +199,11 @@ contract BodyMetadata is Ownable {
     ) internal view returns (string memory) {
           uint256 scalingFactor = Problems(problems).scalingFactor();
           (uint256 body_problemId, uint256 body_mintedBodyIndex, bytes32 body_seed) = Bodies(bodies).bodies(tokenId);
-          uint256 body_radius = Problems(problems).genRadius(body_seed);
-          uint256 scaledRadius = body_radius *
-              4 +
-              radiusMultiplyer *
-              scalingFactor;
+          uint256 body_radius = Problems(problems).genRadius(body_seed, body_mintedBodyIndex);
+          uint256 scaledRadius = body_radius;// *
+              // 4 +
+              // radiusMultiplyer *
+              // scalingFactor;
 
 
         return

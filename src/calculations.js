@@ -298,10 +298,6 @@ export const Calculations = {
 
   convertScaledBigIntBodyToArray(b) {
     const maxVectorScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
-    console.log({
-      x: _convertBigIntToModP(b.position.x),
-      y: _convertBigIntToModP(b.position.y)
-    })
     const bodyArray = []
     const noNegativeVelocityX = b.velocity.x + maxVectorScaled
     const noNegativeVelocityY = b.velocity.y + maxVectorScaled

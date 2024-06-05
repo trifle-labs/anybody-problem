@@ -4,7 +4,6 @@ import {
   Problems,
   Bodies,
   Solver,
-  Dust,
   ProblemMetadata,
   BodyMetadata
 } from './contracts'
@@ -26,15 +25,13 @@ const sepolia: Source = {
 
 const network = sepolia.chain_id
 const contracts = Object.fromEntries(
-  [Problems, Bodies, Solver, Dust, ProblemMetadata, BodyMetadata].map(
-    (contract) => {
-      const abi = contract.abi.abi
-      return [
-        contract.abi.contractName,
-        new ethers.Contract(contract.networks[network].address, abi)
-      ]
-    }
-  )
+  [Problems, Bodies, Solver, ProblemMetadata, BodyMetadata].map((contract) => {
+    const abi = contract.abi.abi
+    return [
+      contract.abi.contractName,
+      new ethers.Contract(contract.networks[network].address, abi)
+    ]
+  })
 )
 
 const solTypeToPgType = {
