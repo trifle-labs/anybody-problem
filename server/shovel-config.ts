@@ -5,17 +5,20 @@ import type {
   Integration,
   PGColumnType
 } from '@indexsupply/shovel-config'
-import { Problems, Bodies, Solver } from './src/contracts'
+import { Problems, Bodies, Solver } from './contracts'
 import { ethers } from 'ethers'
 import { camelToSnakeCase } from './src/util'
 
-const mainnet: Source = {
+export type Chain = 'mainnet' | 'sepolia' | 'garnet' | 'base_sepolia'
+type KnownSource = Source & { name: Chain }
+
+const mainnet: KnownSource = {
   name: 'mainnet',
   chain_id: 1,
   url: 'https://ethereum-rpc.publicnode.com'
 }
 
-const sepolia: Source = {
+const sepolia: KnownSource = {
   name: 'sepolia',
   chain_id: 11155111,
   url: 'https://rpc2.sepolia.org',
@@ -23,10 +26,18 @@ const sepolia: Source = {
   concurrency: 1
 }
 
-const garnet: Source = {
+const garnet: KnownSource = {
   name: 'garnet',
   chain_id: 17069,
   url: 'https://rpc.garnetchain.com',
+  batch_size: 1000,
+  concurrency: 1
+}
+
+const baseSepolia: KnownSource = {
+  name: 'base_sepolia',
+  chain_id: 84532,
+  url: 'https://base-sepolia.infura.io/v3/049a0c3141de47f1afcbc640911be2a7',
   batch_size: 1000,
   concurrency: 1
 }
@@ -42,13 +53,12 @@ const solTypeToPgType: Record<string, PGColumnType> = {
 const STARTING_BLOCK = {
   // mainnet: BigInt('2067803')
   sepolia: BigInt('5716600'),
-  garnet: BigInt('2067803')
+  garnet: BigInt('2067803'),
+  base_sepolia: BigInt('10923234')
 }
 
-export type Chain = 'mainnet' | 'sepolia' | 'garnet'
-
 // n.b. sources must match ABI in contracts to correctly sync
-export const sources = [sepolia, garnet]
+export const sources: KnownSource[] = [baseSepolia]
 
 const contracts = Object.fromEntries(
   [Problems, Bodies, Solver].map((contract) => {
