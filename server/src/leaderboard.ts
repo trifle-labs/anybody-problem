@@ -196,7 +196,8 @@ async function calculateAllTimeLeaderboard(
   chain: Chain
 ): Promise<Leaderboard['allTime']> {
   const n = 10
-  const result = await db.query(`
+  const result = await db.query(
+    `
   WITH most_solved AS (
     SELECT 
         problem_id,
@@ -204,7 +205,7 @@ async function calculateAllTimeLeaderboard(
     FROM 
         solver_solved
     WHERE
-        src_name = '${chain}'
+        src_name = $1
     GROUP BY 
         problem_id
     ORDER BY 
@@ -229,7 +230,7 @@ current_streaks AS (
                 solver_solved
             WHERE
                 day <= ${today}
-                AND src_name = '${chain}'
+                AND src_name = $1
         ) AS subquery
         GROUP BY
             problem_id, streak
@@ -249,7 +250,7 @@ fastest_completed AS (
     FROM 
         solver_solved
     WHERE
-        src_name = '${chain}'
+        src_name = $1
     GROUP BY 
         problem_id
     HAVING 
@@ -283,7 +284,9 @@ leaderboard AS (
 SELECT 
     *
 FROM
-  leaderboard`)
+  leaderboard`,
+    [chain]
+  )
   return {
     mostSolved: result.rows
       .filter((r: any) => r.category === 'Most Solved')
@@ -320,7 +323,7 @@ export async function getProblems(chain: Chain) {
       FROM
         problems_transfer
       WHERE
-        src_name = '${chain}'
+        src_name = $1
   ),
   current_owners AS (
       SELECT
@@ -341,7 +344,7 @@ export async function getProblems(chain: Chain) {
           'added' AS status
       FROM
       problems_body_added ba
-      WHERE src_name = '${chain}'
+      WHERE src_name = $1
       UNION ALL
       SELECT
           br.problem_id,
@@ -352,7 +355,7 @@ export async function getProblems(chain: Chain) {
           'removed' AS status
       FROM
       problems_body_removed br
-      WHERE src_name = '${chain}'
+      WHERE src_name = $1
   ),
   body_final_status AS (
       SELECT
@@ -382,7 +385,8 @@ export async function getProblems(chain: Chain) {
       body_final_status bfs ON ba.problem_id = bfs.problem_id AND ba.body_id = bfs.body_id
   WHERE
       bfs.rn = 1
-      AND bfs.status = 'added';`
+      AND bfs.status = 'added';`,
+    [chain]
   )
 
   function bodyFromRow(row: Record<string, string>): Body {
