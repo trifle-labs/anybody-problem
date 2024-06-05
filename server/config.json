@@ -128,13 +128,12 @@
         "columns": [
           { "name": "solver", "type": "bytea", "indexed": true },
           { "name": "problem_id", "type": "numeric", "indexed": true },
-          { "name": "level", "type": "numeric", "indexed": true },
           {
             "name": "ticks_in_this_match",
             "type": "numeric",
             "indexed": false
           },
-          { "name": "day", "type": "numeric", "indexed": false },
+          { "name": "winnings", "type": "numeric", "indexed": false },
           { "name": "log_addr", "type": "bytea", "indexed": true }
         ]
       },
@@ -167,22 +166,16 @@
             "column": "problem_id"
           },
           {
-            "name": "level",
-            "type": "uint256",
-            "indexed": true,
-            "column": "level"
-          },
-          {
             "name": "ticksInThisMatch",
             "type": "uint256",
             "indexed": false,
             "column": "ticks_in_this_match"
           },
           {
-            "name": "day",
+            "name": "winnings",
             "type": "uint256",
             "indexed": false,
-            "column": "day"
+            "column": "winnings"
           }
         ]
       },
@@ -201,6 +194,7 @@
           { "name": "body_id", "type": "numeric", "indexed": true },
           { "name": "problem_id", "type": "numeric", "indexed": true },
           { "name": "minted_body_index", "type": "numeric", "indexed": true },
+          { "name": "max_star_lvl", "type": "numeric", "indexed": false },
           { "name": "seed", "type": "bytea", "indexed": false },
           { "name": "added_to_problem", "type": "bool", "indexed": false },
           { "name": "log_addr", "type": "bytea", "indexed": true }
@@ -241,6 +235,12 @@
             "column": "minted_body_index"
           },
           {
+            "name": "maxStarLvl",
+            "type": "uint256",
+            "indexed": false,
+            "column": "max_star_lvl"
+          },
+          {
             "name": "seed",
             "type": "bytes32",
             "indexed": false,
@@ -273,6 +273,8 @@
           { "name": "px", "type": "numeric", "indexed": false },
           { "name": "py", "type": "numeric", "indexed": false },
           { "name": "radius", "type": "numeric", "indexed": false },
+          { "name": "star_lvl", "type": "numeric", "indexed": false },
+          { "name": "max_star_lvl", "type": "numeric", "indexed": false },
           { "name": "seed", "type": "bytea", "indexed": false },
           { "name": "log_addr", "type": "bytea", "indexed": true }
         ]
@@ -326,6 +328,18 @@
             "column": "radius"
           },
           {
+            "name": "starLvl",
+            "type": "uint256",
+            "indexed": false,
+            "column": "star_lvl"
+          },
+          {
+            "name": "maxStarLvl",
+            "type": "uint256",
+            "indexed": false,
+            "column": "max_star_lvl"
+          },
+          {
             "name": "seed",
             "type": "bytes32",
             "indexed": false,
@@ -348,6 +362,8 @@
           { "name": "problem_id", "type": "numeric", "indexed": false },
           { "name": "tick", "type": "numeric", "indexed": false },
           { "name": "body_id", "type": "numeric", "indexed": false },
+          { "name": "star_lvl", "type": "numeric", "indexed": false },
+          { "name": "max_star_lvl", "type": "numeric", "indexed": false },
           { "name": "seed", "type": "bytea", "indexed": false },
           { "name": "log_addr", "type": "bytea", "indexed": true }
         ]
@@ -385,6 +401,18 @@
             "type": "uint256",
             "indexed": false,
             "column": "body_id"
+          },
+          {
+            "name": "starLvl",
+            "type": "uint256",
+            "indexed": false,
+            "column": "star_lvl"
+          },
+          {
+            "name": "maxStarLvl",
+            "type": "uint256",
+            "indexed": false,
+            "column": "max_star_lvl"
           },
           {
             "name": "seed",

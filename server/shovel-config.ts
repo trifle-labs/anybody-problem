@@ -47,6 +47,7 @@ const STARTING_BLOCK = {
 
 export type Chain = 'mainnet' | 'sepolia' | 'garnet'
 
+// n.b. sources must match ABI in contracts to correctly sync
 export const sources = [sepolia, garnet]
 
 const contracts = Object.fromEntries(
