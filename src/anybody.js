@@ -488,8 +488,23 @@ export class Anybody extends EventEmitter {
       }
       missileInits.push([maxVectorScaled, maxVectorScaled, '0'])
     }
-    console.log({ missileInits: JSON.parse(JSON.stringify(missileInits)) })
+
+    let inflightMissile = this.missileInits[0] || {
+      x: '0',
+      y: (this.windowWidth * parseInt(this.scalingFactor)).toString(),
+      vx: '2000',
+      vy: '2000',
+      radius: '0'
+    }
+    inflightMissile = [
+      inflightMissile.x,
+      inflightMissile.y,
+      inflightMissile.vx,
+      inflightMissile.vy,
+      inflightMissile.radius
+    ]
     results = {
+      inflightMissile: JSON.parse(JSON.stringify(inflightMissile)),
       missiles: JSON.parse(JSON.stringify(missileInits)),
       bodyInits: JSON.parse(JSON.stringify(this.bodyInits)),
       bodyFinal: JSON.parse(JSON.stringify(this.bodyFinal))
@@ -504,13 +519,28 @@ export class Anybody extends EventEmitter {
       m.step = this.frames
       return m
     })
-    results.outflightMissiles = JSON.parse(JSON.stringify(this.missileInits))
+    // console.log(this.missileInits)
+    // console.log('this.missileInits[0]', this.missileInits[0])
+    const outflightMissile = this.missileInits[0] || {
+      x: '0',
+      y: (this.windowWidth * parseInt(this.scalingFactor)).toString(),
+      vx: '2000',
+      vy: '2000',
+      radius: '0'
+    }
+    results.outflightMissile = [
+      outflightMissile.x,
+      outflightMissile.y,
+      outflightMissile.vx,
+      outflightMissile.vy,
+      outflightMissile.radius
+    ]
     this.emit('finished', results)
     this.bodyFinal = []
     // this.setPause(false)
     if (
       this.mode == 'game' &&
-      this.bodies.reduce((a, c) => a + c.radius, 0) == 0
+      this.bodies.slice(1).reduce((a, c) => a + c.radius, 0) == 0
     ) {
       this.finalBatchSent = true
       this.storeStarPositions()

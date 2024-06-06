@@ -186,12 +186,13 @@ export const Visuals = {
     //   framesIsAtStopEveryInterval,
     //   frames_lt_timer: this.frames < this.timer
     // })
+    const timeHasntRunOut = this.frames - this.startingFrame <= this.timer
     if (
       !this.firstFrame &&
       notPaused &&
       framesIsAtStopEveryInterval &&
       didNotJustPause &&
-      this.frames - this.startingFrame <= this.timer
+      timeHasntRunOut
     ) {
       if (didNotJustPause) {
         this.finish()
@@ -1231,7 +1232,7 @@ export const Visuals = {
     //   radius,
     //   radius
     // )
-    this.bodiesGraphic.ellipse(0, offset, radius, radius)
+    this.bodiesGraphic.ellipse(0, offset, radius)
     if (this.globalStyle == 'psycho' && this.target == 'inside') {
       this.drawCenter(body, this.bodiesGraphic, 0, offset)
     }

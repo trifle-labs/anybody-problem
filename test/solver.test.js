@@ -131,14 +131,17 @@ describe('Solver Tests', function () {
       let body = await problems.getProblemBodyData(problemId, bodyId)
       const scalingFactor = await problems.scalingFactor()
       const maxVector = await problems.maxVector()
-      const pos = ethers.BigNumber.from(i)
-        .mul(body.radius.mul(2).div(scalingFactor))
-        .mul(scalingFactor)
-
       const windowWidth = ethers.BigNumber.from(anybody.windowWidth)
+      const pos =
+        i == 0
+          ? windowWidth.div(2).mul(scalingFactor)
+          : ethers.BigNumber.from(i)
+              .mul(body.radius.mul(2).div(scalingFactor))
+              .mul(scalingFactor)
+
       const mid = windowWidth
       console.log({ pos, mid })
-      const newRadius = ethers.BigNumber.from(10).mul(scalingFactor)
+      const newRadius = ethers.BigNumber.from(10 + i).mul(scalingFactor)
       body = {
         bodyId: body.bodyId,
         mintedBodyIndex: body.mintedBodyIndex,
@@ -155,14 +158,15 @@ describe('Solver Tests', function () {
       await problems.updateProblemBody(problemId, bodyId, body)
 
       const radius = ethers.BigNumber.from(10).mul(scalingFactor)
-
-      const missile = {
-        step: i * 2,
-        position: anybody.createVector(0, windowWidth),
-        velocity: anybody.createVector(ethers.BigNumber.from(3), 0),
-        radius
+      if (i > 0) {
+        const missile = {
+          step: i * 2 - 1,
+          position: anybody.createVector(0, windowWidth),
+          velocity: anybody.createVector(ethers.BigNumber.from(3), 0),
+          radius
+        }
+        missileInits.push(missile)
       }
-      missileInits.push(missile)
     }
 
     // restore the correct solver address after overwriting the body positions
@@ -182,7 +186,7 @@ describe('Solver Tests', function () {
       missiles
     )
     console.log({ dataResult })
-    for (let i = 0; i < bodyCount; i++) {
+    for (let i = 1; i < bodyCount; i++) {
       const radiusIndex = 5 + i * 5 + 4
       expect(dataResult.publicSignals[radiusIndex]).to.equal('0')
     }

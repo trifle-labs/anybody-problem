@@ -352,10 +352,10 @@ contract Problems is ERC721, Ownable {
         // -maxVector = 0
         // 0 = maxVector
         // maxVector = 2 * maxVector
-        body.vx = randomRange(0, 2 * maxVector * scalingFactor, rand);
+        body.vx = randomRange(maxVector * scalingFactor / 2, 3 * maxVector * scalingFactor / 2, rand);
 
         rand = keccak256(abi.encodePacked(rand));
-        body.vy = randomRange(0, 2 * maxVector * scalingFactor, rand);
+        body.vy = randomRange(maxVector * scalingFactor / 2, 3 * maxVector * scalingFactor / 2, rand);
 
         return body;
     }
@@ -423,10 +423,9 @@ contract Problems is ERC721, Ownable {
     }
 
     function restoreValues(uint256 problemId) public onlySolver {
-
-      uint256 max = problems[problemId].bodyCount  == MAX_BODY_COUNT ? MAX_BODY_COUNT : problems[problemId].bodyCount - 1;
+      uint256 bodyCount = problems[problemId].bodyCount;
       // -1 because the newly added body is already in the correct level position
-      for (uint256 i = 0; i < max; i++) {
+      for (uint256 i = 0; i < bodyCount; i++) {
         uint256 bodyId = problems[problemId].bodyIds[i];
         bytes32 levelSeed = getLevelSeed(problems[problemId].day, problems[problemId].mintedBodiesIndex, i);
         bytes32 bodyIndexRand = keccak256(abi.encodePacked(problems[problemId].day, i));
