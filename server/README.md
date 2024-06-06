@@ -8,6 +8,13 @@ blockchains => shovel => postgres => read-only api => app
 2. postgres: `brew install postgresql@15`
 3. [shovel](https://www.indexsupply.com/shovel/docs/#install): `curl -LO https://indexsupply.net/bin/1.6/darwin/arm64/shovel && chmod +x shovel`
 
+## Run postgres
+
+```
+brew services start postgresql@15
+createdb shovel
+```
+
 ## Run shovel
 
 blockchains => shovel => postgres

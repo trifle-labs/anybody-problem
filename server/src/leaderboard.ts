@@ -49,7 +49,8 @@ type Leaderboard = {
   }
 }
 
-const MAX_BODIES = 3
+// TODO: pull this from the contract
+const MAX_BODY_COUNT = 3
 const DAILY_CATEGORY_LIMIT = 3
 
 export const leaderboards: Record<Chain, Leaderboard> | {} = {}
@@ -88,7 +89,7 @@ async function calculateDailyLeaderboard(day: number, chain: Chain) {
       GROUP BY 
           problem_id
       HAVING 
-          COUNT(level) = ${MAX_BODIES}
+          COUNT(level) = ${MAX_BODY_COUNT}
   ),
   ranked_fastest_times AS (
       SELECT 
@@ -108,33 +109,21 @@ async function calculateDailyLeaderboard(day: number, chain: Chain) {
           cumulative_times
   ),
   leaderboard AS (
-    SELECT 
-        'Level 1' AS category,
-        problem_id,
-        fastest_time AS time
-    FROM 
-        ranked_fastest_times
-    WHERE 
-        level = 1 AND rank <= ${DAILY_CATEGORY_LIMIT}
-    UNION ALL
-    SELECT 
-        'Level 2' AS category,
-        problem_id,
-        fastest_time AS time
-    FROM 
-        ranked_fastest_times
-    WHERE 
-        level = 2 AND rank <= ${DAILY_CATEGORY_LIMIT}
-    UNION ALL
-    SELECT 
-        'Level 3' AS category,
-        problem_id,
-        fastest_time AS time
-    FROM 
-        ranked_fastest_times
-    WHERE 
-        level = 3 AND rank <= ${DAILY_CATEGORY_LIMIT}
-    UNION ALL
+    ${[1, 2, 3, 4, 5, 6, 7, 8, 9]
+      .map(
+        (level) => `
+      SELECT
+          'Level ${level}' AS category,
+          problem_id,
+          fastest_time AS time
+      FROM
+          ranked_fastest_times
+      WHERE
+          rank <= ${DAILY_CATEGORY_LIMIT}
+          AND level = ${level}
+      UNION ALL`
+      )
+      .join('\n')}
     SELECT 
         'Cumulative' AS category,
         problem_id,
@@ -185,6 +174,12 @@ async function calculateDailyLeaderboard(day: number, chain: Chain) {
     oneBody: scores(result.rows.filter((r: any) => r.category === 'Level 1')),
     twoBody: scores(result.rows.filter((r: any) => r.category === 'Level 2')),
     threeBody: scores(result.rows.filter((r: any) => r.category === 'Level 3')),
+    fourBody: scores(result.rows.filter((r: any) => r.category === 'Level 4')),
+    fiveBody: scores(result.rows.filter((r: any) => r.category === 'Level 5')),
+    sixBody: scores(result.rows.filter((r: any) => r.category === 'Level 6')),
+    sevenBody: scores(result.rows.filter((r: any) => r.category === 'Level 7')),
+    eightBody: scores(result.rows.filter((r: any) => r.category === 'Level 8')),
+    nineBody: scores(result.rows.filter((r: any) => r.category === 'Level 9')),
     cumulative: scores(
       result.rows.filter((r: any) => r.category === 'Cumulative')
     )
@@ -254,7 +249,7 @@ fastest_completed AS (
     GROUP BY 
         problem_id
     HAVING 
-        COUNT(level) = ${MAX_BODIES}
+        COUNT(level) = ${MAX_BODY_COUNT}
     ORDER BY 
         total_time ASC
     LIMIT ${n}
