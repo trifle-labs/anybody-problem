@@ -50,7 +50,7 @@ type Leaderboard = {
 }
 
 // TODO: pull this from the contract
-const MAX_BODY_COUNT = 3
+const MAX_BODY_COUNT = 10
 const DAILY_CATEGORY_LIMIT = 3
 
 export const leaderboards: Record<Chain, Leaderboard> | {} = {}
@@ -71,119 +71,111 @@ async function calculateDailyLeaderboard(day: number, chain: Chain) {
     FROM 
         solver_solved
     WHERE 
-        level IN (1, 2, 3)
-        AND day = ${day}
+        day = ${day}
         AND src_name = '${chain}'
     GROUP BY 
         problem_id, level
-  ),
-  cumulative_times AS (
-      SELECT 
-          problem_id,
-          SUM(ticks_in_this_match) AS total_time
-      FROM 
-          solver_solved
-      WHERE 
-          day = ${day}
-          AND src_name = '${chain}'
-      GROUP BY 
-          problem_id
-      HAVING 
-          COUNT(level) = ${MAX_BODY_COUNT}
-  ),
-  ranked_fastest_times AS (
-      SELECT 
-          problem_id,
-          level,
-          fastest_time,
-          ROW_NUMBER() OVER (PARTITION BY level ORDER BY fastest_time) AS rank
-      FROM 
-          fastest_times
-  ),
-  ranked_cumulative_times AS (
-      SELECT 
-          problem_id,
-          total_time,
-          ROW_NUMBER() OVER (ORDER BY total_time) AS rank
-      FROM 
-          cumulative_times
-  ),
-  leaderboard AS (
-    ${[1, 2, 3, 4, 5, 6, 7, 8, 9]
-      .map(
-        (level) => `
-      SELECT
-          'Level ${level}' AS category,
-          problem_id,
-          fastest_time AS time
-      FROM
-          ranked_fastest_times
-      WHERE
-          rank <= ${DAILY_CATEGORY_LIMIT}
-          AND level = ${level}
-      UNION ALL`
-      )
-      .join('\n')}
+),
+cumulative_times AS (
     SELECT 
-        'Cumulative' AS category,
+        problem_id,
+        SUM(ticks_in_this_match) AS total_time
+    FROM 
+        solver_solved
+    WHERE 
+        day = ${day}
+        AND src_name = '${chain}'
+    GROUP BY 
+        problem_id
+    HAVING 
+        COUNT(level) = ${MAX_BODY_COUNT}
+),
+ranked_fastest_times AS (
+    SELECT 
+        problem_id,
+        level,
+        fastest_time,
+        ROW_NUMBER() OVER (PARTITION BY level ORDER BY fastest_time) AS rank
+    FROM 
+        fastest_times
+),
+ranked_cumulative_times AS (
+    SELECT 
+        problem_id,
+        total_time,
+        ROW_NUMBER() OVER (ORDER BY total_time) AS rank
+    FROM 
+        cumulative_times
+),
+leaderboard AS (
+    SELECT
+        level,
+        problem_id,
+        fastest_time AS time
+    FROM
+        ranked_fastest_times
+    WHERE
+        rank <= ${DAILY_CATEGORY_LIMIT}
+    UNION ALL
+    SELECT 
+        NULL AS level,
         problem_id,
         total_time AS time
     FROM 
         ranked_cumulative_times
     WHERE 
         rank <= ${DAILY_CATEGORY_LIMIT}
-    ORDER BY 
-        category, time
-  ),
-  latest_transactions AS (
+),
+latest_transactions AS (
     SELECT
         token_id,
         "to",
         ROW_NUMBER() OVER (PARTITION BY token_id ORDER BY block_num DESC, tx_idx DESC, log_idx DESC) AS rn
     FROM
-      problems_transfer
+        problems_transfer
     WHERE
-      token_id IN (SELECT problem_id FROM leaderboard)
-      AND src_name = '${chain}'
-  ),
-  current_owners AS (
-      SELECT
-          token_id,
-          concat('0x', encode("to", 'hex')) as owner
-      FROM
-          latest_transactions
-      WHERE
-          rn = 1
-  )
-  SELECT 
-      *
-  FROM
+        token_id IN (SELECT problem_id FROM leaderboard)
+        AND src_name = '${chain}'
+),
+current_owners AS (
+    SELECT
+        token_id,
+        concat('0x', encode("to", 'hex')) as owner
+    FROM
+        latest_transactions
+    WHERE
+        rn = 1
+)
+SELECT 
+    *
+FROM
     leaderboard
-  LEFT JOIN current_owners ON leaderboard.problem_id = current_owners.token_id
+LEFT JOIN current_owners ON leaderboard.problem_id = current_owners.token_id
+ORDER BY
+    COALESCE(level, 0), time;
   `)
 
   function scores(rows: any[]): SpeedScore[] {
     return rows.map((r: any) => ({
       problemId: r.problem_id,
-      ticks: r.time,
+      ticks: parseInt(r.time),
       owner: r.owner
     }))
   }
 
-  return {
-    oneBody: scores(result.rows.filter((r: any) => r.category === 'Level 1')),
-    twoBody: scores(result.rows.filter((r: any) => r.category === 'Level 2')),
-    threeBody: scores(result.rows.filter((r: any) => r.category === 'Level 3')),
-    fourBody: scores(result.rows.filter((r: any) => r.category === 'Level 4')),
-    fiveBody: scores(result.rows.filter((r: any) => r.category === 'Level 5')),
-    sixBody: scores(result.rows.filter((r: any) => r.category === 'Level 6')),
-    sevenBody: scores(result.rows.filter((r: any) => r.category === 'Level 7')),
-    eightBody: scores(result.rows.filter((r: any) => r.category === 'Level 8')),
-    nineBody: scores(result.rows.filter((r: any) => r.category === 'Level 9')),
-    cumulative: scores(
-      result.rows.filter((r: any) => r.category === 'Cumulative')
-    )
+  const levels = []
+  for (let i = 1; i <= MAX_BODY_COUNT; i++) {
+    const events = scores(result.rows.filter((r: any) => r.level === `${i}`))
+    if (events.length) {
+      levels.push({
+        level: i,
+        events
+      })
+    }
   }
+  const cumulativeEvents = scores(result.rows.filter((r: any) => !r.level))
+
+  return { levels, cumulative: cumulativeEvents }
 }
 
 async function calculateAllTimeLeaderboard(
@@ -418,12 +410,13 @@ export async function getProblems(chain: Chain) {
 export async function updateLeaderboard(chain: Chain) {
   const start = Date.now()
 
-  const seasonStart = 1716336000
+  const seasonStart = 1717632000
 
   // calculate daily leaderboards
   const today = currentDayInUnixTime()
   const daysSoFar: number[] = []
-  for (let i = seasonStart; i < today; i += 86400) {
+  const ONE_DAY_SECONDS = 86400
+  for (let i = seasonStart; i <= today; i += ONE_DAY_SECONDS) {
     daysSoFar.push(i)
   }
 
@@ -432,6 +425,8 @@ export async function updateLeaderboard(chain: Chain) {
       return calculateDailyLeaderboard(day, chain)
     })
   )
+
+  const doneWithDaily = Date.now()
 
   const daily = daysSoFar.reduce(
     (acc, day, idx) => {
@@ -456,6 +451,8 @@ export async function updateLeaderboard(chain: Chain) {
     Date.now() - start,
     'ms with',
     Object.keys(problems).length,
-    'problems'
+    'problems',
+    'daily took',
+    doneWithDaily - start
   )
 }
