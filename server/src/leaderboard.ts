@@ -32,10 +32,13 @@ type SolvedScore = LeaderboardLine & { solved: number }
 
 type StreakScore = LeaderboardLine & { streak: number }
 
+type LevelLeaderboard = {
+  level: number
+  events: SpeedScore[]
+}
+
 type DailyLeaderboard = {
-  oneBody: SpeedScore[]
-  twoBody: SpeedScore[]
-  threeBody: SpeedScore[]
+  levels: LevelLeaderboard[]
   cumulative: SpeedScore[]
 }
 
@@ -62,7 +65,7 @@ function currentDayInUnixTime() {
 }
 
 async function calculateDailyLeaderboard(day: number, chain: Chain) {
-  const result = await db.query(`
+  const q = `
   WITH fastest_times AS (
       SELECT 
           problem_id,
@@ -156,7 +159,9 @@ async function calculateDailyLeaderboard(day: number, chain: Chain) {
   LEFT JOIN current_owners ON leaderboard.problem_id = current_owners.token_id
   ORDER BY
       COALESCE(leaderboard.level, 0), leaderboard.time;
-  `)
+  `
+
+  const result = await db.query(q)
 
   function scores(rows: any[]): SpeedScore[] {
     return rows.map((r: any) => ({
@@ -166,15 +171,14 @@ async function calculateDailyLeaderboard(day: number, chain: Chain) {
     }))
   }
 
-  const levels = []
+  const levels: LevelLeaderboard[] = []
   for (let i = 1; i <= MAX_BODY_COUNT; i++) {
     const events = scores(result.rows.filter((r: any) => r.level === `${i}`))
-    if (events.length) {
-      levels.push({
-        level: i,
-        events
-      })
-    }
+    if (!events.length) continue
+    levels.push({
+      level: i,
+      events
+    })
   }
   const cumulativeEvents = scores(result.rows.filter((r: any) => !r.level))
 
@@ -270,11 +274,33 @@ leaderboard AS (
       total_time AS metric
   FROM 
       fastest_completed
+),
+latest_transactions AS (
+  SELECT
+      token_id,
+      "to",
+      ROW_NUMBER() OVER (PARTITION BY token_id ORDER BY block_num DESC, tx_idx DESC, log_idx DESC) AS rn
+  FROM
+      problems_transfer
+  WHERE
+      token_id IN (SELECT problem_id FROM leaderboard)
+      AND src_name = '${chain}'
+),
+current_owners AS (
+  SELECT
+      token_id,
+      concat('0x', encode("to", 'hex')) as owner
+  FROM
+      latest_transactions
+  WHERE
+      rn = 1
 )
 SELECT 
     *
 FROM
-  leaderboard`,
+  leaderboard
+LEFT JOIN current_owners co ON leaderboard.problem_id = co.token_id
+`,
     [chain]
   )
   return {

@@ -3,7 +3,8 @@ import type {
   Source,
   Table,
   Integration,
-  PGColumnType
+  PGColumnType,
+  IndexStatment
 } from '@indexsupply/shovel-config'
 import { Problems, Bodies, Solver } from './contracts'
 import { ethers } from 'ethers'
@@ -74,7 +75,8 @@ const contracts = Object.fromEntries(
 
 async function integrationFor(
   contractName: string,
-  eventName: string
+  eventName: string,
+  index: IndexStatment[] = []
 ): Promise<Integration> {
   const tableName = camelToSnakeCase(`${contractName}_${eventName}`)
 
@@ -105,7 +107,8 @@ async function integrationFor(
 
   const table: Table = {
     name: tableName,
-    columns
+    columns,
+    index
   }
 
   const inputs = event.inputs.map((input) => {
@@ -150,8 +153,12 @@ async function integrationFor(
 if (process.env.OUTPUT) {
   ;(async function main() {
     let integrations = await Promise.all([
-      integrationFor('Problems', 'Transfer'),
-      integrationFor('Bodies', 'Transfer'),
+      integrationFor('Problems', 'Transfer', [
+        ['block_num DESC', 'tx_idx DESC', 'log_idx DESC']
+      ]),
+      integrationFor('Bodies', 'Transfer', [
+        ['block_num DESC', 'tx_idx DESC', 'log_idx DESC']
+      ]),
       integrationFor('Solver', 'Solved'),
       integrationFor('Bodies', 'bodyBorn'),
       integrationFor('Problems', 'bodyAdded'),

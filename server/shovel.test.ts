@@ -2,12 +2,11 @@ import { expect, test, describe } from 'bun:test'
 import db from './src/db'
 
 describe('shovel sanity test', () => {
-  test('db exists', async () => {
+  test('db exists', () => {
     expect(db).toBeDefined()
   })
 
   test('events got pulled into tables', async () => {
-    await db.connect()
     const { rows, rowCount } = await db.query(
       `
       WITH tbl AS

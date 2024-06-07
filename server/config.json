@@ -22,7 +22,8 @@
           { "name": "to", "type": "bytea", "indexed": true },
           { "name": "token_id", "type": "numeric", "indexed": true },
           { "name": "log_addr", "type": "bytea", "indexed": true }
-        ]
+        ],
+        "index": [["block_num DESC", "tx_idx DESC", "log_idx DESC"]]
       },
       "block": [
         {
@@ -65,7 +66,8 @@
           { "name": "to", "type": "bytea", "indexed": true },
           { "name": "token_id", "type": "numeric", "indexed": true },
           { "name": "log_addr", "type": "bytea", "indexed": true }
-        ]
+        ],
+        "index": [["block_num DESC", "tx_idx DESC", "log_idx DESC"]]
       },
       "block": [
         {
@@ -114,7 +116,8 @@
           },
           { "name": "day", "type": "numeric", "indexed": false },
           { "name": "log_addr", "type": "bytea", "indexed": true }
-        ]
+        ],
+        "index": []
       },
       "block": [
         {
@@ -176,7 +179,8 @@
           { "name": "seed", "type": "bytea", "indexed": false },
           { "name": "added_to_problem", "type": "bool", "indexed": false },
           { "name": "log_addr", "type": "bytea", "indexed": true }
-        ]
+        ],
+        "index": []
       },
       "block": [
         {
@@ -241,7 +245,8 @@
           { "name": "radius", "type": "numeric", "indexed": false },
           { "name": "seed", "type": "bytea", "indexed": false },
           { "name": "log_addr", "type": "bytea", "indexed": true }
-        ]
+        ],
+        "index": []
       },
       "block": [
         {
@@ -310,7 +315,8 @@
           { "name": "body_id", "type": "numeric", "indexed": false },
           { "name": "seed", "type": "bytea", "indexed": false },
           { "name": "log_addr", "type": "bytea", "indexed": true }
-        ]
+        ],
+        "index": []
       },
       "block": [
         {

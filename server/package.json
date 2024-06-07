@@ -13,7 +13,8 @@
     "@indexsupply/shovel-config": "^0.0.16",
     "@types/bun": "latest",
     "@types/pg": "^8.11.6",
-    "ethers": "^6.12.1"
+    "ethers": "^6.12.1",
+    "typescript": "^5.4.5"
   },
   "dependencies": {
     "hono": "^4.4.3",
