@@ -128,20 +128,21 @@ export const Visuals = {
     if (this.globalStyle == 'psycho') {
       this.p.blendMode(this.p.BLEND)
     }
+
+    // if (
+    //   this.mode == 'game' &&
+    //   this.target == 'inside' &&
+    //   !this.firstFrame &&
+    //   this.globalStyle !== 'psycho'
+    // ) {
+    //   for (let i = 0; i < this.bodies.length; i++) {
+    //     const body = this.bodies[i]
+    //     this.drawCenter(body)
+    //   }
+    // }
+
     if (!this.firstFrame) {
       this.drawBodies()
-    }
-
-    if (
-      this.mode == 'game' &&
-      this.target == 'inside' &&
-      !this.firstFrame &&
-      this.globalStyle !== 'psycho'
-    ) {
-      for (let i = 0; i < this.bodies.length; i++) {
-        const body = this.bodies[i]
-        this.drawCenter(body)
-      }
     }
 
     if (
@@ -255,6 +256,7 @@ export const Visuals = {
     // this.p.background('white')
     if (!this.starBG) {
       this.starBG = this.p.createGraphics(this.windowWidth, this.windowHeight)
+      this.starBG.pixelDensity(this.pixelDensity)
 
       for (let i = 0; i < 200; i++) {
         // this.starBG.stroke('black')
@@ -933,97 +935,157 @@ export const Visuals = {
     return closeEnough
   },
 
-  drawPngFace(/*radius, body, offset*/) {
-    return
-    // if (body.bodyIndex == 0) return
-    // const closeEnough = true //this.isMissileClose(body)
-    // if (body.radius !== 0 && !closeEnough) return
-    // this.pngFaces ||= new Array(FACE_PNGS.length)
-    //   .fill(null)
-    //   .map(() => new Array(FACE_PNGS[0].length))
-    // const faceIdx = body.faceIndex || body.mintedBodyIndex || body.bodyIndex
-    // // faceRotation: 'time' | 'hitcycle' | 'mania'
-    // // time: start sleepy and get happier as time goes on
-    // // hit: rotate to a new face each time (expression is starLvl % 3)
-    // // mania: when body is hit, cycle wildly until end of game
-    // let hit = body.radius === 0
-    // let expression = 1
-    // /*Math.ceil(
-    //   (2 * (hit ? body.starLvl - 1 : body.starLvl)) / body.maxStarLvl
-    // ) // 0 sleepy, 1 normal, 2 ecstatic
-    // */
-    // const framesLeft = this.startingFrame + this.timer - this.frames
-    // switch (this.faceRotation) {
-    //   case 'time':
-    //     expression = 2 - Math.floor((framesLeft / this.timer) * 3)
-    //     break
-    //   case 'hitcycle':
-    //     expression = hit
-    //       ? expression + (Math.floor(this.frames / 10) % 2)
-    //       : expression
-    //     break
-    //   case 'mania':
-    //     // cycle every 10 frames when hit
-    //     expression = hit ? Math.floor(this.frames / 10) % 3 : expression
-    //     break
-    // }
-    // expression = expression % 3
-    // // const no_mouth = expression * 2 + 1
-    // const with_mouth = expression * 2
+  drawPngFace(radius, body /*, offset*/) {
+    if (body.bodyIndex !== 0) return
+    const closeEnough = true //this.isMissileClose(body)
+    if (body.radius !== 0 && !closeEnough) return
+    this.pngFaces ||= new Array(FACE_PNGS.length)
+      .fill(null)
+      .map(() => new Array(FACE_PNGS[0].length))
+    const faceIdx = body.faceIndex || body.mintedBodyIndex || body.bodyIndex
+    // faceRotation: 'time' | 'hitcycle' | 'mania'
+    // time: start sleepy and get happier as time goes on
+    // hit: rotate to a new face each time (expression is starLvl % 3)
+    // mania: when body is hit, cycle wildly until end of game
+    let hit = body.radius === 0
+    let expression = 1
+    /*Math.ceil(
+      (2 * (hit ? body.starLvl - 1 : body.starLvl)) / body.maxStarLvl
+    ) // 0 sleepy, 1 normal, 2 ecstatic
+    */
+    const framesLeft = this.startingFrame + this.timer - this.frames
+    switch (this.faceRotation) {
+      case 'time':
+        expression = 2 - Math.floor((framesLeft / this.timer) * 3)
+        break
+      case 'hitcycle':
+        expression = hit
+          ? expression + (Math.floor(this.frames / 10) % 2)
+          : expression
+        break
+      case 'mania':
+        // cycle every 10 frames when hit
+        expression = hit ? Math.floor(this.frames / 10) % 3 : expression
+        break
+    }
+    expression = expression % 3
+    // const no_mouth = expression * 2 + 1
+    const with_mouth = expression * 2
 
-    // // let closeEnough = this.isMissileClose(body)
-    // const whichFace = with_mouth //body.radius !== 0 ? no_mouth : with_mouth
-    // const face = this.pngFaces[faceIdx][whichFace]
-    // if (!face) {
-    //   this.pngFaces[faceIdx][whichFace] = 'loading'
-    //   const png = FACE_PNGS[faceIdx][whichFace]
-    //   this.p.loadImage(png, (img) => {
-    //     const origX = img.width
-    //     const origY = img.height
-    //     const scale = 1
-    //     const foo = this.p.createGraphics(origX / scale, origY / scale)
-    //     // foo.noSmooth()
-    //     // const ctx = foo.canvas.getContext('2d')
+    // let closeEnough = this.isMissileClose(body)
+    const whichFace = with_mouth //body.radius !== 0 ? no_mouth : with_mouth
+    const face = this.pngFaces[faceIdx][whichFace]
+    if (!face) {
+      this.pngFaces[faceIdx][whichFace] = 'loading'
+      const png = FACE_PNGS[faceIdx][whichFace]
+      this.p.loadImage(png, (img) => {
+        const origX = img.width
+        const origY = img.height
+        const scale = 1
+        const foo = this.p.createGraphics(origX / scale, origY / scale)
+        // foo.noSmooth()
+        // const ctx = foo.canvas.getContext('2d')
 
-    //     // turn off image aliasing
-    //     // foo.drawingContext.msImageSmoothingEnabled = false
-    //     // foo.drawingContext.mozImageSmoothingEnabled = false
-    //     // foo.drawingContext.webkitImageSmoothingEnabled = false
-    //     // foo.drawingContext.imageSmoothingEnabled = false
+        // turn off image aliasing
+        // foo.drawingContext.msImageSmoothingEnabled = false
+        // foo.drawingContext.mozImageSmoothingEnabled = false
+        // foo.drawingContext.webkitImageSmoothingEnabled = false
+        // foo.drawingContext.imageSmoothingEnabled = false
 
-    //     // foo.pixelDensity(0.1)
-    //     foo.image(img, 0, 0, origX / scale, origY / scale)
-    //     foo.loadPixels()
-    //     // to make masked background
+        // foo.pixelDensity(0.1)
+        foo.image(img, 0, 0, origX / scale, origY / scale)
+        foo.loadPixels()
+        // to make masked background
 
-    //     // const bgSize = img.width * 1.2
-    //     // const imgCopy = img.get()
-    //     // this.maskImage(imgCopy, [255, 255, 255])
-    //     // const tinted = this.p.createGraphics(bgSize, bgSize)
-    //     // const cc = this.getTintFromColor(body.c)
-    //     // tinted.tint(cc[0], cc[1], cc[2])
-    //     // tinted.image(imgCopy, 0, 0, bgSize, bgSize)
-    //     // tinted.noTint()
-    //     // const offset = (bgSize - img.width) / 2
-    //     // tinted.image(img, offset, offset)
-    //     // this.pngFaces[faceIdx][expression] = tinted
-    //     this.pngFaces[faceIdx][whichFace] = foo
-    //   })
-    // }
-    // if (face && face !== 'loading') {
-    //   const faceSize = radius
-    //   // this.bodiesGraphic.drawingContext.msImageSmoothingEnabled = false
-    //   // this.bodiesGraphic.drawingContext.mozImageSmoothingEnabled = false
-    //   // this.bodiesGraphic.drawingContext.webkitImageSmoothingEnabled = false
-    //   // this.bodiesGraphic.drawingContext.imageSmoothingEnabled = false
-    //   this.bodiesGraphic.image(
-    //     face,
-    //     -faceSize / 2,
-    //     -faceSize / 2,
-    //     faceSize,
-    //     faceSize
-    //   )
-    // }
+        // const bgSize = img.width * 1.2
+        // const imgCopy = img.get()
+        // this.maskImage(imgCopy, [255, 255, 255])
+        // const tinted = this.p.createGraphics(bgSize, bgSize)
+        // const cc = this.getTintFromColor(body.c)
+        // tinted.tint(cc[0], cc[1], cc[2])
+        // tinted.image(imgCopy, 0, 0, bgSize, bgSize)
+        // tinted.noTint()
+        // const offset = (bgSize - img.width) / 2
+        // tinted.image(img, offset, offset)
+        // this.pngFaces[faceIdx][expression] = tinted
+        this.pngFaces[faceIdx][whichFace] = foo
+      })
+    }
+    if (face && face !== 'loading') {
+      const faceSize = radius
+      // this.bodiesGraphic.drawingContext.msImageSmoothingEnabled = false
+      // this.bodiesGraphic.drawingContext.mozImageSmoothingEnabled = false
+      // this.bodiesGraphic.drawingContext.webkitImageSmoothingEnabled = false
+      // this.bodiesGraphic.drawingContext.imageSmoothingEnabled = false
+      this.bodiesGraphic.image(
+        face,
+        -faceSize / 2,
+        -faceSize / 2,
+        faceSize,
+        faceSize
+      )
+    }
+  },
+
+  drawStarSvgTest(radius, body) {
+    if (body.bodyIndex !== 0) return
+    const closeEnough = true //this.isMissileClose(body)
+    if (body.radius !== 0 && !closeEnough) return
+    this.svgStars ||= new Array(STAR_SVGS.length).fill(null)
+
+    const whichFace = 0 // with_mouth //body.radius !== 0 ? no_mouth : with_mouth
+    const face = this.svgStars[whichFace]
+    if (!face) {
+      this.svgStars[whichFace] = 'loading'
+      const png = STAR_SVGS[whichFace]
+      this.p.loadImage(png, (img) => {
+        const origX = img.width
+        const origY = img.height
+        const scale = 1
+        const foo = this.p.createGraphics(origX / scale, origY / scale)
+        foo.pixelDensity(this.pixelDensity)
+        // foo.noSmooth()
+        // const ctx = foo.canvas.getContext('2d')
+
+        // turn off image aliasing
+        // foo.drawingContext.msImageSmoothingEnabled = false
+        // foo.drawingContext.mozImageSmoothingEnabled = false
+        // foo.drawingContext.webkitImageSmoothingEnabled = false
+        // foo.drawingContext.imageSmoothingEnabled = false
+
+        // foo.pixelDensity(0.1)
+        foo.image(img, 0, 0, origX / scale, origY / scale)
+        foo.loadPixels()
+        // to make masked background
+
+        // const bgSize = img.width * 1.2
+        // const imgCopy = img.get()
+        // this.maskImage(imgCopy, [255, 255, 255])
+        // const tinted = this.p.createGraphics(bgSize, bgSize)
+        // const cc = this.getTintFromColor(body.c)
+        // tinted.tint(cc[0], cc[1], cc[2])
+        // tinted.image(imgCopy, 0, 0, bgSize, bgSize)
+        // tinted.noTint()
+        // const offset = (bgSize - img.width) / 2
+        // tinted.image(img, offset, offset)
+        // this.svgStars[expression] = tinted
+        this.svgStars[whichFace] = foo
+      })
+    }
+    if (face && face !== 'loading') {
+      const faceSize = radius * 4
+      // this.bodiesGraphic.drawingContext.msImageSmoothingEnabled = false
+      // this.bodiesGraphic.drawingContext.mozImageSmoothingEnabled = false
+      // this.bodiesGraphic.drawingContext.webkitImageSmoothingEnabled = false
+      // this.bodiesGraphic.drawingContext.imageSmoothingEnabled = false
+      this.bodiesGraphic.image(
+        face,
+        -faceSize / 2,
+        -faceSize / 2,
+        faceSize,
+        faceSize
+      )
+    }
   },
 
   drawGlyphFace(radius, body) {
@@ -1211,9 +1273,9 @@ export const Visuals = {
     this.bodiesGraphic.noStroke()
     let c =
       body.radius !== 0 ? body.c : this.replaceOpacity(body.c, this.deadOpacity)
-    if (body.bodyIndex == 0) {
-      c = 'white'
-    }
+    // if (body.bodyIndex == 0) {
+    //   c = 'white'
+    // }
     this.bodiesGraphic.fill(c)
     // const scale = 1
     // const foo = this.p.createGraphics(radius / scale, radius / scale)
@@ -1233,9 +1295,6 @@ export const Visuals = {
     //   radius
     // )
     this.bodiesGraphic.ellipse(0, offset, radius)
-    if (this.globalStyle == 'psycho' && this.target == 'inside') {
-      this.drawCenter(body, this.bodiesGraphic, 0, offset)
-    }
   },
 
   moveAndRotate_PopAfter(graphic, x, y, v) {
@@ -1254,21 +1313,23 @@ export const Visuals = {
   drawBody(x, y, v, radius, body) {
     this.moveAndRotate_PopAfter(this.bodiesGraphic, x, y, v)
 
+    // y-offset of face relative to center
     const offset = this.getOffset(radius)
 
-    switch (body.bodyStyle) {
-      default:
-        this.drawBodyStyle1(radius, body, offset)
-    }
-    if ((body.mintedBodyIndex || body.bodyIndex) <= FACE_PNGS.length) {
-      this.drawPngFace(radius, body, offset)
-    } else {
-      this.drawGlyphFace(radius, body)
-    }
+    this.drawCenter(body)
 
-    if (this.showLevels) {
-      this.drawLevels(radius, body, offset)
-    }
+    // draw star bg
+    this.drawStarSvgTest(radius, body, offset)
+
+    // switch (body.bodyStyle) {
+    //   default:
+    //     this.drawBodyStyle1(radius, body, offset)
+    // }
+    this.drawPngFace(radius, body, offset)
+
+    // if (this.showLevels) {
+    //   this.drawLevels(radius, body, offset)
+    // }
 
     this.bodiesGraphic.pop()
   },
@@ -1773,13 +1834,13 @@ export const Visuals = {
       p.image(star, x - r / 2, y - r / 2, r, r)
     } else {
       let darker = this.brighten(b.c, -30).replace(this.opac, 1)
-      if (b.bodyIndex == 0) {
-        darker = '#FFF44F'
+      // if (b.bodyIndex == 0) {
+      //   darker = '#FFF44F'
 
-        p.fill(darker)
-        p.ellipse(x, y, r)
-        return
-      }
+      //   p.fill(darker)
+      //   p.ellipse(x, y, r)
+      //   // return
+      // }
       p.fill(darker)
       p.ellipse(x, y, r)
       if (closeEnough) {
