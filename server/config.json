@@ -30,7 +30,7 @@
           "name": "log_addr",
           "column": "log_addr",
           "filter_op": "contains",
-          "filter_arg": ["0x18133dD32220C81cb49577AAB9b5b85a65339AC0"]
+          "filter_arg": ["0xaA74a9Af511B81c7AeB17f74d2Fcfae91FCbF0DA"]
         }
       ],
       "event": {
@@ -74,7 +74,7 @@
           "name": "log_addr",
           "column": "log_addr",
           "filter_op": "contains",
-          "filter_arg": ["0xB6B87D1520Ff11451d77f04583ACea00A444b819"]
+          "filter_arg": ["0xFF42991c567c291eD9c2Ccc663cDC9fe36Eef8e0"]
         }
       ],
       "event": {
@@ -124,7 +124,7 @@
           "name": "log_addr",
           "column": "log_addr",
           "filter_op": "contains",
-          "filter_arg": ["0xe9DBc186058B26ac7c3227421c04ebb5eCC1b070"]
+          "filter_arg": ["0x70557F58e63b36c121320197f5e281D3eF64e009"]
         }
       ],
       "event": {
@@ -187,7 +187,7 @@
           "name": "log_addr",
           "column": "log_addr",
           "filter_op": "contains",
-          "filter_arg": ["0xB6B87D1520Ff11451d77f04583ACea00A444b819"]
+          "filter_arg": ["0xFF42991c567c291eD9c2Ccc663cDC9fe36Eef8e0"]
         }
       ],
       "event": {
@@ -253,7 +253,7 @@
           "name": "log_addr",
           "column": "log_addr",
           "filter_op": "contains",
-          "filter_arg": ["0x18133dD32220C81cb49577AAB9b5b85a65339AC0"]
+          "filter_arg": ["0xaA74a9Af511B81c7AeB17f74d2Fcfae91FCbF0DA"]
         }
       ],
       "event": {
@@ -323,7 +323,7 @@
           "name": "log_addr",
           "column": "log_addr",
           "filter_op": "contains",
-          "filter_arg": ["0x18133dD32220C81cb49577AAB9b5b85a65339AC0"]
+          "filter_arg": ["0xaA74a9Af511B81c7AeB17f74d2Fcfae91FCbF0DA"]
         }
       ],
       "event": {
