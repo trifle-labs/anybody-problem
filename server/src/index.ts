@@ -23,7 +23,6 @@ import { cors } from 'hono/cors'
 // - Materialized view for leaderboard to scale horizontally
 
 async function setupListener() {
-  await db.connect()
   db.on('notification', async (msg) => {
     console.log('[DB notification]', msg)
     await Promise.all(

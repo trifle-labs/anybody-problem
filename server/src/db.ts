@@ -12,4 +12,6 @@ const pgClient = new Client({
   }
 })
 
+pgClient.connect()
+
 export default pgClient
