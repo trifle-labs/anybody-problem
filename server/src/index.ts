@@ -112,7 +112,8 @@ app.use(
     origin: [
       'http://localhost:5173',
       'https://anybody.trifle.life',
-      'https://starfish-app-3vq2e.ondigitalocean.app'
+      'https://starfish-app-3vq2e.ondigitalocean.app',
+      '*' // TODO: remove before going live
     ],
     allowMethods: ['GET', 'POST', 'OPTIONS'],
     allowHeaders: ['Content-Type', 'Cache-Control', 'Keep-Alive']
