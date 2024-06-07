@@ -559,7 +559,7 @@ export const Visuals = {
     p.textAlign(p.LEFT, p.TOP)
 
     const runningFrames = this.frames - this.startingFrame
-    const seconds = runningFrames / (this.FPS * this.speedFactor)
+    const seconds = runningFrames / this.FPS
 
     if (this.gameOver) {
       this.scoreSize = this.initialScoreSize

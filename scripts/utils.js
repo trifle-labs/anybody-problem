@@ -17,9 +17,7 @@ const proverTickIndex = {
   5: 100,
   6: 100,
   7: 100,
-  8: 50,
-  9: 50,
-  10: 50
+  8: 75
 }
 
 const getTicksRun = async (bodyCount, ignoreTesting = false) => {
@@ -137,7 +135,7 @@ const deployContracts = async (ignoreTesting = false) => {
   const verifiersTicks = []
   const verifiersBodies = []
 
-  for (let i = 2; i <= 10; i++) {
+  for (let i = 2; i <= 8; i++) {
     const ticks = await getTicksRun(i, ignoreTesting)
     const name = `Game_${i}_${ticks}Verifier`
     const path = `contracts/${name}.sol:Groth16Verifier`

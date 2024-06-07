@@ -333,12 +333,11 @@ export class Anybody extends EventEmitter {
     this.won = won
     var dust = 0
     var timeTook = 0
-    var framesTook = 0
 
     const stats = this.calculateStats()
     dust = stats.dust
     timeTook = stats.timeTook
-    framesTook = stats.framesTook
+    this.framesTook = stats.framesTook
     void this.setStatsText(stats)
     void this.setShowPlayAgain()
     this.emit('gameOver', {
@@ -346,7 +345,7 @@ export class Anybody extends EventEmitter {
       ticks: this.frames - this.startingFrame,
       dust,
       timeTook,
-      framesTook
+      framesTook: this.framesTook
     })
     if (won) {
       this.startingBodies++
@@ -509,9 +508,7 @@ export class Anybody extends EventEmitter {
       bodyInits: JSON.parse(JSON.stringify(this.bodyInits)),
       bodyFinal: JSON.parse(JSON.stringify(this.bodyFinal))
     }
-    const stats = this.calculateStats()
-    const time = stats.timeTook
-    results.time = time
+    results.framesTook = this.framesTook
 
     this.bodyInits = JSON.parse(JSON.stringify(this.bodyFinal))
     this.alreadyRun = this.frames
@@ -837,6 +834,15 @@ export class Anybody extends EventEmitter {
       (p, c) => (c[0] == 0 ? p : p + 1),
       0
     )
+    console.log('stats will return', {
+      missilesShot,
+      bodiesIncluded,
+      bodiesBoost,
+      speedBoost,
+      dust,
+      timeTook,
+      framesTook
+    })
 
     return {
       missilesShot,
