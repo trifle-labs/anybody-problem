@@ -26,3 +26,11 @@ blockchains => shovel => postgres
 postgres => read-only api => app
 
 `bun run dev`
+
+## Reset db
+
+```
+dropdb shovel
+createdb shovel
+bun run shovel
+```
