@@ -50,7 +50,7 @@ type Leaderboard = {
 }
 
 // TODO: pull this from the contract
-const MAX_BODY_COUNT = 10
+const MAX_BODY_COUNT = 3
 const DAILY_CATEGORY_LIMIT = 3
 
 export const leaderboards: Record<Chain, Leaderboard> | {} = {}
@@ -64,95 +64,98 @@ function currentDayInUnixTime() {
 async function calculateDailyLeaderboard(day: number, chain: Chain) {
   const result = await db.query(`
   WITH fastest_times AS (
-    SELECT 
-        problem_id,
-        level,
-        MIN(ticks_in_this_match) AS fastest_time
-    FROM 
-        solver_solved
-    WHERE 
-        day = ${day}
-        AND src_name = '${chain}'
-    GROUP BY 
-        problem_id, level
-),
-cumulative_times AS (
-    SELECT 
-        problem_id,
-        SUM(ticks_in_this_match) AS total_time
-    FROM 
-        solver_solved
-    WHERE 
-        day = ${day}
-        AND src_name = '${chain}'
-    GROUP BY 
-        problem_id
-    HAVING 
-        COUNT(level) = ${MAX_BODY_COUNT}
-),
-ranked_fastest_times AS (
-    SELECT 
-        problem_id,
-        level,
-        fastest_time,
-        ROW_NUMBER() OVER (PARTITION BY level ORDER BY fastest_time) AS rank
-    FROM 
-        fastest_times
-),
-ranked_cumulative_times AS (
-    SELECT 
-        problem_id,
-        total_time,
-        ROW_NUMBER() OVER (ORDER BY total_time) AS rank
-    FROM 
-        cumulative_times
-),
-leaderboard AS (
-    SELECT
-        level,
-        problem_id,
-        fastest_time AS time
-    FROM
-        ranked_fastest_times
-    WHERE
-        rank <= ${DAILY_CATEGORY_LIMIT}
-    UNION ALL
-    SELECT 
-        NULL AS level,
-        problem_id,
-        total_time AS time
-    FROM 
-        ranked_cumulative_times
-    WHERE 
-        rank <= ${DAILY_CATEGORY_LIMIT}
-),
-latest_transactions AS (
-    SELECT
-        token_id,
-        "to",
-        ROW_NUMBER() OVER (PARTITION BY token_id ORDER BY block_num DESC, tx_idx DESC, log_idx DESC) AS rn
-    FROM
-        problems_transfer
-    WHERE
-        token_id IN (SELECT problem_id FROM leaderboard)
-        AND src_name = '${chain}'
-),
-current_owners AS (
-    SELECT
-        token_id,
-        concat('0x', encode("to", 'hex')) as owner
-    FROM
-        latest_transactions
-    WHERE
-        rn = 1
-)
-SELECT 
-    *
-FROM
-    leaderboard
-LEFT JOIN current_owners ON leaderboard.problem_id = current_owners.token_id
-ORDER BY
-    COALESCE(level, 0), time;
+      SELECT 
+          problem_id,
+          level,
+          MIN(ticks_in_this_match) AS fastest_time
+      FROM 
+          solver_solved
+      WHERE 
+          day = ${day}
+          AND src_name = '${chain}'
+      GROUP BY 
+          problem_id, level
+  ),
+  cumulative_times AS (
+      SELECT 
+          problem_id,
+          SUM(ticks_in_this_match) AS total_time
+      FROM 
+          solver_solved
+      WHERE 
+          day = ${day}
+          AND src_name = '${chain}'
+      GROUP BY 
+          problem_id
+      HAVING 
+          COUNT(level) = ${MAX_BODY_COUNT}
+  ),
+  ranked_fastest_times AS (
+      SELECT 
+          problem_id,
+          level,
+          fastest_time,
+          ROW_NUMBER() OVER (PARTITION BY level ORDER BY fastest_time) AS rank
+      FROM 
+          fastest_times
+  ),
+  ranked_cumulative_times AS (
+      SELECT 
+          problem_id,
+          total_time,
+          ROW_NUMBER() OVER (ORDER BY total_time) AS rank
+      FROM 
+          cumulative_times
+  ),
+  leaderboard AS (
+      SELECT
+          level,
+          problem_id,
+          fastest_time AS time
+      FROM
+          ranked_fastest_times
+      WHERE
+          rank <= ${DAILY_CATEGORY_LIMIT}
+      UNION ALL
+      SELECT 
+          NULL AS level,
+          problem_id,
+          total_time AS time
+      FROM 
+          ranked_cumulative_times
+      WHERE 
+          rank <= ${DAILY_CATEGORY_LIMIT}
+  ),
+  latest_transactions AS (
+      SELECT
+          token_id,
+          "to",
+          ROW_NUMBER() OVER (PARTITION BY token_id ORDER BY block_num DESC, tx_idx DESC, log_idx DESC) AS rn
+      FROM
+          problems_transfer
+      WHERE
+          token_id IN (SELECT problem_id FROM leaderboard)
+          AND src_name = '${chain}'
+  ),
+  current_owners AS (
+      SELECT
+          token_id,
+          concat('0x', encode("to", 'hex')) as owner
+      FROM
+          latest_transactions
+      WHERE
+          rn = 1
+  )
+  SELECT 
+      leaderboard.level,
+      leaderboard.problem_id,
+      leaderboard.time,
+      current_owners.owner
+  FROM
+      leaderboard
+  LEFT JOIN current_owners ON leaderboard.problem_id = current_owners.token_id
+  ORDER BY
+      COALESCE(leaderboard.level, 0), leaderboard.time;
   `)
 
   function scores(rows: any[]): SpeedScore[] {
@@ -279,21 +282,21 @@ FROM
       .filter((r: any) => r.category === 'Most Solved')
       .map((r: any) => ({
         problemId: r.problem_id,
-        solved: parseInt(r.metric, 10),
+        solved: parseInt(r.metric),
         owner: r.owner
       })),
     currentStreak: result.rows
       .filter((r: any) => r.category === 'Current Streak')
       .map((r: any) => ({
         problemId: r.problem_id,
-        streak: parseInt(r.metric, 10),
+        streak: parseInt(r.metric),
         owner: r.owner
       })),
     fastest: result.rows
       .filter((r: any) => r.category === 'Fastest Completed Problem')
       .map((r: any) => ({
         problemId: r.problem_id,
-        ticks: parseInt(r.metric, 10),
+        ticks: parseInt(r.metric),
         owner: r.owner
       }))
   }
