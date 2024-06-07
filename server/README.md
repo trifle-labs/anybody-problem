@@ -34,3 +34,9 @@ dropdb shovel
 createdb shovel
 bun run shovel
 ```
+
+## Smoke test
+
+After modifying `shovel-config.ts` and running it with `bun run shovel`, use this script as a sanity check.
+
+`bun run smoke`
