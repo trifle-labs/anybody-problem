@@ -53,7 +53,7 @@ type Leaderboard = {
 }
 
 // TODO: pull this from the contract
-const MAX_BODY_COUNT = 3
+const MAX_BODY_COUNT = 8
 const DAILY_CATEGORY_LIMIT = 3
 
 export const leaderboards: Record<Chain, Leaderboard> | {} = {}
@@ -91,7 +91,7 @@ async function calculateDailyLeaderboard(day: number, chain: Chain) {
       GROUP BY 
           problem_id
       HAVING 
-          COUNT(level) = ${MAX_BODY_COUNT}
+          COUNT(level) = ${MAX_BODY_COUNT - 1}
   ),
   ranked_fastest_times AS (
       SELECT 
