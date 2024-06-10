@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Anybody API</title>
+  </head>
+
+  <body>
+    <h1>Anybody API /sse/base_sepolia</h1>
+    <pre id="sse-data"></pre>
+
+    <script type="module">
+      const sseData = document.getElementById('sse-data')
+
+      const controller = new AbortController()
+      const signal = controller.signal
+      const response = await fetch('/sse/base_sepolia', {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/event-stream' },
+        signal
+      })
+
+      const reader = response.body
+        .pipeThrough(new TextDecoderStream())
+        .getReader()
+
+      window.onbeforeunload = function () {
+        signal.abort()
+      }
+
+      while (true) {
+        const { value, done } = await reader.read()
+        if (done) break
+        sseData.innerHTML += value + '<br><br><br>'
+        window.scrollTo(0, document.body.scrollHeight)
+      }
+    </script>
+  </body>
+</html>
