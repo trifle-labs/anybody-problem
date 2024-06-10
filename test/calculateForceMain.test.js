@@ -4,6 +4,7 @@
 
 import { Anybody } from '../src/anybody.js'
 import { wasm as wasm_tester } from 'circom_tester'
+import fs from 'fs'
 import {
   /*_calculateTime,*/ _convertBigIntToModP
 } from '../src/calculations.js'
@@ -55,6 +56,66 @@ describe('calculateForceMain circuit', () => {
     // const secRounded = _calculateTime(perStep)
     // console.log(`| calculateForce() | ${perStep} | ${secRounded} |`)
     await circuit.checkConstraints(witness)
+  })
+
+  it.only('can use the witness to generate the outcome', async () => {
+    console.log({ circuit })
+    const dir = circuit.dir
+    // list contents of dir
+    const files = fs.readdirSync(dir)
+    console.log({ files })
+    const suffixes = ['.r1cs', '.sym', '_js']
+    for (let i = 0; i < suffixes.length; i++) {
+      const suffix = suffixes[i]
+      const file = dir + '/calculateForceMain' + suffix
+      const isFile = suffix.indexOf('.') > -1
+      const files = isFile
+        ? fs.readFileSync(file, { encoding: 'utf8' })
+        : fs.readdirSync(file)
+      if (!isFile) {
+        for (let j = 0; j < files.length; j++) {
+          const file = dir + '/calculateForceMain' + suffix + '/' + files[j]
+          const contents = fs.readFileSync(file, { encoding: 'utf8' })
+          console.log({ file })
+          console.log({ contents })
+        }
+      } else {
+        console.log({ files })
+      }
+    }
+
+    const pad = 1000
+    let start = Date.now()
+    for (let i = 0; i < sampleInputs.length * pad; i++) {
+      const sampleInput = sampleInputs[i % sampleInputs.length]
+      await circuit.calculateWitness(sampleInput)
+    }
+    let end = Date.now()
+    let executionTimeA = end - start
+    console.log(`Execution time: ${executionTimeA} milliseconds`)
+    console.log(
+      `Average witness execution time: ${executionTimeA / (sampleInputs.length * pad)} milliseconds`
+    )
+
+    const anybody = new Anybody(null, { util: true })
+    start = Date.now()
+    for (let i = 0; i < sampleInputs.length * pad; i++) {
+      const sampleInput = sampleInputs[i % sampleInputs.length]
+      let bodies = sampleInput.in_bodies.map(
+        anybody.convertScaledStringArrayToBody.bind(anybody)
+      )
+      anybody.calculateForceBigInt(bodies[0], bodies[1])
+    }
+    end = Date.now()
+    let executionTimeB = end - start
+    console.log(`Execution time: ${executionTimeB} milliseconds`)
+    console.log(
+      `Average calculation execution time: ${executionTimeB / (sampleInputs.length * pad)} milliseconds`
+    )
+
+    console.log(
+      `calculation is ${executionTimeA / executionTimeB} times faster than witness genreation`
+    )
   })
 
   it('has the correct output', async () => {

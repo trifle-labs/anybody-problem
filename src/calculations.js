@@ -94,16 +94,36 @@ export const Calculations = {
     for (let i = 0; i < bodies.length; i++) {
       accumulativeForces.push([0n, 0n])
     }
+    const time = BigInt(this.speedFactor)
     for (let i = 0; i < bodies.length; i++) {
       const body = bodies[i]
       for (let j = i + 1; j < bodies.length; j++) {
         const otherBody = bodies[j]
         const force = this.calculateForceBigInt(body, otherBody)
-        accumulativeForces[i] = _addVectors(accumulativeForces[i], force)
-        accumulativeForces[j] = _addVectors(accumulativeForces[j], [
-          -force[0],
-          -force[1]
-        ])
+        // const bodyVelocity = [
+        //   body.radius == 0n
+        //     ? 0n
+        //     : time * (force[0] / (body.radius / this.scalingFactor)),
+        //   body.radius == 0n
+        //     ? 0n
+        //     : time * (force[1] / (body.radius / this.scalingFactor))
+        // ]
+        // const otherBodyVelocity = [
+        //   otherBody.radius == 0n
+        //     ? 0n
+        //     : time * (-force[0] / (otherBody.radius / this.scalingFactor)),
+        //   otherBody.radius == 0n
+        //     ? 0n
+        //     : time * (-force[1] / (otherBody.radius / this.scalingFactor))
+        // ]
+        const bodyVelocity = [time * force[0], time * force[1]]
+        const otherBodyVelocity = [time * -force[0], time * -force[1]]
+
+        accumulativeForces[i] = _addVectors(accumulativeForces[i], bodyVelocity)
+        accumulativeForces[j] = _addVectors(
+          accumulativeForces[j],
+          otherBodyVelocity
+        )
       }
     }
     // console.log({ vectorLimitScaled })
@@ -295,6 +315,22 @@ export const Calculations = {
     return BigInt(value)
   },
 
+  convertMissileScaledStringArrayToFloat(missile) {
+    const maxVectorScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
+    missile = missile.map(this.convertScaledStringToBigInt.bind(this))
+    return {
+      position: {
+        x: this.convertScaledBigIntToFloat(0),
+        y: this.convertScaledBigIntToFloat(this.windowWidth)
+      },
+      velocity: {
+        x: this.convertScaledBigIntToFloat(missile[0] - maxVectorScaled),
+        y: this.convertScaledBigIntToFloat(missile[1] - maxVectorScaled)
+      },
+      radius: this.convertScaledBigIntToFloat(missile[2])
+    }
+  },
+
   convertScaledStringArrayToFloat(body) {
     const maxVectorScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
     body = body.map(this.convertScaledStringToBigInt.bind(this))
@@ -409,46 +445,48 @@ export const Calculations = {
     if (missiles.length == 0) {
       return { bodies, missiles }
     }
-    const missile = missiles[0]
-    missile.position.x += missile.velocity.x
-    missile.position.y += missile.velocity.y
+    for (let i = 0; i < missiles.length; i++) {
+      const missile = missiles[i]
+      missile.position.x += missile.velocity.x
+      missile.position.y += missile.velocity.y
 
-    if (
-      missile.position.x > BigInt(this.windowWidth) * this.scalingFactor ||
-      missile.position.y < 0n
-    ) {
-      missile.radius = 0n
-    }
-
-    for (let j = 0; j < bodies.length; j++) {
-      const body = bodies[j]
-      const distance = _approxDist(
-        missile.position.x,
-        missile.position.y,
-        body.position.x,
-        body.position.y
-      )
-      // NOTE: this is to match the circuit. If the missile is gone, set minDist to 0
-      // Need to make sure comparison of distance is < and not <= for this to work
-      // because they may by chance be at the exact same coordinates and should still
-      // not trigger an _explosion since the missile is already gone.
-      const minDist = missile.radius == 0n ? 0n : body.radius * 2n
-      if (distance < minDist) {
+      if (
+        missile.position.x > BigInt(this.windowWidth) * this.scalingFactor ||
+        missile.position.y < 0n
+      ) {
         missile.radius = 0n
-        const x = this.convertScaledBigIntToFloat(body.position.x)
-        const y = this.convertScaledBigIntToFloat(body.position.y)
-        this.explosions.push(
-          _explosion(x, y, this.convertScaledBigIntToFloat(body.radius))
-        )
-        this.sound?.playExplosion(x, y)
-
-        body.starLvl += 1
-
-        bodies[j].radius = 0n
       }
-    }
 
-    missiles[0] = missile
+      for (let j = 0; j < bodies.length; j++) {
+        const body = bodies[j]
+        const distance = _approxDist(
+          missile.position.x,
+          missile.position.y,
+          body.position.x,
+          body.position.y
+        )
+        // NOTE: this is to match the circuit. If the missile is gone, set minDist to 0
+        // Need to make sure comparison of distance is < and not <= for this to work
+        // because they may by chance be at the exact same coordinates and should still
+        // not trigger an _explosion since the missile is already gone.
+        const minDist = missile.radius == 0n ? 0n : body.radius * 2n
+        if (distance < minDist) {
+          missile.radius = 0n
+          const x = this.convertScaledBigIntToFloat(body.position.x)
+          const y = this.convertScaledBigIntToFloat(body.position.y)
+          this.explosions.push(
+            _explosion(x, y, this.convertScaledBigIntToFloat(body.radius))
+          )
+          this.sound?.playExplosion(x, y)
+
+          body.starLvl += 1
+
+          bodies[j].radius = 0n
+        }
+      }
+
+      missiles[i] = missile
+    }
     return { bodies, missiles }
   }
 }

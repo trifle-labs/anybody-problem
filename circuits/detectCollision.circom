@@ -44,6 +44,8 @@ template DetectCollision(totalBodies) {
     distanceMinMux[i].c[1] <== 0;
     distanceMinMux[i].s <== isZero[i].out;
 
+    // NOTE: this just checks whether the missile is within the radius of the body.
+    // the radius of the missile doesn't matter as long as it's not 0.
     lessThan[i] = LessThan(21);
     lessThan[i].in[0] <== getDistance[i].distance; // maxBits: 21 (maxNum: 1_414_214) = approxSqrt(distanceSquared) = approxSqrt(2_000_000_000_000)
     lessThan[i].in[1] <== distanceMinMux[i].out; // maxBits: 15 (maxNum: 26_000)

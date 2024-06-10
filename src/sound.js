@@ -206,7 +206,9 @@ export default class Sound {
     if (typeof window === 'undefined') return
     this.anybody = anybody
     window.addEventListener('keydown', this.handleKeyDown)
-    const rng = new Prando(anybody.seed?.toString(16))
+    // const rng = new Prando(anybody.seed?.toString(16))
+    // TODO: change back if you want each day to have one song
+    const rng = new Prando()
     const songs = Object.values(SONGS)
     const rand = rng.nextInt(0, songs.length - 1)
     this.currentSong = songs[rand]
@@ -302,8 +304,10 @@ export default class Sound {
     const now = Date.now()
     await loaded()
     if (Date.now() - now < 40) {
+      // if (!this.anybody.gameOver) {
       this.oneShots[key].start()
       return this.oneShots[key]
+      // }
     }
   }
 
