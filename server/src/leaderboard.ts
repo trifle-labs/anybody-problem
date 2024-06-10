@@ -6,20 +6,44 @@ type LeaderboardLine = {
   owner: string
 }
 
+type Body = {
+  problemId: string
+  bodyId: string
+  tick: number
+  px: number
+  py: number
+  radius: number
+  seed: string
+  owner: string
+  mintedBodyIndex: number
+}
+
+type Problems = Record<
+  string, // problemId
+  {
+    owner: string
+    bodies: Body[]
+  }
+>
+
 type SpeedScore = LeaderboardLine & { ticks: number }
 
 type SolvedScore = LeaderboardLine & { solved: number }
 
 type StreakScore = LeaderboardLine & { streak: number }
 
+type LevelLeaderboard = {
+  level: number
+  events: SpeedScore[]
+}
+
 type DailyLeaderboard = {
-  oneBody: SpeedScore[]
-  twoBody: SpeedScore[]
-  threeBody: SpeedScore[]
+  levels: LevelLeaderboard[]
   cumulative: SpeedScore[]
 }
 
 type Leaderboard = {
+  problems: Problems
   daily: Record<number, DailyLeaderboard>
   allTime: {
     mostSolved: SolvedScore[]
@@ -28,17 +52,11 @@ type Leaderboard = {
   }
 }
 
-const MAX_BODIES = 3
+// TODO: pull this from the contract
+const MAX_BODY_COUNT = 8
 const DAILY_CATEGORY_LIMIT = 3
 
-export const leaderboard: Leaderboard = {
-  daily: {},
-  allTime: {
-    mostSolved: [],
-    currentStreak: [],
-    fastest: []
-  }
-}
+export const leaderboards: Record<Chain, Leaderboard> | {} = {}
 
 function currentDayInUnixTime() {
   const date = new Date()
@@ -47,20 +65,19 @@ function currentDayInUnixTime() {
 }
 
 async function calculateDailyLeaderboard(day: number, chain: Chain) {
-  const result = await db.query(`
+  const q = `
   WITH fastest_times AS (
-    SELECT 
-        problem_id,
-        level,
-        MIN(ticks_in_this_match) AS fastest_time
-    FROM 
-        solver_solved
-    WHERE 
-        level IN (1, 2, 3)
-        AND day = ${day}
-        AND src_name = '${chain}'
-    GROUP BY 
-        problem_id, level
+      SELECT 
+          problem_id,
+          level,
+          MIN(ticks_in_this_match) AS fastest_time
+      FROM 
+          solver_solved
+      WHERE 
+          day = ${day}
+          AND src_name = '${chain}'
+      GROUP BY 
+          problem_id, level
   ),
   cumulative_times AS (
       SELECT 
@@ -74,7 +91,7 @@ async function calculateDailyLeaderboard(day: number, chain: Chain) {
       GROUP BY 
           problem_id
       HAVING 
-          COUNT(level) = ${MAX_BODIES}
+          COUNT(level) = ${MAX_BODY_COUNT - 1}
   ),
   ranked_fastest_times AS (
       SELECT 
@@ -94,54 +111,34 @@ async function calculateDailyLeaderboard(day: number, chain: Chain) {
           cumulative_times
   ),
   leaderboard AS (
-    SELECT 
-        'Level 1' AS category,
-        problem_id,
-        fastest_time AS time
-    FROM 
-        ranked_fastest_times
-    WHERE 
-        level = 1 AND rank <= ${DAILY_CATEGORY_LIMIT}
-    UNION ALL
-    SELECT 
-        'Level 2' AS category,
-        problem_id,
-        fastest_time AS time
-    FROM 
-        ranked_fastest_times
-    WHERE 
-        level = 2 AND rank <= ${DAILY_CATEGORY_LIMIT}
-    UNION ALL
-    SELECT 
-        'Level 3' AS category,
-        problem_id,
-        fastest_time AS time
-    FROM 
-        ranked_fastest_times
-    WHERE 
-        level = 3 AND rank <= ${DAILY_CATEGORY_LIMIT}
-    UNION ALL
-    SELECT 
-        'Cumulative' AS category,
-        problem_id,
-        total_time AS time
-    FROM 
-        ranked_cumulative_times
-    WHERE 
-        rank <= ${DAILY_CATEGORY_LIMIT}
-    ORDER BY 
-        category, time
+      SELECT
+          level,
+          problem_id,
+          fastest_time AS time
+      FROM
+          ranked_fastest_times
+      WHERE
+          rank <= ${DAILY_CATEGORY_LIMIT}
+      UNION ALL
+      SELECT 
+          NULL AS level,
+          problem_id,
+          total_time AS time
+      FROM 
+          ranked_cumulative_times
+      WHERE 
+          rank <= ${DAILY_CATEGORY_LIMIT}
   ),
   latest_transactions AS (
-    SELECT
-        token_id,
-        "to",
-        ROW_NUMBER() OVER (PARTITION BY token_id ORDER BY block_num DESC, tx_idx DESC, log_idx DESC) AS rn
-    FROM
-      problems_transfer
-    WHERE
-      token_id IN (SELECT problem_id FROM leaderboard)
-      AND src_name = '${chain}'
+      SELECT
+          token_id,
+          "to",
+          ROW_NUMBER() OVER (PARTITION BY token_id ORDER BY block_num DESC, tx_idx DESC, log_idx DESC) AS rn
+      FROM
+          problems_transfer
+      WHERE
+          token_id IN (SELECT problem_id FROM leaderboard)
+          AND src_name = '${chain}'
   ),
   current_owners AS (
       SELECT
@@ -153,28 +150,39 @@ async function calculateDailyLeaderboard(day: number, chain: Chain) {
           rn = 1
   )
   SELECT 
-      *
+      leaderboard.level,
+      leaderboard.problem_id,
+      leaderboard.time,
+      current_owners.owner
   FROM
-    leaderboard
+      leaderboard
   LEFT JOIN current_owners ON leaderboard.problem_id = current_owners.token_id
-  `)
+  ORDER BY
+      COALESCE(leaderboard.level, 0), leaderboard.time;
+  `
+
+  const result = await db.query(q)
 
   function scores(rows: any[]): SpeedScore[] {
     return rows.map((r: any) => ({
       problemId: r.problem_id,
-      ticks: r.time,
+      ticks: parseInt(r.time),
       owner: r.owner
     }))
   }
 
-  return {
-    oneBody: scores(result.rows.filter((r: any) => r.category === 'Level 1')),
-    twoBody: scores(result.rows.filter((r: any) => r.category === 'Level 2')),
-    threeBody: scores(result.rows.filter((r: any) => r.category === 'Level 3')),
-    cumulative: scores(
-      result.rows.filter((r: any) => r.category === 'Cumulative')
-    )
+  const levels: LevelLeaderboard[] = []
+  for (let i = 1; i <= MAX_BODY_COUNT; i++) {
+    const events = scores(result.rows.filter((r: any) => r.level === `${i}`))
+    if (!events.length) continue
+    levels.push({
+      level: i,
+      events
+    })
   }
+  const cumulativeEvents = scores(result.rows.filter((r: any) => !r.level))
+
+  return { levels, cumulative: cumulativeEvents }
 }
 
 async function calculateAllTimeLeaderboard(
@@ -182,7 +190,8 @@ async function calculateAllTimeLeaderboard(
   chain: Chain
 ): Promise<Leaderboard['allTime']> {
   const n = 10
-  const result = await db.query(`
+  const result = await db.query(
+    `
   WITH most_solved AS (
     SELECT 
         problem_id,
@@ -190,7 +199,7 @@ async function calculateAllTimeLeaderboard(
     FROM 
         solver_solved
     WHERE
-        src_name = '${chain}'
+        src_name = $1
     GROUP BY 
         problem_id
     ORDER BY 
@@ -215,7 +224,7 @@ current_streaks AS (
                 solver_solved
             WHERE
                 day <= ${today}
-                AND src_name = '${chain}'
+                AND src_name = $1
         ) AS subquery
         GROUP BY
             problem_id, streak
@@ -235,11 +244,11 @@ fastest_completed AS (
     FROM 
         solver_solved
     WHERE
-        src_name = '${chain}'
+        src_name = $1
     GROUP BY 
         problem_id
     HAVING 
-        COUNT(level) = ${MAX_BODIES}
+        COUNT(level) = ${MAX_BODY_COUNT}
     ORDER BY 
         total_time ASC
     LIMIT ${n}
@@ -265,45 +274,178 @@ leaderboard AS (
       total_time AS metric
   FROM 
       fastest_completed
+),
+latest_transactions AS (
+  SELECT
+      token_id,
+      "to",
+      ROW_NUMBER() OVER (PARTITION BY token_id ORDER BY block_num DESC, tx_idx DESC, log_idx DESC) AS rn
+  FROM
+      problems_transfer
+  WHERE
+      token_id IN (SELECT problem_id FROM leaderboard)
+      AND src_name = '${chain}'
+),
+current_owners AS (
+  SELECT
+      token_id,
+      concat('0x', encode("to", 'hex')) as owner
+  FROM
+      latest_transactions
+  WHERE
+      rn = 1
 )
 SELECT 
     *
 FROM
-  leaderboard`)
+  leaderboard
+LEFT JOIN current_owners co ON leaderboard.problem_id = co.token_id
+`,
+    [chain]
+  )
   return {
     mostSolved: result.rows
       .filter((r: any) => r.category === 'Most Solved')
       .map((r: any) => ({
         problemId: r.problem_id,
-        solved: parseInt(r.metric, 10),
+        solved: parseInt(r.metric),
         owner: r.owner
       })),
     currentStreak: result.rows
       .filter((r: any) => r.category === 'Current Streak')
       .map((r: any) => ({
         problemId: r.problem_id,
-        streak: parseInt(r.metric, 10),
+        streak: parseInt(r.metric),
         owner: r.owner
       })),
     fastest: result.rows
       .filter((r: any) => r.category === 'Fastest Completed Problem')
       .map((r: any) => ({
         problemId: r.problem_id,
-        ticks: parseInt(r.metric, 10),
+        ticks: parseInt(r.metric),
         owner: r.owner
       }))
   }
 }
 
+export async function getProblems(chain: Chain) {
+  const bodies = await db.query(
+    `
+    WITH latest_transactions AS (
+      SELECT
+          token_id,
+          "to",
+          ROW_NUMBER() OVER (PARTITION BY token_id ORDER BY block_num DESC, tx_idx DESC, log_idx DESC) AS rn
+      FROM
+        problems_transfer
+      WHERE
+        src_name = $1
+  ),
+  current_owners AS (
+      SELECT
+          "to",
+          token_id
+      FROM
+          latest_transactions
+      WHERE
+          rn = 1
+  ),
+  body_add_remove_events AS (
+      SELECT
+          ba.problem_id,
+          ba.body_id,
+          ba.block_num,
+          ba.tx_idx,
+          ba.log_idx,
+          'added' AS status
+      FROM
+      problems_body_added ba
+      WHERE src_name = $1
+      UNION ALL
+      SELECT
+          br.problem_id,
+          br.body_id,
+          br.block_num,
+          br.tx_idx,
+          br.log_idx,
+          'removed' AS status
+      FROM
+      problems_body_removed br
+      WHERE src_name = $1
+  ),
+  body_final_status AS (
+      SELECT
+          problem_id,
+          body_id,
+          status,
+          ROW_NUMBER() OVER (PARTITION BY problem_id, body_id ORDER BY block_num DESC, tx_idx DESC, log_idx DESC) AS rn
+      FROM
+          body_add_remove_events
+  )
+  SELECT
+      ba.problem_id,
+      ba.body_id,
+      ba.minted_body_index,
+      ba.tick,
+      ba.px,
+      ba.py,
+      ba.radius,
+      CONCAT('0x', encode(ba.seed, 'hex')) AS seed,
+      CONCAT('0x', encode(ba.log_addr, 'hex')) AS log_addr,
+      CONCAT('0x', encode(co."to", 'hex')) AS owner
+  FROM
+    problems_body_added ba
+  JOIN
+      current_owners co ON ba.problem_id = co.token_id
+  JOIN
+      body_final_status bfs ON ba.problem_id = bfs.problem_id AND ba.body_id = bfs.body_id
+  WHERE
+      bfs.rn = 1
+      AND bfs.status = 'added';`,
+    [chain]
+  )
+
+  function bodyFromRow(row: Record<string, string>): Body {
+    return {
+      problemId: row.problem_id,
+      bodyId: row.body_id,
+      tick: parseInt(row.tick),
+      px: parseInt(row.px),
+      py: parseInt(row.py),
+      radius: parseInt(row.radius),
+      seed: row.seed,
+      owner: row.owner,
+      mintedBodyIndex: parseInt(row.minted_body_index)
+    }
+  }
+
+  const problems: Problems = {}
+  for (const row of bodies.rows) {
+    const body = bodyFromRow(row)
+    const problem = problems[row.problem_id]
+    if (!problem) {
+      problems[row.problem_id] = {
+        owner: body.owner,
+        bodies: [body]
+      }
+    } else {
+      problem.bodies.push(body)
+    }
+  }
+
+  return problems
+}
+
 export async function updateLeaderboard(chain: Chain) {
   const start = Date.now()
 
-  const seasonStart = 1716336000
+  const seasonStart = 1717632000
 
   // calculate daily leaderboards
   const today = currentDayInUnixTime()
   const daysSoFar: number[] = []
-  for (let i = seasonStart; i < today; i += 86400) {
+  const ONE_DAY_SECONDS = 86400
+  for (let i = seasonStart; i <= today; i += ONE_DAY_SECONDS) {
     daysSoFar.push(i)
   }
 
@@ -313,7 +455,9 @@ export async function updateLeaderboard(chain: Chain) {
     })
   )
 
-  leaderboard.daily = daysSoFar.reduce(
+  const doneWithDaily = Date.now()
+
+  const daily = daysSoFar.reduce(
     (acc, day, idx) => {
       acc[day] = dailies[idx]
       return acc
@@ -321,9 +465,23 @@ export async function updateLeaderboard(chain: Chain) {
     {} as Record<number, DailyLeaderboard>
   )
 
-  // calculate all-time leaderboards
   const allTime = await calculateAllTimeLeaderboard(today, chain)
-  leaderboard.allTime = allTime
+  const problems = await getProblems(chain)
 
-  console.log(chain, 'leaderboard updated in', Date.now() - start, 'ms')
+  leaderboards[chain] = {
+    daily,
+    allTime,
+    problems
+  }
+
+  console.log(
+    chain,
+    'leaderboard updated in',
+    Date.now() - start,
+    'ms with',
+    Object.keys(problems).length,
+    'problems',
+    'daily took',
+    doneWithDaily - start
+  )
 }

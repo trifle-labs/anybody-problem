@@ -3,30 +3,42 @@ import type {
   Source,
   Table,
   Integration,
-  PGColumnType
+  PGColumnType,
+  IndexStatment
 } from '@indexsupply/shovel-config'
-import { Problems, Bodies, Solver } from './src/contracts'
+import { Problems, Bodies, Solver } from './contracts'
 import { ethers } from 'ethers'
 import { camelToSnakeCase } from './src/util'
 
-const mainnet: Source = {
+export type Chain = 'mainnet' | 'sepolia' | 'garnet' | 'base_sepolia'
+type KnownSource = Source & { name: Chain }
+
+const mainnet: KnownSource = {
   name: 'mainnet',
   chain_id: 1,
-  url: 'https://ethereum-rpc.publicnode.com'
+  url: process.env.MAINNET_RPC
 }
 
-const sepolia: Source = {
+const sepolia: KnownSource = {
   name: 'sepolia',
   chain_id: 11155111,
-  url: 'https://rpc2.sepolia.org',
+  url: process.env.SEPOLIA_RPC,
   batch_size: 1000,
   concurrency: 1
 }
 
-const garnet: Source = {
+const garnet: KnownSource = {
   name: 'garnet',
   chain_id: 17069,
-  url: 'https://rpc.garnetchain.com',
+  url: process.env.GARNET_RPC,
+  batch_size: 1000,
+  concurrency: 1
+}
+
+const baseSepolia: KnownSource = {
+  name: 'base_sepolia',
+  chain_id: 84532,
+  url: process.env.BASE_SEPOLIA_RPC,
   batch_size: 1000,
   concurrency: 1
 }
@@ -42,12 +54,12 @@ const solTypeToPgType: Record<string, PGColumnType> = {
 const STARTING_BLOCK = {
   // mainnet: BigInt('2067803')
   sepolia: BigInt('5716600'),
-  garnet: BigInt('2067803')
+  garnet: BigInt('2067803'),
+  base_sepolia: BigInt('10923234')
 }
 
-export type Chain = 'mainnet' | 'sepolia' | 'garnet'
-
-export const sources = [sepolia, garnet]
+// n.b. sources must match ABI in contracts to correctly sync
+export const sources: KnownSource[] = [baseSepolia]
 
 const contracts = Object.fromEntries(
   [Problems, Bodies, Solver].map((contract) => {
@@ -63,7 +75,8 @@ const contracts = Object.fromEntries(
 
 async function integrationFor(
   contractName: string,
-  eventName: string
+  eventName: string,
+  index: IndexStatment[] = []
 ): Promise<Integration> {
   const tableName = camelToSnakeCase(`${contractName}_${eventName}`)
 
@@ -94,7 +107,8 @@ async function integrationFor(
 
   const table: Table = {
     name: tableName,
-    columns
+    columns,
+    index
   }
 
   const inputs = event.inputs.map((input) => {
@@ -137,10 +151,14 @@ async function integrationFor(
 }
 
 if (process.env.OUTPUT) {
-  ;(async () => {
+  ;(async function main() {
     let integrations = await Promise.all([
-      integrationFor('Problems', 'Transfer'),
-      integrationFor('Bodies', 'Transfer'),
+      integrationFor('Problems', 'Transfer', [
+        ['block_num DESC', 'tx_idx DESC', 'log_idx DESC']
+      ]),
+      integrationFor('Bodies', 'Transfer', [
+        ['block_num DESC', 'tx_idx DESC', 'log_idx DESC']
+      ]),
       integrationFor('Solver', 'Solved'),
       integrationFor('Bodies', 'bodyBorn'),
       integrationFor('Problems', 'bodyAdded'),

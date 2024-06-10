@@ -2,26 +2,32 @@
 <html>
   <head>
     <meta charset="UTF-8" />
-    <title>SSE Example</title>
+    <title>Anybody API</title>
   </head>
 
   <body>
-    <h1>Problems leaderboard + my problems</h1>
+    <h1>Anybody API /sse/base_sepolia</h1>
     <pre id="sse-data"></pre>
 
     <script type="module">
       const sseData = document.getElementById('sse-data')
 
-      const response = await fetch(
-        '/sse/sepolia/0xfa398d672936dcf428116f687244034961545d91',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/event-stream' }
-        }
-      )
+      const controller = new AbortController()
+      const signal = controller.signal
+      const response = await fetch('/sse/base_sepolia', {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/event-stream' },
+        signal
+      })
+
       const reader = response.body
         .pipeThrough(new TextDecoderStream())
         .getReader()
+
+      window.onbeforeunload = function () {
+        signal.abort()
+      }
+
       while (true) {
         const { value, done } = await reader.read()
         if (done) break

@@ -19,7 +19,6 @@ describe('Problem Tests', function () {
     const { Problems: problems } = deployedContracts
     for (const [name, contract] of Object.entries(deployedContracts)) {
       if (name === 'Problems') continue
-      if (name === 'Dust') continue
       if (name === 'BodyMetadata') continue
       let storedAddress
       if (name.indexOf('Verifier') > -1) {

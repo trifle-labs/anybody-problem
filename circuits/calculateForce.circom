@@ -73,8 +73,8 @@ template CalculateForce() {
   var body1_position_yMaxBits = windowWidthScaledMaxBits;
   // log("body1_position_y", body1_position_y);
 
-  // NOTE: maximum radius currently 13
-  var body1_radius = getMass(in_bodies[0]); // maxBits: 14 = numBits(13 * scalingFactor) (maxNum: 13_000)
+  // NOTE: maximum radius currently 32
+  var body1_radius = getMass(in_bodies[0]); // maxBits: 15 = numBits(32 * scalingFactor) (maxNum: 32_000)
   var body1_radiusMaxBits = maxRadiusScaledMaxBits;
   var body2_position_x = getX(in_bodies[1]); // maxBits: 20 (maxNum: 1_000_000) = windowWidthScaled
   var body2_position_xMaxBits = windowWidthScaledMaxBits;
@@ -83,8 +83,8 @@ template CalculateForce() {
   var body2_position_yMaxBits = windowWidthScaledMaxBits;
   // log("body2_position_y", body2_position_y);
   
-  // NOTE: maximum radius currently 13
-  var body2_radius = getMass(in_bodies[1]); // maxBits: 14 = numBits(13 * scalingFactor) (maxNum: 13_000)
+  // NOTE: maximum radius currently 32
+  var body2_radius = getMass(in_bodies[1]); // maxBits: 15 = numBits(32 * scalingFactor) (maxNum: 32_000)
   var body2_radiusMaxBits = maxRadiusScaledMaxBits;
 
   signal dx <== body2_position_x - body1_position_x; // maxBits: 254 because it can be negative
@@ -148,25 +148,25 @@ template CalculateForce() {
   var distanceMaxBits = maxBits(distanceMax);
 
  // NOTE: this could be tweaked as a variable for "liveliness" of bodies
-  signal bodies_sum_tmp <== (body1_radius + body2_radius) * 4; // maxBits: 17 (maxNum: 104_000)
+  signal bodies_sum_tmp <== (body1_radius + body2_radius) * 4; // maxBits: 18 (maxNum: 256_000)
 
   // bodies_sum is 0 if either body1_radius or body2_radius is 0
   component isZero = IsZero();
-  isZero.in <== body1_radius; // maxBits: 14
+  isZero.in <== body1_radius; // maxBits: 15
 
   component myMux2 = Mux1();
-  myMux2.c[0] <== bodies_sum_tmp; // maxBits: 17 (maxNum: 104_000)
+  myMux2.c[0] <== bodies_sum_tmp; // maxBits: 18 (maxNum: 256_000)
   myMux2.c[1] <== 0; // maxBits: 0
   myMux2.s <== isZero.out;
 
   component isZero2 = IsZero();
-  isZero2.in <== body2_radius; // maxBits: 14
+  isZero2.in <== body2_radius; // maxBits: 15
 
   component myMux3 = Mux1();
-  myMux3.c[0] <== myMux2.out; // maxBits: 17 (maxNum: 104_000)
+  myMux3.c[0] <== myMux2.out; // maxBits: 18 (maxNum: 256_000)
   myMux3.c[1] <== 0; // maxBits: 0
   myMux3.s <== isZero2.out;
-  signal bodies_sum <== myMux3.out; // maxBits: 17 (maxNum: 104_000)
+  signal bodies_sum <== myMux3.out; // maxBits: 18 (maxNum: 256_000)
 
   // log("bodies_sum", bodies_sum);
 
@@ -175,7 +175,7 @@ template CalculateForce() {
   // log("distanceSquared_with_avg_denom", distanceSquared_with_avg_denom);
 
    // NOTE: distance should be divided by scaling factor, but we can multiply GScaled by scaling factor instead to prevent division rounding errors
-  signal forceMag_numerator <== GScaled * bodies_sum * scalingFactor; // maxBits: 44 (maxNum: 10_400_000_000_000)
+  signal forceMag_numerator <== GScaled * bodies_sum * scalingFactor; // maxBits: 45 (maxNum: 25,600,000,000,000)
   // log("forceMag_numerator", forceMag_numerator);
 
   signal forceDenom <== distanceSquared_with_avg_denom * distance; // maxBits: 63 (maxNum: 5_656_856_000_000_000_000)

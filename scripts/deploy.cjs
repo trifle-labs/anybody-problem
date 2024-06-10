@@ -41,6 +41,7 @@ async function copyABI(name, contractName) {
   var copy = path.join(
     __dirname,
     '..',
+    'server',
     'contractData',
     'ABI-' + String(networkinfo['chainId']) + `-${name}.json`
   )
@@ -55,6 +56,7 @@ async function saveAddress(contract, name) {
   var savePath = path.join(
     __dirname,
     '..',
+    'server',
     'contractData',
     String(networkinfo['chainId']) + '-' + String(name) + '.json'
   )

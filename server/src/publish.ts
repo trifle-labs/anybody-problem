@@ -2,6 +2,7 @@ const subscribers = new Set<ReadableStreamDefaultController>()
 
 export function addSubscriber(subscriber: ReadableStreamDefaultController) {
   subscribers.add(subscriber)
+  console.log('added subscriber, total', subscribers.size)
 
   // the idea is just to have a knob to load shed on too many subscribers
   const MAX_SUBSCRIBERS = 100000
@@ -11,7 +12,7 @@ export function addSubscriber(subscriber: ReadableStreamDefaultController) {
     const oldest = it.next().value
     oldest?.cancel()
     subscribers.delete(oldest)
-    console.log('Deleted oldest subscriber')
+    console.log('deleted oldest subscriber')
   }
 }
 
@@ -21,6 +22,10 @@ export function unsubscribe(subscriber: ReadableStreamDefaultController) {
 
 export async function publish() {
   for (const subscriber of subscribers) {
-    subscriber.enqueue(`lets-update`)
+    try {
+      subscriber.enqueue(`lets-update`)
+    } catch (e) {
+      console.error('Error publishing', e)
+    }
   }
 }

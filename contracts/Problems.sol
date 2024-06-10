@@ -15,7 +15,7 @@ contract Problems is ERC721, Ownable {
     // TODO: update with actual start date
     uint256 public startDate = 0; //4070908800; // Thu Jan 01 2099 00:00:00 GMT+0000 (___ CEST Berlin, ___ London, ___ NYC, ___ LA)
     uint256 constant public SECONDS_IN_A_DAY = 86400;
-    uint256 constant public MAX_BODY_COUNT = 3; // TODO: change back to 10
+    uint256 constant public MAX_BODY_COUNT = 8;
     uint256 public problemSupply;
 
     address public bodies;
@@ -55,8 +55,10 @@ contract Problems is ERC721, Ownable {
     // mapping is body count to tickcount to address
     mapping(uint256 => mapping(uint256 => address)) public verifiers;
 
-    uint256 public constant maxVector = 10;
+    uint256 public constant speedFactor = 2;
     uint256 public constant scalingFactor = 10 ** 3;
+    uint256 public constant maxVector = 10 * speedFactor;
+    uint256 public constant maxVectorScaled = maxVector * scalingFactor;
     uint256 public constant windowWidth = 1000 * scalingFactor;
     // uint256 public constant maxRadius = 13;
     uint256 public constant startingRadius = 2;
@@ -128,6 +130,14 @@ contract Problems is ERC721, Ownable {
 
     receive() external payable {
         mint();
+    }
+
+    function getProblemDataByDay(uint256 day, uint256 bodyCount) public pure returns (Body[10] memory bodyData) {
+      for (uint256 i = 0; i < bodyCount; i++) {
+         bytes32 levelSeed = getLevelSeed(day, bodyCount - 1, i);
+          bytes32 bodyIndexRand = keccak256(abi.encodePacked(day, i));
+          bodyData[i] = getRandomValues(levelSeed, bodyIndexRand, i);
+      }
     }
 
     function currentDay() public view returns (uint256) {
@@ -220,20 +230,35 @@ contract Problems is ERC721, Ownable {
         problems[problemSupply].seed = generateSeed(problemSupply);
 
         emit problemCreated(problemSupply, problems[problemSupply].day, problems[problemSupply].seed);
+        mintBodyToProblem(problemSupply);
+        mintBodyToProblem(problemSupply);
+        // (uint256 bodyId, bytes32 bodySeed) = Bodies(bodies)
+        //     .mintAndAddToProblem(
+        //         recipient,
+        //         problemSupply, // problemId
+        //         0
+        //     );
+        // _addBody(
+        //     problemSupply, // problemId
+        //     bodyId,
+        //     0,
+        //     bodySeed,
+        //     0 // bodyIndex == mintedBodyIndex when minting
+        // );
 
-        (uint256 bodyId, bytes32 bodySeed) = Bodies(bodies)
-            .mintAndAddToProblem(
-                recipient,
-                problemSupply, // problemId
-                0
-            );
-        _addBody(
-            problemSupply, // problemId
-            bodyId,
-            0,
-            bodySeed,
-            0 // bodyIndex == mintedBodyIndex when minting
-        );
+        // (uint256 bodyId2, bytes32 bodySeed2) = Bodies(bodies)
+        //     .mintAndAddToProblem(
+        //         recipient,
+        //         problemSupply, // problemId
+        //         1
+        //     );
+        // _addBody(
+        //     problemSupply, // problemId
+        //     bodyId2,
+        //     1,
+        //     bodySeed2,
+        //     1 // bodyIndex == mintedBodyIndex when minting
+        // );
     }
 
     function mintBodyToProblem(uint256 problemId) internal {
@@ -275,7 +300,7 @@ contract Problems is ERC721, Ownable {
     ) internal {
         bytes32 levelSeed = getLevelSeed(problems[problemId].day, problems[problemId].mintedBodiesIndex, bodyIndex);
           bytes32 bodyIndexRand = keccak256(abi.encodePacked(problems[problemId].day, bodyIndex));
-        Body memory bodyData = getRandomValues(levelSeed, bodyIndexRand);
+        Body memory bodyData = getRandomValues(levelSeed, bodyIndexRand, bodyIndex);
         
         bodyData.seed = bodySeed;
         bodyData.bodyId = bodyId;
@@ -301,20 +326,20 @@ contract Problems is ERC721, Ownable {
 
         // NOTE: radius is a function of the seed of the body so it stays the
         // same no matter what problem it enters
-    function genRadius(bytes32 seed) public pure returns (uint256) {
+    function genRadius(bytes32 seed, uint256 index) public pure returns (uint256) {
         // TODO: confirm whether radius should remain only one of 3 sizes
         uint256 randRadius = randomRange(1, 3, seed);
-        randRadius = (randRadius) * 5 + startingRadius;
+        randRadius = index == 0 ? 36 : (randRadius) * 5 + startingRadius;
         return randRadius * scalingFactor;
     }
 
     // NOTE: this function uses a seed consisting of the day + the mintedBodyIndex + 
     // actual bodyIndex which means that all problems of the same level on the same day 
     // will have bodies with the same positions, velocities and radii.
-    function getRandomValues(bytes32 rand, bytes32 bodyIndexRand) public pure returns (Body memory) {
+    function getRandomValues(bytes32 rand, bytes32 bodyIndexRand, uint256 index) public pure returns (Body memory) {
         Body memory body;
 
-        body.radius = genRadius(bodyIndexRand);
+        body.radius = genRadius(bodyIndexRand, index);
 
         rand = keccak256(abi.encodePacked(rand));
         body.px = randomRange(0, windowWidth, rand);
@@ -324,10 +349,13 @@ contract Problems is ERC721, Ownable {
 
          // this is actually a range of -1/2 to 1/2 of maxVector since negative offset
         rand = keccak256(abi.encodePacked(rand));
-        body.vx = randomRange(0, maxVector * scalingFactor, rand);
+        // -maxVector = 0
+        // 0 = maxVector
+        // maxVector = 2 * maxVector
+        body.vx = randomRange(maxVector * scalingFactor / 2, 3 * maxVector * scalingFactor / 2, rand);
 
         rand = keccak256(abi.encodePacked(rand));
-        body.vy = randomRange(0, maxVector * scalingFactor, rand);
+        body.vy = randomRange(maxVector * scalingFactor / 2, 3 * maxVector * scalingFactor / 2, rand);
 
         return body;
     }
@@ -395,14 +423,13 @@ contract Problems is ERC721, Ownable {
     }
 
     function restoreValues(uint256 problemId) public onlySolver {
-
-      uint256 max = problems[problemId].bodyCount  == MAX_BODY_COUNT ? MAX_BODY_COUNT : problems[problemId].bodyCount - 1;
+      uint256 bodyCount = problems[problemId].bodyCount;
       // -1 because the newly added body is already in the correct level position
-      for (uint256 i = 0; i < max; i++) {
+      for (uint256 i = 0; i < bodyCount; i++) {
         uint256 bodyId = problems[problemId].bodyIds[i];
         bytes32 levelSeed = getLevelSeed(problems[problemId].day, problems[problemId].mintedBodiesIndex, i);
         bytes32 bodyIndexRand = keccak256(abi.encodePacked(problems[problemId].day, i));
-        Body memory bodyData = getRandomValues(levelSeed, bodyIndexRand);
+        Body memory bodyData = getRandomValues(levelSeed, bodyIndexRand, i);
         problems[problemId].bodyData[bodyId].px = bodyData.px;
         problems[problemId].bodyData[bodyId].py = bodyData.py;
         problems[problemId].bodyData[bodyId].vx = bodyData.vx;

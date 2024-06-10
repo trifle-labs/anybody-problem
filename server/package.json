@@ -7,16 +7,18 @@
   "scripts": {
     "shovel": "OUTPUT=1 bun run shovel-config.ts > config.json && ./shovel --config config.json",
     "dev": "bun run --hot src/index.ts",
-    "start": "./shovel --config config.json & bun run src/index.ts"
+    "start": "./shovel --config config.json & bun run src/index.ts",
+    "smoke": "bun run tsc && bun test"
   },
   "devDependencies": {
     "@indexsupply/shovel-config": "^0.0.16",
     "@types/bun": "latest",
     "@types/pg": "^8.11.6",
-    "ethers": "^6.12.1"
+    "ethers": "^6.12.1",
+    "typescript": "^5.4.5"
   },
   "dependencies": {
-    "hono": "^4.3.8",
+    "hono": "^4.4.3",
     "pg": "^8.11.5"
   },
   "trustedDependencies": []
