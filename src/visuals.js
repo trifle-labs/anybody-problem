@@ -1,4 +1,17 @@
 const WITHERING_STEPS = 3000
+const BODY_SCALE = 4
+const LOOPING_BODY_OPACITY = 0.5
+const THEME = {
+  bg: 'rgb(10,10,10)',
+  fg: 'white'
+}
+
+const FACE_SVGS = [
+  new URL('/public/faces/svgs/face9.svg', import.meta.url).href
+]
+
+const FG_SVGS = [new URL('/public/foregrounds/fg10.svg', import.meta.url).href]
+
 const FACE_PNGS = [
   // [tired, tired_no_mouth, normal, normal_no_mouth, ecstatic, ecstatic_no_mouth]
   [
@@ -252,7 +265,7 @@ export const Visuals = {
 
   drawBg() {
     // this.p.background('rgb(10,10,100)')
-    this.p.background('rgb(10,10,10)')
+    this.p.background(THEME.bg)
     // this.p.background('white')
     if (!this.starBG) {
       this.starBG = this.p.createGraphics(this.windowWidth, this.windowHeight)
@@ -263,7 +276,7 @@ export const Visuals = {
         this.starBG.noStroke()
         // this.starBG.fill('rgba(255,255,255,0.6)')
         // this.starBG.fill('black')
-        this.starBG.fill('white')
+        this.starBG.fill(THEME.fg)
         this.starBG.textSize(20)
         const strings = [',', '.', '*']
         this.starBG.text(
@@ -1027,17 +1040,17 @@ export const Visuals = {
     }
   },
 
-  drawStarSvgTest(radius, body) {
+  drawFaceSvg(radius, body, isFaded) {
     if (body.bodyIndex !== 0) return
     const closeEnough = true //this.isMissileClose(body)
     if (body.radius !== 0 && !closeEnough) return
-    this.svgStars ||= new Array(STAR_SVGS.length).fill(null)
+    this.faceSvgs ||= new Array(FACE_SVGS.length).fill(null)
 
     const whichFace = 0 // with_mouth //body.radius !== 0 ? no_mouth : with_mouth
-    const face = this.svgStars[whichFace]
+    const face = this.faceSvgs[whichFace]
     if (!face) {
-      this.svgStars[whichFace] = 'loading'
-      const png = STAR_SVGS[whichFace]
+      this.faceSvgs[whichFace] = 'loading'
+      const png = FACE_SVGS[whichFace]
       this.p.loadImage(png, (img) => {
         const origX = img.width
         const origY = img.height
@@ -1068,16 +1081,17 @@ export const Visuals = {
         // tinted.noTint()
         // const offset = (bgSize - img.width) / 2
         // tinted.image(img, offset, offset)
-        // this.svgStars[expression] = tinted
-        this.svgStars[whichFace] = foo
+        // this.faceSvgs[expression] = tinted
+        this.faceSvgs[whichFace] = foo
       })
     }
     if (face && face !== 'loading') {
-      const faceSize = radius * 4
+      const faceSize = radius
       // this.bodiesGraphic.drawingContext.msImageSmoothingEnabled = false
       // this.bodiesGraphic.drawingContext.mozImageSmoothingEnabled = false
       // this.bodiesGraphic.drawingContext.webkitImageSmoothingEnabled = false
       // this.bodiesGraphic.drawingContext.imageSmoothingEnabled = false
+      if (isFaded) this.bodiesGraphic.tint(255, 256 * LOOPING_BODY_OPACITY)
       this.bodiesGraphic.image(
         face,
         -faceSize / 2,
@@ -1085,6 +1099,135 @@ export const Visuals = {
         faceSize,
         faceSize
       )
+      this.bodiesGraphic.tint(255, 256)
+    }
+  },
+
+  drawStarForegroundSvg(radius, body, isFaded) {
+    if (body.bodyIndex !== 0) return
+    const closeEnough = true //this.isMissileClose(body)
+    if (body.radius !== 0 && !closeEnough) return
+    this.fgSvgs ||= new Array(FG_SVGS.length).fill(null)
+
+    const whichFace = 0 // with_mouth //body.radius !== 0 ? no_mouth : with_mouth
+    const face = this.fgSvgs[whichFace]
+    if (!face) {
+      this.fgSvgs[whichFace] = 'loading'
+      const png = FG_SVGS[whichFace]
+      this.p.loadImage(png, (img) => {
+        const origX = img.width
+        const origY = img.height
+        const scale = 1
+        const foo = this.p.createGraphics(origX / scale, origY / scale)
+        foo.pixelDensity(this.pixelDensity * 2)
+        // foo.noSmooth()
+        // const ctx = foo.canvas.getContext('2d')
+
+        // turn off image aliasing
+        // foo.drawingContext.msImageSmoothingEnabled = false
+        // foo.drawingContext.mozImageSmoothingEnabled = false
+        // foo.drawingContext.webkitImageSmoothingEnabled = false
+        // foo.drawingContext.imageSmoothingEnabled = false
+
+        // foo.pixelDensity(0.1)
+        foo.image(img, 0, 0, origX / scale, origY / scale)
+        foo.loadPixels()
+        // to make masked background
+
+        // const bgSize = img.width * 1.2
+        // const imgCopy = img.get()
+        // this.maskImage(imgCopy, [255, 255, 255])
+        // const tinted = this.p.createGraphics(bgSize, bgSize)
+        // const cc = this.getTintFromColor(body.c)
+        // tinted.tint(cc[0], cc[1], cc[2])
+        // tinted.image(imgCopy, 0, 0, bgSize, bgSize)
+        // tinted.noTint()
+        // const offset = (bgSize - img.width) / 2
+        // tinted.image(img, offset, offset)
+        // this.fgSvgs[expression] = tinted
+        this.fgSvgs[whichFace] = foo
+      })
+    }
+    if (face && face !== 'loading') {
+      const faceSize = radius
+      // apply effects?
+      // this.bodiesGraphic.blendMode(this.bodiesGraphic.HARD_LIGHT)
+      if (isFaded) this.bodiesGraphic.tint(255, 256 * LOOPING_BODY_OPACITY)
+
+      this.bodiesGraphic.image(
+        face,
+        -faceSize / 2,
+        -faceSize / 2,
+        faceSize,
+        faceSize
+      )
+      // reset effects
+      this.bodiesGraphic.blendMode(this.bodiesGraphic.NORMAL)
+      this.bodiesGraphic.tint(255, 256)
+    }
+  },
+
+  drawStarBackgroundSvg(radius, body, isFaded) {
+    if (body.bodyIndex !== 0) return
+    const closeEnough = true //this.isMissileClose(body)
+    if (body.radius !== 0 && !closeEnough) return
+    this.svgStars ||= new Array(STAR_SVGS.length).fill(null)
+
+    const whichFace = 0 // with_mouth //body.radius !== 0 ? no_mouth : with_mouth
+    const face = this.svgStars[whichFace]
+    if (!face) {
+      this.svgStars[whichFace] = 'loading'
+      const png = STAR_SVGS[whichFace]
+      this.p.loadImage(png, (img) => {
+        const origX = img.width
+        const origY = img.height
+        const scale = 1
+        const foo = this.p.createGraphics(origX / scale, origY / scale)
+        foo.pixelDensity(this.pixelDensity)
+        // foo.noSmooth()
+        // const ctx = foo.canvas.getContext('2d')
+
+        // turn off image aliasing
+        // foo.drawingContext.msImageSmoothingEnabled = false
+        // foo.drawingContext.mozImageSmoothingEnabled = false
+        // foo.drawingContext.webkitImageSmoothingEnabled = false
+        // foo.drawingContext.imageSmoothingEnabled = false
+
+        // foo.tint(256, 256 * 0.75)
+        foo.image(img, 0, 0, origX / scale, origY / scale)
+        foo.filter(foo.BLUR, 8)
+        foo.loadPixels()
+        // to make masked background
+
+        // const bgSize = img.width * 1.2
+        // const imgCopy = img.get()
+        // this.maskImage(imgCopy, [255, 255, 255])
+        // const tinted = this.p.createGraphics(bgSize, bgSize)
+        // const cc = this.getTintFromColor(body.c)
+        // tinted.tint(cc[0], cc[1], cc[2])
+        // tinted.image(imgCopy, 0, 0, bgSize, bgSize)
+        // tinted.noTint()
+        // const offset = (bgSize - img.width) / 2
+        // tinted.image(img, offset, offset)
+        // this.svgStars[expression] = tinted
+        this.svgStars[whichFace] = foo
+      })
+    }
+    if (face && face !== 'loading') {
+      const faceSize = radius
+      // this.bodiesGraphic.drawingContext.msImageSmoothingEnabled = false
+      // this.bodiesGraphic.drawingContext.mozImageSmoothingEnabled = false
+      // this.bodiesGraphic.drawingContext.webkitImageSmoothingEnabled = false
+      // this.bodiesGraphic.drawingContext.imageSmoothingEnabled = false
+      if (isFaded) this.bodiesGraphic.tint(255, 256 * LOOPING_BODY_OPACITY)
+      this.bodiesGraphic.image(
+        face,
+        -faceSize / 2,
+        -faceSize / 2,
+        faceSize,
+        faceSize
+      )
+      this.bodiesGraphic.tint(255, 256)
     }
   },
 
@@ -1310,28 +1453,24 @@ export const Visuals = {
     // }
   },
 
-  drawBody(x, y, v, radius, body) {
+  drawBody(x, y, v, radius, body, isLooped) {
     this.moveAndRotate_PopAfter(this.bodiesGraphic, x, y, v)
 
     // y-offset of face relative to center
-    const offset = this.getOffset(radius)
+    // const offset = this.getOffset(radius)
 
+    const size = Math.floor(body.radius * BODY_SCALE * 2)
+
+    this.drawStarBackgroundSvg(size, body, isLooped)
+    this.drawStarForegroundSvg(size, body, isLooped)
     this.drawCenter(body)
+    this.drawFaceSvg(size, body, isLooped)
 
-    // draw star bg
-    this.drawStarSvgTest(radius, body, offset)
-
-    // switch (body.bodyStyle) {
-    //   default:
-    //     this.drawBodyStyle1(radius, body, offset)
-    // }
-    this.drawPngFace(radius, body, offset)
+    this.bodiesGraphic.pop()
 
     // if (this.showLevels) {
     //   this.drawLevels(radius, body, offset)
     // }
-
-    this.bodiesGraphic.pop()
   },
 
   getBodyRadius(actualRadius) {
@@ -1352,29 +1491,29 @@ export const Visuals = {
     if (body.position.x > this.windowWidth - loopGap) {
       loopedX = true
       loopX = body.position.x - this.windowWidth
-      drawFunction(loopX, body.position.y, body.velocity, radius, body)
+      drawFunction(loopX, body.position.y, body.velocity, radius, body, true)
       // crosses left, draw on right
     } else if (body.position.x < loopGap) {
       loopedX = true
       loopX = body.position.x + this.windowWidth
-      drawFunction(loopX, body.position.y, body.velocity, radius, body)
+      drawFunction(loopX, body.position.y, body.velocity, radius, body, true)
     }
 
     // crosses bottom, draw on top
     if (body.position.y > this.windowHeight - loopGap) {
       loopedY = true
       loopY = body.position.y - this.windowHeight
-      drawFunction(body.position.x, loopY, body.velocity, radius, body)
+      drawFunction(body.position.x, loopY, body.velocity, radius, body, true)
       // crosses top, draw on bottom
     } else if (body.position.y < loopGap) {
       loopedY = true
       loopY = body.position.y + this.windowHeight
-      drawFunction(body.position.x, loopY, body.velocity, radius, body)
+      drawFunction(body.position.x, loopY, body.velocity, radius, body, true)
     }
 
     // crosses corner, draw opposite corner
     if (loopedX && loopedY) {
-      drawFunction(loopX, loopY, body.velocity, radius, body)
+      drawFunction(loopX, loopY, body.velocity, radius, body, true)
     }
   },
 
@@ -1818,13 +1957,13 @@ export const Visuals = {
     return `hsla(${cc.join(',')})`
   },
 
-  drawCenter(b, p = this.p, x, y) {
+  drawCenter(b, p = this.bodiesGraphic, x = 0, y = 0) {
     let closeEnough = false //this.isMissileClose(b)
     // this.p.blendMode(this.p.DIFFERENCE)
     p.noStroke()
     x = x == undefined ? b.position.x : x
     y = y == undefined ? b.position.y : y
-    const r = b.radius * 4
+    const r = b.radius * BODY_SCALE // b.radius * 4
     if (r == 0) return
     let c = this.brighten(b.c).replace(this.opac, 1)
     if (this.target == 'outside') {
@@ -1834,13 +1973,29 @@ export const Visuals = {
       p.image(star, x - r / 2, y - r / 2, r, r)
     } else {
       let darker = this.brighten(b.c, -30).replace(this.opac, 1)
-      // if (b.bodyIndex == 0) {
-      //   darker = '#FFF44F'
 
-      //   p.fill(darker)
-      //   p.ellipse(x, y, r)
-      //   // return
-      // }
+      // STAR TARGET
+      if (b.bodyIndex == 0) {
+        darker = '#FFF44F'
+        // p.fill(darker)
+        // p.ellipse(x, y, r)
+        const blur = 0
+        const pad = blur * 2
+        const foo = p.createGraphics(r * 2 + pad * 2, r * 2 + pad * 2)
+        foo.pixelDensity(this.pixelDensity * 2)
+        // foo.fill('transparent')
+        foo.fill('yellow')
+        foo.noStroke()
+        foo.ellipse(r / 2 + pad, r / 2 + pad, r)
+        foo.filter(foo.BLUR, blur)
+
+        p.blendMode(p.OVERLAY)
+        p.image(foo, x - r / 2 - pad, y - r / 2 - pad)
+        p.blendMode(p.NORMAL)
+        // p.tint(255, 256)
+        return
+      }
+
       p.fill(darker)
       p.ellipse(x, y, r)
       if (closeEnough) {
@@ -1871,6 +2026,7 @@ export const Visuals = {
         p.noFill()
         p.ellipse(x, y, r)
       } else {
+        /** DRAW TARGET */
         // const width = r / 2
         // const rotatedAngle = b.velocity.heading()
         // p.push()

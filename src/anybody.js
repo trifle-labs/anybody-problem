@@ -637,8 +637,14 @@ export class Anybody extends EventEmitter {
       const vectorMax =
         (i == 0 ? this.vectorLimit / 3 : this.vectorLimit) *
         Number(this.scalingFactor)
-      const vx = this.random(-vectorMax, vectorMax) / Number(this.scalingFactor)
-      const vy = this.random(-vectorMax, vectorMax) / Number(this.scalingFactor)
+      const vx =
+        i === 0
+          ? 0
+          : this.random(-vectorMax, vectorMax) / Number(this.scalingFactor)
+      const vy =
+        i === 0
+          ? 0
+          : this.random(-vectorMax, vectorMax) / Number(this.scalingFactor)
       const body = {
         bodyIndex: i,
         position: this.createVector(ss[i][0], ss[i][1]),
