@@ -5,7 +5,7 @@ import { Anybody } from '../src/anybody.js'
 
 import { expect } from 'chai'
 
-describe.skip('stepStateTest circuit', () => {
+describe('stepStateTest circuit', () => {
   let circuit
 
   const totalSteps = 20
@@ -21,8 +21,8 @@ describe.skip('stepStateTest circuit', () => {
 
   const sampleInputMissiles = new Array(totalSteps + 1).fill(0).map(() => {
     const m = new Array(5).fill('0')
-    m[1] = '20000'
     m[2] = '20000'
+    m[3] = '20000'
     return m
   })
 
@@ -61,7 +61,7 @@ describe.skip('stepStateTest circuit', () => {
     inflightMissile: [0, 0, '20000', '20000', 0]
   }
 
-  console.dir({ sampleInput }, { depth: null })
+  // console.dir({ sampleInput }, { depth: null })
 
   // example of edge cases
   const edgeCaseSampleInput = {
@@ -2113,12 +2113,12 @@ describe.skip('stepStateTest circuit', () => {
     ]
   }
 
-  console.log({
+  const edgeCaseSampleInputs = [
     edgeCaseSampleInput,
     edgeCaseSampleInput2,
     edgeCaseSampleInput3,
     edgeCaseSampleInput4
-  })
+  ]
   const sanityCheck = true
   const steps = sampleInput.missiles.length - 1
   const bodies = sampleInput.bodies.length
@@ -2140,8 +2140,10 @@ describe.skip('stepStateTest circuit', () => {
 
   // TODO: PR #97
   it.only('passes the edge case', async () => {
-    // const sampleInput = edgeCaseSampleInput
-    sampleInput.missiles = sampleInput.missiles.map((m) => [m[2], m[3], m[4]])
+    const sampleInput = edgeCaseSampleInputs[0]
+    sampleInput.missiles = sampleInput.missiles.map((m) =>
+      m.length == 5 ? [m[2], m[3], m[4]] : m
+    )
     sampleInput.missiles = sampleInput.missiles.map((m) => {
       if (parseInt(m[2]) === 0) {
         m[0] = '20000'
@@ -2149,10 +2151,11 @@ describe.skip('stepStateTest circuit', () => {
       }
       return m
     })
+
     const steps = sampleInput.missiles.length - 1
     const bodies = sampleInput.bodies.length
     const circuitName = `circuits/game_${bodies}_${steps}.circom`
-
+    console.log(`make sure ${circuitName} exists`)
     const circuit = await wasm_tester(circuitName)
 
     const witness = await circuit.calculateWitness(sampleInput, sanityCheck)
@@ -2190,6 +2193,7 @@ describe.skip('stepStateTest circuit', () => {
       time: 20,
       outflightMissiles: [0, 1000000, 20000, 20000, 0]
     }
+    // console.dir({ witness, expected }, { depth: null })
     await circuit.assertOut(witness, expected)
   })
 

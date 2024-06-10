@@ -58,8 +58,7 @@ describe('calculateForceMain circuit', () => {
     await circuit.checkConstraints(witness)
   })
 
-  it.only('can use the witness to generate the outcome', async () => {
-    console.log({ circuit })
+  it.skip('can check the differnce in speed calculating with witness vs anybody.js', async () => {
     const dir = circuit.dir
     // list contents of dir
     const files = fs.readdirSync(dir)
