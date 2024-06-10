@@ -16,13 +16,13 @@ type KnownSource = Source & { name: Chain }
 const mainnet: KnownSource = {
   name: 'mainnet',
   chain_id: 1,
-  url: 'https://ethereum-rpc.publicnode.com'
+  url: process.env.MAINNET_RPC
 }
 
 const sepolia: KnownSource = {
   name: 'sepolia',
   chain_id: 11155111,
-  url: 'https://rpc2.sepolia.org',
+  url: process.env.SEPOLIA_RPC,
   batch_size: 1000,
   concurrency: 1
 }
@@ -30,7 +30,7 @@ const sepolia: KnownSource = {
 const garnet: KnownSource = {
   name: 'garnet',
   chain_id: 17069,
-  url: 'https://rpc.garnetchain.com',
+  url: process.env.GARNET_RPC,
   batch_size: 1000,
   concurrency: 1
 }
@@ -38,7 +38,7 @@ const garnet: KnownSource = {
 const baseSepolia: KnownSource = {
   name: 'base_sepolia',
   chain_id: 84532,
-  url: 'https://base-sepolia.infura.io/v3/049a0c3141de47f1afcbc640911be2a7',
+  url: process.env.BASE_SEPOLIA_RPC,
   batch_size: 1000,
   concurrency: 1
 }
