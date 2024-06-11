@@ -169,12 +169,12 @@ template ForceAccumulator(totalBodies) { // max 10 = maxBits: 4
       // at this point the vector is offset by maxVectorScaled but not maximum_accumulated_possible
       // 
 
-      vectorLowerLimiterX[i] = LowerLimiter(15);
+      vectorLowerLimiterX[i] = LowerLimiter(16);
       // log("vectorLimiterX[i].out", i, vectorLimiterX[i].out);
-      // log("vectorLimiterX[i].in", "vectorLimiterX[i].out - maximum_accumulated_possible", vectorLimiterX[i].out - maximum_accumulated_possible);
+      // log("vectorLimiterX[i].in <==", "vectorLimiterX[i].out - maximum_accumulated_possible", vectorLimiterX[i].out - maximum_accumulated_possible + maxVectorScaled);
       // log("maxVectorScaled.limit", "maxVectorScaled", maxVectorScaled);
       // log("maxVectorScaled.rather", "maxVectorScaled", maxVectorScaled);
-      vectorLowerLimiterX[i].in <== vectorLimiterX[i].out - maximum_accumulated_possible + maxVectorScaled; // maxBits: 15 (maxNum: 20_000)
+      vectorLowerLimiterX[i].in <== vectorLimiterX[i].out - maximum_accumulated_possible + maxVectorScaled; // maxBits: 16 (maxNum: 40_000)
       vectorLowerLimiterX[i].limit <== maxVectorScaled; // maxBits: 13 (maxNum: 10_000)
       vectorLowerLimiterX[i].rather <== maxVectorScaled; // maxBits: 13 (maxNum: 10_000)
       // log("vectorLowerLimiterX[i].out", vectorLowerLimiterX[i].out);

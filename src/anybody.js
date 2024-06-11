@@ -432,6 +432,10 @@ export class Anybody extends EventEmitter {
 
     if (this.missiles.length > 0 && this.missiles[0].radius == 0) {
       this.missiles.splice(0, 1)
+    } else if (this.missiles.length > 1 && this.missiles[0].radius !== 0) {
+      // NOTE: follows logic of circuit
+      const newMissile = this.missiles.splice(0, 1)
+      this.missiles.splice(0, 1, newMissile[0])
     }
     return { bodies: this.bodies, missiles: this.missiles }
   }
@@ -478,7 +482,6 @@ export class Anybody extends EventEmitter {
       for (let i = this.alreadyRun; i < this.alreadyRun + this.stopEvery; i++) {
         if (this.missileInits[missileIndex]?.step == i) {
           const missile = this.missileInits[missileIndex]
-          console.log({ missile })
           missileInits.push([missile.vx, missile.vy, missile.radius])
           missileIndex++
         } else {
@@ -862,4 +865,7 @@ if (typeof window !== 'undefined') {
 
 function _smolr(a, b) {
   return a < b ? a : b
+}
+BigInt.prototype.toJSON = function () {
+  return this.toString()
 }
