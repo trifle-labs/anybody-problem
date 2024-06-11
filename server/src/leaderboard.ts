@@ -2,7 +2,6 @@ import { Chain } from '../shovel-config'
 import db from './db'
 
 type LeaderboardLine = {
-  problemId: string
   owner: string
 }
 
@@ -26,11 +25,13 @@ type Problems = Record<
   }
 >
 
-type SpeedScore = LeaderboardLine & { ticks: number }
+type SpeedScore = LeaderboardLine & { problemId: string; ticks: number }
 
 type SolvedScore = LeaderboardLine & { solved: number }
 
-type StreakScore = LeaderboardLine & { streak: number }
+type StreakScore = LeaderboardLine & { problemId: string; streak: number }
+
+type DaysPlayedScore = LeaderboardLine & { daysPlayed: number }
 
 type LevelLeaderboard = {
   level: number
@@ -49,6 +50,7 @@ type Leaderboard = {
     mostSolved: SolvedScore[]
     currentStreak: StreakScore[]
     fastest: SpeedScore[]
+    daysPlayed: DaysPlayedScore[]
   }
 }
 
@@ -192,21 +194,7 @@ async function calculateAllTimeLeaderboard(
   const n = 10
   const result = await db.query(
     `
-  WITH most_solved AS (
-    SELECT 
-        problem_id,
-        COUNT(*) AS solve_count
-    FROM 
-        solver_solved
-    WHERE
-        src_name = $1
-    GROUP BY 
-        problem_id
-    ORDER BY 
-        solve_count DESC
-    LIMIT ${n}
-),
-current_streaks AS (
+  WITH current_streaks AS (
     SELECT
         problem_id,
         MAX(streak_length) AS current_streak
@@ -255,13 +243,6 @@ fastest_completed AS (
 ),
 leaderboard AS (
   SELECT 
-      'Most Solved' AS category,
-      problem_id,
-      solve_count AS metric
-  FROM 
-      most_solved
-  UNION ALL
-  SELECT 
       'Current Streak' AS category,
       problem_id,
       current_streak AS metric
@@ -283,8 +264,7 @@ latest_transactions AS (
   FROM
       problems_transfer
   WHERE
-      token_id IN (SELECT problem_id FROM leaderboard)
-      AND src_name = '${chain}'
+      src_name = '${chain}'
 ),
 current_owners AS (
   SELECT
@@ -294,12 +274,64 @@ current_owners AS (
       latest_transactions
   WHERE
       rn = 1
+),
+owners_with_most_days_played AS (
+  SELECT
+      owner,
+      COUNT(DISTINCT day) AS days_played
+  FROM
+      solver_solved
+  LEFT JOIN
+      current_owners co ON problem_id = co.token_id
+  WHERE
+      src_name = $1
+      AND level = ${MAX_BODY_COUNT - 1}
+  GROUP BY
+      owner
+  ORDER BY
+      days_played DESC
+  LIMIT ${n}
+),
+owners_with_most_levels_solved AS (
+  SELECT
+      owner,
+      COUNT(DISTINCT (problem_id, level)) AS solve_count
+  FROM
+      solver_solved
+  LEFT JOIN
+      current_owners co ON problem_id = co.token_id
+  WHERE
+      src_name = $1
+  GROUP BY
+      owner
+  ORDER BY
+      solve_count DESC
+  LIMIT ${n}
 )
 SELECT 
-    *
+  category,
+  problem_id,
+  owner,
+  metric
 FROM
   leaderboard
 LEFT JOIN current_owners co ON leaderboard.problem_id = co.token_id
+UNION ALL
+SELECT 
+    'Most Days Played' AS category,
+    NULL AS problem_id,
+    owner,
+    days_played AS metric
+FROM
+    owners_with_most_days_played
+UNION ALL
+SELECT 
+    'Most Solved' AS category,
+    NULL AS problem_id,
+    owner,
+    solve_count AS metric
+FROM
+    owners_with_most_levels_solved
 `,
     [chain]
   )
@@ -307,7 +339,6 @@ LEFT JOIN current_owners co ON leaderboard.problem_id = co.token_id
     mostSolved: result.rows
       .filter((r: any) => r.category === 'Most Solved')
       .map((r: any) => ({
-        problemId: r.problem_id,
         solved: parseInt(r.metric),
         owner: r.owner
       })),
@@ -324,6 +355,12 @@ LEFT JOIN current_owners co ON leaderboard.problem_id = co.token_id
         problemId: r.problem_id,
         ticks: parseInt(r.metric),
         owner: r.owner
+      })),
+    daysPlayed: result.rows
+      .filter((r: any) => r.category === 'Most Days Played')
+      .map((r: any) => ({
+        owner: r.owner,
+        daysPlayed: parseInt(r.metric)
       }))
   }
 }
