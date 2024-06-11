@@ -344,7 +344,6 @@ const generateProof = async (
   mode = 'nft',
   missiles = null
 ) => {
-  console.log('generateProof')
   const anybody = new Anybody(null, {
     bodyData,
     seed,
@@ -366,18 +365,13 @@ const generateProof = async (
     ...inputData.missiles[0]
   ]
   const bodyFinal = results.bodyFinal
-  const outflightMissile = results.outflightMissiles
+  // const outflightMissile = results.outflightMissiles
   // const startTime = Date.now()
-  console.dir({ inputData }, { depth: null })
-  console.dir({ bodyFinal }, { depth: null })
-  console.dir({ outflightMissile }, { depth: null })
-  console.log(`ensure that ${mode}_${bodyCount}_${ticksRun} exists`)
   const dataResult = await exportCallDataGroth16(
     inputData,
     `./public/${mode}_${bodyCount}_${ticksRun}.wasm`,
     `./public/${mode}_${bodyCount}_${ticksRun}_final.zkey`
   )
-  console.dir({ dataResult }, { depth: null })
   // bodyCount = bodyCount.toNumber()
   // const endTime = Date.now()
   // const difference = endTime - startTime
@@ -400,7 +394,7 @@ const generateAndSubmitProof = async (
   ticksRun,
   bodyData
 ) => {
-  console.log('generateAndSubmitProof')
+  // console.log('generateAndSubmitProof')
   const { Problems: problems, Solver: solver } = deployedContracts
   const { seed } = await problems.problems(problemId)
   const { inputData, bodyFinal, dataResult } = await generateProof(

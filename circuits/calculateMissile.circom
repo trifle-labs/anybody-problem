@@ -25,11 +25,11 @@ and the radius is reduced to 0.
 
 template CalculateMissile() {
   signal input in_missile[5];
-  log("in_missile[0]", in_missile[0]);
-  log("in_missile[1]", in_missile[1]);
-  log("in_missile[2]", in_missile[2]);
-  log("in_missile[3]", in_missile[3]);
-  log("in_missile[4]", in_missile[4]);
+  // log("in_missile[0]", in_missile[0]);
+  // log("in_missile[1]", in_missile[1]);
+  // log("in_missile[2]", in_missile[2]);
+  // log("in_missile[3]", in_missile[3]);
+  // log("in_missile[4]", in_missile[4]);
   signal output out_missile[5];
 
 
@@ -106,9 +106,9 @@ template CalculateMissile() {
   out_missile[3] <== in_missile[3]; // maxBits: 14 (maxNum: 10_000)
   out_missile[4] <== muxY.out;
 
-  log("out_missile[0]", out_missile[0]);
-  log("out_missile[1]", out_missile[1]);
-  log("out_missile[2]", out_missile[2]);
-  log("out_missile[3]", out_missile[3]);
-  log("out_missile[4]", out_missile[4]);
+  // log("out_missile[0]", out_missile[0]);
+  // log("out_missile[1]", out_missile[1]);
+  // log("out_missile[2]", out_missile[2]);
+  // log("out_missile[3]", out_missile[3]);
+  // log("out_missile[4]", out_missile[4]);
 }

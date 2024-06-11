@@ -431,8 +431,8 @@ describe('Problem Tests', function () {
     expect(day).to.equal(jsCurrentDay)
 
     expect(parseInt(seed, 16)).to.not.equal(0)
-    expect(bodyCount).to.equal(1)
-    expect(mintedBodiesIndex).to.equal(1)
+    expect(bodyCount).to.equal(2)
+    expect(mintedBodiesIndex).to.equal(2)
     expect(tickCount).to.equal(0)
 
     const scalingFactor = await problems.scalingFactor()
@@ -440,6 +440,7 @@ describe('Problem Tests', function () {
     const startingRadius = await problems.startingRadius()
     const maxRadius = ethers.BigNumber.from(3 * 5).add(startingRadius)
 
+    const firstBodyRadius = ethers.BigNumber.from(36)
     const windowWidth = await problems.windowWidth()
 
     const bodyIDs = await problems.getProblemBodyIds(problemId)
@@ -485,7 +486,11 @@ describe('Problem Tests', function () {
       expect(vy.lte(maxVectorScaled.mul(2))).to.be.true
 
       expect(radius).to.not.equal(0)
-      expect(radius.lte(maxRadius.mul(scalingFactor))).to.be.true
+      if (i !== 0) {
+        expect(radius.lte(maxRadius.mul(scalingFactor))).to.be.true
+      } else {
+        expect(radius.eq(firstBodyRadius.mul(scalingFactor))).to.be.true
+      }
 
       expect(seed).to.not.equal(0)
     }
@@ -507,8 +512,6 @@ describe('Problem Tests', function () {
 
     const { bodyCount } = await problems.problems(problemId)
     expect(bodyCount).to.equal(maxBodies)
-
-    await problems.levelUp(problemId, 100)
 
     const bodyBalance = await bodies.balanceOf(owner.address)
     expect(bodyBalance).to.equal(maxBodies)

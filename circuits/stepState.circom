@@ -72,15 +72,15 @@ template StepState(totalBodies, steps) {
   component andMissiles[steps];
 
   for (var i = 0; i < steps; i++) {
-    for (var j = 0; j < totalBodies; j++) {
-      log("step", i);
-      log("body", j);
-      log("tmp_body[j][0]", tmp_body[j][0]);
-      log("tmp_body[j][1]", tmp_body[j][1]);
-      log("tmp_body[j][2]", tmp_body[j][2]);
-      log("tmp_body[j][3]", tmp_body[j][3]);
-      log("tmp_body[j][4]", tmp_body[j][4]);
-    }
+    // for (var j = 0; j < totalBodies; j++) {
+    //   log("step", i);
+    //   log("body", j);
+    //   log("tmp_body[j][0]", tmp_body[j][0]);
+    //   log("tmp_body[j][1]", tmp_body[j][1]);
+    //   log("tmp_body[j][2]", tmp_body[j][2]);
+    //   log("tmp_body[j][3]", tmp_body[j][3]);
+    //   log("tmp_body[j][4]", tmp_body[j][4]);
+    // }
 
     forceAccumulator[i] = ForceAccumulator(totalBodies);
     forceAccumulator[i].bodies <== tmp_body;
@@ -173,18 +173,18 @@ template StepState(totalBodies, steps) {
   out_bodies <== tmp_body;
   outflightMissile <== tmp_missile;
 
-  log("time", time);
-  for (var j = 0; j < totalBodies; j++) {
-    log("final tmp_body[j][0]", tmp_body[j][0]);
-    log("final tmp_body[j][1]", tmp_body[j][1]);
-    log("final tmp_body[j][2]", tmp_body[j][2]);
-    log("final tmp_body[j][3]", tmp_body[j][3]);
-    log("final tmp_body[j][4]", tmp_body[j][4]);
-  }
-  log("outflightMissile[0]", outflightMissile[0]);
-  log("outflightMissile[1]", outflightMissile[1]);
-  log("outflightMissile[2]", outflightMissile[2]);
-  log("outflightMissile[3]", outflightMissile[3]);
-  log("outflightMissile[4]", outflightMissile[4]);
+  // log("time", time);
+  // for (var j = 0; j < totalBodies; j++) {
+  //   log("final tmp_body[j][0]", tmp_body[j][0]);
+  //   log("final tmp_body[j][1]", tmp_body[j][1]);
+  //   log("final tmp_body[j][2]", tmp_body[j][2]);
+  //   log("final tmp_body[j][3]", tmp_body[j][3]);
+  //   log("final tmp_body[j][4]", tmp_body[j][4]);
+  // }
+  // log("outflightMissile[0]", outflightMissile[0]);
+  // log("outflightMissile[1]", outflightMissile[1]);
+  // log("outflightMissile[2]", outflightMissile[2]);
+  // log("outflightMissile[3]", outflightMissile[3]);
+  // log("outflightMissile[4]", outflightMissile[4]);
 
 }
