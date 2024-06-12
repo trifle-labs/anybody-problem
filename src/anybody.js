@@ -491,13 +491,16 @@ export class Anybody extends EventEmitter {
       missileInits.push([maxVectorScaled, maxVectorScaled, '0'])
     }
 
-    let inflightMissile = this.missileInits[0] || {
-      x: '0',
-      y: (this.windowWidth * parseInt(this.scalingFactor)).toString(),
-      vx: '2000',
-      vy: '2000',
-      radius: '0'
-    }
+    let inflightMissile =
+      this.missileInits[0]?.step == this.alreadyRun
+        ? this.missileInits[0]
+        : {
+            x: '0',
+            y: (this.windowWidth * parseInt(this.scalingFactor)).toString(),
+            vx: '20000',
+            vy: '20000',
+            radius: '0'
+          }
     inflightMissile = [
       inflightMissile.x,
       inflightMissile.y,

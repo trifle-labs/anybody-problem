@@ -10,15 +10,13 @@ const correctPrice = ethers.utils.parseEther('0.01')
 // const splitterAddress = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266'
 
 const proverTickIndex = {
-  1: 300,
   2: 300,
   3: 300,
   4: 300,
   5: 100,
-  6: 100,
-  7: 100,
-  8: 75
+  6: 100
 }
+const MAX_BODY_COUNT = 6
 
 const getTicksRun = async (bodyCount, ignoreTesting = false) => {
   const networkInfo = await hre.ethers.provider.getNetwork()
@@ -135,7 +133,7 @@ const deployContracts = async (ignoreTesting = false) => {
   const verifiersTicks = []
   const verifiersBodies = []
 
-  for (let i = 2; i <= 8; i++) {
+  for (let i = 2; i <= MAX_BODY_COUNT; i++) {
     const ticks = await getTicksRun(i, ignoreTesting)
     const name = `Game_${i}_${ticks}Verifier`
     const path = `contracts/${name}.sol:Groth16Verifier`

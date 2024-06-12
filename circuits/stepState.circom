@@ -161,6 +161,20 @@ template StepState(totalBodies, steps) {
     mux[i].c[4][0] <== detectCollision[i].out_missile[2];
     mux[i].c[4][1] <== missiles[i + 1][2];
     mux[i].s <== isZero[i].out;
+    // log("if this is 1, then current missile is done (radius == 0)", isZero[i].out, 
+    // 0, 
+    // windowWidthScaled,
+    // missiles[i + 1][0],
+    // missiles[i + 1][1],
+    // missiles[i + 1][2]
+    // );
+    // log("if this is 0, then current missile is continued (radius !== 0)", isZero[i].out, 
+    // detectCollision[i].out_missile[0], 
+    // detectCollision[i].out_missile[1], 
+    // calculateMissile[i].out_missile[2], 
+    // calculateMissile[i].out_missile[3], 
+    // detectCollision[i].out_missile[2]
+    // );
 
     tmp_missile[0] = mux[i].out[0];
     tmp_missile[1] = mux[i].out[1];

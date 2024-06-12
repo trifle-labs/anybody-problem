@@ -53,7 +53,7 @@ type Leaderboard = {
 }
 
 // TODO: pull this from the contract
-const MAX_BODY_COUNT = 8
+const MAX_BODY_COUNT = 6
 const DAILY_CATEGORY_LIMIT = 3
 
 export const leaderboards: Record<Chain, Leaderboard> | {} = {}

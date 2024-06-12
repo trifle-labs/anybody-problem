@@ -2119,6 +2119,121 @@ describe('stepStateTest circuit', () => {
   const steps = sampleInput.missiles.length - 1
   const bodies = sampleInput.bodies.length
 
+  const checkSampleInput = {
+    bodies: [
+      ['287518', '756437', '16935', '19758', '36000'],
+      ['500237', '983658', '23018', '27409', '7000'],
+      ['312878', '527524', '27544', '28267', '12000'],
+      ['788385', '815229', '22364', '26689', '7000'],
+      ['682643', '630624', '12924', '25887', '7000']
+    ],
+    missiles: [
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['37921', '11121', '10'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['37912', '11102', '10'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['37916', '11112', '10'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0'],
+      ['20000', '20000', '0']
+    ],
+    inflightMissile: ['0', '1000000', '20000', '20000', '0'],
+    address: '0xfa398d672936dcf428116f687244034961545d91'
+  }
+
   before(async () => {
     circuit = await wasm_tester(`circuits/game_${bodies}_${steps}.circom`)
   })
@@ -2143,6 +2258,52 @@ describe('stepStateTest circuit', () => {
     // const secRounded = calculateTime(perStep, steps)
     // console.log(`| stepState(3, ${steps}) | ${perStep} | ${secRounded} |`)
     await circuit.checkConstraints(witness)
+  })
+
+  it('passes one off check input', async () => {
+    const sampleInput = checkSampleInput
+
+    const steps = sampleInput.missiles.length - 1
+    const bodies = sampleInput.bodies.length
+    const circuitName = `circuits/game_${bodies}_${steps}.circom`
+    // console.log({ circuitName })
+    const circuit = await wasm_tester(circuitName)
+
+    const witness = await circuit.calculateWitness(sampleInput, sanityCheck)
+    await circuit.checkConstraints(witness)
+
+    const anybody = new Anybody(null, { util: true })
+    let abBodies = sampleInput.bodies.map(
+      anybody.convertScaledStringArrayToFloat.bind(anybody)
+    )
+    let abMissiles = sampleInput.missiles.map(
+      anybody.convertMissileScaledStringArrayToFloat.bind(anybody)
+    )
+    for (let i = 0; i < steps; i++) {
+      // console.log({ step: i })
+      anybody.bodies = abBodies
+      anybody.missiles = abMissiles
+      const results = anybody.step()
+      abBodies = results.bodies
+      abMissiles = results.missiles
+    }
+
+    abBodies = anybody.convertBodiesToBigInts(abBodies)
+    const out_bodies = abBodies.map(
+      anybody.convertScaledBigIntBodyToArray.bind(anybody)
+    )
+    const expected = {
+      out_bodies,
+      time: steps,
+      outflightMissile: [
+        abMissiles[0].px,
+        abMissiles[0].py,
+        parseInt(abMissiles[0].vx) + 20000,
+        parseInt(abMissiles[0].vy) + 20000,
+        abMissiles[0].radius
+      ]
+    }
+    await circuit.assertOut(witness, expected)
   })
 
   it('passes the edge cases', async () => {

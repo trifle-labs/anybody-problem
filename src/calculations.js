@@ -3,6 +3,7 @@
 
 export const Calculations = {
   forceAccumulator(bodies = this.bodies) {
+    // console.dir({ bodies_in: bodies }, { depth: null })
     bodies = this.convertBodiesToBigInts(bodies)
     bodies = this.forceAccumulatorBigInts(bodies)
     bodies = this.convertBigIntsToBodies(bodies)
@@ -469,11 +470,19 @@ export const Calculations = {
         body.position.x,
         body.position.y
       )
+      // console.log({
+      //   p_x: body.position.x,
+      //   p_y: body.position.y,
+      //   m_x: missile.position.x,
+      //   m_y: missile.position.y
+      // })
+      // console.log({ distance })
       // NOTE: this is to match the circuit. If the missile is gone, set minDist to 0
       // Need to make sure comparison of distance is < and not <= for this to work
       // because they may by chance be at the exact same coordinates and should still
       // not trigger an _explosion since the missile is already gone.
       const minDist = missile.radius == 0n ? 0n : body.radius * 2n
+      // console.log({ minDist })
       if (distance < minDist) {
         missile.radius = 0n
         const x = this.convertScaledBigIntToFloat(body.position.x)
