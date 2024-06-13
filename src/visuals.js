@@ -251,7 +251,14 @@ export const Visuals = {
 
   drawBg() {
     // this.p.background('rgb(10,10,100)')
-    this.p.background('rgb(10,10,10)')
+    if (this.lastMissileCantBeUndone) {
+      this.p.background('rgb(150,150,150)')
+      this.p.textSize(100)
+      this.p.textAlign(this.p.CENTER, this.p.CENTER)
+      this.p.text('YOUR GUN\nIS BROKEN!', this.windowWidth / 2, 100)
+    } else {
+      this.p.background('rgb(10,10,10)')
+    }
     // this.p.background('white')
     if (!this.starBG) {
       this.starBG = this.p.createGraphics(this.windowWidth, this.windowHeight)

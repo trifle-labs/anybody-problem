@@ -80,6 +80,7 @@ export class Anybody extends EventEmitter {
 
   // run whenever the class should be reset
   clearValues() {
+    this.lastMissileCantBeUndone = false
     this.speedFactor = 2
     this.speedLimit = 10
     this.vectorLimit = this.speedLimit * this.speedFactor
@@ -419,6 +420,9 @@ export class Anybody extends EventEmitter {
   }
 
   step() {
+    if (this.missiles.length == 0 && this.lastMissileCantBeUndone) {
+      this.lastMissileCantBeUndone = false
+    }
     // const { bodies, missiles } = await this.circomStep(
     //   this.bodies,
     //   this.missiles
