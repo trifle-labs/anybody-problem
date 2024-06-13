@@ -898,7 +898,7 @@ export const Visuals = {
 
   drawStarBackgroundSvg(width, body) {
     const fill = hslToRgb(randHSL(bodyThemes[body.theme].bg))
-    this.drawImageAsset(BG_SVGS[0], width, fill, undefined)
+    this.drawImageAsset(BG_SVGS[0], width, fill)
   },
 
   drawGlyphFace(radius, body) {
