@@ -820,30 +820,40 @@ export const Visuals = {
   },
 
   drawImageAsset(
-    asset,
+    assetUrl,
     width,
     myP = this.bodiesGraphic,
     beforeInsert,
     afterInsert
   ) {
     this.imgAssets ||= {}
-    const id = btoa(asset) // bad???
+    const id = btoa(assetUrl) // bad???
     const loaded = this.imgAssets[id]
 
     if (!loaded) {
       this.imgAssets[id] = 'loading'
-      this.p.loadImage(asset, (img) => {
-        const origX = img.width
-        const origY = img.height
-        const scale = 1
-        const foo = this.p.createGraphics(origX / scale, origY / scale)
-        foo.pixelDensity(this.pixelDensity)
+      fetch(assetUrl)
+        .then((resp) => resp.text())
+        .then((svg) => {
+          svg = 'data:image/svg+xml,' + encodeURIComponent(svg)
 
-        foo.image(img, 0, 0, origX / scale, origY / scale)
-        foo.loadPixels()
+          this.p.loadImage(svg, (img) => {
+            const width = img.width * this.pixelDensity
+            const height = img.height * this.pixelDensity
 
-        this.imgAssets[id] = foo
-      })
+            const foo = this.p.createGraphics(width, height)
+            foo.pixelDensity(this.pixelDensity)
+
+            foo.image(img, 0, 0, width, height)
+            foo.loadPixels()
+
+            this.imgAssets[id] = foo
+          })
+        })
+        .catch((e) => {
+          console.error(e)
+          this.imgAssets[id] = undefined
+        })
     }
 
     if (loaded && loaded !== 'loading') {
