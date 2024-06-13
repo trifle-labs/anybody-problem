@@ -97,14 +97,6 @@ export function hslToRgb(values) {
   return `rgb(${r}, ${g}, ${b})`
 }
 
-export function randomRGB() {
-  const max = 255
-  const min = 60
-  var r = Math.floor(Math.random() * (max - min + 1)) + min
-  var g = Math.floor(Math.random() * (max - min + 1)) + min
-  var b = Math.floor(Math.random() * (max - min + 1)) + min
-  return 'rgb(' + r + ', ' + g + ', ' + b + ')'
-}
 
 function randInt(min, max) {
   // min and max included
