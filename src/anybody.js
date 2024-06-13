@@ -47,7 +47,7 @@ export class Anybody extends EventEmitter {
       seed: null,
       windowWidth: 1000,
       windowHeight: 1000,
-      pixelDensity: window.devicePixelRatio ?? 1,
+      pixelDensity: 4, //4, // Math.min(4, 4 * (window.devicePixelRatio ?? 1)),
       scalingFactor: 10n ** 3n,
       minDistanceSquared: 200 * 200,
       G: 100, // Gravitational constant
@@ -767,7 +767,7 @@ export class Anybody extends EventEmitter {
   prepareP5() {
     this.p.frameRate(this.FPS)
     this.p.createCanvas(this.windowWidth, this.windowWidth)
-    this.p.pixelDensity(this.pixelDensity)
+    // this.p.pixelDensity(this.pixelDensity)
     this.p.background('white')
   }
 
