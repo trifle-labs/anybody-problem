@@ -40,6 +40,7 @@ template DetectCollision(totalBodies) {
 
     // if there is no missile (isZeroOut == 1), then set distanceMin to 0. Even if they are exact same coordinates the distance will be 0 and 0 < 0 is false
     distanceMinMux[i] = Mux1();
+    // NOTE: distance is 2 x radius
     distanceMinMux[i].c[0] <== bodies[i][2] * 2; // maxBits: 15 = numBits(2 * 13 * scalingFactor) (maxNum: 26_000)
     distanceMinMux[i].c[1] <== 0;
     distanceMinMux[i].s <== isZero[i].out;
@@ -49,11 +50,14 @@ template DetectCollision(totalBodies) {
     lessThan[i] = LessThan(21);
     lessThan[i].in[0] <== getDistance[i].distance; // maxBits: 21 (maxNum: 1_414_214) = approxSqrt(distanceSquared) = approxSqrt(2_000_000_000_000)
     lessThan[i].in[1] <== distanceMinMux[i].out; // maxBits: 15 (maxNum: 26_000)
-
+    // log("distance is ", getDistance[i].distance);
+    // log("max distance is ", distanceMinMux[i].out);
+    // log("lessThan[i].out", lessThan[i].out);
     mux[i] = Mux1();
     mux[i].c[0] <== bodies[i][2]; // maxBits: 14 = numBits(13 * scalingFactor) (maxNum: 13_000)
     mux[i].c[1] <== 0;
     mux[i].s <== lessThan[i].out;
+    // log("output radius, mux[i].out", mux[i].out);
     out_bodies[i][0] <== bodies[i][0];
     out_bodies[i][1] <== bodies[i][1];
     out_bodies[i][2] <== mux[i].out;
@@ -61,17 +65,24 @@ template DetectCollision(totalBodies) {
     // log("out_bodies[i][1]", out_bodies[i][1]);
     // log("out_bodies[i][2]", out_bodies[i][2]);
 
+
+    // what is the purpose here?
+    // less than refers to the distance
+    // if lessThan is true (1) (missile hit), then the output should be 0
+    // if lessThan is false (0) (missile missed), then the output should be the previous radius of the missile
+    // log("tmp_missiles[i][2];", tmp_missiles[i][2]);
     mux2[i] = Mux1();
     mux2[i].c[0] <== tmp_missiles[i][2];
     mux2[i].c[1] <== 0;
     mux2[i].s <== lessThan[i].out;
+    // log("mux2[i].out", mux2[i].out);
 
     tmp_missiles[i + 1][0] <== missile[0];
     tmp_missiles[i + 1][1] <== missile[1];
     tmp_missiles[i + 1][2] <== mux2[i].out;
   }
 
-  out_missile[0] <== tmp_missiles[totalBodies - 1][0]; // last iteration's x
-  out_missile[1] <== tmp_missiles[totalBodies - 1][1]; // last iteration's y
-  out_missile[2] <== tmp_missiles[totalBodies - 1][2]; // last iteration's radius
+  out_missile[0] <== tmp_missiles[totalBodies][0]; // last iteration's x
+  out_missile[1] <== tmp_missiles[totalBodies][1]; // last iteration's y
+  out_missile[2] <== tmp_missiles[totalBodies][2]; // last iteration's radius
 }

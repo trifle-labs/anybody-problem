@@ -3,11 +3,23 @@
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
+  "type": "module",
   "scripts": {
-    "shovel": "bun run shovel-config.ts > config.json && ./shovel --config config.json"
+    "shovel": "OUTPUT=1 bun run shovel-config.ts > config.json && DATABASE_URL=postgresql://billy@localhost:5432/shovel ./shovel --config config.json",
+    "dev": "bun run --hot src/index.ts",
+    "start": "./shovel --config config.json & bun run src/index.ts",
+    "smoke": "bun run tsc && bun test"
   },
   "devDependencies": {
     "@indexsupply/shovel-config": "^0.0.16",
-    "ethers": "^6.12.1"
-  }
+    "@types/bun": "latest",
+    "@types/pg": "^8.11.6",
+    "ethers": "^6.12.1",
+    "typescript": "^5.4.5"
+  },
+  "dependencies": {
+    "hono": "^4.4.3",
+    "pg": "^8.11.5"
+  },
+  "trustedDependencies": []
 }

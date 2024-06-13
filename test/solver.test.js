@@ -139,8 +139,6 @@ describe('Solver Tests', function () {
               .mul(body.radius.mul(2).div(scalingFactor))
               .mul(scalingFactor)
 
-      const mid = windowWidth
-      console.log({ pos, mid })
       const newRadius = ethers.BigNumber.from(10 + i).mul(scalingFactor)
       body = {
         bodyId: body.bodyId,
@@ -174,7 +172,6 @@ describe('Solver Tests', function () {
 
     missileInits = anybody.processMissileInits(missileInits)
     anybody.missileInits = missileInits
-    console.log({ missileInits })
     const { missiles } = anybody.finish()
     const { dataResult } = await generateProof(
       owner.address,
@@ -185,7 +182,6 @@ describe('Solver Tests', function () {
       'game',
       missiles
     )
-    console.log({ dataResult })
     for (let i = 1; i < bodyCount; i++) {
       const radiusIndex = 5 + i * 5 + 4
       expect(dataResult.publicSignals[radiusIndex]).to.equal('0')
@@ -199,15 +195,6 @@ describe('Solver Tests', function () {
     // 17—21: body 1 input
     // 22—26: body 2 input
     // 27—31: missile input (5 + 2 * bodyCount * 5 + 2)
-
-    console.log(
-      problemId,
-      ticksRun,
-      dataResult.a,
-      dataResult.b,
-      dataResult.c,
-      dataResult.Input
-    )
 
     const tx = await solver.solveProblem(
       problemId,
@@ -552,12 +539,6 @@ describe('Solver Tests', function () {
     // make a proof for each body quantity
     for (let i = 0; i <= totalBodies; i++) {
       const { bodyCount } = await problems.problems(problemId)
-      console.log({
-        bodyCount: bodyCount.toString(),
-        initialBodyCount: initialBodyCount.toString(),
-        i,
-        add: initialBodyCount.add(i).toString()
-      })
       expect(bodyCount.toString()).to.equal(initialBodyCount.add(i).toString())
       const bodyData = []
       const bodyIds = await problems.getProblemBodyIds(problemId)
@@ -620,10 +601,10 @@ describe('Solver Tests', function () {
     let bodyIds = await getParsedEventLogs(receipt, bodies, 'Transfer')
     // make bodyIds array unique
     bodyIds = [...new Set(bodyIds.map((body) => body.args.tokenId.toNumber()))]
-    expect(bodyIds.length).to.equal(1)
+    expect(bodyIds.length).to.equal(2)
 
     let { bodyCount } = await problems.problems(problemId)
-    expect(bodyCount).to.equal(1)
+    expect(bodyCount).to.equal(2)
     let bodyData = []
     let newBodyIds = await problems.getProblemBodyIds(problemId)
     for (let j = 0; j < bodyCount; j++) {
@@ -655,7 +636,7 @@ describe('Solver Tests', function () {
     await problems.updateSolverAddress(solver.address)
 
     const { bodyCount: newBodyCount } = await problems.problems(problemId)
-    expect(newBodyCount).to.equal(2)
+    expect(newBodyCount).to.equal(3)
 
     bodyData = []
     newBodyIds = await problems.getProblemBodyIds(problemId)
@@ -665,7 +646,6 @@ describe('Solver Tests', function () {
       bodyData.push(body)
     }
     const ticksRunB = await getTicksRun(bodyData.length)
-    // console.log({ bodyData })
     ;({ tx } = await generateAndSubmitProof(
       owner.address,
       expect,
@@ -679,13 +659,12 @@ describe('Solver Tests', function () {
     // await expect(tx)
     //   .to.emit(solver, 'Solved')
     //   .withArgs(problemId, ticksRunA, ticksRunB)
-
     const problemBodyIds = await problems.getProblemBodyIds(problemId)
     expect(problemBodyIds[0]).to.equal(1)
     expect(problemBodyIds[1]).to.equal(2)
 
     bodyData = []
-    const wrongBodyIds = [2, 1]
+    const wrongBodyIds = [2, 1, 3]
     for (let j = 0; j < newBodyCount; j++) {
       const bodyId = wrongBodyIds[j]
       const body = await problems.getProblemBodyData(problemId, bodyId)

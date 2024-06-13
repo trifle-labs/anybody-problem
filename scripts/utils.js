@@ -10,17 +10,13 @@ const correctPrice = ethers.utils.parseEther('0.01')
 // const splitterAddress = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266'
 
 const proverTickIndex = {
-  1: 300,
   2: 300,
   3: 300,
   4: 300,
   5: 100,
-  6: 100,
-  7: 100,
-  8: 50,
-  9: 50,
-  10: 50
+  6: 100
 }
+const MAX_BODY_COUNT = 6
 
 const getTicksRun = async (bodyCount, ignoreTesting = false) => {
   const networkInfo = await hre.ethers.provider.getNetwork()
@@ -137,7 +133,7 @@ const deployContracts = async (ignoreTesting = false) => {
   const verifiersTicks = []
   const verifiersBodies = []
 
-  for (let i = 2; i <= 10; i++) {
+  for (let i = 2; i <= MAX_BODY_COUNT; i++) {
     const ticks = await getTicksRun(i, ignoreTesting)
     const name = `Game_${i}_${ticks}Verifier`
     const path = `contracts/${name}.sol:Groth16Verifier`
@@ -346,7 +342,6 @@ const generateProof = async (
   mode = 'nft',
   missiles = null
 ) => {
-  console.log('generateProof')
   const anybody = new Anybody(null, {
     bodyData,
     seed,
@@ -368,18 +363,13 @@ const generateProof = async (
     ...inputData.missiles[0]
   ]
   const bodyFinal = results.bodyFinal
-  const outflightMissile = results.outflightMissiles
+  // const outflightMissile = results.outflightMissiles
   // const startTime = Date.now()
-  console.dir({ inputData }, { depth: null })
-  console.dir({ bodyFinal }, { depth: null })
-  console.dir({ outflightMissile }, { depth: null })
-  console.log(`ensure that ${mode}_${bodyCount}_${ticksRun} exists`)
   const dataResult = await exportCallDataGroth16(
     inputData,
     `./public/${mode}_${bodyCount}_${ticksRun}.wasm`,
     `./public/${mode}_${bodyCount}_${ticksRun}_final.zkey`
   )
-  console.dir({ dataResult }, { depth: null })
   // bodyCount = bodyCount.toNumber()
   // const endTime = Date.now()
   // const difference = endTime - startTime
@@ -402,7 +392,7 @@ const generateAndSubmitProof = async (
   ticksRun,
   bodyData
 ) => {
-  console.log('generateAndSubmitProof')
+  // console.log('generateAndSubmitProof')
   const { Problems: problems, Solver: solver } = deployedContracts
   const { seed } = await problems.problems(problemId)
   const { inputData, bodyFinal, dataResult } = await generateProof(

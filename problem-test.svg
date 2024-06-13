@@ -9,11 +9,11 @@
   <style>
     @keyframes moveEllipse1 {
       0% {
-        transform-origin: 804.6px 447.231px;
+        transform-origin: 877.787px 137.965px;
         transform: rotate(0deg) translate(0px, 10px);
       }
       100% {
-        transform-origin: 804.6px 447.231px;
+        transform-origin: 877.787px 137.965px;
         transform: rotate(360deg) translate(0px, 10px);
       }
     }
@@ -24,20 +24,20 @@
   </style>
   <ellipse
     id="id-1"
-    ry="148.0"
-    rx="148.0"
-    cy="447.231"
-    cx="804.6"
-    fill="hsl(317,88%,62%)"
+    ry="244.0"
+    rx="244.0"
+    cy="137.965"
+    cx="877.787"
+    fill="hsl(230,98%,68%)"
   />
   <style>
     @keyframes moveEllipse2 {
       0% {
-        transform-origin: 13.386px 763.965px;
+        transform-origin: 178.506px 49.271px;
         transform: rotate(0deg) translate(0px, 10px);
       }
       100% {
-        transform-origin: 13.386px 763.965px;
+        transform-origin: 178.506px 49.271px;
         transform: rotate(360deg) translate(0px, 10px);
       }
     }
@@ -50,9 +50,9 @@
     id="id-2"
     ry="128.0"
     rx="128.0"
-    cy="763.965"
-    cx="13.386"
-    fill="hsl(260,76%,71%)"
+    cy="49.271"
+    cx="178.506"
+    fill="hsl(4,25%,56%)"
   />
   <text x="50" y="550" class="name">Problem #1</text>
 </svg>

@@ -9,8 +9,8 @@ import {Groth16Verifier as Groth16Verifier5} from "./Game_5_20Verifier.sol";
 import {Groth16Verifier as Groth16Verifier6} from "./Game_6_20Verifier.sol";
 import {Groth16Verifier as Groth16Verifier7} from "./Game_7_20Verifier.sol";
 import {Groth16Verifier as Groth16Verifier8} from "./Game_8_20Verifier.sol";
-import {Groth16Verifier as Groth16Verifier9} from "./Game_9_20Verifier.sol";
-import {Groth16Verifier as Groth16Verifier10} from "./Game_10_20Verifier.sol";
+// import {Groth16Verifier as Groth16Verifier9} from "./Game_9_20Verifier.sol";
+// import {Groth16Verifier as Groth16Verifier10} from "./Game_10_20Verifier.sol";
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 
@@ -173,46 +173,6 @@ contract Solver is Ownable {
                 //    convertTo72(input)
                 //),
                 //"Invalid 6 body proof"
-            //);
-        } else if (bodyCount == 7) {
-            //require(
-                //Groth16Verifier7(verifier).verifyProof(
-                //    a,
-                //    b,
-                //    c,
-                //    convertTo82(input)
-                //),
-                //"Invalid 7 body proof"
-            //);
-        } else if (bodyCount == 8) {
-            //require(
-                //Groth16Verifier8(verifier).verifyProof(
-                //    a,
-                //    b,
-                //    c,
-                //    convertTo92(input)
-                //),
-                //"Invalid 8 body proof"
-            //);
-        } else if (bodyCount == 9) {
-            //require(
-                //Groth16Verifier9(verifier).verifyProof(
-                //    a,
-                //    b,
-                //    c,
-                //    convertTo102(input)
-                //),
-                //"Invalid 9 body proof"
-            //);
-        } else if (bodyCount == 10) {
-            //require(
-                //Groth16Verifier10(verifier).verifyProof(
-                //    a,
-                //    b,
-                //    c,
-                //    convertTo112(input)
-                //),
-                //"Invalid 10 body proof"
             //);
         } else {
             revert("Invalid number of bodies");
