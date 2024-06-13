@@ -843,8 +843,6 @@ export const Visuals = {
     width,
     fill,
     myP = this.bodiesGraphic,
-    beforeInsert,
-    afterInsert
   ) {
     this.imgAssets ||= {}
     const id = btoa(assetUrl) // bad???
