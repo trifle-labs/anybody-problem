@@ -845,7 +845,7 @@ export const Visuals = {
     myP = this.bodiesGraphic,
   ) {
     this.imgAssets ||= {}
-    const id = btoa(assetUrl) // bad???
+    const id = assetUrl
     const loaded = this.imgAssets[id]
 
     if (!loaded) {
