@@ -1045,11 +1045,14 @@ export const Visuals = {
     this.bodiesGraphic.ellipse(0, offset, radius)
   },
 
-  moveAndRotate_PopAfter(graphic, x, y, v) {
+  moveAndRotate_PopAfter(graphic, x, y /*v*/) {
     graphic.push()
     graphic.translate(x, y)
-    const angle = v.heading() + this.p.PI / 2
-    graphic.rotate(angle)
+
+    // rotate body in vector direction
+    // const angle = v.heading() + this.p.PI / 2
+    // graphic.rotate(angle)
+
     // if (v.x > 0) {
     //   graphic.scale(-1, 1)
     // }
@@ -1090,40 +1093,40 @@ export const Visuals = {
     drawFunction = drawFunction.bind(this)
     drawFunction(body.position.x, body.position.y, body.velocity, radius, body)
 
-    let loopedX = false,
-      loopedY = false,
-      loopX = body.position.x,
-      loopY = body.position.y
-    const loopGap = radius / 2
+    // let loopedX = false,
+    //   loopedY = false,
+    //   loopX = body.position.x,
+    //   loopY = body.position.y
+    // const loopGap = radius / 2
 
-    // crosses right, draw on left
-    if (body.position.x > this.windowWidth - loopGap) {
-      loopedX = true
-      loopX = body.position.x - this.windowWidth
-      drawFunction(loopX, body.position.y, body.velocity, radius, body, true)
-      // crosses left, draw on right
-    } else if (body.position.x < loopGap) {
-      loopedX = true
-      loopX = body.position.x + this.windowWidth
-      drawFunction(loopX, body.position.y, body.velocity, radius, body, true)
-    }
+    // // crosses right, draw on left
+    // if (body.position.x > this.windowWidth - loopGap) {
+    //   loopedX = true
+    //   loopX = body.position.x - this.windowWidth
+    //   drawFunction(loopX, body.position.y, body.velocity, radius, body, true)
+    //   // crosses left, draw on right
+    // } else if (body.position.x < loopGap) {
+    //   loopedX = true
+    //   loopX = body.position.x + this.windowWidth
+    //   drawFunction(loopX, body.position.y, body.velocity, radius, body, true)
+    // }
 
-    // crosses bottom, draw on top
-    if (body.position.y > this.windowHeight - loopGap) {
-      loopedY = true
-      loopY = body.position.y - this.windowHeight
-      drawFunction(body.position.x, loopY, body.velocity, radius, body, true)
-      // crosses top, draw on bottom
-    } else if (body.position.y < loopGap) {
-      loopedY = true
-      loopY = body.position.y + this.windowHeight
-      drawFunction(body.position.x, loopY, body.velocity, radius, body, true)
-    }
+    // // crosses bottom, draw on top
+    // if (body.position.y > this.windowHeight - loopGap) {
+    //   loopedY = true
+    //   loopY = body.position.y - this.windowHeight
+    //   drawFunction(body.position.x, loopY, body.velocity, radius, body, true)
+    //   // crosses top, draw on bottom
+    // } else if (body.position.y < loopGap) {
+    //   loopedY = true
+    //   loopY = body.position.y + this.windowHeight
+    //   drawFunction(body.position.x, loopY, body.velocity, radius, body, true)
+    // }
 
-    // crosses corner, draw opposite corner
-    if (loopedX && loopedY) {
-      drawFunction(loopX, loopY, body.velocity, radius, body, true)
-    }
+    // // crosses corner, draw opposite corner
+    // if (loopedX && loopedY) {
+    //   drawFunction(loopX, loopY, body.velocity, radius, body, true)
+    // }
   },
 
   // TODO: add this back as part of a end game animation

@@ -568,26 +568,26 @@ export class Anybody extends EventEmitter {
   }
 
   generateBodies() {
-    if (this.inputData) {
-      // console.dir({ inputData: this.inputData }, { depth: null })
-      const step1 = this.inputData.map(
-        this.convertScaledStringArrayToBody.bind(this)
-      )
-      // console.dir({ step1 }, { depth: null })
-      this.bodies = this.convertBigIntsToBodies(step1)
-      // console.dir({ bodies: this.bodies })
-      this.radiusMultiplyer = this.random(10, 200)
-      for (let i = 0; i < this.startingBodies; i++) {
-        this.bodies[i].c =
-          `hsla(${this.random(0, 360)}, 100%, 100%, ${this.opac})`
-        // this.bodies[i].c = this.colorArrayToTxt(this.randomColor(200, 250)
-        this.bodies[i].bodyIndex = i
-      }
-      return
-    }
-    if (this.starData) {
-      this.starPositions = this.starData.map(this.bodyDataToBodies.bind(this))
-    }
+    // if (this.inputData) {
+    //   // console.dir({ inputData: this.inputData }, { depth: null })
+    //   const step1 = this.inputData.map(
+    //     this.convertScaledStringArrayToBody.bind(this)
+    //   )
+    //   // console.dir({ step1 }, { depth: null })
+    //   this.bodies = this.convertBigIntsToBodies(step1)
+    //   // console.dir({ bodies: this.bodies })
+    //   this.radiusMultiplyer = this.random(10, 200)
+    //   for (let i = 0; i < this.startingBodies; i++) {
+    //     this.bodies[i].c =
+    //       `hsla(${this.random(0, 360)}, 100%, 100%, ${this.opac})`
+    //     // this.bodies[i].c = this.colorArrayToTxt(this.randomColor(200, 250)
+    //     this.bodies[i].bodyIndex = i
+    //   }
+    //   return
+    // }
+    // if (this.starData) {
+    //   this.starPositions = this.starData.map(this.bodyDataToBodies.bind(this))
+    // }
     if (this.bodyData) {
       this.radiusMultiplyer = 100 //this.random(10, 200)
       this.bodies = this.bodyData.map(this.bodyDataToBodies.bind(this))
