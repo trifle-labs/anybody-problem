@@ -893,7 +893,7 @@ export const Visuals = {
 
   drawCoreSvg(width, body) {
     const fill = hslToRgb(randHSL(bodyThemes[body.theme].cr))
-    this.drawImageAsset(CORE_SVGS[0], width, fill, undefined)
+    this.drawImageAsset(CORE_SVGS[0], width, fill)
   },
 
   drawStarBackgroundSvg(width, body) {
