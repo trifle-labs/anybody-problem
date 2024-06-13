@@ -477,20 +477,32 @@ export class Anybody extends EventEmitter {
     this.calculateBodyFinal()
     const missileInits = []
     // TODO: what about when the game begins with a missileInit that isn't in corner?
+
+    // console.log('finish')
+    // console.dir(
+    //   {
+    //     alreadyRun: this.alreadyRun,
+    //     stopEvery: this.stopEvery,
+    //     missileInits: this.missileInits
+    //   },
+    //   { depth: null }
+    // )
     if (this.mode == 'game') {
       let missileIndex = 0
       for (let i = this.alreadyRun; i < this.alreadyRun + this.stopEvery; i++) {
         if (this.missileInits[missileIndex]?.step == i) {
+          // console.log('step == i', i)
           const missile = this.missileInits[missileIndex]
           missileInits.push([missile.vx, missile.vy, missile.radius])
           missileIndex++
         } else {
+          // console.log('else it starts from corner')
           missileInits.push([maxVectorScaled, maxVectorScaled, '0'])
         }
       }
       missileInits.push([maxVectorScaled, maxVectorScaled, '0'])
     }
-
+    // console.log('first missile: ', this.missileInits[0], this.alreadyRun)
     let inflightMissile =
       this.missileInits[0]?.step == this.alreadyRun
         ? this.missileInits[0]
@@ -547,6 +559,11 @@ export class Anybody extends EventEmitter {
     ) {
       this.finalBatchSent = true
       this.storeStarPositions()
+    }
+    if (this.missileInits.length > 0) {
+      // TODO: this is a hack to prevent proofs from breaking,
+      // maybe should add visuals and turn it into a feature (single shot mode)
+      this.lastMissileCantBeUndone = true
     }
     return results
   }
@@ -760,6 +777,18 @@ export class Anybody extends EventEmitter {
     //   this.missileInits.pop()
     // }
 
+    if (this.lastMissileCantBeUndone) {
+      if (this.missiles.length > 0) {
+        console.log('CANT ADD NEW MISSILE')
+        return
+      } else {
+        this.lastMissileCantBeUndone = false
+      }
+    } else if (this.missiles.length > 0) {
+      this.missileInits.pop()
+      this.missileCount--
+    }
+
     this.missileCount++
     const radius = 10
 
@@ -769,15 +798,14 @@ export class Anybody extends EventEmitter {
       velocity: this.p.createVector(x, y - this.windowWidth),
       radius
     }
-    console.log({ b: JSON.parse(JSON.stringify(b)) })
-    console.log(this.speedLimit * this.speedFactor)
     // b.velocity.setMag(this.speedLimit * this.speedFactor)
     b.velocity.limit(this.speedLimit * this.speedFactor)
-    console.log({ b: JSON.parse(JSON.stringify(b)) })
-    this.missiles.push(b)
     // const bodyCount = this.bodies.filter((b) => b.radius !== 0).length - 1
     // this.missiles = this.missiles.slice(0, bodyCount)
     // this.missiles = this.missiles.slice(-bodyCount)
+
+    // NOTE: this is stupid
+    this.missiles.push(b)
     this.missiles = this.missiles.slice(-1)
 
     this.sound?.playMissile()

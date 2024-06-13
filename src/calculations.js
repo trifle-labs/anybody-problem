@@ -3,7 +3,6 @@
 
 export const Calculations = {
   forceAccumulator(bodies = this.bodies) {
-    // console.dir({ bodies_in: bodies }, { depth: null })
     bodies = this.convertBodiesToBigInts(bodies)
     bodies = this.forceAccumulatorBigInts(bodies)
     bodies = this.convertBigIntsToBodies(bodies)
