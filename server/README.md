@@ -15,6 +15,10 @@ brew services start postgresql@15
 createdb shovel
 ```
 
+## Env setup
+
+`cp .env.template .env` then fill it in with your database info. `bun` will automatically source `.env` when it runs.
+
 ## Run shovel
 
 blockchains => shovel => postgres
