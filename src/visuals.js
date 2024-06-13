@@ -883,7 +883,7 @@ export const Visuals = {
   },
 
   drawFaceSvg(width) {
-    this.drawImageAsset(FACE_SVGS[0], width, undefined, undefined)
+    this.drawImageAsset(FACE_SVGS[0], width)
   },
 
   drawStarForegroundSvg(width, body) {
