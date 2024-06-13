@@ -174,26 +174,6 @@ contract Solver is Ownable {
                 //),
                 //"Invalid 6 body proof"
             //);
-        } else if (bodyCount == 7) {
-            //require(
-                //Groth16Verifier7(verifier).verifyProof(
-                //    a,
-                //    b,
-                //    c,
-                //    convertTo82(input)
-                //),
-                //"Invalid 7 body proof"
-            //);
-        } else if (bodyCount == 8) {
-            //require(
-                //Groth16Verifier8(verifier).verifyProof(
-                //    a,
-                //    b,
-                //    c,
-                //    convertTo92(input)
-                //),
-                //"Invalid 8 body proof"
-            //);
         } else {
             revert("Invalid number of bodies");
         }

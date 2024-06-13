@@ -5,8 +5,9 @@ blockchains => shovel => postgres => read-only api => app
 ## Install
 
 1. bun: install bun then `bun install`
-2. postgres: `brew install postgresql@15`
-3. [shovel](https://www.indexsupply.com/shovel/docs/#install): `curl -LO https://indexsupply.net/bin/1.6/darwin/arm64/shovel && chmod +x shovel`
+2. (if bun is hanging try running `bun upgrade --canary`)
+3. postgres: `brew install postgresql@15`
+4. [shovel](https://www.indexsupply.com/shovel/docs/#install): `curl -LO https://indexsupply.net/bin/1.6/darwin/arm64/shovel && chmod +x shovel`
 
 ## Run postgres
 

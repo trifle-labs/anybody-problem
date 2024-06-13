@@ -34,11 +34,13 @@ template StepState(totalBodies, steps) {
   // NOTE: if there's an inflight missile, then the starting position should match
   // If there is not an inflight missile, then the starting position should be the corner
   component whatShouldStartingMissilePositionBe = MultiMux1(2);
+
   whatShouldStartingMissilePositionBe.c[0][0] <== inflightMissile[0];
   whatShouldStartingMissilePositionBe.c[0][1] <== 0;
 
   whatShouldStartingMissilePositionBe.c[1][0] <==  inflightMissile[1];
   whatShouldStartingMissilePositionBe.c[1][1] <== windowWidthScaled;
+
   component isMissileZero = IsZero();
   isMissileZero.in <== inflightMissile[4];
 
@@ -72,15 +74,23 @@ template StepState(totalBodies, steps) {
   component andMissiles[steps];
 
   for (var i = 0; i < steps; i++) {
+    // log("step", i);
     // for (var j = 0; j < totalBodies; j++) {
-    //   log("step", i);
     //   log("body", j);
-    //   log("tmp_body[j][0]", tmp_body[j][0]);
-    //   log("tmp_body[j][1]", tmp_body[j][1]);
-    //   log("tmp_body[j][2]", tmp_body[j][2]);
-    //   log("tmp_body[j][3]", tmp_body[j][3]);
-    //   log("tmp_body[j][4]", tmp_body[j][4]);
+    //   log("body_in[j][0]", tmp_body[j][0]);
+    //   log("body_in[j][1]", tmp_body[j][1]);
+    //   log("body_in[j][2]", tmp_body[j][2]);
+    //   log("body_in[j][3]", tmp_body[j][3]);
+    //   log("body_in[j][4]", tmp_body[j][4]);
     // }
+
+    //   log("tmp_missile[j][0]", tmp_missile[0]);
+    //   log("tmp_missile[j][1]", tmp_missile[1]);
+    //   log("tmp_missile[j][2]", tmp_missile[2]);
+    //   log("tmp_missile[j][3]", tmp_missile[3]);
+    //   log("tmp_missile[j][4]", tmp_missile[4]);
+
+
 
     forceAccumulator[i] = ForceAccumulator(totalBodies);
     forceAccumulator[i].bodies <== tmp_body;
@@ -89,7 +99,7 @@ template StepState(totalBodies, steps) {
     calculateMissile[i] = CalculateMissile();
     calculateMissile[i].in_missile <== tmp_missile;
 
-
+    // log("missile after CalculateMissile has radius of", calculateMissile[i].out_missile[4]);
     // TODO: Ask WEI whether it's possible to skip this calculation if the radius is 0, 
     // meaning there is no missile (or at least reduce the constraints needed?)
     detectCollision[i] = DetectCollision(totalBodies);
@@ -161,6 +171,20 @@ template StepState(totalBodies, steps) {
     mux[i].c[4][0] <== detectCollision[i].out_missile[2];
     mux[i].c[4][1] <== missiles[i + 1][2];
     mux[i].s <== isZero[i].out;
+    // log("if this is 1, then current missile is done (radius == 0)", isZero[i].out, 
+    // 0, 
+    // windowWidthScaled,
+    // missiles[i + 1][0],
+    // missiles[i + 1][1],
+    // missiles[i + 1][2]
+    // );
+    // log("if this is 0, then current missile is continued (radius !== 0)", isZero[i].out, 
+    // detectCollision[i].out_missile[0], 
+    // detectCollision[i].out_missile[1], 
+    // calculateMissile[i].out_missile[2], 
+    // calculateMissile[i].out_missile[3], 
+    // detectCollision[i].out_missile[2]
+    // );
 
     tmp_missile[0] = mux[i].out[0];
     tmp_missile[1] = mux[i].out[1];

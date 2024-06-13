@@ -15,7 +15,7 @@ contract Problems is ERC721, Ownable {
     // TODO: update with actual start date
     uint256 public startDate = 0; //4070908800; // Thu Jan 01 2099 00:00:00 GMT+0000 (___ CEST Berlin, ___ London, ___ NYC, ___ LA)
     uint256 constant public SECONDS_IN_A_DAY = 86400;
-    uint256 constant public MAX_BODY_COUNT = 8;
+    uint256 constant public MAX_BODY_COUNT = 6;
     uint256 public problemSupply;
 
     address public bodies;
@@ -24,7 +24,7 @@ contract Problems is ERC721, Ownable {
 
     address public proceedRecipient;
 
-    uint256 public price = 0.01 ether;
+    uint256 public price = 0 ether;
 
     // TODO: confirm bodyIndex matches anybody.js for proof generation
     struct Body {
