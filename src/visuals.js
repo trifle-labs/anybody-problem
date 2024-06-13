@@ -1628,28 +1628,6 @@ export const Visuals = {
     } else {
       let darker = this.brighten(b.c, -30).replace(this.opac, 1)
 
-      // STAR TARGET
-      if (b.bodyIndex == 0) {
-        darker = '#FFF44F'
-        // p.fill(darker)
-        // p.ellipse(x, y, r)
-        const blur = 0
-        const pad = blur * 2
-        const foo = p.createGraphics(r * 2 + pad * 2, r * 2 + pad * 2)
-        foo.pixelDensity(this.pixelDensity * 2)
-        // foo.fill('transparent')
-        foo.fill('yellow')
-        foo.noStroke()
-        foo.ellipse(r / 2 + pad, r / 2 + pad, r)
-        foo.filter(foo.BLUR, blur)
-
-        p.blendMode(p.OVERLAY)
-        p.image(foo, x - r / 2 - pad, y - r / 2 - pad)
-        p.blendMode(p.NORMAL)
-        // p.tint(255, 256)
-        return
-      }
-
       p.fill(darker)
       p.ellipse(x, y, r)
       if (closeEnough) {
