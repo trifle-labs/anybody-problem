@@ -1,9 +1,14 @@
+import { hslToRgb, randHSL, themes } from './colors'
+
 const BODY_SCALE = 4 // match to calculations.js !!
 const WITHERING_STEPS = 3000
 const THEME = {
   bg: 'rgb(10,10,10)',
-  fg: 'white'
+  fg: 'white',
+  bodiesTheme: 'default'
 }
+
+const bodyThemes = themes.bodies[THEME.bodiesTheme]
 
 const BG_SVGS = [
   new URL('/public/bodies/bgs/bg1.svg', import.meta.url).href,
@@ -51,6 +56,12 @@ const FACE_SVGS = [
 const CORE_SVGS = [
   new URL('/public/bodies/cores/core-zigzag-lg.svg', import.meta.url).href
 ]
+
+const replaceAttribute = (string, key, color) =>
+  string.replaceAll(
+    new RegExp(`${key}="(?!none)([^"]+)"`, 'g'),
+    `${key}="${color}"`
+  )
 
 export const Visuals = {
   async draw() {
@@ -822,6 +833,7 @@ export const Visuals = {
   drawImageAsset(
     assetUrl,
     width,
+    fill,
     myP = this.bodiesGraphic,
     beforeInsert,
     afterInsert
@@ -835,6 +847,8 @@ export const Visuals = {
       fetch(assetUrl)
         .then((resp) => resp.text())
         .then((svg) => {
+          svg = fill ? replaceAttribute(svg, 'fill', fill) : svg
+          // svg = replaceAttribute(svg, 'stroke-width', '0')
           svg = 'data:image/svg+xml,' + encodeURIComponent(svg)
 
           this.p.loadImage(svg, (img) => {
@@ -858,27 +872,28 @@ export const Visuals = {
 
     if (loaded && loaded !== 'loading') {
       if (typeof beforeInsert === 'function') beforeInsert()
-      // if (isFaded) this.bodiesGraphic.tint(255, 256 * LOOPING_BODY_OPACITY)
       myP.image(loaded, -width / 2, -width / 2, width, width)
-      // this.bodiesGraphic.tint(255, 256)
       if (typeof afterInsert === 'function') afterInsert()
     }
   },
 
   drawFaceSvg(width) {
-    this.drawImageAsset(FACE_SVGS[0], width, undefined)
+    this.drawImageAsset(FACE_SVGS[0], width, undefined, undefined)
   },
 
-  drawStarForegroundSvg(width) {
-    this.drawImageAsset(FG_SVGS[0], width, undefined)
+  drawStarForegroundSvg(width, body) {
+    const fill = hslToRgb(randHSL(bodyThemes[body.theme].fg))
+    this.drawImageAsset(FG_SVGS[0], width, fill, undefined)
   },
 
-  drawCoreSvg(width) {
-    this.drawImageAsset(CORE_SVGS[0], width, undefined)
+  drawCoreSvg(width, body) {
+    const fill = hslToRgb(randHSL(bodyThemes[body.theme].cr))
+    this.drawImageAsset(CORE_SVGS[0], width, fill, undefined)
   },
 
-  drawStarBackgroundSvg(width) {
-    this.drawImageAsset(BG_SVGS[0], width, undefined)
+  drawStarBackgroundSvg(width, body) {
+    const fill = hslToRgb(randHSL(bodyThemes[body.theme].bg))
+    this.drawImageAsset(BG_SVGS[0], width, fill, undefined)
   },
 
   drawGlyphFace(radius, body) {
@@ -1115,9 +1130,13 @@ export const Visuals = {
     const size = Math.floor(body.radius * BODY_SCALE * 2.66)
 
     if (body.bodyIndex === 0) {
-      this.drawStarBackgroundSvg(size)
-      this.drawCoreSvg(body.radius * BODY_SCALE)
-      this.drawStarForegroundSvg(size)
+      // TEMP random body theme
+      const themes = Object.keys(bodyThemes)
+      body.theme = themes[Math.floor(Math.random() * (themes.length - 1))]
+
+      this.drawStarBackgroundSvg(size, body)
+      this.drawCoreSvg(body.radius * BODY_SCALE, body)
+      this.drawStarForegroundSvg(size, body)
       this.drawFaceSvg(size)
     } else {
       this.drawCenter(body)
