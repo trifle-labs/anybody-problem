@@ -5,17 +5,52 @@ const THEME = {
   fg: 'white'
 }
 
-const FACE_SVGS = [
-  new URL('/public/bodies/faces/face9.svg', import.meta.url).href
+const BG_SVGS = [
+  new URL('/public/bodies/bgs/bg1.svg', import.meta.url).href,
+  new URL('/public/bodies/bgs/bg2.svg', import.meta.url).href,
+  new URL('/public/bodies/bgs/bg3.svg', import.meta.url).href,
+  new URL('/public/bodies/bgs/bg4.svg', import.meta.url).href,
+  new URL('/public/bodies/bgs/bg5.svg', import.meta.url).href,
+  new URL('/public/bodies/bgs/bg6.svg', import.meta.url).href,
+  new URL('/public/bodies/bgs/bg7.svg', import.meta.url).href,
+  new URL('/public/bodies/bgs/bg8.svg', import.meta.url).href,
+  new URL('/public/bodies/bgs/bg9.svg', import.meta.url).href,
+  new URL('/public/bodies/bgs/bg10.svg', import.meta.url).href
 ]
 
-const FG_SVGS = [new URL('/public/bodies/fgs/fg1.svg', import.meta.url).href]
+const FG_SVGS = [
+  new URL('/public/bodies/fgs/fg1.svg', import.meta.url).href,
+  new URL('/public/bodies/fgs/fg2.svg', import.meta.url).href,
+  new URL('/public/bodies/fgs/fg3.svg', import.meta.url).href,
+  new URL('/public/bodies/fgs/fg4.svg', import.meta.url).href,
+  new URL('/public/bodies/fgs/fg5.svg', import.meta.url).href,
+  new URL('/public/bodies/fgs/fg6.svg', import.meta.url).href,
+  new URL('/public/bodies/fgs/fg7.svg', import.meta.url).href,
+  new URL('/public/bodies/fgs/fg8.svg', import.meta.url).href,
+  new URL('/public/bodies/fgs/fg9.svg', import.meta.url).href,
+  new URL('/public/bodies/fgs/fg10.svg', import.meta.url).href
+]
+
+const FACE_SVGS = [
+  new URL('/public/bodies/faces/face1.svg', import.meta.url).href,
+  new URL('/public/bodies/faces/face2.svg', import.meta.url).href,
+  new URL('/public/bodies/faces/face3.svg', import.meta.url).href,
+  new URL('/public/bodies/faces/face4.svg', import.meta.url).href,
+  new URL('/public/bodies/faces/face5.svg', import.meta.url).href,
+  new URL('/public/bodies/faces/face6.svg', import.meta.url).href,
+  new URL('/public/bodies/faces/face7.svg', import.meta.url).href,
+  new URL('/public/bodies/faces/face8.svg', import.meta.url).href,
+  new URL('/public/bodies/faces/face9.svg', import.meta.url).href,
+  new URL('/public/bodies/faces/face10.svg', import.meta.url).href,
+  new URL('/public/bodies/faces/face11.svg', import.meta.url).href,
+  new URL('/public/bodies/faces/face12.svg', import.meta.url).href,
+  new URL('/public/bodies/faces/face13.svg', import.meta.url).href,
+  new URL('/public/bodies/faces/face14.svg', import.meta.url).href
+]
 
 const CORE_SVGS = [
   new URL('/public/bodies/cores/core-zigzag-lg.svg', import.meta.url).href
 ]
-
-const BG_SVGS = [new URL('/public/bodies/bgs/bg1.svg', import.meta.url).href]
 
 export const Visuals = {
   async draw() {
