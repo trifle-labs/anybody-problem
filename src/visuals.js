@@ -878,7 +878,6 @@ export const Visuals = {
 
     if (loaded && loaded !== 'loading') {
       myP.image(loaded, -width / 2, -width / 2, width, width)
-      if (typeof afterInsert === 'function') afterInsert()
     }
   },
 
