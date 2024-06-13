@@ -47,6 +47,7 @@ export class Anybody extends EventEmitter {
       seed: null,
       windowWidth: 1000,
       windowHeight: 1000,
+      pixelDensity: 4, //4, // Math.min(4, 4 * (window.devicePixelRatio ?? 1)),
       scalingFactor: 10n ** 3n,
       minDistanceSquared: 200 * 200,
       G: 100, // Gravitational constant
@@ -591,26 +592,26 @@ export class Anybody extends EventEmitter {
   }
 
   generateBodies() {
-    if (this.inputData) {
-      // console.dir({ inputData: this.inputData }, { depth: null })
-      const step1 = this.inputData.map(
-        this.convertScaledStringArrayToBody.bind(this)
-      )
-      // console.dir({ step1 }, { depth: null })
-      this.bodies = this.convertBigIntsToBodies(step1)
-      // console.dir({ bodies: this.bodies })
-      this.radiusMultiplyer = this.random(10, 200)
-      for (let i = 0; i < this.startingBodies; i++) {
-        this.bodies[i].c =
-          `hsla(${this.random(0, 360)}, 100%, 100%, ${this.opac})`
-        // this.bodies[i].c = this.colorArrayToTxt(this.randomColor(200, 250)
-        this.bodies[i].bodyIndex = i
-      }
-      return
-    }
-    if (this.starData) {
-      this.starPositions = this.starData.map(this.bodyDataToBodies.bind(this))
-    }
+    // if (this.inputData) {
+    //   // console.dir({ inputData: this.inputData }, { depth: null })
+    //   const step1 = this.inputData.map(
+    //     this.convertScaledStringArrayToBody.bind(this)
+    //   )
+    //   // console.dir({ step1 }, { depth: null })
+    //   this.bodies = this.convertBigIntsToBodies(step1)
+    //   // console.dir({ bodies: this.bodies })
+    //   this.radiusMultiplyer = this.random(10, 200)
+    //   for (let i = 0; i < this.startingBodies; i++) {
+    //     this.bodies[i].c =
+    //       `hsla(${this.random(0, 360)}, 100%, 100%, ${this.opac})`
+    //     // this.bodies[i].c = this.colorArrayToTxt(this.randomColor(200, 250)
+    //     this.bodies[i].bodyIndex = i
+    //   }
+    //   return
+    // }
+    // if (this.starData) {
+    //   this.starPositions = this.starData.map(this.bodyDataToBodies.bind(this))
+    // }
     if (this.bodyData) {
       this.radiusMultiplyer = 100 //this.random(10, 200)
       this.bodies = this.bodyData.map(this.bodyDataToBodies.bind(this))
@@ -660,8 +661,14 @@ export class Anybody extends EventEmitter {
       const vectorMax =
         (i == 0 ? this.vectorLimit / 3 : this.vectorLimit) *
         Number(this.scalingFactor)
-      const vx = this.random(-vectorMax, vectorMax) / Number(this.scalingFactor)
-      const vy = this.random(-vectorMax, vectorMax) / Number(this.scalingFactor)
+      const vx =
+        i === 0
+          ? 0
+          : this.random(-vectorMax, vectorMax) / Number(this.scalingFactor)
+      const vy =
+        i === 0
+          ? 0
+          : this.random(-vectorMax, vectorMax) / Number(this.scalingFactor)
       const body = {
         bodyIndex: i,
         position: this.createVector(ss[i][0], ss[i][1]),
@@ -760,6 +767,7 @@ export class Anybody extends EventEmitter {
   prepareP5() {
     this.p.frameRate(this.FPS)
     this.p.createCanvas(this.windowWidth, this.windowWidth)
+    // this.p.pixelDensity(this.pixelDensity)
     this.p.background('white')
   }
 

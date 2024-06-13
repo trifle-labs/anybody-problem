@@ -8,6 +8,9 @@
     <style>
       body {
         text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
       html,
       body,
@@ -16,17 +19,7 @@
         padding: 0px;
       }
       :root {
-        --canvas-size: min(1vw, 1vh);
-      }
-      @media (orientation: landscape) {
-        :root {
-          --canvas-size: 100vh;
-        }
-      }
-      @media (orientation: portrait) {
-        :root {
-          --canvas-size: 100vw;
-        }
+        --canvas-size: min(1000px, 100vmin);
       }
       canvas {
         cursor: pointer;
