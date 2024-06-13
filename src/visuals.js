@@ -868,6 +868,7 @@ export const Visuals = {
             foo.loadPixels()
 
             this.imgAssets[id] = foo
+            foo.clear()
           })
         })
         .catch((e) => {
