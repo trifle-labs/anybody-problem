@@ -838,12 +838,7 @@ export const Visuals = {
     return closeEnough
   },
 
-  drawImageAsset(
-    assetUrl,
-    width,
-    fill,
-    myP = this.bodiesGraphic,
-  ) {
+  drawImageAsset(assetUrl, width, fill, myP = this.bodiesGraphic) {
     this.imgAssets ||= {}
     const id = assetUrl
     const loaded = this.imgAssets[id]
@@ -865,10 +860,8 @@ export const Visuals = {
             foo.pixelDensity(this.pixelDensity)
 
             foo.image(img, 0, 0, width, height)
-            foo.loadPixels()
 
             this.imgAssets[id] = foo
-            foo.clear()
           })
         })
         .catch((e) => {
