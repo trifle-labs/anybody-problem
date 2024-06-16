@@ -1,100 +1,67 @@
+import { hslToRgb, randHSL, themes } from './colors'
+
+const BODY_SCALE = 4 // match to calculations.js !!
 const WITHERING_STEPS = 3000
-const FACE_PNGS = [
-  // [tired, tired_no_mouth, normal, normal_no_mouth, ecstatic, ecstatic_no_mouth]
-  [
-    new URL('/public/faces/face1_1.png', import.meta.url).href,
-    new URL('/public/faces/face1_1_no.png', import.meta.url).href,
-    new URL('/public/faces/face1_2.png', import.meta.url).href,
-    new URL('/public/faces/face1_2_no.png', import.meta.url).href,
-    new URL('/public/faces/face1_3.png', import.meta.url).href,
-    new URL('/public/faces/face1_3_no.png', import.meta.url).href
-  ],
-  [
-    new URL('/public/faces/face3_1.png', import.meta.url).href,
-    new URL('/public/faces/face3_1_no.png', import.meta.url).href,
-    new URL('/public/faces/face3_2.png', import.meta.url).href,
-    new URL('/public/faces/face3_2_no.png', import.meta.url).href,
-    new URL('/public/faces/face3_3.png', import.meta.url).href,
-    new URL('/public/faces/face3_3_no.png', import.meta.url).href
-  ],
-  [
-    new URL('/public/faces/face4_1.png', import.meta.url).href,
-    new URL('/public/faces/face4_1_no.png', import.meta.url).href,
-    new URL('/public/faces/face4_2.png', import.meta.url).href,
-    new URL('/public/faces/face4_2_no.png', import.meta.url).href,
-    new URL('/public/faces/face4_3.png', import.meta.url).href,
-    new URL('/public/faces/face4_3_no.png', import.meta.url).href
-  ],
-  [
-    new URL('/public/faces/face6_1.png', import.meta.url).href,
-    new URL('/public/faces/face6_1_no.png', import.meta.url).href,
-    new URL('/public/faces/face6_2.png', import.meta.url).href,
-    new URL('/public/faces/face6_2_no.png', import.meta.url).href,
-    new URL('/public/faces/face6_3.png', import.meta.url).href,
-    new URL('/public/faces/face6_3_no.png', import.meta.url).href
-  ],
-  [
-    new URL('/public/faces/face7_1.png', import.meta.url).href,
-    new URL('/public/faces/face7_1_no.png', import.meta.url).href,
-    new URL('/public/faces/face7_2.png', import.meta.url).href,
-    new URL('/public/faces/face7_2_no.png', import.meta.url).href,
-    new URL('/public/faces/face7_3.png', import.meta.url).href,
-    new URL('/public/faces/face7_3_no.png', import.meta.url).href
-  ],
-  [
-    new URL('/public/faces/face8_1.png', import.meta.url).href,
-    new URL('/public/faces/face8_1_no.png', import.meta.url).href,
-    new URL('/public/faces/face8_2.png', import.meta.url).href,
-    new URL('/public/faces/face8_2_no.png', import.meta.url).href,
-    new URL('/public/faces/face8_3.png', import.meta.url).href,
-    new URL('/public/faces/face8_3_no.png', import.meta.url).href
-  ],
-  [
-    new URL('/public/faces/face9_1.png', import.meta.url).href,
-    new URL('/public/faces/face9_1_no.png', import.meta.url).href,
-    new URL('/public/faces/face9_2.png', import.meta.url).href,
-    new URL('/public/faces/face9_2_no.png', import.meta.url).href,
-    new URL('/public/faces/face9_3.png', import.meta.url).href,
-    new URL('/public/faces/face9_3_no.png', import.meta.url).href
-  ],
-  [
-    new URL('/public/faces/face10_1.png', import.meta.url).href,
-    new URL('/public/faces/face10_1_no.png', import.meta.url).href,
-    new URL('/public/faces/face10_2.png', import.meta.url).href,
-    new URL('/public/faces/face10_2_no.png', import.meta.url).href,
-    new URL('/public/faces/face10_3.png', import.meta.url).href,
-    new URL('/public/faces/face10_3_no.png', import.meta.url).href
-  ],
-  [
-    new URL('/public/faces/face11_1.png', import.meta.url).href,
-    new URL('/public/faces/face11_1_no.png', import.meta.url).href,
-    new URL('/public/faces/face11_2.png', import.meta.url).href,
-    new URL('/public/faces/face11_2_no.png', import.meta.url).href,
-    new URL('/public/faces/face11_3.png', import.meta.url).href,
-    new URL('/public/faces/face11_3_no.png', import.meta.url).href
-  ],
-  [
-    new URL('/public/faces/face12_1.png', import.meta.url).href,
-    new URL('/public/faces/face12_1_no.png', import.meta.url).href,
-    new URL('/public/faces/face12_2.png', import.meta.url).href,
-    new URL('/public/faces/face12_2_no.png', import.meta.url).href,
-    new URL('/public/faces/face12_3.png', import.meta.url).href,
-    new URL('/public/faces/face12_3_no.png', import.meta.url).href
-  ]
+const THEME = {
+  bg: 'rgb(10,10,10)',
+  fg: 'white',
+  bodiesTheme: 'default'
+}
+
+const bodyThemes = themes.bodies[THEME.bodiesTheme]
+
+const BG_SVGS = [
+  new URL('/public/bodies/bgs/bg1.svg', import.meta.url).href,
+  new URL('/public/bodies/bgs/bg2.svg', import.meta.url).href,
+  new URL('/public/bodies/bgs/bg3.svg', import.meta.url).href,
+  new URL('/public/bodies/bgs/bg4.svg', import.meta.url).href,
+  new URL('/public/bodies/bgs/bg5.svg', import.meta.url).href,
+  new URL('/public/bodies/bgs/bg6.svg', import.meta.url).href,
+  new URL('/public/bodies/bgs/bg7.svg', import.meta.url).href,
+  new URL('/public/bodies/bgs/bg8.svg', import.meta.url).href,
+  new URL('/public/bodies/bgs/bg9.svg', import.meta.url).href,
+  new URL('/public/bodies/bgs/bg10.svg', import.meta.url).href
 ]
 
-const STAR_SVGS = [
-  new URL(`/public/stars/star1.svg`, import.meta.url).href,
-  new URL(`/public/stars/star2.svg`, import.meta.url).href,
-  new URL(`/public/stars/star3.svg`, import.meta.url).href,
-  new URL(`/public/stars/star4.svg`, import.meta.url).href,
-  new URL(`/public/stars/star5.svg`, import.meta.url).href,
-  new URL(`/public/stars/star6.svg`, import.meta.url).href,
-  new URL(`/public/stars/star7.svg`, import.meta.url).href,
-  new URL(`/public/stars/star8.svg`, import.meta.url).href,
-  new URL(`/public/stars/star9.svg`, import.meta.url).href,
-  new URL(`/public/stars/star10.svg`, import.meta.url).href
+const FG_SVGS = [
+  new URL('/public/bodies/fgs/fg1.svg', import.meta.url).href,
+  new URL('/public/bodies/fgs/fg2.svg', import.meta.url).href,
+  new URL('/public/bodies/fgs/fg3.svg', import.meta.url).href,
+  new URL('/public/bodies/fgs/fg4.svg', import.meta.url).href,
+  new URL('/public/bodies/fgs/fg5.svg', import.meta.url).href,
+  new URL('/public/bodies/fgs/fg6.svg', import.meta.url).href,
+  new URL('/public/bodies/fgs/fg7.svg', import.meta.url).href,
+  new URL('/public/bodies/fgs/fg8.svg', import.meta.url).href,
+  new URL('/public/bodies/fgs/fg9.svg', import.meta.url).href,
+  new URL('/public/bodies/fgs/fg10.svg', import.meta.url).href
 ]
+
+const FACE_SVGS = [
+  new URL('/public/bodies/faces/face1.svg', import.meta.url).href,
+  new URL('/public/bodies/faces/face2.svg', import.meta.url).href,
+  new URL('/public/bodies/faces/face3.svg', import.meta.url).href,
+  new URL('/public/bodies/faces/face4.svg', import.meta.url).href,
+  new URL('/public/bodies/faces/face5.svg', import.meta.url).href,
+  new URL('/public/bodies/faces/face6.svg', import.meta.url).href,
+  new URL('/public/bodies/faces/face7.svg', import.meta.url).href,
+  new URL('/public/bodies/faces/face8.svg', import.meta.url).href,
+  new URL('/public/bodies/faces/face9.svg', import.meta.url).href,
+  new URL('/public/bodies/faces/face10.svg', import.meta.url).href,
+  new URL('/public/bodies/faces/face11.svg', import.meta.url).href,
+  new URL('/public/bodies/faces/face12.svg', import.meta.url).href,
+  new URL('/public/bodies/faces/face13.svg', import.meta.url).href,
+  new URL('/public/bodies/faces/face14.svg', import.meta.url).href
+]
+
+const CORE_SVGS = [
+  new URL('/public/bodies/cores/core-zigzag-lg.svg', import.meta.url).href
+]
+
+const replaceAttribute = (string, key, color) =>
+  string.replaceAll(
+    new RegExp(`${key}="(?!none)([^"]+)"`, 'g'),
+    `${key}="${color}"`
+  )
 
 export const Visuals = {
   async draw() {
@@ -128,20 +95,21 @@ export const Visuals = {
     if (this.globalStyle == 'psycho') {
       this.p.blendMode(this.p.BLEND)
     }
+
+    // if (
+    //   this.mode == 'game' &&
+    //   this.target == 'inside' &&
+    //   !this.firstFrame &&
+    //   this.globalStyle !== 'psycho'
+    // ) {
+    //   for (let i = 0; i < this.bodies.length; i++) {
+    //     const body = this.bodies[i]
+    //     this.drawCenter(body)
+    //   }
+    // }
+
     if (!this.firstFrame) {
       this.drawBodies()
-    }
-
-    if (
-      this.mode == 'game' &&
-      this.target == 'inside' &&
-      !this.firstFrame &&
-      this.globalStyle !== 'psycho'
-    ) {
-      for (let i = 0; i < this.bodies.length; i++) {
-        const body = this.bodies[i]
-        this.drawCenter(body)
-      }
     }
 
     if (
@@ -250,7 +218,8 @@ export const Visuals = {
   },
 
   drawBg() {
-    // this.p.background('rgb(10,10,100)')
+    this.p.background(THEME.bg)
+
     if (this.lastMissileCantBeUndone) {
       this.p.background('rgb(150,150,150)')
       this.p.textSize(100)
@@ -259,16 +228,17 @@ export const Visuals = {
     } else {
       this.p.background('rgb(10,10,10)')
     }
-    // this.p.background('white')
+
     if (!this.starBG) {
       this.starBG = this.p.createGraphics(this.windowWidth, this.windowHeight)
+      this.starBG.pixelDensity(this.pixelDensity)
 
       for (let i = 0; i < 200; i++) {
         // this.starBG.stroke('black')
         this.starBG.noStroke()
         // this.starBG.fill('rgba(255,255,255,0.6)')
         // this.starBG.fill('black')
-        this.starBG.fill('white')
+        this.starBG.fill(THEME.fg)
         this.starBG.textSize(20)
         const strings = [',', '.', '*']
         this.starBG.text(
@@ -409,78 +379,6 @@ export const Visuals = {
     // const star = this.starSVG[b.maxStarLvl]
     if (face) {
       this.p.image(face, x, y, radius, radius)
-    }
-  },
-
-  drawStarOnBG(x, y, v, radius, b) {
-    const faceIdx = b.mintedBodyIndex || b.bodyIndex
-    const expression = 1
-    const with_mouth = expression * 2
-    this.pngFaces ||= new Array(FACE_PNGS.length)
-      .fill(null)
-      .map(() => new Array(FACE_PNGS[0].length))
-    const face = this.pngFaces[faceIdx][with_mouth]
-
-    if (!face) {
-      this.pngFaces[faceIdx][with_mouth] = 'loading'
-      const png = FACE_PNGS[faceIdx][with_mouth]
-      this.p.loadImage(png, (face) => {
-        // to make masked background
-
-        // const bgSize = img.width * 1.2
-        // const imgCopy = img.get()
-        // this.maskImage(imgCopy, [255, 255, 255])
-        // const tinted = this.p.createGraphics(bgSize, bgSize)
-        // const cc = this.getTintFromColor(body.c)
-        // tinted.tint(cc[0], cc[1], cc[2])
-        // tinted.image(imgCopy, 0, 0, bgSize, bgSize)
-        // tinted.noTint()
-        // const offset = (bgSize - img.width) / 2
-        // tinted.image(img, offset, offset)
-        // this.pngFaces[faceIdx][expression] = tinted
-        this.pngFaces[faceIdx][with_mouth] = face
-        // let star = this.starSVG[b.maxStarLvl]
-        // if (!star) return
-        // star = this.tintImage(star, b.c)
-        const newElement = this.p.createGraphics(
-          this.windowWidth,
-          this.windowHeight
-        )
-        newElement.image(this.starBG, 0, 0, this.windowWidth, this.windowHeight)
-        // const resize = 1.2
-        // newElement.image(
-        //   this.starSVG[b.maxStarLvl],
-        //   x + (radius - radius * resize) / 2,
-        //   y + (radius - radius * resize) / 2,
-        //   radius * resize,
-        //   radius * resize
-        // )
-        newElement.fill(b.c.replace(this.opac, '1'))
-        newElement.ellipse(x, y, radius, radius)
-        newElement.image(face, x - radius / 2, y - radius / 2, radius, radius)
-        this.starBG = newElement
-      })
-    } else {
-      // let star = this.starSVG[b.maxStarLvl]
-      // if (!star) return
-      // star = this.tintImage(star, b.c)
-      const newElement = this.p.createGraphics(
-        this.windowWidth,
-        this.windowHeight
-      )
-      newElement.image(this.starBG, 0, 0, this.windowWidth, this.windowHeight)
-      // const resize = 1.2
-      // newElement.image(
-      //   this.starSVG[b.maxStarLvl],
-      //   x + (radius - radius * resize) / 2,
-      //   y + (radius - radius * resize) / 2,
-      //   radius * resize,
-      //   radius * resize
-      // )
-      newElement.fill(b.c.replace(this.opac, '1'))
-      newElement.ellipse(x, y, radius, radius)
-      newElement.image(face, x - radius / 2, y - radius / 2, radius, radius)
-      this.starBG = newElement
     }
   },
 
@@ -940,97 +838,60 @@ export const Visuals = {
     return closeEnough
   },
 
-  drawPngFace(/*radius, body, offset*/) {
-    return
-    // if (body.bodyIndex == 0) return
-    // const closeEnough = true //this.isMissileClose(body)
-    // if (body.radius !== 0 && !closeEnough) return
-    // this.pngFaces ||= new Array(FACE_PNGS.length)
-    //   .fill(null)
-    //   .map(() => new Array(FACE_PNGS[0].length))
-    // const faceIdx = body.faceIndex || body.mintedBodyIndex || body.bodyIndex
-    // // faceRotation: 'time' | 'hitcycle' | 'mania'
-    // // time: start sleepy and get happier as time goes on
-    // // hit: rotate to a new face each time (expression is starLvl % 3)
-    // // mania: when body is hit, cycle wildly until end of game
-    // let hit = body.radius === 0
-    // let expression = 1
-    // /*Math.ceil(
-    //   (2 * (hit ? body.starLvl - 1 : body.starLvl)) / body.maxStarLvl
-    // ) // 0 sleepy, 1 normal, 2 ecstatic
-    // */
-    // const framesLeft = this.startingFrame + this.timer - this.frames
-    // switch (this.faceRotation) {
-    //   case 'time':
-    //     expression = 2 - Math.floor((framesLeft / this.timer) * 3)
-    //     break
-    //   case 'hitcycle':
-    //     expression = hit
-    //       ? expression + (Math.floor(this.frames / 10) % 2)
-    //       : expression
-    //     break
-    //   case 'mania':
-    //     // cycle every 10 frames when hit
-    //     expression = hit ? Math.floor(this.frames / 10) % 3 : expression
-    //     break
-    // }
-    // expression = expression % 3
-    // // const no_mouth = expression * 2 + 1
-    // const with_mouth = expression * 2
+  drawImageAsset(assetUrl, width, fill, myP = this.bodiesGraphic) {
+    this.imgAssets ||= {}
+    const id = assetUrl
+    const loaded = this.imgAssets[id]
 
-    // // let closeEnough = this.isMissileClose(body)
-    // const whichFace = with_mouth //body.radius !== 0 ? no_mouth : with_mouth
-    // const face = this.pngFaces[faceIdx][whichFace]
-    // if (!face) {
-    //   this.pngFaces[faceIdx][whichFace] = 'loading'
-    //   const png = FACE_PNGS[faceIdx][whichFace]
-    //   this.p.loadImage(png, (img) => {
-    //     const origX = img.width
-    //     const origY = img.height
-    //     const scale = 1
-    //     const foo = this.p.createGraphics(origX / scale, origY / scale)
-    //     // foo.noSmooth()
-    //     // const ctx = foo.canvas.getContext('2d')
+    if (!loaded) {
+      this.imgAssets[id] = 'loading'
+      fetch(assetUrl)
+        .then((resp) => resp.text())
+        .then((svg) => {
+          svg = fill ? replaceAttribute(svg, 'fill', fill) : svg
+          // svg = replaceAttribute(svg, 'stroke-width', '0')
+          svg = 'data:image/svg+xml,' + encodeURIComponent(svg)
 
-    //     // turn off image aliasing
-    //     // foo.drawingContext.msImageSmoothingEnabled = false
-    //     // foo.drawingContext.mozImageSmoothingEnabled = false
-    //     // foo.drawingContext.webkitImageSmoothingEnabled = false
-    //     // foo.drawingContext.imageSmoothingEnabled = false
+          this.p.loadImage(svg, (img) => {
+            const width = img.width * this.pixelDensity
+            const height = img.height * this.pixelDensity
 
-    //     // foo.pixelDensity(0.1)
-    //     foo.image(img, 0, 0, origX / scale, origY / scale)
-    //     foo.loadPixels()
-    //     // to make masked background
+            const foo = this.p.createGraphics(width, height)
+            foo.pixelDensity(this.pixelDensity)
 
-    //     // const bgSize = img.width * 1.2
-    //     // const imgCopy = img.get()
-    //     // this.maskImage(imgCopy, [255, 255, 255])
-    //     // const tinted = this.p.createGraphics(bgSize, bgSize)
-    //     // const cc = this.getTintFromColor(body.c)
-    //     // tinted.tint(cc[0], cc[1], cc[2])
-    //     // tinted.image(imgCopy, 0, 0, bgSize, bgSize)
-    //     // tinted.noTint()
-    //     // const offset = (bgSize - img.width) / 2
-    //     // tinted.image(img, offset, offset)
-    //     // this.pngFaces[faceIdx][expression] = tinted
-    //     this.pngFaces[faceIdx][whichFace] = foo
-    //   })
-    // }
-    // if (face && face !== 'loading') {
-    //   const faceSize = radius
-    //   // this.bodiesGraphic.drawingContext.msImageSmoothingEnabled = false
-    //   // this.bodiesGraphic.drawingContext.mozImageSmoothingEnabled = false
-    //   // this.bodiesGraphic.drawingContext.webkitImageSmoothingEnabled = false
-    //   // this.bodiesGraphic.drawingContext.imageSmoothingEnabled = false
-    //   this.bodiesGraphic.image(
-    //     face,
-    //     -faceSize / 2,
-    //     -faceSize / 2,
-    //     faceSize,
-    //     faceSize
-    //   )
-    // }
+            foo.image(img, 0, 0, width, height)
+
+            this.imgAssets[id] = foo
+          })
+        })
+        .catch((e) => {
+          console.error(e)
+          this.imgAssets[id] = undefined
+        })
+    }
+
+    if (loaded && loaded !== 'loading') {
+      myP.image(loaded, -width / 2, -width / 2, width, width)
+    }
+  },
+
+  drawFaceSvg(width) {
+    this.drawImageAsset(FACE_SVGS[0], width)
+  },
+
+  drawStarForegroundSvg(width, body) {
+    const fill = hslToRgb(randHSL(bodyThemes[body.theme].fg))
+    this.drawImageAsset(FG_SVGS[0], width, fill)
+  },
+
+  drawCoreSvg(width, body) {
+    const fill = hslToRgb(randHSL(bodyThemes[body.theme].cr))
+    this.drawImageAsset(CORE_SVGS[0], width, fill)
+  },
+
+  drawStarBackgroundSvg(width, body) {
+    const fill = hslToRgb(randHSL(bodyThemes[body.theme].bg))
+    this.drawImageAsset(BG_SVGS[0], width, fill)
   },
 
   drawGlyphFace(radius, body) {
@@ -1218,9 +1079,9 @@ export const Visuals = {
     this.bodiesGraphic.noStroke()
     let c =
       body.radius !== 0 ? body.c : this.replaceOpacity(body.c, this.deadOpacity)
-    if (body.bodyIndex == 0) {
-      c = 'white'
-    }
+    // if (body.bodyIndex == 0) {
+    //   c = 'white'
+    // }
     this.bodiesGraphic.fill(c)
     // const scale = 1
     // const foo = this.p.createGraphics(radius / scale, radius / scale)
@@ -1240,16 +1101,16 @@ export const Visuals = {
     //   radius
     // )
     this.bodiesGraphic.ellipse(0, offset, radius)
-    if (this.globalStyle == 'psycho' && this.target == 'inside') {
-      this.drawCenter(body, this.bodiesGraphic, 0, offset)
-    }
   },
 
-  moveAndRotate_PopAfter(graphic, x, y, v) {
+  moveAndRotate_PopAfter(graphic, x, y /*v*/) {
     graphic.push()
     graphic.translate(x, y)
-    const angle = v.heading() + this.p.PI / 2
-    graphic.rotate(angle)
+
+    // rotate body in vector direction
+    // const angle = v.heading() + this.p.PI / 2
+    // graphic.rotate(angle)
+
     // if (v.x > 0) {
     //   graphic.scale(-1, 1)
     // }
@@ -1261,23 +1122,29 @@ export const Visuals = {
   drawBody(x, y, v, radius, body) {
     this.moveAndRotate_PopAfter(this.bodiesGraphic, x, y, v)
 
-    const offset = this.getOffset(radius)
+    // y-offset of face relative to center
+    // const offset = this.getOffset(radius)
 
-    switch (body.bodyStyle) {
-      default:
-        this.drawBodyStyle1(radius, body, offset)
-    }
-    if ((body.mintedBodyIndex || body.bodyIndex) <= FACE_PNGS.length) {
-      this.drawPngFace(radius, body, offset)
+    const size = Math.floor(body.radius * BODY_SCALE * 2.66)
+
+    if (body.bodyIndex === 0) {
+      // TEMP random body theme
+      const themes = Object.keys(bodyThemes)
+      body.theme = themes[Math.floor(Math.random() * (themes.length - 1))]
+
+      this.drawStarBackgroundSvg(size, body)
+      this.drawCoreSvg(body.radius * BODY_SCALE, body)
+      this.drawStarForegroundSvg(size, body)
+      this.drawFaceSvg(size)
     } else {
-      this.drawGlyphFace(radius, body)
-    }
-
-    if (this.showLevels) {
-      this.drawLevels(radius, body, offset)
+      this.drawCenter(body)
     }
 
     this.bodiesGraphic.pop()
+
+    // if (this.showLevels) {
+    //   this.drawLevels(radius, body, offset)
+    // }
   },
 
   getBodyRadius(actualRadius) {
@@ -1288,40 +1155,40 @@ export const Visuals = {
     drawFunction = drawFunction.bind(this)
     drawFunction(body.position.x, body.position.y, body.velocity, radius, body)
 
-    let loopedX = false,
-      loopedY = false,
-      loopX = body.position.x,
-      loopY = body.position.y
-    const loopGap = radius / 2
+    // let loopedX = false,
+    //   loopedY = false,
+    //   loopX = body.position.x,
+    //   loopY = body.position.y
+    // const loopGap = radius / 2
 
-    // crosses right, draw on left
-    if (body.position.x > this.windowWidth - loopGap) {
-      loopedX = true
-      loopX = body.position.x - this.windowWidth
-      drawFunction(loopX, body.position.y, body.velocity, radius, body)
-      // crosses left, draw on right
-    } else if (body.position.x < loopGap) {
-      loopedX = true
-      loopX = body.position.x + this.windowWidth
-      drawFunction(loopX, body.position.y, body.velocity, radius, body)
-    }
+    // // crosses right, draw on left
+    // if (body.position.x > this.windowWidth - loopGap) {
+    //   loopedX = true
+    //   loopX = body.position.x - this.windowWidth
+    //   drawFunction(loopX, body.position.y, body.velocity, radius, body, true)
+    //   // crosses left, draw on right
+    // } else if (body.position.x < loopGap) {
+    //   loopedX = true
+    //   loopX = body.position.x + this.windowWidth
+    //   drawFunction(loopX, body.position.y, body.velocity, radius, body, true)
+    // }
 
-    // crosses bottom, draw on top
-    if (body.position.y > this.windowHeight - loopGap) {
-      loopedY = true
-      loopY = body.position.y - this.windowHeight
-      drawFunction(body.position.x, loopY, body.velocity, radius, body)
-      // crosses top, draw on bottom
-    } else if (body.position.y < loopGap) {
-      loopedY = true
-      loopY = body.position.y + this.windowHeight
-      drawFunction(body.position.x, loopY, body.velocity, radius, body)
-    }
+    // // crosses bottom, draw on top
+    // if (body.position.y > this.windowHeight - loopGap) {
+    //   loopedY = true
+    //   loopY = body.position.y - this.windowHeight
+    //   drawFunction(body.position.x, loopY, body.velocity, radius, body, true)
+    //   // crosses top, draw on bottom
+    // } else if (body.position.y < loopGap) {
+    //   loopedY = true
+    //   loopY = body.position.y + this.windowHeight
+    //   drawFunction(body.position.x, loopY, body.velocity, radius, body, true)
+    // }
 
-    // crosses corner, draw opposite corner
-    if (loopedX && loopedY) {
-      drawFunction(loopX, loopY, body.velocity, radius, body)
-    }
+    // // crosses corner, draw opposite corner
+    // if (loopedX && loopedY) {
+    //   drawFunction(loopX, loopY, body.velocity, radius, body, true)
+    // }
   },
 
   // TODO: add this back as part of a end game animation
@@ -1393,26 +1260,6 @@ export const Visuals = {
       body.zoff += 0.01
 
       p.pop()
-    }
-  },
-
-  async drawBodyAsStar(body) {
-    const star = this.starSVG[body.starLvl]
-    if (!star) {
-      this.starSVG[body.starLvl] = 'loading'
-      const svg = STAR_SVGS[body.starLvl - 1]
-      this.p.loadImage(svg, (img) => {
-        this.starSVG[body.starLvl] = img
-      })
-    }
-    if (star && star !== 'loading') {
-      this.bodiesGraphic.image(
-        star,
-        body.position.x - body.radius * 2,
-        body.position.y - body.radius * 2,
-        body.radius,
-        body.radius
-      )
     }
   },
 
@@ -1764,13 +1611,13 @@ export const Visuals = {
     return `hsla(${cc.join(',')})`
   },
 
-  drawCenter(b, p = this.p, x, y) {
+  drawCenter(b, p = this.bodiesGraphic, x = 0, y = 0) {
     let closeEnough = false //this.isMissileClose(b)
     // this.p.blendMode(this.p.DIFFERENCE)
     p.noStroke()
     x = x == undefined ? b.position.x : x
     y = y == undefined ? b.position.y : y
-    const r = b.radius * 4
+    const r = b.radius * BODY_SCALE // b.radius * 4
     if (r == 0) return
     let c = this.brighten(b.c).replace(this.opac, 1)
     if (this.target == 'outside') {
@@ -1780,13 +1627,7 @@ export const Visuals = {
       p.image(star, x - r / 2, y - r / 2, r, r)
     } else {
       let darker = this.brighten(b.c, -30).replace(this.opac, 1)
-      if (b.bodyIndex == 0) {
-        darker = '#FFF44F'
 
-        p.fill(darker)
-        p.ellipse(x, y, r)
-        return
-      }
       p.fill(darker)
       p.ellipse(x, y, r)
       if (closeEnough) {
@@ -1817,6 +1658,7 @@ export const Visuals = {
         p.noFill()
         p.ellipse(x, y, r)
       } else {
+        /** DRAW TARGET */
         // const width = r / 2
         // const rotatedAngle = b.velocity.heading()
         // p.push()
