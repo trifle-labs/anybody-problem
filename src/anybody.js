@@ -692,7 +692,6 @@ export class Anybody extends EventEmitter {
   }
 
   bodyDataToBodies(b) {
-    const bodyId = b.bodyId.toNumber()
     const bodyIndex = b.bodyIndex.toNumber()
     const px = b.px.toNumber() / parseInt(this.scalingFactor)
     const py = b.py.toNumber() / parseInt(this.scalingFactor)
@@ -707,14 +706,10 @@ export class Anybody extends EventEmitter {
     return {
       seed: b.seed,
       faceIndex,
-      bodyId: bodyId,
       bodyIndex: bodyIndex,
       position: this.createVector(px, py),
       velocity: this.createVector(vx, vy),
       radius: radius,
-      starLvl: b.starLvl?.toNumber(),
-      maxStarLvl: b.maxStarLvl?.toNumber(),
-      mintedBodyIndex: b.mintedBodyIndex.toNumber(),
       c: this.getBodyColor(b.seed)
     }
   }

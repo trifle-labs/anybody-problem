@@ -73,13 +73,7 @@ const initContracts = async (getSigners = true) => {
     ;[owner] = await hre.ethers.getSigners()
   }
 
-  const contractNames = [
-    'Problems',
-    'Bodies',
-    'Solver',
-    'ProblemMetadata',
-    'BodyMetadata'
-  ]
+  const contractNames = ['AnybodyProblem', 'Runs']
   for (let i = 3; i <= 10; i++) {
     contractNames.push(`Game_${i}_20Verifier.sol`)
   }
@@ -113,20 +107,17 @@ const decodeUri = (decodedJson) => {
 const deployContracts = async (ignoreTesting = false) => {
   var networkinfo = await hre.ethers.provider.getNetwork()
   const testing = !ignoreTesting && networkinfo['chainId'] == 12345
-  // const [owner] = await hre.ethers.getSigners()
+  const [deployer] = await hre.ethers.getSigners()
 
   // order of deployment + constructor arguments
 
   // Nft_3_20Verifier (no args)
   // ...
   // Nft_10_20Verifier (no args)
-  // ProblemMetadata (no args)
-  // BodyMetadata (no args)
-  // Problems (problemMetadata.address, address[10] verifiers)
-  // Bodies(bodyMetadata.address, problems.address)
+  // Speedruns (no args)
+  // AnybodyProblem (recipient, speedruns.address, address[10] verifiers, uint[10] verifiersTicks, uint[10] verifiersBodies)
 
-  // Problems.updateBodies(bodies.address)
-  // Problems.updateSolver(solver.address)
+  // Speedruns.updateAnybodyProblemAddress(anybodyProblem.address)
 
   const returnObject = {}
   const verifiers = []
@@ -147,80 +138,35 @@ const deployContracts = async (ignoreTesting = false) => {
     returnObject[name] = verifierContract
   }
 
-  // deploy ProblemMetadata
-  const ProblemMetadata = await hre.ethers.getContractFactory('ProblemMetadata')
-  const problemMetadata = await ProblemMetadata.deploy()
-  await problemMetadata.deployed()
-  var problemMetadataAddress = problemMetadata.address
-  returnObject['ProblemMetadata'] = problemMetadata
-  !testing &&
-    log('ProblemMetadata Deployed at ' + String(problemMetadataAddress))
+  // deploy Speedruns
+  const Speedruns = await hre.ethers.getContractFactory('Speedruns')
+  const speedruns = await Speedruns.deploy()
+  await speedruns.deployed()
+  var speedrunsAddress = speedruns.address
+  returnObject['Speedruns'] = speedruns
+  !testing && log('Speedruns Deployed at ' + String(speedrunsAddress))
 
-  // deploy BodyMetadata
-  const BodyMetadata = await hre.ethers.getContractFactory('BodyMetadata')
-  const bodyMetadata = await BodyMetadata.deploy()
-  await bodyMetadata.deployed()
-  var bodyMetadataAddress = bodyMetadata.address
-  returnObject['BodyMetadata'] = bodyMetadata
-  !testing && log('BodyMetadata Deployed at ' + String(bodyMetadataAddress))
-
-  // deploy Problems
-  const Problems = await hre.ethers.getContractFactory('Problems')
-  const problems = await Problems.deploy(
-    problemMetadataAddress,
+  // deploy AnybodyProblem
+  const AnybodyProblem = await hre.ethers.getContractFactory('AnybodyProblem')
+  const anybodyProblem = await AnybodyProblem.deploy(
+    deployer.address,
+    speedrunsAddress,
     verifiers,
     verifiersTicks,
     verifiersBodies
   )
-  await problems.deployed()
-  var problemsAddress = problems.address
-  returnObject['Problems'] = problems
+  await anybodyProblem.deployed()
+  var anybodyProblemAddress = anybodyProblem.address
+  returnObject['AnybodyProblem'] = anybodyProblem
   !testing &&
     log(
-      'Problems Deployed at ' +
-        String(problemsAddress) +
-        ` with problemMetadata ${problemMetadataAddress} and verifiers ${verifiers} and verifiersTicks ${verifiersTicks} and verifiersBodies ${verifiersBodies}`
+      'AnybodyProblem Deployed at ' +
+        String(anybodyProblemAddress) +
+        ` with speedrunsAddress ${speedrunsAddress} and verifiers ${verifiers} and verifiersTicks ${verifiersTicks} and verifiersBodies ${verifiersBodies}`
     )
 
-  // deploy Bodies
-  const Bodies = await hre.ethers.getContractFactory('Bodies')
-  const bodies = await Bodies.deploy(bodyMetadataAddress, problemsAddress)
-  await bodies.deployed()
-  const bodiesAddress = bodies.address
-  returnObject['Bodies'] = bodies
-  !testing &&
-    log(
-      `Bodies deployed at ${bodiesAddress} with bodyMetadata ${bodyMetadataAddress} and problemsAddress ${problemsAddress}`
-    )
-
-  // deploy Solver
-  const Solver = await hre.ethers.getContractFactory('Solver')
-  const solver = await Solver.deploy(problemsAddress)
-  await solver.deployed()
-  const solverAddress = solver.address
-  returnObject['Solver'] = solver
-  !testing &&
-    log(
-      `Solver deployed at ${solverAddress} with problemsAddress ${problemsAddress}`
-    )
-
-  // configure ProblemMetadata
-  await problemMetadata.updateProblemsAddress(problemsAddress)
-  !testing &&
-    log(`ProblemMetadata configured with problemsAddress ${problemsAddress}`)
-
-  // configure BodiesMetadata
-  await bodyMetadata.updateProblemsAddress(problemsAddress)
-  !testing &&
-    log(`BodyMetadata configured with problemsAddress ${problemsAddress}`)
-  await bodyMetadata.updateBodiesAddress(bodiesAddress)
-  !testing && log(`BodyMetadata configured with bodiesAddress ${bodiesAddress}`)
-
-  // configure Problems
-  await problems.updateBodiesAddress(bodiesAddress)
-  !testing && log(`Problems configured with bodiesAddress ${bodiesAddress}`)
-  await problems.updateSolverAddress(solverAddress)
-  !testing && log(`Problems configured with solverAddress ${solverAddress}`)
+  // update Speedruns
+  await speedruns.updateAnybodyProblemAddress(anybodyProblemAddress)
 
   // verify contract if network ID is mainnet goerli or sepolia
   if (
@@ -232,29 +178,18 @@ const deployContracts = async (ignoreTesting = false) => {
   ) {
     const verificationData = [
       {
-        name: 'ProblemMetadata',
+        name: 'Speedruns',
         constructorArguments: []
       },
       {
-        name: 'BodyMetadata',
-        constructorArguments: []
-      },
-      {
-        name: 'Problems',
+        name: 'AnybodyProblem',
         constructorArguments: [
-          problemMetadataAddress,
+          deployer.address,
+          speedrunsAddress,
           verifiers,
           verifiersTicks,
           verifiersBodies
         ]
-      },
-      {
-        name: 'Bodies',
-        constructorArguments: [bodyMetadataAddress, problemsAddress]
-      },
-      {
-        name: 'Solver',
-        constructorArguments: [problemsAddress]
       }
     ]
 
@@ -294,17 +229,17 @@ const getParsedEventLogs = (receipt, contract, eventName) => {
   return events.filter((x) => x.name === eventName)
 }
 
-const mintProblem = async (signers, deployedContracts, acct) => {
-  const [owner] = signers
-  acct = acct || owner
-  const { Problems: problems } = deployedContracts
-  await problems.updatePaused(false)
-  await problems.updateStartDate(0)
-  const tx = await problems.connect(acct)['mint()']({ value: correctPrice })
-  const receipt = await tx.wait()
-  const problemId = getParsedEventLogs(receipt, problems, 'Transfer')[0].args
-    .tokenId
-  return { receipt, problemId }
+const mintProblem = async (/*signers, deployedContracts, acct*/) => {
+  // const [owner] = signers
+  // acct = acct || owner
+  // const { Problems: problems } = deployedContracts
+  // await problems.updatePaused(false)
+  // await problems.updateStartDate(0)
+  // const tx = await problems.connect(acct)['mint()']({ value: correctPrice })
+  // const receipt = await tx.wait()
+  // const problemId = getParsedEventLogs(receipt, problems, 'Transfer')[0].args
+  //   .tokenId
+  // return { receipt, problemId }
 }
 
 const generateWitness = async (
@@ -337,20 +272,19 @@ const generateProof = async (
   address,
   seed,
   bodyCount,
-  ticksRun,
+  proofLength,
   bodyData,
-  mode = 'nft',
   missiles = null
 ) => {
+  console.log({ bodyData })
   const anybody = new Anybody(null, {
     bodyData,
     seed,
     util: true,
-    stopEvery: ticksRun,
-    mode
+    stopEvery: proofLength
   })
   anybody.storeInits()
-  anybody.runSteps(ticksRun)
+  anybody.runSteps(proofLength)
   const results = anybody.finish()
   const inputData = {
     address,
@@ -367,8 +301,8 @@ const generateProof = async (
   // const startTime = Date.now()
   const dataResult = await exportCallDataGroth16(
     inputData,
-    `./public/${mode}_${bodyCount}_${ticksRun}.wasm`,
-    `./public/${mode}_${bodyCount}_${ticksRun}_final.zkey`
+    `./public/game_${bodyCount}_${proofLength}.wasm`,
+    `./public/game_${bodyCount}_${proofLength}_final.zkey`
   )
   // bodyCount = bodyCount.toNumber()
   // const endTime = Date.now()
@@ -385,23 +319,23 @@ const generateProof = async (
 
 const generateAndSubmitProof = async (
   address,
+  seed,
   expect,
   deployedContracts,
   problemId,
-  bodyCount,
-  ticksRun,
+  proofLength,
   bodyData
 ) => {
+  const bodyCount = bodyData.length
+  console.log({ bodyCount })
   // console.log('generateAndSubmitProof')
-  const { Problems: problems, Solver: solver } = deployedContracts
-  const { seed } = await problems.problems(problemId)
+  const { AnybodyProblem: anybodyProblem } = deployedContracts
   const { inputData, bodyFinal, dataResult } = await generateProof(
     address,
     seed,
     bodyCount,
-    ticksRun,
-    bodyData,
-    'game'
+    proofLength,
+    bodyData
   )
   // 0—4: missile output
   // 5—9: body 1 output
@@ -467,14 +401,28 @@ const generateAndSubmitProof = async (
       throw new Error(`Invalid index ${i}`)
     }
   }
+  const batchLength = 1
 
-  const tx = await solver.solveProblem(
+  const proofLengths = []
+  const a = []
+  const b = []
+  const c = []
+  const Input = []
+  for (let i = 0; i < batchLength; i++) {
+    proofLengths.push(proofLength)
+    a.push(dataResult.a)
+    b.push(dataResult.b)
+    c.push(dataResult.c)
+    Input.push(dataResult.Input)
+  }
+
+  const tx = await anybodyProblem.batchSolve(
     problemId,
-    ticksRun,
-    dataResult.a,
-    dataResult.b,
-    dataResult.c,
-    dataResult.Input
+    proofLengths,
+    a,
+    b,
+    c,
+    Input
   )
   return { tx, bodyFinal }
 }
