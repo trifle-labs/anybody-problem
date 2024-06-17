@@ -4,7 +4,6 @@ require('hardhat-contract-sizer')
 require('dotenv').config()
 require('@nomicfoundation/hardhat-verify')
 require('solidity-coverage')
-// require('@defi-wonderland/smock')
 
 // const util = require("util");
 
@@ -54,12 +53,7 @@ const config = {
         version: '0.8.15',
         settings: {
           viaIR: true,
-          optimizer: { enabled: true, runs: 200 },
-          outputSelection: {
-            '*': {
-              '*': ['storageLayout']
-            }
-          }
+          optimizer: { enabled: true, runs: 200 }
         }
       }
     ]
@@ -100,11 +94,12 @@ const config = {
     }
   },
   gasReporter: {
-    currency: 'EUR',
-    gasPrice: 42,
+    currency: 'USD',
+    gasPrice: 0.1,
     url: 'http://localhost:8545',
     coinmarketcap: '38b60711-0559-45f4-8bda-e72f446c8278',
-    enabled: true
+    enabled: true,
+    showMethodSig: true
   },
   sourcify: {
     enabled: false
@@ -136,10 +131,11 @@ const config = {
     ]
   },
   contractSizer: {
-    alphaSort: true,
-    disambiguatePaths: true,
+    alphaSort: false,
+    disambiguatePaths: false,
     runOnCompile: true,
-    strict: true
+    strict: false,
+    only: ['AnybodyProblem', 'Speedruns']
   }
 }
 module.exports = config

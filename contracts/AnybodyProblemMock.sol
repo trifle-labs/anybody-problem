@@ -15,15 +15,16 @@ contract AnybodyProblemMock is AnybodyProblem {
   {}
 
   Body[6][5] public mockedBodyDataByLevel;
+
   function setMockedBodyDataByLevel(uint256 level, Body[6] memory bodyData) public {
     mockedBodyDataByLevel[level - 1] = bodyData;
   }
 
-  function generateLevelData(uint256 day, uint256 level)  public pure override(AnybodyProblem) returns(AnybodyProblem.Body[6] memory bodyData, uint256 bodyCount) {
+  function generateLevelData(uint256 day, uint256 level) public view override(AnybodyProblem) returns(AnybodyProblem.Body[6] memory bodyData, uint256 bodyCount) {
     if (mockedBodyDataByLevel[level - 1][0].seed == bytes32(0)) {
       return super.generateLevelData(day, level);
     }
-    return (mockedBodyDataByLevel[level], level + 1);
+    return (mockedBodyDataByLevel[level - 1], level + 1);
   }
 
 }

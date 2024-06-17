@@ -104,7 +104,10 @@ const decodeUri = (decodedJson) => {
   return text
 }
 
-const deployContracts = async (ignoreTesting = false) => {
+const deployContracts = async (options) => {
+  const defaultOptions = { mock: false, ignoreTesting: false }
+  const { mock, ignoreTesting } = Object.assign(defaultOptions, options)
+
   var networkinfo = await hre.ethers.provider.getNetwork()
   const testing = !ignoreTesting && networkinfo['chainId'] == 12345
   const [deployer] = await hre.ethers.getSigners()
@@ -150,7 +153,9 @@ const deployContracts = async (ignoreTesting = false) => {
   !testing && log('Speedruns Deployed at ' + String(speedrunsAddress))
 
   // deploy AnybodyProblem
-  const AnybodyProblem = await hre.ethers.getContractFactory('AnybodyProblem')
+  const AnybodyProblem = await hre.ethers.getContractFactory(
+    mock ? 'AnybodyProblemMock' : 'AnybodyProblem'
+  )
   const anybodyProblem = await AnybodyProblem.deploy(
     deployer.address,
     speedrunsAddress,
@@ -220,42 +225,18 @@ const verifyContracts = async (returnObject) => {
   }
 }
 
-const solveLevel = async (owner, anybodyProblem, expect, runId) => {
-  const runCount = await anybodyProblem.runCount()
-  if (runId == 0) {
-    // const tx = await anybodyProblem.batchSolve(0, [], [], [], [], [])
-    // const receipt = await tx.wait()
-    // const events = getParsedEventLogs(receipt, anybodyProblem, 'RunCreated')
-    // runId = events[0].args.runId
-    runId = runCount
-  } else if (runId > runCount) {
-    throw new Error(`Run ID (${runId}) out of range (${runCount})`)
-  }
-
+const solveLevel = async (
+  owner,
+  anybodyProblem,
+  expect,
+  runId,
+  level,
+  execute = true
+) => {
   const day = await anybodyProblem.currentDay()
-
-  // const { owner, /*solved, accumulativeTime,*/ seed, day } =
-  //   await anybodyProblem.runs(runId)
-  let level
-  try {
-    level = await anybodyProblem.currentLevel(runId)
-  } catch (e) {
-    console.log({ e })
-    level = 1
-  }
-  const levelIndex = level.toNumber() - 1
-  // const levelData = await anybodyProblem.getLevelsData(runId)
   const levelData = await anybodyProblem.generateLevelData(day, level)
+  const { bodyCount, bodyData } = levelData
 
-  const {
-    // solved: levelSolved,
-    // time: levelTime,
-    // seed: levelSeed,
-    // tmpInflightMissile,
-    tmpBodyData: bodyData
-  } = levelData[levelIndex]
-
-  const bodyCount = bodyData.filter((b) => parseInt(b.seed) !== 0).length
   const ticksRun = await getTicksRun(bodyCount)
 
   let missileInits = []
@@ -314,24 +295,13 @@ const solveLevel = async (owner, anybodyProblem, expect, runId) => {
     missiles,
     inflightMissile
   )
-
   for (let i = 1; i < bodyCount; i++) {
     const radiusIndex = 5 + i * 5 + 4
     expect(dataResult.publicSignals[radiusIndex]).to.equal('0')
   }
 
-  const newBodyDataLength6 = newBodyData.concat(
-    bodyData.slice(level.add(1).toNumber(), 6)
-  )
-
-  // await anybodyProblemMock.setMockedBodyDataByLevel(level, newBodyDataLength6)
-
-  await anybodyProblem.testFunctionCommentBeforeDeployment(
-    runId,
-    level.sub(1),
-    inflightMissile,
-    newBodyDataLength6
-  )
+  const newBodyDataLength6 = newBodyData.concat(bodyData.slice(level + 1, 6))
+  await anybodyProblem.setMockedBodyDataByLevel(level, newBodyDataLength6)
 
   // 0—4: missile output
   // 5—9: body 1 output
@@ -354,15 +324,22 @@ const solveLevel = async (owner, anybodyProblem, expect, runId) => {
 
   const args = [runId, tickCounts, a, b, c, Input]
 
-  const tx3 = await anybodyProblem.batchSolve(...args, {
-    value: level.eq(5) ? price : 0
-  })
-
-  await expect(tx3)
-    .to.emit(anybodyProblem, 'LevelSolved')
-    .withArgs(owner, runId, level, time, day)
-
-  return { runId, tx: tx3, time }
+  if (runId == 0) {
+    runId = 1
+  }
+  let tx3
+  if (execute) {
+    if (level !== 5) {
+      await solveLevel(owner, anybodyProblem, expect, runId, level + 1, false)
+    }
+    tx3 = await anybodyProblem.batchSolve(...args, {
+      value: level == 5 ? price : 0
+    })
+    await expect(tx3)
+      .to.emit(anybodyProblem, 'LevelSolved')
+      .withArgs(owner, runId, level, time, day)
+  }
+  return { runId, tx: tx3, time, args }
 }
 
 const log = (message) => {

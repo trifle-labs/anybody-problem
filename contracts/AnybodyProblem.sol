@@ -154,7 +154,7 @@ contract AnybodyProblem is Ownable, ERC2981 {
   function getLevelsData(uint256 runId) public view returns(Level[] memory levels) {
     return runs[runId].levels;
   }
-  function generateLevelData(uint256 day, uint256 level) public pure returns (Body[6] memory bodyData, uint256 bodyCount) {
+  function generateLevelData(uint256 day, uint256 level) public view virtual returns (Body[6] memory bodyData, uint256 bodyCount) {
     // NOTE: <= becuase level 5 has 6 bodies
     for (uint256 i = 0; i <= level; i++) {
       bytes32 dayLevelIndexSeed = getLevelSeed(day, level, i);
@@ -334,11 +334,6 @@ contract AnybodyProblem is Ownable, ERC2981 {
         addNewLevelData(runId);
       }
     }
-  }
-  // TODO: Make sure this is commented out before deployment
-  function testFunctionCommentBeforeDeployment(uint256 runId, uint256 levelIndex, uint256[5] memory missile, Body[6] memory bodyData) public onlyOwner {
-    runs[runId].levels[levelIndex].tmpInflightMissile = missile;
-    runs[runId].levels[levelIndex].tmpBodyData = bodyData;
   }
   function addToLeaderboard(uint256 runId) internal {
     addToFastestByDay(runId);

@@ -1,6 +1,5 @@
 import { expect } from 'chai'
 import hre from 'hardhat'
-import { smock } from '@defi-wonderland/smock'
 const ethers = hre.ethers
 
 import {
@@ -111,9 +110,6 @@ describe('AnybodyProblem Tests', function () {
     const events = getParsedEventLogs(receipt, anybodyProblem, 'RunCreated')
     // console.dir({ events }, { depth: null })
     const runId = events[0].args.runId
-    // console.log({ runId })
-    // const run = await anybodyProblem.runs(runId)
-    // console.dir({ run }, { depth: null })
     const allLevelData = await anybodyProblem.getLevelsData(runId)
     const level = await anybodyProblem.currentLevel(runId)
     const levelIndex = level - 1
@@ -138,17 +134,20 @@ describe('AnybodyProblem Tests', function () {
     }
   })
 
-  it('solves the first level', async () => {
+  it('solves the first level using mock', async () => {
     const [owner] = await ethers.getSigners()
-    const { AnybodyProblem: anybodyProblem } = await deployContracts()
+    const { AnybodyProblem: anybodyProblem } = await deployContracts({
+      mock: true
+    })
     let runId = 0
     const day = await anybodyProblem.currentDay()
-
+    const level = 1
     const solvedReturn = await solveLevel(
       owner.address,
       anybodyProblem,
       expect,
-      runId
+      runId,
+      level
     )
     runId = solvedReturn.runId
     const tx = solvedReturn.tx
@@ -158,20 +157,22 @@ describe('AnybodyProblem Tests', function () {
       .withArgs(owner.address, runId, 1, time, day)
   })
 
-  it('solves all levels', async () => {
+  it('solves all levels async using mock', async () => {
     const [owner] = await ethers.getSigners()
     const { AnybodyProblem: anybodyProblem, Speedruns: speedruns } =
-      await deployContracts()
+      await deployContracts({ mock: true })
     let runId = 0,
       tx
     const day = await anybodyProblem.currentDay()
     let accumulativeTime = 0
     for (let i = 0; i < 5; i++) {
+      const level = i + 1
       const solvedReturn = await solveLevel(
         owner.address,
         anybodyProblem,
         expect,
-        runId
+        runId,
+        level
       )
       runId = solvedReturn.runId
       tx = solvedReturn.tx
@@ -201,38 +202,59 @@ describe('AnybodyProblem Tests', function () {
     expect(gamesPlayed.streak).to.equal(1)
   })
 
-  it.only('solves all levels in a single tx', async () => {
-    console.log('start')
-    const deployedContracts = await deployContracts()
+  it('solves all levels in a single tx', async () => {
     const [owner] = await ethers.getSigners()
-
-    const AnybodyProblemFactory = await smock.mock('AnybodyProblem', {
-      provider: hre.ethers.provider
-    })
-    const { verifiers, verifiersTicks, verifiersBodies, Speedruns } =
-      deployedContracts
-    const anybodyProblem = await AnybodyProblemFactory.connect(owner).deploy(
-      owner.address,
-      Speedruns.address,
-      verifiers,
-      verifiersTicks,
-      verifiersBodies
-    )
-    anybodyProblem.price.returns(69)
+    const { AnybodyProblem: anybodyProblem, Speedruns: speedruns } =
+      await deployContracts({ mock: true })
+    let runId = 0
+    const day = await anybodyProblem.currentDay()
+    let accumulativeTime = 0
+    const finalArgs = [null, [], [], [], [], []]
+    let finalRunId
+    for (let i = 0; i < 5; i++) {
+      const level = i + 1
+      const solvedReturn = await solveLevel(
+        owner.address,
+        anybodyProblem,
+        expect,
+        runId,
+        level,
+        false
+      )
+      const args = solvedReturn.args
+      const time = solvedReturn.time
+      finalRunId = solvedReturn.runId
+      accumulativeTime += parseInt(time)
+      finalArgs[0] = runId
+      finalArgs[1].push(args[1][0])
+      finalArgs[2].push(args[2][0])
+      finalArgs[3].push(args[3][0])
+      finalArgs[4].push(args[4][0])
+      finalArgs[5].push(args[5][0])
+    }
     const price = await anybodyProblem.price()
-    expect(price).to.equal(69)
+    expect(finalArgs.length).to.equal(6)
+    const tx = await anybodyProblem.batchSolve(...finalArgs, { value: price })
+    await expect(tx)
+      .to.emit(anybodyProblem, 'RunSolved')
+      .withArgs(owner.address, finalRunId, accumulativeTime, day)
 
-    anybodyProblem.getLevelSeed.returns('0x' + '1'.repeat(64))
-    const seed = await anybodyProblem.getLevelSeed(0, 0, 0)
-    expect(seed).to.equal('0x' + '1'.repeat(64))
+    await expect(tx)
+      .to.emit(anybodyProblem, 'EthMoved')
+      .withArgs(owner.address, true, '0x', price)
 
-    anybodyProblem.getLevelSeed
-      .whenCalledWith(1, 2, 3)
-      .returns('0x' + '2'.repeat(64))
-    const otherSeed = await anybodyProblem.getLevelSeed(1, 2, 3)
-    expect(otherSeed).to.equal('0x' + '2'.repeat(64))
+    const speedrunBalance = await speedruns.balanceOf(owner.address)
+    expect(speedrunBalance).to.equal(1)
 
-    // const sameSeed = await anybodyProblem.testGetLevelSeed(0, 0, 0)
-    // expect(sameSeed).to.equal(seed)
+    const fastestRun = await anybodyProblem.fastestByDay(day, 0)
+    expect(fastestRun).to.equal(finalRunId)
+
+    const mostGames = await anybodyProblem.mostGames(0)
+    expect(mostGames).to.equal(owner.address)
+
+    const gamesPlayed = await anybodyProblem.gamesPlayed(owner.address)
+    expect(gamesPlayed.total).to.equal(1)
+    expect(gamesPlayed.lastPlayed).to.equal(day)
+    expect(gamesPlayed.streak).to.equal(1)
   })
 })
