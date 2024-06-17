@@ -519,6 +519,8 @@ export async function updateLeaderboard(chain: Chain) {
     Object.keys(problems).length,
     'problems',
     'daily took',
-    doneWithDaily - start
+    doneWithDaily - start,
+    'today',
+    today
   )
 }
