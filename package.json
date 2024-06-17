@@ -90,7 +90,7 @@
     "eslint-config-prettier": "^9.1.0",
     "ethereum-waffle": "*",
     "ethers": "^5.7.0",
-    "hardhat": "2.13.0",
+    "hardhat": "2.21.0",
     "hardhat-contract-sizer": "*",
     "hardhat-gas-reporter": "*",
     "husky": "^9.0.11",

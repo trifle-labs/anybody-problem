@@ -217,6 +217,138 @@ const verifyContracts = async (returnObject) => {
   }
 }
 
+const solveLevel = async (anybodyProblem, expect, runId) => {
+  const runCount = await anybodyProblem.runCount()
+  if (runId == 0) {
+    const tx = await anybodyProblem.batchSolve(0, [], [], [], [], [])
+
+    const receipt = await tx.wait()
+    const events = getParsedEventLogs(receipt, anybodyProblem, 'RunCreated')
+    runId = events[0].args.runId
+  } else if (runId > runCount) {
+    throw new Error(`Run ID (${runId}) out of range (${runCount})`)
+  }
+  const { owner, /*solved, accumulativeTime,*/ seed, day } =
+    await anybodyProblem.runs(runId)
+  const level = await anybodyProblem.currentLevel(runId)
+  const levelIndex = level.toNumber() - 1
+  const levelData = await anybodyProblem.getLevelsData(runId)
+
+  const {
+    // solved: levelSolved,
+    // time: levelTime,
+    // seed: levelSeed,
+    // tmpInflightMissile,
+    tmpBodyData: bodyData
+  } = levelData[levelIndex]
+
+  const bodyCount = bodyData.filter((b) => parseInt(b.seed) !== 0).length
+  const ticksRun = await getTicksRun(bodyCount)
+
+  let missileInits = []
+  const anybody = new Anybody(null, {
+    util: true,
+    stopEvery: ticksRun
+  })
+  const newBodyData = []
+  const scalingFactor = await anybodyProblem.scalingFactor()
+  const maxVector = await anybodyProblem.maxVector()
+  const windowWidth = ethers.BigNumber.from(anybody.windowWidth)
+  for (let i = 0; i < bodyCount; i++) {
+    let body = bodyData[i]
+    const newRadius = ethers.BigNumber.from(10).mul(scalingFactor)
+
+    // position x will be 3/4 of the way across the screen for the hero body
+    // position x will be increments of the radius for the other bodies
+    // position y will all be at the exact bottom of the screen so the gravity
+    // does not affect any bodies in a vertical direction
+    const pos =
+      i == 0
+        ? windowWidth.mul(3).div(4).mul(scalingFactor)
+        : ethers.BigNumber.from(i)
+            .mul(newRadius.mul(1).div(scalingFactor))
+            .mul(scalingFactor)
+
+    body = {
+      bodyIndex: body.bodyIndex,
+      px: pos,
+      py: windowWidth.mul(scalingFactor),
+      vx: ethers.BigNumber.from(1).mul(maxVector).mul(scalingFactor),
+      vy: ethers.BigNumber.from(1).mul(maxVector).mul(scalingFactor),
+      radius: newRadius,
+      seed: body.seed
+    }
+    newBodyData.push(body)
+
+    const missile = {
+      step: i * 2,
+      position: anybody.createVector(0, windowWidth),
+      velocity: anybody.createVector(ethers.BigNumber.from(10), 0),
+      radius: newRadius
+    }
+    missileInits.push(missile)
+  }
+
+  missileInits = anybody.processMissileInits(missileInits)
+  anybody.missileInits = missileInits
+  const { missiles, inflightMissile } = anybody.finish()
+  const { dataResult } = await generateProof(
+    owner,
+    seed,
+    bodyCount,
+    ticksRun,
+    newBodyData,
+    missiles,
+    inflightMissile
+  )
+
+  for (let i = 1; i < bodyCount; i++) {
+    const radiusIndex = 5 + i * 5 + 4
+    expect(dataResult.publicSignals[radiusIndex]).to.equal('0')
+  }
+
+  const newBodyDataLength6 = newBodyData.concat(
+    bodyData.slice(level.add(1).toNumber(), 6)
+  )
+  await anybodyProblem.testFunctionCommentBeforeDeployment(
+    runId,
+    level.sub(1),
+    inflightMissile,
+    newBodyDataLength6
+  )
+
+  // 0—4: missile output
+  // 5—9: body 1 output
+  // 10—14: body 2 output
+  // 15: time output (5 + bodyCount * 5 + 1)
+  // 16: address input (5 + bodyCount * 5 + 2)
+  // 17—21: body 1 input
+  // 22—26: body 2 input
+  // 27—31: missile input (5 + 2 * bodyCount * 5 + 2)
+
+  const time = dataResult.Input[5 + bodyCount * 5]
+
+  const price = await anybodyProblem.price()
+
+  const tickCounts = [ticksRun]
+  const a = [dataResult.a]
+  const b = [dataResult.b]
+  const c = [dataResult.c]
+  const Input = [dataResult.Input]
+
+  const args = [runId, tickCounts, a, b, c, Input]
+
+  const tx3 = await anybodyProblem.batchSolve(...args, {
+    value: level.eq(5) ? price : 0
+  })
+
+  await expect(tx3)
+    .to.emit(anybodyProblem, 'LevelSolved')
+    .withArgs(owner, runId, level, time, day)
+
+  return { runId, tx: tx3, time }
+}
+
 const log = (message) => {
   const printLogs = process.env.npm_lifecycle_event !== 'test'
   printLogs && console.log(message)
@@ -226,7 +358,7 @@ const getParsedEventLogs = (receipt, contract, eventName) => {
   const events = receipt.events
     .filter((x) => x.address === contract.address)
     .map((log) => contract.interface.parseLog(log))
-  return events.filter((x) => x.name === eventName)
+  return eventName ? events.filter((x) => x.name === eventName) : events
 }
 
 const mintProblem = async (/*signers, deployedContracts, acct*/) => {
@@ -274,9 +406,9 @@ const generateProof = async (
   bodyCount,
   proofLength,
   bodyData,
-  missiles = null
+  missiles = null,
+  inflightMissile = null
 ) => {
-  console.log({ bodyData })
   const anybody = new Anybody(null, {
     bodyData,
     seed,
@@ -291,11 +423,13 @@ const generateProof = async (
     bodies: results.bodyInits,
     missiles: missiles || results.missiles
   }
-  inputData.inflightMissile = [
+  inputData.inflightMissile = inflightMissile || [
     '0',
     (anybody.windowHeight * parseInt(anybody.scalingFactor)).toString(),
-    ...inputData.missiles[0]
+    ...(inputData.missiles.length > 0 ? inputData.missiles[0] : [0, 0, 0])
   ]
+
+  // console.dir({ inputData }, { depth: null })
   const bodyFinal = results.bodyFinal
   // const outflightMissile = results.outflightMissiles
   // const startTime = Date.now()
@@ -327,7 +461,6 @@ const generateAndSubmitProof = async (
   bodyData
 ) => {
   const bodyCount = bodyData.length
-  console.log({ bodyCount })
   // console.log('generateAndSubmitProof')
   const { AnybodyProblem: anybodyProblem } = deployedContracts
   const { inputData, bodyFinal, dataResult } = await generateProof(
@@ -443,6 +576,7 @@ export {
   testJson,
   correctPrice,
   generateWitness,
-  verifyContracts
+  verifyContracts,
+  solveLevel
   // splitterAddress
 }

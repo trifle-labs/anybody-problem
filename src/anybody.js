@@ -51,7 +51,7 @@ export class Anybody extends EventEmitter {
       scalingFactor: 10n ** 3n,
       minDistanceSquared: 200 * 200,
       G: 100, // Gravitational constant
-      mode: 'nft', // game or nft
+      mode: 'game', // game or nft
       admin: false,
       solved: false,
       clearBG: true,
@@ -329,7 +329,6 @@ export class Anybody extends EventEmitter {
     if (this.handledGameOver) return
     this.handledGameOver = true
 
-    this.witherAllBodies()
     // this.sound?.playGameOver({ won })
     this.gameOver = true
     this.won = won
@@ -563,7 +562,6 @@ export class Anybody extends EventEmitter {
       this.bodies.slice(1).reduce((a, c) => a + c.radius, 0) == 0
     ) {
       this.finalBatchSent = true
-      this.storeStarPositions()
     }
     if (this.missileInits.length > 0) {
       // TODO: this is a hack to prevent proofs from breaking,
@@ -571,24 +569,6 @@ export class Anybody extends EventEmitter {
       this.lastMissileCantBeUndone = true
     }
     return results
-  }
-
-  storeStarPositions() {
-    this.starPositions ||= []
-    for (let i = 0; i < this.bodies.length; i++) {
-      const body = this.bodies[i]
-      if (body.starLvl == body.maxStarLvl) {
-        this.starPositions.push(
-          JSON.parse(
-            JSON.stringify(
-              body,
-              (key, value) =>
-                typeof value === 'bigint' ? value.toString() : value // return everything else unchanged
-            )
-          )
-        )
-      }
-    }
   }
 
   generateBodies() {
@@ -655,8 +635,6 @@ export class Anybody extends EventEmitter {
       // const j = this.random(0, 2)
       const j = Math.floor(this.random(1, 4))
       const radius = i == 0 ? 32 : j * 5 + startingRadius
-      const maxStarLvl = this.random(3, 10, new Prando())
-      const starLvl = this.random(0, maxStarLvl - 1, new Prando())
 
       const vectorMax =
         (i == 0 ? this.vectorLimit / 3 : this.vectorLimit) *
@@ -664,18 +642,18 @@ export class Anybody extends EventEmitter {
       const vx =
         i === 0
           ? 0
-          : this.random(-vectorMax, vectorMax) / Number(this.scalingFactor)
+          : this.random(-vectorMax / 2, vectorMax / 2) /
+            Number(this.scalingFactor)
       const vy =
         i === 0
           ? 0
-          : this.random(-vectorMax, vectorMax) / Number(this.scalingFactor)
+          : this.random(-vectorMax / 2, vectorMax / 2) /
+            Number(this.scalingFactor)
       const body = {
         bodyIndex: i,
         position: this.createVector(ss[i][0], ss[i][1]),
         velocity: this.createVector(vx, vy),
         radius,
-        starLvl,
-        maxStarLvl,
         c: cs[i]
       }
       bodies.push(body)
@@ -717,7 +695,7 @@ export class Anybody extends EventEmitter {
       position: this.createVector(px, py),
       velocity: this.createVector(vx, vy),
       radius: radius,
-      c: this.getBodyColor(b.seed)
+      c: this.getBodyColor(bodyIndex)
     }
   }
 
@@ -817,23 +795,6 @@ export class Anybody extends EventEmitter {
 
     this.sound?.playMissile()
     this.missileInits.push(...this.processMissileInits([b]))
-  }
-
-  witherAllBodies() {
-    for (const body of this.bodies) {
-      if (body.starLvl !== body.maxStarLvl) continue
-      // find the index in witheringBodies
-      const index = this.witheringBodies.findIndex(
-        (b) => b.bodyIndex == body.bodyIndex
-      )
-      // if it's there, update the position
-      if (index >= 0) {
-        this.witheringBodies[index].position = body.position
-      } else {
-        // if not, add it
-        this.witheringBodies.push({ ...body })
-      }
-    }
   }
 
   calculateStats = () => {

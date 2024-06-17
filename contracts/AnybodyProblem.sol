@@ -55,6 +55,7 @@ contract AnybodyProblem is Ownable, ERC2981 {
     uint256 vx;
     uint256 vy;
     uint256 radius;
+    bytes32 seed;
   }
 
   mapping(uint256 => uint256[3]) public fastestByDay; // day => [fastest, 2nd fastest, 3rd fastest runId]
@@ -72,6 +73,7 @@ contract AnybodyProblem is Ownable, ERC2981 {
 
   // NOTE: initialize with length of 1 so Runs are not 0 indexed (runId == index of the run array)
   Run[] public runs = new Run[](1);
+
   // mapping is body count to tickcount to address
   mapping(uint256 => mapping(uint256 => address)) public verifiers;
 
@@ -146,29 +148,36 @@ contract AnybodyProblem is Ownable, ERC2981 {
           verifyLevelChunk(runId, tickCounts[i], day, a[i], b[i], c[i], input[i]);
       }
   }
-  function getLevelData(uint256 day, uint256 level) public pure returns (Body[6] memory bodyData, uint256 bodyCount) {
+  function runCount() public view returns (uint256) {
+    return runs.length - 1;
+  }
+  function getLevelsData(uint256 runId) public view returns(Level[] memory levels) {
+    return runs[runId].levels;
+  }
+  function generateLevelData(uint256 day, uint256 level) public pure returns (Body[6] memory bodyData, uint256 bodyCount) {
     // NOTE: <= becuase level 5 has 6 bodies
     for (uint256 i = 0; i <= level; i++) {
-      bytes32 levelSeed = getLevelSeed(day, level, i);
-      bytes32 bodyIndexRand = keccak256(abi.encodePacked(day, i));
-      bodyData[i] = getRandomValues(levelSeed, bodyIndexRand, i);
+      bytes32 dayLevelIndexSeed = getLevelSeed(day, level, i);
+      bytes32 dayIndexSeed = keccak256(abi.encodePacked(day, i));
+      bodyData[i] = getRandomValues(dayLevelIndexSeed, dayIndexSeed, i);
     }
     bodyCount = level + 1;
   }
   function getLevelSeed(uint256 day, uint256 level, uint256 bodyIndex) public pure returns (bytes32) {
       return keccak256(abi.encodePacked(day, level, bodyIndex));
   }
-  function getRandomValues(bytes32 rand, bytes32 bodyIndexRand, uint256 index) public pure returns (Body memory) {
+  function getRandomValues(bytes32 dayLevelIndexSeed, bytes32 dayIndexSeed, uint256 index) public pure returns (Body memory) {
       // NOTE: this function uses a seed consisting of the day + bodyIndex which means 
       // that all problems of the same level on the same day will have bodies with the same 
       // positions, velocities and radii.
       Body memory body;
 
       body.bodyIndex = index;
+      body.seed = dayLevelIndexSeed;
 
-      body.radius = genRadius(bodyIndexRand, index);
+      body.radius = genRadius(dayIndexSeed, index);
 
-      rand = keccak256(abi.encodePacked(rand));
+      bytes32 rand = keccak256(abi.encodePacked(dayLevelIndexSeed));
       body.px = randomRange(0, windowWidth, rand);
 
       rand = keccak256(abi.encodePacked(rand));
@@ -210,16 +219,20 @@ contract AnybodyProblem is Ownable, ERC2981 {
   function currentDay() public view returns (uint256) {
       return block.timestamp - (block.timestamp % SECONDS_IN_A_DAY);
   }
-  function addNewLevelData(uint256 runId) internal {
+  // TODO: comment out this test version before deployment
+  function addNewLevelData(uint256 runId) public onlyOwner {
+  // function addNewLevelData(uint256 runId) internal {
     uint256 day = runs[runId].day;
     uint256 level = currentLevel(runId) + 1;
     Level memory levelData;
     levelData.seed = generateSeed(runId, level);
-    (levelData.tmpBodyData, ) = getLevelData(day, level);
+    (levelData.tmpBodyData, ) = generateLevelData(day, level);
     runs[runId].levels.push(levelData);
     emit LevelCreated(runId, level, levelData.seed, day);
   }
-  function addNewRun(uint256 day) internal returns (uint256 runId) {
+  // TODO: make sure the test version is commented out before deployment
+  function addNewRun(uint256 day) public onlyOwner returns (uint256 runId) {
+  // function addNewRun(uint256 day) internal returns (uint256 runId) {
     runId = runs.length;
     Run memory run;
     run.owner = msg.sender;
@@ -322,6 +335,11 @@ contract AnybodyProblem is Ownable, ERC2981 {
         addNewLevelData(runId);
       }
     }
+  }
+  // TODO: Make sure this is commented out before deployment
+  function testFunctionCommentBeforeDeployment(uint256 runId, uint256 levelIndex, uint256[5] memory missile, Body[6] memory bodyData) public onlyOwner {
+    runs[runId].levels[levelIndex].tmpInflightMissile = missile;
+    runs[runId].levels[levelIndex].tmpBodyData = bodyData;
   }
   function addToLeaderboard(uint256 runId) internal {
     addToFastestByDay(runId);

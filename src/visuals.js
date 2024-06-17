@@ -1,4 +1,4 @@
-import { hslToRgb, randHSL, themes } from './colors'
+import { hslToRgb, randHSL, themes } from './colors.js'
 
 const BODY_SCALE = 4 // match to calculations.js !!
 const WITHERING_STEPS = 3000
@@ -368,18 +368,6 @@ export const Visuals = {
     g.tint(cc[0], cc[1], cc[2], cc[3] * 255)
     g.image(img, 0, 0)
     return g
-  },
-
-  drawStarOnTopOfBG(x, y, v, radius, b) {
-    const faceIdx = b.mintedBodyIndex || b.bodyIndex
-    const expression = 1
-    const with_mouth = expression * 2
-    const face = this.pngFaces[faceIdx][with_mouth]
-
-    // const star = this.starSVG[b.maxStarLvl]
-    if (face) {
-      this.p.image(face, x, y, radius, radius)
-    }
   },
 
   drawStaticBg() {
@@ -894,186 +882,12 @@ export const Visuals = {
     this.drawImageAsset(BG_SVGS[0], width, fill)
   },
 
-  drawGlyphFace(radius, body) {
-    const eyeArray = [
-      '≖',
-      '✿',
-      'ಠ',
-      '◉',
-      '۞',
-      '◉',
-      'ಡ',
-      '˘',
-      '❛',
-      '⊚',
-      '✖',
-      'ᓀ',
-      '◔',
-      'ಠ',
-      '⊡',
-      '◑',
-      '■',
-      '↑',
-      '༎',
-      'ಥ',
-      'ཀ',
-      '╥',
-      '☯'
-    ]
-    const mouthArray = [
-      '益',
-      '﹏',
-      '෴',
-      'ᗜ',
-      'ω',
-      '_',
-      '‿',
-      '‿‿',
-      '‿‿‿',
-      '‿‿‿‿',
-      '‿‿‿‿‿',
-      '‿‿‿‿‿‿',
-      '‿‿‿‿‿‿‿',
-      '‿‿‿‿‿‿‿‿',
-      '‿‿‿‿‿‿‿‿‿'
-    ]
-
-    const c = body.c.replace(this.opac, '0.1')
-    const i = this.bodies.indexOf(body) // TODO: change to bodyId
-
-    this.bodiesGraphic.noStroke()
-    this.bodiesGraphic.fill(c)
-    this.bodiesGraphic.ellipse(0, 0, radius, radius)
-    this.bodiesGraphic.textSize(radius / 2.2)
-    const eyeIndex = i % eyeArray.length
-    const mouthIndex = i % mouthArray.length
-    const face =
-      eyeArray[eyeIndex] + mouthArray[mouthIndex] + eyeArray[eyeIndex]
-
-    this.bodiesGraphic.fill(c)
-    this.bodiesGraphic.strokeWeight(10)
-    this.bodiesGraphic.stroke(c)
-    this.bodiesGraphic.text(face, -radius / 2.4, radius / 8)
-
-    const invertedC = this.invertColorRGB(c)
-    this.bodiesGraphic.fill(invertedC)
-    this.bodiesGraphic.noStroke()
-    this.bodiesGraphic.text(face, -radius / 2.4, radius / 8)
-
-    // hp in white text
-    this.bodiesGraphic.fill('white')
-    this.bodiesGraphic.textSize(radius / 4)
-    this.bodiesGraphic.textAlign(this.p.CENTER, this.p.CENTER)
-    this.bodiesGraphic.text(body.starLvl, 0, radius)
-  },
-
   getTintFromColor(c) {
     const cc = c
       .split(',')
       .map((c) => parseFloat(c.replace(')', '').replace('hsla(', '')))
     return [cc[0], cc[1], cc[2], cc[2]]
   },
-
-  drawLevels(radius, body, offset) {
-    if (body.radius !== 0) return
-    this.bodiesGraphic.push()
-    this.bodiesGraphic.translate(0, offset)
-    this.bodiesGraphic.rotate(3 * (this.p.PI / 2))
-    const distance = radius / 1
-    radius = radius - this.radiusMultiplyer
-    // const blackTransparent = 'rgba(0,0,0,0.5)'
-    const whiteTransparent = 'rgba(255,255,255,0.5)'
-    this.bodiesGraphic.fill('transparent')
-    this.bodiesGraphic.stroke(whiteTransparent)
-    this.bodiesGraphic.strokeWeight(1)
-    this.bodiesGraphic.ellipse(0, 0, distance * 2)
-    for (let i = 0; i < body.maxStarLvl; i++) {
-      this.bodiesGraphic.strokeWeight(0)
-      this.bodiesGraphic.noStroke()
-      // this.bodiesGraphic.stroke(whiteTransparent)
-      const rotateOffset = this.frames / 80
-      const rotated =
-        i * (this.bodiesGraphic.TWO_PI / body.maxStarLvl) + rotateOffset
-      const xRotated = distance * Math.cos(rotated)
-      const yRotated = distance * Math.sin(rotated)
-
-      // let c = body.c
-      let c = body.c.replace(this.opac, '1')
-
-      if (body.radius == 0) {
-        if (i < body.starLvl) {
-          // this.bodiesGraphic.fill(body.c.replace(this.opac, '1'))
-          // if (i == body.starLvl - 1) {
-          //   c = 'rgba(255,255,255,1)'
-          //   this.bodiesGraphic.fill('white')
-          // } else {
-          // c = body.c.replace(this.opac, '1')
-          this.bodiesGraphic.fill(c)
-          // }
-        } else {
-          c = 'black'
-          this.bodiesGraphic.strokeWeight(1)
-          this.bodiesGraphic.stroke(whiteTransparent)
-          this.bodiesGraphic.fill(c)
-        }
-      } else {
-        if (i > 0 && i - 1 < body.starLvl) {
-          this.bodiesGraphic.fill(c)
-        } else {
-          c = 'black'
-          this.bodiesGraphic.strokeWeight(1)
-          this.bodiesGraphic.stroke(whiteTransparent)
-          this.bodiesGraphic.fill(c)
-          // c = blackTransparent
-        }
-      }
-
-      this.bodiesGraphic.ellipse(xRotated, yRotated, radius / 2)
-      // this.starSVG ||= []
-      // const star = this.starSVG[body.maxStarLvl]
-      // if (!star) {
-      //   const svg = STAR_SVGS[body.maxStarLvl - 1]
-      //   this.p.loadImage(svg, (img) => {
-      //     // this is a hack to tint the svg
-      //     // const g = this.p.createGraphics(img.width, img.height)
-      //     // const cc = c
-      //     //   .split(',')
-      //     //   .map((c) => parseFloat(c.replace(')', '').replace('rgba(', '')))
-      //     // g.tint(cc[0], cc[1], cc[2], cc[3] * 255)
-      //     // g.image(img, 0, 0)
-      //     this.starSVG[body.maxStarLvl] = img //g
-      //   })
-      // }
-      // if (star && star !== 'loading') {
-      //   this.bodiesGraphic.image(
-      //     star,
-      //     xRotated - radius / 2,
-      //     yRotated - radius / 2,
-      //     radius,
-      //     radius
-      //   )
-      // }
-
-      // this.bodiesGraphic.fill('white')
-      // this.bodiesGraphic.textSize(50)
-      // this.bodiesGraphic.text(`${body.starLvl} / ${body.maxStarLvl}`, 0, radius)
-    }
-    this.bodiesGraphic.pop()
-  },
-
-  // async getStar(starIndex, color) {
-  //   if (this.starPNGs[starIndex][color]) {
-  //     return this.starPNGs[starIndex + color]
-  //   }
-  //   this.starPNGs[starIndex + color] = 'not-yet'
-  //   const path = stars[starIndex]
-
-  //   const starImg = this.p.loadImage(svg, (img) => {
-
-  //   }
-  //   this.starPNGs[starIndex][color] = starImg
-
-  // },
 
   drawBodyStyle1(radius, body, offset) {
     this.bodiesGraphic.noStroke()
@@ -1275,7 +1089,6 @@ export const Visuals = {
       // const body = this.bodies.sort((a, b) => b.radius - a.radius)[i]
       const body = this.bodies[i]
       // after final proof is sent, don't draw upgradable bodies
-      if (this.finalBatchSent && body.maxStarLvl == body.starLvl) continue
       if (body.radius == 0) continue
       const bodyRadius = this.bodyCopies.filter(
         (b) => b.bodyIndex == body.bodyIndex
@@ -1619,80 +1432,70 @@ export const Visuals = {
     y = y == undefined ? b.position.y : y
     const r = b.radius * BODY_SCALE // b.radius * 4
     if (r == 0) return
-    let c = this.brighten(b.c).replace(this.opac, 1)
-    if (this.target == 'outside') {
-      p.fill(c)
-      p.ellipse(x, y, r)
-      const star = this.starSVG[b.maxStarLvl]
-      p.image(star, x - r / 2, y - r / 2, r, r)
-    } else {
-      let darker = this.brighten(b.c, -30).replace(this.opac, 1)
+    // let c = this.brighten(b.c).replace(this.opac, 1)
+    let darker = this.brighten(b.c, -30).replace(this.opac, 1)
 
+    p.fill(darker)
+    p.ellipse(x, y, r)
+    if (closeEnough) {
+      // draw teeth
+      const teeth = 10
+      const toothSize = r / 4.5
+      // if (closeEnough) {
       p.fill(darker)
       p.ellipse(x, y, r)
-      if (closeEnough) {
-        // draw teeth
-        const teeth = 10
-        const toothSize = r / 4.5
-        // if (closeEnough) {
-        p.fill(darker)
-        p.ellipse(x, y, r)
-        for (let i = 0; i < teeth; i++) {
-          if (i == Math.floor(teeth / 4)) continue
-          if (i == Math.ceil(teeth / 4)) continue
+      for (let i = 0; i < teeth; i++) {
+        if (i == Math.floor(teeth / 4)) continue
+        if (i == Math.ceil(teeth / 4)) continue
 
-          if (i == Math.floor((3 * teeth) / 4)) continue
-          if (i == Math.ceil((3 * teeth) / 4)) continue
+        if (i == Math.floor((3 * teeth) / 4)) continue
+        if (i == Math.ceil((3 * teeth) / 4)) continue
+        p.fill('white')
+        // draw each tooth
+        const angle = (i * this.p.TWO_PI) / teeth
+        // add some rotation depending on vector of body
+        const rotatedAngle = angle + b.velocity.heading()
+        const x1 = x + (r / 2.3) * this.p.cos(rotatedAngle)
+        const y1 = y + (r / 2.3) * this.p.sin(rotatedAngle)
+        p.ellipse(x1, y1, toothSize)
+      }
+
+      p.stroke(darker)
+      p.strokeWeight(r / 12)
+      p.noFill()
+      p.ellipse(x, y, r)
+    } else {
+      /** DRAW TARGET */
+      // const width = r / 2
+      // const rotatedAngle = b.velocity.heading()
+      // p.push()
+      // p.translate(x, y)
+      // p.rotate(rotatedAngle + p.PI / 2)
+      // const teeth = 6
+      // for (let i = 0; i < teeth; i++) {
+      //   p.fill('white')
+      //   const xx = 0 - width / (teeth / 2) + ((i % (teeth / 2)) * width) / 2
+      //   const yy =
+      //     -width / (teeth / 2) - ((i < teeth / 2 ? -1 : 1) * width) / 5
+      //   p.ellipse(xx - width / teeth / 2, yy + width / 4, width / (teeth / 3))
+      // }
+      // p.fill(darker)
+      // p.rect(0 - width / 1.5, 0 - width / 1.5, width * 1.5, width / 3)
+      // p.rect(0 - width / 1.5, 0 + width / 4, width * 1.5, width / 3)
+      // p.strokeWeight(15)
+      // p.noFill()
+      // p.stroke(darker)
+      // p.ellipse(0, 0, r - 7)
+      // p.pop()
+      p.strokeWeight(0)
+      const count = 3
+      for (let i = 0; i < count; i++) {
+        if (i % 2 == 1) {
           p.fill('white')
-          // draw each tooth
-          const angle = (i * this.p.TWO_PI) / teeth
-          // add some rotation depending on vector of body
-          const rotatedAngle = angle + b.velocity.heading()
-          const x1 = x + (r / 2.3) * this.p.cos(rotatedAngle)
-          const y1 = y + (r / 2.3) * this.p.sin(rotatedAngle)
-          p.ellipse(x1, y1, toothSize)
+        } else {
+          p.fill(darker)
         }
-
-        p.stroke(darker)
-        p.strokeWeight(r / 12)
-        p.noFill()
-        p.ellipse(x, y, r)
-      } else {
-        /** DRAW TARGET */
-        // const width = r / 2
-        // const rotatedAngle = b.velocity.heading()
-        // p.push()
-        // p.translate(x, y)
-        // p.rotate(rotatedAngle + p.PI / 2)
-        // const teeth = 6
-        // for (let i = 0; i < teeth; i++) {
-        //   p.fill('white')
-        //   const xx = 0 - width / (teeth / 2) + ((i % (teeth / 2)) * width) / 2
-        //   const yy =
-        //     -width / (teeth / 2) - ((i < teeth / 2 ? -1 : 1) * width) / 5
-        //   p.ellipse(xx - width / teeth / 2, yy + width / 4, width / (teeth / 3))
-        // }
-        // p.fill(darker)
-        // p.rect(0 - width / 1.5, 0 - width / 1.5, width * 1.5, width / 3)
-        // p.rect(0 - width / 1.5, 0 + width / 4, width * 1.5, width / 3)
-        // p.strokeWeight(15)
-        // p.noFill()
-        // p.stroke(darker)
-        // p.ellipse(0, 0, r - 7)
-        // p.pop()
-        p.strokeWeight(0)
-        const count = 3
-        for (let i = 0; i < count; i++) {
-          if (i % 2 == 1) {
-            p.fill('white')
-          } else {
-            p.fill(darker)
-          }
-          p.ellipse(x, y, r - (i * r) / count)
-        }
-        // let star = this.starSVG[b.maxStarLvl]
-        // star = this.tintImage(star, darker)
-        // p.image(star, x - r / 2, y - r / 2, r, r)
+        p.ellipse(x, y, r - (i * r) / count)
       }
     }
     // p.blendMode(p.BLEND)
