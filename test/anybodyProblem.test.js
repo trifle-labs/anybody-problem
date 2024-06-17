@@ -1,5 +1,6 @@
 import { expect } from 'chai'
 import hre from 'hardhat'
+import { smock } from '@defi-wonderland/smock'
 const ethers = hre.ethers
 
 import {
@@ -143,7 +144,12 @@ describe('AnybodyProblem Tests', function () {
     let runId = 0
     const day = await anybodyProblem.currentDay()
 
-    const solvedReturn = await solveLevel(anybodyProblem, expect, runId)
+    const solvedReturn = await solveLevel(
+      owner.address,
+      anybodyProblem,
+      expect,
+      runId
+    )
     runId = solvedReturn.runId
     const tx = solvedReturn.tx
     const time = solvedReturn.time
@@ -152,7 +158,7 @@ describe('AnybodyProblem Tests', function () {
       .withArgs(owner.address, runId, 1, time, day)
   })
 
-  it.only('solves all levels', async () => {
+  it('solves all levels', async () => {
     const [owner] = await ethers.getSigners()
     const { AnybodyProblem: anybodyProblem, Speedruns: speedruns } =
       await deployContracts()
@@ -161,7 +167,12 @@ describe('AnybodyProblem Tests', function () {
     const day = await anybodyProblem.currentDay()
     let accumulativeTime = 0
     for (let i = 0; i < 5; i++) {
-      const solvedReturn = await solveLevel(anybodyProblem, expect, runId)
+      const solvedReturn = await solveLevel(
+        owner.address,
+        anybodyProblem,
+        expect,
+        runId
+      )
       runId = solvedReturn.runId
       tx = solvedReturn.tx
       accumulativeTime += parseInt(solvedReturn.time)
@@ -190,5 +201,38 @@ describe('AnybodyProblem Tests', function () {
     expect(gamesPlayed.streak).to.equal(1)
   })
 
-  it('solves all levels in a single tx', async () => {})
+  it.only('solves all levels in a single tx', async () => {
+    console.log('start')
+    const deployedContracts = await deployContracts()
+    const [owner] = await ethers.getSigners()
+
+    const AnybodyProblemFactory = await smock.mock('AnybodyProblem', {
+      provider: hre.ethers.provider
+    })
+    const { verifiers, verifiersTicks, verifiersBodies, Speedruns } =
+      deployedContracts
+    const anybodyProblem = await AnybodyProblemFactory.connect(owner).deploy(
+      owner.address,
+      Speedruns.address,
+      verifiers,
+      verifiersTicks,
+      verifiersBodies
+    )
+    anybodyProblem.price.returns(69)
+    const price = await anybodyProblem.price()
+    expect(price).to.equal(69)
+
+    anybodyProblem.getLevelSeed.returns('0x' + '1'.repeat(64))
+    const seed = await anybodyProblem.getLevelSeed(0, 0, 0)
+    expect(seed).to.equal('0x' + '1'.repeat(64))
+
+    anybodyProblem.getLevelSeed
+      .whenCalledWith(1, 2, 3)
+      .returns('0x' + '2'.repeat(64))
+    const otherSeed = await anybodyProblem.getLevelSeed(1, 2, 3)
+    expect(otherSeed).to.equal('0x' + '2'.repeat(64))
+
+    // const sameSeed = await anybodyProblem.testGetLevelSeed(0, 0, 0)
+    // expect(sameSeed).to.equal(seed)
+  })
 })

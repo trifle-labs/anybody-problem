@@ -4,6 +4,7 @@ require('hardhat-contract-sizer')
 require('dotenv').config()
 require('@nomicfoundation/hardhat-verify')
 require('solidity-coverage')
+// require('@defi-wonderland/smock')
 
 // const util = require("util");
 
@@ -53,7 +54,12 @@ const config = {
         version: '0.8.15',
         settings: {
           viaIR: true,
-          optimizer: { enabled: true, runs: 200 }
+          optimizer: { enabled: true, runs: 200 },
+          outputSelection: {
+            '*': {
+              '*': ['storageLayout']
+            }
+          }
         }
       }
     ]

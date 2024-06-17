@@ -137,6 +137,9 @@ const deployContracts = async (ignoreTesting = false) => {
     verifiersBodies.push(i)
     returnObject[name] = verifierContract
   }
+  returnObject.verifiers = verifiers
+  returnObject.verifiersTicks = verifiersTicks
+  returnObject.verifiersBodies = verifiersBodies
 
   // deploy Speedruns
   const Speedruns = await hre.ethers.getContractFactory('Speedruns')
@@ -217,22 +220,32 @@ const verifyContracts = async (returnObject) => {
   }
 }
 
-const solveLevel = async (anybodyProblem, expect, runId) => {
+const solveLevel = async (owner, anybodyProblem, expect, runId) => {
   const runCount = await anybodyProblem.runCount()
   if (runId == 0) {
-    const tx = await anybodyProblem.batchSolve(0, [], [], [], [], [])
-
-    const receipt = await tx.wait()
-    const events = getParsedEventLogs(receipt, anybodyProblem, 'RunCreated')
-    runId = events[0].args.runId
+    // const tx = await anybodyProblem.batchSolve(0, [], [], [], [], [])
+    // const receipt = await tx.wait()
+    // const events = getParsedEventLogs(receipt, anybodyProblem, 'RunCreated')
+    // runId = events[0].args.runId
+    runId = runCount
   } else if (runId > runCount) {
     throw new Error(`Run ID (${runId}) out of range (${runCount})`)
   }
-  const { owner, /*solved, accumulativeTime,*/ seed, day } =
-    await anybodyProblem.runs(runId)
-  const level = await anybodyProblem.currentLevel(runId)
+
+  const day = await anybodyProblem.currentDay()
+
+  // const { owner, /*solved, accumulativeTime,*/ seed, day } =
+  //   await anybodyProblem.runs(runId)
+  let level
+  try {
+    level = await anybodyProblem.currentLevel(runId)
+  } catch (e) {
+    console.log({ e })
+    level = 1
+  }
   const levelIndex = level.toNumber() - 1
-  const levelData = await anybodyProblem.getLevelsData(runId)
+  // const levelData = await anybodyProblem.getLevelsData(runId)
+  const levelData = await anybodyProblem.generateLevelData(day, level)
 
   const {
     // solved: levelSolved,
@@ -294,7 +307,7 @@ const solveLevel = async (anybodyProblem, expect, runId) => {
   const { missiles, inflightMissile } = anybody.finish()
   const { dataResult } = await generateProof(
     owner,
-    seed,
+    '0x' + '0'.repeat(64), // seed doesn't matter
     bodyCount,
     ticksRun,
     newBodyData,
@@ -310,6 +323,9 @@ const solveLevel = async (anybodyProblem, expect, runId) => {
   const newBodyDataLength6 = newBodyData.concat(
     bodyData.slice(level.add(1).toNumber(), 6)
   )
+
+  // await anybodyProblemMock.setMockedBodyDataByLevel(level, newBodyDataLength6)
+
   await anybodyProblem.testFunctionCommentBeforeDeployment(
     runId,
     level.sub(1),
