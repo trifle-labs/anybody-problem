@@ -210,9 +210,9 @@ const deployContracts = async (options) => {
 const verifyContracts = async (returnObject) => {
   const blocksToWaitBeforeVerify = 0
   const verificationData = returnObject.verificationData
-  const problemMetadata = returnObject.ProblemMetadata
+  const anybodyProblem = returnObject.AnybodyProblem
   for (let i = 0; i < verificationData.length; i++) {
-    await problemMetadata.deployTransaction.wait(blocksToWaitBeforeVerify)
+    await anybodyProblem.deployTransaction.wait(blocksToWaitBeforeVerify)
     log(`Verifying ${verificationData[i].name} Contract`)
     try {
       await hre.run('verify:verify', {

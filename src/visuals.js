@@ -10,6 +10,32 @@ const THEME = {
 
 const bodyThemes = themes.bodies[THEME.bodiesTheme]
 
+const rot = {
+  fg: {
+    direction: 1,
+    speed: 25
+  },
+  bg: {
+    direction: -1,
+    speed: 35
+  },
+  core: {
+    direction: 1,
+    speed: 100
+  }
+}
+
+const rotOverride = {
+  fg: {
+    1: {
+      speed: 0
+    },
+    9: {
+      direction: -1
+    }
+  }
+}
+
 const BG_SVGS = [
   new URL('/public/bodies/bgs/bg1.svg', import.meta.url).href,
   new URL('/public/bodies/bgs/bg2.svg', import.meta.url).href,
@@ -218,15 +244,13 @@ export const Visuals = {
   },
 
   drawBg() {
-    this.p.background(THEME.bg)
-
     if (this.lastMissileCantBeUndone) {
       this.p.background('rgb(150,150,150)')
       this.p.textSize(100)
       this.p.textAlign(this.p.CENTER, this.p.CENTER)
       this.p.text('YOUR GUN\nIS BROKEN!', this.windowWidth / 2, 100)
     } else {
-      this.p.background('rgb(10,10,10)')
+      this.p.background(THEME.bg)
     }
 
     if (!this.starBG) {
@@ -864,22 +888,49 @@ export const Visuals = {
   },
 
   drawFaceSvg(width) {
-    this.drawImageAsset(FACE_SVGS[0], width)
+    this.fIndex ||= Math.floor(Math.random() * 14)
+    this.drawImageAsset(FACE_SVGS[this.fIndex], width)
   },
 
   drawStarForegroundSvg(width, body) {
     const fill = hslToRgb(randHSL(bodyThemes[body.theme].fg))
-    this.drawImageAsset(FG_SVGS[0], width, fill)
+    this.bodiesGraphic.push()
+    this.fgIndex ||= Math.floor(Math.random() * 10)
+    const r = {
+      ...rot.fg,
+      ...(rotOverride?.fg?.[this.fgIndex] ?? {})
+    }
+    const rotateBy = r.speed == 0 ? 0 : (this.frames / r.speed) % 360
+    this.bodiesGraphic.rotate(r.direction * rotateBy)
+    this.drawImageAsset(FG_SVGS[this.fgIndex], width, fill)
+    this.bodiesGraphic.pop()
   },
 
   drawCoreSvg(width, body) {
     const fill = hslToRgb(randHSL(bodyThemes[body.theme].cr))
+    this.bodiesGraphic.push()
+    const r = {
+      ...rot.core,
+      ...(rotOverride?.core?.[0] ?? {})
+    }
+    const rotateBy = r.speed == 0 ? 0 : (this.frames / r.speed) % 360
+    this.bodiesGraphic.rotate(r.direction * rotateBy)
     this.drawImageAsset(CORE_SVGS[0], width, fill)
+    this.bodiesGraphic.pop()
   },
 
   drawStarBackgroundSvg(width, body) {
     const fill = hslToRgb(randHSL(bodyThemes[body.theme].bg))
-    this.drawImageAsset(BG_SVGS[0], width, fill)
+    this.bodiesGraphic.push()
+    this.bgIndex ||= Math.floor(Math.random() * 10)
+    const r = {
+      ...rot.bg,
+      ...(rotOverride?.bg?.[this.bgIndex] ?? {})
+    }
+    const rotateBy = r.speed == 0 ? 0 : (this.frames / r.speed) % 360
+    this.bodiesGraphic.rotate(r.direction * rotateBy)
+    this.drawImageAsset(BG_SVGS[this.bgIndex], width, fill)
+    this.bodiesGraphic.pop()
   },
 
   getTintFromColor(c) {

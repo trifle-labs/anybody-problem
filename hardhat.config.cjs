@@ -77,7 +77,7 @@ const config = {
       // url: 'https://sepolia.base.org',
       url: 'https://public.stackup.sh/api/v1/node/base-sepolia',
       accounts: { mnemonic: process.env.deploymentKey },
-      gasPrice: 1_000_000_000 // 1 GWEI
+      gasPrice: 100_000_000 // 0.1 GWEI
     },
     sepolia: {
       // url: 'https://sepolia.infura.io/v3/' + process.env.INFURA_API_KEY,

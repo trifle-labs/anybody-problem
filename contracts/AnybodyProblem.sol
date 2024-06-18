@@ -166,9 +166,6 @@ contract AnybodyProblem is Ownable, ERC2981 {
   function getLevelSeed(uint256 day, uint256 level, uint256 bodyIndex) public pure returns (bytes32) {
       return keccak256(abi.encodePacked(day, level, bodyIndex));
   }
-  function testGetLevelSeed(uint256 day, uint256 level, uint256 bodyIndex) public pure returns (bytes32) {
-      return getLevelSeed(day, level, bodyIndex);
-  }
   function getRandomValues(bytes32 dayLevelIndexSeed, bytes32 dayIndexSeed, uint256 index) public pure returns (Body memory) {
       // NOTE: this function uses a seed consisting of the day + bodyIndex which means 
       // that all problems of the same level on the same day will have bodies with the same 
