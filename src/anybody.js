@@ -3,7 +3,8 @@ import Prando from 'prando'
 import EventEmitter from 'events'
 import Sound from './sound.js'
 import { Visuals } from './visuals.js'
-import { _validateSeed, Calculations } from './calculations.js'
+import { Calculations } from './calculations.js'
+import { utils } from 'ethers'
 // import wc from './witness_calculator.js'
 
 const GAME_LENGTH = 60 // seconds
@@ -39,19 +40,17 @@ export class Anybody extends EventEmitter {
 
   setOptions(options = {}) {
     const defaultOptions = {
-      inputData: null,
-      bodyData: null,
-      starData: null,
+      day: 324000,
+      level: 1,
       // Add default properties and their initial values here
       startingBodies: 1,
-      seed: null,
       windowWidth: 1000,
       windowHeight: 1000,
       pixelDensity: 4, //4, // Math.min(4, 4 * (window.devicePixelRatio ?? 1)),
       scalingFactor: 10n ** 3n,
       minDistanceSquared: 200 * 200,
       G: 100, // Gravitational constant
-      mode: 'nft', // game or nft
+      mode: 'game', // game or nft
       admin: false,
       solved: false,
       clearBG: true,
@@ -120,12 +119,8 @@ export class Anybody extends EventEmitter {
 
   // run once at initilization
   init() {
-    if (this.seed == undefined) {
-      this.seed = BigInt(Math.floor(Math.random() * 10000))
-    }
-    _validateSeed(this.seed)
-    this.rng = new Prando(this.seed.toString(16))
     this.generateBodies()
+    this.rng = new Prando(this.seed.toString(16))
     this.frames = this.alreadyRun
     this.startingFrame = this.alreadyRun
     // const vectorLimitScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
@@ -329,7 +324,6 @@ export class Anybody extends EventEmitter {
     if (this.handledGameOver) return
     this.handledGameOver = true
 
-    this.witherAllBodies()
     // this.sound?.playGameOver({ won })
     this.gameOver = true
     this.won = won
@@ -350,7 +344,7 @@ export class Anybody extends EventEmitter {
       framesTook: this.framesTook
     })
     if (won) {
-      this.startingBodies++
+      this.level++
     }
   }
 
@@ -563,7 +557,6 @@ export class Anybody extends EventEmitter {
       this.bodies.slice(1).reduce((a, c) => a + c.radius, 0) == 0
     ) {
       this.finalBatchSent = true
-      this.storeStarPositions()
     }
     if (this.missileInits.length > 0) {
       // TODO: this is a hack to prevent proofs from breaking,
@@ -573,116 +566,72 @@ export class Anybody extends EventEmitter {
     return results
   }
 
-  storeStarPositions() {
-    this.starPositions ||= []
-    for (let i = 0; i < this.bodies.length; i++) {
-      const body = this.bodies[i]
-      if (body.starLvl == body.maxStarLvl) {
-        this.starPositions.push(
-          JSON.parse(
-            JSON.stringify(
-              body,
-              (key, value) =>
-                typeof value === 'bigint' ? value.toString() : value // return everything else unchanged
-            )
-          )
-        )
-      }
+  generateLevelData(day, level) {
+    this.seed = utils.solidityKeccak256(['uint256'], [day])
+    const bodyData = []
+    for (let i = 0; i <= level; i++) {
+      const dayLevelIndexSeed = utils.solidityKeccak256(
+        ['uint256', 'uint256', 'uint256'],
+        [day, level, i]
+      )
+      const dayIndexSeed = utils.solidityKeccak256(
+        ['uint256', 'uint256'],
+        [day, i]
+      )
+      bodyData.push(this.getRandomValues(dayLevelIndexSeed, dayIndexSeed, i))
     }
+    return bodyData
+  }
+
+  getRandomValues(dayLevelIndexSeed, dayIndexSeed, index) {
+    const maxVectorScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
+
+    const body = {}
+    body.bodyIndex = index
+    body.seed = dayLevelIndexSeed
+    body.radius = this.genRadius(dayIndexSeed, index)
+
+    let rand = utils.solidityKeccak256(['bytes32'], [dayLevelIndexSeed])
+    body.px = this.randomRange(0, this.windowWidth, rand)
+
+    rand = utils.solidityKeccak256(['bytes32'], [rand])
+    body.py = this.randomRange(0, this.windowWidth, rand)
+
+    rand = utils.solidityKeccak256(['bytes32'], [rand])
+    body.vx = this.randomRange(
+      maxVectorScaled / 2n,
+      (maxVectorScaled * 3n) / 2n,
+      rand
+    )
+
+    rand = utils.solidityKeccak256(['bytes32'], [rand])
+    body.vy = this.randomRange(
+      maxVectorScaled / 2n,
+      (maxVectorScaled * 3n) / 2n,
+      rand
+    )
+
+    return body
+  }
+
+  genRadius(seed, index) {
+    const startingRadius = 2
+    let randRadius = this.randomRange(1, 3, seed)
+    randRadius = index == 0 ? 36 : randRadius * 5 + startingRadius
+    return parseInt(BigInt(randRadius) * BigInt(this.scalingFactor))
+  }
+
+  randomRange(minBigInt, maxBigInt, seed) {
+    minBigInt = typeof minBigInt === 'bigint' ? minBigInt : BigInt(minBigInt)
+    maxBigInt = typeof maxBigInt === 'bigint' ? maxBigInt : BigInt(maxBigInt)
+    seed = typeof seed === 'bigint' ? seed : BigInt(seed)
+    return parseInt((seed % (maxBigInt - minBigInt)) + minBigInt)
   }
 
   generateBodies() {
-    // if (this.inputData) {
-    //   // console.dir({ inputData: this.inputData }, { depth: null })
-    //   const step1 = this.inputData.map(
-    //     this.convertScaledStringArrayToBody.bind(this)
-    //   )
-    //   // console.dir({ step1 }, { depth: null })
-    //   this.bodies = this.convertBigIntsToBodies(step1)
-    //   // console.dir({ bodies: this.bodies })
-    //   this.radiusMultiplyer = this.random(10, 200)
-    //   for (let i = 0; i < this.startingBodies; i++) {
-    //     this.bodies[i].c =
-    //       `hsla(${this.random(0, 360)}, 100%, 100%, ${this.opac})`
-    //     // this.bodies[i].c = this.colorArrayToTxt(this.randomColor(200, 250)
-    //     this.bodies[i].bodyIndex = i
-    //   }
-    //   return
-    // }
-    // if (this.starData) {
-    //   this.starPositions = this.starData.map(this.bodyDataToBodies.bind(this))
-    // }
-    if (this.bodyData) {
-      this.radiusMultiplyer = 100 //this.random(10, 200)
-      this.bodies = this.bodyData.map(this.bodyDataToBodies.bind(this))
-      this.startingBodies = this.bodies.length
-      return
-    }
-    const ss = []
-    const cs = []
-    const bodies = []
-
-    this.radiusMultiplyer = 100 //this.random(10, 50)
-
-    const startingRadius = 2 //this.random(20, 40)
-
-    // const baseColor = this.randomColor(0, 200)
-
-    // const range = 100
-    // const midRange = range / 2
-    // const start = 0 - midRange
-    // const totalChunks = this.startingBodies
-    // const chunk = range / totalChunks
-
-    for (let i = 0; i < this.startingBodies; i++) {
-      // cs.push(`hsla(${this.random(0, 360)}, 100%, 50%, ${this.opac})`)
-
-      cs.push(this.colorArrayToTxt(this.randomColor()))
-    }
-
-    for (let i = 0; i < this.startingBodies; i++) {
-      let s = this.randomPosition()
-      ss.push(s)
-    }
-    if (this.startingBodies.length > 10) {
-      throw new Error('too many bodies')
-    }
-    let maxSize = this.startingBodies < 10 ? 10 : this.startingBodies
-    for (let i = 0; i < maxSize; i++) {
-      if (i >= this.startingBodies) break
-
-      // const j = i
-      // const j = this.random(0, 2)
-      const j = Math.floor(this.random(1, 4))
-      const radius = i == 0 ? 32 : j * 5 + startingRadius
-      const maxStarLvl = this.random(3, 10, new Prando())
-      const starLvl = this.random(0, maxStarLvl - 1, new Prando())
-
-      const vectorMax =
-        (i == 0 ? this.vectorLimit / 3 : this.vectorLimit) *
-        Number(this.scalingFactor)
-      const vx =
-        i === 0
-          ? 0
-          : this.random(-vectorMax, vectorMax) / Number(this.scalingFactor)
-      const vy =
-        i === 0
-          ? 0
-          : this.random(-vectorMax, vectorMax) / Number(this.scalingFactor)
-      const body = {
-        bodyIndex: i,
-        position: this.createVector(ss[i][0], ss[i][1]),
-        velocity: this.createVector(vx, vy),
-        radius,
-        starLvl,
-        maxStarLvl,
-        c: cs[i]
-      }
-      bodies.push(body)
-    }
-
-    this.bodies = bodies
-    // .sort((a, b) => b.radius - a.radius)
+    const bodyData = this.generateLevelData(this.day, this.level)
+    this.bodies = bodyData.map(this.bodyDataToBodies.bind(this))
+    this.startingBodies = this.bodies.length
   }
 
   getFaceIdx(seed) {
@@ -699,30 +648,25 @@ export class Anybody extends EventEmitter {
   }
 
   bodyDataToBodies(b) {
-    const bodyId = b.bodyId.toNumber()
-    const bodyIndex = b.bodyIndex.toNumber()
-    const px = b.px.toNumber() / parseInt(this.scalingFactor)
-    const py = b.py.toNumber() / parseInt(this.scalingFactor)
+    const bodyIndex = b.bodyIndex
+    const px = b.px
+    const py = b.py
     const vx =
-      (b.vx.toNumber() - this.vectorLimit * parseInt(this.scalingFactor)) /
+      (b.vx - this.vectorLimit * parseInt(this.scalingFactor)) /
       parseInt(this.scalingFactor)
     const vy =
-      (b.vy.toNumber() - this.vectorLimit * parseInt(this.scalingFactor)) /
+      (b.vy - this.vectorLimit * parseInt(this.scalingFactor)) /
       parseInt(this.scalingFactor)
-    const radius = b.radius.toNumber() / parseInt(this.scalingFactor)
+    const radius = b.radius / parseInt(this.scalingFactor)
     const faceIndex = this.getFaceIdx(b.seed)
     return {
       seed: b.seed,
       faceIndex,
-      bodyId: bodyId,
       bodyIndex: bodyIndex,
       position: this.createVector(px, py),
       velocity: this.createVector(vx, vy),
       radius: radius,
-      starLvl: b.starLvl?.toNumber(),
-      maxStarLvl: b.maxStarLvl?.toNumber(),
-      mintedBodyIndex: b.mintedBodyIndex.toNumber(),
-      c: this.getBodyColor(b.seed)
+      c: this.getBodyColor(bodyIndex)
     }
   }
 
@@ -824,23 +768,6 @@ export class Anybody extends EventEmitter {
     this.missileInits.push(...this.processMissileInits([b]))
   }
 
-  witherAllBodies() {
-    for (const body of this.bodies) {
-      if (body.starLvl !== body.maxStarLvl) continue
-      // find the index in witheringBodies
-      const index = this.witheringBodies.findIndex(
-        (b) => b.bodyIndex == body.bodyIndex
-      )
-      // if it's there, update the position
-      if (index >= 0) {
-        this.witheringBodies[index].position = body.position
-      } else {
-        // if not, add it
-        this.witheringBodies.push({ ...body })
-      }
-    }
-  }
-
   calculateStats = () => {
     // n.b. this needs to match the contract in check_boost.cjs
     const BODY_BOOST = [
@@ -880,15 +807,6 @@ export class Anybody extends EventEmitter {
       (p, c) => (c[0] == 0 ? p : p + 1),
       0
     )
-    console.log('stats will return', {
-      missilesShot,
-      bodiesIncluded,
-      bodiesBoost,
-      speedBoost,
-      dust,
-      timeTook,
-      framesTook
-    })
 
     return {
       missilesShot,

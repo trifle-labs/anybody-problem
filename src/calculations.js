@@ -379,10 +379,8 @@ export const Calculations = {
       if (body.c) {
         newBody.c = body.c
       }
-      newBody.mintedBodyIndex = body.mintedBodyIndex
-      newBody.starLvl = body.starLvl
-      newBody.maxStarLvl = body.maxStarLvl
       newBody.seed = body.seed
+      newBody.bodyIndex = body.bodyIndex
       newBody.faceIndex = body.faceIndex
       bodies.push(newBody)
     }
@@ -418,9 +416,6 @@ export const Calculations = {
       newBody.velocity.y =
         body.vy || this.convertFloatToScaledBigInt(body.velocity.y)
       newBody.radius = this.convertFloatToScaledBigInt(body.radius)
-      newBody.starLvl = body.starLvl
-      newBody.maxStarLvl = body.maxStarLvl
-      newBody.mintedBodyIndex = body.mintedBodyIndex
       newBody.c = body.c
       newBody.bodyIndex = body.bodyIndex
       newBody.seed = body.seed
@@ -490,8 +485,6 @@ export const Calculations = {
           _explosion(x, y, this.convertScaledBigIntToFloat(body.radius))
         )
         this.sound?.playExplosion(x, y)
-
-        body.starLvl += 1
 
         bodies[j].radius = 0n
       }

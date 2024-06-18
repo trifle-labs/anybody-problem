@@ -77,7 +77,7 @@ const config = {
       // url: 'https://sepolia.base.org',
       url: 'https://public.stackup.sh/api/v1/node/base-sepolia',
       accounts: { mnemonic: process.env.deploymentKey },
-      gasPrice: 1_000_000_000 // 1 GWEI
+      gasPrice: 100_000_000 // 0.1 GWEI
     },
     sepolia: {
       // url: 'https://sepolia.infura.io/v3/' + process.env.INFURA_API_KEY,
@@ -94,11 +94,12 @@ const config = {
     }
   },
   gasReporter: {
-    currency: 'EUR',
-    gasPrice: 42,
+    currency: 'USD',
+    gasPrice: 0.1,
     url: 'http://localhost:8545',
     coinmarketcap: '38b60711-0559-45f4-8bda-e72f446c8278',
-    enabled: true
+    enabled: true,
+    showMethodSig: true
   },
   sourcify: {
     enabled: false
@@ -130,10 +131,11 @@ const config = {
     ]
   },
   contractSizer: {
-    alphaSort: true,
-    disambiguatePaths: true,
+    alphaSort: false,
+    disambiguatePaths: false,
     runOnCompile: true,
-    strict: true
+    strict: false,
+    only: ['AnybodyProblem', 'Speedruns']
   }
 }
 module.exports = config

@@ -13,7 +13,7 @@ q5.setup = () => {
     // globalStyle: 'psycho',
     alreadyRun: 0, //Math.floor(Math.random() * 20000),
     seed: seed || null,
-    startingBodies: Number(process.env.DEV_STARTING_BODIES) || 2 //Math.floor(Math.random() * 8) + 2
+    startingBodies: Math.floor(Math.random() * 8) + 2
   })
   if (!seed) {
     window.location.hash =

@@ -406,7 +406,7 @@ describe('Solver Tests', function () {
     ]
 
     const signers = await ethers.getSigners()
-    const deployedContracts = await deployContracts(true)
+    const deployedContracts = await deployContracts({ ignoreTesting: true })
     const { problemId } = await mintProblem(signers, deployedContracts)
     const { Problems: problems, Solver: solver } = deployedContracts
     const { bodyCount } = await problems.problems(problemId)

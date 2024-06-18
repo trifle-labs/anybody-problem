@@ -7,10 +7,6 @@ import {Groth16Verifier as Groth16Verifier3} from "./Game_3_20Verifier.sol";
 import {Groth16Verifier as Groth16Verifier4} from "./Game_4_20Verifier.sol";
 import {Groth16Verifier as Groth16Verifier5} from "./Game_5_20Verifier.sol";
 import {Groth16Verifier as Groth16Verifier6} from "./Game_6_20Verifier.sol";
-import {Groth16Verifier as Groth16Verifier7} from "./Game_7_20Verifier.sol";
-import {Groth16Verifier as Groth16Verifier8} from "./Game_8_20Verifier.sol";
-// import {Groth16Verifier as Groth16Verifier9} from "./Game_9_20Verifier.sol";
-// import {Groth16Verifier as Groth16Verifier10} from "./Game_10_20Verifier.sol";
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 

@@ -66,7 +66,7 @@
   },
   "dependencies": {
     "prando": "^6.0.1",
-    "tone": "^14.7.77"
+    "tone": "14.7.77"
   },
   "devDependencies": {
     "@babel/core": "^7.24.0",
@@ -90,9 +90,9 @@
     "eslint-config-prettier": "^9.1.0",
     "ethereum-waffle": "*",
     "ethers": "^5.7.0",
-    "hardhat": "2.13.0",
-    "hardhat-contract-sizer": "*",
-    "hardhat-gas-reporter": "*",
+    "hardhat": "2.21.0",
+    "hardhat-contract-sizer": "^2.10.0",
+    "hardhat-gas-reporter": "^2.2.0",
     "husky": "^9.0.11",
     "lint-staged": "^15.2.2",
     "parcel": "^2.12.0",

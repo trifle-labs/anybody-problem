@@ -19,13 +19,13 @@ export const themes = {
         fg: [undefined, '100', '55-60']
       },
       'bg:shadow__core:highlighter__fg:marker': {
-        bg: [undefined, '80-100', '10-25'],
+        bg: [undefined, '80-100', '18-25'],
         cr: [undefined, '100', '55-60'],
         fg: [undefined, '70-90', '67']
       },
       // "berlin"
       'bg:dark__core:burnt__fg:crayon': {
-        bg: [undefined, '100', '10'],
+        bg: [undefined, '100', '18'],
         cr: [undefined, '100', '45'],
         fg: [undefined, '100', '30']
       }
@@ -96,7 +96,6 @@ export function hslToRgb(values) {
 
   return `rgb(${r}, ${g}, ${b})`
 }
-
 
 function randInt(min, max) {
   // min and max included
