@@ -6,7 +6,7 @@ import type {
   PGColumnType,
   IndexStatment
 } from '@indexsupply/shovel-config'
-import { Problems, Bodies, Solver } from './contracts'
+import { AnybodyProblem, Speedruns } from './contracts'
 import { ethers } from 'ethers'
 import { camelToSnakeCase } from './src/util'
 
@@ -62,7 +62,7 @@ const STARTING_BLOCK = {
 export const sources: KnownSource[] = [baseSepolia]
 
 const contracts = Object.fromEntries(
-  [Problems, Bodies, Solver].map((contract) => {
+  [AnybodyProblem, Speedruns].map((contract) => {
     const abi = contract.abi.abi
     return [
       contract.abi.contractName,
@@ -153,16 +153,13 @@ async function integrationFor(
 if (process.env.OUTPUT) {
   ;(async function main() {
     let integrations = await Promise.all([
-      integrationFor('Problems', 'Transfer', [
+      integrationFor('Speedruns', 'Transfer', [
         ['block_num DESC', 'tx_idx DESC', 'log_idx DESC']
       ]),
-      integrationFor('Bodies', 'Transfer', [
-        ['block_num DESC', 'tx_idx DESC', 'log_idx DESC']
-      ]),
-      integrationFor('Solver', 'Solved'),
-      integrationFor('Bodies', 'bodyBorn'),
-      integrationFor('Problems', 'bodyAdded'),
-      integrationFor('Problems', 'bodyRemoved')
+      integrationFor('AnybodyProblem', 'RunCreated'),
+      integrationFor('AnybodyProblem', 'RunSolved'),
+      integrationFor('AnybodyProblem', 'LevelCreated'),
+      integrationFor('AnybodyProblem', 'LevelSolved')
     ])
 
     const config = makeConfig({
