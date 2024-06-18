@@ -260,6 +260,8 @@ export class Anybody extends EventEmitter {
 
   handleMouseMove = (e) => {
     const { x, y } = this.getXY(e)
+    this.mouseX = x
+    this.mouseY = y
     // check if mouse is inside any of the buttons
     for (const key in this.buttons) {
       const button = this.buttons[key]
@@ -301,22 +303,25 @@ export class Anybody extends EventEmitter {
   }
 
   handleGameKeyDown = (e) => {
-    if (e.code == 'Space') {
-      e.preventDefault()
-      this.setPause()
-    }
-    if (
-      e.code === 'KeyR' &&
-      !e.shiftKey &&
-      !e.altKey &&
-      !e.ctrlKey &&
-      !e.metaKey
-    ) {
-      // confirm('Are you sure you want to restart?') && this.restart()
-      if (!this.gameOver) {
-        // this.startingBodies = 2
-      }
-      this.restart()
+    const modifierKeyActive = e.shiftKey && e.altKey && e.ctrlKey && e.metaKey
+    if (modifierKeyActive) return
+    switch (e.code) {
+      case 'Space':
+        if (this.mouseX || this.mouseY) {
+          e.preventDefault()
+          this.missileClick(this.mouseX, this.mouseY)
+        }
+        break
+      case 'KeyR':
+        // confirm('Are you sure you want to restart?') && this.restart()
+        if (!this.gameOver) {
+          // this.startingBodies = 2
+        }
+        this.restart()
+        break
+      case 'KeyP':
+        this.setPause()
+        break
     }
   }
 
