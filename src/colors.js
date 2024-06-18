@@ -51,7 +51,7 @@ export const themes = {
 
 // helpers
 
-export function hslToRgb(values) {
+export function hslToRgb(values, alpha = 1) {
   let [h, s, l] = values
 
   s /= 100
@@ -94,9 +94,8 @@ export function hslToRgb(values) {
   g = Math.round((g + m) * 255)
   b = Math.round((b + m) * 255)
 
-  return `rgb(${r}, ${g}, ${b})`
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`
 }
-
 
 function randInt(min, max) {
   // min and max included
