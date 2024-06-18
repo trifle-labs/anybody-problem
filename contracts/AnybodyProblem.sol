@@ -11,7 +11,6 @@ import {Groth16Verifier as Groth16Verifier6} from "./Game_6_20Verifier.sol";
 import "@openzeppelin/contracts/token/common/ERC2981.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/token/common/ERC2981.sol";
 import "./Speedruns.sol";
 
 contract AnybodyProblem is Ownable, ERC2981 {
