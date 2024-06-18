@@ -159,7 +159,9 @@ if (process.env.OUTPUT) {
       integrationFor('AnybodyProblem', 'RunCreated'),
       integrationFor('AnybodyProblem', 'RunSolved'),
       integrationFor('AnybodyProblem', 'LevelCreated'),
-      integrationFor('AnybodyProblem', 'LevelSolved')
+      integrationFor('AnybodyProblem', 'LevelSolved'),
+      integrationFor('AnybodyProblem', 'OwnershipTransferred'),
+      integrationFor('Speedruns', 'OwnershipTransferred')
     ])
 
     const config = makeConfig({

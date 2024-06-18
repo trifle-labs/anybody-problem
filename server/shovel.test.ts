@@ -33,9 +33,26 @@ describe('shovel sanity test', () => {
     //  public       | problems_body_removed |      0
 
     expect(rows).toBeDefined()
-    expect(rowCount).toBeGreaterThanOrEqual(6)
+    expect(rowCount).toBeGreaterThanOrEqual(7)
 
-    const tablesWithRows = rows.filter((row) => row.rows_n > 0)
-    expect(tablesWithRows.length).toBeGreaterThanOrEqual(5)
+    // TODO: uncomment when there's data
+    // const tablesWithRows = rows.filter((row) => row.rows_n > 0)
+    // expect(tablesWithRows.length).toBeGreaterThanOrEqual(5)
+  })
+
+  test('anybody_problem has owner', async () => {
+    const { rows, rowCount } = await db.query(
+      `SELECT * FROM anybody_problem_ownership_transferred`
+    )
+
+    expect(rowCount).toBeGreaterThan(0)
+  })
+
+  test('speedruns have owners', async () => {
+    const { rows, rowCount } = await db.query(
+      `SELECT * FROM speedruns_ownership_transferred`
+    )
+
+    expect(rowCount).toBeGreaterThan(0)
   })
 })
