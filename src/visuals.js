@@ -83,6 +83,12 @@ const CORE_SVGS = [
   new URL('/public/bodies/cores/core-zigzag-lg.svg', import.meta.url).href
 ]
 
+const BADDIE_SVG = {
+  bg: new URL('/public/baddies/baddie-bg.svg', import.meta.url).href,
+  core: new URL('/public/baddies/baddie-core.svg', import.meta.url).href,
+  face: new URL('/public/baddies/baddie-face.svg', import.meta.url).href
+}
+
 const replaceAttribute = (string, key, color) =>
   string.replaceAll(
     new RegExp(`${key}="(?!none)([^"]+)"`, 'g'),
@@ -852,7 +858,8 @@ export const Visuals = {
 
   drawImageAsset(assetUrl, width, fill, myP = this.bodiesGraphic) {
     this.imgAssets ||= {}
-    const id = assetUrl
+    // TODO: remove width from ID when colors aren't temp-random
+    const id = assetUrl + width
     const loaded = this.imgAssets[id]
 
     if (!loaded) {
@@ -990,9 +997,9 @@ export const Visuals = {
     // y-offset of face relative to center
     // const offset = this.getOffset(radius)
 
-    const size = Math.floor(body.radius * BODY_SCALE * 2.66)
-
     if (body.bodyIndex === 0) {
+      const size = Math.floor(body.radius * BODY_SCALE * 2.66)
+
       // TEMP random body theme
       const themes = Object.keys(bodyThemes)
       body.theme = themes[Math.floor(Math.random() * (themes.length - 1))]
@@ -1002,7 +1009,10 @@ export const Visuals = {
       this.drawStarForegroundSvg(size, body)
       this.drawFaceSvg(size)
     } else {
-      this.drawCenter(body)
+      // TEMP random baddie color
+      const color = randHSL([undefined, '90-100', '55-60'])
+
+      this.drawBaddie(body, color)
     }
 
     this.bodiesGraphic.pop()
@@ -1473,6 +1483,20 @@ export const Visuals = {
     cc[1] = cc[1] + '%'
     cc[2] = cc[2] + '%'
     return `hsla(${cc.join(',')})`
+  },
+
+  drawBaddie(body, colorHSL) {
+    const coreWidth = body.radius * BODY_SCALE
+    const bgColor = hslToRgb(colorHSL, 0.5)
+    const coreColor = hslToRgb(colorHSL)
+    this.drawImageAsset(
+      BADDIE_SVG.bg,
+      Math.floor(coreWidth * (310 / 111.2)),
+      bgColor
+    )
+    this.drawImageAsset(BADDIE_SVG.core, coreWidth, coreColor)
+    // TODO: draw eyes (or pupils) as ellipses that follow the bullet?
+    this.drawImageAsset(BADDIE_SVG.face, coreWidth, undefined)
   },
 
   drawCenter(b, p = this.bodiesGraphic, x = 0, y = 0) {
