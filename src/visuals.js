@@ -30,6 +30,9 @@ const rotOverride = {
     1: {
       speed: 0
     },
+    8: {
+      speed: 0
+    },
     9: {
       direction: -1
     }
@@ -77,6 +80,23 @@ const FACE_SVGS = [
   new URL('/public/bodies/faces/face12.svg', import.meta.url).href,
   new URL('/public/bodies/faces/face13.svg', import.meta.url).href,
   new URL('/public/bodies/faces/face14.svg', import.meta.url).href
+]
+
+const FACE_BLINK_SVGS = [
+  new URL('/public/bodies/faces_blink/1.svg', import.meta.url).href,
+  new URL('/public/bodies/faces_blink/2.svg', import.meta.url).href,
+  new URL('/public/bodies/faces_blink/3.svg', import.meta.url).href,
+  new URL('/public/bodies/faces_blink/4.svg', import.meta.url).href,
+  new URL('/public/bodies/faces_blink/5.svg', import.meta.url).href,
+  new URL('/public/bodies/faces_blink/6.svg', import.meta.url).href,
+  new URL('/public/bodies/faces_blink/7.svg', import.meta.url).href,
+  new URL('/public/bodies/faces_blink/8.svg', import.meta.url).href,
+  new URL('/public/bodies/faces_blink/9.svg', import.meta.url).href,
+  new URL('/public/bodies/faces_blink/10.svg', import.meta.url).href,
+  new URL('/public/bodies/faces_blink/11.svg', import.meta.url).href,
+  new URL('/public/bodies/faces_blink/12.svg', import.meta.url).href,
+  new URL('/public/bodies/faces_blink/13.svg', import.meta.url).href,
+  new URL('/public/bodies/faces_blink/14.svg', import.meta.url).href
 ]
 
 const CORE_SVGS = [
@@ -269,7 +289,7 @@ export const Visuals = {
         // this.starBG.fill('rgba(255,255,255,0.6)')
         // this.starBG.fill('black')
         this.starBG.fill(THEME.fg)
-        this.starBG.textSize(20)
+        this.starBG.textSize(40)
         const strings = [',', '.', '*']
         this.starBG.text(
           strings[this.random(0, strings.length - 1)],
@@ -894,9 +914,19 @@ export const Visuals = {
     }
   },
 
-  drawFaceSvg(width) {
+  drawFaceSvg(body, width) {
     this.fIndex ||= Math.floor(Math.random() * 14)
-    this.drawImageAsset(FACE_SVGS[this.fIndex], width)
+    const x = 5 // every 5 seconds it blinks
+    const m = 25 // for 25 frames (1 second)
+    // uncomment the following line to rotate face
+    // this.bodiesGraphic.push()
+    // this.bodiesGraphic.rotate(body.velocity.heading() + this.p.PI / 2)
+    if (Math.floor(this.frames / x) % m == 0) {
+      this.drawImageAsset(FACE_BLINK_SVGS[this.fIndex], width)
+    } else {
+      this.drawImageAsset(FACE_SVGS[this.fIndex], width)
+    }
+    // this.bodiesGraphic.pop()
   },
 
   drawStarForegroundSvg(width, body) {
@@ -1007,7 +1037,7 @@ export const Visuals = {
       this.drawStarBackgroundSvg(size, body)
       this.drawCoreSvg(body.radius * BODY_SCALE, body)
       this.drawStarForegroundSvg(size, body)
-      this.drawFaceSvg(size)
+      this.drawFaceSvg(body, size)
     } else {
       // TEMP random baddie color
       const color = randHSL([undefined, '90-100', '55-60'])
@@ -1489,14 +1519,21 @@ export const Visuals = {
     const coreWidth = body.radius * BODY_SCALE
     const bgColor = hslToRgb(colorHSL, 0.5)
     const coreColor = hslToRgb(colorHSL)
+    this.bodiesGraphic.push()
+    const rotate = (this.frames / 30) % 360
+    this.bodiesGraphic.rotate(rotate)
     this.drawImageAsset(
       BADDIE_SVG.bg,
       Math.floor(coreWidth * (310 / 111.2)),
       bgColor
     )
+    this.bodiesGraphic.push()
+    this.bodiesGraphic.rotate(-rotate + body.velocity.heading() + this.p.PI / 2)
     this.drawImageAsset(BADDIE_SVG.core, coreWidth, coreColor)
     // TODO: draw eyes (or pupils) as ellipses that follow the bullet?
     this.drawImageAsset(BADDIE_SVG.face, coreWidth, undefined)
+    this.bodiesGraphic.pop()
+    this.bodiesGraphic.pop()
   },
 
   drawCenter(b, p = this.bodiesGraphic, x = 0, y = 0) {

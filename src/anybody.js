@@ -621,7 +621,7 @@ export class Anybody extends EventEmitter {
 
   genRadius(seed, index) {
     const startingRadius = 2
-    let randRadius = this.randomRange(1, 3, seed)
+    let randRadius = this.randomRange(2, 5, seed)
     randRadius = index == 0 ? 36 : randRadius * 5 + startingRadius
     return parseInt(BigInt(randRadius) * BigInt(this.scalingFactor))
   }
