@@ -140,6 +140,10 @@ export const Visuals = {
     //   }
     // }
 
+    if (this.forces) {
+      this.drawForces()
+    }
+
     if (!this.firstFrame) {
       this.drawBodies()
     }
@@ -214,6 +218,29 @@ export const Visuals = {
       this.handleGameOver({ won: true })
     }
     this.firstFrame = false
+  },
+  drawForces() {
+    const { forces } = this
+    this.p.stroke('rgba(255,255,255,0.2)')
+    this.p.strokeCap(this.p.PROJECT)
+
+    for (const [key, value] of Object.entries(forces)) {
+      // Your code here
+      console.log({ key })
+      console.log({ value })
+      const bodyIndexes = key.split('-')
+      const body1 = this.bodies[bodyIndexes[0]]
+      const body2 = this.bodies[bodyIndexes[1]]
+      const force = Math.abs(parseInt(value[0] + value[1]))
+      console.log({ force })
+      this.p.strokeWeight(force)
+      this.p.line(
+        body1.position.x,
+        body1.position.y,
+        body2.position.x,
+        body2.position.y
+      )
+    }
   },
   drawPause() {
     if (this.paused) {

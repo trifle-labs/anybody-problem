@@ -429,7 +429,9 @@ export class Anybody extends EventEmitter {
     // )
     // this.bodies = bodies
     // this.missiles = missiles || []
-    this.bodies = this.forceAccumulator(this.bodies)
+    const forceResults = this.forceAccumulator(this.bodies)
+    this.bodies = forceResults.bodies
+    this.forces = forceResults.forces
     var results = this.detectCollision(this.bodies, this.missiles)
     this.bodies = results.bodies
     this.missiles = results.missiles || []

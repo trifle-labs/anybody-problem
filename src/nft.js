@@ -8,6 +8,7 @@ window.anybody
 q5.setup = () => {
   window.anybody = new Anybody(q5, {
     mode: 'game',
+    level: 2,
     // showLevels: true,
     // target: 'inside',
     // globalStyle: 'psycho',
