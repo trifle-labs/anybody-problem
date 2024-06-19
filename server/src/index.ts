@@ -31,9 +31,10 @@ async function setupListener() {
     await publish()
   })
   for (const source of sources) {
-    db.query(`LISTEN "${source.name}-problems_transfer"`)
-    db.query(`LISTEN "${source.name}-problems_body_added"`)
-    db.query(`LISTEN "${source.name}-problems_body_removed"`)
+    db.query(`LISTEN "${source.name}-anybody_problem_level_created"`)
+    db.query(`LISTEN "${source.name}-anybody_problem_level_solved"`)
+    db.query(`LISTEN "${source.name}-anybody_problem_run_created"`)
+    db.query(`LISTEN "${source.name}-anybody_problem_run_solved"`)
     db.query(`LISTEN "${source.name}-solver_solved"`)
     db.query(`LISTEN "${source.name}-bodies_transfer"`)
   }

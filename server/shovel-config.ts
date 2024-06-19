@@ -157,9 +157,11 @@ if (process.env.OUTPUT) {
         ['block_num DESC', 'tx_idx DESC', 'log_idx DESC']
       ]),
       integrationFor('AnybodyProblem', 'RunCreated'),
-      integrationFor('AnybodyProblem', 'RunSolved'),
+      integrationFor('AnybodyProblem', 'RunSolved', [
+        ['accumulative_time ASC']
+      ]),
       integrationFor('AnybodyProblem', 'LevelCreated'),
-      integrationFor('AnybodyProblem', 'LevelSolved'),
+      integrationFor('AnybodyProblem', 'LevelSolved', [['time ASC']]),
       integrationFor('AnybodyProblem', 'OwnershipTransferred'),
       integrationFor('Speedruns', 'OwnershipTransferred')
     ])
