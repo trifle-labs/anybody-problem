@@ -7,7 +7,7 @@ import { Chain, sources } from '../shovel-config'
 import { publish, addSubscriber, unsubscribe } from './publish'
 import { cors } from 'hono/cors'
 
-// This is a read-only API server that serves the leaderboard state, including all problems and owners.
+// This is a read-only API server that serves the leaderboard state.
 // It uses Server Sent Events (SSE) to push updates to the client.
 
 // Design notes:
