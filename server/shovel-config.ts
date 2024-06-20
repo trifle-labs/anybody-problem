@@ -161,9 +161,7 @@ if (process.env.OUTPUT) {
         ['accumulative_time ASC']
       ]),
       integrationFor('AnybodyProblem', 'LevelCreated'),
-      integrationFor('AnybodyProblem', 'LevelSolved', [['time ASC']]),
-      integrationFor('AnybodyProblem', 'OwnershipTransferred'),
-      integrationFor('Speedruns', 'OwnershipTransferred')
+      integrationFor('AnybodyProblem', 'LevelSolved', [['time ASC']])
     ])
 
     const config = makeConfig({

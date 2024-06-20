@@ -340,12 +340,10 @@ export async function updateLeaderboard(chain: Chain) {
   )
 
   const allTime = await calculateAllTimeLeaderboard(today, chain)
-  // const runs = await getRuns(chain)
 
   leaderboards[chain] = {
     daily,
     allTime
-    // runs
   }
 
   console.log(
