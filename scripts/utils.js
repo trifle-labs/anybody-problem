@@ -235,10 +235,11 @@ const solveLevel = async (
 ) => {
   const day = await anybodyProblem.currentDay()
   const levelData = await anybodyProblem.generateLevelData(day, level)
+  console.log({ levelData })
   const { bodyCount, bodyData } = levelData
 
   const ticksRun = await getTicksRun(bodyCount)
-
+  console.log({ ticksRun })
   let missileInits = []
   const anybody = new Anybody(null, {
     util: true,

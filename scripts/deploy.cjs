@@ -75,7 +75,7 @@ async function main() {
   console.log({ networkInfo })
   const { deployContracts, verifyContracts } = await import('./utils.js')
 
-  const deployedContracts = await deployContracts()
+  const deployedContracts = await deployContracts({ ignoreTesting: true })
   for (const contractName in deployedContracts) {
     if (
       contractName == 'verificationData' ||
