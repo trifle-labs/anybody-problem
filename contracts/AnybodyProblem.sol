@@ -396,8 +396,6 @@ contract AnybodyProblem is Ownable, ERC2981 {
     // px
     // confirm previously stored values were used as input to the proof
     // uint256 pxIndex = 5 * bodyCount + i * 5 + 0 + 1 (for time);
-    console.log("bodyData.px", bodyData.px);
-    console.log("input[5 + 5 * bodyCount + i * 5 + 0 + 2]", input[5 + 5 * bodyCount + i * 5 + 0 + 2]);
     require(
         bodyData.px == input[5 + 5 * bodyCount + i * 5 + 0 + 2],
         "Invalid position x"
