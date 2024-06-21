@@ -238,7 +238,6 @@ const solveLevel = async (
   const { bodyCount, bodyData } = levelData
 
   const ticksRun = await getTicksRun(bodyCount)
-
   let missileInits = []
   const anybody = new Anybody(null, {
     util: true,

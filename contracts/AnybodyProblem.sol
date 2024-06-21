@@ -146,6 +146,7 @@ contract AnybodyProblem is Ownable, ERC2981 {
       for(uint256 i = 0; i < input.length; i++) {
           verifyLevelChunk(runId, tickCounts[i], day, a[i], b[i], c[i], input[i]);
       }
+      require(runs[runId].solved, "Must solve all levels to complete run");
   }
   function runCount() public view returns (uint256) {
     return runs.length - 1;
@@ -196,11 +197,11 @@ contract AnybodyProblem is Ownable, ERC2981 {
   }
   function genRadius(bytes32 seed, uint256 index) public pure returns (uint256) {
       // TODO: confirm whether radius should remain only one of 3 sizes
-      uint256 randRadius = randomRange(1, 3, seed);
+      uint256 randRadius = randomRange(2, 6, seed);
       randRadius = index == 0 ? 36 : (randRadius) * 5 + startingRadius;
       return randRadius * scalingFactor;
   }
-  function randomRange(uint256 min,uint256 max,bytes32 rand) public pure returns (uint256) {
+  function randomRange(uint256 min,uint256 max, bytes32 rand) public pure returns (uint256) {
       return min + (uint256(rand) % (max - min));
   }
   function currentLevel(uint256 runId) public view returns (uint256) {
@@ -571,6 +572,7 @@ contract AnybodyProblem is Ownable, ERC2981 {
       interfaceId == type(IERC2981).interfaceId ||
       interfaceId == bytes4(0x49064906); // IERC4906 MetadataUpdate
   }
+  // TODO: add external metadata contract for easier upgrades
   function speedrunsTokenURI(uint256 id) public view returns (string memory) {
     // return string(abi.encodePacked("https://api.bodies.io/problems/", uint2str(id)));
   }

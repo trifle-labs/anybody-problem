@@ -5,6 +5,7 @@ import Sound from './sound.js'
 import { Visuals } from './visuals.js'
 import { Calculations } from './calculations.js'
 import { utils } from 'ethers'
+import { randHSL, hslToRgb, bodyThemes } from './colors.js'
 // import wc from './witness_calculator.js'
 
 const GAME_LENGTH = 60 // seconds
@@ -42,6 +43,7 @@ export class Anybody extends EventEmitter {
     const defaultOptions = {
       day: 324000,
       level: 1,
+      bodyData: null,
       // Add default properties and their initial values here
       startingBodies: 1,
       windowWidth: 1000,
@@ -119,8 +121,9 @@ export class Anybody extends EventEmitter {
 
   // run once at initilization
   init() {
-    this.generateBodies()
+    this.seed = utils.solidityKeccak256(['uint256'], [this.day])
     this.rng = new Prando(this.seed.toString(16))
+    this.generateBodies()
     this.frames = this.alreadyRun
     this.startingFrame = this.alreadyRun
     // const vectorLimitScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
@@ -572,7 +575,6 @@ export class Anybody extends EventEmitter {
   }
 
   generateLevelData(day, level) {
-    this.seed = utils.solidityKeccak256(['uint256'], [day])
     const bodyData = []
     for (let i = 0; i <= level; i++) {
       const dayLevelIndexSeed = utils.solidityKeccak256(
@@ -597,10 +599,18 @@ export class Anybody extends EventEmitter {
     body.radius = this.genRadius(dayIndexSeed, index)
 
     let rand = utils.solidityKeccak256(['bytes32'], [dayLevelIndexSeed])
-    body.px = this.randomRange(0, this.windowWidth, rand)
+    body.px = this.randomRange(
+      0,
+      BigInt(this.windowWidth) * this.scalingFactor,
+      rand
+    )
 
     rand = utils.solidityKeccak256(['bytes32'], [rand])
-    body.py = this.randomRange(0, this.windowWidth, rand)
+    body.py = this.randomRange(
+      0,
+      BigInt(this.windowWidth) * this.scalingFactor,
+      rand
+    )
 
     rand = utils.solidityKeccak256(['bytes32'], [rand])
     body.vx = this.randomRange(
@@ -621,7 +631,7 @@ export class Anybody extends EventEmitter {
 
   genRadius(seed, index) {
     const startingRadius = 2
-    let randRadius = this.randomRange(2, 5, seed)
+    let randRadius = this.randomRange(2, 6, seed)
     randRadius = index == 0 ? 36 : randRadius * 5 + startingRadius
     return parseInt(BigInt(randRadius) * BigInt(this.scalingFactor))
   }
@@ -634,8 +644,8 @@ export class Anybody extends EventEmitter {
   }
 
   generateBodies() {
-    const bodyData = this.generateLevelData(this.day, this.level)
-    this.bodies = bodyData.map(this.bodyDataToBodies.bind(this))
+    this.bodyData = this.generateLevelData(this.day, this.level)
+    this.bodies = this.bodyData.map(this.bodyDataToBodies.bind(this))
     this.startingBodies = this.bodies.length
   }
 
@@ -654,8 +664,8 @@ export class Anybody extends EventEmitter {
 
   bodyDataToBodies(b) {
     const bodyIndex = b.bodyIndex
-    const px = b.px
-    const py = b.py
+    const px = b.px / parseInt(this.scalingFactor)
+    const py = b.py / parseInt(this.scalingFactor)
     const vx =
       (b.vx - this.vectorLimit * parseInt(this.scalingFactor)) /
       parseInt(this.scalingFactor)
@@ -663,10 +673,10 @@ export class Anybody extends EventEmitter {
       (b.vy - this.vectorLimit * parseInt(this.scalingFactor)) /
       parseInt(this.scalingFactor)
     const radius = b.radius / parseInt(this.scalingFactor)
-    const faceIndex = this.getFaceIdx(b.seed)
+    // const faceIndex = this.getFaceIdx(b.seed)
     return {
       seed: b.seed,
-      faceIndex,
+      // faceIndex,
       bodyIndex: bodyIndex,
       position: this.createVector(px, py),
       velocity: this.createVector(vx, vy),
@@ -675,16 +685,33 @@ export class Anybody extends EventEmitter {
     }
   }
 
-  getBodyColor(seed, replaceOpacity = false) {
-    if (typeof seed !== 'string') {
-      seed = seed.toString(16)
+  getBodyColor(bodyIndex) {
+    if (bodyIndex == 0) {
+      // TEMP random body theme
+      const themes = Object.keys(bodyThemes)
+      const theme = themes[this.random(0, themes.length - 1)]
+
+      return {
+        bg: hslToRgb(randHSL(bodyThemes[theme].bg, this.random.bind(this))),
+        core: hslToRgb(randHSL(bodyThemes[theme].cr, this.random.bind(this))),
+        fg: hslToRgb(randHSL(bodyThemes[theme].fg, this.random.bind(this)))
+      }
+    } else {
+      return randHSL([undefined, '90-100', '55-60'], this.random.bind(this))
     }
-    const blocker = 0xffff
-    const color = (BigInt(seed) & BigInt(blocker)) % 360n
-    const saturation = ((BigInt(seed) >> 16n) & BigInt(blocker)) % 100n
-    const lightness = (((BigInt(seed) >> 32n) & BigInt(blocker)) % 40n) + 40n
-    const result = `hsla(${color.toString()}, ${saturation.toString()}%, ${lightness.toString()}%,${replaceOpacity ? '1' : this.opac})`
-    return result
+    // const seedtype = typeof seed
+    // if (seedtype !== 'string' && seedtype !== 'number') {
+    //   seed = seed.toHexString()
+    // } else if (seedtype == 'number') {
+    //   seed = seed.toString(16)
+    // }
+    // const blocker = 0xffff
+    // const color = (BigInt(seed) & BigInt(blocker)) % 360n
+    // const saturation = ((BigInt(seed) >> 16n) & BigInt(blocker)) % 100n
+    // const lightness = (((BigInt(seed) >> 32n) & BigInt(blocker)) % 40n) + 40n
+    // const result = `hsla(${color.toString()}, ${saturation.toString()}%, ${lightness.toString()}%,${replaceOpacity ? '1' : this.opac})`
+
+    // return result
   }
 
   random(min, max, rng = this.rng) {
@@ -702,17 +729,6 @@ export class Anybody extends EventEmitter {
     color.push(this.random(40, 80, rng) + '%') // Lightness
     return color
   }
-  randomPosition() {
-    const radiusDist = this.random(
-      _smolr(this.windowWidth, this.windowHeight) * 0.37,
-      _smolr(this.windowWidth, this.windowHeight) * 0.47
-    )
-    const randomDir = this.random(0, 360)
-    const x = radiusDist * Math.cos(randomDir) + this.windowWidth / 2
-    const y = radiusDist * Math.sin(randomDir) + this.windowWidth / 2
-    return [x, y]
-  }
-
   prepareP5() {
     this.p.frameRate(this.FPS)
     this.p.createCanvas(this.windowWidth, this.windowWidth)
@@ -829,9 +845,9 @@ if (typeof window !== 'undefined') {
   window.Anybody = Anybody
 }
 
-function _smolr(a, b) {
-  return a < b ? a : b
-}
+// function _smolr(a, b) {
+//   return a < b ? a : b
+// }
 BigInt.prototype.toJSON = function () {
   return this.toString()
 }

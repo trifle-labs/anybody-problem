@@ -13,7 +13,7 @@ import {
   // generateProof
 } from '../scripts/utils.js'
 
-// import { Anybody } from '../src/anybody.js'
+import { Anybody } from '../src/anybody.js'
 
 // let tx
 describe('AnybodyProblem Tests', function () {
@@ -92,7 +92,7 @@ describe('AnybodyProblem Tests', function () {
     const day = await anybodyProblem.currentDay()
     let { bodyData, bodyCount } = await anybodyProblem.generateLevelData(day, 1)
     bodyData = bodyData.slice(0, bodyCount)
-
+    console.log({ contractProducedBodyData: bodyData })
     const seed = '0x' + '0'.repeat(64)
     const proofLength = await getTicksRun(bodyCount)
 
@@ -256,5 +256,96 @@ describe('AnybodyProblem Tests', function () {
     expect(gamesPlayed.total).to.equal(1)
     expect(gamesPlayed.lastPlayed).to.equal(day)
     expect(gamesPlayed.streak).to.equal(1)
+  })
+
+  it('has the same results for generateLevelData as anybody.js', async () => {
+    const SECONDS_IN_A_DAY = 86400
+    const day = Math.floor(Date.now() / 1000 / SECONDS_IN_A_DAY)
+    const level = 1
+    const { AnybodyProblem: anybodyProblem } = await deployContracts()
+    const contractLevelData = await anybodyProblem.generateLevelData(day, level)
+    const contractBodyData = contractLevelData.bodyData
+      .slice(0, level + 1)
+      .map((body) => {
+        const newBody = {}
+        newBody.bodyIndex = body.bodyIndex.toNumber()
+        newBody.px = body.px.toNumber()
+        newBody.py = body.py.toNumber()
+        newBody.vx = body.vx.toNumber()
+        newBody.vy = body.vy.toNumber()
+        newBody.radius = body.radius.toNumber()
+        newBody.seed = body.seed
+        return newBody
+      })
+
+    const anybody = new Anybody(null, {
+      util: true
+    })
+    const anybodyLevelData = anybody.generateLevelData(day, level)
+    expect(contractBodyData).to.deep.equal(anybodyLevelData)
+  })
+
+  it('has correct getLevelFromInputs', async () => {
+    const Input = [
+      '0',
+      '1000000',
+      '20000',
+      '20000',
+      '0',
+      '754480',
+      '773335',
+      '14544',
+      '14963',
+      '36000',
+      '820297',
+      '695735',
+      '15617',
+      '15319',
+      '0',
+      '26',
+      '1428531153118459510960519782658600836333166681489',
+      '338153',
+      '247056',
+      '19800',
+      '18689',
+      '36000',
+      '174915',
+      '126128',
+      '10361',
+      '11593',
+      '17000',
+      '0',
+      '1000000',
+      '20000',
+      '20000',
+      '0'
+    ]
+
+    const { AnybodyProblem: anybodyProblem } = await deployContracts()
+    console.log(Input.length)
+    const level = await anybodyProblem.getLevelFromInputs(Input.length)
+    expect(level).to.equal(1)
+  })
+
+  it.only('returns correct currentLevel', async () => {
+    const [owner] = await ethers.getSigners()
+    const { AnybodyProblem: anybodyProblem } = await deployContracts({
+      mock: true
+    })
+    const currentLevel = await anybodyProblem.currentLevel(0)
+    expect(currentLevel).to.equal(0)
+    let runId = 0
+    let level = 1
+    const solvedReturn = await solveLevel(
+      owner.address,
+      anybodyProblem,
+      expect,
+      runId,
+      level
+    )
+    runId = solvedReturn.runId
+
+    const newCurrentLevel = await anybodyProblem.currentLevel(runId)
+    expect(newCurrentLevel).to.equal(2)
   })
 })

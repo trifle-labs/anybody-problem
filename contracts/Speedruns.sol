@@ -9,7 +9,9 @@ import "./AnybodyProblem.sol";
 
 contract Speedruns is ERC721, Ownable {
   address payable anybodyProblem;
-  constructor() ERC721("Anybody Problem Speedruns", "APS") {}
+  constructor() ERC721("Anybody Problem Speedruns", "APS") {
+    _mint(address(this), 0); // universal interface NFT
+  }
   modifier onlyAnybody() {
     require(msg.sender == anybodyProblem, "Only Anybody Problem can call");
     _;

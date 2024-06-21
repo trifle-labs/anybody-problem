@@ -1,14 +1,7 @@
-import { hslToRgb, randHSL, themes } from './colors.js'
+import { hslToRgb, THEME } from './colors.js'
 
 const BODY_SCALE = 4 // match to calculations.js !!
 const WITHERING_STEPS = 3000
-const THEME = {
-  bg: 'rgb(10,10,10)',
-  fg: 'white',
-  bodiesTheme: 'default'
-}
-
-const bodyThemes = themes.bodies[THEME.bodiesTheme]
 
 const rot = {
   fg: {
@@ -82,6 +75,18 @@ const FACE_SVGS = [
   new URL('/public/bodies/faces/face14.svg', import.meta.url).href
 ]
 
+// const FACE_DISTRESS_SVGS = [
+//   new URL('/public/bodies/faces_distress/1.svg', import.meta.url).href,
+//   new URL('/public/bodies/faces_distress/2.svg', import.meta.url).href,
+//   new URL('/public/bodies/faces_distress/3.svg', import.meta.url).href
+// ]
+
+// const FACE_CRY_SVGS = [
+//   new URL('/public/bodies/faces_cry/1.svg', import.meta.url).href,
+//   new URL('/public/bodies/faces_cry/2.svg', import.meta.url).href,
+//   new URL('/public/bodies/faces_cry/3.svg', import.meta.url).href
+// ]
+
 const FACE_BLINK_SVGS = [
   new URL('/public/bodies/faces_blink/1.svg', import.meta.url).href,
   new URL('/public/bodies/faces_blink/2.svg', import.meta.url).href,
@@ -97,6 +102,22 @@ const FACE_BLINK_SVGS = [
   new URL('/public/bodies/faces_blink/12.svg', import.meta.url).href,
   new URL('/public/bodies/faces_blink/13.svg', import.meta.url).href,
   new URL('/public/bodies/faces_blink/14.svg', import.meta.url).href
+]
+const FACE_SHOT_SVGS = [
+  new URL('/public/bodies/faces_shot/1.svg', import.meta.url).href,
+  new URL('/public/bodies/faces_shot/2.svg', import.meta.url).href,
+  new URL('/public/bodies/faces_shot/3.svg', import.meta.url).href,
+  new URL('/public/bodies/faces_shot/4.svg', import.meta.url).href,
+  new URL('/public/bodies/faces_shot/5.svg', import.meta.url).href,
+  new URL('/public/bodies/faces_shot/6.svg', import.meta.url).href,
+  new URL('/public/bodies/faces_shot/7.svg', import.meta.url).href,
+  new URL('/public/bodies/faces_shot/8.svg', import.meta.url).href,
+  new URL('/public/bodies/faces_shot/9.svg', import.meta.url).href,
+  new URL('/public/bodies/faces_shot/10.svg', import.meta.url).href,
+  new URL('/public/bodies/faces_shot/11.svg', import.meta.url).href,
+  new URL('/public/bodies/faces_shot/12.svg', import.meta.url).href,
+  new URL('/public/bodies/faces_shot/13.svg', import.meta.url).href,
+  new URL('/public/bodies/faces_shot/14.svg', import.meta.url).href
 ]
 
 const CORE_SVGS = [
@@ -142,7 +163,7 @@ export const Visuals = {
     if (this.globalStyle == 'psycho') {
       this.p.blendMode(this.p.DIFFERENCE)
     }
-    this.drawTails()
+    // this.drawTails()
 
     if (this.globalStyle == 'psycho') {
       this.p.blendMode(this.p.BLEND)
@@ -289,12 +310,12 @@ export const Visuals = {
         // this.starBG.fill('rgba(255,255,255,0.6)')
         // this.starBG.fill('black')
         this.starBG.fill(THEME.fg)
-        this.starBG.textSize(40)
+        this.starBG.textSize(15)
         const strings = [',', '.', '*']
         this.starBG.text(
-          strings[this.random(0, strings.length - 1)],
-          this.random(0, this.windowWidth),
-          this.random(0, this.windowHeight)
+          strings[Math.floor(Math.random() * strings.length)],
+          Math.floor(Math.random() * this.windowWidth),
+          Math.floor(Math.random() * this.windowHeight)
         )
       }
       //   const totalLines = 6
@@ -655,10 +676,19 @@ export const Visuals = {
     p.pop()
   },
 
+  scaleX(val) {
+    const { canvas } = this.p
+    return (val / canvas.offsetWidth) * this.windowWidth
+  },
+
+  scaleY(val) {
+    const { canvas } = this.p
+    return (val / canvas.offsetHeight) * this.windowHeight
+  },
+
   drawGun() {
     this.p.stroke('rgba(200,200,200,1)')
     this.p.strokeCap(this.p.SQUARE)
-    const { canvas } = this.p
 
     if (this.p.mouseX <= 0 && this.p.mouseY <= 0) return
 
@@ -669,26 +699,20 @@ export const Visuals = {
 
     const crossHairSize = 25
 
-    const scaleX = (val) => {
-      return (val / canvas.offsetWidth) * this.windowWidth
-    }
-    const scaleY = (val) => {
-      return (val / canvas.offsetHeight) * this.windowHeight
-    }
     // Calculate direction from bottom left to mouse
-    let dirX = scaleX(this.p.mouseX) - startX
-    let dirY = scaleY(this.p.mouseY) - startY
+    let dirX = this.scaleX(this.p.mouseX) - startX
+    let dirY = this.scaleY(this.p.mouseY) - startY
     this.p.line(
-      scaleX(this.p.mouseX) - crossHairSize,
-      scaleX(this.p.mouseY),
-      scaleX(this.p.mouseX) + crossHairSize,
-      scaleX(this.p.mouseY)
+      this.scaleX(this.p.mouseX) - crossHairSize,
+      this.scaleX(this.p.mouseY),
+      this.scaleX(this.p.mouseX) + crossHairSize,
+      this.scaleX(this.p.mouseY)
     )
     this.p.line(
-      scaleX(this.p.mouseX),
-      scaleX(this.p.mouseY) - crossHairSize,
-      scaleX(this.p.mouseX),
-      scaleX(this.p.mouseY) + crossHairSize
+      this.scaleX(this.p.mouseX),
+      this.scaleX(this.p.mouseY) - crossHairSize,
+      this.scaleX(this.p.mouseX),
+      this.scaleX(this.p.mouseY) + crossHairSize
     )
     // // Calculate the length of the direction
     // let len = this.p.sqrt(dirX * dirX + dirY * dirY)
@@ -757,7 +781,7 @@ export const Visuals = {
       this.p.ellipse(body.position.x, body.position.y, body.radius, body.radius)
 
       this.p.noFill()
-      this.p.strokeWeight(1)
+      this.p.strokeWeight(10)
       for (let i = 0; i < missileReverbLevels; i++) {
         const c =
           Math.floor((this.frames - i) / missileReverbLevels) % 2 == 0
@@ -825,21 +849,6 @@ export const Visuals = {
     // return newColor
   },
 
-  ghostEyes(radius) {
-    const eyeOffsetX = radius / 5
-    const eyeOffsetY = radius / 12
-    this.bodiesGraphic.fill('rgba(0,0,0,0.3)')
-    this.bodiesGraphic.filter(this.p.BLUR)
-    this.bodiesGraphic.ellipse(-eyeOffsetX, -eyeOffsetY, radius / 7, radius / 5)
-    this.bodiesGraphic.ellipse(eyeOffsetX, -eyeOffsetY, radius / 7, radius / 5)
-    this.bodiesGraphic.ellipse(0, +eyeOffsetY, radius / 7, radius / 7)
-    // this.bodiesGraphic.fill(i % 2 == 0 ? 'white' : this.randomColor(0, 255))
-  },
-
-  drawStyleGhost(x, y, v, radius) {
-    this.ghostEyes(radius)
-  },
-
   // Function to apply mask color to the image
   maskImage(img, maskColor) {
     img.loadPixels() // Load the image's pixel data
@@ -879,7 +888,7 @@ export const Visuals = {
   drawImageAsset(assetUrl, width, fill, myP = this.bodiesGraphic) {
     this.imgAssets ||= {}
     // TODO: remove width from ID when colors aren't temp-random
-    const id = assetUrl + width
+    const id = assetUrl + width + fill
     const loaded = this.imgAssets[id]
 
     if (!loaded) {
@@ -913,15 +922,45 @@ export const Visuals = {
       myP.image(loaded, -width / 2, -width / 2, width, width)
     }
   },
+  closeTo(body) {
+    let isClose = false
+    const minDistance = body.radius * 2
+    for (let i = 1; i < this.bodies.length; i++) {
+      const other = this.bodies[i]
+      if (other.radius == 0) continue
+      const specificDistance = minDistance + other.radius * 4
+      const distance = this.p.dist(
+        body.position.x,
+        body.position.y,
+        other.position.x,
+        other.position.y
+      )
+      if (distance <= specificDistance) {
+        isClose = true
+        break
+      }
+    }
+    return isClose
+  },
 
   drawFaceSvg(body, width) {
     this.fIndex ||= Math.floor(Math.random() * 14)
+
+    const baddiesNear = this.closeTo(body)
+    if (baddiesNear) {
+      this.drawImageAsset(FACE_SHOT_SVGS[this.fIndex], width)
+      return
+    }
+
     const x = 5 // every 5 seconds it blinks
     const m = 25 // for 25 frames (1 second)
     // uncomment the following line to rotate face
     // this.bodiesGraphic.push()
     // this.bodiesGraphic.rotate(body.velocity.heading() + this.p.PI / 2)
-    if (Math.floor(this.frames / x) % m == 0) {
+    if (
+      Math.floor(this.frames / x) % m == 0 ||
+      Math.floor(this.frames / x) % m == 2
+    ) {
       this.drawImageAsset(FACE_BLINK_SVGS[this.fIndex], width)
     } else {
       this.drawImageAsset(FACE_SVGS[this.fIndex], width)
@@ -930,7 +969,7 @@ export const Visuals = {
   },
 
   drawStarForegroundSvg(width, body) {
-    const fill = hslToRgb(randHSL(bodyThemes[body.theme].fg))
+    const fill = body.c.fg
     this.bodiesGraphic.push()
     this.fgIndex ||= Math.floor(Math.random() * 10)
     const r = {
@@ -944,7 +983,7 @@ export const Visuals = {
   },
 
   drawCoreSvg(width, body) {
-    const fill = hslToRgb(randHSL(bodyThemes[body.theme].cr))
+    const fill = body.c.core
     this.bodiesGraphic.push()
     const r = {
       ...rot.core,
@@ -957,7 +996,7 @@ export const Visuals = {
   },
 
   drawStarBackgroundSvg(width, body) {
-    const fill = hslToRgb(randHSL(bodyThemes[body.theme].bg))
+    const fill = body.c.bg
     this.bodiesGraphic.push()
     this.bgIndex ||= Math.floor(Math.random() * 10)
     const r = {
@@ -1030,19 +1069,12 @@ export const Visuals = {
     if (body.bodyIndex === 0) {
       const size = Math.floor(body.radius * BODY_SCALE * 2.66)
 
-      // TEMP random body theme
-      const themes = Object.keys(bodyThemes)
-      body.theme = themes[Math.floor(Math.random() * (themes.length - 1))]
-
       this.drawStarBackgroundSvg(size, body)
       this.drawCoreSvg(body.radius * BODY_SCALE, body)
       this.drawStarForegroundSvg(size, body)
       this.drawFaceSvg(body, size)
     } else {
-      // TEMP random baddie color
-      const color = randHSL([undefined, '90-100', '55-60'])
-
-      this.drawBaddie(body, color)
+      this.drawBaddie(body)
     }
 
     this.bodiesGraphic.pop()
@@ -1515,7 +1547,8 @@ export const Visuals = {
     return `hsla(${cc.join(',')})`
   },
 
-  drawBaddie(body, colorHSL) {
+  drawBaddie(body) {
+    const colorHSL = body.c
     const coreWidth = body.radius * BODY_SCALE
     const bgColor = hslToRgb(colorHSL, 0.5)
     const coreColor = hslToRgb(colorHSL)
@@ -1530,8 +1563,67 @@ export const Visuals = {
     this.bodiesGraphic.push()
     this.bodiesGraphic.rotate(-rotate + body.velocity.heading() + this.p.PI / 2)
     this.drawImageAsset(BADDIE_SVG.core, coreWidth, coreColor)
-    // TODO: draw eyes (or pupils) as ellipses that follow the bullet?
     this.drawImageAsset(BADDIE_SVG.face, coreWidth, undefined)
+
+    // pupils always looking at missile, if no missile, look at mouse
+    const target =
+      this.missiles.length > 0
+        ? this.missiles[0].position
+        : { x: this.scaleX(this.p.mouseX), y: this.scaleY(this.p.mouseY) }
+
+    const bx = body.position.x
+    const by = body.position.y
+
+    const leftEye = [-body.radius * 0.6, -body.radius * 0.15]
+    const rightEye = [body.radius * 0.6, -body.radius * 0.15]
+
+    this.bodiesGraphic.fill('white')
+    this.bodiesGraphic.circle(leftEye[0], leftEye[1], body.radius)
+    this.bodiesGraphic.circle(rightEye[0], rightEye[1], body.radius)
+
+    const angle =
+      Math.atan2(target.y - by, target.x - bx) -
+      body.velocity.heading() -
+      this.p.PI / 2
+
+    const distance = body.radius * 0.3
+    const leftX = distance * Math.cos(angle)
+    const leftY = distance * Math.sin(angle)
+
+    this.bodiesGraphic.fill('black')
+    this.bodiesGraphic.circle(
+      leftX + leftEye[0],
+      leftY + leftEye[1],
+      body.radius * 0.4
+    )
+    this.bodiesGraphic.circle(
+      leftX + rightEye[0],
+      leftY + rightEye[1],
+      body.radius * 0.4
+    )
+
+    const heroBody = this.bodies[0]
+    const minDistance = heroBody.radius * 2 + body.radius * 4
+    const currentDistance = this.p.dist(
+      heroBody.position.x,
+      heroBody.position.y,
+      body.position.x,
+      body.position.y
+    )
+    const closeToBody = currentDistance <= minDistance
+
+    if (closeToBody) {
+      this.bodiesGraphic.fill(coreColor)
+      this.bodiesGraphic.triangle(
+        0,
+        -body.radius * 0.2,
+        leftEye[0] * 2,
+        -body.radius * 0.8,
+        rightEye[0] * 2,
+        -body.radius * 0.8
+      )
+    }
+
     this.bodiesGraphic.pop()
     this.bodiesGraphic.pop()
   },
