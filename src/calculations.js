@@ -4,9 +4,11 @@
 export const Calculations = {
   forceAccumulator(bodies = this.bodies) {
     bodies = this.convertBodiesToBigInts(bodies)
-    bodies = this.forceAccumulatorBigInts(bodies)
+    const results = this.forceAccumulatorBigInts(bodies)
+    bodies = results.bodies
+    const forces = results.forces
     bodies = this.convertBigIntsToBodies(bodies)
-    return bodies
+    return { bodies, forces }
   },
 
   // async circomStep(bodies, missiles) {
@@ -94,12 +96,14 @@ export const Calculations = {
     for (let i = 0; i < bodies.length; i++) {
       accumulativeForces.push([0n, 0n])
     }
+    const forces = {}
     const time = BigInt(this.speedFactor)
     for (let i = 0; i < bodies.length; i++) {
       const body = bodies[i]
       for (let j = i + 1; j < bodies.length; j++) {
         const otherBody = bodies[j]
         const force = this.calculateForceBigInt(body, otherBody)
+        forces[i + '-' + j] = force
         // const bodyVelocity = [
         //   body.radius == 0n
         //     ? 0n
@@ -185,7 +189,7 @@ export const Calculations = {
         body.position.y = scaledWindowWidth
       }
     }
-    return bodies
+    return { bodies, forces }
   },
 
   calculateBodyFinal() {

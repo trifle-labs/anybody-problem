@@ -38,7 +38,8 @@ describe('forceAccumulatorMain circuit', () => {
     )
     // console.dir({ bodies }, { depth: null })
 
-    const out_bodies = anybody
+    const results = anybody
+    const out_bodies = results.bodies
       .forceAccumulatorBigInts(bodies)
       .map(anybody.convertScaledBigIntBodyToArray.bind(anybody))
     // console.log({ out_bodies })

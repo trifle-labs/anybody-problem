@@ -50,7 +50,8 @@ describe.skip('nft circuit', () => {
     )
     // console.dir({ bodies }, { depth: null })
     for (let i = 0; i < steps; i++) {
-      bodies = anybody.forceAccumulatorBigInts(bodies)
+      const results = anybody.forceAccumulatorBigInts(bodies)
+      bodies = results.bodies
     }
     const out_bodies = bodies.map(
       anybody.convertScaledBigIntBodyToArray.bind(anybody)
