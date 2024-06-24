@@ -10,11 +10,11 @@ const correctPrice = ethers.utils.parseEther('0.01')
 // const splitterAddress = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266'
 
 const proverTickIndex = {
-  2: 300,
-  3: 300,
-  4: 300,
-  5: 100,
-  6: 100
+  2: 250,
+  3: 250,
+  4: 250,
+  5: 125,
+  6: 125
 }
 const MAX_BODY_COUNT = 6
 
