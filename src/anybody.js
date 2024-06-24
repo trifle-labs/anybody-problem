@@ -8,7 +8,8 @@ import { utils } from 'ethers'
 import { randHSL, hslToRgb, bodyThemes } from './colors.js'
 // import wc from './witness_calculator.js'
 
-const GAME_LENGTH = 60 // seconds
+// const GAME_LENGTH = 60 // seconds
+const GAME_LENGTH_BY_LEVEL_INDEX = [10, 20, 30, 40, 50]
 
 function intersectsButton(button, x, y) {
   return (
@@ -48,7 +49,7 @@ export class Anybody extends EventEmitter {
       startingBodies: 1,
       windowWidth: 1000,
       windowHeight: 1000,
-      pixelDensity: 4, //4, // Math.min(4, 4 * (window.devicePixelRatio ?? 1)),
+      pixelDensity: 0.45, //4, // Math.min(4, 4 * (window.devicePixelRatio ?? 1)),
       scalingFactor: 10n ** 3n,
       minDistanceSquared: 200 * 200,
       G: 100, // Gravitational constant
@@ -87,7 +88,9 @@ export class Anybody extends EventEmitter {
     this.speedLimit = 10
     this.vectorLimit = this.speedLimit * this.speedFactor
     this.FPS = 25
-    this.timer = GAME_LENGTH * this.FPS
+    this.timer =
+      (this.level > 5 ? 60 : GAME_LENGTH_BY_LEVEL_INDEX[this.level - 1]) *
+      this.FPS
     this.deadOpacity = '0.9'
     this.initialScoreSize = 60
     this.scoreSize = this.initialScoreSize
@@ -352,6 +355,7 @@ export class Anybody extends EventEmitter {
       framesTook: this.framesTook
     })
     if (won) {
+      this.bodyData = null
       this.level++
     }
   }
@@ -581,22 +585,18 @@ export class Anybody extends EventEmitter {
         ['uint256', 'uint256', 'uint256'],
         [day, level, i]
       )
-      const dayIndexSeed = utils.solidityKeccak256(
-        ['uint256', 'uint256'],
-        [day, i]
-      )
-      bodyData.push(this.getRandomValues(dayLevelIndexSeed, dayIndexSeed, i))
+      bodyData.push(this.getRandomValues(dayLevelIndexSeed, i))
     }
     return bodyData
   }
 
-  getRandomValues(dayLevelIndexSeed, dayIndexSeed, index) {
+  getRandomValues(dayLevelIndexSeed, index) {
     const maxVectorScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
 
     const body = {}
     body.bodyIndex = index
     body.seed = dayLevelIndexSeed
-    body.radius = this.genRadius(dayIndexSeed, index)
+    body.radius = this.genRadius(index)
 
     let rand = utils.solidityKeccak256(['bytes32'], [dayLevelIndexSeed])
     body.px = this.randomRange(
@@ -629,11 +629,10 @@ export class Anybody extends EventEmitter {
     return body
   }
 
-  genRadius(seed, index) {
-    const startingRadius = 2
-    let randRadius = this.randomRange(2, 6, seed)
-    randRadius = index == 0 ? 36 : randRadius * 5 + startingRadius
-    return parseInt(BigInt(randRadius) * BigInt(this.scalingFactor))
+  genRadius(index) {
+    const radii = [36n, 27n, 22n, 17n, 12n, 7n] // n * 5 + 2
+    let size = radii[index % radii.length]
+    return parseInt(size * BigInt(this.scalingFactor))
   }
 
   randomRange(minBigInt, maxBigInt, seed) {
@@ -644,7 +643,8 @@ export class Anybody extends EventEmitter {
   }
 
   generateBodies() {
-    this.bodyData = this.generateLevelData(this.day, this.level)
+    this.bodyData =
+      this.bodyData || this.generateLevelData(this.day, this.level)
     this.bodies = this.bodyData.map(this.bodyDataToBodies.bind(this))
     this.startingBodies = this.bodies.length
   }

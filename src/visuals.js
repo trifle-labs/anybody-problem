@@ -2,6 +2,7 @@ import { hslToRgb, THEME } from './colors.js'
 
 const BODY_SCALE = 4 // match to calculations.js !!
 const WITHERING_STEPS = 3000
+const GAME_LENGTH_BY_LEVEL_INDEX = [10, 20, 30, 40, 50]
 
 const rot = {
   fg: {
@@ -524,7 +525,9 @@ export const Visuals = {
 
     const runningFrames = this.frames - this.startingFrame
     const seconds = runningFrames / this.FPS
-
+    const secondsLeft =
+      (this.level > 5 ? 60 : GAME_LENGTH_BY_LEVEL_INDEX[this.level - 1]) -
+      seconds
     if (this.gameOver) {
       this.scoreSize = this.initialScoreSize
       p.pop()
@@ -545,7 +548,7 @@ export const Visuals = {
     }
     p.textSize(this.scoreSize)
     if (runningFrames > 2) {
-      p.text(seconds.toFixed(2) + 's', 20, 10)
+      p.text(secondsLeft.toFixed(2) + 's', 20, 10)
     }
 
     p.pop()

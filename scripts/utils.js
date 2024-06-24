@@ -152,6 +152,16 @@ const deployContracts = async (options) => {
   returnObject['Speedruns'] = speedruns
   !testing && log('Speedruns Deployed at ' + String(speedrunsAddress))
 
+  // deploy ExternalMetadata
+  const ExternalMetadata =
+    await hre.ethers.getContractFactory('ExternalMetadata')
+  const externalMetadata = await ExternalMetadata.deploy()
+  await externalMetadata.deployed()
+  var externalMetadataAddress = externalMetadata.address
+  returnObject['ExternalMetadata'] = externalMetadata
+  !testing &&
+    log('ExternalMetadata Deployed at ' + String(externalMetadataAddress))
+
   // deploy AnybodyProblem
   const AnybodyProblem = await hre.ethers.getContractFactory(
     mock ? 'AnybodyProblemMock' : 'AnybodyProblem'
@@ -159,6 +169,7 @@ const deployContracts = async (options) => {
   const anybodyProblem = await AnybodyProblem.deploy(
     deployer.address,
     speedrunsAddress,
+    externalMetadataAddress,
     verifiers,
     verifiersTicks,
     verifiersBodies
@@ -170,11 +181,15 @@ const deployContracts = async (options) => {
     log(
       'AnybodyProblem Deployed at ' +
         String(anybodyProblemAddress) +
-        ` with speedrunsAddress ${speedrunsAddress} and verifiers ${verifiers} and verifiersTicks ${verifiersTicks} and verifiersBodies ${verifiersBodies}`
+        ` with speedrunsAddress ${speedrunsAddress} and externalMetdataAddress ${externalMetadataAddress} and verifiers ${verifiers} and verifiersTicks ${verifiersTicks} and verifiersBodies ${verifiersBodies}`
     )
 
   // update Speedruns
   await speedruns.updateAnybodyProblemAddress(anybodyProblemAddress)
+
+  // update ExternalMetadata
+  await externalMetadata.updateAnybodyProblemAddress(anybodyProblemAddress)
+  await externalMetadata.updateSpeedrunsAddress(speedrunsAddress)
 
   // verify contract if network ID is mainnet goerli or sepolia
   if (
@@ -330,6 +345,13 @@ const solveLevel = async (
   if (execute) {
     if (level !== 5) {
       await solveLevel(owner, anybodyProblem, expect, runId, level + 1, false)
+    }
+    if (level == 5) {
+      await expect(
+        anybodyProblem.batchSolve(...args, {
+          value: price.add(1)
+        })
+      ).to.be.revertedWith('Incorrect payment')
     }
     tx3 = await anybodyProblem.batchSolve(...args, {
       value: level == 5 ? price : 0

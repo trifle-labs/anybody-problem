@@ -7,52 +7,148 @@
 >
   <style></style>
   <style>
-    @keyframes moveEllipse1 {
+    @keyframes moveEllipse0 {
       0% {
-        transform-origin: 877.787px 137.965px;
+        transform-origin: 750px 1000px;
         transform: rotate(0deg) translate(0px, 10px);
       }
       100% {
-        transform-origin: 877.787px 137.965px;
+        transform-origin: 750px 1000px;
+        transform: rotate(360deg) translate(0px, 10px);
+      }
+    }
+    ellipse#id-0 {
+      animation: moveEllipse0 4s infinite linear;
+      animation-delay: -0s;
+    }
+  </style>
+  <ellipse
+    id="id-0"
+    ry="140.0"
+    rx="140.0"
+    cy="1000.0"
+    cx="750.0"
+    fill="hsl(168,53%,63%)"
+  />
+  <style>
+    @keyframes moveEllipse1 {
+      0% {
+        transform-origin: 10px 1000px;
+        transform: rotate(0deg) translate(0px, 10px);
+      }
+      100% {
+        transform-origin: 10px 1000px;
         transform: rotate(360deg) translate(0px, 10px);
       }
     }
     ellipse#id-1 {
       animation: moveEllipse1 4s infinite linear;
-      animation-delay: -0s;
+      animation-delay: -1s;
     }
   </style>
   <ellipse
     id="id-1"
-    ry="244.0"
-    rx="244.0"
-    cy="137.965"
-    cx="877.787"
-    fill="hsl(230,98%,68%)"
+    ry="140.0"
+    rx="140.0"
+    cy="1000.0"
+    cx="10.0"
+    fill="hsl(177,30%,64%)"
   />
   <style>
     @keyframes moveEllipse2 {
       0% {
-        transform-origin: 178.506px 49.271px;
+        transform-origin: 20px 1000px;
         transform: rotate(0deg) translate(0px, 10px);
       }
       100% {
-        transform-origin: 178.506px 49.271px;
+        transform-origin: 20px 1000px;
         transform: rotate(360deg) translate(0px, 10px);
       }
     }
     ellipse#id-2 {
       animation: moveEllipse2 4s infinite linear;
-      animation-delay: -1s;
+      animation-delay: -2s;
     }
   </style>
   <ellipse
     id="id-2"
-    ry="128.0"
-    rx="128.0"
-    cy="49.271"
-    cx="178.506"
-    fill="hsl(4,25%,56%)"
+    ry="140.0"
+    rx="140.0"
+    cy="1000.0"
+    cx="20.0"
+    fill="hsl(26,52%,41%)"
+  />
+  <style>
+    @keyframes moveEllipse3 {
+      0% {
+        transform-origin: 30px 1000px;
+        transform: rotate(0deg) translate(0px, 10px);
+      }
+      100% {
+        transform-origin: 30px 1000px;
+        transform: rotate(360deg) translate(0px, 10px);
+      }
+    }
+    ellipse#id-3 {
+      animation: moveEllipse3 4s infinite linear;
+      animation-delay: -3s;
+    }
+  </style>
+  <ellipse
+    id="id-3"
+    ry="140.0"
+    rx="140.0"
+    cy="1000.0"
+    cx="30.0"
+    fill="hsl(331,29%,63%)"
+  />
+  <style>
+    @keyframes moveEllipse4 {
+      0% {
+        transform-origin: 40px 1000px;
+        transform: rotate(0deg) translate(0px, 10px);
+      }
+      100% {
+        transform-origin: 40px 1000px;
+        transform: rotate(360deg) translate(0px, 10px);
+      }
+    }
+    ellipse#id-4 {
+      animation: moveEllipse4 4s infinite linear;
+      animation-delay: -4s;
+    }
+  </style>
+  <ellipse
+    id="id-4"
+    ry="140.0"
+    rx="140.0"
+    cy="1000.0"
+    cx="40.0"
+    fill="hsl(118,92%,59%)"
+  />
+  <style>
+    @keyframes moveEllipse5 {
+      0% {
+        transform-origin: 50px 1000px;
+        transform: rotate(0deg) translate(0px, 10px);
+      }
+      100% {
+        transform-origin: 50px 1000px;
+        transform: rotate(360deg) translate(0px, 10px);
+      }
+    }
+    ellipse#id-5 {
+      animation: moveEllipse5 4s infinite linear;
+      animation-delay: -5s;
+    }
+  </style>
+  <ellipse
+    id="id-5"
+    ry="140.0"
+    rx="140.0"
+    cy="1000.0"
+    cx="50.0"
+    fill="hsl(75,44%,53%)"
   />
   <text x="50" y="550" class="name">Problem #1</text>
 </svg>

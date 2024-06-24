@@ -11,13 +11,51 @@ import {
   generateAndSubmitProof,
   getTicksRun
   // generateProof
-} from '../scripts/utils.js'
+} from '../../scripts/utils.js'
 
-import { Anybody } from '../src/anybody.js'
+import { Anybody } from '../../src/anybody.js'
 
 // let tx
 describe('AnybodyProblem Tests', function () {
   this.timeout(50000000)
+
+  it('has the correct verifiers, externalMetadata, speedruns addresses', async () => {
+    const deployedContracts = await deployContracts()
+
+    const { AnybodyProblem: anybodyProblem } = deployedContracts
+    for (const [name, contract] of Object.entries(deployedContracts)) {
+      if (name === 'AnybodyProblem') continue
+      if (name === 'verifiers') continue
+      if (name === 'verifiersTicks') continue
+      if (name === 'verifiersBodies') continue
+      let storedAddress
+      if (name.indexOf('Verifier') > -1) {
+        const bodyCount = name.split('_')[1]
+        storedAddress = await anybodyProblem.verifiers(
+          bodyCount,
+          await getTicksRun(bodyCount)
+        )
+      } else {
+        const functionName = name.charAt(0).toLowerCase() + name.slice(1)
+        storedAddress = await anybodyProblem[`${functionName}()`]()
+      }
+      const actualAddress = contract.address
+      expect(storedAddress).to.equal(actualAddress)
+    }
+  })
+
+  it('stores the verifiers in the correct order of the mapping', async () => {
+    const deployedContracts = await deployContracts()
+    const { AnybodyProblem: anybodyProblem } = deployedContracts
+    for (const [name, contract] of Object.entries(deployedContracts)) {
+      if (name.indexOf('Verifier') === -1) continue
+      const bodyCount = name.split('_')[1]
+      const tickCount = await getTicksRun(bodyCount)
+      const storedAddress = await anybodyProblem.verifiers(bodyCount, tickCount)
+      const actualAddress = contract.address
+      expect(storedAddress).to.equal(actualAddress)
+    }
+  })
 
   it('starts week correctly', async () => {
     // const [owner] = await ethers.getSigners()
@@ -47,14 +85,14 @@ describe('AnybodyProblem Tests', function () {
     expect(speedrunsAddress).to.equal(speedruns.address)
   })
 
-  it('onlyOwner functions are really only Owner', async function () {
+  it.only('onlyOwner functions are really only Owner', async function () {
     const [, addr1] = await ethers.getSigners()
     const { AnybodyProblem: anybodyProblem } = await deployContracts()
 
     const functions = [
       { name: 'emitMetadataUpdate', args: [0] },
       { name: 'emitBatchMetadataUpdate', args: [0, 0] },
-      { name: 'exampleEmitMultipleIndexEvent', args: [0, 0] },
+      { name: 'exampleEmitMultipleIndexEvent', args: [0, 0, addr1.address] },
       { name: 'updateProceedRecipient', args: [addr1.address] },
       { name: 'updateSpeedrunsAddress', args: [addr1.address] },
       { name: 'updateVerifier', args: [addr1.address, 0, 0] },
@@ -64,7 +102,6 @@ describe('AnybodyProblem Tests', function () {
     ]
 
     for (const { name, args } of functions) {
-      // console.log({ name, args })
       await expect(
         anybodyProblem.connect(addr1)[name](...args)
       ).to.be.revertedWith('Ownable: caller is not the owner')
@@ -92,7 +129,6 @@ describe('AnybodyProblem Tests', function () {
     const day = await anybodyProblem.currentDay()
     let { bodyData, bodyCount } = await anybodyProblem.generateLevelData(day, 1)
     bodyData = bodyData.slice(0, bodyCount)
-    console.log({ contractProducedBodyData: bodyData })
     const seed = '0x' + '0'.repeat(64)
     const proofLength = await getTicksRun(bodyCount)
 
@@ -115,22 +151,50 @@ describe('AnybodyProblem Tests', function () {
     const levelIndex = level - 1
     const levelData = allLevelData[levelIndex]
     // console.dir({ levelData }, { depth: null })
+    const windowWidth = await anybodyProblem.windowWidth()
+    const maxVector = await anybodyProblem.maxVector()
+    const scalingFactor = await anybodyProblem.scalingFactor()
+
+    const maxVectorScaled = maxVector.mul(scalingFactor)
 
     expect(levelData.solved).to.equal(false)
     expect(
       levelData.tmpBodyData.filter((b) => parseInt(b.seed) !== 0).length
     ).to.equal(bodyCount)
     expect(levelData.time).to.equal(proofLength)
+    const startingRadius = await anybodyProblem.startingRadius()
+    const maxRadius = ethers.BigNumber.from(5 * 5).add(startingRadius)
+    const firstBodyRadius = ethers.BigNumber.from(36)
 
     // confirm new values are stored correctly
     for (let i = 0; i < bodyCount; i++) {
       const bodyData = levelData.tmpBodyData[i]
-      const { px, py, vx, vy, radius } = bodyData
+      const { bodyIndex, px, py, vx, vy, radius, seed } = bodyData
+      expect(i).to.equal(bodyIndex)
+      expect(seed).to.not.equal(0)
+
       expect(px).to.equal(bodyFinal[i][0].toString())
+      expect(px).to.not.equal(0)
+      expect(px.lt(windowWidth)).to.be.true
+
       expect(py).to.equal(bodyFinal[i][1].toString())
+      expect(py).to.not.equal(0)
+      expect(py.lt(windowWidth)).to.be.true
+
       expect(vx).to.equal(bodyFinal[i][2].toString())
       expect(vy).to.equal(bodyFinal[i][3].toString())
+
+      expect(vx.lte(maxVectorScaled.mul(2))).to.be.true
+      expect(vy.lte(maxVectorScaled.mul(2))).to.be.true
+
       expect(radius).to.equal(bodyFinal[i][4].toString())
+
+      expect(radius).to.not.equal(0)
+      if (i !== 0) {
+        expect(radius.lte(maxRadius.mul(scalingFactor))).to.be.true
+      } else {
+        expect(radius.eq(firstBodyRadius.mul(scalingFactor))).to.be.true
+      }
     }
   })
 
@@ -157,10 +221,27 @@ describe('AnybodyProblem Tests', function () {
       .withArgs(owner.address, runId, 1, time, day)
   })
 
+  it('must be unpaused', async function () {
+    // const [owner] = await ethers.getSigners()
+    const { AnybodyProblem: anybodyProblem } = await deployContracts({
+      mock: true
+    })
+    await anybodyProblem.updatePaused(true)
+    await expect(
+      anybodyProblem.batchSolve(0, [], [], [], [], [])
+    ).to.be.revertedWith('Contract is paused')
+  })
+
   it('solves all levels async using mock', async () => {
-    const [owner] = await ethers.getSigners()
+    const [owner, acct1] = await ethers.getSigners()
     const { AnybodyProblem: anybodyProblem, Speedruns: speedruns } =
       await deployContracts({ mock: true })
+
+    await anybodyProblem.updateProceedRecipient(acct1.address)
+
+    const proceedRecipient = await anybodyProblem.proceedRecipient()
+    const balanceBefore = await ethers.provider.getBalance(proceedRecipient)
+
     let runId = 0,
       tx
     const day = await anybodyProblem.currentDay()
@@ -185,10 +266,17 @@ describe('AnybodyProblem Tests', function () {
     const price = await anybodyProblem.price()
     await expect(tx)
       .to.emit(anybodyProblem, 'EthMoved')
-      .withArgs(owner.address, true, '0x', price)
+      .withArgs(acct1.address, true, '0x', price)
+
+    const balanceAfter = await ethers.provider.getBalance(proceedRecipient)
+    expect(balanceAfter.sub(balanceBefore)).to.equal(price)
 
     const speedrunBalance = await speedruns.balanceOf(owner.address)
     expect(speedrunBalance).to.equal(1)
+
+    const expectedTokenId = runId
+    const ownerOfToken = await speedruns.ownerOf(expectedTokenId)
+    expect(ownerOfToken).to.equal(owner.address)
 
     const fastestRun = await anybodyProblem.fastestByDay(day, 0)
     expect(fastestRun).to.equal(runId)
@@ -322,12 +410,11 @@ describe('AnybodyProblem Tests', function () {
     ]
 
     const { AnybodyProblem: anybodyProblem } = await deployContracts()
-    console.log(Input.length)
     const level = await anybodyProblem.getLevelFromInputs(Input.length)
     expect(level).to.equal(1)
   })
 
-  it.only('returns correct currentLevel', async () => {
+  it('returns correct currentLevel', async () => {
     const [owner] = await ethers.getSigners()
     const { AnybodyProblem: anybodyProblem } = await deployContracts({
       mock: true
@@ -347,5 +434,106 @@ describe('AnybodyProblem Tests', function () {
 
     const newCurrentLevel = await anybodyProblem.currentLevel(runId)
     expect(newCurrentLevel).to.equal(2)
+  })
+
+  // TODO: add exhaustive tests for topic and types
+  it('emits arbitrary events within Speedruns', async () => {
+    const [owner] = await ethers.getSigners()
+    const { AnybodyProblem: anybodyProblem, Speedruns: speedruns } =
+      await deployContracts()
+
+    const metadataUpdateEvent = [
+      {
+        anonymous: false,
+        inputs: [
+          {
+            indexed: false,
+            name: 'tokenId',
+            type: 'uint256'
+          }
+        ],
+        name: 'MetadataUpdate',
+        type: 'event'
+      },
+      {
+        anonymous: false,
+        inputs: [
+          {
+            indexed: false,
+            name: '_fromTokenId',
+            type: 'uint256'
+          },
+          {
+            indexed: false,
+            name: '_toTokenId',
+            type: 'uint256'
+          }
+        ],
+        name: 'BatchMetadataUpdate',
+        type: 'event'
+      },
+      {
+        anonymous: false,
+        inputs: [
+          {
+            indexed: true,
+            name: '_fromTokenId',
+            type: 'uint256'
+          },
+          {
+            indexed: true,
+            name: '_toTokenId',
+            type: 'uint256'
+          },
+          {
+            indexed: false,
+            name: 'who',
+            type: 'address'
+          }
+        ],
+        name: 'BatchMetadataUpdateIndexed',
+        type: 'event'
+      }
+    ]
+    const speedrunsABI = speedruns.interface.fragments.map((fragment) =>
+      JSON.parse(fragment.format(ethers.utils.FormatTypes.json))
+    )
+    // Adding the new event to the ABI
+    speedrunsABI.push(...metadataUpdateEvent)
+
+    // Creating a new Interface with the updated ABI
+    const mergedInterface = new ethers.utils.Interface(speedrunsABI)
+
+    // Creating a new contract instance with the merged Interface
+    const newSpeedrunsContract = new ethers.Contract(
+      speedruns.address,
+      mergedInterface,
+      speedruns.signer
+    )
+
+    const tokenId = 1
+    const tx = await anybodyProblem.emitMetadataUpdate(tokenId)
+    await expect(tx)
+      .to.emit(newSpeedrunsContract, 'MetadataUpdate')
+      .withArgs(tokenId)
+
+    const fromTokenId = 1
+    const toTokenId = 100
+    const tx2 = await anybodyProblem.emitBatchMetadataUpdate(
+      fromTokenId,
+      toTokenId
+    )
+    await expect(tx2)
+      .to.emit(newSpeedrunsContract, 'BatchMetadataUpdate')
+      .withArgs(fromTokenId, toTokenId)
+
+    const tx3 = await anybodyProblem.exampleEmitMultipleIndexEvent(
+      fromTokenId,
+      toTokenId,
+      owner.address
+    )
+    await expect(tx3)
+      .to.emit(newSpeedrunsContract, 'BatchMetadataUpdateIndexed')
+      .withArgs(fromTokenId, toTokenId, owner.address)
   })
 })
