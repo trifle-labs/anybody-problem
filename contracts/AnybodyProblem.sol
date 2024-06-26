@@ -214,6 +214,7 @@ contract AnybodyProblem is Ownable, ERC2981 {
   function generateSeed(uint256 id, uint256 index) public view returns (bytes32) {
       return keccak256(abi.encodePacked(id, index, blockhash(block.number - 1)));
   }
+  // TODO: fix day and week so that days and week begin at same time
   function currentWeek() public view returns (uint256) {
     return block.timestamp - ((block.timestamp - FIRST_SUNDAY_AT_6_PM_UTC) % SECONDS_IN_A_WEEK);
   }

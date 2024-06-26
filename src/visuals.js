@@ -228,30 +228,33 @@ export const Visuals = {
     //   framesIsAtStopEveryInterval,
     //   frames_lt_timer: this.frames < this.timer
     // })
-    const timeHasntRunOut = this.frames - this.startingFrame <= this.timer
+
+    const ranOutOfTime =
+      this.frames - this.startingFrame + this.FPS >= this.timer
+    const hitHeroBody = this.bodies[0].radius == 0
+
+    if ((ranOutOfTime || hitHeroBody) && !this.handledGameOver) {
+      this.handleGameOver({ won: false, ranOutOfTime, hitHeroBody })
+    }
+
+    // const timeHasntRunOut = this.frames - this.startingFrame <= this.timer
     if (
       !this.firstFrame &&
       notPaused &&
       framesIsAtStopEveryInterval &&
       didNotJustPause &&
-      timeHasntRunOut
+      !ranOutOfTime &&
+      !this.handledGameOver
     ) {
-      if (didNotJustPause) {
-        this.finish()
-      }
+      this.finish()
     } else {
       this.justPaused = false
     }
     if (
-      this.frames - this.startingFrame + this.FPS >= this.timer ||
-      this.bodies[0].radius == 0
-    ) {
-      this.handleGameOver({ won: false })
-    }
-    if (
       !this.won &&
       this.mode == 'game' &&
-      this.bodies.slice(1).reduce((a, c) => a + c.radius, 0) == 0
+      this.bodies.slice(1).reduce((a, c) => a + c.radius, 0) == 0 &&
+      !this.handledGameOver
     ) {
       this.handleGameOver({ won: true })
     }

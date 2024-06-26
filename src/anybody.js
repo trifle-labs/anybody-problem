@@ -10,7 +10,13 @@ import { randHSL, hslToRgb, bodyThemes } from './colors.js'
 
 // const GAME_LENGTH = 60 // seconds
 const GAME_LENGTH_BY_LEVEL_INDEX = [10, 20, 30, 40, 50]
-
+const proverTickIndex = {
+  2: 250,
+  3: 250,
+  4: 250,
+  5: 125,
+  6: 125
+}
 function intersectsButton(button, x, y) {
   return (
     x > button.x &&
@@ -40,6 +46,10 @@ export class Anybody extends EventEmitter {
     !this.util && this.start()
   }
 
+  proverTickIndex(i) {
+    return proverTickIndex[i]
+  }
+
   setOptions(options = {}) {
     const defaultOptions = {
       day: 324000,
@@ -49,7 +59,7 @@ export class Anybody extends EventEmitter {
       startingBodies: 1,
       windowWidth: 1000,
       windowHeight: 1000,
-      pixelDensity: 0.45, //4, // Math.min(4, 4 * (window.devicePixelRatio ?? 1)),
+      pixelDensity: 4, //4, // Math.min(4, 4 * (window.devicePixelRatio ?? 1)),
       scalingFactor: 10n ** 3n,
       minDistanceSquared: 200 * 200,
       G: 100, // Gravitational constant
@@ -64,7 +74,7 @@ export class Anybody extends EventEmitter {
       chunk: 1,
       mute: true,
       freeze: false,
-      stopEvery: 0,
+      test: false,
       util: false,
       paused: true,
       globalStyle: 'default', // 'default', 'psycho'
@@ -79,6 +89,25 @@ export class Anybody extends EventEmitter {
     const mergedOptions = { ...defaultOptions, ...options }
     // Assign the merged options to the instance properties
     Object.assign(this, mergedOptions)
+  }
+  removeCSS() {
+    if (typeof document === 'undefined') return
+    const style = document.getElementById('canvas-cursor')
+    style && document.head.removeChild(style)
+  }
+  addCSS() {
+    if (typeof document === 'undefined') return
+    if (document.getElementById('canvas-cursor')) return
+    const style = document.createElement('style')
+    style.id = 'canvas-cursor' // Add an id to the style element
+
+    style.innerHTML = `
+      canvas {
+        cursor: none;
+      }
+    `
+    console.log({ style })
+    document.head.appendChild(style)
   }
 
   // run whenever the class should be reset
@@ -129,6 +158,7 @@ export class Anybody extends EventEmitter {
     this.generateBodies()
     this.frames = this.alreadyRun
     this.startingFrame = this.alreadyRun
+    this.stopEvery = this.test ? 20 : this.proverTickIndex(this.level + 1)
     // const vectorLimitScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
     this.loadImages()
     this.setPause(this.paused, true)
@@ -159,6 +189,7 @@ export class Anybody extends EventEmitter {
   // }
 
   async start() {
+    this.addCSS()
     this.addListeners()
     this.runSteps(this.preRun)
     // this.paintAtOnce(this.paintSteps)
@@ -347,7 +378,7 @@ export class Anybody extends EventEmitter {
     this.framesTook = stats.framesTook
     void this.setStatsText(stats)
     void this.setShowPlayAgain()
-    this.emit('gameOver', {
+    this.emit('done', {
       won,
       ticks: this.frames - this.startingFrame,
       dust,
@@ -356,11 +387,17 @@ export class Anybody extends EventEmitter {
     })
     if (won) {
       this.bodyData = null
-      this.level++
+    }
+    this.removeCSS()
+    if (won) {
+      this.finish()
     }
   }
 
   restart = (options, beginPaused = true) => {
+    if (this.won) {
+      this.level++
+    }
     if (options) {
       this.setOptions(options)
     }
@@ -372,6 +409,7 @@ export class Anybody extends EventEmitter {
     if (!beginPaused) {
       this.setPause(false)
     }
+    this.addCSS()
   }
 
   doubleTextInverted(text) {
@@ -453,6 +491,8 @@ export class Anybody extends EventEmitter {
 
   started() {
     this.emit('started', {
+      day: this.day,
+      level: this.level,
       bodyInits: JSON.parse(JSON.stringify(this.bodyInits))
     })
   }
@@ -478,7 +518,6 @@ export class Anybody extends EventEmitter {
 
   finish() {
     if (this.finalBatchSent) return
-    let results = {}
     // this.finished = true
     // this.setPause(true)
     const maxVectorScaled = parseInt(
@@ -531,13 +570,35 @@ export class Anybody extends EventEmitter {
       inflightMissile.vy,
       inflightMissile.radius
     ]
-    results = {
-      inflightMissile: JSON.parse(JSON.stringify(inflightMissile)),
-      missiles: JSON.parse(JSON.stringify(missileInits)),
-      bodyInits: JSON.parse(JSON.stringify(this.bodyInits)),
-      bodyFinal: JSON.parse(JSON.stringify(this.bodyFinal))
+    const outflightMissileTmp = this.missileInits[0] || {
+      x: '0',
+      y: (this.windowWidth * parseInt(this.scalingFactor)).toString(),
+      vx: '2000',
+      vy: '2000',
+      radius: '0'
     }
-    results.framesTook = this.framesTook
+    const outflightMissile = [
+      outflightMissileTmp.x,
+      outflightMissileTmp.y,
+      outflightMissileTmp.vx,
+      outflightMissileTmp.vy,
+      outflightMissileTmp.radius
+    ]
+
+    const { day, level, bodyInits, bodyFinal, framesTook } = this
+
+    const results = JSON.parse(
+      JSON.stringify({
+        day,
+        level,
+        inflightMissile,
+        missiles: missileInits,
+        bodyInits,
+        bodyFinal,
+        framesTook,
+        outflightMissile
+      })
+    )
 
     this.bodyInits = JSON.parse(JSON.stringify(this.bodyFinal))
     this.alreadyRun = this.frames
@@ -545,23 +606,7 @@ export class Anybody extends EventEmitter {
       m.step = this.frames
       return m
     })
-    // console.log(this.missileInits)
-    // console.log('this.missileInits[0]', this.missileInits[0])
-    const outflightMissile = this.missileInits[0] || {
-      x: '0',
-      y: (this.windowWidth * parseInt(this.scalingFactor)).toString(),
-      vx: '2000',
-      vy: '2000',
-      radius: '0'
-    }
-    results.outflightMissile = [
-      outflightMissile.x,
-      outflightMissile.y,
-      outflightMissile.vx,
-      outflightMissile.vy,
-      outflightMissile.radius
-    ]
-    this.emit('finished', results)
+    this.emit('chunk', results)
     this.bodyFinal = []
     // this.setPause(false)
     if (
