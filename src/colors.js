@@ -1,5 +1,5 @@
 export const THEME = {
-  bg: 'rgb(10,10,10)',
+  bg: 'rgb(20,20,20)',
   fg: 'white',
   bodiesTheme: 'default'
 }

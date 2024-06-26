@@ -8,10 +8,11 @@ contract AnybodyProblemMock is AnybodyProblem {
   constructor(
     address payable proceedRecipient_,
     address payable speedruns_,
+    address externalMetadata_,
     address[] memory verifiers_,
     uint256[] memory verifiersTicks,
     uint256[] memory verifiersBodies)
-    AnybodyProblem(proceedRecipient_,speedruns_,verifiers_,verifiersTicks,verifiersBodies)
+    AnybodyProblem(proceedRecipient_,speedruns_,externalMetadata_,verifiers_,verifiersTicks,verifiersBodies)
   {}
 
   Body[6][5] public mockedBodyDataByLevel;

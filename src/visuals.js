@@ -2,6 +2,7 @@ import { hslToRgb, THEME } from './colors.js'
 
 const BODY_SCALE = 4 // match to calculations.js !!
 const WITHERING_STEPS = 3000
+const GAME_LENGTH_BY_LEVEL_INDEX = [10, 20, 30, 40, 50]
 
 const rot = {
   fg: {
@@ -227,30 +228,33 @@ export const Visuals = {
     //   framesIsAtStopEveryInterval,
     //   frames_lt_timer: this.frames < this.timer
     // })
-    const timeHasntRunOut = this.frames - this.startingFrame <= this.timer
+
+    const ranOutOfTime =
+      this.frames - this.startingFrame + this.FPS >= this.timer
+    const hitHeroBody = this.bodies[0].radius == 0
+
+    if ((ranOutOfTime || hitHeroBody) && !this.handledGameOver) {
+      this.handleGameOver({ won: false, ranOutOfTime, hitHeroBody })
+    }
+
+    // const timeHasntRunOut = this.frames - this.startingFrame <= this.timer
     if (
       !this.firstFrame &&
       notPaused &&
       framesIsAtStopEveryInterval &&
       didNotJustPause &&
-      timeHasntRunOut
+      !ranOutOfTime &&
+      !this.handledGameOver
     ) {
-      if (didNotJustPause) {
-        this.finish()
-      }
+      this.finish()
     } else {
       this.justPaused = false
     }
     if (
-      this.frames - this.startingFrame + this.FPS >= this.timer ||
-      this.bodies[0].radius == 0
-    ) {
-      this.handleGameOver({ won: false })
-    }
-    if (
       !this.won &&
       this.mode == 'game' &&
-      this.bodies.slice(1).reduce((a, c) => a + c.radius, 0) == 0
+      this.bodies.slice(1).reduce((a, c) => a + c.radius, 0) == 0 &&
+      !this.handledGameOver
     ) {
       this.handleGameOver({ won: true })
     }
@@ -524,7 +528,9 @@ export const Visuals = {
 
     const runningFrames = this.frames - this.startingFrame
     const seconds = runningFrames / this.FPS
-
+    const secondsLeft =
+      (this.level > 5 ? 60 : GAME_LENGTH_BY_LEVEL_INDEX[this.level - 1]) -
+      seconds
     if (this.gameOver) {
       this.scoreSize = this.initialScoreSize
       p.pop()
@@ -545,7 +551,7 @@ export const Visuals = {
     }
     p.textSize(this.scoreSize)
     if (runningFrames > 2) {
-      p.text(seconds.toFixed(2) + 's', 20, 10)
+      p.text(secondsLeft.toFixed(2) + 's', 20, 10)
     }
 
     p.pop()

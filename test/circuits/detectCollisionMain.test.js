@@ -3,7 +3,7 @@
 // import { describe, it, before } from 'mocha';
 import { wasm as wasm_tester } from 'circom_tester'
 
-import index from '../docs/index.cjs'
+import index from '../../docs/index.cjs'
 const {
   // calculateTime,
   detectCollisionBigInt,

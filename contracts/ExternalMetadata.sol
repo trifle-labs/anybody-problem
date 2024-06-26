@@ -2,18 +2,20 @@
 pragma solidity ^0.8.0;
 
 import "base64-sol/base64.sol";
-import "./Problems.sol";
+import "./AnybodyProblem.sol";
+import "./Speedruns.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./StringsExtended.sol";
-import "hardhat/console.sol";
+// import "hardhat/console.sol";
 
-/// @title ProblemMetadata
+/// @title ExternalMetadata
 /// @notice
 /// @author @okwme
 /// @dev The updateable and replaceable problemMetadata contract
 
-contract ProblemMetadata is Ownable {
-    address payable public problems;
+contract ExternalMetadata is Ownable {
+    address payable public anybodyProblem;
+    address payable public speedruns;
     uint256 constant radiusMultiplyer = 100;
 
     constructor() {}
@@ -45,12 +47,12 @@ contract ProblemMetadata is Ownable {
     }
 
     function exists(uint256 id) public view returns (bool) {
-        return Problems(problems).ownerOf(id) != address(0);
+        return Speedruns(speedruns).ownerOf(id) != address(0);
     }
 
     /// @dev generates the problemMetadata
     /// @param tokenId the tokenId
-    function getProblemMetadata(
+    function getMetadata(
         uint256 tokenId
     ) public view existsModifier(tokenId) returns (string memory) {
         return
@@ -121,24 +123,19 @@ contract ProblemMetadata is Ownable {
         // const { seed, bodyCount, tickCount, mintedBodiesIndex } = problem
         string memory path = "";
         (
+            address owner,
             bool solved,
+            uint256 accumulativeTime,
             bytes32 seed,
-            uint256 day,
-            uint256 bodyCount,
-            uint256 tickCount,
-            uint256 mintedBodiesIndex
-        ) = Problems(problems).problems(tokenId);
+            uint256 day
+        ) = AnybodyProblem(anybodyProblem).runs(tokenId);
 
-        uint256[10] memory bodyIds = Problems(problems).getProblemBodyIds(
-            tokenId
-        );
-        uint256 scalingFactor = Problems(problems).scalingFactor();
+        AnybodyProblem.Level[] memory levels = AnybodyProblem(anybodyProblem).getLevelsData(tokenId);
+        uint256 level = levels.length;
+        uint256 scalingFactor = AnybodyProblem(anybodyProblem).scalingFactor();
+        (AnybodyProblem.Body[6] memory bodies, uint256 bodyCount) = AnybodyProblem(anybodyProblem).generateLevelData(day, level);
         for (uint256 i = 0; i < bodyCount; i++) {
-            Problems.Body memory body = Problems(problems).getProblemBodyData(
-                tokenId,
-                bodyIds[i]
-            );
-
+            AnybodyProblem.Body memory body = bodies[i];
             uint256 scaledRadius = body.radius *
                 4 +
                 radiusMultiplyer *
@@ -167,7 +164,7 @@ contract ProblemMetadata is Ownable {
                     StringsExtended.toString(pyDecimals)
                 )
             );
-            string memory bodyIDString = StringsExtended.toString(body.bodyId);
+            string memory bodyIDString = StringsExtended.toString(body.bodyIndex);
             string memory transformOrigin = string(
                 abi.encodePacked(
                     "transform-origin: ",
@@ -249,7 +246,16 @@ contract ProblemMetadata is Ownable {
     function getAttributes(
         uint256 tokenId
     ) internal view returns (string memory) {
-        (bool solved, bytes32 seed, uint256 day, uint256 bodyCount, uint256 mintedBodiesIndex, uint256 tickCount) = Problems(problems).problems(tokenId);
+        (
+            address owner,
+            bool solved,
+            uint256 accumulativeTime,
+            bytes32 seed,
+            uint256 day
+        ) = AnybodyProblem(anybodyProblem).runs(tokenId);
+        AnybodyProblem.Level[] memory levels = AnybodyProblem(anybodyProblem).getLevelsData(tokenId);
+        uint256 level = levels.length;
+        uint256 bodyCount = level + 1;
         return
             string(
                 abi.encodePacked(
@@ -262,16 +268,19 @@ contract ProblemMetadata is Ownable {
                     StringsExtended.toString(day),
                     '"}, {"trait_type":"bodyCount","value":"',
                     StringsExtended.toString(bodyCount),
-                    '"}, {"trait_type":"mintedBodiesIndex","value":"',
-                    StringsExtended.toString(mintedBodiesIndex),
-                    '"}, {"trait_type":"tickCount","value":"',
-                    StringsExtended.toString(tickCount),
+                    '"}, {"trait_type":"level","value":"',
+                    StringsExtended.toString(level),
+                    '"}, {"trait_type":"accumulativeTime","value":"',
+                    StringsExtended.toString(accumulativeTime),
                     '"}]'
                 )
             );
     }
 
-    function updateProblemsAddress(address payable problems_) public onlyOwner {
-        problems = problems_;
+    function updateAnybodyProblemAddress(address payable anybodyProblem_) public onlyOwner {
+        anybodyProblem = anybodyProblem_;
+    }
+    function updateSpeedrunsAddress(address payable speedruns_) public onlyOwner {
+        speedruns = speedruns_;
     }
 }

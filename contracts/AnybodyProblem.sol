@@ -12,6 +12,7 @@ import "@openzeppelin/contracts/token/common/ERC2981.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "./Speedruns.sol";
+import "./ExternalMetadata.sol";
 
 contract AnybodyProblem is Ownable, ERC2981 {
 
@@ -23,8 +24,11 @@ contract AnybodyProblem is Ownable, ERC2981 {
   bool public paused = false;
   uint256 public price = 0.0005 ether;
   address payable public proceedRecipient;
+  address public externalMetadata;
   address payable public speedruns;
-  uint256 public constant maxTick = 25 * 60; // 25 fps * 60 sec = 1,500 ticks max
+  // uint256 public constant maxTick = 25 * 60; // 25 fps * 60 sec = 1,500 ticks max
+  // level duration is numberOfBaddies * 10sec (multiplied by 25 because of 25 FPS)
+  uint256[5] public maxTicksByLevelIndex = [1 * 10 * 25, 2 * 10 * 25, 3 * 10 * 25, 4 * 10 * 25, 5 * 10 * 25];
   uint256 public constant speedFactor = 2;
   uint256 public constant scalingFactor = 10 ** 3;
   uint256 public constant maxVector = 10 * speedFactor;
@@ -79,10 +83,12 @@ contract AnybodyProblem is Ownable, ERC2981 {
   constructor(
     address payable proceedRecipient_,
     address payable speedruns_,
+    address externalMetadata_,
     address[] memory verifiers_,
     uint256[] memory verifiersTicks,
     uint256[] memory verifiersBodies) 
   {
+    updateExternalMetadata(externalMetadata_);
     updateProceedRecipient(proceedRecipient_);
     updateSpeedrunsAddress(speedruns_);
     for (uint256 i = 0; i < verifiers_.length; i++) {
@@ -146,7 +152,8 @@ contract AnybodyProblem is Ownable, ERC2981 {
       for(uint256 i = 0; i < input.length; i++) {
           verifyLevelChunk(runId, tickCounts[i], day, a[i], b[i], c[i], input[i]);
       }
-      require(runs[runId].solved, "Must solve all levels to complete run");
+      // TODO: decide whether this is necessary
+      // require(runs[runId].solved, "Must solve all levels to complete run");
   }
   function runCount() public view returns (uint256) {
     return runs.length - 1;
@@ -158,15 +165,14 @@ contract AnybodyProblem is Ownable, ERC2981 {
     // NOTE: <= becuase level 5 has 6 bodies
     for (uint256 i = 0; i <= level; i++) {
       bytes32 dayLevelIndexSeed = getLevelSeed(day, level, i);
-      bytes32 dayIndexSeed = keccak256(abi.encodePacked(day, i));
-      bodyData[i] = getRandomValues(dayLevelIndexSeed, dayIndexSeed, i);
+      bodyData[i] = getRandomValues(dayLevelIndexSeed, i);
     }
     bodyCount = level + 1;
   }
   function getLevelSeed(uint256 day, uint256 level, uint256 bodyIndex) public pure returns (bytes32) {
       return keccak256(abi.encodePacked(day, level, bodyIndex));
   }
-  function getRandomValues(bytes32 dayLevelIndexSeed, bytes32 dayIndexSeed, uint256 index) public pure returns (Body memory) {
+  function getRandomValues(bytes32 dayLevelIndexSeed, uint256 index) public pure returns (Body memory) {
       // NOTE: this function uses a seed consisting of the day + bodyIndex which means 
       // that all problems of the same level on the same day will have bodies with the same 
       // positions, velocities and radii.
@@ -175,7 +181,7 @@ contract AnybodyProblem is Ownable, ERC2981 {
       body.bodyIndex = index;
       body.seed = dayLevelIndexSeed;
 
-      body.radius = genRadius(dayIndexSeed, index);
+      body.radius = genRadius(index);
 
       bytes32 rand = keccak256(abi.encodePacked(dayLevelIndexSeed));
       body.px = randomRange(0, windowWidth, rand);
@@ -195,11 +201,9 @@ contract AnybodyProblem is Ownable, ERC2981 {
 
       return body;
   }
-  function genRadius(bytes32 seed, uint256 index) public pure returns (uint256) {
-      // TODO: confirm whether radius should remain only one of 3 sizes
-      uint256 randRadius = randomRange(2, 6, seed);
-      randRadius = index == 0 ? 36 : (randRadius) * 5 + startingRadius;
-      return randRadius * scalingFactor;
+  function genRadius(uint256 index) public pure returns (uint256) {
+      uint8[6] memory radii = [36, 27, 22, 17, 12, 7]; // n * 5 + 2
+      return radii[index % radii.length] * scalingFactor;
   }
   function randomRange(uint256 min,uint256 max, bytes32 rand) public pure returns (uint256) {
       return min + (uint256(rand) % (max - min));
@@ -210,6 +214,7 @@ contract AnybodyProblem is Ownable, ERC2981 {
   function generateSeed(uint256 id, uint256 index) public view returns (bytes32) {
       return keccak256(abi.encodePacked(id, index, blockhash(block.number - 1)));
   }
+  // TODO: fix day and week so that days and week begin at same time
   function currentWeek() public view returns (uint256) {
     return block.timestamp - ((block.timestamp - FIRST_SUNDAY_AT_6_PM_UTC) % SECONDS_IN_A_WEEK);
   }
@@ -291,7 +296,7 @@ contract AnybodyProblem is Ownable, ERC2981 {
     Level memory levelData = runs[runId].levels[levelIndex];
 
     levelData.time += time;
-    require(levelData.time <= maxTick, "Time limit exceeded");
+    require(levelData.time <= maxTicksByLevelIndex[levelIndex], "Time limit exceeded");
 
     uint256 bodiesGone;
     Body memory bodyData;
@@ -335,7 +340,7 @@ contract AnybodyProblem is Ownable, ERC2981 {
   function addToLeaderboard(uint256 runId) internal {
     addToFastestByDay(runId);
     addToLongestStreak(runId);
-    addToMostPlayed(runId);
+    addToMostPlayed();
   }
   function addToLongestStreak(uint256 runId) internal {
     uint256 day = runs[runId].day;
@@ -358,7 +363,7 @@ contract AnybodyProblem is Ownable, ERC2981 {
       }
     }
   }
-  function addToMostPlayed(uint256 runId) internal {
+  function addToMostPlayed() internal {
     Record memory record = gamesPlayed[msg.sender];
     for (uint256 i = 0; i < mostGames.length; i++) {
       if (record.total > gamesPlayed[mostGames[i]].total) {
@@ -574,7 +579,7 @@ contract AnybodyProblem is Ownable, ERC2981 {
   }
   // TODO: add external metadata contract for easier upgrades
   function speedrunsTokenURI(uint256 id) public view returns (string memory) {
-    // return string(abi.encodePacked("https://api.bodies.io/problems/", uint2str(id)));
+    return ExternalMetadata(externalMetadata).getMetadata(id);
   }
   function emitMetadataUpdate(uint256 tokenId) public onlyOwner {
     bytes32 topic = keccak256("MetadataUpdate(uint256)");
@@ -590,16 +595,19 @@ contract AnybodyProblem is Ownable, ERC2981 {
       topics[0] = topic;
     Speedruns(speedruns).emitGenericEvent(topics, data);
   }
-  function exampleEmitMultipleIndexEvent(uint256 _fromTokenId, uint256 _toTokenId) public onlyOwner {
-      bytes32 topic = keccak256("BatchMetadataUpdate(uint256,uint256)");
-      bytes32 topicFrom = keccak256(abi.encode(_fromTokenId));
-      bytes32 topicTo = keccak256(abi.encode(_toTokenId));
-      bytes memory data = abi.encode(_fromTokenId, _toTokenId);
+  function exampleEmitMultipleIndexEvent(uint256 _fromTokenId, uint256 _toTokenId, address who) public onlyOwner {
+      bytes32 topic = keccak256("BatchMetadataUpdateIndexed(uint256,uint256,address)");
+      bytes32 topicFrom = bytes32(abi.encode(_fromTokenId));
+      bytes32 topicTo = bytes32(abi.encode(_toTokenId));
+      bytes memory data = abi.encode(who);
       bytes32[] memory topics = new bytes32[](3);
       topics[0] = topic;
       topics[1] = topicFrom;
       topics[2] = topicTo;
       Speedruns(speedruns).emitGenericEvent(topics, data);
+  }
+  function updateExternalMetadata(address externalMetadata_) public onlyOwner {
+    externalMetadata = externalMetadata_;
   }
   function updateProceedRecipient(address payable proceedRecipient_) public onlyOwner {
     proceedRecipient = proceedRecipient_;
