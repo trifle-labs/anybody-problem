@@ -1,4 +1,5 @@
 import { hslToRgb, THEME } from './colors.js'
+import { fonts, drawKernedText } from './fonts.js'
 
 const BODY_SCALE = 4 // match to calculations.js !!
 const WITHERING_STEPS = 3000
@@ -152,13 +153,14 @@ export const Visuals = {
       this.started()
     }
 
-    this.frames++
-    const results = this.step(this.bodies, this.missiles)
-    this.bodies = results.bodies || []
-    this.missiles = results.missiles || []
+    if (!this.paused) {
+      this.frames++
+      const results = this.step(this.bodies, this.missiles)
+      this.bodies = results.bodies || []
+      this.missiles = results.missiles || []
+    }
 
     this.p.noFill()
-    this.p.textStyle(this.p.BOLDITALIC)
     // this.p.textFont('Instrument Serif, serif')
     this.drawBg()
     if (this.globalStyle == 'psycho') {
@@ -182,7 +184,7 @@ export const Visuals = {
     //   }
     // }
 
-    if (!this.firstFrame) {
+    if (!this.firstFrame && !this.paused) {
       this.drawBodies()
     }
 
@@ -261,25 +263,25 @@ export const Visuals = {
     this.firstFrame = false
   },
   drawPause() {
-    if (this.paused) {
-      this.p.fill('white')
-      this.p.textSize(128)
-      // p.text('SUCCESS', this.windowWidth / 2 - 8, 190) // adjust by 8 to center SF Pro weirdness
-      this.p.textAlign(this.p.CENTER, this.p.TOP)
-      this.p.text(
-        'START',
-        this.windowWidth / 2,
-        this.windowHeight / 2 - 128 / 2
-      )
-      // this.p.noStroke()
-      // this.p.strokeWeight(0)
-      // this.p.fill('rgba(0,0,0,0.4)')
-      // this.p.rect(0, 0, this.windowWidth, this.windowHeight)
-      // this.p.push()
-      // this.p.translate(this.windowWidth / 2, this.windowHeight / 2)
-      // this.p.triangle(-100, -100, -100, 100, 100, 0)
-      // this.p.pop()
-    }
+    if (!(this.paused && fonts.dot)) return
+    this.p.textFont(fonts.dot)
+    this.p.fill('#ECCDFF')
+    this.p.textSize(200)
+    this.p.textAlign(this.p.LEFT, this.p.TOP)
+
+    // draw logo
+    const titleY = this.windowHeight / 2 - 270
+    drawKernedText(this.p, 'Anybody', 46, titleY, 1)
+    drawKernedText(this.p, 'Problem', 46, titleY + 240, 6.5)
+
+    this.drawButton({
+      text: 'PLAY',
+      x: this.windowWidth / 2 - 140,
+      y: this.windowHeight / 2 + 325,
+      height: 90,
+      width: 280,
+      onClick: () => this.setPause(false)
+    })
   },
   drawBodyOutlines() {
     for (let i = 0; i < this.bodies.length; i++) {
@@ -549,6 +551,7 @@ export const Visuals = {
       this.scoreSize += 1
       p.fill(255, 255, 255, 150)
     }
+    p.textFont(fonts.body)
     p.textSize(this.scoreSize)
     if (runningFrames > 2) {
       p.text(secondsLeft.toFixed(2) + 's', 20, 10)
@@ -635,7 +638,6 @@ export const Visuals = {
     }
 
     p.push()
-    p.textStyle(p.BOLDITALIC)
     p.stroke('white')
     p.textSize(48)
     p.strokeWeight(button.active ? 1 : 4)
@@ -644,7 +646,7 @@ export const Visuals = {
     } else {
       p.noFill()
     }
-    p.rect(x, y, width, height, 10)
+    p.rect(x, y, width, height, height / 2)
     p.noStroke()
     p.fill('white')
     p.textAlign(p.CENTER, p.CENTER)
@@ -728,6 +730,8 @@ export const Visuals = {
     //   dirX = (dirX / len) * 100
     //   dirY = (dirY / len) * 100
     // }
+
+    if (this.paused) return
 
     // Draw the line
     // this.p.setLineDash([5, 15])
