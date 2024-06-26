@@ -201,6 +201,10 @@ const deployContracts = async (options) => {
   ) {
     const verificationData = [
       {
+        name: 'ExternalMetadata',
+        constructorArguments: []
+      },
+      {
         name: 'Speedruns',
         constructorArguments: []
       },
@@ -209,6 +213,7 @@ const deployContracts = async (options) => {
         constructorArguments: [
           deployer.address,
           speedrunsAddress,
+          externalMetadataAddress,
           verifiers,
           verifiersTicks,
           verifiersBodies
