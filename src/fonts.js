@@ -2,6 +2,8 @@ const bodyFontURL = new URL(
   '/public/fonts/Space-Notorious-rounded.otf',
   import.meta.url
 ).href
+
+// n.b. to make this font load, I had to remove the leading numbers from the filename
 const dotFontURL = new URL(
   '/public/fonts/A000-Dots-edited.ttf',
   import.meta.url
