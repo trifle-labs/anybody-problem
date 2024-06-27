@@ -31,7 +31,7 @@ export const Buttons = {
     button.visibleForFrames++
     button.lastVisibleFrame = this.p5Frames
 
-    const entranceTime = 0.2 // seconds
+    const entranceTime = 0.4 // seconds
 
     // animate in button when it is visible
     const scale = Math.min(

@@ -40,16 +40,16 @@ const PAUSE_BODY_DATA = [
   {
     bodyIndex: 1,
     seed: '0x34f645e62a9fb47276675e36c76e717bee1cc4688cdbx2ce1a2343e0fb210afa',
-    radius: 30000,
+    radius: 32000,
     px: 309311,
-    py: 201865
+    py: 121865
   },
   {
     bodyIndex: 2,
     seed: '0x34f645e62a9fb47426675e36c76e717bee1cc4688cdbd2te1a2343e0fb210afa',
-    radius: 36000,
-    px: 949311,
-    py: 901865
+    radius: 30000,
+    px: 850311,
+    py: 811865
   },
   {
     bodyIndex: 3,
@@ -520,6 +520,8 @@ export class Anybody extends EventEmitter {
   setPause(newPauseState = !this.paused, mute = false) {
     if (newPauseState) {
       this.pauseBodies = PAUSE_BODY_DATA.map(this.bodyDataToBodies.bind(this))
+      this.pauseBodies[1].c = this.getBodyColor(0)
+      this.pauseBodies[2].c = this.getBodyColor(0)
     }
 
     if (typeof newPauseState !== 'boolean') {

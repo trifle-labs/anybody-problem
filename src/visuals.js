@@ -445,13 +445,13 @@ export const Visuals = {
     // }
   },
 
-  tintImage(img, color) {
-    const g = this.p.createGraphics(img.width, img.height)
-    const cc = this.getTintFromColor(color)
-    g.tint(cc[0], cc[1], cc[2], cc[3] * 255)
-    g.image(img, 0, 0)
-    return g
-  },
+  // tintImage(img, color) {
+  //   const g = this.p.createGraphics(img.width, img.height)
+  //   const cc = this.getTintFromColor(color)
+  //   g.tint(cc[0], cc[1], cc[2], cc[3] * 255)
+  //   g.image(img, 0, 0)
+  //   return g
+  // },
 
   drawStaticBg() {
     const bw = true
@@ -931,7 +931,9 @@ export const Visuals = {
   },
 
   drawFaceSvg(body, width) {
-    this.fIndex ||= Math.floor(Math.random() * 14)
+    const maxIndex = Math.min(FACE_BLINK_SVGS.length, FACE_SVGS.length)
+    this.fIndex ||= Math.floor(Math.random() * maxIndex)
+    const fIndex = (this.fIndex + body.bodyIndex) % maxIndex
 
     const baddiesNear = this.closeTo(body)
     if (baddiesNear) {
@@ -948,9 +950,9 @@ export const Visuals = {
       Math.floor(this.frames / x) % m == 0 ||
       Math.floor(this.frames / x) % m == 2
     ) {
-      this.drawImageAsset(FACE_BLINK_SVGS[this.fIndex], width)
+      this.drawImageAsset(FACE_BLINK_SVGS[fIndex], width)
     } else {
-      this.drawImageAsset(FACE_SVGS[this.fIndex], width)
+      this.drawImageAsset(FACE_SVGS[fIndex], width)
     }
     // this.bodiesGraphic.pop()
   },
@@ -958,14 +960,15 @@ export const Visuals = {
   drawStarForegroundSvg(width, body) {
     const fill = body.c.fg
     this.bodiesGraphic.push()
-    this.fgIndex ||= Math.floor(Math.random() * 10)
+    this.fgIndex ||= Math.floor(Math.random() * FG_SVGS.length)
+    const fgIndex = (this.bgIndex + body.bodyIndex) % FG_SVGS.length
     const r = {
       ...rot.fg,
-      ...(rotOverride?.fg?.[this.fgIndex] ?? {})
+      ...(rotOverride?.fg?.[fgIndex] ?? {})
     }
     const rotateBy = r.speed == 0 ? 0 : (this.frames / r.speed) % 360
     this.bodiesGraphic.rotate(r.direction * rotateBy)
-    this.drawImageAsset(FG_SVGS[this.fgIndex], width, fill)
+    this.drawImageAsset(FG_SVGS[fgIndex], width, fill)
     this.bodiesGraphic.pop()
   },
 
@@ -985,51 +988,52 @@ export const Visuals = {
   drawStarBackgroundSvg(width, body) {
     const fill = body.c.bg
     this.bodiesGraphic.push()
-    this.bgIndex ||= Math.floor(Math.random() * 10)
+    this.bgIndex ||= Math.floor(Math.random() * BG_SVGS.length)
+    const bgIndex = (this.bgIndex + body.bodyIndex) % BG_SVGS.length
     const r = {
       ...rot.bg,
-      ...(rotOverride?.bg?.[this.bgIndex] ?? {})
+      ...(rotOverride?.bg?.[bgIndex] ?? {})
     }
     const rotateBy = r.speed == 0 ? 0 : (this.frames / r.speed) % 360
     this.bodiesGraphic.rotate(r.direction * rotateBy)
-    this.drawImageAsset(BG_SVGS[this.bgIndex], width, fill)
+    this.drawImageAsset(BG_SVGS[bgIndex], width, fill)
     this.bodiesGraphic.pop()
   },
 
-  getTintFromColor(c) {
-    const cc = c
-      .split(',')
-      .map((c) => parseFloat(c.replace(')', '').replace('hsla(', '')))
-    return [cc[0], cc[1], cc[2], cc[2]]
-  },
+  // getTintFromColor(c) {
+  //   const cc = c
+  //     .split(',')
+  //     .map((c) => parseFloat(c.replace(')', '').replace('hsla(', '')))
+  //   return [cc[0], cc[1], cc[2], cc[2]]
+  // },
 
-  drawBodyStyle1(radius, body, offset) {
-    this.bodiesGraphic.noStroke()
-    let c =
-      body.radius !== 0 ? body.c : this.replaceOpacity(body.c, this.deadOpacity)
-    // if (body.bodyIndex == 0) {
-    //   c = 'white'
-    // }
-    this.bodiesGraphic.fill(c)
-    // const scale = 1
-    // const foo = this.p.createGraphics(radius / scale, radius / scale)
-    // foo.noStroke()
-    // foo.fill(c)
-    // foo.ellipse(
-    //   radius / scale / 2,
-    //   radius / scale / 2,
-    //   radius / scale,
-    //   radius / scale
-    // )
-    // this.bodiesGraphic.image(
-    //   foo,
-    //   -radius / 2,
-    //   -radius / 2 - offset,
-    //   radius,
-    //   radius
-    // )
-    this.bodiesGraphic.ellipse(0, offset, radius)
-  },
+  // drawBodyStyle1(radius, body, offset) {
+  //   this.bodiesGraphic.noStroke()
+  //   let c =
+  //     body.radius !== 0 ? body.c : this.replaceOpacity(body.c, this.deadOpacity)
+  //   // if (body.bodyIndex == 0) {
+  //   //   c = 'white'
+  //   // }
+  //   this.bodiesGraphic.fill(c)
+  //   // const scale = 1
+  //   // const foo = this.p.createGraphics(radius / scale, radius / scale)
+  //   // foo.noStroke()
+  //   // foo.fill(c)
+  //   // foo.ellipse(
+  //   //   radius / scale / 2,
+  //   //   radius / scale / 2,
+  //   //   radius / scale,
+  //   //   radius / scale
+  //   // )
+  //   // this.bodiesGraphic.image(
+  //   //   foo,
+  //   //   -radius / 2,
+  //   //   -radius / 2 - offset,
+  //   //   radius,
+  //   //   radius
+  //   // )
+  //   this.bodiesGraphic.ellipse(0, offset, radius)
+  // },
 
   moveAndRotate_PopAfter(graphic, x, y /*v*/) {
     graphic.push()
@@ -1053,7 +1057,8 @@ export const Visuals = {
     // y-offset of face relative to center
     // const offset = this.getOffset(radius)
 
-    if (body.bodyIndex === 0) {
+    if (body.bodyIndex === 0 || (this.paused && body.bodyIndex < 3)) {
+      // draw hero
       const size = Math.floor(body.radius * BODY_SCALE * 2.66)
 
       this.drawStarBackgroundSvg(size, body)
@@ -1234,6 +1239,7 @@ export const Visuals = {
     this.bodiesGraphic.noStroke()
 
     for (const body of this.pauseBodies) {
+      this.bodiesGraphic.push()
       body.position.x
       // after final proof is sent, don't draw upgradable bodies
       if (body.radius == 0) continue
@@ -1261,9 +1267,11 @@ export const Visuals = {
       )
       bodyCopy.velocity = this.p.createVector(body.velocity.x, body.velocity.y)
       this.drawBodiesLooped(bodyCopy, radius, this.drawBody)
+      this.bodiesGraphic.pop()
     }
 
     this.p.image(this.bodiesGraphic, 0, 0)
+
     this.bodiesGraphic.clear()
   },
 
