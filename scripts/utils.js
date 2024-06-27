@@ -261,7 +261,8 @@ const solveLevel = async (
   let missileInits = []
   const anybody = new Anybody(null, {
     util: true,
-    stopEvery: ticksRun
+    stopEvery: ticksRun,
+    test: ticksRun == 20
   })
   const newBodyData = []
   const scalingFactor = await anybodyProblem.scalingFactor()
@@ -432,6 +433,7 @@ const generateProof = async (
     bodyData,
     seed,
     util: true,
+    test: proofLength == 20,
     stopEvery: proofLength
   })
   anybody.storeInits()

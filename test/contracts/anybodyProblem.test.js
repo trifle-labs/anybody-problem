@@ -85,7 +85,7 @@ describe('AnybodyProblem Tests', function () {
     expect(speedrunsAddress).to.equal(speedruns.address)
   })
 
-  it.only('onlyOwner functions are really only Owner', async function () {
+  it('onlyOwner functions are really only Owner', async function () {
     const [, addr1] = await ethers.getSigners()
     const { AnybodyProblem: anybodyProblem } = await deployContracts()
 
