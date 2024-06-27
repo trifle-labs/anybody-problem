@@ -326,7 +326,7 @@ contract AnybodyProblem is Ownable, ERC2981 {
         (bool sent, bytes memory data) = proceedRecipient.call{
             value: msg.value
         }("");
-        Speedruns(speedruns).__mint(msg.sender, runId, 1, "");
+        Speedruns(speedruns).__mint(msg.sender, day, 1, "");
         emit EthMoved(proceedRecipient, sent, data, msg.value);
         emit RunSolved(msg.sender, runId, runs[runId].accumulativeTime, day);
         gamesPlayed[msg.sender].total++;
