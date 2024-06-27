@@ -779,7 +779,6 @@ export class Anybody extends EventEmitter {
   generateBodies() {
     this.bodyData =
       this.bodyData || this.generateLevelData(this.day, this.level)
-    console.log(JSON.stringify(this.bodyData))
     this.bodies = this.bodyData.map(this.bodyDataToBodies.bind(this))
     this.startingBodies = this.bodies.length
   }
