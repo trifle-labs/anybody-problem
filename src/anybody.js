@@ -533,12 +533,8 @@ export class Anybody extends EventEmitter {
     this.showPlayAgain = true
   }
 
-  setPause(newPauseState = !this.paused, mute = false) {
-    if (newPauseState) {
-      this.pauseBodies = PAUSE_BODY_DATA.map(this.bodyDataToBodies.bind(this))
-      this.pauseBodies[1].c = this.getBodyColor(0)
-      this.pauseBodies[2].c = this.getBodyColor(0)
-    }
+  setPause = (newPauseState = !this.paused, mute = false) => {
+    console.log(this.pauseBodies.map((b) => b.c))
 
     if (typeof newPauseState !== 'boolean') {
       newPauseState = !this.paused
@@ -779,8 +775,12 @@ export class Anybody extends EventEmitter {
   generateBodies() {
     this.bodyData =
       this.bodyData || this.generateLevelData(this.day, this.level)
-    this.bodies = this.bodyData.map(this.bodyDataToBodies.bind(this))
+    this.bodies = this.bodyData.map(this.bodyDataToBodies)
     this.startingBodies = this.bodies.length
+
+    this.pauseBodies = PAUSE_BODY_DATA.map(this.bodyDataToBodies)
+    this.pauseBodies[1].c = this.getBodyColor(0)
+    this.pauseBodies[2].c = this.getBodyColor(0)
   }
 
   getFaceIdx(seed) {
@@ -796,8 +796,8 @@ export class Anybody extends EventEmitter {
     return faceIndex
   }
 
-  bodyDataToBodies(b) {
-    const bodyIndex = b.bodyIndex
+  bodyDataToBodies = (b) => {
+    const { bodyIndex } = b
     const px = b.px / parseInt(this.scalingFactor)
     const py = b.py / parseInt(this.scalingFactor)
     const vx =
@@ -811,7 +811,7 @@ export class Anybody extends EventEmitter {
     return {
       seed: b.seed,
       // faceIndex,
-      bodyIndex: bodyIndex,
+      bodyIndex,
       position: this.createVector(px, py),
       velocity: this.createVector(vx, vy),
       radius: radius,
@@ -826,12 +826,12 @@ export class Anybody extends EventEmitter {
       const theme = themes[this.random(0, themes.length - 1)]
 
       return {
-        bg: hslToRgb(randHSL(bodyThemes[theme].bg, this.random.bind(this))),
-        core: hslToRgb(randHSL(bodyThemes[theme].cr, this.random.bind(this))),
-        fg: hslToRgb(randHSL(bodyThemes[theme].fg, this.random.bind(this)))
+        bg: hslToRgb(randHSL(bodyThemes[theme].bg, this.random)),
+        core: hslToRgb(randHSL(bodyThemes[theme].cr, this.random)),
+        fg: hslToRgb(randHSL(bodyThemes[theme].fg, this.random))
       }
     } else {
-      return randHSL([undefined, '90-100', '55-60'], this.random.bind(this))
+      return randHSL([undefined, '90-100', '55-60'], this.random)
     }
     // const seedtype = typeof seed
     // if (seedtype !== 'string' && seedtype !== 'number') {
@@ -848,7 +848,7 @@ export class Anybody extends EventEmitter {
     // return result
   }
 
-  random(min, max, rng = this.rng) {
+  random = (min, max, rng = this.rng) => {
     return rng.nextInt(min, max)
     // return Math.floor(Math.random() * (upper - lower + 1)) + lower;
   }

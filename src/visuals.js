@@ -1051,13 +1051,13 @@ export const Visuals = {
     // }
   },
 
-  drawBody(x, y, v, radius, body) {
+  drawBody(x, y, v, radius, body, hero = false) {
     this.moveAndRotate_PopAfter(this.bodiesGraphic, x, y, v)
 
     // y-offset of face relative to center
     // const offset = this.getOffset(radius)
 
-    if (body.bodyIndex === 0 || (this.paused && body.bodyIndex < 3)) {
+    if (body.bodyIndex === 0 || hero) {
       // draw hero
       const size = Math.floor(body.radius * BODY_SCALE * 2.66)
 
@@ -1080,45 +1080,45 @@ export const Visuals = {
     return actualRadius * 4 + this.radiusMultiplyer
   },
 
-  drawBodiesLooped(body, radius, drawFunction) {
-    drawFunction = drawFunction.bind(this)
-    drawFunction(body.position.x, body.position.y, body.velocity, radius, body)
+  // drawBodiesLooped(body, radius, drawFunction) {
+  //   drawFunction = drawFunction.bind(this)
+  //   drawFunction(body.position.x, body.position.y, body.velocity, radius, body)
 
-    // let loopedX = false,
-    //   loopedY = false,
-    //   loopX = body.position.x,
-    //   loopY = body.position.y
-    // const loopGap = radius / 2
+  //   // let loopedX = false,
+  //   //   loopedY = false,
+  //   //   loopX = body.position.x,
+  //   //   loopY = body.position.y
+  //   // const loopGap = radius / 2
 
-    // // crosses right, draw on left
-    // if (body.position.x > this.windowWidth - loopGap) {
-    //   loopedX = true
-    //   loopX = body.position.x - this.windowWidth
-    //   drawFunction(loopX, body.position.y, body.velocity, radius, body, true)
-    //   // crosses left, draw on right
-    // } else if (body.position.x < loopGap) {
-    //   loopedX = true
-    //   loopX = body.position.x + this.windowWidth
-    //   drawFunction(loopX, body.position.y, body.velocity, radius, body, true)
-    // }
+  //   // // crosses right, draw on left
+  //   // if (body.position.x > this.windowWidth - loopGap) {
+  //   //   loopedX = true
+  //   //   loopX = body.position.x - this.windowWidth
+  //   //   drawFunction(loopX, body.position.y, body.velocity, radius, body, true)
+  //   //   // crosses left, draw on right
+  //   // } else if (body.position.x < loopGap) {
+  //   //   loopedX = true
+  //   //   loopX = body.position.x + this.windowWidth
+  //   //   drawFunction(loopX, body.position.y, body.velocity, radius, body, true)
+  //   // }
 
-    // // crosses bottom, draw on top
-    // if (body.position.y > this.windowHeight - loopGap) {
-    //   loopedY = true
-    //   loopY = body.position.y - this.windowHeight
-    //   drawFunction(body.position.x, loopY, body.velocity, radius, body, true)
-    //   // crosses top, draw on bottom
-    // } else if (body.position.y < loopGap) {
-    //   loopedY = true
-    //   loopY = body.position.y + this.windowHeight
-    //   drawFunction(body.position.x, loopY, body.velocity, radius, body, true)
-    // }
+  //   // // crosses bottom, draw on top
+  //   // if (body.position.y > this.windowHeight - loopGap) {
+  //   //   loopedY = true
+  //   //   loopY = body.position.y - this.windowHeight
+  //   //   drawFunction(body.position.x, loopY, body.velocity, radius, body, true)
+  //   //   // crosses top, draw on bottom
+  //   // } else if (body.position.y < loopGap) {
+  //   //   loopedY = true
+  //   //   loopY = body.position.y + this.windowHeight
+  //   //   drawFunction(body.position.x, loopY, body.velocity, radius, body, true)
+  //   // }
 
-    // // crosses corner, draw opposite corner
-    // if (loopedX && loopedY) {
-    //   drawFunction(loopX, loopY, body.velocity, radius, body, true)
-    // }
-  },
+  //   // // crosses corner, draw opposite corner
+  //   // if (loopedX && loopedY) {
+  //   //   drawFunction(loopX, loopY, body.velocity, radius, body, true)
+  //   // }
+  // },
 
   // TODO: add this back as part of a end game animation
   drawWitheringBodies() {
@@ -1209,7 +1209,13 @@ export const Visuals = {
         (b) => b.bodyIndex == body.bodyIndex
       )[0]?.radius
       const radius = this.getBodyRadius(bodyRadius)
-      this.drawBodiesLooped(body, radius, this.drawBody)
+      this.drawBody(
+        body.position.x,
+        body.position.y,
+        body.velocity,
+        radius,
+        body
+      )
 
       const bodyCopy = JSON.parse(
         JSON.stringify(
@@ -1266,7 +1272,15 @@ export const Visuals = {
         body.position.y + yWobble
       )
       bodyCopy.velocity = this.p.createVector(body.velocity.x, body.velocity.y)
-      this.drawBodiesLooped(bodyCopy, radius, this.drawBody)
+      this.drawBody(
+        body.position.x,
+        body.position.y,
+        body.velocity,
+        radius,
+        body,
+        body.bodyIndex < 3
+      )
+
       this.bodiesGraphic.pop()
     }
 
