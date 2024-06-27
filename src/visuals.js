@@ -191,6 +191,8 @@ export const Visuals = {
 
     if (!this.firstFrame && !this.paused) {
       this.drawBodies()
+    } else {
+      this.drawPauseBodies()
     }
 
     if (
@@ -1221,6 +1223,47 @@ export const Visuals = {
     if (attachToCanvas) {
       this.p.image(this.bodiesGraphic, 0, 0)
     }
+    this.bodiesGraphic.clear()
+  },
+
+  drawPauseBodies() {
+    this.bodiesGraphic ||= this.p.createGraphics(
+      this.windowWidth,
+      this.windowHeight
+    )
+    this.bodiesGraphic.noStroke()
+
+    for (const body of this.pauseBodies) {
+      body.position.x
+      // after final proof is sent, don't draw upgradable bodies
+      if (body.radius == 0) continue
+      const bodyRadius = this.bodyCopies.filter(
+        (b) => b.bodyIndex == body.bodyIndex
+      )[0]?.radius
+      const radius = this.getBodyRadius(bodyRadius)
+
+      // calculate x and y wobble factors based on this.p5Frames to make the pause bodies look like they're bobbing around
+      const xWobble =
+        this.p.sin(this.p.frameCount / this.P5_FPS) * (10 + body.bodyIndex)
+      const yWobble =
+        this.p.cos(this.p.frameCount / this.P5_FPS + body.bodyIndex * 3) *
+        (10 + body.bodyIndex)
+
+      const bodyCopy = JSON.parse(
+        JSON.stringify(
+          body,
+          (key, value) => (typeof value === 'bigint' ? value.toString() : value) // return everything else unchanged
+        )
+      )
+      bodyCopy.position = this.p.createVector(
+        body.position.x + xWobble,
+        body.position.y + yWobble
+      )
+      bodyCopy.velocity = this.p.createVector(body.velocity.x, body.velocity.y)
+      this.drawBodiesLooped(bodyCopy, radius, this.drawBody)
+    }
+
+    this.p.image(this.bodiesGraphic, 0, 0)
     this.bodiesGraphic.clear()
   },
 
