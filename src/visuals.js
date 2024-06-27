@@ -157,12 +157,13 @@ export const Visuals = {
       this.started()
     }
 
-    if (!this.paused) {
+    if (!this.paused && this.p5Frames % 2 == 0) {
       this.frames++
       const results = this.step(this.bodies, this.missiles)
       this.bodies = results.bodies || []
       this.missiles = results.missiles || []
     }
+    this.p5Frames++
 
     this.p.noFill()
     // this.p.textFont('Instrument Serif, serif')
@@ -624,7 +625,7 @@ export const Visuals = {
     p.textSize(200)
     p.textAlign(p.LEFT, p.TOP)
     p.textFont(fonts.dot)
-    const tickerSpeed = this.FPS / 2
+    const tickerSpeed = 120 / this.P5_FPS
     const textWidth = p.textWidth(doubleText)
     if (!this.gameoverTickerX || this.gameoverTickerX + tickerSpeed >= 0) {
       this.gameoverTickerX = -textWidth / 2

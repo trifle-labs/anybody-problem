@@ -120,6 +120,7 @@ export class Anybody extends EventEmitter {
     this.speedLimit = 10
     this.vectorLimit = this.speedLimit * this.speedFactor
     this.FPS = 25
+    this.P5_FPS = 50
     this.timer =
       (this.level > 5 ? 60 : GAME_LENGTH_BY_LEVEL_INDEX[this.level - 1]) *
       this.FPS
@@ -139,6 +140,7 @@ export class Anybody extends EventEmitter {
     this.allCopiesOfBodies = []
     this.missileCount = 0
     this.frames = 0
+    this.p5Frames = 0
     this.showIt = true
     this.justStopped = false
     this.gameOver = false
@@ -777,7 +779,7 @@ export class Anybody extends EventEmitter {
     return color
   }
   prepareP5() {
-    this.p.frameRate(this.FPS)
+    this.p.frameRate(this.P5_FPS)
     this.p.createCanvas(this.windowWidth, this.windowWidth)
     // this.p.pixelDensity(this.pixelDensity)
     this.p.background('white')
