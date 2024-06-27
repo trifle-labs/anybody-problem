@@ -1275,99 +1275,99 @@ export const Visuals = {
     this.bodiesGraphic.clear()
   },
 
-  drawBorder() {
-    // drawClock
-    const clockCenter = this.windowWidth / 2
+  // drawBorder() {
+  //   // drawClock
+  //   const clockCenter = this.windowWidth / 2
 
-    // const radialStep1 = (this.frames / (this.chunk * 1) / 255) * 180 + 270 % 360
-    // const clockRadius = this.windowWidth
-    // const clockX = clockCenter + clockRadius * Math.cos(radialStep1 * Math.PI / 180)
-    // const clockY = clockCenter + clockRadius * Math.sin(radialStep1 * Math.PI / 180)
-    // this.bodiesGraphic.stroke(this.getBW())
-    // this.bodiesGraphic.noStroke()
-    // this.bodiesGraphic.fill(this.getNotGrey())
-    // this.bodiesGraphic.ellipse(clockX, clockY, 100, 100)
+  //   // const radialStep1 = (this.frames / (this.chunk * 1) / 255) * 180 + 270 % 360
+  //   // const clockRadius = this.windowWidth
+  //   // const clockX = clockCenter + clockRadius * Math.cos(radialStep1 * Math.PI / 180)
+  //   // const clockY = clockCenter + clockRadius * Math.sin(radialStep1 * Math.PI / 180)
+  //   // this.bodiesGraphic.stroke(this.getBW())
+  //   // this.bodiesGraphic.noStroke()
+  //   // this.bodiesGraphic.fill(this.getNotGrey())
+  //   // this.bodiesGraphic.ellipse(clockX, clockY, 100, 100)
 
-    let size = this.windowWidth / Math.PI
-    const radialStep2 =
-      (this.frames / (this.chunk * 1) / 255) * 360 + (270 % 360)
-    const clockRadius2 = this.windowWidth / 2 + size / 4
+  //   let size = this.windowWidth / Math.PI
+  //   const radialStep2 =
+  //     (this.frames / (this.chunk * 1) / 255) * 360 + (270 % 360)
+  //   const clockRadius2 = this.windowWidth / 2 + size / 4
 
-    const clockX2 =
-      clockCenter + clockRadius2 * Math.cos((radialStep2 * Math.PI) / 180)
-    const clockY2 =
-      clockCenter + clockRadius2 * Math.sin((radialStep2 * Math.PI) / 180)
-    // this.bodiesGraphic.stroke(this.getBW())
-    this.bodiesGraphic.noStroke()
-    // this.bodiesGraphic.stroke('white')
-    this.bodiesGraphic.fill(this.getGrey())
-    // if (size < 0) {
-    //   size = 0
-    // }
-    this.bodiesGraphic.ellipse(clockX2, clockY2, size, size)
-  },
+  //   const clockX2 =
+  //     clockCenter + clockRadius2 * Math.cos((radialStep2 * Math.PI) / 180)
+  //   const clockY2 =
+  //     clockCenter + clockRadius2 * Math.sin((radialStep2 * Math.PI) / 180)
+  //   // this.bodiesGraphic.stroke(this.getBW())
+  //   this.bodiesGraphic.noStroke()
+  //   // this.bodiesGraphic.stroke('white')
+  //   this.bodiesGraphic.fill(this.getGrey())
+  //   // if (size < 0) {
+  //   //   size = 0
+  //   // }
+  //   this.bodiesGraphic.ellipse(clockX2, clockY2, size, size)
+  // },
 
-  getAngledImage(body) {
-    const graphic = this.p.createGraphics(this.windowWidth, this.windowHeight)
-    graphic.push()
-    graphic.translate(body.position.x, body.position.y)
-    var angle = body.velocity.heading() + graphic.PI / 2
-    graphic.rotate(angle)
+  // getAngledImage(body) {
+  //   const graphic = this.p.createGraphics(this.windowWidth, this.windowHeight)
+  //   graphic.push()
+  //   graphic.translate(body.position.x, body.position.y)
+  //   var angle = body.velocity.heading() + graphic.PI / 2
+  //   graphic.rotate(angle)
 
-    if (!this.eyes) {
-      this.eyes = this.p.loadImage('/eyes-3.png')
-    }
-    const size = 6
-    graphic.image(
-      this.eyes,
-      -body.radius * (size / 2),
-      -body.radius * (size / 2),
-      body.radius * size,
-      body.radius * size
-    )
+  //   if (!this.eyes) {
+  //     this.eyes = this.p.loadImage('/eyes-3.png')
+  //   }
+  //   const size = 6
+  //   graphic.image(
+  //     this.eyes,
+  //     -body.radius * (size / 2),
+  //     -body.radius * (size / 2),
+  //     body.radius * size,
+  //     body.radius * size
+  //   )
 
-    graphic.pop()
-    graphic.push()
-    graphic.translate(body.position.x, body.position.y)
-    var angle2 = body.velocity.heading() + graphic.PI / 2
-    graphic.rotate(angle2)
-    graphic.pop()
-    return graphic
-  },
+  //   graphic.pop()
+  //   graphic.push()
+  //   graphic.translate(body.position.x, body.position.y)
+  //   var angle2 = body.velocity.heading() + graphic.PI / 2
+  //   graphic.rotate(angle2)
+  //   graphic.pop()
+  //   return graphic
+  // },
 
-  getAngledBody(body, finalColor) {
-    // rotate by velocity
-    this.p.push()
-    this.p.translate(body.position.x, body.position.y)
-    var angle = body.velocity.heading() + this.p.PI / 2
-    this.p.rotate(angle)
+  // getAngledBody(body, finalColor) {
+  //   // rotate by velocity
+  //   this.p.push()
+  //   this.p.translate(body.position.x, body.position.y)
+  //   var angle = body.velocity.heading() + this.p.PI / 2
+  //   this.p.rotate(angle)
 
-    this.p.strokeWeight(0)
-    // stroke("white")
-    this.p.fill(finalColor)
-    // Calculate the vertices of the equilateral triangle
-    let x1 = body.radius * 4 * this.p.cos(this.p.PI / 6)
-    let y1 = body.radius * 4 * this.p.sin(this.p.PI / 6)
+  //   this.p.strokeWeight(0)
+  //   // stroke("white")
+  //   this.p.fill(finalColor)
+  //   // Calculate the vertices of the equilateral triangle
+  //   let x1 = body.radius * 4 * this.p.cos(this.p.PI / 6)
+  //   let y1 = body.radius * 4 * this.p.sin(this.p.PI / 6)
 
-    let x2 = body.radius * 4 * this.p.cos(this.p.PI / 6 + this.p.TWO_PI / 3)
-    let y2 = body.radius * 4 * this.p.sin(this.p.PI / 6 + this.p.TWO_PI / 3)
+  //   let x2 = body.radius * 4 * this.p.cos(this.p.PI / 6 + this.p.TWO_PI / 3)
+  //   let y2 = body.radius * 4 * this.p.sin(this.p.PI / 6 + this.p.TWO_PI / 3)
 
-    let x3 =
-      body.radius * 4 * this.p.cos(this.p.PI / 6 + (2 * this.p.TWO_PI) / 3)
-    let y3 =
-      body.radius * 4 * this.p.sin(this.p.PI / 6 + (2 * this.p.TWO_PI) / 3)
+  //   let x3 =
+  //     body.radius * 4 * this.p.cos(this.p.PI / 6 + (2 * this.p.TWO_PI) / 3)
+  //   let y3 =
+  //     body.radius * 4 * this.p.sin(this.p.PI / 6 + (2 * this.p.TWO_PI) / 3)
 
-    this.p.triangle(x1, y1, x2, y2, x3, y3)
-    this.p.pop()
+  //   this.p.triangle(x1, y1, x2, y2, x3, y3)
+  //   this.p.pop()
 
-    this.p.stroke('white')
-    this.p.strokeWeight(1)
-    this.p.push()
-    this.p.translate(body.position.x, body.position.y)
-    var angle2 = body.velocity.heading() + this.p.PI / 2
-    this.p.rotate(angle2)
-    this.p.pop()
-  },
+  //   this.p.stroke('white')
+  //   this.p.strokeWeight(1)
+  //   this.p.push()
+  //   this.p.translate(body.position.x, body.position.y)
+  //   var angle2 = body.velocity.heading() + this.p.PI / 2
+  //   this.p.rotate(angle2)
+  //   this.p.pop()
+  // },
 
   drawTailStyle1(/*x, y, v, radius, finalColor, offset*/) {
     return
@@ -1387,174 +1387,174 @@ export const Visuals = {
     // this.p.pop()
   },
 
-  drawTailStyleGhost(x, y, v, radius, finalColor) {
-    // ghost version
+  // drawTailStyleGhost(x, y, v, radius, finalColor) {
+  //   // ghost version
 
-    const id = radius + '-' + finalColor
-    if (!this.tailGraphics) {
-      this.tailGraphics = {}
-    }
-    if (!this.tailGraphics || this.tailGraphics[id] == undefined) {
-      this.tailGraphics[id] = this.p.createGraphics(
-        this.windowWidth,
-        this.windowHeight
-      )
-      this.tailGraphics[id].noStroke()
-      this.tailGraphics[id].fill(finalColor)
+  //   const id = radius + '-' + finalColor
+  //   if (!this.tailGraphics) {
+  //     this.tailGraphics = {}
+  //   }
+  //   if (!this.tailGraphics || this.tailGraphics[id] == undefined) {
+  //     this.tailGraphics[id] = this.p.createGraphics(
+  //       this.windowWidth,
+  //       this.windowHeight
+  //     )
+  //     this.tailGraphics[id].noStroke()
+  //     this.tailGraphics[id].fill(finalColor)
 
-      this.tailGraphics[id].beginShape()
-      // this.tailGraphics[id].vertex(radius, 0)
-      // this.tailGraphics[id].vertex(0, 0)
+  //     this.tailGraphics[id].beginShape()
+  //     // this.tailGraphics[id].vertex(radius, 0)
+  //     // this.tailGraphics[id].vertex(0, 0)
 
-      // this.p.arc(0, 0, radius, radius, this.p.PI, 2 * this.p.PI)
-      const arcResolution = 20
+  //     // this.p.arc(0, 0, radius, radius, this.p.PI, 2 * this.p.PI)
+  //     const arcResolution = 20
 
-      for (let j = 0; j < arcResolution; j++) {
-        const ang = this.p.map(j, 0, arcResolution, 0, this.p.PI)
-        const ax = radius / 2 + (this.p.cos(ang) * radius) / 2
-        const ay = (2 * radius) / 2 + (-1 * this.p.sin(ang) * radius) / 2
-        this.tailGraphics[id].vertex(ax, ay)
-      }
+  //     for (let j = 0; j < arcResolution; j++) {
+  //       const ang = this.p.map(j, 0, arcResolution, 0, this.p.PI)
+  //       const ax = radius / 2 + (this.p.cos(ang) * radius) / 2
+  //       const ay = (2 * radius) / 2 + (-1 * this.p.sin(ang) * radius) / 2
+  //       this.tailGraphics[id].vertex(ax, ay)
+  //     }
 
-      // this.tailGraphics[id].fill('red')
-      // this.tailGraphics[id].rect(0, 0, radius, radius / 2)
+  //     // this.tailGraphics[id].fill('red')
+  //     // this.tailGraphics[id].rect(0, 0, radius, radius / 2)
 
-      const bumps = 7
-      let bumpHeight = radius / 6
-      // let heightChanger = radius / 10
-      // const bumpHeightMax = radius / 5
-      // const bumpHeightMin = radius / 8
-      const startY = radius * 1
-      // this.tailGraphics[id].push()
-      let remaindingWidth = radius
-      for (let i = 0; i < bumps; i++) {
-        let bumpWidth = radius / bumps
-        // bumpHeight += heightChanger
-        // if (bumpHeight > bumpHeightMax || bumpHeight < bumpHeightMin) {
-        //   heightChanger *= -1
-        // }
-        let x = radius - remaindingWidth
-        if (i % 2 == 1) {
-          // this.tailGraphics[id].arc(x + bumpWidth / 2, startY, bumpWidth, bumpHeight, this.tailGraphics[id].PI, 0, this.tailGraphics[id].OPEN)
-          for (let j = 0; j < arcResolution; j++) {
-            const ang = this.p.map(j, 0, arcResolution, this.p.PI, 0)
-            const ax = x + bumpWidth / 2 + (this.p.cos(ang) * bumpWidth) / 2
-            const ay =
-              startY + bumpHeight + (-1 * this.p.sin(ang) * bumpHeight) / 2
-            this.tailGraphics[id].vertex(ax, ay)
-          }
-        } else {
-          for (let j = 0; j < arcResolution; j++) {
-            const ang = this.p.map(j, 0, arcResolution, this.p.PI, 0)
-            const ax = x + bumpWidth / 2 + (this.p.cos(ang) * bumpWidth) / 2
-            const ay = startY + bumpHeight + (this.p.sin(ang) * bumpHeight) / 2
-            this.tailGraphics[id].vertex(ax, ay)
-          }
-          // this.tailGraphics[id].arc(x + bumpWidth / 2, startY + bumpWidth, bumpWidth, bumpHeight, 0, this.tailGraphics[id].PI, this.tailGraphics[id].OPEN)
-        }
-        remaindingWidth -= bumpWidth
-      }
-      this.tailGraphics[id].endShape(this.tailGraphics[id].CLOSE)
-      // this.tailGraphics[id].pop()
-    }
+  //     const bumps = 7
+  //     let bumpHeight = radius / 6
+  //     // let heightChanger = radius / 10
+  //     // const bumpHeightMax = radius / 5
+  //     // const bumpHeightMin = radius / 8
+  //     const startY = radius * 1
+  //     // this.tailGraphics[id].push()
+  //     let remaindingWidth = radius
+  //     for (let i = 0; i < bumps; i++) {
+  //       let bumpWidth = radius / bumps
+  //       // bumpHeight += heightChanger
+  //       // if (bumpHeight > bumpHeightMax || bumpHeight < bumpHeightMin) {
+  //       //   heightChanger *= -1
+  //       // }
+  //       let x = radius - remaindingWidth
+  //       if (i % 2 == 1) {
+  //         // this.tailGraphics[id].arc(x + bumpWidth / 2, startY, bumpWidth, bumpHeight, this.tailGraphics[id].PI, 0, this.tailGraphics[id].OPEN)
+  //         for (let j = 0; j < arcResolution; j++) {
+  //           const ang = this.p.map(j, 0, arcResolution, this.p.PI, 0)
+  //           const ax = x + bumpWidth / 2 + (this.p.cos(ang) * bumpWidth) / 2
+  //           const ay =
+  //             startY + bumpHeight + (-1 * this.p.sin(ang) * bumpHeight) / 2
+  //           this.tailGraphics[id].vertex(ax, ay)
+  //         }
+  //       } else {
+  //         for (let j = 0; j < arcResolution; j++) {
+  //           const ang = this.p.map(j, 0, arcResolution, this.p.PI, 0)
+  //           const ax = x + bumpWidth / 2 + (this.p.cos(ang) * bumpWidth) / 2
+  //           const ay = startY + bumpHeight + (this.p.sin(ang) * bumpHeight) / 2
+  //           this.tailGraphics[id].vertex(ax, ay)
+  //         }
+  //         // this.tailGraphics[id].arc(x + bumpWidth / 2, startY + bumpWidth, bumpWidth, bumpHeight, 0, this.tailGraphics[id].PI, this.tailGraphics[id].OPEN)
+  //       }
+  //       remaindingWidth -= bumpWidth
+  //     }
+  //     this.tailGraphics[id].endShape(this.tailGraphics[id].CLOSE)
+  //     // this.tailGraphics[id].pop()
+  //   }
 
-    // this.tailGraphics[id].push()
-    // this.tailGraphics[id].translate(x, y)
-    var angle = v.heading() + this.p.PI / 2
-    // this.tailGraphics[id].rotate(angle)
-    // this.tailGraphics[id].fill(finalColor)
-    // this.tailGraphics[id].fill('rgba(255,0,0,1)')
-    // this.tailGraphics[id].rect(0, 0, radius, radius / 4)
-    // this.tailGraphics[id].pop()
-    this.p.push()
-    this.p.translate(x, y)
-    this.p.rotate(angle)
-    this.p.image(this.tailGraphics[id], -radius / 2, -radius)
-    this.p.pop()
-  },
+  //   // this.tailGraphics[id].push()
+  //   // this.tailGraphics[id].translate(x, y)
+  //   var angle = v.heading() + this.p.PI / 2
+  //   // this.tailGraphics[id].rotate(angle)
+  //   // this.tailGraphics[id].fill(finalColor)
+  //   // this.tailGraphics[id].fill('rgba(255,0,0,1)')
+  //   // this.tailGraphics[id].rect(0, 0, radius, radius / 4)
+  //   // this.tailGraphics[id].pop()
+  //   this.p.push()
+  //   this.p.translate(x, y)
+  //   this.p.rotate(angle)
+  //   this.p.image(this.tailGraphics[id], -radius / 2, -radius)
+  //   this.p.pop()
+  // },
 
-  getOffset(radius) {
-    return this.target == 'inside' ? 0 : radius / 1.5
-  },
+  // getOffset(radius) {
+  //   return this.target == 'inside' ? 0 : radius / 1.5
+  // },
 
-  drawTails() {
-    // if (this.allCopiesOfBodies && this.allCopiesOfBodies.length > 0) {
-    //   const allCopiesOfBodies =
-    //     this.allCopiesOfBodies[this.allCopiesOfBodies.length - 1]
-    //   const body = allCopiesOfBodies[0]
-    //   if (body.bodyIndex == 0) {
-    //     this.p.noFill()
-    //     this.p.stroke('white')
-    //     this.p.strokeWeight(10)
-    //     this.p.ellipse(body.position.x, body.position.y, body.radius * 10)
-    //   }
-    // }
-    for (let i = 0; i < this.allCopiesOfBodies.length; i++) {
-      const copyOfBodies = this.allCopiesOfBodies[i]
-      for (let j = 0; j < copyOfBodies.length; j++) {
-        const body = copyOfBodies[j]
-        if (body.bodyIndex == 0) continue
-        if (this.gameOver || this.won) {
-          if (
-            this.witheringBodies.filter((b) => b.bodyIndex == body.bodyIndex)
-              .length > 0
-          )
-            continue
-        }
-        if (body.radius == 0) continue
-        let c =
-          body.radius !== 0
-            ? this.replaceOpacity(body.c, this.deadOpacity)
-            : this.replaceOpacity(body.c, this.deadOpacity)
-        this.p.fill(c)
-        // if (this.mode == 'nft') {
-        const bodyCopy = this.bodyCopies.filter(
-          (b) => b.bodyIndex == body.bodyIndex
-        )[0]
-        const radius = this.getBodyRadius(bodyCopy.radius) * 1.1
+  // drawTails() {
+  //   // if (this.allCopiesOfBodies && this.allCopiesOfBodies.length > 0) {
+  //   //   const allCopiesOfBodies =
+  //   //     this.allCopiesOfBodies[this.allCopiesOfBodies.length - 1]
+  //   //   const body = allCopiesOfBodies[0]
+  //   //   if (body.bodyIndex == 0) {
+  //   //     this.p.noFill()
+  //   //     this.p.stroke('white')
+  //   //     this.p.strokeWeight(10)
+  //   //     this.p.ellipse(body.position.x, body.position.y, body.radius * 10)
+  //   //   }
+  //   // }
+  //   for (let i = 0; i < this.allCopiesOfBodies.length; i++) {
+  //     const copyOfBodies = this.allCopiesOfBodies[i]
+  //     for (let j = 0; j < copyOfBodies.length; j++) {
+  //       const body = copyOfBodies[j]
+  //       if (body.bodyIndex == 0) continue
+  //       if (this.gameOver || this.won) {
+  //         if (
+  //           this.witheringBodies.filter((b) => b.bodyIndex == body.bodyIndex)
+  //             .length > 0
+  //         )
+  //           continue
+  //       }
+  //       if (body.radius == 0) continue
+  //       let c =
+  //         body.radius !== 0
+  //           ? this.replaceOpacity(body.c, this.deadOpacity)
+  //           : this.replaceOpacity(body.c, this.deadOpacity)
+  //       this.p.fill(c)
+  //       // if (this.mode == 'nft') {
+  //       const bodyCopy = this.bodyCopies.filter(
+  //         (b) => b.bodyIndex == body.bodyIndex
+  //       )[0]
+  //       const radius = this.getBodyRadius(bodyCopy.radius) * 1.1
 
-        // this.p.ellipse(body.position.x, body.position.y, radius, radius)
-        this.p.push()
-        this.p.translate(body.position.x, body.position.y)
-        this.p.rotate(body.velocity.heading() + this.p.PI / 2)
-        // this.p.arc(0, 0, radius, radius, this.p.PI, 2 * this.p.PI)
-        this.p.pop()
-        const offset = this.getOffset(radius)
+  //       // this.p.ellipse(body.position.x, body.position.y, radius, radius)
+  //       this.p.push()
+  //       this.p.translate(body.position.x, body.position.y)
+  //       this.p.rotate(body.velocity.heading() + this.p.PI / 2)
+  //       // this.p.arc(0, 0, radius, radius, this.p.PI, 2 * this.p.PI)
+  //       this.p.pop()
+  //       const offset = this.getOffset(radius)
 
-        switch (body.tailStyle) {
-          case 1:
-            this.drawTailStyle1(
-              body.position.x,
-              body.position.y,
-              body.velocity,
-              radius,
-              c,
-              offset
-            )
-            break
-          case 'ghost':
-            this.drawTailStyleGhost(
-              body.position.x,
-              body.position.y,
-              body.velocity,
-              radius,
-              c,
-              offset
-            )
-            break
-          default:
-            this.drawTailStyle1(
-              body.position.x,
-              body.position.y,
-              body.velocity,
-              radius,
-              c,
-              offset
-            )
-        }
-      }
-    }
-  },
+  //       switch (body.tailStyle) {
+  //         case 1:
+  //           this.drawTailStyle1(
+  //             body.position.x,
+  //             body.position.y,
+  //             body.velocity,
+  //             radius,
+  //             c,
+  //             offset
+  //           )
+  //           break
+  //         case 'ghost':
+  //           this.drawTailStyleGhost(
+  //             body.position.x,
+  //             body.position.y,
+  //             body.velocity,
+  //             radius,
+  //             c,
+  //             offset
+  //           )
+  //           break
+  //         default:
+  //           this.drawTailStyle1(
+  //             body.position.x,
+  //             body.position.y,
+  //             body.velocity,
+  //             radius,
+  //             c,
+  //             offset
+  //           )
+  //       }
+  //     }
+  //   }
+  // },
 
   replaceOpacity(c, opacity) {
     const isHSLA = c.includes('hsla')
