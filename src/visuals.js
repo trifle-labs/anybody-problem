@@ -140,6 +140,10 @@ const replaceAttribute = (string, key, color) =>
 
 export const Visuals = {
   async draw() {
+    for (const key in this.buttons) {
+      const button = this.buttons[key]
+      button.visible = false
+    }
     if (!this.showIt) return
     if (this.bodies.length < 1) {
       this.p.textSize(40)

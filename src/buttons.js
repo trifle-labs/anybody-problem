@@ -17,12 +17,13 @@ export const Buttons = {
     this.p.textFont(fonts.dot)
 
     // register the button if it's not registered
-    const key = `${x}-${y}-${height}-${width}`
+    const key = `${text}-${x}-${y}-${height}-${width}`
     let button = this.buttons[key]
     if (!button) {
       this.buttons[key] = { x, y, height, width, onClick: onClick.bind(this) }
       button = this.buttons[key]
     }
+    button.visible = true
 
     p.push()
     p.noStroke()

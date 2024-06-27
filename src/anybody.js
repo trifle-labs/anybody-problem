@@ -330,7 +330,7 @@ export class Anybody extends EventEmitter {
     // if mouse is inside of a button, call the button's handler
     for (const key in this.buttons) {
       const button = this.buttons[key]
-      if (intersectsButton(button, x, y)) {
+      if (button.visible && intersectsButton(button, x, y)) {
         button.onClick()
         return
       }
