@@ -6,6 +6,8 @@ import { Visuals } from './visuals.js'
 import { Calculations } from './calculations.js'
 import { utils } from 'ethers'
 import { randHSL, hslToRgb, bodyThemes } from './colors.js'
+import { loadFonts } from './fonts.js'
+import { Buttons } from './buttons.js'
 // import wc from './witness_calculator.js'
 
 // const GAME_LENGTH = 60 // seconds
@@ -32,6 +34,7 @@ export class Anybody extends EventEmitter {
 
     Object.assign(this, Visuals)
     Object.assign(this, Calculations)
+    Object.assign(this, Buttons)
 
     this.setOptions(options)
 
@@ -117,11 +120,13 @@ export class Anybody extends EventEmitter {
     this.speedLimit = 10
     this.vectorLimit = this.speedLimit * this.speedFactor
     this.FPS = 25
+    this.P5_FPS_MULTIPLIER = 3
+    this.P5_FPS = this.FPS * this.P5_FPS_MULTIPLIER
     this.timer =
       (this.level > 5 ? 60 : GAME_LENGTH_BY_LEVEL_INDEX[this.level - 1]) *
       this.FPS
     this.deadOpacity = '0.9'
-    this.initialScoreSize = 60
+    this.initialScoreSize = 120
     this.scoreSize = this.initialScoreSize
     this.opac = this.globalStyle == 'psycho' ? 1 : 1
     this.tailLength = 1
@@ -136,6 +141,7 @@ export class Anybody extends EventEmitter {
     this.allCopiesOfBodies = []
     this.missileCount = 0
     this.frames = 0
+    this.p5Frames = 0
     this.showIt = true
     this.justStopped = false
     this.gameOver = false
@@ -189,6 +195,7 @@ export class Anybody extends EventEmitter {
   // }
 
   async start() {
+    loadFonts(this.p)
     this.addCSS()
     this.addListeners()
     this.runSteps(this.preRun)
@@ -326,7 +333,7 @@ export class Anybody extends EventEmitter {
     // if mouse is inside of a button, call the button's handler
     for (const key in this.buttons) {
       const button = this.buttons[key]
-      if (intersectsButton(button, x, y)) {
+      if (button.visible && intersectsButton(button, x, y)) {
         button.onClick()
         return
       }
@@ -456,10 +463,8 @@ export class Anybody extends EventEmitter {
     this.justPaused = true
     this.emit('paused', this.paused)
     if (newPauseState) {
-      this.p?.noLoop()
       if (!mute) this.sound?.pause()
     } else {
-      this.p?.loop()
       if (!mute) this.sound?.resume()
     }
   }
@@ -775,7 +780,7 @@ export class Anybody extends EventEmitter {
     return color
   }
   prepareP5() {
-    this.p.frameRate(this.FPS)
+    this.p.frameRate(this.P5_FPS)
     this.p.createCanvas(this.windowWidth, this.windowWidth)
     // this.p.pixelDensity(this.pixelDensity)
     this.p.background('white')

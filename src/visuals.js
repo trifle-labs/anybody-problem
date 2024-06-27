@@ -1,4 +1,5 @@
 import { hslToRgb, THEME } from './colors.js'
+import { fonts, drawKernedText } from './fonts.js'
 
 const BODY_SCALE = 4 // match to calculations.js !!
 const WITHERING_STEPS = 3000
@@ -139,6 +140,10 @@ const replaceAttribute = (string, key, color) =>
 
 export const Visuals = {
   async draw() {
+    for (const key in this.buttons) {
+      const button = this.buttons[key]
+      button.visible = false
+    }
     if (!this.showIt) return
     if (this.bodies.length < 1) {
       this.p.textSize(40)
@@ -152,13 +157,15 @@ export const Visuals = {
       this.started()
     }
 
-    this.frames++
-    const results = this.step(this.bodies, this.missiles)
-    this.bodies = results.bodies || []
-    this.missiles = results.missiles || []
+    if (!this.paused && this.p5Frames % this.P5_FPS_MULTIPLIER == 0) {
+      this.frames++
+      const results = this.step(this.bodies, this.missiles)
+      this.bodies = results.bodies || []
+      this.missiles = results.missiles || []
+    }
+    this.p5Frames++
 
     this.p.noFill()
-    this.p.textStyle(this.p.BOLDITALIC)
     // this.p.textFont('Instrument Serif, serif')
     this.drawBg()
     if (this.globalStyle == 'psycho') {
@@ -182,7 +189,7 @@ export const Visuals = {
     //   }
     // }
 
-    if (!this.firstFrame) {
+    if (!this.firstFrame && !this.paused) {
       this.drawBodies()
     }
 
@@ -203,6 +210,8 @@ export const Visuals = {
       this.sound?.render(this)
     }
 
+    this.drawPause()
+
     if (
       this.mode == 'game' &&
       this.frames - this.startingFrame + this.FPS < this.timer &&
@@ -214,7 +223,6 @@ export const Visuals = {
     this.drawExplosions()
     // this.drawBodyOutlines()
 
-    this.drawPause()
     this.drawScore()
 
     const notPaused = !this.paused
@@ -261,25 +269,23 @@ export const Visuals = {
     this.firstFrame = false
   },
   drawPause() {
-    if (this.paused) {
-      this.p.fill('white')
-      this.p.textSize(128)
-      // p.text('SUCCESS', this.windowWidth / 2 - 8, 190) // adjust by 8 to center SF Pro weirdness
-      this.p.textAlign(this.p.CENTER, this.p.TOP)
-      this.p.text(
-        'START',
-        this.windowWidth / 2,
-        this.windowHeight / 2 - 128 / 2
-      )
-      // this.p.noStroke()
-      // this.p.strokeWeight(0)
-      // this.p.fill('rgba(0,0,0,0.4)')
-      // this.p.rect(0, 0, this.windowWidth, this.windowHeight)
-      // this.p.push()
-      // this.p.translate(this.windowWidth / 2, this.windowHeight / 2)
-      // this.p.triangle(-100, -100, -100, 100, 100, 0)
-      // this.p.pop()
-    }
+    if (!(this.paused && fonts.dot)) return
+    this.p.textFont(fonts.dot)
+    this.p.fill(THEME.pink)
+    this.p.textSize(200)
+    this.p.textAlign(this.p.LEFT, this.p.TOP)
+
+    // draw logo
+    const titleY = this.windowHeight / 2 - 270
+    drawKernedText(this.p, 'Anybody', 46, titleY, 0.8)
+    drawKernedText(this.p, 'Problem', 46, titleY + 240, 2)
+
+    this.drawFatButton({
+      text: 'PLAY',
+      onClick: () => this.setPause(false),
+      fg: THEME.fuschia,
+      bg: THEME.pink
+    })
   },
   drawBodyOutlines() {
     for (let i = 0; i < this.bodies.length; i++) {
@@ -538,20 +544,10 @@ export const Visuals = {
       return
     }
 
-    // make the timer bigger as time runs out
-    if (seconds >= 51 && this.scoreSize < 420) {
-      this.scoreSize += 5
-      p.fill(255, 255, 255, 150)
-    } else if (seconds > 30 && this.scoreSize < 160) {
-      this.scoreSize += 2
-      p.fill(255, 255, 255, 150)
-    } else if (seconds > 50 && this.scoreSize < 80) {
-      this.scoreSize += 1
-      p.fill(255, 255, 255, 150)
-    }
+    p.textFont(fonts.body)
     p.textSize(this.scoreSize)
     if (runningFrames > 2) {
-      p.text(secondsLeft.toFixed(2) + 's', 20, 10)
+      p.text(secondsLeft.toFixed(2), 20, 10)
     }
 
     p.pop()
@@ -610,46 +606,37 @@ export const Visuals = {
 
     // play again button
     if (this.showPlayAgain) {
-      this.drawButton({
-        text: 'retry',
-        x: this.windowWidth / 2 - 140,
-        y: this.windowHeight / 2 + 225,
-        height: 90,
-        width: 280,
-        onClick: () => this.restart(null, false)
+      this.drawFatButton({
+        text: 'RETRY',
+        onClick: () => this.restart(null, false),
+        fg: 'black',
+        bg: 'white'
       })
     }
 
     p.pop()
   },
 
-  drawButton({ text, x, y, height, width, onClick }) {
+  drawTicker({ text, bottom = false, fg }) {
+    const doubleText = `${text} ${text} `
+
     const { p } = this
 
-    // register the button if it's not registered
-    const key = `${x}-${y}-${height}-${width}`
-    let button = this.buttons[key]
-    if (!button) {
-      this.buttons[key] = { x, y, height, width, onClick }
-      button = this.buttons[key]
+    p.fill(fg)
+    p.textSize(200)
+    p.textAlign(p.LEFT, p.TOP)
+    p.textFont(fonts.dot)
+    const tickerSpeed = 120 / this.P5_FPS
+    const textWidth = p.textWidth(doubleText)
+    if (!this.gameoverTickerX || this.gameoverTickerX + tickerSpeed >= 0) {
+      this.gameoverTickerX = -textWidth / 2
     }
-
-    p.push()
-    p.textStyle(p.BOLDITALIC)
-    p.stroke('white')
-    p.textSize(48)
-    p.strokeWeight(button.active ? 1 : 4)
-    if (button.hover) {
-      p.fill('rgba(255,255,255,0.5)')
-    } else {
-      p.noFill()
-    }
-    p.rect(x, y, width, height, 10)
-    p.noStroke()
-    p.fill('white')
-    p.textAlign(p.CENTER, p.CENTER)
-    p.text(text, x + width / 2, y + height / 2)
-    p.pop()
+    this.gameoverTickerX += tickerSpeed
+    p.text(
+      doubleText,
+      this.gameoverTickerX,
+      bottom ? this.windowHeight - 80 - 120 : 80
+    )
   },
 
   drawLoseScreen() {
@@ -658,24 +645,14 @@ export const Visuals = {
     p.noStroke()
     p.fill(this.randomColor(100))
 
-    p.textSize(128)
-    // game over in the center of screen
-    p.textAlign(p.CENTER)
+    this.drawTicker({ text: 'GAME OVER', fg: THEME.red })
 
-    p.text(
-      'GAME OVER',
-      this.windowWidth / 2,
-      this.windowHeight / 2 + 44 // place the crease of the R on the line
-    )
-    p.textSize(40)
     if (this.showPlayAgain) {
-      this.drawButton({
-        text: 'retry',
-        x: this.windowWidth / 2 - 140,
-        y: this.windowHeight / 2 + 120,
-        height: 90,
-        width: 280,
-        onClick: () => this.restart(null, false)
+      this.drawFatButton({
+        text: 'RETRY',
+        onClick: () => this.restart(null, false),
+        fg: THEME.red,
+        bg: THEME.maroon
       })
     }
 
@@ -728,6 +705,8 @@ export const Visuals = {
     //   dirX = (dirX / len) * 100
     //   dirY = (dirY / len) * 100
     // }
+
+    if (this.paused) return
 
     // Draw the line
     // this.p.setLineDash([5, 15])
