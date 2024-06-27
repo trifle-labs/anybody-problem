@@ -271,8 +271,8 @@ export const Visuals = {
 
     // draw logo
     const titleY = this.windowHeight / 2 - 270
-    drawKernedText(this.p, 'Anybody', 46, titleY, 1)
-    drawKernedText(this.p, 'Problem', 46, titleY + 240, 6.5)
+    drawKernedText(this.p, 'Anybody', 46, titleY, 0.8)
+    drawKernedText(this.p, 'Problem', 46, titleY + 240, 2)
 
     this.drawFatButton({
       text: 'PLAY',
