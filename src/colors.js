@@ -1,7 +1,9 @@
 export const THEME = {
   bg: 'rgb(20,20,20)',
   fg: 'white',
-  bodiesTheme: 'default'
+  bodiesTheme: 'default',
+  pink: 'rgba(236, 205, 255, 1)',
+  fuschia: 'rgba(160, 67, 232, 1)'
 }
 
 // [hue, saturation, lightness]

@@ -265,7 +265,7 @@ export const Visuals = {
   drawPause() {
     if (!(this.paused && fonts.dot)) return
     this.p.textFont(fonts.dot)
-    this.p.fill('#ECCDFF')
+    this.p.fill(THEME.pink)
     this.p.textSize(200)
     this.p.textAlign(this.p.LEFT, this.p.TOP)
 
@@ -274,13 +274,11 @@ export const Visuals = {
     drawKernedText(this.p, 'Anybody', 46, titleY, 1)
     drawKernedText(this.p, 'Problem', 46, titleY + 240, 6.5)
 
-    this.drawButton({
+    this.drawFatButton({
       text: 'PLAY',
-      x: this.windowWidth / 2 - 140,
-      y: this.windowHeight / 2 + 325,
-      height: 90,
-      width: 280,
-      onClick: () => this.setPause(false)
+      onClick: () => this.setPause(false),
+      fg: THEME.fuschia,
+      bg: THEME.pink
     })
   },
   drawBodyOutlines() {
@@ -613,13 +611,11 @@ export const Visuals = {
 
     // play again button
     if (this.showPlayAgain) {
-      this.drawButton({
-        text: 'retry',
-        x: this.windowWidth / 2 - 140,
-        y: this.windowHeight / 2 + 225,
-        height: 90,
-        width: 280,
-        onClick: () => this.restart(null, false)
+      this.drawFatButton({
+        text: 'RETRY',
+        onClick: () => this.restart(null, false),
+        fg: 'black',
+        bg: 'white'
       })
     }
 
@@ -656,13 +652,14 @@ export const Visuals = {
     this.drawTicker({ text: 'GAME OVER' })
 
     if (this.showPlayAgain) {
-      this.drawButton({
-        text: 'retry',
-        x: this.windowWidth / 2 - 140,
-        y: this.windowHeight / 2 + 120,
-        height: 90,
-        width: 280,
-        onClick: () => this.restart(null, false)
+      this.drawFatButton({
+        text: 'RETRY',
+        onClick: () => {
+          console.log('retry')
+          this.restart(null, false)
+        },
+        fg: THEME.fuschia,
+        bg: THEME.pink
       })
     }
 
