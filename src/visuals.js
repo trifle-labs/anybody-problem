@@ -157,7 +157,7 @@ export const Visuals = {
       this.started()
     }
 
-    if (!this.paused && this.p5Frames % 2 == 0) {
+    if (!this.paused && this.p5Frames % this.P5_FPS_MULTIPLIER == 0) {
       this.frames++
       const results = this.step(this.bodies, this.missiles)
       this.bodies = results.bodies || []
