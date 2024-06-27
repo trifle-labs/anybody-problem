@@ -22,7 +22,7 @@ contract AnybodyProblem is Ownable, ERC2981 {
   uint256 public constant FIRST_SUNDAY_AT_6_PM_UTC = 324000;
 
   bool public paused = false;
-  uint256 public price = 0.0005 ether;
+  uint256 public price = 0.0025 ether;
   address payable public proceedRecipient;
   address public externalMetadata;
   address payable public speedruns;
