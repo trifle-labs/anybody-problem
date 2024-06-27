@@ -40,6 +40,7 @@ export class Anybody extends EventEmitter {
 
     // Add other constructor logic here
     this.p = p
+    !this.util && loadFonts(this.p)
     // this.p.blendMode(this.p.DIFFERENCE)
 
     this.clearValues()
@@ -195,7 +196,6 @@ export class Anybody extends EventEmitter {
   // }
 
   async start() {
-    loadFonts(this.p)
     this.addCSS()
     this.addListeners()
     this.runSteps(this.preRun)

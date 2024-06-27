@@ -1,14 +1,10 @@
 import Q5 from './q5.min.js'
 import { Anybody } from './anybody.js'
-import { loadFonts } from './fonts.js'
 
 const q5 = new Q5()
 const seed = window.location.hash.slice(1)
 
 window.anybody
-q5.preload = () => {
-  loadFonts(q5)
-}
 
 q5.setup = () => {
   window.anybody = new Anybody(q5, {
