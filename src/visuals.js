@@ -1253,7 +1253,7 @@ export const Visuals = {
         this.p.sin(this.p.frameCount / this.P5_FPS) * (10 + body.bodyIndex)
       const yWobble =
         this.p.cos(this.p.frameCount / this.P5_FPS + body.bodyIndex * 3) *
-        (10 + body.bodyIndex)
+        (16 + body.bodyIndex)
 
       const bodyCopy = JSON.parse(
         JSON.stringify(
