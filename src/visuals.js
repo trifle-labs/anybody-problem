@@ -210,6 +210,8 @@ export const Visuals = {
       this.sound?.render(this)
     }
 
+    this.drawPause()
+
     if (
       this.mode == 'game' &&
       this.frames - this.startingFrame + this.FPS < this.timer &&
@@ -221,7 +223,6 @@ export const Visuals = {
     this.drawExplosions()
     // this.drawBodyOutlines()
 
-    this.drawPause()
     this.drawScore()
 
     const notPaused = !this.paused
