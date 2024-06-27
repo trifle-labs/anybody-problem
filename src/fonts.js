@@ -7,6 +7,8 @@ export function loadFonts(p) {
   const toLoad = { body: bodyFontURL, dot: dotFontURL }
 
   for (const fontName in toLoad) {
+    if (fonts[fontName]) continue
+
     const url = toLoad[fontName]
     const handleError = (err) => {
       console.log('font load error', err)

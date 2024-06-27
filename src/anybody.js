@@ -7,6 +7,7 @@ import { Calculations } from './calculations.js'
 import { utils } from 'ethers'
 import { randHSL, hslToRgb, bodyThemes } from './colors.js'
 import { loadFonts } from './fonts.js'
+import { Buttons } from './buttons.js'
 // import wc from './witness_calculator.js'
 
 // const GAME_LENGTH = 60 // seconds
@@ -33,6 +34,7 @@ export class Anybody extends EventEmitter {
 
     Object.assign(this, Visuals)
     Object.assign(this, Calculations)
+    Object.assign(this, Buttons)
 
     this.setOptions(options)
 

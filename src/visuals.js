@@ -626,32 +626,25 @@ export const Visuals = {
     p.pop()
   },
 
-  drawButton({ text, x, y, height, width, onClick }) {
+  drawTicker({ text, bottom = false }) {
+    const doubleText = `${text} ${text} `
+
     const { p } = this
 
-    // register the button if it's not registered
-    const key = `${x}-${y}-${height}-${width}`
-    let button = this.buttons[key]
-    if (!button) {
-      this.buttons[key] = { x, y, height, width, onClick }
-      button = this.buttons[key]
+    p.textSize(200)
+    p.textAlign(p.LEFT, p.TOP)
+    p.textFont(fonts.dot)
+    const tickerSpeed = this.FPS / 2
+    const textWidth = p.textWidth(doubleText)
+    if (!this.gameoverTickerX || this.gameoverTickerX + tickerSpeed >= 0) {
+      this.gameoverTickerX = -textWidth / 2
     }
-
-    p.push()
-    p.stroke('white')
-    p.textSize(48)
-    p.strokeWeight(button.active ? 1 : 4)
-    if (button.hover) {
-      p.fill('rgba(255,255,255,0.5)')
-    } else {
-      p.noFill()
-    }
-    p.rect(x, y, width, height, height / 2)
-    p.noStroke()
-    p.fill('white')
-    p.textAlign(p.CENTER, p.CENTER)
-    p.text(text, x + width / 2, y + height / 2)
-    p.pop()
+    this.gameoverTickerX += tickerSpeed
+    p.text(
+      doubleText,
+      this.gameoverTickerX,
+      bottom ? this.windowHeight - 80 - 120 : 80
+    )
   },
 
   drawLoseScreen() {
@@ -660,16 +653,8 @@ export const Visuals = {
     p.noStroke()
     p.fill(this.randomColor(100))
 
-    p.textSize(128)
-    // game over in the center of screen
-    p.textAlign(p.CENTER)
+    this.drawTicker({ text: 'GAME OVER' })
 
-    p.text(
-      'GAME OVER',
-      this.windowWidth / 2,
-      this.windowHeight / 2 + 44 // place the crease of the R on the line
-    )
-    p.textSize(40)
     if (this.showPlayAgain) {
       this.drawButton({
         text: 'retry',
