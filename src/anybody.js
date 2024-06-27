@@ -124,7 +124,7 @@ export class Anybody extends EventEmitter {
       (this.level > 5 ? 60 : GAME_LENGTH_BY_LEVEL_INDEX[this.level - 1]) *
       this.FPS
     this.deadOpacity = '0.9'
-    this.initialScoreSize = 60
+    this.initialScoreSize = 120
     this.scoreSize = this.initialScoreSize
     this.opac = this.globalStyle == 'psycho' ? 1 : 1
     this.tailLength = 1

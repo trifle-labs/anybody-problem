@@ -3,7 +3,9 @@ export const THEME = {
   fg: 'white',
   bodiesTheme: 'default',
   pink: 'rgba(236, 205, 255, 1)',
-  fuschia: 'rgba(160, 67, 232, 1)'
+  fuschia: 'rgba(160, 67, 232, 1)',
+  red: 'rgba(255, 88, 88, 1)',
+  maroon: 'rgba(53, 20, 20, 1)'
 }
 
 // [hue, saturation, lightness]

@@ -538,21 +538,10 @@ export const Visuals = {
       return
     }
 
-    // make the timer bigger as time runs out
-    if (seconds >= 51 && this.scoreSize < 420) {
-      this.scoreSize += 5
-      p.fill(255, 255, 255, 150)
-    } else if (seconds > 30 && this.scoreSize < 160) {
-      this.scoreSize += 2
-      p.fill(255, 255, 255, 150)
-    } else if (seconds > 50 && this.scoreSize < 80) {
-      this.scoreSize += 1
-      p.fill(255, 255, 255, 150)
-    }
     p.textFont(fonts.body)
     p.textSize(this.scoreSize)
     if (runningFrames > 2) {
-      p.text(secondsLeft.toFixed(2) + 's', 20, 10)
+      p.text(secondsLeft.toFixed(2), 20, 10)
     }
 
     p.pop()
@@ -622,11 +611,12 @@ export const Visuals = {
     p.pop()
   },
 
-  drawTicker({ text, bottom = false }) {
+  drawTicker({ text, bottom = false, fg }) {
     const doubleText = `${text} ${text} `
 
     const { p } = this
 
+    p.fill(fg)
     p.textSize(200)
     p.textAlign(p.LEFT, p.TOP)
     p.textFont(fonts.dot)
@@ -649,17 +639,14 @@ export const Visuals = {
     p.noStroke()
     p.fill(this.randomColor(100))
 
-    this.drawTicker({ text: 'GAME OVER' })
+    this.drawTicker({ text: 'GAME OVER', fg: THEME.red })
 
     if (this.showPlayAgain) {
       this.drawFatButton({
         text: 'RETRY',
-        onClick: () => {
-          console.log('retry')
-          this.restart(null, false)
-        },
-        fg: THEME.fuschia,
-        bg: THEME.pink
+        onClick: () => this.restart(null, false),
+        fg: THEME.red,
+        bg: THEME.maroon
       })
     }
 

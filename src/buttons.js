@@ -31,7 +31,8 @@ export const Buttons = {
 
     p.rect(x, y, width, height, height / 2)
     if (button.hover) {
-      p.fill('rgba(255,255,255,0.3)')
+      // p.fill('rgba(255,255,255,0.3)')
+      p.fill('rgba(160, 67, 232, 0.3)')
       p.rect(x, y, width, height, height / 2)
     }
 
