@@ -12,6 +12,7 @@ import { Buttons } from './buttons.js'
 
 // const GAME_LENGTH = 60 // seconds
 const GAME_LENGTH_BY_LEVEL_INDEX = [10, 20, 30, 40, 50]
+const NORMAL_GRAVITY = 100
 const proverTickIndex = {
   2: 250,
   3: 250,
@@ -65,7 +66,7 @@ export class Anybody extends EventEmitter {
       pixelDensity: 4, //4, // Math.min(4, 4 * (window.devicePixelRatio ?? 1)),
       scalingFactor: 10n ** 3n,
       minDistanceSquared: 200 * 200,
-      G: 100, // Gravitational constant
+      G: NORMAL_GRAVITY, // Gravitational constant
       mode: 'game', // game or nft
       admin: false,
       solved: false,
@@ -118,6 +119,7 @@ export class Anybody extends EventEmitter {
     this.lastMissileCantBeUndone = false
     this.speedFactor = 2
     this.speedLimit = 10
+    this.G = NORMAL_GRAVITY
     this.vectorLimit = this.speedLimit * this.speedFactor
     this.FPS = 25
     this.P5_FPS_MULTIPLIER = 3
@@ -376,6 +378,7 @@ export class Anybody extends EventEmitter {
     // this.sound?.playGameOver({ won })
     this.gameOver = true
     this.won = won
+    this.G = 2000 // make the badies dance
     var dust = 0
     var timeTook = 0
 
