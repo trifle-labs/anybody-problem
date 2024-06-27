@@ -38,23 +38,11 @@ contract ExternalMetadata is Ownable {
     //         );
     // }
 
-    /**
-     * @dev Throws if id doesn't exist
-     */
-    modifier existsModifier(uint256 id) {
-        require(exists(id), "DOES NOT EXIST");
-        _;
-    }
-
-    function exists(uint256 id) public view returns (bool) {
-        return Speedruns(speedruns).ownerOf(id) != address(0);
-    }
-
     /// @dev generates the problemMetadata
     /// @param tokenId the tokenId
     function getMetadata(
         uint256 tokenId
-    ) public view existsModifier(tokenId) returns (string memory) {
+    ) public view returns (string memory) {
         return
             string(
                 abi.encodePacked(
@@ -101,7 +89,7 @@ contract ExternalMetadata is Ownable {
     /// @dev function to generate a SVG String
     function getSVG(
         uint256 tokenId
-    ) public view existsModifier(tokenId) returns (string memory) {
+    ) public view returns (string memory) {
         return
             string(
                 abi.encodePacked(

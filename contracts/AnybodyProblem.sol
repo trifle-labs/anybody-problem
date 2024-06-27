@@ -10,7 +10,7 @@ import {Groth16Verifier as Groth16Verifier6} from "./Game_6_20Verifier.sol";
 
 import "@openzeppelin/contracts/token/common/ERC2981.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "./Speedruns.sol";
 import "./ExternalMetadata.sol";
 
@@ -326,7 +326,7 @@ contract AnybodyProblem is Ownable, ERC2981 {
         (bool sent, bytes memory data) = proceedRecipient.call{
             value: msg.value
         }("");
-        Speedruns(speedruns).__mint(runId, msg.sender);
+        Speedruns(speedruns).__mint(msg.sender, runId, 1, "");
         emit EthMoved(proceedRecipient, sent, data, msg.value);
         emit RunSolved(msg.sender, runId, runs[runId].accumulativeTime, day);
         gamesPlayed[msg.sender].total++;
@@ -572,8 +572,8 @@ contract AnybodyProblem is Ownable, ERC2981 {
   function speedrunsSupportsInterface(bytes4 interfaceId) public pure returns (bool) {
     return
       interfaceId == type(IERC165).interfaceId ||
-      interfaceId == type(IERC721).interfaceId ||
-      interfaceId == type(IERC721Metadata).interfaceId ||
+      interfaceId == type(IERC1155).interfaceId ||
+      interfaceId == type(IERC1155MetadataURI).interfaceId ||
       interfaceId == type(IERC2981).interfaceId ||
       interfaceId == bytes4(0x49064906); // IERC4906 MetadataUpdate
   }
