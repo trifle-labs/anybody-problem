@@ -406,7 +406,7 @@ export const Calculations = {
     const skipCopying = ['px', 'py', 'vx', 'vy']
     for (let i = 0; i < bodies.length; i++) {
       const body = bodies[i]
-      const newBody = {}
+      const newBody = { position: {}, velocity: {} }
 
       newBody.position.x =
         body.px || this.convertFloatToScaledBigInt(body.position.x)
