@@ -582,31 +582,31 @@ contract AnybodyProblem is Ownable, ERC2981 {
   function speedrunsTokenURI(uint256 id) public view returns (string memory) {
     return ExternalMetadata(externalMetadata).getMetadata(id);
   }
-  function emitMetadataUpdate(uint256 tokenId) public onlyOwner {
+  function emitMetadataUpdate(uint256 tokenId) internal {
     bytes32 topic = keccak256("MetadataUpdate(uint256)");
     bytes memory data = abi.encode(tokenId);
     bytes32[] memory topics = new bytes32[](1);
     topics[0] = topic;
     Speedruns(speedruns).emitGenericEvent(topics, data);
   }
-  function emitBatchMetadataUpdate(uint256 _fromTokenId, uint256 _toTokenId) public onlyOwner {
-    bytes32 topic = keccak256("BatchMetadataUpdate(uint256,uint256)");
-    bytes memory data = abi.encode(_fromTokenId, _toTokenId);
-      bytes32[] memory topics = new bytes32[](1);
-      topics[0] = topic;
-    Speedruns(speedruns).emitGenericEvent(topics, data);
-  }
-  function exampleEmitMultipleIndexEvent(uint256 _fromTokenId, uint256 _toTokenId, address who) public onlyOwner {
-      bytes32 topic = keccak256("BatchMetadataUpdateIndexed(uint256,uint256,address)");
-      bytes32 topicFrom = bytes32(abi.encode(_fromTokenId));
-      bytes32 topicTo = bytes32(abi.encode(_toTokenId));
-      bytes memory data = abi.encode(who);
-      bytes32[] memory topics = new bytes32[](3);
-      topics[0] = topic;
-      topics[1] = topicFrom;
-      topics[2] = topicTo;
-      Speedruns(speedruns).emitGenericEvent(topics, data);
-  }
+  // function emitBatchMetadataUpdate(uint256 _fromTokenId, uint256 _toTokenId) internal {
+  //   bytes32 topic = keccak256("BatchMetadataUpdate(uint256,uint256)");
+  //   bytes memory data = abi.encode(_fromTokenId, _toTokenId);
+  //     bytes32[] memory topics = new bytes32[](1);
+  //     topics[0] = topic;
+  //   Speedruns(speedruns).emitGenericEvent(topics, data);
+  // }
+  // function exampleEmitMultipleIndexEvent(uint256 _fromTokenId, uint256 _toTokenId, address who) internal {
+  //     bytes32 topic = keccak256("BatchMetadataUpdateIndexed(uint256,uint256,address)");
+  //     bytes32 topicFrom = bytes32(abi.encode(_fromTokenId));
+  //     bytes32 topicTo = bytes32(abi.encode(_toTokenId));
+  //     bytes memory data = abi.encode(who);
+  //     bytes32[] memory topics = new bytes32[](3);
+  //     topics[0] = topic;
+  //     topics[1] = topicFrom;
+  //     topics[2] = topicTo;
+  //     Speedruns(speedruns).emitGenericEvent(topics, data);
+  // }
   function updateExternalMetadata(address externalMetadata_) public onlyOwner {
     externalMetadata = externalMetadata_;
   }
