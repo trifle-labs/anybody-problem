@@ -10,7 +10,7 @@ import {Groth16Verifier as Groth16Verifier6} from "./Game_6_20Verifier.sol";
 
 import "@openzeppelin/contracts/token/common/ERC2981.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "./Speedruns.sol";
 import "./ExternalMetadata.sol";
 
@@ -326,7 +326,7 @@ contract AnybodyProblem is Ownable, ERC2981 {
         (bool sent, bytes memory data) = proceedRecipient.call{
             value: msg.value
         }("");
-        Speedruns(speedruns).__mint(runId, msg.sender);
+        Speedruns(speedruns).__mint(msg.sender, day, 1, "");
         emit EthMoved(proceedRecipient, sent, data, msg.value);
         emit RunSolved(msg.sender, runId, runs[runId].accumulativeTime, day);
         gamesPlayed[msg.sender].total++;
@@ -385,6 +385,7 @@ contract AnybodyProblem is Ownable, ERC2981 {
           fastestByDay[run.day][j] = fastestByDay[run.day][j - 1];
         }
         fastestByDay[run.day][i] = runId;
+        emitMetadataUpdate(run.day);
         break;
       }
     }
@@ -572,8 +573,8 @@ contract AnybodyProblem is Ownable, ERC2981 {
   function speedrunsSupportsInterface(bytes4 interfaceId) public pure returns (bool) {
     return
       interfaceId == type(IERC165).interfaceId ||
-      interfaceId == type(IERC721).interfaceId ||
-      interfaceId == type(IERC721Metadata).interfaceId ||
+      interfaceId == type(IERC1155).interfaceId ||
+      interfaceId == type(IERC1155MetadataURI).interfaceId ||
       interfaceId == type(IERC2981).interfaceId ||
       interfaceId == bytes4(0x49064906); // IERC4906 MetadataUpdate
   }
@@ -581,31 +582,31 @@ contract AnybodyProblem is Ownable, ERC2981 {
   function speedrunsTokenURI(uint256 id) public view returns (string memory) {
     return ExternalMetadata(externalMetadata).getMetadata(id);
   }
-  function emitMetadataUpdate(uint256 tokenId) public onlyOwner {
+  function emitMetadataUpdate(uint256 tokenId) internal {
     bytes32 topic = keccak256("MetadataUpdate(uint256)");
     bytes memory data = abi.encode(tokenId);
     bytes32[] memory topics = new bytes32[](1);
     topics[0] = topic;
     Speedruns(speedruns).emitGenericEvent(topics, data);
   }
-  function emitBatchMetadataUpdate(uint256 _fromTokenId, uint256 _toTokenId) public onlyOwner {
-    bytes32 topic = keccak256("BatchMetadataUpdate(uint256,uint256)");
-    bytes memory data = abi.encode(_fromTokenId, _toTokenId);
-      bytes32[] memory topics = new bytes32[](1);
-      topics[0] = topic;
-    Speedruns(speedruns).emitGenericEvent(topics, data);
-  }
-  function exampleEmitMultipleIndexEvent(uint256 _fromTokenId, uint256 _toTokenId, address who) public onlyOwner {
-      bytes32 topic = keccak256("BatchMetadataUpdateIndexed(uint256,uint256,address)");
-      bytes32 topicFrom = bytes32(abi.encode(_fromTokenId));
-      bytes32 topicTo = bytes32(abi.encode(_toTokenId));
-      bytes memory data = abi.encode(who);
-      bytes32[] memory topics = new bytes32[](3);
-      topics[0] = topic;
-      topics[1] = topicFrom;
-      topics[2] = topicTo;
-      Speedruns(speedruns).emitGenericEvent(topics, data);
-  }
+  // function emitBatchMetadataUpdate(uint256 _fromTokenId, uint256 _toTokenId) internal {
+  //   bytes32 topic = keccak256("BatchMetadataUpdate(uint256,uint256)");
+  //   bytes memory data = abi.encode(_fromTokenId, _toTokenId);
+  //     bytes32[] memory topics = new bytes32[](1);
+  //     topics[0] = topic;
+  //   Speedruns(speedruns).emitGenericEvent(topics, data);
+  // }
+  // function exampleEmitMultipleIndexEvent(uint256 _fromTokenId, uint256 _toTokenId, address who) internal {
+  //     bytes32 topic = keccak256("BatchMetadataUpdateIndexed(uint256,uint256,address)");
+  //     bytes32 topicFrom = bytes32(abi.encode(_fromTokenId));
+  //     bytes32 topicTo = bytes32(abi.encode(_toTokenId));
+  //     bytes memory data = abi.encode(who);
+  //     bytes32[] memory topics = new bytes32[](3);
+  //     topics[0] = topic;
+  //     topics[1] = topicFrom;
+  //     topics[2] = topicTo;
+  //     Speedruns(speedruns).emitGenericEvent(topics, data);
+  // }
   function updateExternalMetadata(address externalMetadata_) public onlyOwner {
     externalMetadata = externalMetadata_;
   }

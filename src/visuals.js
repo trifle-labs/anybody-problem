@@ -146,12 +146,12 @@ export const Visuals = {
     }
 
     if (!this.paused && this.p5Frames % this.P5_FPS_MULTIPLIER == 0) {
+      this.firstFrame = false
       this.frames++
       const results = this.step(this.bodies, this.missiles)
       this.bodies = results.bodies || []
       this.missiles = results.missiles || []
     }
-    this.p5Frames++
 
     this.p.noFill()
     this.drawBg()
@@ -163,6 +163,7 @@ export const Visuals = {
       this.p.blendMode(this.p.BLEND)
     }
 
+    this.p5Frames++
     // if (
     //   this.mode == 'game' &&
     //   this.target == 'inside' &&
@@ -214,7 +215,8 @@ export const Visuals = {
 
     const notPaused = !this.paused
     const framesIsAtStopEveryInterval =
-      (this.frames - this.startingFrame) % this.stopEvery == 0
+      (this.frames - this.startingFrame) % this.stopEvery == 0 &&
+      this.p5Frames % this.P5_FPS_MULTIPLIER == 0
     const didNotJustPause = !this.justPaused
 
     const ranOutOfTime =
@@ -223,6 +225,14 @@ export const Visuals = {
 
     if ((ranOutOfTime || hitHeroBody) && !this.handledGameOver) {
       this.handleGameOver({ won: false, ranOutOfTime, hitHeroBody })
+    }
+    if (
+      !this.won &&
+      this.mode == 'game' &&
+      this.bodies.slice(1).reduce((a, c) => a + c.radius, 0) == 0 &&
+      !this.handledGameOver
+    ) {
+      this.handleGameOver({ won: true })
     }
 
     if (
@@ -237,15 +247,6 @@ export const Visuals = {
     } else {
       this.justPaused = false
     }
-    if (
-      !this.won &&
-      this.mode == 'game' &&
-      this.bodies.slice(1).reduce((a, c) => a + c.radius, 0) == 0 &&
-      !this.handledGameOver
-    ) {
-      this.handleGameOver({ won: true })
-    }
-    this.firstFrame = false
   },
   drawPause() {
     if (!(this.paused && fonts.dot)) return

@@ -1,33 +1,32 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "hardhat/console.sol";
 
 import "./AnybodyProblem.sol";
 
-contract Speedruns is ERC721, Ownable {
+contract Speedruns is ERC1155, Ownable {
   address payable anybodyProblem;
-  constructor() ERC721("Anybody Problem Speedruns", "APS") {
-    _mint(address(this), 0); // universal interface NFT
+  constructor() ERC1155("") {
   }
   modifier onlyAnybody() {
     require(msg.sender == anybodyProblem, "Only Anybody Problem can call");
     _;
   }
 
-  function __mint(uint256 tokenId, address to) external onlyAnybody {
-    _mint(to, tokenId);
+  function __mint(address to, uint256 id, uint256 amount, bytes memory data) external onlyAnybody {
+    _mint(to, id, amount, data);
   }
-  function __burn(uint256 tokenId) external onlyAnybody {
-    _burn(tokenId);
+  function __burn(address from, uint256 id, uint256 amount) external onlyAnybody {
+    _burn(from, id, amount);
   }
-  function __transfer(address from, address to, uint256 tokenId) external onlyAnybody {
-    _transfer(from, to, tokenId);
+  function __safeTransferFrom(address from, address to, uint256 tokenId, uint256 amount, bytes memory data) external onlyAnybody {
+    _safeTransferFrom(from, to, tokenId, amount, data);
   }
-  function __approve(address to, uint256 tokenId) external onlyAnybody {
-    _approve(to, tokenId);
+  function __setApprovalForAll(address owner, address operator, bool approved) external onlyAnybody {
+    _setApprovalForAll(owner, operator, approved);
   }
 
   function updateAnybodyProblemAddress(address payable anybodyProblem_) public onlyOwner {
@@ -46,16 +45,16 @@ contract Speedruns is ERC721, Ownable {
     require(success, "Call to anybodyProblem failed");
   }
 
-  // override all ERC721 functions to call the AnybodyProblem contract first
-  function tokenURI(uint256 tokenId) public view override(ERC721) returns (string memory) {
+  // override all ERC1155 functions to call the AnybodyProblem contract first
+  function uri(uint256 tokenId) public view override(ERC1155) returns (string memory) {
     (bool success, bytes memory data) = anybodyProblem.staticcall(abi.encodeWithSignature("speedrunsTokenURI(uint256)", tokenId));
     if (success) {
       return abi.decode(data, (string));
     } else {
-      return super.tokenURI(tokenId);
+      return super.uri(tokenId);
     }
   }
-  function supportsInterface(bytes4 interfaceId) public view override(ERC721) returns (bool) {
+  function supportsInterface(bytes4 interfaceId) public view override(ERC1155) returns (bool) {
     (bool success, bytes memory data) = anybodyProblem.staticcall(abi.encodeWithSignature("speedrunsSupportsInterface(bytes4)", interfaceId));
     if (success) {
       return abi.decode(data, (bool));
@@ -63,66 +62,24 @@ contract Speedruns is ERC721, Ownable {
       return super.supportsInterface(interfaceId);
     }
   }
-  function name() public view override(ERC721) returns (string memory) {
-    (bool success, bytes memory data) = anybodyProblem.staticcall(abi.encodeWithSignature("speedrunsName()"));
-    if (success) {
-      return abi.decode(data, (string));
-    } else {
-      return super.name();
-    }
-  }
-  function symbol() public view override(ERC721) returns (string memory) {
-    (bool success, bytes memory data) = anybodyProblem.staticcall(abi.encodeWithSignature("speedrunsSymbol()"));
-    if (success) {
-      return abi.decode(data, (string));
-    } else {
-      return super.symbol();
-    }
-  }
-  function getApproved(uint256 tokenId) public view override(ERC721) returns (address) {
-    (bool success, bytes memory data) = anybodyProblem.staticcall(abi.encodeWithSignature("speedrunsGetApproved(uint256)", tokenId));
-    if (success) {
-      return abi.decode(data, (address));
-    } else {
-      return super.getApproved(tokenId);
-    }
-  }
-  function isApprovedForAll(address owner, address operator) public view override(ERC721) returns (bool) {
-    (bool success, bytes memory data) = anybodyProblem.staticcall(abi.encodeWithSignature("speedrunsIsApprovedForAll(address,address)", owner, operator));
+  function isApprovedForAll(address account, address operator) public view override(ERC1155) returns (bool) {
+    (bool success, bytes memory data) = anybodyProblem.staticcall(abi.encodeWithSignature("speedrunsIsApprovedForAll(address,address)", account, operator));
     if (success) {
       return abi.decode(data, (bool));
     } else {
-      return super.isApprovedForAll(owner, operator);
+      return super.isApprovedForAll(account, operator);
     }
   }
-  function approve(address to, uint256 tokenId) public override(ERC721) {
-    (bool success, bytes memory data) = anybodyProblem.call(abi.encodeWithSignature("speedrunsApprove(address,uint256)", to, tokenId));
-    if (!success) {
-      return super.approve(to, tokenId);
-    }
-  }
-  function setApprovalForAll(address operator, bool approved) public override(ERC721) {
+  function setApprovalForAll(address operator, bool approved) public override(ERC1155) {
     (bool success, bytes memory data) = anybodyProblem.call(abi.encodeWithSignature("speedrunsSetApprovalForAll(address,bool)", operator, approved));
     if (!success) {
       return super.setApprovalForAll(operator, approved);
     }
   }
-  function transferFrom(address from, address to, uint256 tokenId) public override(ERC721) {
-    (bool success, bytes memory data) = anybodyProblem.call(abi.encodeWithSignature("speedrunsTransferFrom(address,address,uint256)", from, to, tokenId));
+  function safeTransferFrom(address from, address to, uint256 tokenId, uint256 amount, bytes memory data) public override(ERC1155) {
+    (bool success, bytes memory data) = anybodyProblem.call(abi.encodeWithSignature("speedrunsSafeTransferFrom(address,address,uint256,uint256,bytes)", from, to, tokenId, amount, data));
     if (!success) {
-      return super.transferFrom(from, to, tokenId);
-    }
-  }
-  function safeTransferFrom(address from, address to, uint256 tokenId) public override(ERC721) {
-    (bool success, bytes memory data) = anybodyProblem.call(abi.encodeWithSignature("speedrunsSafeTransferFrom(address,address,uint256)", from, to, tokenId));
-    if (!success) {
-      return super.safeTransferFrom(from, to, tokenId);
-    }
-  }
-  function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory _data) public override(ERC721) {
-    (bool success, bytes memory data) = anybodyProblem.call(abi.encodeWithSignature("speedrunsSafeTransferFrom(address,address,uint256)", from, to, tokenId, _data));
-    if (!success) {
-      return super.safeTransferFrom(from, to, tokenId, _data);
+      return super.safeTransferFrom(from, to, tokenId, amount, data);
     }
   }
 

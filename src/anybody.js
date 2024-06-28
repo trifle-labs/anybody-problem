@@ -115,6 +115,7 @@ export class Anybody extends EventEmitter {
 
     // Add other constructor logic here
     this.p = p
+    !this.util && loadFonts(this.p)
     // this.p.blendMode(this.p.DIFFERENCE)
 
     this.clearValues()
@@ -247,7 +248,6 @@ export class Anybody extends EventEmitter {
   }
 
   async start() {
-    loadFonts(this.p)
     this.addCSS()
     this.addListeners()
     this.runSteps(this.preRun)
@@ -561,11 +561,12 @@ export class Anybody extends EventEmitter {
 
     this.calculateBodyFinal()
     const missileInits = []
-    // TODO: what about when the game begins with a missileInit that isn't in corner?
-
     if (this.mode == 'game') {
       let missileIndex = 0
+      // loop through all the steps that were just played since the last chunk
       for (let i = this.alreadyRun; i < this.alreadyRun + this.stopEvery; i++) {
+        // if the step index matches the step where a missile was shot, add the missile to the missileInits
+        // otherwise fill the missileInit array with an empty missile
         if (this.missileInits[missileIndex]?.step == i) {
           const missile = this.missileInits[missileIndex]
           missileInits.push([missile.vx, missile.vy, missile.radius])
@@ -574,9 +575,13 @@ export class Anybody extends EventEmitter {
           missileInits.push([maxVectorScaled, maxVectorScaled, '0'])
         }
       }
+      // add one more because missileInits contains one extra for circuit
       missileInits.push([maxVectorScaled, maxVectorScaled, '0'])
     }
 
+    // define the inflightMissile for the proof from the first missile shot during this chunk
+    // if the first missile shot was shot at step == alreadyRun (start of this chunk)
+    // add it as an inflightMissile otherwise add a dummy missile
     let inflightMissile =
       this.missileInits[0]?.step == this.alreadyRun
         ? this.missileInits[0]
@@ -594,16 +599,19 @@ export class Anybody extends EventEmitter {
       inflightMissile.vy,
       inflightMissile.radius
     ]
-    const outflightMissileTmp = this.missileInits[0] || {
-      x: '0',
-      y: (this.windowWidth * parseInt(this.scalingFactor)).toString(),
+
+    // defind outflightMissile for the proof from the currently flying missiles
+    // if there is no missile flying, add a dummy missile
+    const outflightMissileTmp = this.missiles[0] || {
+      px: '0',
+      py: (this.windowWidth * parseInt(this.scalingFactor)).toString(),
       vx: '2000',
       vy: '2000',
       radius: '0'
     }
     const outflightMissile = [
-      outflightMissileTmp.x,
-      outflightMissileTmp.y,
+      outflightMissileTmp.px,
+      outflightMissileTmp.py,
       outflightMissileTmp.vx,
       outflightMissileTmp.vy,
       outflightMissileTmp.radius

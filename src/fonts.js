@@ -8,7 +8,6 @@ const dotFontURL = new URL(
   '/public/fonts/A000-Dots-edited-subsetAlphaNumPuncSimple.ttf',
   import.meta.url
 ).href
-
 export const fonts = { body: null, dot: null }
 
 export function loadFonts(p) {

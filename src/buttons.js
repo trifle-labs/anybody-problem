@@ -1,4 +1,4 @@
-import { fonts } from './fonts'
+import { fonts } from './fonts.js'
 
 export const Buttons = {
   drawButton({
