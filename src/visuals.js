@@ -189,7 +189,7 @@ export const Visuals = {
     //   }
     // }
 
-    if (!this.firstFrame && !this.paused) {
+    if (!this.paused) {
       this.drawBodies()
     } else {
       this.drawPauseBodies()

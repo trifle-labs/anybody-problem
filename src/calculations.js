@@ -419,6 +419,7 @@ export const Calculations = {
       newBody.c = body.c
       newBody.bodyIndex = body.bodyIndex
       newBody.seed = body.seed
+
       // newBody.faceIndex = body.faceIndex
 
       bigBodies.push(newBody)
