@@ -5,6 +5,7 @@ import "base64-sol/base64.sol";
 import "./AnybodyProblem.sol";
 import "./Speedruns.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "./BokkyPooBahsDateTimeLibrary.sol";
 import "./StringsExtended.sol";
 // import "hardhat/console.sol";
 
@@ -14,6 +15,7 @@ import "./StringsExtended.sol";
 /// @dev The updateable and replaceable problemMetadata contract
 
 contract ExternalMetadata is Ownable {
+    using BokkyPooBahsDateTimeLibrary for uint;
     address payable public anybodyProblem;
     address payable public speedruns;
     uint256 constant radiusMultiplyer = 100;
@@ -39,9 +41,9 @@ contract ExternalMetadata is Ownable {
     // }
 
     /// @dev generates the problemMetadata
-    /// @param tokenId the tokenId
+    /// @param date the date
     function getMetadata(
-        uint256 tokenId
+        uint256 date
     ) public view returns (string memory) {
         return
             string(
@@ -49,28 +51,29 @@ contract ExternalMetadata is Ownable {
                     "data:application/json;base64,",
                     Base64.encode(
                         abi.encodePacked(
-                            '{"name":"',getName(tokenId), '",',
+                            '{"name":"',getName(date), '",',
                             '"description": "Anybody Problem (https://anybody.trifle.life)",',
-                            '"image": "',getSVG(tokenId),'",',
-                            '"image_url": "',getSVG(tokenId),'",',
+                            '"image": "',getSVG(date),'",',
+                            '"image_url": "',getSVG(date),'",',
                             '"home_url": "https://anybody.trifle.life",',
                             '"external_url": "https://anybody.trifle.life",',
                             // '"animation_url": "', getHTML(tokenId), '",',
-                            '"attributes": ', getAttributes(tokenId), '}'
+                            '"attributes": ', getAttributes(date), '}'
                         )
                     )
                 )
             );
     }
 
-    function getName(uint256 tokenId) public pure returns (string memory) {
+    function getName(uint256 date) public pure returns (string memory) {
+        (uint year, uint month, uint day) = BokkyPooBahsDateTimeLibrary.timestampToDate(date);
         return
             string(
-                abi.encodePacked("Problem #", StringsExtended.toString(tokenId))
+                abi.encodePacked(StringsExtended.toString(year),"-",StringsExtended.toString(month),"-",StringsExtended.toString(day))
             );
     }
 
-    function getHTML(uint256 tokenId) public view returns (string memory) {
+    function getHTML(uint256 date) public view returns (string memory) {
         return
             string(
                 abi.encodePacked(
@@ -78,7 +81,7 @@ contract ExternalMetadata is Ownable {
                     Base64.encode(
                         abi.encodePacked(
                             "<html><body><img src='",
-                            getSVG(tokenId),
+                            getSVG(date),
                             "'></body></html>"
                         )
                     )
@@ -88,7 +91,7 @@ contract ExternalMetadata is Ownable {
 
     /// @dev function to generate a SVG String
     function getSVG(
-        uint256 tokenId
+        uint256 date
     ) public view returns (string memory) {
         return
             string(
@@ -97,9 +100,9 @@ contract ExternalMetadata is Ownable {
                     Base64.encode(
                         abi.encodePacked(
                             '<?xml version="1.0" encoding="utf-8"?><svg xmlns="http://www.w3.org/2000/svg"  height="100%" width="100%" viewBox="0 0 1000 1000" style="background-color:grey;"><style></style>',
-                            getPath(tokenId),
+                            getPath(date),
                             '<text x="50" y="550" class="name">',
-                            getName(tokenId),
+                            getName(date),
                             "</text></svg>"
                         )
                     )
@@ -107,21 +110,12 @@ contract ExternalMetadata is Ownable {
             );
     }
 
-    function getPath(uint256 tokenId) public view returns (string memory) {
+    function getPath(uint256 date) public view returns (string memory) {
         // const { seed, bodyCount, tickCount, mintedBodiesIndex } = problem
         string memory path = "";
-        (
-            address owner,
-            bool solved,
-            uint256 accumulativeTime,
-            bytes32 seed,
-            uint256 day
-        ) = AnybodyProblem(anybodyProblem).runs(tokenId);
-
-        AnybodyProblem.Level[] memory levels = AnybodyProblem(anybodyProblem).getLevelsData(tokenId);
-        uint256 level = levels.length;
         uint256 scalingFactor = AnybodyProblem(anybodyProblem).scalingFactor();
-        (AnybodyProblem.Body[6] memory bodies, uint256 bodyCount) = AnybodyProblem(anybodyProblem).generateLevelData(day, level);
+        uint256 level = AnybodyProblem(anybodyProblem).LEVELS();
+        (AnybodyProblem.Body[6] memory bodies, uint256 bodyCount) = AnybodyProblem(anybodyProblem).generateLevelData(date, level);
         for (uint256 i = 0; i < bodyCount; i++) {
             AnybodyProblem.Body memory body = bodies[i];
             uint256 scaledRadius = body.radius *
@@ -232,34 +226,40 @@ contract ExternalMetadata is Ownable {
 
     /// @dev generates the attributes as JSON String
     function getAttributes(
-        uint256 tokenId
+        uint256 date
     ) internal view returns (string memory) {
-        (
-            address owner,
-            bool solved,
-            uint256 accumulativeTime,
-            bytes32 seed,
-            uint256 day
-        ) = AnybodyProblem(anybodyProblem).runs(tokenId);
-        AnybodyProblem.Level[] memory levels = AnybodyProblem(anybodyProblem).getLevelsData(tokenId);
-        uint256 level = levels.length;
-        uint256 bodyCount = level + 1;
+        (uint year, uint month, uint day) = BokkyPooBahsDateTimeLibrary.timestampToDate(date);
+        uint256 fastestRunId = AnybodyProblem(anybodyProblem).fastestByDay(date, 0);
+        uint256 secondFastestRunId = AnybodyProblem(anybodyProblem).fastestByDay(date, 1);
+        uint256 thirdFastestRunId = AnybodyProblem(anybodyProblem).fastestByDay(date, 2);
+        (address fastestAddress, , uint256 fastestTime, , ) = AnybodyProblem(anybodyProblem).runs(fastestRunId);
+        (address secondFastestAddress, , uint256 secondFastestTime, , ) = AnybodyProblem(anybodyProblem).runs(secondFastestRunId);
+        (address thirdFastestAddress, , uint256 thirdFastestTime, , ) = AnybodyProblem(anybodyProblem).runs(thirdFastestRunId);
+
         return
             string(
                 abi.encodePacked(
                     "[",
-                    '{"trait_type":"solved","value":',
-                    solved ? "true" : "false",
-                    '}, {"trait_type":"seed","value":"',
-                    StringsExtended.toHexStringWithPrefix(uint256(seed), 32),
+                    '{"trait_type":"date","value":"',
+                    StringsExtended.toString(date),
                     '"}, {"trait_type":"day","value":"',
                     StringsExtended.toString(day),
-                    '"}, {"trait_type":"bodyCount","value":"',
-                    StringsExtended.toString(bodyCount),
-                    '"}, {"trait_type":"level","value":"',
-                    StringsExtended.toString(level),
-                    '"}, {"trait_type":"accumulativeTime","value":"',
-                    StringsExtended.toString(accumulativeTime),
+                    '"}, {"trait_type":"month","value":"',
+                    StringsExtended.toString(month),
+                    '"}, {"trait_type":"year","value":"',
+                    StringsExtended.toString(year),
+                    '"}, {"trait_type":"1st-address","value":"',
+                    StringsExtended.toHexString(fastestAddress),
+                    '"}, {"trait_type":"1st-time","value":"',
+                    StringsExtended.toString(fastestTime),
+                    '"}, {"trait_type":"2nd-address","value":"',
+                    StringsExtended.toHexString(secondFastestAddress),
+                    '"}, {"trait_type":"2nd-time","value":"',
+                    StringsExtended.toString(secondFastestTime),
+                    '"}, {"trait_type":"3rd-address","value":"',
+                    StringsExtended.toHexString(thirdFastestAddress),
+                    '"}, {"trait_type":"3rd-time","value":"',
+                    StringsExtended.toString(thirdFastestTime),
                     '"}]'
                 )
             );

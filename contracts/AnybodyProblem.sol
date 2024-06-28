@@ -385,6 +385,7 @@ contract AnybodyProblem is Ownable, ERC2981 {
           fastestByDay[run.day][j] = fastestByDay[run.day][j - 1];
         }
         fastestByDay[run.day][i] = runId;
+        emitMetadataUpdate(run.day);
         break;
       }
     }
