@@ -77,18 +77,6 @@ const FACE_SVGS = [
   new URL('/public/bodies/faces/face14.svg', import.meta.url).href
 ]
 
-// const FACE_DISTRESS_SVGS = [
-//   new URL('/public/bodies/faces_distress/1.svg', import.meta.url).href,
-//   new URL('/public/bodies/faces_distress/2.svg', import.meta.url).href,
-//   new URL('/public/bodies/faces_distress/3.svg', import.meta.url).href
-// ]
-
-// const FACE_CRY_SVGS = [
-//   new URL('/public/bodies/faces_cry/1.svg', import.meta.url).href,
-//   new URL('/public/bodies/faces_cry/2.svg', import.meta.url).href,
-//   new URL('/public/bodies/faces_cry/3.svg', import.meta.url).href
-// ]
-
 const FACE_BLINK_SVGS = [
   new URL('/public/bodies/faces_blink/1.svg', import.meta.url).href,
   new URL('/public/bodies/faces_blink/2.svg', import.meta.url).href,
@@ -166,12 +154,10 @@ export const Visuals = {
     this.p5Frames++
 
     this.p.noFill()
-    // this.p.textFont('Instrument Serif, serif')
     this.drawBg()
     if (this.globalStyle == 'psycho') {
       this.p.blendMode(this.p.DIFFERENCE)
     }
-    // this.drawTails()
 
     if (this.globalStyle == 'psycho') {
       this.p.blendMode(this.p.BLEND)
@@ -223,7 +209,6 @@ export const Visuals = {
       this.drawMissiles()
     }
     this.drawExplosions()
-    // this.drawBodyOutlines()
 
     this.drawScore()
 
@@ -231,13 +216,6 @@ export const Visuals = {
     const framesIsAtStopEveryInterval =
       (this.frames - this.startingFrame) % this.stopEvery == 0
     const didNotJustPause = !this.justPaused
-    // console.log({
-    //   stopEvery: this.stopEvery,
-    //   alreadyRun: this.alreadyRun,
-    //   frames: this.frames,
-    //   framesIsAtStopEveryInterval,
-    //   frames_lt_timer: this.frames < this.timer
-    // })
 
     const ranOutOfTime =
       this.frames - this.startingFrame + this.FPS >= this.timer
@@ -247,7 +225,6 @@ export const Visuals = {
       this.handleGameOver({ won: false, ranOutOfTime, hitHeroBody })
     }
 
-    // const timeHasntRunOut = this.frames - this.startingFrame <= this.timer
     if (
       !this.firstFrame &&
       notPaused &&
@@ -419,7 +396,7 @@ export const Visuals = {
     //   this.windowHeight
     // )
 
-    // // Grid lines
+    // // Grid lines, uncomment for visual debugging and alignment
     // const boxCount = 6
     // // this.p.stroke('black')
     // this.p.stroke('white')
@@ -445,74 +422,12 @@ export const Visuals = {
     // }
   },
 
-  drawStaticBg() {
-    const bw = true
-
-    // Fill the background with static noise
-    if (!this.staticBg) {
-      this.staticBg = this.p.createGraphics(this.windowWidth, this.windowHeight)
-      this.staticBg.loadPixels()
-      for (let x = 0; x < this.staticBg.width; x++) {
-        for (let y = 0; y < this.staticBg.height; y++) {
-          let colorValue
-          if (bw) {
-            const noiseValue = this.staticBg.noise(x * 0.01, y * 0.01)
-            colorValue = this.staticBg.map(noiseValue, 0, 1, 0, 255)
-            colorValue = this.staticBg.color(colorValue)
-          } else {
-            // const noiseValue = this.staticBg.noise(x * 0.01, y * 0.01)
-            const rNoise = this.staticBg.noise(x * 0.01, y * 0.01) // * 255
-            const gNoise = this.staticBg.noise(x * 0.02, y * 0.02) // * 255 // Different scale for variation
-            const bNoise = this.staticBg.noise(x * 0.03, y * 0.03) // * 255 // Different scale for variation
-            const rColorValue = this.staticBg.map(rNoise, 0, 1.01, 0, 255)
-            const gColorValue = this.staticBg.map(gNoise, 0, 1.02, 0, 255)
-            const bColorValue = this.staticBg.map(bNoise, 0, 1.03, 0, 255)
-            colorValue = this.staticBg.color(
-              rColorValue,
-              gColorValue,
-              bColorValue
-            )
-          }
-          this.staticBg.set(x, y, this.staticBg.color(colorValue))
-        }
-      }
-      this.staticBg.updatePixels()
-    }
-    this.p.image(this.staticBg, 0, 0)
-  },
-  drawSolidBg() {
-    this.p.background(255)
-  },
-
   getColorDir(chunk) {
     return Math.floor(this.frames / (255 * chunk)) % 2 == 0
   },
 
-  getBW() {
-    const dir = this.getColorDir(this.chunk)
-    const lowerHalf = Math.floor(this.frames / this.chunk) % 255 < 255 / 2
-    if (dir && lowerHalf) {
-      return 'white'
-    } else if (!dir && !lowerHalf) {
-      return 'white'
-    } else if (!dir && lowerHalf) {
-      return 'black'
-    } else if (dir && !lowerHalf) {
-      return 'black'
-    }
-    // return  ? 'white' : 'black'
-  },
-
   getGrey() {
     if (this.getColorDir(this.chunk)) {
-      return 255 - (Math.floor(this.frames / this.chunk) % 255)
-    } else {
-      return Math.floor(this.frames / this.chunk) % 255
-    }
-  },
-
-  getNotGrey() {
-    if (!this.getColorDir(this.chunk)) {
       return 255 - (Math.floor(this.frames / this.chunk) % 255)
     } else {
       return Math.floor(this.frames / this.chunk) % 255
@@ -580,13 +495,7 @@ export const Visuals = {
       const xLeft = this.windowWidth / 2 - 300
       const xRight = this.windowWidth / 2 + 300
       const y = 374 + leading * i
-      // if (i === 3) {
-      //   p.stroke('black')
-      //   p.strokeWeight(4)
-      //   p.line(xLeft, y, xRight, y)
-      //   p.noStroke()
-      //   barPadding = 20
-      // }
+
       for (const [j, stat] of line.split(':').entries()) {
         if (j === 0) {
           p.textAlign(p.LEFT, p.TOP)
@@ -691,19 +600,10 @@ export const Visuals = {
       this.scaleX(this.p.mouseX),
       this.scaleX(this.p.mouseY) + crossHairSize
     )
-    // // Calculate the length of the direction
-    // let len = this.p.sqrt(dirX * dirX + dirY * dirY)
-
-    // // If the length is not zero, scale the direction to have a length of 100
-    // if (len != 0) {
-    //   dirX = (dirX / len) * 100
-    //   dirY = (dirY / len) * 100
-    // }
 
     if (this.paused) return
 
     // Draw the line
-    // this.p.setLineDash([5, 15])
     const drawingContext = this.p.canvas.getContext('2d')
     const chunk = this.windowWidth / 100
     drawingContext.setLineDash([chunk])
@@ -771,78 +671,6 @@ export const Visuals = {
         this.p.ellipse(body.position.x, body.position.y, reverb, reverb)
       }
     }
-  },
-
-  paintAtOnce(n = this.paintSteps) {
-    this.bodiesGraphic ||= this.p.createGraphics(
-      this.windowWidth,
-      this.windowHeight
-    )
-
-    for (let i = 0; i < n; i++) {
-      const results = this.step(this.bodies, this.missiles)
-      this.bodies = results.bodies
-      this.missiles = results.missiles || []
-      this.drawBodies(false)
-      this.drawWitheringBodies()
-      this.frames++
-    }
-
-    this.p.image(this.bodiesGraphic, 0, 0)
-    this.bodiesGraphic.clear()
-  },
-  componentToHex(c) {
-    var hex = parseInt(c).toString(16)
-    return hex.length == 1 ? '0' + hex : hex
-  },
-
-  rgbToHex(r, g, b) {
-    return (
-      '0x' +
-      this.componentToHex(r) +
-      this.componentToHex(g) +
-      this.componentToHex(b)
-    )
-  },
-  hexToRgb(hex) {
-    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
-    return result
-      ? {
-          r: parseInt(result[1], 16),
-          g: parseInt(result[2], 16),
-          b: parseInt(result[3], 16)
-        }
-      : null
-  },
-
-  invertColorRGB(c) {
-    throw new Error(`invert color is not meant for HSL colors (${c})`)
-    // let [r, g, b] = c.replace('rgba(', '').split(',').slice(0, 3)
-    // const hexColor = this.rgbToHex(r, g, b)
-    // const invert = (parseInt(hexColor) ^ 0xffffff).toString(16).padStart(6, '0')
-    // const invertRGB = this.hexToRgb(invert)
-    // // r = r - 255
-    // // g = g - 255
-    // // b = b - 255
-    // const newColor = this.p.color(invertRGB.r, invertRGB.g, invertRGB.b)
-    // return newColor
-  },
-
-  // Function to apply mask color to the image
-  maskImage(img, maskColor) {
-    img.loadPixels() // Load the image's pixel data
-
-    for (let i = 0; i < img.pixels.length; i += 4) {
-      if (img.pixels[i + 3] == 0) continue // Skip transparent pixels (alpha = 0
-      // Replace RGB values with the mask color's RGB, preserve the original alpha
-      img.pixels[i] = maskColor[0] // R
-      img.pixels[i + 1] = maskColor[1] // G
-      img.pixels[i + 2] = maskColor[2] // B
-      img.pixels[i + 3] = 255 // TODO: could be 100% or 1
-      // Alpha remains unchanged to preserve transparency
-    }
-
-    img.updatePixels() // Update the image with the new pixel values
   },
 
   isMissileClose(body) {
@@ -1027,10 +855,6 @@ export const Visuals = {
     }
 
     this.bodiesGraphic.pop()
-
-    // if (this.showLevels) {
-    //   this.drawLevels(radius, body, offset)
-    // }
   },
 
   getBodyRadius(actualRadius) {
@@ -1083,11 +907,6 @@ export const Visuals = {
       return
     }
     const { p } = this
-
-    // draw a fake withering body for development
-    // if (this.witheringBodies.length === 0) {
-    //   this.witheringBodies = [{ position: p.createVector(100, 100) }]
-    // }
 
     this.bodiesGraphic ||= p.createGraphics(this.windowWidth, this.windowHeight)
 
@@ -1444,19 +1263,5 @@ export const Visuals = {
     }
 
     return this.lastFrameRate
-  },
-  async loadImages() {
-    return
-    // this.starSVG ||= {}
-    // for (let i = 0; i < STAR_SVGS.length; i++) {
-    //   const svg = STAR_SVGS[i]
-    //   await new Promise((resolve) => {
-    //     this.p.loadImage(svg, (img) => {
-    //       this.starSVG[i + 1] = img
-    //       resolve()
-    //     })
-    //   })
-    // }
-    // this.loaded = true
   }
 }

@@ -10,7 +10,6 @@ import { loadFonts } from './fonts.js'
 import { Buttons } from './buttons.js'
 // import wc from './witness_calculator.js'
 
-// const GAME_LENGTH = 60 // seconds
 const GAME_LENGTH_BY_LEVEL_INDEX = [10, 20, 30, 40, 50]
 const NORMAL_GRAVITY = 100
 const proverTickIndex = {
@@ -159,7 +158,6 @@ export class Anybody extends EventEmitter {
       globalStyle: 'default', // 'default', 'psycho'
       aimHelper: false,
       target: 'inside', // 'outside' or 'inside'
-      showLevels: false, // true or false
       faceRotation: 'mania', // 'time' or 'hitcycle' or 'mania'
       sfx: 'bubble', // 'space' or 'bubble'
       ownerPresent: false
@@ -243,33 +241,10 @@ export class Anybody extends EventEmitter {
     this.startingFrame = this.alreadyRun
     this.stopEvery = this.test ? 20 : this.proverTickIndex(this.level + 1)
     // const vectorLimitScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
-    this.loadImages()
     this.setPause(this.paused, true)
     this.storeInits()
     // this.prepareWitness()
   }
-
-  // async prepareWitness() {
-  //   // const wasmFile = `/public/game_10_1.wasm`
-  //   const wasmFile = new URL('./game_10_1.wasm', import.meta.url).href
-  //   console.log({ wasmFile })
-  //   const response = await fetch(wasmFile)
-  //   console.log({ response })
-  //   const buffer = await response.arrayBuffer()
-  //   console.log({ buffer })
-  //   // let wasm = await fetch(new URL('./game_10_1.wasm', import.meta.url).href)
-  //   // console.log({ wasm })
-  //   this.witnessCalculator = await wc(buffer)
-  //   console.log({ witnessCalculator: this.witnessCalculator })
-  //   // const w = await witnessCalculator.calculateWitness(input, 0);
-  //   // for (let i = 0; i < w.length; i++) {
-  //   //   console.log(w[i]);
-  //   // }
-  //   // const buff = await witnessCalculator.calculateWTNSBin(input, 0)
-  //   // writeFile(process.argv[4], buff, function (err) {
-  //   //   if (err) throw err
-  //   // })
-  // }
 
   async start() {
     loadFonts(this.p)
@@ -292,16 +267,8 @@ export class Anybody extends EventEmitter {
   }
 
   storeInits() {
-    // console.dir(
-    //   {
-    //     frames: this.frames,
-    //     bodies: this.bodies.map((b) => (b.position.x, b.position.y))
-    //   },
-    //   { depth: null }
-    // )
     this.bodyCopies = JSON.parse(JSON.stringify(this.bodies))
     this.bodyInits = this.processInits(this.bodies)
-    // console.dir({ bodyInits: this.bodyInits }, { depth: null })
   }
 
   processInits(bodies) {
@@ -434,11 +401,7 @@ export class Anybody extends EventEmitter {
         }
         break
       case 'KeyR':
-        // confirm('Are you sure you want to restart?') && this.restart()
-        if (!this.gameOver) {
-          // this.startingBodies = 2
-        }
-        this.restart()
+        this.restart(null, false)
         break
       case 'KeyP':
         this.setPause()
@@ -450,7 +413,7 @@ export class Anybody extends EventEmitter {
     if (this.handledGameOver) return
     this.handledGameOver = true
 
-    // this.sound?.playGameOver({ won })
+    this.sound?.playGameOver({ won })
     this.gameOver = true
     this.won = won
     this.G = 2000 // make the badies dance
@@ -487,7 +450,7 @@ export class Anybody extends EventEmitter {
       this.setOptions(options)
     }
     this.clearValues()
-    this.sound?.stop()
+    // this.sound?.stop()
     this.sound?.playStart()
     this.init()
     this.draw()
@@ -546,12 +509,6 @@ export class Anybody extends EventEmitter {
     if (this.missiles.length == 0 && this.lastMissileCantBeUndone) {
       this.lastMissileCantBeUndone = false
     }
-    // const { bodies, missiles } = await this.circomStep(
-    //   this.bodies,
-    //   this.missiles
-    // )
-    // this.bodies = bodies
-    // this.missiles = missiles || []
     this.bodies = this.forceAccumulator(this.bodies)
     var results = this.detectCollision(this.bodies, this.missiles)
     this.bodies = results.bodies
@@ -943,9 +900,6 @@ if (typeof window !== 'undefined') {
   window.Anybody = Anybody
 }
 
-// function _smolr(a, b) {
-//   return a < b ? a : b
-// }
 BigInt.prototype.toJSON = function () {
   return this.toString()
 }

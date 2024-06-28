@@ -13,7 +13,6 @@ q5.preload = () => {
 q5.setup = () => {
   window.anybody = new Anybody(q5, {
     mode: 'game',
-    // showLevels: true,
     // target: 'inside',
     // globalStyle: 'psycho',
     day: Math.floor(Math.random() * 10000000),
