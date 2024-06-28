@@ -530,7 +530,7 @@ export const Visuals = {
     p.textSize(200)
     p.textAlign(p.LEFT, p.TOP)
     p.textFont(fonts.dot)
-    const tickerSpeed = -120 / this.P5_FPS
+    const tickerSpeed = -200 / this.P5_FPS
     const textWidth = p.textWidth(doubleText)
     if (
       !this.gameoverTickerX ||

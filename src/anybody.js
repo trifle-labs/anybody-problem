@@ -198,6 +198,7 @@ export class Anybody extends EventEmitter {
     this.FPS = 25
     this.P5_FPS_MULTIPLIER = 3
     this.P5_FPS = this.FPS * this.P5_FPS_MULTIPLIER
+    this.p.frameRate(this.P5_FPS)
     this.timer =
       (this.level > 5 ? 60 : GAME_LENGTH_BY_LEVEL_INDEX[this.level - 1]) *
       this.FPS
@@ -417,6 +418,8 @@ export class Anybody extends EventEmitter {
     this.gameOver = true
     this.won = won
     this.G = 2000 // make the badies dance
+    this.P5_FPS *= 3
+    this.p.frameRate(this.P5_FPS)
     var dust = 0
     var timeTook = 0
 
