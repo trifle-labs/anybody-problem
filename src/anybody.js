@@ -487,7 +487,7 @@ export class Anybody extends EventEmitter {
       this.setOptions(options)
     }
     this.clearValues()
-    // this.sound?.stop()
+    this.sound?.stop()
     this.sound?.playStart()
     this.init()
     this.draw()
@@ -503,7 +503,6 @@ export class Anybody extends EventEmitter {
 
   setStatsText = async (stats) => {
     const statLines = [
-      // `total bodies: ${stats.bodiesIncluded}`,
       this.doubleTextInverted(`¸♩·¯·♬¸¸♬·¯·♩¸¸♪¯`),
       `${stats.bodiesIncluded - 1} bodies cleared`,
       `in ${stats.timeTook} sec 🐎`,
@@ -512,16 +511,6 @@ export class Anybody extends EventEmitter {
     ]
     const toShow = statLines.join('\n')
     this.statsText = toShow
-    // for (let i = 0; i < toShow.length; i++) {
-    //   await new Promise((resolve) => setTimeout(resolve, 50))
-    //   this.statsText = toShow.slice(0, i + 1)
-    //   this.sound?.playStat()
-    //   // play a sound on new line
-    //   if (toShow[i] == '\n') {
-    //     await new Promise((resolve) => setTimeout(resolve, 800))
-    //     this.sound?.playStat()
-    //   }
-    // }
 
     await this.setShowPlayAgain(1000)
     this.sound?.playSuccess()
@@ -617,31 +606,20 @@ export class Anybody extends EventEmitter {
     const missileInits = []
     // TODO: what about when the game begins with a missileInit that isn't in corner?
 
-    // console.log('finish')
-    // console.dir(
-    //   {
-    //     alreadyRun: this.alreadyRun,
-    //     stopEvery: this.stopEvery,
-    //     missileInits: this.missileInits
-    //   },
-    //   { depth: null }
-    // )
     if (this.mode == 'game') {
       let missileIndex = 0
       for (let i = this.alreadyRun; i < this.alreadyRun + this.stopEvery; i++) {
         if (this.missileInits[missileIndex]?.step == i) {
-          // console.log('step == i', i)
           const missile = this.missileInits[missileIndex]
           missileInits.push([missile.vx, missile.vy, missile.radius])
           missileIndex++
         } else {
-          // console.log('else it starts from corner')
           missileInits.push([maxVectorScaled, maxVectorScaled, '0'])
         }
       }
       missileInits.push([maxVectorScaled, maxVectorScaled, '0'])
     }
-    // console.log('first missile: ', this.missileInits[0], this.alreadyRun)
+
     let inflightMissile =
       this.missileInits[0]?.step == this.alreadyRun
         ? this.missileInits[0]
@@ -833,24 +811,10 @@ export class Anybody extends EventEmitter {
     } else {
       return randHSL([undefined, '90-100', '55-60'], this.random.bind(this))
     }
-    // const seedtype = typeof seed
-    // if (seedtype !== 'string' && seedtype !== 'number') {
-    //   seed = seed.toHexString()
-    // } else if (seedtype == 'number') {
-    //   seed = seed.toString(16)
-    // }
-    // const blocker = 0xffff
-    // const color = (BigInt(seed) & BigInt(blocker)) % 360n
-    // const saturation = ((BigInt(seed) >> 16n) & BigInt(blocker)) % 100n
-    // const lightness = (((BigInt(seed) >> 32n) & BigInt(blocker)) % 40n) + 40n
-    // const result = `hsla(${color.toString()}, ${saturation.toString()}%, ${lightness.toString()}%,${replaceOpacity ? '1' : this.opac})`
-
-    // return result
   }
 
   random(min, max, rng = this.rng) {
     return rng.nextInt(min, max)
-    // return Math.floor(Math.random() * (upper - lower + 1)) + lower;
   }
 
   randomColor(min = 0, max = 359, rng = this.rng) {
