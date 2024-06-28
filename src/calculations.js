@@ -402,10 +402,11 @@ export const Calculations = {
 
   convertBodiesToBigInts(bodies) {
     const bigBodies = []
-    // const maxVectorScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
+
+    const skipCopying = ['px', 'py', 'vx', 'vy']
     for (let i = 0; i < bodies.length; i++) {
       const body = bodies[i]
-      const newBody = { position: {}, velocity: {}, radius: null }
+      const newBody = {}
 
       newBody.position.x =
         body.px || this.convertFloatToScaledBigInt(body.position.x)
@@ -416,11 +417,14 @@ export const Calculations = {
       newBody.velocity.y =
         body.vy || this.convertFloatToScaledBigInt(body.velocity.y)
       newBody.radius = this.convertFloatToScaledBigInt(body.radius)
-      newBody.c = body.c
-      newBody.bodyIndex = body.bodyIndex
-      newBody.seed = body.seed
 
-      // newBody.faceIndex = body.faceIndex
+      // copy over any other properties on body
+      for (const key in body) {
+        if (typeof newBody[key] !== 'undefined' || skipCopying.includes(key))
+          continue
+        const value = body[key]
+        newBody[key] = value
+      }
 
       bigBodies.push(newBody)
     }
