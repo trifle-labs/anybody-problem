@@ -482,7 +482,7 @@ export const Visuals = {
     p.stroke(THEME.border)
     const gutter = 24
     p.rect(gutter, 104, this.windowWidth - gutter * 2, 144, 24)
-    p.rect(this.windowWidth / 2 - 320, 340, 640, 350, 24)
+    p.rect(gutter, 320, this.windowWidth - gutter * 2, 524, 24)
 
     // draw stats
     p.textSize(48)
@@ -516,14 +516,40 @@ export const Visuals = {
     }
 
     // play again button
-    if (this.showPlayAgain) {
-      this.drawFatButton({
-        text: 'RETRY',
-        onClick: () => this.restart(null, false),
-        fg: 'black',
-        bg: 'white'
-      })
-    }
+    // if (this.showPlayAgain) {
+    this.drawBottomButton({
+      text: 'RETRY',
+      onClick: () => this.restart(null, false),
+      fg: 'black',
+      bg: 'white',
+      columns: 4,
+      column: 0
+    })
+    this.drawBottomButton({
+      text: 'RESTART',
+      onClick: () => this.restart(null, false),
+      fg: 'black',
+      bg: 'white',
+      columns: 4,
+      column: 1
+    })
+    this.drawBottomButton({
+      text: 'RESTART',
+      onClick: () => this.restart(null, false),
+      fg: 'black',
+      bg: 'white',
+      columns: 4,
+      column: 2
+    })
+    this.drawBottomButton({
+      text: 'RESTART',
+      onClick: () => this.restart(null, false),
+      fg: 'black',
+      bg: 'white',
+      columns: 4,
+      column: 3
+    })
+    // }
 
     p.pop()
   },

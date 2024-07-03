@@ -62,11 +62,17 @@ export const Buttons = {
     if (scale === 1) {
       p.fill(fg)
       p.textAlign(p.CENTER, p.CENTER)
-      p.text(text, x + width / 2, y + height / 2 + textSize * 0.05)
+      p.text(
+        text,
+        // tweak to center, somethign about the font
+        x + width / 2 + textSize * 0.13,
+        y + height / 2 + textSize * 0.05
+      )
     }
     p.pop()
   },
 
+  // single button with a fat appearance (retry, start)
   drawFatButton(buttonOptions) {
     const { bottom } = buttonOptions
     const bottomPadding = bottom || 80
@@ -76,6 +82,23 @@ export const Buttons = {
       width: 275,
       y: this.windowHeight - 96 - bottomPadding,
       x: this.windowWidth / 2 - 275 / 2,
+      ...buttonOptions
+    })
+  },
+
+  // buttons that are drawn at the bottom of the screen (win screen)
+  drawBottomButton(buttonOptions) {
+    const { columns, column } = buttonOptions
+    const gutter = 24
+    const interButtonGutter = 6
+    const frameWidth = this.windowWidth - 2 * gutter
+    const width = (frameWidth - (columns - 1) * interButtonGutter) / columns
+    this.drawButton({
+      height: 84,
+      textSize: 44,
+      width,
+      y: this.windowHeight - gutter - 84,
+      x: gutter + column * (width + interButtonGutter),
       ...buttonOptions
     })
   }
