@@ -256,6 +256,7 @@ export const Visuals = {
     this.p.fill(THEME.pink)
     this.p.textSize(200)
     this.p.textAlign(this.p.LEFT, this.p.TOP)
+    this.p.noStroke()
     const titleY = this.windowHeight / 2 - 270
     drawKernedText(this.p, 'Anybody', 46, titleY, 0.8)
     drawKernedText(this.p, 'Problem', 46, titleY + 240, 2)
@@ -741,12 +742,12 @@ export const Visuals = {
         .then((resp) => resp.text())
         .then((svg) => {
           svg = fill ? replaceAttribute(svg, 'fill', fill) : svg
-          // svg = replaceAttribute(svg, 'stroke-width', '0')
+          svg = replaceAttribute(svg, 'stroke-width', '2')
           svg = 'data:image/svg+xml,' + encodeURIComponent(svg)
 
           this.p.loadImage(svg, (img) => {
-            const width = img.width * this.pixelDensity
-            const height = img.height * this.pixelDensity
+            const width = img.width
+            const height = img.height
 
             const foo = this.p.createGraphics(width, height)
             foo.pixelDensity(this.pixelDensity)

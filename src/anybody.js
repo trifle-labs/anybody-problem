@@ -138,7 +138,7 @@ export class Anybody extends EventEmitter {
       startingBodies: 1,
       windowWidth: 1000,
       windowHeight: 1000,
-      pixelDensity: 4, //4, // Math.min(4, 4 * (window.devicePixelRatio ?? 1)),
+      pixelDensity: window.devicePixelRatio, //4, // Math.min(4, 4 * (window.devicePixelRatio ?? 1)),
       scalingFactor: 10n ** 3n,
       minDistanceSquared: 200 * 200,
       G: NORMAL_GRAVITY, // Gravitational constant
@@ -798,7 +798,7 @@ export class Anybody extends EventEmitter {
   prepareP5() {
     this.p.frameRate(this.P5_FPS)
     this.p.createCanvas(this.windowWidth, this.windowWidth)
-    // this.p.pixelDensity(this.pixelDensity)
+    this.p.pixelDensity(this.pixelDensity)
     this.p.background('white')
   }
 
