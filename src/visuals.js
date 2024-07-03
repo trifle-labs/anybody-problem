@@ -554,37 +554,38 @@ export const Visuals = {
       }
     }
 
-    // play again button
-    // if (this.showPlayAgain) {
+    // bottom buttons
+    const buttonCount = this.showShare ? 4 : 3
     this.drawBottomButton({
       text: 'RETRY',
       onClick: () => this.restart(null, false),
       ...themes.buttons.teal,
-      columns: 4,
+      columns: buttonCount,
       column: 0
     })
     this.drawBottomButton({
       text: 'RESTART',
       onClick: () => this.restart(null, false),
       ...themes.buttons.flame,
-      columns: 4,
+      columns: buttonCount,
       column: 1
     })
+    if (this.showShare) {
+      this.drawBottomButton({
+        text: 'SHARE',
+        onClick: () => this.restart(null, false),
+        ...themes.buttons.pink,
+        columns: buttonCount,
+        column: 2
+      })
+    }
     this.drawBottomButton({
-      text: 'RESTART',
-      onClick: () => this.restart(null, false),
-      ...themes.buttons.pink,
-      columns: 4,
-      column: 2
-    })
-    this.drawBottomButton({
-      text: 'RESTART',
+      text: 'NEXT',
       onClick: () => this.restart(null, false),
       ...themes.buttons.green,
-      columns: 4,
-      column: 3
+      columns: buttonCount,
+      column: buttonCount - 1
     })
-    // }
 
     p.pop()
   },
