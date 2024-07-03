@@ -250,23 +250,45 @@ export const Visuals = {
   },
   drawPause() {
     if (!(this.paused && fonts.dot)) return
-    this.p.textFont(fonts.dot)
-    this.p.fill(THEME.pink)
-    this.p.textSize(200)
-    this.p.textAlign(this.p.LEFT, this.p.TOP)
+
+    const { p } = this
+    p.textFont(fonts.dot)
+    p.fill(THEME.pink)
+    p.textSize(200)
+    p.textAlign(p.LEFT, p.TOP)
 
     // draw logo
-    this.p.noStroke()
+    p.noStroke()
     const titleY = this.windowHeight / 2 - 270
-    drawKernedText(this.p, 'Anybody', 46, titleY, 0.8)
-    drawKernedText(this.p, 'Problem', 46, titleY + 240, 2)
+    drawKernedText(p, 'Anybody', 46, titleY, 0.8)
+    drawKernedText(p, 'Problem', 46, titleY + 240, 2)
 
     this.drawFatButton({
       text: 'PLAY',
       onClick: () => this.setPause(false),
       fg: THEME.fuschia,
-      bg: THEME.pink
+      bg: THEME.pink,
+      bottom: 120
     })
+
+    // date
+    p.textFont(fonts.body)
+    p.textSize(24)
+    const dateWidth = p.textWidth(this.date)
+    const dateBgWidth = dateWidth + 48
+    const dateBgHeight = 32
+    const dateBottomY = this.windowHeight - 58
+    p.fill(THEME.textBg)
+    p.rect(
+      this.windowWidth / 2 - dateBgWidth / 2,
+      dateBottomY - dateBgHeight / 2,
+      dateBgWidth,
+      dateBgHeight,
+      20
+    )
+    p.textAlign(p.CENTER, p.CENTER)
+    p.fill(THEME.textFg)
+    p.text(this.date, this.windowWidth / 2, dateBottomY)
   },
   drawBodyOutlines() {
     for (let i = 0; i < this.bodies.length; i++) {

@@ -232,6 +232,7 @@ export class Anybody extends EventEmitter {
     this.won = false
     this.finalBatchSent = false
     this.solved = false
+    this.date = new Date().toLocaleDateString()
   }
 
   // run once at initilization
