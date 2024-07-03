@@ -512,15 +512,15 @@ export const Visuals = {
       this.p.cos(this.p.frameCount / this.P5_FPS + body.bodyIndex * 3) *
       (6 + body.bodyIndex)
     body.position = {
-      x: this.p.map(scale, 0, 1, -170, 170) + xWobble,
-      y: 170 + yWobble
+      x: this.p.map(scale, 0, 1, -140, 210) + xWobble,
+      y: 220 + yWobble
     }
     this.bodiesGraphic ||= this.p.createGraphics(
       this.windowWidth,
       this.windowHeight
     )
     this.drawBodiesLooped(body, radius, this.drawBody)
-    this.p.image(this.bodiesGraphic, 40, 30, 800, 800)
+    this.p.image(this.bodiesGraphic, 0, 0, 800, 800)
     this.bodiesGraphic.clear()
 
     // draw stats
