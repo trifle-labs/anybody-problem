@@ -256,6 +256,7 @@ export const Visuals = {
     this.p.textAlign(this.p.LEFT, this.p.TOP)
 
     // draw logo
+    this.p.noStroke()
     const titleY = this.windowHeight / 2 - 270
     drawKernedText(this.p, 'Anybody', 46, titleY, 0.8)
     drawKernedText(this.p, 'Problem', 46, titleY + 240, 2)
