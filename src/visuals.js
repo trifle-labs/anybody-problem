@@ -1,5 +1,6 @@
 import { hslToRgb, THEME } from './colors.js'
 import { fonts, drawKernedText } from './fonts.js'
+import { themes } from './colors.js'
 
 const BODY_SCALE = 4 // match to calculations.js !!
 const WITHERING_STEPS = 3000
@@ -466,6 +467,21 @@ export const Visuals = {
 
   drawWinScreen() {
     const { p } = this
+
+    const justEntered = this.winScreenLastVisibleFrame !== this.p5Frames - 1
+    if (justEntered) {
+      this.winScreenVisibleForFrames = 0
+    }
+    this.winScreenVisibleForFrames++
+    this.winScreenLastVisibleFrame = this.p5Frames
+
+    const entranceTime = 0.4 // seconds
+
+    const scale = Math.min(
+      1,
+      this.winScreenVisibleForFrames / (entranceTime * this.P5_FPS)
+    )
+
     p.push()
     p.noStroke()
     p.fill('white')
@@ -475,15 +491,37 @@ export const Visuals = {
     this.p.fill(THEME.pink)
     this.p.textSize(60)
     this.p.textAlign(this.p.LEFT, this.p.TOP)
-    drawKernedText(this.p, 'Anybody', 334, 22, 0.8)
-    drawKernedText(this.p, 'Problem', 640, 22, 2)
+    const logoY = this.p.map(scale, 0, 1, -100, 22)
+    drawKernedText(this.p, 'Anybody', 334, logoY, 0.8)
+    drawKernedText(this.p, 'Problem', 640, logoY, 2)
 
     // bordered boxes
     p.fill('black')
     p.stroke(THEME.border)
+    p.strokeWeight(1)
     const gutter = 24
     p.rect(gutter, 104, this.windowWidth - gutter * 2, 144, 24)
     p.rect(gutter, 320, this.windowWidth - gutter * 2, 524, 24)
+
+    // draw hero this.bodies[0]
+    const body = this.getDisplayHero()
+    const radius = this.getBodyRadius(body.radius)
+    const xWobble =
+      this.p.sin(this.p.frameCount / this.P5_FPS) * (5 + body.bodyIndex)
+    const yWobble =
+      this.p.cos(this.p.frameCount / this.P5_FPS + body.bodyIndex * 3) *
+      (6 + body.bodyIndex)
+    body.position = {
+      x: this.p.map(scale, 0, 1, -170, 170) + xWobble,
+      y: 170 + yWobble
+    }
+    this.bodiesGraphic ||= this.p.createGraphics(
+      this.windowWidth,
+      this.windowHeight
+    )
+    this.drawBodiesLooped(body, radius, this.drawBody)
+    this.p.image(this.bodiesGraphic, 40, 30, 800, 800)
+    this.bodiesGraphic.clear()
 
     // draw stats
     p.textSize(48)
@@ -521,38 +559,47 @@ export const Visuals = {
     this.drawBottomButton({
       text: 'RETRY',
       onClick: () => this.restart(null, false),
-      fg: 'black',
-      bg: 'white',
+      ...themes.buttons.teal,
       columns: 4,
       column: 0
     })
     this.drawBottomButton({
       text: 'RESTART',
       onClick: () => this.restart(null, false),
-      fg: 'black',
-      bg: 'white',
+      ...themes.buttons.flame,
       columns: 4,
       column: 1
     })
     this.drawBottomButton({
       text: 'RESTART',
       onClick: () => this.restart(null, false),
-      fg: 'black',
-      bg: 'white',
+      ...themes.buttons.pink,
       columns: 4,
       column: 2
     })
     this.drawBottomButton({
       text: 'RESTART',
       onClick: () => this.restart(null, false),
-      fg: 'black',
-      bg: 'white',
+      ...themes.buttons.green,
       columns: 4,
       column: 3
     })
     // }
 
     p.pop()
+  },
+
+  getDisplayHero() {
+    const body = this.bodies[0]
+    const bodyCopy = JSON.parse(
+      JSON.stringify(
+        body,
+        (key, value) => (typeof value === 'bigint' ? value.toString() : value) // return everything else unchanged
+      )
+    )
+    bodyCopy.position = this.p.createVector(body.position.x, body.position.y)
+    bodyCopy.velocity = this.p.createVector(body.velocity.x, body.velocity.y)
+    return bodyCopy
   },
 
   drawTicker({ text, bottom = false, fg }) {

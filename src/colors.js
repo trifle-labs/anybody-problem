@@ -1,5 +1,13 @@
 const iris_60 = 'rgba(88, 59, 209, 1)'
 const iris_30 = 'rgba(146, 118, 255, 1)'
+const teal_50 = 'rgba(137, 255, 248, 1)'
+const teal_75 = 'rgba(13, 61, 58, 1)'
+const flame_50 = 'rgba(255, 88, 88, 1)'
+const flame_75 = 'rgba(70, 12, 12, 1)'
+const pink_50 = 'rgba(255, 105, 177, 1)'
+const pink_75 = 'rgba(59, 29, 43, 1)'
+const green_50 = 'rgba(125, 241, 115, 1)'
+const green_75 = 'rgba(4, 53, 0, 1)'
 
 export const THEME = {
   bg: 'rgb(20,20,20)',
@@ -61,6 +69,24 @@ export const themes = {
         cr: [undefined, '90-100', '85-95'],
         fg: [undefined, '90', '60']
       }
+    }
+  },
+  buttons: {
+    teal: {
+      fg: teal_50,
+      bg: teal_75
+    },
+    flame: {
+      fg: flame_50,
+      bg: flame_75
+    },
+    pink: {
+      fg: pink_50,
+      bg: pink_75
+    },
+    green: {
+      fg: green_50,
+      bg: green_75
     }
   }
 }
