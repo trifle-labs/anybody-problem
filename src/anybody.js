@@ -221,7 +221,7 @@ export class Anybody extends EventEmitter {
     this.p5Frames = 0
     this.showIt = true
     this.justStopped = false
-    this.gameOver = false
+    this.gameOver = true
     this.firstFrame = true
     this.loaded = false
     this.showPlayAgain = false
@@ -229,7 +229,7 @@ export class Anybody extends EventEmitter {
     this.statsText = ''
     this.hasStarted = false
     this.buttons = {}
-    this.won = false
+    this.won = true
     this.finalBatchSent = false
     this.solved = false
   }

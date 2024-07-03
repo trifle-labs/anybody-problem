@@ -1,3 +1,6 @@
+const iris_60 = 'rgba(88, 59, 209, 1)'
+const iris_30 = 'rgba(146, 118, 255, 1)'
+
 export const THEME = {
   bg: 'rgb(20,20,20)',
   fg: 'white',
@@ -5,7 +8,10 @@ export const THEME = {
   pink: 'rgba(236, 205, 255, 1)',
   fuschia: 'rgba(160, 67, 232, 1)',
   red: 'rgba(255, 88, 88, 1)',
-  maroon: 'rgba(53, 20, 20, 1)'
+  maroon: 'rgba(53, 20, 20, 1)',
+  border: iris_60,
+  foreground: iris_60,
+  mutedForeground: iris_30
 }
 
 // [hue, saturation, lightness]

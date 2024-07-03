@@ -178,7 +178,7 @@ export const Visuals = {
 
     if (!this.paused) {
       this.drawBodies()
-    } else {
+    } else if (!this.gameOver) {
       this.drawPauseBodies()
     }
 
@@ -249,13 +249,13 @@ export const Visuals = {
     }
   },
   drawPause() {
-    if (!(this.paused && fonts.dot)) return
+    if (!(this.paused && fonts.dot && !this.gameOver)) return
+
+    // draw logo
     this.p.textFont(fonts.dot)
     this.p.fill(THEME.pink)
     this.p.textSize(200)
     this.p.textAlign(this.p.LEFT, this.p.TOP)
-
-    // draw logo
     const titleY = this.windowHeight / 2 - 270
     drawKernedText(this.p, 'Anybody', 46, titleY, 0.8)
     drawKernedText(this.p, 'Problem', 46, titleY + 240, 2)
@@ -469,18 +469,25 @@ export const Visuals = {
     p.noStroke()
     p.fill('white')
 
-    p.textSize(128)
-    p.textAlign(p.CENTER, p.TOP)
-    p.text('SUCCESS', this.windowWidth / 2 - 8, 190) // adjust by 8 to center SF Pro weirdness
+    // logo at top
+    this.p.textFont(fonts.dot)
+    this.p.fill(THEME.pink)
+    this.p.textSize(60)
+    this.p.textAlign(this.p.LEFT, this.p.TOP)
+    drawKernedText(this.p, 'Anybody', 334, 22, 0.8)
+    drawKernedText(this.p, 'Problem', 640, 22, 2)
 
-    // draw a white box behind the stats, with border radius
-    p.fill('white')
-    p.rect(this.windowWidth / 2 - 320, 340, 640, 350, 20, 20, 20, 20)
+    // bordered boxes
+    p.fill('black')
+    p.stroke(THEME.border)
+    const gutter = 24
+    p.rect(gutter, 104, this.windowWidth - gutter * 2, 144, 24)
+    p.rect(this.windowWidth / 2 - 320, 340, 640, 350, 24)
 
     // draw stats
     p.textSize(48)
-    p.textStyle(p.BOLD)
-    p.fill('black')
+    p.textFont(fonts.body)
+    p.fill(THEME.mutedForeground)
     for (const [i, line] of this.statsText.split('\n').entries()) {
       // print each stat line with left aligned label, right aligned stat
       if (line.match(/1x/)) {
