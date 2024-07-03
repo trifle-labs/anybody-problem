@@ -709,12 +709,12 @@ export const Visuals = {
         .then((resp) => resp.text())
         .then((svg) => {
           svg = fill ? replaceAttribute(svg, 'fill', fill) : svg
-          // svg = replaceAttribute(svg, 'stroke-width', '0')
+          svg = replaceAttribute(svg, 'stroke-width', '2')
           svg = 'data:image/svg+xml,' + encodeURIComponent(svg)
 
           this.p.loadImage(svg, (img) => {
-            const width = img.width * this.pixelDensity
-            const height = img.height * this.pixelDensity
+            const width = img.width
+            const height = img.height
 
             const foo = this.p.createGraphics(width, height)
             foo.pixelDensity(this.pixelDensity)
