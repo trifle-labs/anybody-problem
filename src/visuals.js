@@ -201,6 +201,7 @@ export const Visuals = {
     }
 
     this.drawPause()
+    this.drawScore()
 
     if (
       this.mode == 'game' &&
@@ -211,8 +212,6 @@ export const Visuals = {
       this.drawMissiles()
     }
     this.drawExplosions()
-
-    this.drawScore()
 
     const notPaused = !this.paused
     const framesIsAtStopEveryInterval =
@@ -687,7 +686,7 @@ export const Visuals = {
       this.scaleX(this.p.mouseY) + crossHairSize
     )
 
-    if (this.paused) return
+    if (this.paused || this.gameOver) return
 
     // Draw the line
     const drawingContext = this.p.canvas.getContext('2d')
