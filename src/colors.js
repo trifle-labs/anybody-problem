@@ -16,6 +16,7 @@ export const THEME = {
   border: iris_60,
   // colors
   lime: 'rgba(125, 241, 115, 1)',
+  lime_40: 'rgba(125, 241, 115, 0.4)',
   pink: 'rgba(236, 205, 255, 1)',
   fuschia: 'rgba(160, 67, 232, 1)',
   red: 'rgba(255, 88, 88, 1)',
