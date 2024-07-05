@@ -230,7 +230,7 @@ export class Anybody extends EventEmitter {
     this.statsText = ''
     this.hasStarted = false
     this.buttons = {}
-    this.won = true
+    this.won = false
     this.finalBatchSent = false
     this.solved = false
   }

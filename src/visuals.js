@@ -5,6 +5,7 @@ import { themes } from './colors.js'
 const BODY_SCALE = 4 // match to calculations.js !!
 const WITHERING_STEPS = 3000
 const GAME_LENGTH_BY_LEVEL_INDEX = [10, 20, 30, 40, 50]
+const LEVELS = GAME_LENGTH_BY_LEVEL_INDEX.length
 
 const rot = {
   fg: {
@@ -486,32 +487,38 @@ export const Visuals = {
     p.fill('white')
 
     // logo at top
-    this.p.textFont(fonts.dot)
-    this.p.fill(THEME.pink)
-    this.p.textSize(60)
-    this.p.textAlign(this.p.LEFT, this.p.TOP)
-    const logoY = this.p.map(scale, 0, 1, -100, 22)
-    drawKernedText(this.p, 'Anybody', 334, logoY, 0.8)
-    drawKernedText(this.p, 'Problem', 640, logoY, 2)
+    p.textFont(fonts.dot)
+    p.fill(THEME.pink)
+    p.textSize(60)
+    p.textAlign(p.LEFT, p.TOP)
+    const logoY = p.map(scale, 0, 1, -100, 22)
+    drawKernedText(p, 'Anybody', 334, logoY, 0.8)
+    drawKernedText(p, 'Problem', 640, logoY, 2)
 
     // bordered boxes
     p.fill('black')
     p.stroke(THEME.border)
     p.strokeWeight(1)
     const gutter = 24
+    const middleBoxY = 320
     p.rect(gutter, 104, this.windowWidth - gutter * 2, 144, 24)
-    p.rect(gutter, 320, this.windowWidth - gutter * 2, 524, 24)
+
+    if (this.showShare) {
+      p.rect(gutter, 320, this.windowWidth - gutter * 2, 524, 24)
+    } else {
+      p.rect(gutter, 320, this.windowWidth - gutter * 2, 444, 24)
+      p.rect(gutter, 796, this.windowWidth - gutter * 2, 64, 24)
+    }
 
     // draw hero this.bodies[0]
     const body = this.getDisplayHero()
     const radius = this.getBodyRadius(body.radius)
-    const xWobble =
-      this.p.sin(this.p.frameCount / this.P5_FPS) * (5 + body.bodyIndex)
+    const xWobble = p.sin(p.frameCount / this.P5_FPS) * (5 + body.bodyIndex)
     const yWobble =
-      this.p.cos(this.p.frameCount / this.P5_FPS + body.bodyIndex * 3) *
+      p.cos(p.frameCount / this.P5_FPS + body.bodyIndex * 3) *
       (6 + body.bodyIndex)
     body.position = {
-      x: this.p.map(scale, 0, 1, -140, 210) + xWobble,
+      x: p.map(scale, 0, 1, -140, 210) + xWobble,
       y: 220 + yWobble
     }
     this.bodiesGraphic ||= this.p.createGraphics(
@@ -519,7 +526,7 @@ export const Visuals = {
       this.windowHeight
     )
     this.drawBodiesLooped(body, radius, this.drawBody)
-    this.p.image(this.bodiesGraphic, 0, 0, 800, 800)
+    p.image(this.bodiesGraphic, 0, 0, 800, 800)
     this.bodiesGraphic.clear()
 
     // upper box text
@@ -537,33 +544,115 @@ export const Visuals = {
     p.fill(THEME.iris_30)
     p.text('JAN-01-2024', 454, 114)
     p.text('okwme.eth', 454, 174)
+    // end upper box text
 
-    for (const [i, line] of this.statsText.split('\n').entries()) {
-      // print each stat line with left aligned label, right aligned stat
-      if (line.match(/1x/)) {
-        // gray text if 1x multiplier
-        p.fill('rgba(0,0,0,0.3)')
-        p.fill('black')
-      } else {
-        p.fill('black')
-      }
-      // last line has a bar on top
-      const leading = 64
-      let barPadding = 0
-      const xLeft = this.windowWidth / 2 - 300
-      const xRight = this.windowWidth / 2 + 300
-      const y = 374 + leading * i
+    // middle box text
+    p.textSize(48)
+    p.fill(THEME.iris_60)
+    p.textAlign(p.RIGHT, p.TOP)
+    const col1X = 580
+    const col2X = 770
+    const col3X = 960
 
-      for (const [j, stat] of line.split(':').entries()) {
-        if (j === 0) {
-          p.textAlign(p.LEFT, p.TOP)
-          p.text(stat, xLeft, y + barPadding)
-        } else {
-          p.textAlign(p.RIGHT, p.TOP)
-          p.text(stat, xRight, y + barPadding)
-        }
-      }
+    // middle box text - labels
+    p.text('time', col1X, 264)
+    p.text('best', col2X, 264)
+    p.text('+/-', col3X, 264)
+
+    // middle box text - values
+    const levelTimes = [1.32, 2.5, 13.54]
+    const bestTimes = [1.45, 2.44, 16.79, 23.45, 36.45]
+    const plusMinus = bestTimes
+      .map((best, i) => {
+        if (i >= levelTimes.length) return ''
+        const time = levelTimes[i]
+        const diff = time - best
+        const sign = diff > 0 ? '+' : ''
+        return sign + diff.toFixed(2)
+      })
+      .filter(Boolean)
+    const problemComplete = levelTimes.length >= LEVELS
+    const rowHeight = 72
+
+    const bestTime = 20.68
+    const levelTimeSum = levelTimes.reduce((a, b) => a + b, 0)
+    const sumLine = [
+      levelTimeSum.toFixed(2),
+      bestTime.toFixed(2),
+      (levelTimeSum - bestTime).toFixed(2)
+    ]
+
+    // middle box text - highlight current
+    p.fill('rgba(146, 118, 255, 0.2)')
+    p.rect(
+      gutter,
+      middleBoxY + levelTimes.length * rowHeight,
+      this.windowWidth - gutter * 2,
+      rowHeight
+    )
+
+    // middle box text - value text
+    p.push()
+    p.textAlign(p.RIGHT, p.CENTER)
+    p.textSize(44)
+    // const middleBoxPadding = 12
+    // p.translate(0, middleBoxPadding)
+    for (let i = 0; i < LEVELS; i++) {
+      const time = i < levelTimes.length ? levelTimes[i].toFixed(2) : '-'
+      const light = i % 2 == 0
+      p.fill(light ? THEME.iris_30 : THEME.iris_60)
+      p.text(
+        time,
+        col1X,
+        middleBoxY + rowHeight * i + rowHeight / 2,
+        150,
+        rowHeight
+      )
     }
+    for (let i = 0; i < LEVELS; i++) {
+      const best = i < bestTimes.length ? bestTimes[i] : '-'
+      const light = i % 2 == 1 && i < levelTimes.length
+      p.fill(light ? THEME.iris_30 : THEME.iris_60)
+      p.text(
+        best.toFixed(2),
+        col2X,
+        middleBoxY + rowHeight * i + rowHeight / 2,
+        150,
+        rowHeight
+      )
+    }
+    for (let i = 0; i < LEVELS; i++) {
+      const diff = plusMinus[i] || '-'
+      p.text(
+        diff,
+        col3X,
+        middleBoxY + rowHeight * i + rowHeight / 2,
+        150,
+        rowHeight
+      )
+    }
+    p.textSize(64)
+    const sumLineY = middleBoxY + rowHeight * bestTimes.length + rowHeight / 2
+    const sumLineHeight = 80
+    p.textAlign(p.LEFT, p.CENTER)
+    p.fill(THEME.iris_30)
+    p.text(problemComplete ? 'solved in' : 'current time', 44, sumLineY)
+    p.textAlign(p.RIGHT, p.CENTER)
+    for (const [i, col] of [col1X, col2X, col3X].entries()) {
+      if (i == 0) p.fill('white')
+      p.text(sumLine[i], col, sumLineY, 150, sumLineHeight)
+    }
+    p.pop()
+    // end middle box text
+
+    // overlay transparent black box to dim past last levelTimes
+    p.fill('rgba(0,0,0,0.4)')
+    p.rect(
+      gutter,
+      middleBoxY + rowHeight * levelTimes.length,
+      this.windowWidth - gutter * 2,
+      rowHeight * (LEVELS - levelTimes.length)
+    )
 
     // bottom buttons
     const buttonCount = this.showShare ? 4 : 3
@@ -614,7 +703,7 @@ export const Visuals = {
     return bodyCopy
   },
 
-  drawTicker({ text, bottom = false, fg }) {
+  drawGameOverTicker({ text, bottom = false, fg }) {
     const doubleText = `${text} ${text} `
 
     const { p } = this
@@ -645,7 +734,7 @@ export const Visuals = {
     p.noStroke()
     p.fill(this.randomColor(100))
 
-    this.drawTicker({ text: 'GAME OVER', fg: THEME.red })
+    this.drawGameOverTicker({ text: 'GAME OVER', fg: THEME.red })
 
     if (this.showPlayAgain) {
       this.drawFatButton({
