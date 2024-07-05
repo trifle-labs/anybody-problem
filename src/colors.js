@@ -13,13 +13,23 @@ export const THEME = {
   bg: 'rgb(20,20,20)',
   fg: 'white',
   bodiesTheme: 'default',
+  border: iris_60,
+  // colors
+  lime: 'rgba(125, 241, 115, 1)',
   pink: 'rgba(236, 205, 255, 1)',
   fuschia: 'rgba(160, 67, 232, 1)',
   red: 'rgba(255, 88, 88, 1)',
   maroon: 'rgba(53, 20, 20, 1)',
-  border: iris_60,
-  foreground: iris_60,
-  mutedForeground: iris_30
+  iris_30,
+  iris_60,
+  teal_50,
+  teal_75,
+  flame_50,
+  flame_75,
+  pink_50,
+  pink_75,
+  green_50,
+  green_75
 }
 
 // [hue, saturation, lightness]

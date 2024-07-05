@@ -522,10 +522,22 @@ export const Visuals = {
     this.p.image(this.bodiesGraphic, 0, 0, 800, 800)
     this.bodiesGraphic.clear()
 
-    // draw stats
-    p.textSize(48)
+    // upper box text
+    p.textSize(32)
+    p.noStroke()
     p.textFont(fonts.body)
-    p.fill(THEME.mutedForeground)
+    p.fill(THEME.iris_60)
+
+    // upper box text - labels
+    p.text('problem', 330, 132)
+    p.text('solver', 330, 192)
+
+    // upper box text - values
+    p.textSize(54)
+    p.fill(THEME.iris_30)
+    p.text('JAN-01-2024', 454, 114)
+    p.text('okwme.eth', 454, 174)
+
     for (const [i, line] of this.statsText.split('\n').entries()) {
       // print each stat line with left aligned label, right aligned stat
       if (line.match(/1x/)) {
