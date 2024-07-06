@@ -180,3 +180,8 @@ export function randHSL(ranges, rand) {
 
   return [h, s, l]
 }
+
+export function rgbaOpacity(color, opacity) {
+  const [r, g, b] = color.split(',').map((s) => Number(s.replace(/\D/g, '')))
+  return `rgba(${r}, ${g}, ${b}, ${opacity})`
+}

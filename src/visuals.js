@@ -487,6 +487,7 @@ export const Visuals = {
     p.fill('white')
 
     // logo at top
+    if (!fonts.dot) return
     p.textFont(fonts.dot)
     p.fill(THEME.pink)
     p.textSize(60)
@@ -510,28 +511,10 @@ export const Visuals = {
       p.rect(gutter, 796, this.windowWidth - gutter * 2, 64, 24)
     }
 
-    // draw hero this.bodies[0]
-    const body = this.getDisplayHero()
-    const radius = this.getBodyRadius(body.radius)
-    const xWobble = p.sin(p.frameCount / this.P5_FPS) * (5 + body.bodyIndex)
-    const yWobble =
-      p.cos(p.frameCount / this.P5_FPS + body.bodyIndex * 3) *
-      (6 + body.bodyIndex)
-    body.position = {
-      x: p.map(scale, 0, 1, -140, 210) + xWobble,
-      y: 220 + yWobble
-    }
-    this.bodiesGraphic ||= this.p.createGraphics(
-      this.windowWidth,
-      this.windowHeight
-    )
-    this.drawBodiesLooped(body, radius, this.drawBody)
-    p.image(this.bodiesGraphic, 0, 0, 800, 800)
-    this.bodiesGraphic.clear()
-
     // upper box text
     p.textSize(32)
     p.noStroke()
+    if (!fonts.body) return
     p.textFont(fonts.body)
     p.fill(THEME.iris_60)
 
@@ -574,19 +557,11 @@ export const Visuals = {
     const problemComplete = levelTimes.length >= LEVELS
     const rowHeight = 72
 
-    const bestTime = 20.68
-    const levelTimeSum = levelTimes.reduce((a, b) => a + b, 0)
-    const sumLine = [
-      levelTimeSum.toFixed(2),
-      bestTime.toFixed(2),
-      (levelTimeSum - bestTime).toFixed(2)
-    ]
-
-    // middle box text - highlight current
+    // middle box text - highlight current row
     p.fill('rgba(146, 118, 255, 0.2)')
     p.rect(
       gutter,
-      middleBoxY + levelTimes.length * rowHeight,
+      middleBoxY + (levelTimes.length - 1) * rowHeight,
       this.windowWidth - gutter * 2,
       rowHeight
     )
@@ -623,6 +598,11 @@ export const Visuals = {
     }
     for (let i = 0; i < LEVELS; i++) {
       const diff = plusMinus[i] || '-'
+      if (i === levelTimes.length - 1) {
+        p.fill(/^-/.test(diff) ? THEME.lime : THEME.flame_50)
+      } else {
+        p.fill(/^-/.test(diff) ? THEME.green_75 : THEME.flame_75)
+      }
       p.text(
         diff,
         col3X,
@@ -632,6 +612,15 @@ export const Visuals = {
       )
     }
     p.textSize(64)
+
+    // middle box text - sum line
+    const bestTime = 20.68
+    const levelTimeSum = levelTimes.reduce((a, b) => a + b, 0)
+    const sumLine = [
+      levelTimeSum.toFixed(2),
+      bestTime.toFixed(2),
+      (levelTimeSum - bestTime).toFixed(2)
+    ]
     const sumLineY = middleBoxY + rowHeight * bestTimes.length + rowHeight / 2
     const sumLineHeight = 80
     p.textAlign(p.LEFT, p.CENTER)
@@ -640,18 +629,72 @@ export const Visuals = {
     p.textAlign(p.RIGHT, p.CENTER)
     for (const [i, col] of [col1X, col2X, col3X].entries()) {
       if (i == 0) p.fill('white')
+      else if (i == 1) p.fill(THEME.iris_60)
+      else p.fill(/^-/.test(sumLine[i]) ? THEME.lime : THEME.flame_75)
       p.text(sumLine[i], col, sumLineY, 150, sumLineHeight)
     }
+
     p.pop()
     // end middle box text
 
+    // draw hero this.bodies[0]
+    const body = this.getDisplayHero()
+    const radius = this.getBodyRadius(body.radius)
+    const xWobble = p.sin(p.frameCount / this.P5_FPS) * (5 + body.bodyIndex)
+    const yWobble =
+      p.cos(p.frameCount / this.P5_FPS + body.bodyIndex * 3) *
+      (6 + body.bodyIndex)
+    body.position = {
+      x: p.map(scale, 0, 1, -140, 170) + xWobble,
+      y: 180 + yWobble
+    }
+    this.bodiesGraphic ||= this.p.createGraphics(
+      this.windowWidth,
+      this.windowHeight
+    )
+    this.drawBodiesLooped(body, radius, this.drawBody)
+
+    // begin middle box baddie body pyramid
+    this.winScreenBadies ||= this.getDisplayBaddies()
+    const baddies = this.winScreenBadies
+    for (let i = 0; i < baddies.length; i++) {
+      const row = baddies[i]
+      for (let j = 0; j < row.length; j++) {
+        const body = row[j]
+        body.position = this.createVector(
+          64 + j * 72,
+          middleBoxY + i * rowHeight + rowHeight / 2
+        )
+        body.velocity = this.createVector(0, 1)
+        body.radius = 6.5
+        this.drawBodiesLooped(body, 3, this.drawBody)
+      }
+    }
+
+    p.image(this.bodiesGraphic, 0, 0)
+    this.bodiesGraphic.clear()
+
     // overlay transparent black box to dim past last levelTimes
-    p.fill('rgba(0,0,0,0.4)')
+    p.fill('rgba(0,0,0,0.6)')
     p.rect(
       gutter,
       middleBoxY + rowHeight * levelTimes.length,
       this.windowWidth - gutter * 2,
       rowHeight * (LEVELS - levelTimes.length)
+    )
+
+    // bottom box ticker text
+    this.winTickerGraphic ||= this.p.createGraphics(
+      this.windowWidth,
+      this.windowHeight
+    )
+    p.textAlign(p.LEFT, p.TOP)
+    p.textSize(32)
+    p.fill(THEME.iris_30)
+    p.text(
+      'NICE JOB!!!!    Keep going!!!   Solve this problem and climb the leaderboard.',
+      44,
+      811
     )
 
     // bottom buttons
@@ -700,7 +743,31 @@ export const Visuals = {
     )
     bodyCopy.position = this.p.createVector(body.position.x, body.position.y)
     bodyCopy.velocity = this.p.createVector(body.velocity.x, body.velocity.y)
+    bodyCopy.radius = 30
     return bodyCopy
+  },
+
+  getDisplayBaddies() {
+    const baddies = []
+    const body = this.bodies[this.bodies.length - 1]
+    if (!body) return []
+    const str = JSON.stringify(body)
+    for (let i = 0; i < LEVELS; i++) {
+      baddies.push([])
+      for (let j = 0; j < i + 1; j++) {
+        const bodyCopy = JSON.parse(str)
+        bodyCopy.position = this.p.createVector(
+          body.position.x,
+          body.position.y
+        )
+        bodyCopy.velocity = this.p.createVector(
+          body.velocity.x,
+          body.velocity.y
+        )
+        baddies[i].push(body)
+      }
+    }
+    return baddies
   },
 
   drawGameOverTicker({ text, bottom = false, fg }) {
@@ -1028,7 +1095,10 @@ export const Visuals = {
     // y-offset of face relative to center
     // const offset = this.getOffset(radius)
 
-    if (body.bodyIndex === 0 || (this.paused && body.bodyIndex < 3)) {
+    if (
+      body.bodyIndex === 0 ||
+      (!this.gameOver && this.paused && body.bodyIndex < 3)
+    ) {
       // draw hero
       const size = Math.floor(body.radius * BODY_SCALE * 2.66)
 

@@ -222,7 +222,7 @@ export class Anybody extends EventEmitter {
     this.p5Frames = 0
     this.showIt = true
     this.justStopped = false
-    this.gameOver = true
+    this.gameOver = false
     this.firstFrame = true
     this.loaded = false
     this.showPlayAgain = false
