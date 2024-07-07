@@ -233,6 +233,11 @@ export class Anybody extends EventEmitter {
     this.won = false
     this.finalBatchSent = false
     this.solved = false
+
+    // uncomment to work on the game over screen
+    // setTimeout(() => {
+    //   this.handleGameOver({ won: true })
+    // }, 500)
   }
 
   // run once at initilization

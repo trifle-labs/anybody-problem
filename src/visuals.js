@@ -453,7 +453,13 @@ export const Visuals = {
       this.scoreSize = this.initialScoreSize
       p.pop()
       this.won ? this.drawWinScreen() : this.drawLoseScreen()
-      return
+      if (!this.celebrating) return
+    }
+
+    // flash the score red and white
+    if (this.won) {
+      const flash = Math.floor(this.frames / 10) % 2 == 0
+      p.fill(flash ? THEME.red : 'white')
     }
 
     p.textFont(fonts.body)
@@ -466,8 +472,6 @@ export const Visuals = {
   },
 
   drawWinScreen() {
-    const { p } = this
-
     const justEntered = this.winScreenLastVisibleFrame !== this.p5Frames - 1
     if (justEntered) {
       this.winScreenVisibleForFrames = 0
@@ -475,11 +479,38 @@ export const Visuals = {
     this.winScreenVisibleForFrames++
     this.winScreenLastVisibleFrame = this.p5Frames
 
+    const celebrationTime = 6 // seconds
+    this.celebrating =
+      this.winScreenVisibleForFrames / this.P5_FPS < celebrationTime
+
+    if (this.celebrating) {
+      this.drawGameOverTicker({
+        text: '                 YAYYYYYYYYYYY',
+        bottom: true,
+        fg: THEME.iris_30
+      })
+    } else {
+      this.drawStatsScreen()
+    }
+  },
+
+  drawStatsScreen() {
+    const { p } = this
+
+    const justEntered = this.statsScreenLastVisibleFrame !== this.p5Frames - 1
+    if (justEntered) {
+      this.statsScreenVisibleForFrames = 0
+      this.P5_FPS = this.FPS * this.P5_FPS_MULTIPLIER
+      this.p.frameRate(this.P5_FPS)
+    }
+    this.statsScreenVisibleForFrames++
+    this.statsScreenLastVisibleFrame = this.p5Frames
+
     const entranceTime = 0.4 // seconds
 
     const scale = Math.min(
       1,
-      this.winScreenVisibleForFrames / (entranceTime * this.P5_FPS)
+      this.statsScreenVisibleForFrames / (entranceTime * this.P5_FPS)
     )
 
     p.push()
