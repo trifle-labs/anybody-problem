@@ -161,6 +161,7 @@ export class Anybody extends EventEmitter {
       target: 'inside', // 'outside' or 'inside'
       faceRotation: 'mania', // 'time' or 'hitcycle' or 'mania'
       sfx: 'bubble', // 'space' or 'bubble'
+      owner: 'billyrennekamp.eth',
       ownerPresent: false
     }
     // Merge the default options with the provided options
@@ -233,6 +234,11 @@ export class Anybody extends EventEmitter {
     this.finalBatchSent = false
     this.solved = false
     this.date = new Date().toLocaleDateString()
+
+    // uncomment to work on the game over screen
+    // setTimeout(() => {
+    //   this.handleGameOver({ won: true })
+    // }, 500)
   }
 
   // run once at initilization
@@ -385,6 +391,7 @@ export class Anybody extends EventEmitter {
       }
     }
 
+    if (this.paused || this.gameOver) return
     this.missileClick(x, y)
   }
 
@@ -804,6 +811,7 @@ export class Anybody extends EventEmitter {
   }
 
   missileClick(x, y) {
+    if (this.gameOver) return
     if (this.paused) {
       this.setPause(false)
       return

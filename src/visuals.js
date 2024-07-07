@@ -1,9 +1,11 @@
 import { hslToRgb, THEME } from './colors.js'
 import { fonts, drawKernedText } from './fonts.js'
+import { themes } from './colors.js'
 
 const BODY_SCALE = 4 // match to calculations.js !!
 const WITHERING_STEPS = 3000
 const GAME_LENGTH_BY_LEVEL_INDEX = [10, 20, 30, 40, 50]
+const LEVELS = GAME_LENGTH_BY_LEVEL_INDEX.length
 
 const rot = {
   fg: {
@@ -178,7 +180,7 @@ export const Visuals = {
 
     if (!this.paused) {
       this.drawBodies()
-    } else {
+    } else if (!this.gameOver) {
       this.drawPauseBodies()
     }
 
@@ -200,6 +202,7 @@ export const Visuals = {
     }
 
     this.drawPause()
+    this.drawScore()
 
     if (
       this.mode == 'game' &&
@@ -210,8 +213,6 @@ export const Visuals = {
       this.drawMissiles()
     }
     this.drawExplosions()
-
-    this.drawScore()
 
     const notPaused = !this.paused
     const framesIsAtStopEveryInterval =
@@ -252,12 +253,12 @@ export const Visuals = {
     if (!(this.paused && fonts.dot)) return
 
     const { p } = this
+
+    // draw logo
     p.textFont(fonts.dot)
     p.fill(THEME.pink)
     p.textSize(200)
     p.textAlign(p.LEFT, p.TOP)
-
-    // draw logo
     p.noStroke()
     const titleY = this.windowHeight / 2 - 270
     drawKernedText(p, 'Anybody', 46, titleY, 0.8)
@@ -474,7 +475,13 @@ export const Visuals = {
       this.scoreSize = this.initialScoreSize
       p.pop()
       this.won ? this.drawWinScreen() : this.drawLoseScreen()
-      return
+      if (!this.celebrating) return
+    }
+
+    // flash the score red and white
+    if (this.won) {
+      const flash = Math.floor(this.frames / 10) % 2 == 0
+      p.fill(flash ? THEME.red : 'white')
     }
 
     p.textFont(fonts.body)
@@ -487,64 +494,336 @@ export const Visuals = {
   },
 
   drawWinScreen() {
+    const justEntered = this.winScreenLastVisibleFrame !== this.p5Frames - 1
+    if (justEntered) {
+      this.winScreenVisibleForFrames = 0
+    }
+    this.winScreenVisibleForFrames++
+    this.winScreenLastVisibleFrame = this.p5Frames
+
+    const celebrationTime = 6 // seconds
+    this.celebrating =
+      this.winScreenVisibleForFrames / this.P5_FPS < celebrationTime
+
+    if (this.celebrating) {
+      this.drawGameOverTicker({
+        text: '                 YAYYYYYYYYYYY',
+        bottom: true,
+        fg: THEME.iris_30
+      })
+    } else {
+      this.drawStatsScreen()
+    }
+  },
+
+  drawStatsScreen() {
     const { p } = this
+
+    const justEntered = this.statsScreenLastVisibleFrame !== this.p5Frames - 1
+    if (justEntered) {
+      this.statsScreenVisibleForFrames = 0
+      this.P5_FPS = this.FPS * this.P5_FPS_MULTIPLIER
+      this.p.frameRate(this.P5_FPS)
+    }
+    this.statsScreenVisibleForFrames++
+    this.statsScreenLastVisibleFrame = this.p5Frames
+
+    const entranceTime = 0.4 // seconds
+
+    const scale = Math.min(
+      1,
+      this.statsScreenVisibleForFrames / (entranceTime * this.P5_FPS)
+    )
+
     p.push()
     p.noStroke()
     p.fill('white')
 
-    p.textSize(128)
-    p.textAlign(p.CENTER, p.TOP)
-    p.text('SUCCESS', this.windowWidth / 2 - 8, 190) // adjust by 8 to center SF Pro weirdness
+    // logo at top
+    if (!fonts.dot) return
+    p.textFont(fonts.dot)
+    p.fill(THEME.pink)
+    p.textSize(60)
+    p.textAlign(p.LEFT, p.TOP)
+    const logoY = p.map(scale, 0, 1, -100, 22)
+    drawKernedText(p, 'Anybody', 334, logoY, 0.8)
+    drawKernedText(p, 'Problem', 640, logoY, 2)
 
-    // draw a white box behind the stats, with border radius
-    p.fill('white')
-    p.rect(this.windowWidth / 2 - 320, 340, 640, 350, 20, 20, 20, 20)
-
-    // draw stats
-    p.textSize(48)
-    p.textStyle(p.BOLD)
+    // bordered boxes
     p.fill('black')
-    for (const [i, line] of this.statsText.split('\n').entries()) {
-      // print each stat line with left aligned label, right aligned stat
-      if (line.match(/1x/)) {
-        // gray text if 1x multiplier
-        p.fill('rgba(0,0,0,0.3)')
-        p.fill('black')
-      } else {
-        p.fill('black')
-      }
-      // last line has a bar on top
-      const leading = 64
-      let barPadding = 0
-      const xLeft = this.windowWidth / 2 - 300
-      const xRight = this.windowWidth / 2 + 300
-      const y = 374 + leading * i
+    p.stroke(THEME.border)
+    p.strokeWeight(1)
+    const gutter = 24
+    const middleBoxY = 320
+    p.rect(gutter, 104, this.windowWidth - gutter * 2, 144, 24)
 
-      for (const [j, stat] of line.split(':').entries()) {
-        if (j === 0) {
-          p.textAlign(p.LEFT, p.TOP)
-          p.text(stat, xLeft, y + barPadding)
-        } else {
-          p.textAlign(p.RIGHT, p.TOP)
-          p.text(stat, xRight, y + barPadding)
-        }
+    if (this.showShare) {
+      p.rect(gutter, 320, this.windowWidth - gutter * 2, 524, 24)
+    } else {
+      p.rect(gutter, 320, this.windowWidth - gutter * 2, 444, 24)
+      p.rect(gutter, 796, this.windowWidth - gutter * 2, 64, 24)
+    }
+
+    // upper box text
+    p.textSize(32)
+    p.noStroke()
+    if (!fonts.body) return
+    p.textFont(fonts.body)
+    p.fill(THEME.iris_60)
+
+    // upper box text - labels
+    p.text('problem', 330, 132)
+    p.text('solver', 330, 192)
+
+    // upper box text - values
+    p.textSize(54)
+    p.fill(THEME.iris_30)
+    p.text('JAN-01-2024', 454, 114)
+    p.text('okwme.eth', 454, 174)
+    // end upper box text
+
+    // middle box text
+    p.textSize(48)
+    p.fill(THEME.iris_60)
+    p.textAlign(p.RIGHT, p.TOP)
+    const col1X = 580
+    const col2X = 770
+    const col3X = 960
+
+    // middle box text - labels
+    p.text('time', col1X, 264)
+    p.text('best', col2X, 264)
+    p.text('+/-', col3X, 264)
+
+    // middle box text - values
+    const levelTimes = [1.32, 2.5, 13.54]
+    const bestTimes = [1.45, 2.44, 16.79, 23.45, 36.45]
+    const plusMinus = bestTimes
+      .map((best, i) => {
+        if (i >= levelTimes.length) return ''
+        const time = levelTimes[i]
+        const diff = time - best
+        const sign = diff > 0 ? '+' : ''
+        return sign + diff.toFixed(2)
+      })
+      .filter(Boolean)
+    const problemComplete = levelTimes.length >= LEVELS
+    const rowHeight = 72
+
+    // middle box text - highlight current row
+    p.fill('rgba(146, 118, 255, 0.2)')
+    p.rect(
+      gutter,
+      middleBoxY + (levelTimes.length - 1) * rowHeight,
+      this.windowWidth - gutter * 2,
+      rowHeight
+    )
+
+    // middle box text - value text
+    p.push()
+    p.textAlign(p.RIGHT, p.CENTER)
+    p.textSize(44)
+    // const middleBoxPadding = 12
+    // p.translate(0, middleBoxPadding)
+    for (let i = 0; i < LEVELS; i++) {
+      const time = i < levelTimes.length ? levelTimes[i].toFixed(2) : '-'
+      const light = i % 2 == 0
+      p.fill(light ? THEME.iris_30 : THEME.iris_60)
+      p.text(
+        time,
+        col1X,
+        middleBoxY + rowHeight * i + rowHeight / 2,
+        150,
+        rowHeight
+      )
+    }
+    for (let i = 0; i < LEVELS; i++) {
+      const best = i < bestTimes.length ? bestTimes[i] : '-'
+      const light = i % 2 == 1 && i < levelTimes.length
+      p.fill(light ? THEME.iris_30 : THEME.iris_60)
+      p.text(
+        best.toFixed(2),
+        col2X,
+        middleBoxY + rowHeight * i + rowHeight / 2,
+        150,
+        rowHeight
+      )
+    }
+    for (let i = 0; i < LEVELS; i++) {
+      const diff = plusMinus[i] || '-'
+      if (i === levelTimes.length - 1) {
+        p.fill(/^-/.test(diff) ? THEME.lime : THEME.flame_50)
+      } else {
+        p.fill(/^-/.test(diff) ? THEME.green_75 : THEME.flame_75)
+      }
+      p.text(
+        diff,
+        col3X,
+        middleBoxY + rowHeight * i + rowHeight / 2,
+        150,
+        rowHeight
+      )
+    }
+    p.textSize(64)
+
+    // middle box text - sum line
+    const bestTime = 20.68
+    const levelTimeSum = levelTimes.reduce((a, b) => a + b, 0)
+    const sumLine = [
+      levelTimeSum.toFixed(2),
+      bestTime.toFixed(2),
+      (levelTimeSum - bestTime).toFixed(2)
+    ]
+    const sumLineY = middleBoxY + rowHeight * bestTimes.length + rowHeight / 2
+    const sumLineHeight = 80
+    p.textAlign(p.LEFT, p.CENTER)
+    p.fill(THEME.iris_30)
+    p.text(problemComplete ? 'solved in' : 'current time', 44, sumLineY)
+    p.textAlign(p.RIGHT, p.CENTER)
+    for (const [i, col] of [col1X, col2X, col3X].entries()) {
+      if (i == 0) p.fill('white')
+      else if (i == 1) p.fill(THEME.iris_60)
+      else p.fill(/^-/.test(sumLine[i]) ? THEME.lime : THEME.flame_75)
+      p.text(sumLine[i], col, sumLineY, 150, sumLineHeight)
+    }
+
+    p.pop()
+    // end middle box text
+
+    // draw hero this.bodies[0]
+    const body = this.getDisplayHero()
+    const radius = this.getBodyRadius(body.radius)
+    const xWobble = p.sin(p.frameCount / this.P5_FPS) * (5 + body.bodyIndex)
+    const yWobble =
+      p.cos(p.frameCount / this.P5_FPS + body.bodyIndex * 3) *
+      (6 + body.bodyIndex)
+    body.position = {
+      x: p.map(scale, 0, 1, -140, 170) + xWobble,
+      y: 180 + yWobble
+    }
+    this.bodiesGraphic ||= this.p.createGraphics(
+      this.windowWidth,
+      this.windowHeight
+    )
+    this.drawBodiesLooped(body, radius, this.drawBody)
+
+    // begin middle box baddie body pyramid
+    this.winScreenBadies ||= this.getDisplayBaddies()
+    const baddies = this.winScreenBadies
+    for (let i = 0; i < baddies.length; i++) {
+      const row = baddies[i]
+      for (let j = 0; j < row.length; j++) {
+        const body = row[j]
+        body.position = this.createVector(
+          64 + j * 72,
+          middleBoxY + i * rowHeight + rowHeight / 2
+        )
+        body.velocity = this.createVector(0, 1)
+        body.radius = 6.5
+        this.drawBodiesLooped(body, 3, this.drawBody)
       }
     }
 
-    // play again button
-    if (this.showPlayAgain) {
-      this.drawFatButton({
-        text: 'RETRY',
+    p.image(this.bodiesGraphic, 0, 0)
+    this.bodiesGraphic.clear()
+
+    // overlay transparent black box to dim past last levelTimes
+    p.fill('rgba(0,0,0,0.6)')
+    p.rect(
+      gutter,
+      middleBoxY + rowHeight * levelTimes.length,
+      this.windowWidth - gutter * 2,
+      rowHeight * (LEVELS - levelTimes.length)
+    )
+
+    // bottom box ticker text
+    this.winTickerGraphic ||= this.p.createGraphics(
+      this.windowWidth,
+      this.windowHeight
+    )
+    p.textAlign(p.LEFT, p.TOP)
+    p.textSize(32)
+    p.fill(THEME.iris_30)
+    p.text(
+      'NICE JOB!!!!    Keep going!!!   Solve this problem and climb the leaderboard.',
+      44,
+      811
+    )
+
+    // bottom buttons
+    const buttonCount = this.showShare ? 4 : 3
+    this.drawBottomButton({
+      text: 'RETRY',
+      onClick: () => this.restart(null, false),
+      ...themes.buttons.teal,
+      columns: buttonCount,
+      column: 0
+    })
+    this.drawBottomButton({
+      text: 'RESTART',
+      onClick: () => this.restart(null, false),
+      ...themes.buttons.flame,
+      columns: buttonCount,
+      column: 1
+    })
+    if (this.showShare) {
+      this.drawBottomButton({
+        text: 'SHARE',
         onClick: () => this.restart(null, false),
-        fg: 'black',
-        bg: 'white'
+        ...themes.buttons.pink,
+        columns: buttonCount,
+        column: 2
       })
     }
+    this.drawBottomButton({
+      text: 'NEXT',
+      onClick: () => this.restart(null, false),
+      ...themes.buttons.green,
+      columns: buttonCount,
+      column: buttonCount - 1
+    })
 
     p.pop()
   },
 
-  drawTicker({ text, bottom = false, fg }) {
+  getDisplayHero() {
+    const body = this.bodies[0]
+    const bodyCopy = JSON.parse(
+      JSON.stringify(
+        body,
+        (key, value) => (typeof value === 'bigint' ? value.toString() : value) // return everything else unchanged
+      )
+    )
+    bodyCopy.position = this.p.createVector(body.position.x, body.position.y)
+    bodyCopy.velocity = this.p.createVector(body.velocity.x, body.velocity.y)
+    bodyCopy.radius = 30
+    return bodyCopy
+  },
+
+  getDisplayBaddies() {
+    const baddies = []
+    const body = this.bodies[this.bodies.length - 1]
+    if (!body) return []
+    const str = JSON.stringify(body)
+    for (let i = 0; i < LEVELS; i++) {
+      baddies.push([])
+      for (let j = 0; j < i + 1; j++) {
+        const bodyCopy = JSON.parse(str)
+        bodyCopy.position = this.p.createVector(
+          body.position.x,
+          body.position.y
+        )
+        bodyCopy.velocity = this.p.createVector(
+          body.velocity.x,
+          body.velocity.y
+        )
+        baddies[i].push(body)
+      }
+    }
+    return baddies
+  },
+
+  drawGameOverTicker({ text, bottom = false, fg }) {
     const doubleText = `${text} ${text} `
 
     const { p } = this
@@ -575,7 +854,7 @@ export const Visuals = {
     p.noStroke()
     p.fill(this.randomColor(100))
 
-    this.drawTicker({ text: 'GAME OVER', fg: THEME.red })
+    this.drawGameOverTicker({ text: 'GAME OVER', fg: THEME.red })
 
     if (this.showPlayAgain) {
       this.drawFatButton({
@@ -628,7 +907,7 @@ export const Visuals = {
       this.scaleX(this.p.mouseY) + crossHairSize
     )
 
-    if (this.paused) return
+    if (this.paused || this.gameOver) return
 
     // Draw the line
     const drawingContext = this.p.canvas.getContext('2d')
@@ -869,7 +1148,10 @@ export const Visuals = {
     // y-offset of face relative to center
     // const offset = this.getOffset(radius)
 
-    if (body.bodyIndex === 0 || (this.paused && body.bodyIndex < 3)) {
+    if (
+      body.bodyIndex === 0 ||
+      (!this.gameOver && this.paused && body.bodyIndex < 3)
+    ) {
       // draw hero
       const size = Math.floor(body.radius * BODY_SCALE * 2.66)
 
