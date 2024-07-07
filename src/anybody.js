@@ -234,6 +234,7 @@ export class Anybody extends EventEmitter {
     this.finalBatchSent = false
     this.solved = false
     this.date = new Date().toLocaleDateString()
+    // this.framesTook = false
 
     // uncomment to work on the game over screen
     // setTimeout(() => {

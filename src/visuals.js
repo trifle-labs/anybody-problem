@@ -467,7 +467,7 @@ export const Visuals = {
     p.textAlign(p.LEFT, p.TOP)
 
     const runningFrames = this.frames - this.startingFrame
-    const seconds = runningFrames / this.FPS
+    const seconds = (this.framesTook || runningFrames) / this.FPS
     const secondsLeft =
       (this.level > 5 ? 60 : GAME_LENGTH_BY_LEVEL_INDEX[this.level - 1]) -
       seconds
