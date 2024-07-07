@@ -14,7 +14,6 @@ export const Buttons = {
     fgHover = 'rgba(160, 67, 232, 0.3)'
   }) {
     const { p } = this
-    this.p.textFont(fonts.dot)
 
     // register the button if it's not registered
     const key = `${text}-${x}-${y}-${height}-${width}`
@@ -43,7 +42,7 @@ export const Buttons = {
 
     p.push()
     p.noStroke()
-    p.textSize(textSize)
+    p.textSize(textSize * scale)
     p.strokeWeight(button.active ? 1 : 4)
     p.fill(bg)
 
@@ -59,7 +58,8 @@ export const Buttons = {
       p.rect(x, y, width, height, height / 2)
     }
 
-    if (scale === 1) {
+    if (scale >= 0.3 && fonts.dot) {
+      p.textFont(fonts.dot)
       p.fill(fg)
       p.textAlign(p.CENTER, p.CENTER)
       p.text(
