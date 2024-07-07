@@ -12,10 +12,9 @@ export const Buttons = {
     onClick,
     fg = 'black',
     bg = 'white',
-    fgHover = 'rgba(160, 67, 232, 0.3)'
+    fgHover = 'rgba(160, 67, 232, 0.3)',
+    p = this.p
   }) {
-    const { p } = this
-
     // register the button if it's not registered
     const key = `${text}-${x}-${y}-${height}-${width}`
     let button = this.buttons[key]

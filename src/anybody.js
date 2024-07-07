@@ -498,18 +498,23 @@ export class Anybody extends EventEmitter {
   }
 
   setPause(newPauseState = !this.paused, mute = false) {
+    if (typeof newPauseState !== 'boolean') {
+      newPauseState = !this.paused
+    }
+
     if (newPauseState) {
       this.pauseBodies = PAUSE_BODY_DATA.map(this.bodyDataToBodies.bind(this))
       this.pauseBodies[1].c = this.getBodyColor(0)
       this.pauseBodies[2].c = this.getBodyColor(0)
+      this.paused = newPauseState
+      this.willUnpause = false
+      delete this.beganUnpauseAt
+    } else {
+      this.justPaused = true
+      this.willUnpause = true
     }
 
-    if (typeof newPauseState !== 'boolean') {
-      newPauseState = !this.paused
-    }
-    this.paused = newPauseState
-    this.justPaused = true
-    this.emit('paused', this.paused)
+    this.emit('paused', newPauseState)
     if (newPauseState) {
       if (!mute) this.sound?.pause()
     } else {
