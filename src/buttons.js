@@ -1,3 +1,4 @@
+import { rgbaOpacity } from './colors.js'
 import { fonts } from './fonts.js'
 
 export const Buttons = {
@@ -55,6 +56,11 @@ export const Buttons = {
     )
     if (button.hover) {
       p.fill(fgHover)
+      p.rect(x, y, width, height, height / 2)
+    }
+
+    if (button.active) {
+      p.fill(rgbaOpacity(bg, 0.3))
       p.rect(x, y, width, height, height / 2)
     }
 
