@@ -273,7 +273,7 @@ export const Visuals = {
     } else if (this.willUnpause) {
       // fade text out
       const fadeOutFrames = (unpauseFrames / 4) * 3
-      const fadeOutStart = this.beganUnpauseAt + unpauseFrames - fadeOutFrames
+      const fadeOutStart = this.beganUnpauseAt
       const fadeOutProgress = this.p5Frames - fadeOutStart
       const fadeOut = this.p.map(fadeOutProgress, 0, fadeOutFrames, 1, 0)
       p.fill(rgbaOpacity(THEME.pink, fadeOut))
@@ -1314,6 +1314,7 @@ export const Visuals = {
   },
 
   async drawBodies(attachToCanvas = true) {
+    if (this.gameOver && !this.celebrating) return
     this.bodiesGraphic ||= this.p.createGraphics(
       this.windowWidth,
       this.windowHeight
