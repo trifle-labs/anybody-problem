@@ -1314,7 +1314,7 @@ export const Visuals = {
   },
 
   async drawBodies(attachToCanvas = true) {
-    if (this.gameOver && !this.celebrating) return
+    if (this.won && !this.celebrating) return
     this.bodiesGraphic ||= this.p.createGraphics(
       this.windowWidth,
       this.windowHeight
