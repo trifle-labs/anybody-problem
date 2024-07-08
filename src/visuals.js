@@ -534,7 +534,7 @@ export const Visuals = {
     this.winScreenVisibleForFrames++
     this.winScreenLastVisibleFrame = this.p5Frames
 
-    const celebrationTime = 0 // seconds
+    const celebrationTime = 3 // seconds
     this.celebrating =
       this.winScreenVisibleForFrames / this.P5_FPS < celebrationTime
 
@@ -619,7 +619,7 @@ export const Visuals = {
       .replace(', ', '-')
       .replace(' ', '-')
     p.text(formattedDate, 454, 114)
-    p.text(this.ens || this.address || 'YOU', 454, 174)
+    p.text(this.owner, 454, 174)
     // end upper box text
 
     // middle box text

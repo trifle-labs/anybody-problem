@@ -162,7 +162,7 @@ export class Anybody extends EventEmitter {
       target: 'inside', // 'outside' or 'inside'
       faceRotation: 'mania', // 'time' or 'hitcycle' or 'mania'
       sfx: 'bubble', // 'space' or 'bubble'
-      owner: 'billyrennekamp.eth',
+      owner: 'YOU',
       ownerPresent: false,
       bestTimes: null
     }
