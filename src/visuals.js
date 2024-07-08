@@ -1211,7 +1211,7 @@ export const Visuals = {
     // }
   },
 
-  drawBody(x, y, v, radius, body, backgroundOnly = false) {
+  drawBody(x, y, v, radius, body) {
     const graphic = body.graphic || this.bodiesGraphic
     this.moveAndRotate_PopAfter(graphic, x, y, v)
 
@@ -1223,15 +1223,15 @@ export const Visuals = {
       const size = Math.floor(body.radius * BODY_SCALE * 2.66)
 
       this.drawStarBackgroundSvg(size, body)
-      if (!backgroundOnly) {
+      if (!body.backgroundOnly) {
         this.drawCoreSvg(body.radius * BODY_SCALE, body)
       }
       this.drawStarForegroundSvg(size, body)
-      if (!backgroundOnly) {
+      if (!body.backgroundOnly) {
         this.drawFaceSvg(body, size)
       }
     } else {
-      this.drawBaddie(body, backgroundOnly)
+      this.drawBaddie(body)
     }
 
     graphic.pop()
@@ -1242,6 +1242,7 @@ export const Visuals = {
   },
 
   drawBodiesLooped(body, radius, drawFunction) {
+    body.backgroundOnly = false
     drawFunction = drawFunction.bind(this)
     drawFunction(body.position.x, body.position.y, body.velocity, radius, body)
 
@@ -1251,33 +1252,34 @@ export const Visuals = {
       loopX = body.position.x,
       loopY = body.position.y
     const loopGap = radius * 1.5
+    body.backgroundOnly = true
     // crosses right, draw on left
     if (body.position.x > this.windowWidth - loopGap) {
       loopedX = true
       loopX = body.position.x - this.windowWidth
-      drawFunction(loopX, body.position.y, body.velocity, radius, body, true)
+      drawFunction(loopX, body.position.y, body.velocity, radius, body)
       // crosses left, draw on right
     } else if (body.position.x < loopGap) {
       loopedX = true
       loopX = body.position.x + this.windowWidth
-      drawFunction(loopX, body.position.y, body.velocity, radius, body, true)
+      drawFunction(loopX, body.position.y, body.velocity, radius, body)
     }
 
     // crosses bottom, draw on top
     if (body.position.y > this.windowHeight - loopGap) {
       loopedY = true
       loopY = body.position.y - this.windowHeight
-      drawFunction(body.position.x, loopY, body.velocity, radius, body, true)
+      drawFunction(body.position.x, loopY, body.velocity, radius, body)
       // crosses top, draw on bottom
     } else if (body.position.y < loopGap) {
       loopedY = true
       loopY = body.position.y + this.windowHeight
-      drawFunction(body.position.x, loopY, body.velocity, radius, body, true)
+      drawFunction(body.position.x, loopY, body.velocity, radius, body)
     }
 
     // crosses corner, draw opposite corner
     if (loopedX && loopedY) {
-      drawFunction(loopX, loopY, body.velocity, radius, body, true)
+      drawFunction(loopX, loopY, body.velocity, radius, body)
     }
   },
 
@@ -1487,7 +1489,7 @@ export const Visuals = {
     return `hsla(${cc.join(',')})`
   },
 
-  drawBaddie(body, backgroundOnly) {
+  drawBaddie(body) {
     const graphic = body.graphic || this.bodiesGraphic
     const colorHSL = body.c
     const coreWidth = body.radius * BODY_SCALE
@@ -1505,7 +1507,7 @@ export const Visuals = {
     graphic.push()
     graphic.rotate(-rotate + body.velocity.heading() + this.p.PI / 2)
     this.drawImageAsset(BADDIE_SVG.core, coreWidth, coreColor, graphic)
-    if (!backgroundOnly) {
+    if (!body.backgroundOnly) {
       this.drawImageAsset(BADDIE_SVG.face, coreWidth, undefined, graphic)
 
       // pupils always looking at missile, if no missile, look at mouse
