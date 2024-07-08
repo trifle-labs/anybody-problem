@@ -201,6 +201,7 @@ export class Anybody extends EventEmitter {
     this.FPS = 25
     this.P5_FPS_MULTIPLIER = 3
     this.P5_FPS = this.FPS * this.P5_FPS_MULTIPLIER
+    this.p?.frameRate(this.P5_FPS)
     this.timer =
       (this.level > 5 ? 60 : GAME_LENGTH_BY_LEVEL_INDEX[this.level - 1]) *
       this.FPS
