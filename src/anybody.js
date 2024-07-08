@@ -31,7 +31,6 @@ function intersectsButton(button, x, y) {
 const PAUSE_BODY_DATA = [
   {
     bodyIndex: 0,
-    seed: '0x34f645e62a9fb47226675e36c76e717bee1cc4688cdbd2ce1a2343e0fb210afa',
     radius: 36000,
     px: 149311,
     py: 901865,
@@ -40,7 +39,6 @@ const PAUSE_BODY_DATA = [
   },
   {
     bodyIndex: 1,
-    seed: '0x34f645e62a9fb47276675e36c76e717bee1cc4688cdbx2ce1a2343e0fb210afa',
     radius: 32000,
     px: 309311,
     py: 121865,
@@ -49,7 +47,6 @@ const PAUSE_BODY_DATA = [
   },
   {
     bodyIndex: 2,
-    seed: '0x34f645e62a9fb47426675e36c76e717bee1cc4688cdbd2te1a2343e0fb210afa',
     radius: 30000,
     px: 850311,
     py: 811865,
@@ -58,7 +55,6 @@ const PAUSE_BODY_DATA = [
   },
   {
     bodyIndex: 3,
-    seed: '0xfc7bf9b39ccf2426bd93629ff94dff5e6e9347098494ac42ea7c7d7339b09f2a',
     radius: 7000,
     px: 833406,
     py: 103029,
@@ -67,7 +63,6 @@ const PAUSE_BODY_DATA = [
   },
   {
     bodyIndex: 4,
-    seed: '0xd85fb8fd2d7ea126a9c3f53553f987bb4a52c0beea472672edeb4d39dcfcdd19',
     radius: 20000,
     px: 705620,
     py: 178711,
@@ -76,7 +71,6 @@ const PAUSE_BODY_DATA = [
   },
   {
     bodyIndex: 5,
-    seed: '0xd4528b05a80492ac1160e49f070b2f77b2e2b4180b360be799a920f35926aa5d',
     radius: 17000,
     px: 139878,
     py: 454946,
@@ -85,7 +79,6 @@ const PAUSE_BODY_DATA = [
   },
   {
     bodyIndex: 6,
-    seed: '0xd4528b05a80492ac1160e49f070b2f77b2e2b4180b360be799a920f35926aa5d',
     radius: 9000,
     px: 289878,
     py: 694946,
@@ -94,7 +87,6 @@ const PAUSE_BODY_DATA = [
   },
   {
     bodyIndex: 7,
-    seed: '0xd4528b05a80492ac1160e49f070b2f77b2e2b4180b360be799a920f35926aa5d',
     radius: 14000,
     px: 589878,
     py: 694946,

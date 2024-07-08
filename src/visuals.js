@@ -254,6 +254,7 @@ export const Visuals = {
       this.windowWidth,
       this.windowHeight
     )
+    this.pauseGraphic.pixelDensity(this.pixelDensity)
     this.pauseGraphic.clear()
 
     const p = this.pauseGraphic
