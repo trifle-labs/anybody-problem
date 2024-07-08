@@ -612,10 +612,14 @@ export const Visuals = {
     p.textSize(54)
     p.fill(THEME.iris_30)
     const date = new Date(this.date)
-    const options = { month: 'short', day: 'numeric', year: 'numeric' }
-    const formattedDate = date.toLocaleDateString('en-US', options)
+    const options = { month: 'short', day: '2-digit', year: 'numeric' }
+    const formattedDate = date
+      .toLocaleDateString('en-US', options)
+      .toUpperCase()
+      .replace(', ', '-')
+      .replace(' ', '-')
     p.text(formattedDate, 454, 114)
-    p.text('okwme.eth', 454, 174)
+    p.text(this.ens || this.address || 'YOU', 454, 174)
     // end upper box text
 
     // middle box text
@@ -786,52 +790,64 @@ export const Visuals = {
     p.textSize(32)
     p.fill(THEME.iris_30)
     p.text(
-      'NICE JOB!!!!    Keep going!!!   Solve this problem and climb the leaderboard.',
+      this.level == 5
+        ? 'CONGRATS!!! SAVE YOUR GAME TO SOLVE THE PROBLEM!!!!'
+        : 'NICE JOB!!!!    Keep going!!!   Solve this problem and climb the leaderboard.',
       44,
       811
     )
-
-    // bottom buttons
-    const buttonCount = this.showShare ? 4 : 3
-    this.drawBottomButton({
-      text: 'RETRY',
-      onClick: () => {
-        this.restart(null, false)
-      },
-      ...themes.buttons.teal,
-      columns: buttonCount,
-      column: 0
-    })
-    this.drawBottomButton({
-      text: 'RESTART',
-      onClick: () => {
-        this.level = 1
-        this.restart(null, false)
-      },
-      ...themes.buttons.flame,
-      columns: buttonCount,
-      column: 1
-    })
-    if (this.showShare) {
+    if (this.level < 5) {
+      // bottom buttons
+      const buttonCount = this.showShare ? 4 : 3
       this.drawBottomButton({
-        text: 'SHARE',
-        onClick: () => this.restart(null, false),
-        ...themes.buttons.pink,
+        text: 'RETRY',
+        onClick: () => {
+          this.restart(null, false)
+        },
+        ...themes.buttons.teal,
         columns: buttonCount,
-        column: 2
+        column: 0
+      })
+      this.drawBottomButton({
+        text: 'RESTART',
+        onClick: () => {
+          this.level = 1
+          this.restart(null, false)
+        },
+        ...themes.buttons.flame,
+        columns: buttonCount,
+        column: 1
+      })
+      if (this.showShare) {
+        this.drawBottomButton({
+          text: 'SHARE',
+          onClick: () => this.restart(null, false),
+          ...themes.buttons.pink,
+          columns: buttonCount,
+          column: 2
+        })
+      }
+      this.drawBottomButton({
+        text: 'NEXT',
+        onClick: () => {
+          this.level++
+          this.restart(null, false)
+        },
+        ...themes.buttons.green,
+        columns: buttonCount,
+        column: buttonCount - 1
+      })
+    } else {
+      this.drawBottomButton({
+        text: this.readyToSave ? 'SAVE' : 'ALMOST READY TO SAVE...',
+        onClick: () => {
+          this.emit('save')
+        },
+        ...themes.buttons.green,
+        columns: 1,
+        column: 0
       })
     }
-    this.drawBottomButton({
-      text: 'NEXT',
-      onClick: () => {
-        this.level++
-        this.restart(null, false)
-      },
-      ...themes.buttons.green,
-      columns: buttonCount,
-      column: buttonCount - 1
-    })
-
     p.pop()
   },
 
