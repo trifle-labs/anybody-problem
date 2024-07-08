@@ -12,10 +12,11 @@ q5.setup = () => {
     // target: 'inside',
     // globalStyle: 'psycho',
     day: Math.floor(Math.random() * 10000000),
-    level: Math.floor(Math.random() * 4) + 1,
+    level: 1, //Math.floor(Math.random() * 4) + 1,
     alreadyRun: 0, //Math.floor(Math.random() * 20000),
     seed: seed || null,
     startingBodies: Math.floor(Math.random() * 8) + 2
+    // bestTimes: [1.45, 2.44, 16.79, 23.45, 36.45]
   })
   if (!seed) {
     window.location.hash =
