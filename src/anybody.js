@@ -118,6 +118,7 @@ export class Anybody extends EventEmitter {
     !this.util && loadFonts(this.p)
     // this.p.blendMode(this.p.DIFFERENCE)
 
+    this.levelSpeeds = new Array(5)
     this.clearValues()
     !this.util && this.prepareP5()
     this.sound = new Sound(this)
@@ -161,8 +162,9 @@ export class Anybody extends EventEmitter {
       target: 'inside', // 'outside' or 'inside'
       faceRotation: 'mania', // 'time' or 'hitcycle' or 'mania'
       sfx: 'bubble', // 'space' or 'bubble'
-      owner: 'billyrennekamp.eth',
-      ownerPresent: false
+      owner: 'YOU',
+      ownerPresent: false,
+      bestTimes: null
     }
     // Merge the default options with the provided options
     const mergedOptions = { ...defaultOptions, ...options }
@@ -199,7 +201,7 @@ export class Anybody extends EventEmitter {
     this.FPS = 25
     this.P5_FPS_MULTIPLIER = 3
     this.P5_FPS = this.FPS * this.P5_FPS_MULTIPLIER
-    this.p.frameRate(this.P5_FPS)
+    this.p?.frameRate(this.P5_FPS)
     this.timer =
       (this.level > 5 ? 60 : GAME_LENGTH_BY_LEVEL_INDEX[this.level - 1]) *
       this.FPS
@@ -233,9 +235,9 @@ export class Anybody extends EventEmitter {
     this.won = false
     this.finalBatchSent = false
     this.solved = false
-    this.date = new Date().toLocaleDateString()
-    this.framesTook = false
+    this.date = new Date().toISOString().split('T')[0].replace(/-/g, '.')
 
+    this.framesTook = false
     // uncomment to work on the game over screen
     // setTimeout(() => {
     //   this.handleGameOver({ won: true })
@@ -244,6 +246,7 @@ export class Anybody extends EventEmitter {
 
   // run once at initilization
   init() {
+    this.skipAhead = false
     this.seed = utils.solidityKeccak256(['uint256'], [this.day])
     this.rng = new Prando(this.seed.toString(16))
     this.generateBodies()
@@ -382,6 +385,9 @@ export class Anybody extends EventEmitter {
   }
 
   handleGameClick = (e) => {
+    if (this.gameOver) {
+      this.skipAhead = true
+    }
     const { x, y } = this.getXY(e)
     // if mouse is inside of a button, call the button's handler
     for (const key in this.buttons) {
@@ -401,6 +407,9 @@ export class Anybody extends EventEmitter {
   }
 
   handleGameKeyDown = (e) => {
+    if (this.gameOver) {
+      this.skipAhead = true
+    }
     const modifierKeyActive = e.shiftKey && e.altKey && e.ctrlKey && e.metaKey
     if (modifierKeyActive) return
     switch (e.code) {
@@ -411,10 +420,10 @@ export class Anybody extends EventEmitter {
         }
         break
       case 'KeyR':
-        this.restart(null, false)
+        if (!this.gameOver || !this.won) this.restart(null, false)
         break
       case 'KeyP':
-        this.setPause()
+        if (!this.gameOver) this.setPause()
         break
     }
   }
@@ -455,9 +464,6 @@ export class Anybody extends EventEmitter {
   }
 
   restart = (options, beginPaused = true) => {
-    if (this.won) {
-      this.level++
-    }
     if (options) {
       this.setOptions(options)
     }
@@ -669,6 +675,7 @@ export class Anybody extends EventEmitter {
       // maybe should add visuals and turn it into a feature (single shot mode)
       this.lastMissileCantBeUndone = true
     }
+    this.levelSpeeds[level - 1] = results
     return results
   }
 

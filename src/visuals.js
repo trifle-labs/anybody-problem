@@ -327,7 +327,7 @@ export const Visuals = {
   drawBodyOutlines() {
     for (let i = 0; i < this.bodies.length; i++) {
       const body = this.bodies[i]
-      const radius = body.radius * 4 + this.radiusMultiplyer
+      const radius = body.radius * 4
 
       this.p.stroke(this.getGrey())
       this.p.stroke('black')
@@ -534,11 +534,11 @@ export const Visuals = {
     this.winScreenVisibleForFrames++
     this.winScreenLastVisibleFrame = this.p5Frames
 
-    const celebrationTime = 6 // seconds
+    const celebrationTime = 3 // seconds
     this.celebrating =
       this.winScreenVisibleForFrames / this.P5_FPS < celebrationTime
 
-    if (this.celebrating) {
+    if (this.celebrating && !this.skipAhead) {
       this.drawGameOverTicker({
         text: '                 YAYYYYYYYYYYY',
         bottom: true,
@@ -611,8 +611,15 @@ export const Visuals = {
     // upper box text - values
     p.textSize(54)
     p.fill(THEME.iris_30)
-    p.text('JAN-01-2024', 454, 114)
-    p.text('okwme.eth', 454, 174)
+    const date = new Date(this.date)
+    const options = { month: 'short', day: '2-digit', year: 'numeric' }
+    const formattedDate = date
+      .toLocaleDateString('en-US', options)
+      .toUpperCase()
+      .replace(', ', '-')
+      .replace(' ', '-')
+    p.text(formattedDate, 454, 114)
+    p.text(this.owner, 454, 174)
     // end upper box text
 
     // middle box text
@@ -629,8 +636,12 @@ export const Visuals = {
     p.text('+/-', col3X, 264)
 
     // middle box text - values
-    const levelTimes = [1.32, 2.5, 13.54]
-    const bestTimes = [1.45, 2.44, 16.79, 23.45, 36.45]
+    const levelTimes = this.levelSpeeds
+      .map((result) => result?.framesTook / this.FPS)
+      .filter((l) => l !== undefined)
+
+    const bestTimes =
+      this.bestTimes ?? Array.from({ length: 5 }, (_, i) => levelTimes[i] || 0)
     const plusMinus = bestTimes
       .map((best, i) => {
         if (i >= levelTimes.length) return ''
@@ -700,7 +711,7 @@ export const Visuals = {
     p.textSize(64)
 
     // middle box text - sum line
-    const bestTime = 20.68
+    const bestTime = bestTimes.reduce((a, b) => a + b, 0)
     const levelTimeSum = levelTimes.reduce((a, b) => a + b, 0)
     const sumLine = [
       levelTimeSum.toFixed(2),
@@ -779,44 +790,64 @@ export const Visuals = {
     p.textSize(32)
     p.fill(THEME.iris_30)
     p.text(
-      'NICE JOB!!!!    Keep going!!!   Solve this problem and climb the leaderboard.',
+      this.level == 5
+        ? 'CONGRATS!!! SAVE YOUR GAME TO SOLVE THE PROBLEM!!!!'
+        : 'NICE JOB!!!!    Keep going!!!   Solve this problem and climb the leaderboard.',
       44,
       811
     )
-
-    // bottom buttons
-    const buttonCount = this.showShare ? 4 : 3
-    this.drawBottomButton({
-      text: 'RETRY',
-      onClick: () => this.restart(null, false),
-      ...themes.buttons.teal,
-      columns: buttonCount,
-      column: 0
-    })
-    this.drawBottomButton({
-      text: 'RESTART',
-      onClick: () => this.restart(null, false),
-      ...themes.buttons.flame,
-      columns: buttonCount,
-      column: 1
-    })
-    if (this.showShare) {
+    if (this.level < 5) {
+      // bottom buttons
+      const buttonCount = this.showShare ? 4 : 3
       this.drawBottomButton({
-        text: 'SHARE',
-        onClick: () => this.restart(null, false),
-        ...themes.buttons.pink,
+        text: 'RETRY',
+        onClick: () => {
+          this.restart(null, false)
+        },
+        ...themes.buttons.teal,
         columns: buttonCount,
-        column: 2
+        column: 0
+      })
+      this.drawBottomButton({
+        text: 'RESTART',
+        onClick: () => {
+          this.level = 1
+          this.restart(null, false)
+        },
+        ...themes.buttons.flame,
+        columns: buttonCount,
+        column: 1
+      })
+      if (this.showShare) {
+        this.drawBottomButton({
+          text: 'SHARE',
+          onClick: () => this.restart(null, false),
+          ...themes.buttons.pink,
+          columns: buttonCount,
+          column: 2
+        })
+      }
+      this.drawBottomButton({
+        text: 'NEXT',
+        onClick: () => {
+          this.level++
+          this.restart(null, false)
+        },
+        ...themes.buttons.green,
+        columns: buttonCount,
+        column: buttonCount - 1
+      })
+    } else {
+      this.drawBottomButton({
+        text: this.readyToSave ? 'SAVE' : 'ALMOST READY TO SAVE...',
+        onClick: () => {
+          this.emit('save')
+        },
+        ...themes.buttons.green,
+        columns: 1,
+        column: 0
       })
     }
-    this.drawBottomButton({
-      text: 'NEXT',
-      onClick: () => this.restart(null, false),
-      ...themes.buttons.green,
-      columns: buttonCount,
-      column: buttonCount - 1
-    })
-
     p.pop()
   },
 
@@ -1092,24 +1123,24 @@ export const Visuals = {
 
   drawFaceSvg(body, width) {
     const maxIndex = Math.min(FACE_BLINK_SVGS.length, FACE_SVGS.length)
-    this.fIndex ||= Math.floor(Math.random() * maxIndex)
+    this.fIndex ||= this.random(0, maxIndex - 1)
     const fIndex = (this.fIndex + body.bodyIndex) % maxIndex
     const graphic = body.graphic || this.bodiesGraphic
 
     const baddiesNear = this.closeTo(body)
-    if (baddiesNear) {
+    if (baddiesNear && !this.paused) {
       this.drawImageAsset(FACE_SHOT_SVGS[this.fIndex], width, null, graphic)
       return
     }
 
     const x = 5 // every 5 seconds it blinks
-    const m = 25 // for 25 frames (1 second)
+    const m = this.P5_FPS // for 25 frames (1 second)
     // uncomment the following line to rotate face
     // this.bodiesGraphic.push()
     // this.bodiesGraphic.rotate(body.velocity.heading() + this.p.PI / 2)
     if (
-      Math.floor(this.frames / x) % m == 0 ||
-      Math.floor(this.frames / x) % m == 2
+      Math.floor(this.p5Frames / x) % m == 0 ||
+      Math.floor(this.p5Frames / x) % m == 2
     ) {
       this.drawImageAsset(FACE_BLINK_SVGS[fIndex], width, null, graphic)
     } else {
@@ -1192,9 +1223,13 @@ export const Visuals = {
       const size = Math.floor(body.radius * BODY_SCALE * 2.66)
 
       this.drawStarBackgroundSvg(size, body)
-      this.drawCoreSvg(body.radius * BODY_SCALE, body)
+      if (!body.backgroundOnly) {
+        this.drawCoreSvg(body.radius * BODY_SCALE, body)
+      }
       this.drawStarForegroundSvg(size, body)
-      this.drawFaceSvg(body, size)
+      if (!body.backgroundOnly) {
+        this.drawFaceSvg(body, size)
+      }
     } else {
       this.drawBaddie(body)
     }
@@ -1203,47 +1238,49 @@ export const Visuals = {
   },
 
   getBodyRadius(actualRadius) {
-    return actualRadius * 4 + this.radiusMultiplyer
+    return actualRadius * 4
   },
 
   drawBodiesLooped(body, radius, drawFunction) {
+    body.backgroundOnly = false
     drawFunction = drawFunction.bind(this)
     drawFunction(body.position.x, body.position.y, body.velocity, radius, body)
 
-    // let loopedX = false,
-    //   loopedY = false,
-    //   loopX = body.position.x,
-    //   loopY = body.position.y
-    // const loopGap = radius / 2
+    if (this.paused) return
+    let loopedX = false,
+      loopedY = false,
+      loopX = body.position.x,
+      loopY = body.position.y
+    const loopGap = radius * 1.5
+    body.backgroundOnly = true
+    // crosses right, draw on left
+    if (body.position.x > this.windowWidth - loopGap) {
+      loopedX = true
+      loopX = body.position.x - this.windowWidth
+      drawFunction(loopX, body.position.y, body.velocity, radius, body)
+      // crosses left, draw on right
+    } else if (body.position.x < loopGap) {
+      loopedX = true
+      loopX = body.position.x + this.windowWidth
+      drawFunction(loopX, body.position.y, body.velocity, radius, body)
+    }
 
-    // // crosses right, draw on left
-    // if (body.position.x > this.windowWidth - loopGap) {
-    //   loopedX = true
-    //   loopX = body.position.x - this.windowWidth
-    //   drawFunction(loopX, body.position.y, body.velocity, radius, body, true)
-    //   // crosses left, draw on right
-    // } else if (body.position.x < loopGap) {
-    //   loopedX = true
-    //   loopX = body.position.x + this.windowWidth
-    //   drawFunction(loopX, body.position.y, body.velocity, radius, body, true)
-    // }
+    // crosses bottom, draw on top
+    if (body.position.y > this.windowHeight - loopGap) {
+      loopedY = true
+      loopY = body.position.y - this.windowHeight
+      drawFunction(body.position.x, loopY, body.velocity, radius, body)
+      // crosses top, draw on bottom
+    } else if (body.position.y < loopGap) {
+      loopedY = true
+      loopY = body.position.y + this.windowHeight
+      drawFunction(body.position.x, loopY, body.velocity, radius, body)
+    }
 
-    // // crosses bottom, draw on top
-    // if (body.position.y > this.windowHeight - loopGap) {
-    //   loopedY = true
-    //   loopY = body.position.y - this.windowHeight
-    //   drawFunction(body.position.x, loopY, body.velocity, radius, body, true)
-    //   // crosses top, draw on bottom
-    // } else if (body.position.y < loopGap) {
-    //   loopedY = true
-    //   loopY = body.position.y + this.windowHeight
-    //   drawFunction(body.position.x, loopY, body.velocity, radius, body, true)
-    // }
-
-    // // crosses corner, draw opposite corner
-    // if (loopedX && loopedY) {
-    //   drawFunction(loopX, loopY, body.velocity, radius, body, true)
-    // }
+    // crosses corner, draw opposite corner
+    if (loopedX && loopedY) {
+      drawFunction(loopX, loopY, body.velocity, radius, body)
+    }
   },
 
   // TODO: add this back as part of a end game animation
@@ -1364,6 +1401,13 @@ export const Visuals = {
       const bodyRadius = this.bodyCopies.filter(
         (b) => b.bodyIndex == body.bodyIndex
       )[0]?.radius
+
+      // TODO: often there is no bodyRadius because bodyIndex doesn't match
+      // what is going on there?
+      // if (!bodyRadius) {
+      //   throw new Error('no body matches')
+      // }
+
       const radius = this.getBodyRadius(bodyRadius)
 
       // calculate x and y wobble factors based on this.p5Frames to make the pause bodies look like they're bobbing around
@@ -1463,57 +1507,63 @@ export const Visuals = {
     graphic.push()
     graphic.rotate(-rotate + body.velocity.heading() + this.p.PI / 2)
     this.drawImageAsset(BADDIE_SVG.core, coreWidth, coreColor, graphic)
-    this.drawImageAsset(BADDIE_SVG.face, coreWidth, undefined, graphic)
+    if (!body.backgroundOnly) {
+      this.drawImageAsset(BADDIE_SVG.face, coreWidth, undefined, graphic)
 
-    // pupils always looking at missile, if no missile, look at mouse
-    const target =
-      this.missiles.length > 0
-        ? this.missiles[0].position
-        : { x: this.scaleX(this.p.mouseX), y: this.scaleY(this.p.mouseY) }
+      // pupils always looking at missile, if no missile, look at mouse
+      const target =
+        this.missiles.length > 0
+          ? this.missiles[0].position
+          : { x: this.scaleX(this.p.mouseX), y: this.scaleY(this.p.mouseY) }
 
-    const bx = body.position.x
-    const by = body.position.y
+      const bx = body.position.x
+      const by = body.position.y
 
-    const leftEye = [-body.radius * 0.6, -body.radius * 0.15]
-    const rightEye = [body.radius * 0.6, -body.radius * 0.15]
+      const leftEye = [-body.radius * 0.6, -body.radius * 0.15]
+      const rightEye = [body.radius * 0.6, -body.radius * 0.15]
 
-    graphic.fill('white')
-    graphic.circle(leftEye[0], leftEye[1], body.radius)
-    graphic.circle(rightEye[0], rightEye[1], body.radius)
+      graphic.fill('white')
+      graphic.circle(leftEye[0], leftEye[1], body.radius)
+      graphic.circle(rightEye[0], rightEye[1], body.radius)
 
-    const angle =
-      Math.atan2(target.y - by, target.x - bx) -
-      body.velocity.heading() -
-      this.p.PI / 2
+      const angle =
+        Math.atan2(target.y - by, target.x - bx) -
+        body.velocity.heading() -
+        this.p.PI / 2
 
-    const distance = body.radius * 0.3
-    const leftX = distance * Math.cos(angle)
-    const leftY = distance * Math.sin(angle)
+      const distance = body.radius * 0.3
+      const leftX = distance * Math.cos(angle)
+      const leftY = distance * Math.sin(angle)
 
-    graphic.fill('black')
-    graphic.circle(leftX + leftEye[0], leftY + leftEye[1], body.radius * 0.4)
-    graphic.circle(leftX + rightEye[0], leftY + rightEye[1], body.radius * 0.4)
-
-    const heroBody = this.bodies[0]
-    const minDistance = heroBody.radius * 2 + body.radius * 4
-    const currentDistance = graphic.dist(
-      heroBody.position.x,
-      heroBody.position.y,
-      body.position.x,
-      body.position.y
-    )
-    const closeToBody = currentDistance <= minDistance
-
-    if (closeToBody) {
-      graphic.fill(coreColor)
-      graphic.triangle(
-        0,
-        -body.radius * 0.2,
-        leftEye[0] * 2,
-        -body.radius * 0.8,
-        rightEye[0] * 2,
-        -body.radius * 0.8
+      graphic.fill('black')
+      graphic.circle(leftX + leftEye[0], leftY + leftEye[1], body.radius * 0.4)
+      graphic.circle(
+        leftX + rightEye[0],
+        leftY + rightEye[1],
+        body.radius * 0.4
       )
+
+      const heroBody = this.bodies[0]
+      const minDistance = heroBody.radius * 2 + body.radius * 4
+      const currentDistance = graphic.dist(
+        heroBody.position.x,
+        heroBody.position.y,
+        body.position.x,
+        body.position.y
+      )
+      const closeToBody = currentDistance <= minDistance
+
+      if (closeToBody) {
+        graphic.fill(coreColor)
+        graphic.triangle(
+          0,
+          -body.radius * 0.2,
+          leftEye[0] * 2,
+          -body.radius * 0.8,
+          rightEye[0] * 2,
+          -body.radius * 0.8
+        )
+      }
     }
 
     graphic.pop()
