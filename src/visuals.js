@@ -1,4 +1,4 @@
-import { hslToRgb, THEME } from './colors.js'
+import { hslToRgb, rgbaOpacity, THEME } from './colors.js'
 import { fonts, drawKernedText } from './fonts.js'
 import { themes } from './colors.js'
 
@@ -180,8 +180,6 @@ export const Visuals = {
 
     if (!this.paused) {
       this.drawBodies()
-    } else if (!this.gameOver) {
-      this.drawPauseBodies()
     }
 
     if (
@@ -250,13 +248,43 @@ export const Visuals = {
     }
   },
   drawPause() {
-    if (!(this.paused && fonts.dot)) return
+    if (!fonts.dot || !this.paused) return
 
-    const { p } = this
+    this.pauseGraphic ||= this.p.createGraphics(
+      this.windowWidth,
+      this.windowHeight
+    )
+    this.pauseGraphic.clear()
+
+    const p = this.pauseGraphic
+
+    const unpauseDuration = 2
+    const unpauseFrames = unpauseDuration * this.P5_FPS
+    if (this.willUnpause && !this.beganUnpauseAt) {
+      this.willUnpause = true
+      this.beganUnpauseAt = this.p5Frames
+    }
+
+    // pause and return when unpause finished
+    if (this.beganUnpauseAt + unpauseFrames < this.p5Frames) {
+      this.paused = false
+      this.willUnpause = false
+      return
+    } else if (this.willUnpause) {
+      // fade text out
+      const fadeOutFrames = (unpauseFrames / 4) * 3
+      const fadeOutStart = this.beganUnpauseAt
+      const fadeOutProgress = this.p5Frames - fadeOutStart
+      const fadeOut = this.p.map(fadeOutProgress, 0, fadeOutFrames, 1, 0)
+      p.fill(rgbaOpacity(THEME.pink, fadeOut))
+    } else {
+      p.fill(THEME.pink)
+    }
+
+    this.drawPauseBodies()
 
     // draw logo
     p.textFont(fonts.dot)
-    p.fill(THEME.pink)
     p.textSize(200)
     p.textAlign(p.LEFT, p.TOP)
     p.noStroke()
@@ -264,32 +292,37 @@ export const Visuals = {
     drawKernedText(p, 'Anybody', 46, titleY, 0.8)
     drawKernedText(p, 'Problem', 46, titleY + 240, 2)
 
-    this.drawFatButton({
-      text: 'PLAY',
-      onClick: () => this.setPause(false),
-      fg: THEME.fuschia,
-      bg: THEME.pink,
-      bottom: 120
-    })
+    if (!this.willUnpause) {
+      this.drawFatButton({
+        text: 'PLAY',
+        onClick: () => this.setPause(false),
+        fg: THEME.fuschia,
+        bg: THEME.pink,
+        bottom: 120,
+        p
+      })
 
-    // date
-    p.textFont(fonts.body)
-    p.textSize(24)
-    const dateWidth = p.textWidth(this.date)
-    const dateBgWidth = dateWidth + 48
-    const dateBgHeight = 32
-    const dateBottomY = this.windowHeight - 58
-    p.fill(THEME.textBg)
-    p.rect(
-      this.windowWidth / 2 - dateBgWidth / 2,
-      dateBottomY - dateBgHeight / 2,
-      dateBgWidth,
-      dateBgHeight,
-      20
-    )
-    p.textAlign(p.CENTER, p.CENTER)
-    p.fill(THEME.textFg)
-    p.text(this.date, this.windowWidth / 2, dateBottomY)
+      // date
+      p.textFont(fonts.body)
+      p.textSize(24)
+      const dateWidth = p.textWidth(this.date)
+      const dateBgWidth = dateWidth + 48
+      const dateBgHeight = 32
+      const dateBottomY = this.windowHeight - 58
+      p.fill(THEME.textBg)
+      p.rect(
+        this.windowWidth / 2 - dateBgWidth / 2,
+        dateBottomY - dateBgHeight / 2,
+        dateBgWidth,
+        dateBgHeight,
+        20
+      )
+      p.textAlign(p.CENTER, p.CENTER)
+      p.fill(THEME.textFg)
+      p.text(this.date, this.windowWidth / 2, dateBottomY)
+    }
+
+    this.p.image(this.pauseGraphic, 0, 0)
   },
   drawBodyOutlines() {
     for (let i = 0; i < this.bodies.length; i++) {
@@ -578,7 +611,10 @@ export const Visuals = {
     // upper box text - values
     p.textSize(54)
     p.fill(THEME.iris_30)
-    p.text('JAN-01-2024', 454, 114)
+    const date = new Date(this.date)
+    const options = { month: 'short', day: 'numeric', year: 'numeric' }
+    const formattedDate = date.toLocaleDateString('en-US', options)
+    p.text(formattedDate, 454, 114)
     p.text('okwme.eth', 454, 174)
     // end upper box text
 
@@ -701,6 +737,7 @@ export const Visuals = {
     const yWobble =
       p.cos(p.frameCount / this.P5_FPS + body.bodyIndex * 3) *
       (6 + body.bodyIndex)
+
     body.position = {
       x: p.map(scale, 0, 1, -140, 170) + xWobble,
       y: 180 + yWobble
@@ -1070,34 +1107,36 @@ export const Visuals = {
 
   drawFaceSvg(body, width) {
     const maxIndex = Math.min(FACE_BLINK_SVGS.length, FACE_SVGS.length)
-    this.fIndex ||= Math.floor(Math.random() * maxIndex)
+    this.fIndex ||= this.random(0, maxIndex - 1)
     const fIndex = (this.fIndex + body.bodyIndex) % maxIndex
+    const graphic = body.graphic || this.bodiesGraphic
 
     const baddiesNear = this.closeTo(body)
-    if (baddiesNear) {
-      this.drawImageAsset(FACE_SHOT_SVGS[this.fIndex], width)
+    if (baddiesNear && !this.paused) {
+      this.drawImageAsset(FACE_SHOT_SVGS[this.fIndex], width, null, graphic)
       return
     }
 
     const x = 5 // every 5 seconds it blinks
-    const m = 25 // for 25 frames (1 second)
+    const m = this.P5_FPS // for 25 frames (1 second)
     // uncomment the following line to rotate face
     // this.bodiesGraphic.push()
     // this.bodiesGraphic.rotate(body.velocity.heading() + this.p.PI / 2)
     if (
-      Math.floor(this.frames / x) % m == 0 ||
-      Math.floor(this.frames / x) % m == 2
+      Math.floor(this.p5Frames / x) % m == 0 ||
+      Math.floor(this.p5Frames / x) % m == 2
     ) {
-      this.drawImageAsset(FACE_BLINK_SVGS[fIndex], width)
+      this.drawImageAsset(FACE_BLINK_SVGS[fIndex], width, null, graphic)
     } else {
-      this.drawImageAsset(FACE_SVGS[fIndex], width)
+      this.drawImageAsset(FACE_SVGS[fIndex], width, null, graphic)
     }
     // this.bodiesGraphic.pop()
   },
 
   drawStarForegroundSvg(width, body) {
     const fill = body.c.fg
-    this.bodiesGraphic.push()
+    const graphic = body.graphic || this.bodiesGraphic
+    graphic.push()
     this.fgIndex ||= Math.floor(Math.random() * FG_SVGS.length)
     const fgIndex = (this.bgIndex + body.bodyIndex) % FG_SVGS.length
     const r = {
@@ -1105,27 +1144,29 @@ export const Visuals = {
       ...(rotOverride?.fg?.[fgIndex] ?? {})
     }
     const rotateBy = r.speed == 0 ? 0 : (this.frames / r.speed) % 360
-    this.bodiesGraphic.rotate(r.direction * rotateBy)
-    this.drawImageAsset(FG_SVGS[fgIndex], width, fill)
-    this.bodiesGraphic.pop()
+    graphic.rotate(r.direction * rotateBy)
+    this.drawImageAsset(FG_SVGS[fgIndex], width, fill, graphic)
+    graphic.pop()
   },
 
   drawCoreSvg(width, body) {
     const fill = body.c.core
-    this.bodiesGraphic.push()
+    const graphic = body.graphic || this.bodiesGraphic
+    graphic.push()
     const r = {
       ...rot.core,
       ...(rotOverride?.core?.[0] ?? {})
     }
     const rotateBy = r.speed == 0 ? 0 : (this.frames / r.speed) % 360
-    this.bodiesGraphic.rotate(r.direction * rotateBy)
-    this.drawImageAsset(CORE_SVGS[0], width, fill)
-    this.bodiesGraphic.pop()
+    graphic.rotate(r.direction * rotateBy)
+    this.drawImageAsset(CORE_SVGS[0], width, fill, graphic)
+    graphic.pop()
   },
 
   drawStarBackgroundSvg(width, body) {
     const fill = body.c.bg
-    this.bodiesGraphic.push()
+    const graphic = body.graphic || this.bodiesGraphic
+    graphic.push()
     this.bgIndex ||= Math.floor(Math.random() * BG_SVGS.length)
     const bgIndex = (this.bgIndex + body.bodyIndex) % BG_SVGS.length
     const r = {
@@ -1133,9 +1174,9 @@ export const Visuals = {
       ...(rotOverride?.bg?.[bgIndex] ?? {})
     }
     const rotateBy = r.speed == 0 ? 0 : (this.frames / r.speed) % 360
-    this.bodiesGraphic.rotate(r.direction * rotateBy)
-    this.drawImageAsset(BG_SVGS[bgIndex], width, fill)
-    this.bodiesGraphic.pop()
+    graphic.rotate(r.direction * rotateBy)
+    this.drawImageAsset(BG_SVGS[bgIndex], width, fill, graphic)
+    graphic.pop()
   },
 
   moveAndRotate_PopAfter(graphic, x, y /*v*/) {
@@ -1155,15 +1196,13 @@ export const Visuals = {
   },
 
   drawBody(x, y, v, radius, body, backgroundOnly = false) {
-    this.moveAndRotate_PopAfter(this.bodiesGraphic, x, y, v)
+    const graphic = body.graphic || this.bodiesGraphic
+    this.moveAndRotate_PopAfter(graphic, x, y, v)
 
     // y-offset of face relative to center
     // const offset = this.getOffset(radius)
 
-    if (
-      body.bodyIndex === 0 ||
-      (!this.gameOver && this.paused && body.bodyIndex < 3) // TODO: what does body.bodyIndex < 3 do?
-    ) {
+    if (body.bodyIndex === 0 || body.hero) {
       // draw hero
       const size = Math.floor(body.radius * BODY_SCALE * 2.66)
 
@@ -1179,7 +1218,7 @@ export const Visuals = {
       this.drawBaddie(body, backgroundOnly)
     }
 
-    this.bodiesGraphic.pop()
+    graphic.pop()
   },
 
   getBodyRadius(actualRadius) {
@@ -1294,6 +1333,7 @@ export const Visuals = {
   },
 
   async drawBodies(attachToCanvas = true) {
+    if (this.won && !this.celebrating) return
     this.bodiesGraphic ||= this.p.createGraphics(
       this.windowWidth,
       this.windowHeight
@@ -1333,14 +1373,10 @@ export const Visuals = {
   },
 
   drawPauseBodies() {
-    this.bodiesGraphic ||= this.p.createGraphics(
-      this.windowWidth,
-      this.windowHeight
-    )
-    this.bodiesGraphic.noStroke()
+    this.pauseGraphic.noStroke()
 
-    for (const body of this.pauseBodies) {
-      this.bodiesGraphic.push()
+    for (const [i, body] of this.pauseBodies.entries()) {
+      this.pauseGraphic.push()
       body.position.x
       // after final proof is sent, don't draw upgradable bodies
       if (body.radius == 0) continue
@@ -1363,6 +1399,33 @@ export const Visuals = {
         this.p.cos(this.p.frameCount / this.P5_FPS + body.bodyIndex * 3) *
         (16 + body.bodyIndex)
 
+      // if not paused, bodies should flee to the nearest side of the screen
+      const fleeDuration = 1.5 // seconds
+      const xFlee =
+        this.willUnpause && this.beganUnpauseAt
+          ? this.p.map(
+              this.p5Frames - this.beganUnpauseAt,
+              0,
+              this.P5_FPS * fleeDuration,
+              0,
+              body.position.x > this.windowWidth / 2
+                ? this.windowWidth + 300
+                : -300
+            )
+          : 0
+      const yFlee =
+        this.willUnpause && this.beganUnpauseAt
+          ? this.p.map(
+              this.p5Frames - this.beganUnpauseAt,
+              0,
+              this.P5_FPS * fleeDuration,
+              0,
+              body.position.y > this.windowHeight / 2
+                ? this.windowHeight + 300
+                : -300
+            )
+          : 0
+
       const bodyCopy = JSON.parse(
         JSON.stringify(
           body,
@@ -1370,17 +1433,15 @@ export const Visuals = {
         )
       )
       bodyCopy.position = this.p.createVector(
-        body.position.x + xWobble,
-        body.position.y + yWobble
+        body.position.x + xWobble + xFlee,
+        body.position.y + yWobble + yFlee
       )
       bodyCopy.velocity = this.p.createVector(body.velocity.x, body.velocity.y)
+      bodyCopy.graphic = this.pauseGraphic
+      bodyCopy.hero = i < 3
       this.drawBodiesLooped(bodyCopy, radius, this.drawBody)
-      this.bodiesGraphic.pop()
+      this.pauseGraphic.pop()
     }
-
-    this.p.image(this.bodiesGraphic, 0, 0)
-
-    this.bodiesGraphic.clear()
   },
 
   replaceOpacity(c, opacity) {
@@ -1411,25 +1472,26 @@ export const Visuals = {
   },
 
   drawBaddie(body, backgroundOnly) {
+    const graphic = body.graphic || this.bodiesGraphic
     const colorHSL = body.c
     const coreWidth = body.radius * BODY_SCALE
-    const bgColor = hslToRgb(colorHSL, 0.5)
+    let bgColor = hslToRgb(colorHSL, 0.5)
     const coreColor = hslToRgb(colorHSL)
-    this.bodiesGraphic.push()
+    graphic.push()
     const rotate = (this.frames / 30) % 360
-    this.bodiesGraphic.rotate(rotate)
+    graphic.rotate(rotate)
     this.drawImageAsset(
       BADDIE_SVG.bg,
       Math.floor(coreWidth * (310 / 111.2)),
-      bgColor
+      bgColor,
+      graphic
     )
-    this.bodiesGraphic.push()
-    this.bodiesGraphic.rotate(-rotate + body.velocity.heading() + this.p.PI / 2)
+    graphic.push()
+    graphic.rotate(-rotate + body.velocity.heading() + this.p.PI / 2)
+    this.drawImageAsset(BADDIE_SVG.core, coreWidth, coreColor, graphic)
     if (!backgroundOnly) {
-      this.drawImageAsset(BADDIE_SVG.core, coreWidth, coreColor)
-    }
-    if (!backgroundOnly) {
-      this.drawImageAsset(BADDIE_SVG.face, coreWidth, undefined)
+      this.drawImageAsset(BADDIE_SVG.face, coreWidth, undefined, graphic)
+
       // pupils always looking at missile, if no missile, look at mouse
       const target =
         this.missiles.length > 0
@@ -1442,9 +1504,9 @@ export const Visuals = {
       const leftEye = [-body.radius * 0.6, -body.radius * 0.15]
       const rightEye = [body.radius * 0.6, -body.radius * 0.15]
 
-      this.bodiesGraphic.fill('white')
-      this.bodiesGraphic.circle(leftEye[0], leftEye[1], body.radius)
-      this.bodiesGraphic.circle(rightEye[0], rightEye[1], body.radius)
+      graphic.fill('white')
+      graphic.circle(leftEye[0], leftEye[1], body.radius)
+      graphic.circle(rightEye[0], rightEye[1], body.radius)
 
       const angle =
         Math.atan2(target.y - by, target.x - bx) -
@@ -1455,13 +1517,9 @@ export const Visuals = {
       const leftX = distance * Math.cos(angle)
       const leftY = distance * Math.sin(angle)
 
-      this.bodiesGraphic.fill('black')
-      this.bodiesGraphic.circle(
-        leftX + leftEye[0],
-        leftY + leftEye[1],
-        body.radius * 0.4
-      )
-      this.bodiesGraphic.circle(
+      graphic.fill('black')
+      graphic.circle(leftX + leftEye[0], leftY + leftEye[1], body.radius * 0.4)
+      graphic.circle(
         leftX + rightEye[0],
         leftY + rightEye[1],
         body.radius * 0.4
@@ -1469,7 +1527,7 @@ export const Visuals = {
 
       const heroBody = this.bodies[0]
       const minDistance = heroBody.radius * 2 + body.radius * 4
-      const currentDistance = this.p.dist(
+      const currentDistance = graphic.dist(
         heroBody.position.x,
         heroBody.position.y,
         body.position.x,
@@ -1478,8 +1536,8 @@ export const Visuals = {
       const closeToBody = currentDistance <= minDistance
 
       if (closeToBody) {
-        this.bodiesGraphic.fill(coreColor)
-        this.bodiesGraphic.triangle(
+        graphic.fill(coreColor)
+        graphic.triangle(
           0,
           -body.radius * 0.2,
           leftEye[0] * 2,
@@ -1490,8 +1548,8 @@ export const Visuals = {
       }
     }
 
-    this.bodiesGraphic.pop()
-    this.bodiesGraphic.pop()
+    graphic.pop()
+    graphic.pop()
   },
 
   drawCenter(b, p = this.bodiesGraphic, x = 0, y = 0) {

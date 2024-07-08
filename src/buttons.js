@@ -1,3 +1,4 @@
+import { rgbaOpacity } from './colors.js'
 import { fonts } from './fonts.js'
 
 export const Buttons = {
@@ -11,11 +12,9 @@ export const Buttons = {
     onClick,
     fg = 'black',
     bg = 'white',
-    fgHover = 'rgba(160, 67, 232, 0.3)'
+    fgHover = 'rgba(160, 67, 232, 0.3)',
+    p = this.p
   }) {
-    const { p } = this
-    this.p.textFont(fonts.dot)
-
     // register the button if it's not registered
     const key = `${text}-${x}-${y}-${height}-${width}`
     let button = this.buttons[key]
@@ -43,7 +42,7 @@ export const Buttons = {
 
     p.push()
     p.noStroke()
-    p.textSize(textSize)
+    p.textSize(textSize * scale)
     p.strokeWeight(button.active ? 1 : 4)
     p.fill(bg)
 
@@ -59,7 +58,13 @@ export const Buttons = {
       p.rect(x, y, width, height, height / 2)
     }
 
-    if (scale === 1) {
+    if (button.active) {
+      p.fill(rgbaOpacity(bg, 0.3))
+      p.rect(x, y, width, height, height / 2)
+    }
+
+    if (scale >= 0.3 && fonts.dot) {
+      p.textFont(fonts.dot)
       p.fill(fg)
       p.textAlign(p.CENTER, p.CENTER)
       p.text(

@@ -235,9 +235,9 @@ export class Anybody extends EventEmitter {
     this.won = false
     this.finalBatchSent = false
     this.solved = false
-    this.date = new Date().toLocaleDateString()
-    this.framesTook = false
+    this.date = new Date().toISOString().split('T')[0].replace(/-/g, '.')
 
+    this.framesTook = false
     // uncomment to work on the game over screen
     // setTimeout(() => {
     //   this.handleGameOver({ won: true })
@@ -420,7 +420,7 @@ export class Anybody extends EventEmitter {
         }
         break
       case 'KeyR':
-        if (!this.gameOver) this.restart(null, false)
+        if (!this.gameOver || !this.won) this.restart(null, false)
         break
       case 'KeyP':
         if (!this.gameOver) this.setPause()
@@ -504,18 +504,23 @@ export class Anybody extends EventEmitter {
   }
 
   setPause(newPauseState = !this.paused, mute = false) {
+    if (typeof newPauseState !== 'boolean') {
+      newPauseState = !this.paused
+    }
+
     if (newPauseState) {
       this.pauseBodies = PAUSE_BODY_DATA.map(this.bodyDataToBodies.bind(this))
       this.pauseBodies[1].c = this.getBodyColor(0)
       this.pauseBodies[2].c = this.getBodyColor(0)
+      this.paused = newPauseState
+      this.willUnpause = false
+      delete this.beganUnpauseAt
+    } else {
+      this.justPaused = true
+      this.willUnpause = true
     }
 
-    if (typeof newPauseState !== 'boolean') {
-      newPauseState = !this.paused
-    }
-    this.paused = newPauseState
-    this.justPaused = true
-    this.emit('paused', this.paused)
+    this.emit('paused', newPauseState)
     if (newPauseState) {
       if (!mute) this.sound?.pause()
     } else {
