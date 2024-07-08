@@ -235,8 +235,10 @@ export class Anybody extends EventEmitter {
     this.won = false
     this.finalBatchSent = false
     this.solved = false
-    this.date = new Date().toISOString().split('T')[0].replace(/-/g, '.')
-
+    this.date = new Date(this.day * 1000)
+      .toISOString()
+      .split('T')[0]
+      .replace(/-/g, '.')
     this.framesTook = false
     // uncomment to work on the game over screen
     // setTimeout(() => {
