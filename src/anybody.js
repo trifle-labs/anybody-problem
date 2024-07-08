@@ -10,8 +10,8 @@ import { loadFonts } from './fonts.js'
 import { Buttons } from './buttons.js'
 // import wc from './witness_calculator.js'
 
-// const GAME_LENGTH = 60 // seconds
 const GAME_LENGTH_BY_LEVEL_INDEX = [10, 20, 30, 40, 50]
+const NORMAL_GRAVITY = 100
 const proverTickIndex = {
   2: 250,
   3: 250,
@@ -28,6 +28,73 @@ function intersectsButton(button, x, y) {
   )
 }
 
+const PAUSE_BODY_DATA = [
+  {
+    bodyIndex: 0,
+    radius: 36000,
+    px: 149311,
+    py: 901865,
+    vx: 0,
+    vy: 0
+  },
+  {
+    bodyIndex: 1,
+    radius: 32000,
+    px: 309311,
+    py: 121865,
+    vx: 0,
+    vy: 0
+  },
+  {
+    bodyIndex: 2,
+    radius: 30000,
+    px: 850311,
+    py: 811865,
+    vx: 0,
+    vy: 0
+  },
+  {
+    bodyIndex: 3,
+    radius: 7000,
+    px: 833406,
+    py: 103029,
+    vx: 0,
+    vy: 0
+  },
+  {
+    bodyIndex: 4,
+    radius: 20000,
+    px: 705620,
+    py: 178711,
+    vx: -100000,
+    vy: -1111000
+  },
+  {
+    bodyIndex: 5,
+    radius: 17000,
+    px: 139878,
+    py: 454946,
+    vx: 0,
+    vy: 0
+  },
+  {
+    bodyIndex: 6,
+    radius: 9000,
+    px: 289878,
+    py: 694946,
+    vx: 0,
+    vy: 0
+  },
+  {
+    bodyIndex: 7,
+    radius: 14000,
+    px: 589878,
+    py: 694946,
+    vx: -100000,
+    vy: -1111000
+  }
+]
+
 export class Anybody extends EventEmitter {
   constructor(p, options = {}) {
     super()
@@ -43,6 +110,7 @@ export class Anybody extends EventEmitter {
     !this.util && loadFonts(this.p)
     // this.p.blendMode(this.p.DIFFERENCE)
 
+    this.levelSpeeds = new Array(5)
     this.clearValues()
     !this.util && this.prepareP5()
     this.sound = new Sound(this)
@@ -63,10 +131,10 @@ export class Anybody extends EventEmitter {
       startingBodies: 1,
       windowWidth: 1000,
       windowHeight: 1000,
-      pixelDensity: 4, //4, // Math.min(4, 4 * (window.devicePixelRatio ?? 1)),
+      pixelDensity: window.devicePixelRatio, //4, // Math.min(4, 4 * (window.devicePixelRatio ?? 1)),
       scalingFactor: 10n ** 3n,
       minDistanceSquared: 200 * 200,
-      G: 100, // Gravitational constant
+      G: NORMAL_GRAVITY, // Gravitational constant
       mode: 'game', // game or nft
       admin: false,
       solved: false,
@@ -84,10 +152,11 @@ export class Anybody extends EventEmitter {
       globalStyle: 'default', // 'default', 'psycho'
       aimHelper: false,
       target: 'inside', // 'outside' or 'inside'
-      showLevels: false, // true or false
       faceRotation: 'mania', // 'time' or 'hitcycle' or 'mania'
       sfx: 'bubble', // 'space' or 'bubble'
-      ownerPresent: false
+      owner: 'YOU',
+      ownerPresent: false,
+      bestTimes: null
     }
     // Merge the default options with the provided options
     const mergedOptions = { ...defaultOptions, ...options }
@@ -119,10 +188,12 @@ export class Anybody extends EventEmitter {
     this.lastMissileCantBeUndone = false
     this.speedFactor = 2
     this.speedLimit = 10
+    this.G = NORMAL_GRAVITY
     this.vectorLimit = this.speedLimit * this.speedFactor
     this.FPS = 25
     this.P5_FPS_MULTIPLIER = 3
     this.P5_FPS = this.FPS * this.P5_FPS_MULTIPLIER
+    this.p?.frameRate(this.P5_FPS)
     this.timer =
       (this.level > 5 ? 60 : GAME_LENGTH_BY_LEVEL_INDEX[this.level - 1]) *
       this.FPS
@@ -156,10 +227,20 @@ export class Anybody extends EventEmitter {
     this.won = false
     this.finalBatchSent = false
     this.solved = false
+    this.date = new Date(this.day * 1000)
+      .toISOString()
+      .split('T')[0]
+      .replace(/-/g, '.')
+    this.framesTook = false
+    // uncomment to work on the game over screen
+    // setTimeout(() => {
+    //   this.handleGameOver({ won: true })
+    // }, 500)
   }
 
   // run once at initilization
   init() {
+    this.skipAhead = false
     this.seed = utils.solidityKeccak256(['uint256'], [this.day])
     this.rng = new Prando(this.seed.toString(16))
     this.generateBodies()
@@ -167,33 +248,10 @@ export class Anybody extends EventEmitter {
     this.startingFrame = this.alreadyRun
     this.stopEvery = this.test ? 20 : this.proverTickIndex(this.level + 1)
     // const vectorLimitScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
-    this.loadImages()
     this.setPause(this.paused, true)
     this.storeInits()
     // this.prepareWitness()
   }
-
-  // async prepareWitness() {
-  //   // const wasmFile = `/public/game_10_1.wasm`
-  //   const wasmFile = new URL('./game_10_1.wasm', import.meta.url).href
-  //   console.log({ wasmFile })
-  //   const response = await fetch(wasmFile)
-  //   console.log({ response })
-  //   const buffer = await response.arrayBuffer()
-  //   console.log({ buffer })
-  //   // let wasm = await fetch(new URL('./game_10_1.wasm', import.meta.url).href)
-  //   // console.log({ wasm })
-  //   this.witnessCalculator = await wc(buffer)
-  //   console.log({ witnessCalculator: this.witnessCalculator })
-  //   // const w = await witnessCalculator.calculateWitness(input, 0);
-  //   // for (let i = 0; i < w.length; i++) {
-  //   //   console.log(w[i]);
-  //   // }
-  //   // const buff = await witnessCalculator.calculateWTNSBin(input, 0)
-  //   // writeFile(process.argv[4], buff, function (err) {
-  //   //   if (err) throw err
-  //   // })
-  // }
 
   async start() {
     this.addCSS()
@@ -215,16 +273,8 @@ export class Anybody extends EventEmitter {
   }
 
   storeInits() {
-    // console.dir(
-    //   {
-    //     frames: this.frames,
-    //     bodies: this.bodies.map((b) => (b.position.x, b.position.y))
-    //   },
-    //   { depth: null }
-    // )
     this.bodyCopies = JSON.parse(JSON.stringify(this.bodies))
     this.bodyInits = this.processInits(this.bodies)
-    // console.dir({ bodyInits: this.bodyInits }, { depth: null })
   }
 
   processInits(bodies) {
@@ -329,6 +379,9 @@ export class Anybody extends EventEmitter {
   }
 
   handleGameClick = (e) => {
+    if (this.gameOver) {
+      this.skipAhead = true
+    }
     const { x, y } = this.getXY(e)
     // if mouse is inside of a button, call the button's handler
     for (const key in this.buttons) {
@@ -339,6 +392,7 @@ export class Anybody extends EventEmitter {
       }
     }
 
+    if (this.paused || this.gameOver) return
     this.missileClick(x, y)
   }
 
@@ -347,6 +401,9 @@ export class Anybody extends EventEmitter {
   }
 
   handleGameKeyDown = (e) => {
+    if (this.gameOver) {
+      this.skipAhead = true
+    }
     const modifierKeyActive = e.shiftKey && e.altKey && e.ctrlKey && e.metaKey
     if (modifierKeyActive) return
     switch (e.code) {
@@ -357,14 +414,10 @@ export class Anybody extends EventEmitter {
         }
         break
       case 'KeyR':
-        // confirm('Are you sure you want to restart?') && this.restart()
-        if (!this.gameOver) {
-          // this.startingBodies = 2
-        }
-        this.restart()
+        if (!this.gameOver || !this.won) this.restart(null, false)
         break
       case 'KeyP':
-        this.setPause()
+        if (!this.gameOver) this.setPause()
         break
     }
   }
@@ -373,9 +426,12 @@ export class Anybody extends EventEmitter {
     if (this.handledGameOver) return
     this.handledGameOver = true
 
-    // this.sound?.playGameOver({ won })
+    this.sound?.playGameOver({ won })
     this.gameOver = true
     this.won = won
+    this.G = 2000 // make the badies dance
+    this.P5_FPS *= 3
+    this.p.frameRate(this.P5_FPS)
     var dust = 0
     var timeTook = 0
 
@@ -402,9 +458,6 @@ export class Anybody extends EventEmitter {
   }
 
   restart = (options, beginPaused = true) => {
-    if (this.won) {
-      this.level++
-    }
     if (options) {
       this.setOptions(options)
     }
@@ -425,7 +478,6 @@ export class Anybody extends EventEmitter {
 
   setStatsText = async (stats) => {
     const statLines = [
-      // `total bodies: ${stats.bodiesIncluded}`,
       this.doubleTextInverted(`¸♩·¯·♬¸¸♬·¯·♩¸¸♪¯`),
       `${stats.bodiesIncluded - 1} bodies cleared`,
       `in ${stats.timeTook} sec 🐎`,
@@ -434,16 +486,6 @@ export class Anybody extends EventEmitter {
     ]
     const toShow = statLines.join('\n')
     this.statsText = toShow
-    // for (let i = 0; i < toShow.length; i++) {
-    //   await new Promise((resolve) => setTimeout(resolve, 50))
-    //   this.statsText = toShow.slice(0, i + 1)
-    //   this.sound?.playStat()
-    //   // play a sound on new line
-    //   if (toShow[i] == '\n') {
-    //     await new Promise((resolve) => setTimeout(resolve, 800))
-    //     this.sound?.playStat()
-    //   }
-    // }
 
     await this.setShowPlayAgain(1000)
     this.sound?.playSuccess()
@@ -459,9 +501,20 @@ export class Anybody extends EventEmitter {
     if (typeof newPauseState !== 'boolean') {
       newPauseState = !this.paused
     }
-    this.paused = newPauseState
-    this.justPaused = true
-    this.emit('paused', this.paused)
+
+    if (newPauseState) {
+      this.pauseBodies = PAUSE_BODY_DATA.map(this.bodyDataToBodies.bind(this))
+      this.pauseBodies[1].c = this.getBodyColor(0)
+      this.pauseBodies[2].c = this.getBodyColor(0)
+      this.paused = newPauseState
+      this.willUnpause = false
+      delete this.beganUnpauseAt
+    } else {
+      this.justPaused = true
+      this.willUnpause = true
+    }
+
+    this.emit('paused', newPauseState)
     if (newPauseState) {
       if (!mute) this.sound?.pause()
     } else {
@@ -473,12 +526,6 @@ export class Anybody extends EventEmitter {
     if (this.missiles.length == 0 && this.lastMissileCantBeUndone) {
       this.lastMissileCantBeUndone = false
     }
-    // const { bodies, missiles } = await this.circomStep(
-    //   this.bodies,
-    //   this.missiles
-    // )
-    // this.bodies = bodies
-    // this.missiles = missiles || []
     this.bodies = this.forceAccumulator(this.bodies)
     var results = this.detectCollision(this.bodies, this.missiles)
     this.bodies = results.bodies
@@ -538,12 +585,10 @@ export class Anybody extends EventEmitter {
         // if the step index matches the step where a missile was shot, add the missile to the missileInits
         // otherwise fill the missileInit array with an empty missile
         if (this.missileInits[missileIndex]?.step == i) {
-          // console.log('step == i', i)
           const missile = this.missileInits[missileIndex]
           missileInits.push([missile.vx, missile.vy, missile.radius])
           missileIndex++
         } else {
-          // console.log('else it starts from corner')
           missileInits.push([maxVectorScaled, maxVectorScaled, '0'])
         }
       }
@@ -554,7 +599,6 @@ export class Anybody extends EventEmitter {
     // define the inflightMissile for the proof from the first missile shot during this chunk
     // if the first missile shot was shot at step == alreadyRun (start of this chunk)
     // add it as an inflightMissile otherwise add a dummy missile
-    // console.log('first missile: ', this.missileInits[0], this.alreadyRun)
     let inflightMissile =
       this.missileInits[0]?.step == this.alreadyRun
         ? this.missileInits[0]
@@ -625,6 +669,7 @@ export class Anybody extends EventEmitter {
       // maybe should add visuals and turn it into a feature (single shot mode)
       this.lastMissileCantBeUndone = true
     }
+    this.levelSpeeds[level - 1] = results
     return results
   }
 
@@ -749,24 +794,10 @@ export class Anybody extends EventEmitter {
     } else {
       return randHSL([undefined, '90-100', '55-60'], this.random.bind(this))
     }
-    // const seedtype = typeof seed
-    // if (seedtype !== 'string' && seedtype !== 'number') {
-    //   seed = seed.toHexString()
-    // } else if (seedtype == 'number') {
-    //   seed = seed.toString(16)
-    // }
-    // const blocker = 0xffff
-    // const color = (BigInt(seed) & BigInt(blocker)) % 360n
-    // const saturation = ((BigInt(seed) >> 16n) & BigInt(blocker)) % 100n
-    // const lightness = (((BigInt(seed) >> 32n) & BigInt(blocker)) % 40n) + 40n
-    // const result = `hsla(${color.toString()}, ${saturation.toString()}%, ${lightness.toString()}%,${replaceOpacity ? '1' : this.opac})`
-
-    // return result
   }
 
   random(min, max, rng = this.rng) {
     return rng.nextInt(min, max)
-    // return Math.floor(Math.random() * (upper - lower + 1)) + lower;
   }
 
   randomColor(min = 0, max = 359, rng = this.rng) {
@@ -782,11 +813,12 @@ export class Anybody extends EventEmitter {
   prepareP5() {
     this.p.frameRate(this.P5_FPS)
     this.p.createCanvas(this.windowWidth, this.windowWidth)
-    // this.p.pixelDensity(this.pixelDensity)
+    this.p.pixelDensity(this.pixelDensity)
     this.p.background('white')
   }
 
   missileClick(x, y) {
+    if (this.gameOver) return
     if (this.paused) {
       this.setPause(false)
       return
@@ -895,9 +927,6 @@ if (typeof window !== 'undefined') {
   window.Anybody = Anybody
 }
 
-// function _smolr(a, b) {
-//   return a < b ? a : b
-// }
 BigInt.prototype.toJSON = function () {
   return this.toString()
 }

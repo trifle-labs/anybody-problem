@@ -1,11 +1,40 @@
+const iris_50 = 'rgba(121, 88, 255, 1)'
+const iris_100 = 'rgba(25, 15, 66, 1)'
+const iris_60 = 'rgba(88, 59, 209, 1)'
+const iris_30 = 'rgba(146, 118, 255, 1)'
+const teal_50 = 'rgba(137, 255, 248, 1)'
+const teal_75 = 'rgba(13, 61, 58, 1)'
+const flame_50 = 'rgba(255, 88, 88, 1)'
+const flame_75 = 'rgba(70, 12, 12, 1)'
+const pink_50 = 'rgba(255, 105, 177, 1)'
+const pink_75 = 'rgba(59, 29, 43, 1)'
+const green_50 = 'rgba(125, 241, 115, 1)'
+const green_75 = 'rgba(4, 53, 0, 1)'
+
 export const THEME = {
   bg: 'rgb(20,20,20)',
   fg: 'white',
   bodiesTheme: 'default',
+  border: iris_60,
+  // colors
+  lime: 'rgba(125, 241, 115, 1)',
+  lime_40: 'rgba(125, 241, 115, 0.4)',
   pink: 'rgba(236, 205, 255, 1)',
   fuschia: 'rgba(160, 67, 232, 1)',
   red: 'rgba(255, 88, 88, 1)',
-  maroon: 'rgba(53, 20, 20, 1)'
+  maroon: 'rgba(53, 20, 20, 1)',
+  textFg: iris_50,
+  textBg: iris_100,
+  iris_30,
+  iris_60,
+  teal_50,
+  teal_75,
+  flame_50,
+  flame_75,
+  pink_50,
+  pink_75,
+  green_50,
+  green_75
 }
 
 // [hue, saturation, lightness]
@@ -55,6 +84,24 @@ export const themes = {
         cr: [undefined, '90-100', '85-95'],
         fg: [undefined, '90', '60']
       }
+    }
+  },
+  buttons: {
+    teal: {
+      fg: teal_50,
+      bg: teal_75
+    },
+    flame: {
+      fg: flame_50,
+      bg: flame_75
+    },
+    pink: {
+      fg: pink_50,
+      bg: pink_75
+    },
+    green: {
+      fg: green_50,
+      bg: green_75
     }
   }
 }
@@ -136,4 +183,9 @@ export function randHSL(ranges, rand) {
   const l = rand(lights[0], lights[1] || lights[0])
 
   return [h, s, l]
+}
+
+export function rgbaOpacity(color, opacity) {
+  const [r, g, b] = color.split(',').map((s) => Number(s.replace(/\D/g, '')))
+  return `rgba(${r}, ${g}, ${b}, ${opacity})`
 }
