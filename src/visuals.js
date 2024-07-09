@@ -867,7 +867,7 @@ export const Visuals = {
 
     const { p } = this
 
-    const entranceTime = 2 // seconds
+    const entranceTime = 1.5 // seconds
 
     const scale = Math.min(
       1,
@@ -992,27 +992,107 @@ export const Visuals = {
         )
       }
     }
-
     // end middle box text
 
     // draw hero body
-    const body = this.getDisplayHero()
+    const body = this.getDisplayHero({ radius: 33 })
     const radius = this.getBodyRadius(body.radius)
     const xWobble = p.sin(p.frameCount / this.P5_FPS) * (5 + body.bodyIndex)
     const yWobble =
       p.cos(p.frameCount / this.P5_FPS + body.bodyIndex * 3) *
       (6 + body.bodyIndex)
     body.position = {
-      x: p.map(scale, 0, 1, -140, 170) + xWobble,
-      y: 700 + yWobble
+      x: p.map(scale ** 3, 0, 1, -140, 180) + xWobble,
+      y: 670 + yWobble
     }
     this.bodiesGraphic ||= this.p.createGraphics(
       this.windowWidth,
       this.windowHeight
     )
     this.drawBodiesLooped(body, radius, this.drawBody)
+    p.image(this.bodiesGraphic, 0, 0)
+    this.bodiesGraphic.clear()
 
-    if (this.savedAt) {
+    // draw messages from hero
+    const message1Entrance = 1.5
+    const message1 = ['wOwOwoWwwww ! ! ! !', 'you solved the daily problem !']
+
+    const message1Frame =
+      this.showProblemRankingsScreenAt + message1Entrance * this.P5_FPS
+
+    const message2Entrance = 3
+    const message2 = [
+      'SAVE your score to the leaderboard',
+      "and receive today's celestial body !"
+    ]
+    const message2Frame =
+      this.showProblemRankingsScreenAt + message2Entrance * this.P5_FPS
+
+    const message3Entrance = 5.5
+    const message3 = [
+      "replay as many times as you'd like",
+      "before tomorrow's problem..."
+    ]
+    const message3Frame =
+      this.showProblemRankingsScreenAt + message3Entrance * this.P5_FPS
+
+    this.drawMessageBox ||= ({ lines, x, y, color, start, textWidth }) => {
+      const padding = 20
+      const paddingLeft = 24
+      p.textSize(32)
+      p.textAlign(p.LEFT, p.TOP)
+      p.textLeading(36)
+      p.fill('black')
+      p.stroke(color)
+      p.strokeWeight(1)
+      const messageText = lines
+        .join('\n')
+        .slice(0, Math.floor((this.p5Frames - start) / 2))
+      const longestLine = lines.sort((a, b) => b.length - a.length)[0]
+      p.rect(
+        x,
+        y,
+        (textWidth || p.textWidth(longestLine)) + paddingLeft + padding,
+        lines.length * 36 + padding * 2,
+        20
+      )
+      // console.log({ h: lines.length * 36 + padding * 2 })
+      p.fill(color)
+
+      p.text(messageText, x + paddingLeft, y + padding)
+    }
+    if (this.p5Frames > message1Frame) {
+      this.drawMessageBox({
+        lines: message1,
+        x: 344,
+        y: 504,
+        color: THEME.iris_30,
+        start: message1Frame
+      })
+    }
+
+    if (this.p5Frames > message3Frame) {
+      this.drawMessageBox({
+        lines: message3,
+        x: 370,
+        y: 704,
+        color: THEME.pink,
+        start: message3Frame
+      })
+    }
+
+    if (this.p5Frames > message2Frame) {
+      this.drawMessageBox({
+        lines: message2,
+        x: 484,
+        y: 604,
+        color: THEME.green_50,
+        start: message2Frame,
+        textWidth: 451
+      })
+    }
+
+    if (this.saveStatus === 'unsaved' || this.saveStatus === 'saving') {
       // bottom buttons
       const buttonCount = 2
       this.drawBottomButton({
@@ -1047,7 +1127,7 @@ export const Visuals = {
     p.pop()
   },
 
-  getDisplayHero() {
+  getDisplayHero({ radius = 30 }) {
     const body = this.bodies[0]
     const bodyCopy = JSON.parse(
       JSON.stringify(
@@ -1057,7 +1137,7 @@ export const Visuals = {
     )
     bodyCopy.position = this.p.createVector(body.position.x, body.position.y)
     bodyCopy.velocity = this.p.createVector(body.velocity.x, body.velocity.y)
-    bodyCopy.radius = 30
+    bodyCopy.radius = radius
     return bodyCopy
   },
 

@@ -233,7 +233,7 @@ export class Anybody extends EventEmitter {
       .replace(/-/g, '.')
     this.framesTook = false
     this.showProblemRankingsScreenAt = -1
-    this.savedAt = -1
+    this.saveStatus = 'unsaved' // 'unsaved', 'saving', 'saved'
     // uncomment to work on the game over screen
     // setTimeout(() => {
     //   this.handleGameOver({ won: true })
