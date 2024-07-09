@@ -232,10 +232,17 @@ export class Anybody extends EventEmitter {
       .split('T')[0]
       .replace(/-/g, '.')
     this.framesTook = false
+    this.showProblemRankingsScreenAt = -1
+    this.savedAt = -1
     // uncomment to work on the game over screen
     // setTimeout(() => {
     //   this.handleGameOver({ won: true })
     // }, 500)
+
+    // uncomment to work on the problem-ranking screen
+    setTimeout(() => {
+      this.showProblemRankingsScreenAt = this.p5Frames
+    }, 500)
   }
 
   // run once at initilization

@@ -247,8 +247,10 @@ export const Visuals = {
       this.justPaused = false
     }
   },
+
   drawPause() {
-    if (!fonts.dot || !this.paused) return
+    if (!fonts.dot || !this.paused || this.showProblemRankingsScreenAt !== -1)
+      return
 
     this.pauseGraphic ||= this.p.createGraphics(
       this.windowWidth,
@@ -500,6 +502,8 @@ export const Visuals = {
     p.noStroke()
     p.textAlign(p.LEFT, p.TOP)
 
+    this.drawProblemRankingsScreen()
+
     const runningFrames = this.frames - this.startingFrame
     const seconds = (this.framesTook || runningFrames) / this.FPS
     const secondsLeft =
@@ -528,6 +532,8 @@ export const Visuals = {
   },
 
   drawWinScreen() {
+    if (this.showProblemRankingsScreenAt >= 0) return
+
     const justEntered = this.winScreenLastVisibleFrame !== this.p5Frames - 1
     if (justEntered) {
       this.winScreenVisibleForFrames = 0
@@ -587,7 +593,7 @@ export const Visuals = {
     p.fill('black')
     p.stroke(THEME.border)
     p.strokeWeight(1)
-    const gutter = 24
+    const gutter = 22
     const middleBoxY = 320
     p.rect(gutter, 104, this.windowWidth - gutter * 2, 144, 24)
 
@@ -832,11 +838,200 @@ export const Visuals = {
         text: 'NEXT',
         onClick: () => {
           this.level++
-          this.restart(null, false)
+          if (this.level > 5) {
+            this.showProblemRankingsScreenAt = this.p5Frames
+          } else {
+            this.restart(null, false)
+          }
         },
         ...themes.buttons.green,
         columns: buttonCount,
         column: buttonCount - 1
+      })
+    } else {
+      this.drawBottomButton({
+        text: this.readyToSave ? 'SAVE' : 'ALMOST READY TO SAVE...',
+        onClick: () => {
+          this.emit('save')
+        },
+        ...themes.buttons.green,
+        columns: 1,
+        column: 0
+      })
+    }
+    p.pop()
+  },
+
+  drawProblemRankingsScreen() {
+    if (this.showProblemRankingsScreenAt === -1) return
+
+    const { p } = this
+
+    const entranceTime = 2 // seconds
+
+    const scale = Math.min(
+      1,
+      (this.p5Frames - this.showProblemRankingsScreenAt) /
+        (entranceTime * this.P5_FPS)
+    )
+
+    p.push()
+    p.noStroke()
+    p.fill('white')
+
+    // bordered boxes
+    p.fill('black')
+    p.stroke(THEME.border)
+    p.strokeWeight(1)
+    const gutter = 22
+    const middleBoxY = 155
+    const rowHeight = 72
+    const rows = 3
+    p.rect(gutter, 28, this.windowWidth - gutter * 2, 103, 24)
+    p.rect(
+      gutter,
+      middleBoxY,
+      this.windowWidth - gutter * 2,
+      rows * rowHeight,
+      24
+    )
+    p.rect(
+      gutter,
+      24 + 155 + rows * rowHeight,
+      this.windowWidth - gutter * 2,
+      rowHeight,
+      24
+    )
+
+    // logo at top
+    if (!fonts.dot) return
+    p.textFont(fonts.dot)
+    const logoOpacity = p.map(scale, 0, 1, 0, 1)
+    p.fill(rgbaOpacity(THEME.pink, logoOpacity))
+    p.textSize(60)
+    p.textAlign(p.LEFT, p.TOP)
+    drawKernedText(p, 'Anybody', 46, 44, 0.8)
+    drawKernedText(p, 'Problem', 352, 44, 2)
+
+    // upper box text - date
+    p.textSize(56)
+    p.noStroke()
+    if (!fonts.body) return
+    p.textFont(fonts.body)
+    p.fill(THEME.iris_30)
+    p.textAlign(p.RIGHT, p.TOP)
+    p.text(this.date, this.windowWidth - 42, 48)
+
+    // middle box text
+    p.textSize(44)
+    p.textAlign(p.RIGHT, p.TOP)
+    const col1X = 42
+    const col2X = 187
+    const col3X = this.windowWidth - col1X // right aligned
+
+    // middle box text - values
+    const scores = [
+      {
+        rank: 1,
+        name: '0xABCD-1234',
+        time: 188.889192912
+      },
+      {
+        rank: 2,
+        name: 'longassensnamethatgoesofftherowalllllllls',
+        time: 189.889192912
+      },
+      {
+        rank: 3,
+        name: '0xABCD-1234',
+        time: 198.889192912
+      },
+      {
+        rank: 999998,
+        name: 'petersugihara.eth',
+        time: 260.889192912
+      }
+    ]
+
+    // middle box text - value text
+    for (const [rowNumber, score] of scores.entries()) {
+      const rowY =
+        rowHeight * rowNumber + rowHeight / 2 + (rowNumber === 3 ? 24 : 0)
+
+      p.textAlign(p.LEFT, p.CENTER)
+      p.fill(THEME.iris_60)
+      const rankText =
+        score.rank === 1
+          ? '1st'
+          : score.rank === 2
+            ? '2nd'
+            : score.rank === 3
+              ? '3rd'
+              : `${score.rank.toLocaleString()}`
+      p.text(rankText, col1X, middleBoxY + rowY)
+
+      p.fill(THEME.iris_30)
+      let nameText = score.name // truncate to fit
+      while (p.textWidth(nameText) > 656) {
+        nameText = `${nameText.replaceAll(/\.\.\.$/g, '').slice(0, -1)}...`
+      }
+      p.text(nameText, col2X, middleBoxY + rowY)
+
+      p.textAlign(p.RIGHT, p.CENTER)
+      p.fill(THEME.iris_60)
+      p.text(score.time.toFixed(2), col3X, middleBoxY + rowY)
+
+      // bottom divider line
+      if (rowNumber < 2) {
+        p.fill(THEME.iris_60)
+        p.rect(
+          gutter,
+          middleBoxY + rowHeight * (rowNumber + 1),
+          this.windowWidth - gutter * 2,
+          1
+        )
+      }
+    }
+
+    // end middle box text
+
+    // draw hero body
+    const body = this.getDisplayHero()
+    const radius = this.getBodyRadius(body.radius)
+    const xWobble = p.sin(p.frameCount / this.P5_FPS) * (5 + body.bodyIndex)
+    const yWobble =
+      p.cos(p.frameCount / this.P5_FPS + body.bodyIndex * 3) *
+      (6 + body.bodyIndex)
+    body.position = {
+      x: p.map(scale, 0, 1, -140, 170) + xWobble,
+      y: 700 + yWobble
+    }
+    this.bodiesGraphic ||= this.p.createGraphics(
+      this.windowWidth,
+      this.windowHeight
+    )
+    this.drawBodiesLooped(body, radius, this.drawBody)
+
+    if (this.savedAt) {
+      // bottom buttons
+      const buttonCount = 2
+      this.drawBottomButton({
+        text: 'Back',
+        onClick: () => {
+          this.restart(null, false)
+        },
+        ...themes.buttons.teal,
+        columns: buttonCount,
+        column: 0
+      })
+      this.drawBottomButton({
+        text: 'Save',
+        onClick: () => {
+          this.savedAt = this.frames
+        },
+        ...themes.buttons.green,
+        columns: buttonCount,
+        column: 1
       })
     } else {
       this.drawBottomButton({

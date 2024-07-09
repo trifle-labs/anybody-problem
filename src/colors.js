@@ -1,7 +1,7 @@
 const iris_50 = 'rgba(121, 88, 255, 1)'
 const iris_100 = 'rgba(25, 15, 66, 1)'
 const iris_60 = 'rgba(88, 59, 209, 1)'
-const iris_30 = 'rgba(146, 118, 255, 1)'
+const iris_30 = 'rgba(163, 140, 222, 1)'
 const teal_50 = 'rgba(137, 255, 248, 1)'
 const teal_75 = 'rgba(13, 61, 58, 1)'
 const flame_50 = 'rgba(255, 88, 88, 1)'
