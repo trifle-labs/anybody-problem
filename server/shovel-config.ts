@@ -68,11 +68,11 @@ const STARTING_BLOCK = {
   // mainnet: BigInt('2067803')
   sepolia: BigInt('5716600'),
   garnet: BigInt('2067803'),
-  base_sepolia: BigInt('11476234')
+  base_sepolia: BigInt('11912350')
 }
 
 // n.b. sources must match ABI in contracts to correctly sync
-export const sources: KnownSource[] = [localhost]
+export const sources: KnownSource[] = [baseSepolia]
 
 const contracts = Object.fromEntries(
   [AnybodyProblem, Speedruns].map((contract) => {
