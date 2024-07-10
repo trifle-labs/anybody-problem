@@ -112,18 +112,18 @@ async function calculateDailyLeaderboard(day: number, chain: Chain) {
   ),
   latest_transactions AS (
       SELECT
-          token_id,
+          id,
           "to",
-          ROW_NUMBER() OVER (PARTITION BY token_id ORDER BY block_num DESC, tx_idx DESC, log_idx DESC) AS rn
+          ROW_NUMBER() OVER (PARTITION BY id ORDER BY block_num DESC, tx_idx DESC, log_idx DESC) AS rn
       FROM
-          speedruns_transfer
+          speedruns_transfer_single
       WHERE
-          token_id IN (SELECT run_id FROM leaderboard)
+          id IN (SELECT run_id FROM leaderboard)
           AND src_name = $1
   ),
   current_players AS (
       SELECT
-          token_id,
+          id,
           concat('0x', encode("to", 'hex')) as player
       FROM
           latest_transactions
@@ -137,13 +137,13 @@ async function calculateDailyLeaderboard(day: number, chain: Chain) {
       current_players.player
   FROM
       leaderboard
-  LEFT JOIN current_players ON leaderboard.run_id = current_players.token_id
+  LEFT JOIN current_players ON leaderboard.run_id = current_players.id
   ORDER BY
       COALESCE(leaderboard.level, 0), leaderboard.time;
   `
 
   const result = await db.query(q, [chain])
-
+  console.dir(result, { depth: null })
   function scores(rows: any[]): SpeedScore[] {
     return rows.map((r: any) => ({
       problemId: r.problem_id,

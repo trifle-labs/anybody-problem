@@ -90,9 +90,6 @@ describe('AnybodyProblem Tests', function () {
     const { AnybodyProblem: anybodyProblem } = await deployContracts()
 
     const functions = [
-      { name: 'emitMetadataUpdate', args: [0] },
-      { name: 'emitBatchMetadataUpdate', args: [0, 0] },
-      { name: 'exampleEmitMultipleIndexEvent', args: [0, 0, addr1.address] },
       { name: 'updateProceedRecipient', args: [addr1.address] },
       { name: 'updateSpeedrunsAddress', args: [addr1.address] },
       { name: 'updateVerifier', args: [addr1.address, 0, 0] },
@@ -236,7 +233,6 @@ describe('AnybodyProblem Tests', function () {
     const [owner, acct1] = await ethers.getSigners()
     const { AnybodyProblem: anybodyProblem, Speedruns: speedruns } =
       await deployContracts({ mock: true })
-
     await anybodyProblem.updateProceedRecipient(acct1.address)
 
     const proceedRecipient = await anybodyProblem.proceedRecipient()
@@ -245,6 +241,7 @@ describe('AnybodyProblem Tests', function () {
     let runId = 0,
       tx
     const day = await anybodyProblem.currentDay()
+
     let accumulativeTime = 0
     for (let i = 0; i < 5; i++) {
       const level = i + 1
@@ -259,6 +256,7 @@ describe('AnybodyProblem Tests', function () {
       tx = solvedReturn.tx
       accumulativeTime += parseInt(solvedReturn.time)
     }
+
     await expect(tx)
       .to.emit(anybodyProblem, 'RunSolved')
       .withArgs(owner.address, runId, accumulativeTime, day)
@@ -271,19 +269,14 @@ describe('AnybodyProblem Tests', function () {
     const balanceAfter = await ethers.provider.getBalance(proceedRecipient)
     expect(balanceAfter.sub(balanceBefore)).to.equal(price)
 
-    const speedrunBalance = await speedruns.balanceOf(owner.address)
+    const speedrunBalance = await speedruns.balanceOf(owner.address, day)
     expect(speedrunBalance).to.equal(1)
-
-    const expectedTokenId = runId
-    const ownerOfToken = await speedruns.ownerOf(expectedTokenId)
-    expect(ownerOfToken).to.equal(owner.address)
 
     const fastestRun = await anybodyProblem.fastestByDay(day, 0)
     expect(fastestRun).to.equal(runId)
 
     const mostGames = await anybodyProblem.mostGames(0)
     expect(mostGames).to.equal(owner.address)
-
     const gamesPlayed = await anybodyProblem.gamesPlayed(owner.address)
     expect(gamesPlayed.total).to.equal(1)
     expect(gamesPlayed.lastPlayed).to.equal(day)
@@ -331,7 +324,7 @@ describe('AnybodyProblem Tests', function () {
       .to.emit(anybodyProblem, 'EthMoved')
       .withArgs(owner.address, true, '0x', price)
 
-    const speedrunBalance = await speedruns.balanceOf(owner.address)
+    const speedrunBalance = await speedruns.balanceOf(owner.address, day)
     expect(speedrunBalance).to.equal(1)
 
     const fastestRun = await anybodyProblem.fastestByDay(day, 0)

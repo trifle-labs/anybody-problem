@@ -139,7 +139,7 @@ export class Anybody extends EventEmitter {
       startingBodies: 1,
       windowWidth: 1000,
       windowHeight: 1000,
-      pixelDensity: window.devicePixelRatio, //4, // Math.min(4, 4 * (window.devicePixelRatio ?? 1)),
+      pixelDensity: typeof window !== 'undefined' ? window.devicePixelRatio : 4, //4, // Math.min(4, 4 * (window.devicePixelRatio ?? 1)),
       scalingFactor: 10n ** 3n,
       minDistanceSquared: 200 * 200,
       G: NORMAL_GRAVITY, // Gravitational constant

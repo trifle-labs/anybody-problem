@@ -35,7 +35,7 @@ async function setupListener() {
     db.query(`LISTEN "${source.name}-anybody_problem_level_solved"`)
     db.query(`LISTEN "${source.name}-anybody_problem_run_created"`)
     db.query(`LISTEN "${source.name}-anybody_problem_run_solved"`)
-    db.query(`LISTEN "${source.name}-speedruns_transfer"`)
+    db.query(`LISTEN "${source.name}-speedruns_transfer_single"`)
   }
 
   await Promise.all(

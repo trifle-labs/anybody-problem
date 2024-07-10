@@ -10,7 +10,12 @@ import { AnybodyProblem, Speedruns } from './contracts'
 import { ethers } from 'ethers'
 import { camelToSnakeCase } from './src/util'
 
-export type Chain = 'mainnet' | 'sepolia' | 'garnet' | 'base_sepolia'
+export type Chain =
+  | 'mainnet'
+  | 'sepolia'
+  | 'garnet'
+  | 'base_sepolia'
+  | 'localhost'
 type KnownSource = Source & { name: Chain }
 
 const mainnet: KnownSource = {
@@ -23,6 +28,14 @@ const sepolia: KnownSource = {
   name: 'sepolia',
   chain_id: 11155111,
   url: process.env.SEPOLIA_RPC,
+  batch_size: 1000,
+  concurrency: 1
+}
+
+const localhost: KnownSource = {
+  name: 'localhost',
+  chain_id: 12345,
+  url: 'http://localhost:8545',
   batch_size: 1000,
   concurrency: 1
 }
@@ -59,7 +72,7 @@ const STARTING_BLOCK = {
 }
 
 // n.b. sources must match ABI in contracts to correctly sync
-export const sources: KnownSource[] = [baseSepolia]
+export const sources: KnownSource[] = [localhost]
 
 const contracts = Object.fromEntries(
   [AnybodyProblem, Speedruns].map((contract) => {
@@ -153,7 +166,7 @@ async function integrationFor(
 if (process.env.OUTPUT) {
   ;(async function main() {
     let integrations = await Promise.all([
-      integrationFor('Speedruns', 'Transfer', [
+      integrationFor('Speedruns', 'TransferSingle', [
         ['block_num DESC', 'tx_idx DESC', 'log_idx DESC']
       ]),
       integrationFor('AnybodyProblem', 'RunCreated'),

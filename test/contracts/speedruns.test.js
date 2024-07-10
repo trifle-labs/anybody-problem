@@ -34,8 +34,8 @@ describe('Speedruns Tests', function () {
         args: [owner.address, 1]
       },
       {
-        name: '__transfer',
-        args: [acct1.address, acct2.address, 1]
+        name: '__transfer_single',
+        args: [acct1.address, acct2.address, 1, 1, '']
       },
       {
         name: 'emitGenericEvent',
