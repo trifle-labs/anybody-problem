@@ -254,6 +254,7 @@ export const Visuals = {
       this.windowWidth,
       this.windowHeight
     )
+    this.pauseGraphic.pixelDensity(this.pixelDensity)
     this.pauseGraphic.clear()
 
     const p = this.pauseGraphic
@@ -1508,7 +1509,6 @@ export const Visuals = {
     graphic.rotate(-rotate + body.velocity.heading() + this.p.PI / 2)
     if (!body.backgroundOnly) {
       this.drawImageAsset(BADDIE_SVG.core, coreWidth, coreColor, graphic)
-      this.drawImageAsset(BADDIE_SVG.face, coreWidth, undefined, graphic)
 
       // pupils always looking at missile, if no missile, look at mouse
       const target =
