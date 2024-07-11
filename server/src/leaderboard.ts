@@ -296,7 +296,7 @@ FROM
 export async function updateLeaderboard(chain: Chain) {
   const start = Date.now()
 
-  const seasonStart = 1717632000
+  const seasonStart = 1719532800
 
   // calculate daily leaderboards
   const today = currentDayInUnixTime()
