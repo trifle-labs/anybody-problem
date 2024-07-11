@@ -242,21 +242,21 @@ players_with_most_levels_solved AS (
 )
 SELECT 
   category,
-  player,
+  concat('0x', encode(player, 'hex')) as player,
   metric
 FROM
   leaderboard
 UNION ALL
 SELECT 
     'Most Days Played' AS category,
-    player,
+    concat('0x', encode(player, 'hex')) as player,
     days_played AS metric
 FROM
     players_with_most_days_played
 UNION ALL
 SELECT 
     'Most Solved' AS category,
-    player,
+    concat('0x', encode(player, 'hex')) as player,
     solve_count AS metric
 FROM
     players_with_most_levels_solved;
