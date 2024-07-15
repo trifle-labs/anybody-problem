@@ -5,7 +5,7 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "shovel": "OUTPUT=1 bun run shovel-config.ts > config.json && ./shovel --config config.json",
+    "shovel": "OUTPUT=1 bun run shovel-config.ts > config.json && DATABASE_URL=postgresql://${USER}@localhost:5432/shovel ./shovel --config config.json",
     "shovel:clean": "dropdb shovel && createdb shovel && rm config.json",
     "dev": "bun run --hot src/index.ts",
     "start": "./shovel --config config.json & bun run src/index.ts",
