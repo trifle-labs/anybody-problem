@@ -51,26 +51,28 @@ async function calculateDailyLeaderboard(day: number, chain: Chain) {
       SELECT 
           run_id,
           level,
-          MIN(time) AS fastest_time
-      FROM 
+          MIN(time) AS fastest_time,
+          player
+      FROM
           anybody_problem_level_solved
       WHERE 
           day = ${day}
           AND src_name = $1
       GROUP BY 
-          run_id, level
+          run_id, level, player
   ),
   cumulative_times AS (
       SELECT 
           run_id,
-          SUM(time) AS total_time
+          SUM(time) AS total_time,
+          player
       FROM 
           anybody_problem_level_solved
       WHERE 
           day = ${day}
           AND src_name = $1
       GROUP BY 
-          run_id
+          run_id, player
       HAVING 
           COUNT(level) = ${MAX_BODY_COUNT - 1}
   ),
@@ -79,7 +81,8 @@ async function calculateDailyLeaderboard(day: number, chain: Chain) {
           run_id,
           level,
           fastest_time,
-          ROW_NUMBER() OVER (PARTITION BY level ORDER BY fastest_time) AS rank
+          ROW_NUMBER() OVER (PARTITION BY level ORDER BY fastest_time) AS rank,
+          player
       FROM 
           fastest_times
   ),
@@ -87,7 +90,8 @@ async function calculateDailyLeaderboard(day: number, chain: Chain) {
       SELECT 
           run_id,
           total_time,
-          ROW_NUMBER() OVER (ORDER BY total_time) AS rank
+          ROW_NUMBER() OVER (ORDER BY total_time) AS rank,
+          player
       FROM 
           cumulative_times
   ),
@@ -95,7 +99,8 @@ async function calculateDailyLeaderboard(day: number, chain: Chain) {
       SELECT
           level,
           run_id,
-          fastest_time AS time
+          fastest_time AS time,
+          player
       FROM
           ranked_fastest_times
       WHERE
@@ -104,46 +109,24 @@ async function calculateDailyLeaderboard(day: number, chain: Chain) {
       SELECT 
           NULL AS level,
           run_id,
-          total_time AS time
+          total_time AS time,
+          player
       FROM 
           ranked_cumulative_times
       WHERE 
           rank <= ${DAILY_CATEGORY_LIMIT}
-  ),
-  latest_transactions AS (
-      SELECT
-          id,
-          "to",
-          ROW_NUMBER() OVER (PARTITION BY id ORDER BY block_num DESC, tx_idx DESC, log_idx DESC) AS rn
-      FROM
-          speedruns_transfer_single
-      WHERE
-          id IN (SELECT run_id FROM leaderboard)
-          AND src_name = $1
-  ),
-  current_players AS (
-      SELECT
-          id,
-          concat('0x', encode("to", 'hex')) as player
-      FROM
-          latest_transactions
-      WHERE
-          rn = 1
   )
   SELECT 
       leaderboard.level,
       leaderboard.run_id,
       leaderboard.time,
-      current_players.player
+      concat('0x', encode(player, 'hex')) as player
   FROM
       leaderboard
-  LEFT JOIN current_players ON leaderboard.run_id = current_players.id
   ORDER BY
       COALESCE(leaderboard.level, 0), leaderboard.time;
   `
-
   const result = await db.query(q, [chain])
-  console.dir(result, { depth: null })
   function scores(rows: any[]): SpeedScore[] {
     return rows.map((r: any) => ({
       problemId: r.problem_id,
@@ -259,21 +242,21 @@ players_with_most_levels_solved AS (
 )
 SELECT 
   category,
-  player,
+  concat('0x', encode(player, 'hex')) as player,
   metric
 FROM
   leaderboard
 UNION ALL
 SELECT 
     'Most Days Played' AS category,
-    player,
+    concat('0x', encode(player, 'hex')) as player,
     days_played AS metric
 FROM
     players_with_most_days_played
 UNION ALL
 SELECT 
     'Most Solved' AS category,
-    player,
+    concat('0x', encode(player, 'hex')) as player,
     solve_count AS metric
 FROM
     players_with_most_levels_solved;
@@ -313,7 +296,7 @@ FROM
 export async function updateLeaderboard(chain: Chain) {
   const start = Date.now()
 
-  const seasonStart = 1717632000
+  const seasonStart = 1719532800
 
   // calculate daily leaderboards
   const today = currentDayInUnixTime()
