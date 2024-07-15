@@ -222,6 +222,15 @@ const deployContracts = async (options) => {
     ]
 
     returnObject.verificationData = verificationData
+  } else if (networkinfo['chainId'] == 12345) {
+    await deployer.sendTransaction({
+      to: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
+      value: ethers.utils.parseEther('1.0')
+    })
+    await deployer.sendTransaction({
+      to: '0xc795344b1b30E3CfEE1AFA1D5204B141940CF445',
+      value: ethers.utils.parseEther('1.0')
+    })
   }
 
   return returnObject

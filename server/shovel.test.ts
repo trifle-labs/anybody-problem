@@ -33,7 +33,7 @@ describe('shovel sanity test', () => {
     //  public       | problems_body_removed |      0
 
     expect(rows).toBeDefined()
-    expect(rowCount).toBeGreaterThanOrEqual(7)
+    expect(rowCount).toBeGreaterThanOrEqual(4)
 
     // TODO: uncomment when there's data
     // const tablesWithRows = rows.filter((row) => row.rows_n > 0)

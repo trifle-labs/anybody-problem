@@ -31,7 +31,14 @@
       while (true) {
         const { value, done } = await reader.read()
         if (done) break
-        sseData.innerHTML += value + '<br><br><br>'
+        const prettyValue = JSON.stringify(
+          JSON.parse(
+            value.substring(value.indexOf('data:') + 5, value.indexOf('id:'))
+          ),
+          null,
+          2
+        )
+        sseData.innerHTML += prettyValue + '<hr><hr><hr>'
         window.scrollTo(0, document.body.scrollHeight)
       }
     </script>
