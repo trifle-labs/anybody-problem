@@ -193,32 +193,18 @@ WITH current_streaks AS (
     LIMIT ${n}
 ),
 fastest_completed AS (
-    SELECT 
+    SELECT
         run_id,
         player,
-        accumulative_time as time
-    FROM 
+        accumulative_time as time,
+        day
+    FROM
         anybody_problem_run_solved
     WHERE
         src_name = $1
-    ORDER BY 
+    ORDER BY
         time ASC
     LIMIT ${n}
-),
-leaderboard AS (
-  SELECT 
-      'Current Streak' AS category,
-      player,
-      current_streak AS metric
-  FROM 
-      current_streaks
-  UNION ALL
-  SELECT 
-      'Fastest Completed Problem' AS category,
-      player,
-      time AS metric
-  FROM 
-      fastest_completed
 ),
 players_with_most_days_played AS (
   SELECT
@@ -247,28 +233,48 @@ players_with_most_levels_solved AS (
   ORDER BY
       solve_count DESC
   LIMIT ${n}
+),
+leaderboard AS (
+    SELECT
+        'Current Streak' AS category,
+        player,
+        current_streak AS metric,
+        NULL::jsonb AS additional_info
+    FROM
+        current_streaks
+    UNION ALL
+    SELECT
+        'Fastest Completed Problem' AS category,
+        player,
+        time AS metric,
+        jsonb_build_object('runId', run_id, 'day', day) AS additional_info
+    FROM
+        fastest_completed
+    UNION ALL
+    SELECT
+        'Most Days Played' AS category,
+        player,
+        days_played AS metric,
+        NULL::jsonb AS additional_info
+    FROM
+        players_with_most_days_played
+    UNION ALL
+    SELECT
+        'Most Solved' AS category,
+        player,
+        solve_count AS metric,
+        NULL::jsonb AS additional_info
+    FROM
+        players_with_most_levels_solved
 )
-SELECT 
-  category,
-  concat('0x', encode(player, 'hex')) as player,
-  metric
+SELECT
+    category,
+    CONCAT('0x', encode(player, 'hex')) as player,
+    metric,
+    additional_info->>'runId' AS runId,
+    additional_info->>'day' AS day
 FROM
-  leaderboard
-UNION ALL
-SELECT 
-    'Most Days Played' AS category,
-    concat('0x', encode(player, 'hex')) as player,
-    days_played AS metric
-FROM
-    players_with_most_days_played
-UNION ALL
-SELECT 
-    'Most Solved' AS category,
-    concat('0x', encode(player, 'hex')) as player,
-    solve_count AS metric
-FROM
-    players_with_most_levels_solved;
-
+    leaderboard;
 `,
     [chain]
   )
@@ -289,9 +295,9 @@ FROM
     fastest: result.rows
       .filter((r: any) => r.category === 'Fastest Completed Problem')
       .map((r: any) => ({
-        runId: 0, // TODO: get runId
-        day: 0, // TODO: get day as unixtime
-        date: '', // TODO: get date as human readble version of unixtime
+        runId: r.runId,
+        day: r.day,
+        date: new Date(r.day * 1000).toISOString().split('T')[0],
         time: parseInt(r.metric),
         player: r.player
       })),
