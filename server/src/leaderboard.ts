@@ -185,6 +185,7 @@ WITH current_streaks AS (
         ) AS subquery
         GROUP BY
             player, streak
+        HAVING MAX(day) = ${today} -- ensure the streak is current
     ) AS streaks
     GROUP BY 
         player
