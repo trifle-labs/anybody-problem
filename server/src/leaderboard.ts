@@ -5,7 +5,13 @@ type LeaderboardLine = {
   player: string
 }
 
-type SpeedScore = LeaderboardLine & { player: string; time: number }
+type SpeedScore = LeaderboardLine & {
+  player: string
+  time: number
+  runId: number
+  date: string
+  day: number
+}
 
 type SolvedScore = LeaderboardLine & { solved: number }
 
@@ -19,7 +25,6 @@ type LevelLeaderboard = {
 }
 
 type DailyLeaderboard = {
-  date: string
   levels: LevelLeaderboard[]
   cumulative: SpeedScore[]
 }
@@ -130,8 +135,9 @@ async function calculateDailyLeaderboard(day: number, chain: Chain) {
   const result = await db.query(q, [chain])
   function scores(rows: any[]): SpeedScore[] {
     return rows.map((r: any) => ({
-      runId: r.run_id,
-      day: new Date(day * 1000).toISOString().split('T')[0],
+      runId: parseInt(r.run_id),
+      day,
+      date: new Date(day * 1000).toISOString().split('T')[0],
       time: parseInt(r.time),
       player: r.player
     }))
@@ -283,6 +289,9 @@ FROM
     fastest: result.rows
       .filter((r: any) => r.category === 'Fastest Completed Problem')
       .map((r: any) => ({
+        runId: 0, // TODO: get runId
+        day: 0, // TODO: get day as unixtime
+        date: '', // TODO: get date as human readble version of unixtime
         time: parseInt(r.metric),
         player: r.player
       })),
