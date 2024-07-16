@@ -10,6 +10,8 @@ const pink_50 = 'rgba(255, 105, 177, 1)'
 const pink_75 = 'rgba(59, 29, 43, 1)'
 const green_50 = 'rgba(125, 241, 115, 1)'
 const green_75 = 'rgba(4, 53, 0, 1)'
+const yellow_50 = 'rgba(252, 255, 105, 1)'
+const yellow_75 = 'rgba(58, 59, 29, 1)'
 
 export const THEME = {
   bg: 'rgb(20,20,20)',
@@ -20,6 +22,7 @@ export const THEME = {
   lime: 'rgba(125, 241, 115, 1)',
   lime_40: 'rgba(125, 241, 115, 0.4)',
   pink: 'rgba(236, 205, 255, 1)',
+  pink_40: 'rgba(219, 115, 255, 1)',
   fuschia: 'rgba(160, 67, 232, 1)',
   red: 'rgba(255, 88, 88, 1)',
   maroon: 'rgba(53, 20, 20, 1)',
@@ -34,7 +37,8 @@ export const THEME = {
   pink_50,
   pink_75,
   green_50,
-  green_75
+  green_75,
+  yellow_50
 }
 
 // [hue, saturation, lightness]
@@ -102,6 +106,10 @@ export const themes = {
     green: {
       fg: green_50,
       bg: green_75
+    },
+    yellow: {
+      fg: yellow_50,
+      bg: yellow_75
     }
   }
 }

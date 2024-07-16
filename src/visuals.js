@@ -1013,30 +1013,8 @@ export const Visuals = {
     p.image(this.bodiesGraphic, 0, 0)
     this.bodiesGraphic.clear()
 
-    // draw messages from hero
-    const message1Entrance = 1.5
-    const message1 = ['wOwOwoWwwww ! ! ! !', 'you solved the daily problem !']
-
-    const message1Frame =
-      this.showProblemRankingsScreenAt + message1Entrance * this.P5_FPS
-
-    const message2Entrance = 3
-    const message2 = [
-      'SAVE your score to the leaderboard',
-      "and receive today's celestial body !"
-    ]
-    const message2Frame =
-      this.showProblemRankingsScreenAt + message2Entrance * this.P5_FPS
-
-    const message3Entrance = 5.5
-    const message3 = [
-      "replay as many times as you'd like",
-      "before tomorrow's problem..."
-    ]
-    const message3Frame =
-      this.showProblemRankingsScreenAt + message3Entrance * this.P5_FPS
-
     this.drawMessageBox ||= ({ lines, x, y, color, start, textWidth }) => {
+      if (start !== -1 && this.p5Frames < start) return
       const padding = 20
       const paddingLeft = 24
       p.textSize(32)
@@ -1061,7 +1039,31 @@ export const Visuals = {
 
       p.text(messageText, x + paddingLeft, y + padding)
     }
-    if (this.p5Frames > message1Frame) {
+
+    if (this.saveStatus === 'unsaved') {
+      // draw messages from hero that
+      const message1Entrance = 1.5
+      const message1 = ['wOwOwoWwwww ! ! ! !', 'you solved the daily problem !']
+
+      const message1Frame =
+        this.showProblemRankingsScreenAt + message1Entrance * this.P5_FPS
+
+      const message2Entrance = 3
+      const message2 = [
+        'SAVE your score to the leaderboard',
+        "and receive today's celestial body !"
+      ]
+      const message2Frame =
+        this.showProblemRankingsScreenAt + message2Entrance * this.P5_FPS
+
+      const message3Entrance = 5.5
+      const message3 = [
+        "replay as many times as you'd like",
+        "before tomorrow's problem..."
+      ]
+      const message3Frame =
+        this.showProblemRankingsScreenAt + message3Entrance * this.P5_FPS
+
       this.drawMessageBox({
         lines: message1,
         x: 344,
@@ -1069,9 +1071,7 @@ export const Visuals = {
         color: THEME.iris_30,
         start: message1Frame
       })
-    }
 
-    if (this.p5Frames > message3Frame) {
       this.drawMessageBox({
         lines: message3,
         x: 370,
@@ -1079,9 +1079,7 @@ export const Visuals = {
         color: THEME.pink,
         start: message3Frame
       })
-    }
 
-    if (this.p5Frames > message2Frame) {
       this.drawMessageBox({
         lines: message2,
         x: 484,
@@ -1092,11 +1090,84 @@ export const Visuals = {
       })
     }
 
-    if (this.saveStatus === 'unsaved' || this.saveStatus === 'saving') {
+    if (this.saveStatus === 'validating') {
+      this.validatingAt ||= this.p5Frames
+      this.drawMessageBox({
+        lines: ['validating your score...'],
+        x: 344,
+        y: 504,
+        color: THEME.iris_30,
+        start: this.validatingAt
+      })
+    }
+
+    if (
+      this.saveStatus === 'validated' ||
+      this.saveStatus === 'saved' ||
+      this.saveStatus === 'saving'
+    ) {
+      this.validatedAt ||= this.p5Frames
+      this.drawMessageBox({
+        lines: ['score validated!'],
+        x: 344,
+        y: 504,
+        color: THEME.iris_30,
+        start: -1
+      })
+    }
+
+    if (this.saveStatus === 'validated' && this.validatedAt) {
+      const message2Frame = this.validatedAt + 1 * this.P5_FPS
+      this.drawMessageBox({
+        lines: ['you can now save your score'],
+        x: 484,
+        y: 566,
+        color: THEME.green_50,
+        start: message2Frame
+      })
+    } else if (this.saveStatus === 'saving') {
+      this.savingAt ||= this.p5Frames
+      this.drawMessageBox({
+        lines: ['saving your score...'],
+        x: 484,
+        y: 566,
+        color: THEME.green_50,
+        start: this.savingAt
+      })
+    } else if (this.saveStatus === 'saved') {
+      this.savedAt ||= this.p5Frames
+      this.drawMessageBox({
+        lines: ['score SAVED!'],
+        x: 478,
+        y: 566,
+        color: THEME.green_50,
+        start: this.savedAt
+      })
+
+      const message2Frame = this.savedAt + 1 * this.P5_FPS
+      this.drawMessageBox({
+        lines: ['this body is now in your wallet !'],
+        x: 414,
+        y: 653,
+        color: THEME.pink_40,
+        start: message2Frame
+      })
+
+      const message3Frame = this.savedAt + 2 * this.P5_FPS
+      this.drawMessageBox({
+        lines: ['but, maybe you can do better ??'],
+        x: 545,
+        y: 757,
+        color: THEME.yellow_50,
+        start: message3Frame
+      })
+    }
+
+    if (this.saveStatus !== 'saved') {
       // bottom buttons
       const buttonCount = 2
       this.drawBottomButton({
-        text: 'Back',
+        text: 'BACK',
         onClick: () => {
           this.restart(null, false)
         },
@@ -1105,21 +1176,29 @@ export const Visuals = {
         column: 0
       })
       this.drawBottomButton({
-        text: 'Save',
+        text:
+          this.saveStatus === 'unsaved'
+            ? 'SAVE'
+            : this.saveStatus === 'validated'
+              ? 'SAVE' // TODO: is it confusing that this label doesn't change?
+              : `${this.saveStatus.toUpperCase()}...`,
         onClick: () => {
-          this.savedAt = this.frames
+          this.handleSave()
         },
         ...themes.buttons.green,
+        disabled:
+          this.saveStatus !== 'unsaved' && this.saveStatus !== 'validated',
         columns: buttonCount,
-        column: 1
+        column: 1,
+        key: 'problem-save'
       })
     } else {
       this.drawBottomButton({
-        text: this.readyToSave ? 'SAVE' : 'ALMOST READY TO SAVE...',
+        text: 'NEW GAME',
         onClick: () => {
-          this.emit('save')
+          this.restart()
         },
-        ...themes.buttons.green,
+        ...themes.buttons.yellow,
         columns: 1,
         column: 0
       })
