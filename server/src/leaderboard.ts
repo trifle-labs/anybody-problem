@@ -19,6 +19,7 @@ type LevelLeaderboard = {
 }
 
 type DailyLeaderboard = {
+  date: string
   levels: LevelLeaderboard[]
   cumulative: SpeedScore[]
 }
@@ -129,7 +130,8 @@ async function calculateDailyLeaderboard(day: number, chain: Chain) {
   const result = await db.query(q, [chain])
   function scores(rows: any[]): SpeedScore[] {
     return rows.map((r: any) => ({
-      problemId: r.problem_id,
+      runId: r.run_id,
+      day: new Date(day * 1000).toISOString().split('T')[0],
       time: parseInt(r.time),
       player: r.player
     }))
@@ -274,7 +276,7 @@ FROM
     currentStreak: result.rows
       .filter((r: any) => r.category === 'Current Streak')
       .map((r: any) => ({
-        problemId: r.problem_id,
+        runId: r.run_id,
         streak: parseInt(r.metric),
         player: r.player
       })),
