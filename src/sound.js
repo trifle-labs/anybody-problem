@@ -290,6 +290,10 @@ export default class Sound {
   }
 
   async playOneShot(url, volume, opts = false) {
+    if (Transport.state !== 'started') {
+      await start()
+      Transport.start()
+    }
     this.oneShots = this.oneShots || {}
     const key = `${url}-${volume}-${opts && JSON.stringify(opts)}`
     if (!this.oneShots[key]) {
@@ -303,17 +307,16 @@ export default class Sound {
     // play if it's been loaded or loads quickly, otherwise load and skip
     const now = Date.now()
     await loaded()
-    if (Date.now() - now < 40) {
-      // if (!this.anybody.gameOver) {
+    if (Date.now() - now < 100) {
       this.oneShots[key].start()
       return this.oneShots[key]
-      // }
     }
   }
 
   async playGameOver({ win }) {
     if (this.playedGameOver) return
     this.playedGameOver = true
+    Transport?.cancel()
     Transport.stop()
     this.voices?.forEach((voice) => voice.player.stop())
 
@@ -392,6 +395,7 @@ export default class Sound {
   }
 
   stop() {
+    Transport?.cancel()
     Transport?.stop()
     this.loop?.dispose()
     this.voices?.forEach((voice) => {
@@ -406,7 +410,7 @@ export default class Sound {
 
   async play(song) {
     // only start if it hasn't started yet
-    if (Transport.state === 'started') return
+    // if (Transport.state === 'started') return
     await start()
     this.playingGameOver = false
 

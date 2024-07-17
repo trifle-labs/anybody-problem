@@ -298,7 +298,10 @@ export const Visuals = {
     if (!this.willUnpause) {
       this.drawFatButton({
         text: 'PLAY',
-        onClick: () => this.setPause(false),
+        onClick: () => {
+          this.sound?.playStart()
+          this.setPause(false)
+        },
         fg: THEME.fuschia,
         bg: THEME.pink,
         bottom: 120,
@@ -1023,9 +1026,17 @@ export const Visuals = {
       p.fill('black')
       p.stroke(color)
       p.strokeWeight(1)
-      const messageText = lines
-        .join('\n')
-        .slice(0, Math.floor((this.p5Frames - start) / 2))
+      const joined = lines.join('\n')
+      const messageText = joined.slice(
+        0,
+        Math.floor((this.p5Frames - start) / 2)
+      )
+      if (
+        this.p5Frames % Math.floor(this.P5_FPS / 8) === 0 &&
+        joined.length > messageText.length
+      ) {
+        this.sound?.playStat()
+      }
       const longestLine = lines.sort((a, b) => b.length - a.length)[0]
       p.rect(
         x,
