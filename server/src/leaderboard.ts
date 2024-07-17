@@ -161,6 +161,7 @@ async function calculateAllTimeLeaderboard(
   today: number,
   chain: Chain
 ): Promise<Leaderboard['allTime']> {
+  const yesterday = today - 24 * 60 * 60
   const n = 10
   const result = await db.query(
     `
@@ -185,7 +186,7 @@ WITH current_streaks AS (
         ) AS subquery
         GROUP BY
             player, streak
-        HAVING MAX(day) = ${today} -- ensure the streak is current
+        HAVING MAX(day) = ${today} OR MAX(day) = ${yesterday} -- ensure the streak is current
     ) AS streaks
     GROUP BY 
         player
