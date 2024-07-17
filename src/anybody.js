@@ -232,9 +232,21 @@ export class Anybody extends EventEmitter {
       .split('T')[0]
       .replace(/-/g, '.')
     this.framesTook = false
+    this.showProblemRankingsScreenAt = -1
+    this.saveStatus = 'unsaved' // 'unsaved' -> 'validating' -> 'validated' -> 'saving' -> 'saved' | 'error'
+    delete this.validatedAt
+    delete this.validatingAt
+    delete this.savingAt
+    delete this.savedAt
+
     // uncomment to work on the game over screen
     // setTimeout(() => {
     //   this.handleGameOver({ won: true })
+    // }, 500)
+
+    // uncomment to work on the problem-ranking screen
+    // setTimeout(() => {
+    //   this.showProblemRankingsScreenAt = this.p5Frames
     // }, 500)
   }
 
@@ -386,7 +398,11 @@ export class Anybody extends EventEmitter {
     // if mouse is inside of a button, call the button's handler
     for (const key in this.buttons) {
       const button = this.buttons[key]
-      if (button.visible && intersectsButton(button, x, y)) {
+      if (
+        button.visible &&
+        intersectsButton(button, x, y) &&
+        !button.disabled
+      ) {
         button.onClick()
         return
       }
@@ -919,6 +935,22 @@ export class Anybody extends EventEmitter {
       dust,
       timeTook,
       framesTook
+    }
+  }
+
+  handleSave = () => {
+    // mock for testing visuals
+
+    if (this.saveStatus == 'unsaved') {
+      this.saveStatus = 'validating'
+      setTimeout(() => {
+        this.saveStatus = 'validated'
+      }, 2000)
+    } else if (this.saveStatus == 'validated') {
+      this.saveStatus = 'saving'
+      setTimeout(() => {
+        this.saveStatus = 'saved'
+      }, 2000)
     }
   }
 }

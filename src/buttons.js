@@ -13,16 +13,18 @@ export const Buttons = {
     fg = 'black',
     bg = 'white',
     fgHover = 'rgba(160, 67, 232, 0.3)',
-    p = this.p
+    p = this.p,
+    disabled = false,
+    key = `${text}-${x}-${y}-${height}-${width}`
   }) {
     // register the button if it's not registered
-    const key = `${text}-${x}-${y}-${height}-${width}`
     let button = this.buttons[key]
     if (!button) {
       this.buttons[key] = { x, y, height, width, onClick: onClick.bind(this) }
       button = this.buttons[key]
     }
     button.visible = true
+    button.disabled = disabled
     const justEntered = button.lastVisibleFrame !== this.p5Frames - 1
     if (justEntered) {
       button.visibleForFrames = 0
@@ -44,7 +46,7 @@ export const Buttons = {
     p.noStroke()
     p.textSize(textSize * scale)
     p.strokeWeight(button.active ? 1 : 4)
-    p.fill(bg)
+    p.fill(button.disabled ? rgbaOpacity(bg, 0.4) : bg)
 
     p.rect(
       x + width / 2 - scaledWidth / 2,
@@ -53,19 +55,10 @@ export const Buttons = {
       scaledHeight,
       height / 2
     )
-    if (button.hover) {
-      p.fill(fgHover)
-      p.rect(x, y, width, height, height / 2)
-    }
-
-    if (button.active) {
-      p.fill(rgbaOpacity(bg, 0.3))
-      p.rect(x, y, width, height, height / 2)
-    }
 
     if (scale >= 0.3 && fonts.dot) {
       p.textFont(fonts.dot)
-      p.fill(fg)
+      p.fill(button.disabled ? rgbaOpacity(fg, 0.4) : fg)
       p.textAlign(p.CENTER, p.CENTER)
       p.text(
         text,
@@ -74,6 +67,17 @@ export const Buttons = {
         y + height / 2 + textSize * 0.05
       )
     }
+
+    if (!button.disabled && button.hover) {
+      p.fill(fgHover)
+      p.rect(x, y, width, height, height / 2)
+    }
+
+    if (!button.disabled && button.active) {
+      p.fill(rgbaOpacity(bg, 0.3))
+      p.rect(x, y, width, height, height / 2)
+    }
+
     p.pop()
   },
 

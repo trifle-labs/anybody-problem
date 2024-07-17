@@ -247,8 +247,10 @@ export const Visuals = {
       this.justPaused = false
     }
   },
+
   drawPause() {
-    if (!fonts.dot || !this.paused) return
+    if (!fonts.dot || !this.paused || this.showProblemRankingsScreenAt !== -1)
+      return
 
     this.pauseGraphic ||= this.p.createGraphics(
       this.windowWidth,
@@ -500,6 +502,8 @@ export const Visuals = {
     p.noStroke()
     p.textAlign(p.LEFT, p.TOP)
 
+    this.drawProblemRankingsScreen()
+
     const runningFrames = this.frames - this.startingFrame
     const seconds = (this.framesTook || runningFrames) / this.FPS
     const secondsLeft =
@@ -528,6 +532,8 @@ export const Visuals = {
   },
 
   drawWinScreen() {
+    if (this.showProblemRankingsScreenAt >= 0) return
+
     const justEntered = this.winScreenLastVisibleFrame !== this.p5Frames - 1
     if (justEntered) {
       this.winScreenVisibleForFrames = 0
@@ -587,7 +593,7 @@ export const Visuals = {
     p.fill('black')
     p.stroke(THEME.border)
     p.strokeWeight(1)
-    const gutter = 24
+    const gutter = 22
     const middleBoxY = 320
     p.rect(gutter, 104, this.windowWidth - gutter * 2, 144, 24)
 
@@ -832,7 +838,11 @@ export const Visuals = {
         text: 'NEXT',
         onClick: () => {
           this.level++
-          this.restart(null, false)
+          if (this.level > 5) {
+            this.showProblemRankingsScreenAt = this.p5Frames
+          } else {
+            this.restart(null, false)
+          }
         },
         ...themes.buttons.green,
         columns: buttonCount,
@@ -852,7 +862,351 @@ export const Visuals = {
     p.pop()
   },
 
-  getDisplayHero() {
+  drawProblemRankingsScreen() {
+    if (this.showProblemRankingsScreenAt === -1) return
+
+    const { p } = this
+
+    const entranceTime = 1.5 // seconds
+
+    const scale = Math.min(
+      1,
+      (this.p5Frames - this.showProblemRankingsScreenAt) /
+        (entranceTime * this.P5_FPS)
+    )
+
+    p.push()
+    p.noStroke()
+    p.fill('white')
+
+    // bordered boxes
+    p.fill('black')
+    p.stroke(THEME.border)
+    p.strokeWeight(1)
+    const gutter = 22
+    const middleBoxY = 155
+    const rowHeight = 72
+    const rows = 3
+    p.rect(gutter, 28, this.windowWidth - gutter * 2, 103, 24)
+    p.rect(
+      gutter,
+      middleBoxY,
+      this.windowWidth - gutter * 2,
+      rows * rowHeight,
+      24
+    )
+    p.rect(
+      gutter,
+      24 + 155 + rows * rowHeight,
+      this.windowWidth - gutter * 2,
+      rowHeight,
+      24
+    )
+
+    // logo at top
+    if (!fonts.dot) return
+    p.textFont(fonts.dot)
+    const logoOpacity = p.map(scale, 0, 1, 0, 1)
+    p.fill(rgbaOpacity(THEME.pink, logoOpacity))
+    p.textSize(60)
+    p.textAlign(p.LEFT, p.TOP)
+    drawKernedText(p, 'Anybody', 46, 44, 0.8)
+    drawKernedText(p, 'Problem', 352, 44, 2)
+
+    // upper box text - date
+    p.textSize(56)
+    p.noStroke()
+    if (!fonts.body) return
+    p.textFont(fonts.body)
+    p.fill(THEME.iris_30)
+    p.textAlign(p.RIGHT, p.TOP)
+    p.text(this.date, this.windowWidth - 42, 48)
+
+    // middle box text
+    p.textSize(44)
+    p.textAlign(p.RIGHT, p.TOP)
+    const col1X = 42
+    const col2X = 187
+    const col3X = this.windowWidth - col1X // right aligned
+
+    // middle box text - values
+    const scores = [
+      {
+        rank: 1,
+        name: '0xABCD-1234',
+        time: 188.889192912
+      },
+      {
+        rank: 2,
+        name: 'longassensnamethatgoesofftherowalllllllls',
+        time: 189.889192912
+      },
+      {
+        rank: 3,
+        name: '0xABCD-1234',
+        time: 198.889192912
+      },
+      {
+        rank: 999998,
+        name: 'petersugihara.eth',
+        time: 260.889192912
+      }
+    ]
+
+    // middle box text - value text
+    for (const [rowNumber, score] of scores.entries()) {
+      const rowY =
+        rowHeight * rowNumber + rowHeight / 2 + (rowNumber === 3 ? 24 : 0)
+
+      p.textAlign(p.LEFT, p.CENTER)
+      p.fill(THEME.iris_60)
+      const rankText =
+        score.rank === 1
+          ? '1st'
+          : score.rank === 2
+            ? '2nd'
+            : score.rank === 3
+              ? '3rd'
+              : `${score.rank.toLocaleString()}`
+      p.text(rankText, col1X, middleBoxY + rowY)
+
+      p.fill(THEME.iris_30)
+      let nameText = score.name // truncate to fit
+      while (p.textWidth(nameText) > 656) {
+        nameText = `${nameText.replaceAll(/\.\.\.$/g, '').slice(0, -1)}...`
+      }
+      p.text(nameText, col2X, middleBoxY + rowY)
+
+      p.textAlign(p.RIGHT, p.CENTER)
+      p.fill(THEME.iris_60)
+      p.text(score.time.toFixed(2), col3X, middleBoxY + rowY)
+
+      // bottom divider line
+      if (rowNumber < 2) {
+        p.fill(THEME.iris_60)
+        p.rect(
+          gutter,
+          middleBoxY + rowHeight * (rowNumber + 1),
+          this.windowWidth - gutter * 2,
+          1
+        )
+      }
+    }
+    // end middle box text
+
+    // draw hero body
+    const body = this.getDisplayHero({ radius: 33 })
+    const radius = this.getBodyRadius(body.radius)
+    const xWobble = p.sin(p.frameCount / this.P5_FPS) * (5 + body.bodyIndex)
+    const yWobble =
+      p.cos(p.frameCount / this.P5_FPS + body.bodyIndex * 3) *
+      (6 + body.bodyIndex)
+    body.position = {
+      x: p.map(scale ** 3, 0, 1, -140, 180) + xWobble,
+      y: 670 + yWobble
+    }
+    this.bodiesGraphic ||= this.p.createGraphics(
+      this.windowWidth,
+      this.windowHeight
+    )
+    this.drawBodiesLooped(body, radius, this.drawBody)
+    p.image(this.bodiesGraphic, 0, 0)
+    this.bodiesGraphic.clear()
+
+    this.drawMessageBox ||= ({ lines, x, y, color, start, textWidth }) => {
+      if (start !== -1 && this.p5Frames < start) return
+      const padding = 20
+      const paddingLeft = 24
+      p.textSize(32)
+      p.textAlign(p.LEFT, p.TOP)
+      p.textLeading(36)
+      p.fill('black')
+      p.stroke(color)
+      p.strokeWeight(1)
+      const messageText = lines
+        .join('\n')
+        .slice(0, Math.floor((this.p5Frames - start) / 2))
+      const longestLine = lines.sort((a, b) => b.length - a.length)[0]
+      p.rect(
+        x,
+        y,
+        (textWidth || p.textWidth(longestLine)) + paddingLeft + padding,
+        lines.length * 36 + padding * 2,
+        20
+      )
+      // console.log({ h: lines.length * 36 + padding * 2 })
+      p.fill(color)
+
+      p.text(messageText, x + paddingLeft, y + padding)
+    }
+
+    if (this.saveStatus === 'unsaved') {
+      // draw messages from hero that
+      const message1Entrance = 1.5
+      const message1 = ['wOwOwoWwwww ! ! ! !', 'you solved the daily problem !']
+
+      const message1Frame =
+        this.showProblemRankingsScreenAt + message1Entrance * this.P5_FPS
+
+      const message2Entrance = 3
+      const message2 = [
+        'SAVE your score to the leaderboard',
+        "and receive today's celestial body !"
+      ]
+      const message2Frame =
+        this.showProblemRankingsScreenAt + message2Entrance * this.P5_FPS
+
+      const message3Entrance = 5.5
+      const message3 = [
+        "replay as many times as you'd like",
+        "before tomorrow's problem..."
+      ]
+      const message3Frame =
+        this.showProblemRankingsScreenAt + message3Entrance * this.P5_FPS
+
+      this.drawMessageBox({
+        lines: message1,
+        x: 344,
+        y: 504,
+        color: THEME.iris_30,
+        start: message1Frame
+      })
+
+      this.drawMessageBox({
+        lines: message3,
+        x: 370,
+        y: 704,
+        color: THEME.pink,
+        start: message3Frame
+      })
+
+      this.drawMessageBox({
+        lines: message2,
+        x: 484,
+        y: 604,
+        color: THEME.green_50,
+        start: message2Frame,
+        textWidth: 451
+      })
+    }
+
+    if (this.saveStatus === 'validating') {
+      this.validatingAt ||= this.p5Frames
+      this.drawMessageBox({
+        lines: ['validating your score...'],
+        x: 344,
+        y: 504,
+        color: THEME.iris_30,
+        start: this.validatingAt
+      })
+    }
+
+    if (
+      this.saveStatus === 'validated' ||
+      this.saveStatus === 'saved' ||
+      this.saveStatus === 'saving'
+    ) {
+      this.validatedAt ||= this.p5Frames
+      this.drawMessageBox({
+        lines: ['score validated!'],
+        x: 344,
+        y: 504,
+        color: THEME.iris_30,
+        start: -1
+      })
+    }
+
+    if (this.saveStatus === 'validated' && this.validatedAt) {
+      const message2Frame = this.validatedAt + 1 * this.P5_FPS
+      this.drawMessageBox({
+        lines: ['you can now save your score'],
+        x: 484,
+        y: 566,
+        color: THEME.green_50,
+        start: message2Frame
+      })
+    } else if (this.saveStatus === 'saving') {
+      this.savingAt ||= this.p5Frames
+      this.drawMessageBox({
+        lines: ['saving your score...'],
+        x: 484,
+        y: 566,
+        color: THEME.green_50,
+        start: this.savingAt
+      })
+    } else if (this.saveStatus === 'saved') {
+      this.savedAt ||= this.p5Frames
+      this.drawMessageBox({
+        lines: ['score SAVED!'],
+        x: 478,
+        y: 566,
+        color: THEME.green_50,
+        start: this.savedAt
+      })
+
+      const message2Frame = this.savedAt + 1 * this.P5_FPS
+      this.drawMessageBox({
+        lines: ['this body is now in your wallet !'],
+        x: 414,
+        y: 653,
+        color: THEME.pink_40,
+        start: message2Frame
+      })
+
+      const message3Frame = this.savedAt + 2 * this.P5_FPS
+      this.drawMessageBox({
+        lines: ['but, maybe you can do better ??'],
+        x: 545,
+        y: 757,
+        color: THEME.yellow_50,
+        start: message3Frame
+      })
+    }
+
+    if (this.saveStatus !== 'saved') {
+      // bottom buttons
+      const buttonCount = 2
+      this.drawBottomButton({
+        text: 'BACK',
+        onClick: () => {
+          this.restart(null, false)
+        },
+        ...themes.buttons.teal,
+        columns: buttonCount,
+        column: 0
+      })
+      this.drawBottomButton({
+        text:
+          this.saveStatus === 'unsaved'
+            ? 'SAVE'
+            : this.saveStatus === 'validated'
+              ? 'SAVE' // TODO: is it confusing that this label doesn't change?
+              : `${this.saveStatus.toUpperCase()}...`,
+        onClick: () => {
+          this.handleSave()
+        },
+        ...themes.buttons.green,
+        disabled:
+          this.saveStatus !== 'unsaved' && this.saveStatus !== 'validated',
+        columns: buttonCount,
+        column: 1,
+        key: 'problem-save'
+      })
+    } else {
+      this.drawBottomButton({
+        text: 'NEW GAME',
+        onClick: () => {
+          this.restart()
+        },
+        ...themes.buttons.yellow,
+        columns: 1,
+        column: 0
+      })
+    }
+    p.pop()
+  },
+
+  getDisplayHero({ radius = 30 }) {
     const body = this.bodies[0]
     const bodyCopy = JSON.parse(
       JSON.stringify(
@@ -862,7 +1216,7 @@ export const Visuals = {
     )
     bodyCopy.position = this.p.createVector(body.position.x, body.position.y)
     bodyCopy.velocity = this.p.createVector(body.velocity.x, body.velocity.y)
-    bodyCopy.radius = 30
+    bodyCopy.radius = radius
     return bodyCopy
   },
 
