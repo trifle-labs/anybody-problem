@@ -1206,7 +1206,7 @@ export const Visuals = {
     p.pop()
   },
 
-  getDisplayHero({ radius = 30 }) {
+  getDisplayHero({ radius } = { radius: 33 }) {
     const body = this.bodies[0]
     const bodyCopy = JSON.parse(
       JSON.stringify(
