@@ -245,9 +245,9 @@ export class Anybody extends EventEmitter {
     // }, 500)
 
     // uncomment to work on the problem-ranking screen
-    setTimeout(() => {
-      this.showProblemRankingsScreenAt = this.p5Frames
-    }, 500)
+    // setTimeout(() => {
+    //   this.showProblemRankingsScreenAt = this.p5Frames
+    // }, 500)
   }
 
   // run once at initilization
