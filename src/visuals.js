@@ -195,10 +195,6 @@ export const Visuals = {
     }
     this.drawWitheringBodies()
 
-    if (this.frames % 10 == 0) {
-      this.sound?.render(this)
-    }
-
     this.drawPause()
     this.drawScore()
 

@@ -477,21 +477,4 @@ export default class Sound {
     // PLAY
     Transport.start()
   }
-
-  // given the state of anybody, modify voices
-  async render(anybody) {
-    if (!this.voices) return
-
-    // map the x position of each body to a voice's panning
-    this.voices.forEach((voice, i) => {
-      const body = anybody.bodies[i]
-      if (!body) return
-      const { x } = body.position
-
-      const xFactor = x / anybody.windowWidth
-
-      // panning
-      voice.panVol.pan.linearRampTo(xFactor * PAN_RANGE - PAN_RANGE / 2, 0.5)
-    })
-  }
 }
