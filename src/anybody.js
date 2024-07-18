@@ -593,23 +593,23 @@ export class Anybody extends EventEmitter {
     ).toString()
 
     this.calculateBodyFinal()
-    const missileInits = []
+    const missileInputs = []
     if (this.mode == 'game') {
       let missileIndex = 0
       // loop through all the steps that were just played since the last chunk
       for (let i = this.alreadyRun; i < this.alreadyRun + this.stopEvery; i++) {
-        // if the step index matches the step where a missile was shot, add the missile to the missileInits
+        // if the step index matches the step where a missile was shot, add the missile to the missileInputs
         // otherwise fill the missileInit array with an empty missile
         if (this.missileInits[missileIndex]?.step == i) {
           const missile = this.missileInits[missileIndex]
-          missileInits.push([missile.vx, missile.vy, missile.radius])
+          missileInputs.push([missile.vx, missile.vy, missile.radius])
           missileIndex++
         } else {
-          missileInits.push([maxVectorScaled, maxVectorScaled, '0'])
+          missileInputs.push([maxVectorScaled, maxVectorScaled, '0'])
         }
       }
       // add one more because missileInits contains one extra for circuit
-      missileInits.push([maxVectorScaled, maxVectorScaled, '0'])
+      missileInputs.push([maxVectorScaled, maxVectorScaled, '0'])
     }
 
     // define the inflightMissile for the proof from the first missile shot during this chunk
@@ -657,7 +657,7 @@ export class Anybody extends EventEmitter {
         day,
         level,
         inflightMissile,
-        missiles: missileInits,
+        missiles: missileInputs,
         bodyInits,
         bodyFinal,
         framesTook,
@@ -667,6 +667,8 @@ export class Anybody extends EventEmitter {
 
     this.bodyInits = JSON.parse(JSON.stringify(this.bodyFinal))
     this.alreadyRun = this.frames
+
+    // this.missileInits is initialized with the currently in flight missiles
     this.missileInits = this.processMissileInits(this.missiles).map((m) => {
       m.step = this.frames
       return m
@@ -680,9 +682,14 @@ export class Anybody extends EventEmitter {
     ) {
       this.finalBatchSent = true
     }
-    if (this.missileInits.length > 0) {
-      // TODO: this is a hack to prevent proofs from breaking,
-      // maybe should add visuals and turn it into a feature (single shot mode)
+    // if missiles.length > 0 that means that there is currently a missile in flight
+    // and so you can't add a new missile until the current missile has been finished.
+    // it is finished when this.missiles.length == 0, as checked in step() and missileClick()
+    // If a missile is shot while lastMissileCantBeUndone is true, then an event is emittied
+    // to notify the proving system to remove the last shot from the last chunk and the missile
+    // is removed from the missileInits array to prevent it from being used as incoming missile
+    // during the next chunk.
+    if (this.missiles.length > 0) {
       this.lastMissileCantBeUndone = true
     }
     this.levelSpeeds[level - 1] = results
@@ -852,14 +859,11 @@ export class Anybody extends EventEmitter {
     //   this.missileInits.pop()
     // }
 
-    if (this.lastMissileCantBeUndone) {
-      if (this.missiles.length > 0) {
-        console.log('CANT ADD NEW MISSILE')
-        return
-      } else {
+    if (this.missiles.length > 0) {
+      if (this.lastMissileCantBeUndone) {
+        this.emit('remove-last-missile')
         this.lastMissileCantBeUndone = false
       }
-    } else if (this.missiles.length > 0) {
       this.missileInits.pop()
       this.missileCount--
     }
