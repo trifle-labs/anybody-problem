@@ -861,7 +861,6 @@ export class Anybody extends EventEmitter {
 
     if (this.missiles.length > 0) {
       if (this.lastMissileCantBeUndone) {
-        console.log('outgoing missile from last chunk must be removed!!!!')
         this.emit('remove-last-missile')
         this.lastMissileCantBeUndone = false
       }
