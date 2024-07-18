@@ -154,6 +154,8 @@ contract AnybodyProblem is Ownable, ERC2981 {
       }
       // TODO: decide whether this is necessary
       // require(runs[runId].solved, "Must solve all levels to complete run");
+
+      // TODO: make a hash of all proof data to ensure this proof hasn't been used before
   }
   function runCount() public view returns (uint256) {
     return runs.length - 1;
@@ -244,7 +246,7 @@ contract AnybodyProblem is Ownable, ERC2981 {
     return runId;
   }
   function verifyLevelChunk(uint256 runId, uint256 tickCount, uint256 day, uint[2] memory a, uint[2][2] memory b, uint[2] memory c, uint[] memory input) internal {
-    uint256 intendedLevel = getLevelFromInputs(input.length);
+    (uint256 intendedLevel, uint256 dummyCount) = getLevelFromInputs(input);
     uint256 level = currentLevel(runId);
 
     require(intendedLevel == level, "Previous level not yet complete");
@@ -253,19 +255,19 @@ contract AnybodyProblem is Ownable, ERC2981 {
     require(!runs[runId].levels[levelIndex].solved, "Level already solved");
     
     uint256 bodyCount = level + 1;
-    address verifier = verifiers[bodyCount][tickCount];
+    address verifier = verifiers[bodyCount + dummyCount][tickCount];
     require(verifier != address(0), "Invalid verifier");
-    require(address(uint160(input[5 + bodyCount * 5 + 1])) == msg.sender, "Owner of this proof is not the sender");
+    require(address(uint160(input[5 + (bodyCount + dummyCount) * 5 + 1])) == msg.sender, "Owner of this proof is not the sender");
 
     // confirm current inflightMissile == previous outflightMissile
     // or confirm that curren inflightMissile (x, y) == (0, windowHeight)
     uint256[5] memory storedOutflightMissile = runs[runId].levels[levelIndex].tmpInflightMissile;
     uint256[5] memory newInflightMissile = [
-        input[5 + 2 * bodyCount * 5 + 2 + 0],
-        input[5 + 2 * bodyCount * 5 + 2 + 1],
-        input[5 + 2 * bodyCount * 5 + 2 + 2],
-        input[5 + 2 * bodyCount * 5 + 2 + 3],
-        input[5 + 2 * bodyCount * 5 + 2 + 4]
+        input[5 + 2 * (bodyCount + dummyCount) * 5 + 2 + 0],
+        input[5 + 2 * (bodyCount + dummyCount) * 5 + 2 + 1],
+        input[5 + 2 * (bodyCount + dummyCount) * 5 + 2 + 2],
+        input[5 + 2 * (bodyCount + dummyCount) * 5 + 2 + 3],
+        input[5 + 2 * (bodyCount + dummyCount) * 5 + 2 + 4]
     ];
     // if there is an inflight missile, it either needs to match the outflight or start
     // from the corner
@@ -289,9 +291,9 @@ contract AnybodyProblem is Ownable, ERC2981 {
     ];
     runs[runId].levels[levelIndex].tmpInflightMissile = newOutflightMissile;
 
-    uint256 time = input[5 + bodyCount * 5];
+    uint256 time = input[5 + (bodyCount + dummyCount) * 5];
 
-    verifyProof(bodyCount, verifier, a, b, c, input);
+    verifyProof((bodyCount + dummyCount), verifier, a, b, c, input);
 
     Level memory levelData = runs[runId].levels[levelIndex];
 
@@ -303,7 +305,7 @@ contract AnybodyProblem is Ownable, ERC2981 {
     for (uint256 i = 0; i < bodyCount; i++) {
         bodyData = levelData.tmpBodyData[i];
 
-        verifyBodyDataMatches(bodyData, input, bodyCount, i);
+        verifyBodyDataMatches(bodyData, input, (bodyCount + dummyCount), i);
         bodyData = extractBodyData(bodyData, input, i);
 
         if (i == 0) {
@@ -490,12 +492,42 @@ contract AnybodyProblem is Ownable, ERC2981 {
             revert("Invalid number of bodies");
         }
   }
-  function getLevelFromInputs(uint256 inputLength) public pure returns (uint256) {
+  function getLevelFromInputs(uint[] memory input) public pure returns (uint256 bodyCount, uint256 dummyCount) {
+    // 0—4: missile output
+    // 5—9: body 1 output
+    // 10—14: body 2 output
+    // 15: time output (5 + bodyCount * 5 + 1)
+    // 16: address input (5 + bodyCount * 5 + 2)
+    // 17—21: body 1 input
+    // 22—26: body 2 input
+    // 27—31: missile input (5 + 2 * bodyCount * 5 + 2)
+
+
     // inputLength = bodyCount * 5 * 2 + 1 + 1 + 5 + 5;
     // inputLength = 10 * bodyCount + 12;
     // 10 * bodyCount = inputLength - 12;
-    uint256 bodyCount = (inputLength - 12) / 10;
-    return bodyCount - 1;
+    uint256 bodyCount =  ((input.length - 12) / 10) - 1;
+    uint256 dummyCount = 0;
+    uint256 tally = 0;
+    // start i at end of input array but before the final 5 elements of the missile input
+    // count backwards checking every 5 whether a body is completely empty
+    // if so consider this a "dummy" body and remove it from the count
+    for (uint256 i = input.length - 1 - 5; i > input.length / 2; i--) {
+      if (tally % 5 == 0) {
+        if (
+          input[i] == 0 // radius
+          && input[i-1] == 0 // vy
+          && input[i-2] == 0 // vx
+          && input[i-3] == 0 // py
+          && input[i-4] == 0 // px
+        ) {
+          dummyCount++;
+        }
+      }
+      tally++;
+    }
+
+    return (bodyCount - dummyCount, dummyCount);
   }
   function convertTo22(uint[] memory input) public pure returns (uint[22] memory) {
       uint[22] memory input_;
