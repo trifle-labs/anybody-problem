@@ -239,7 +239,7 @@ export default class Sound {
   }
 
   pause() {
-    Tone.getTransport()?.stop()
+    Tone.getTransport().stop()
     this.voices?.forEach((voice) => voice.player.stop())
     this.playOneShot(bongoHard, -22)
   }
@@ -312,8 +312,8 @@ export default class Sound {
   async playGameOver({ win }) {
     if (this.playedGameOver) return
     this.playedGameOver = true
-    Tone.getTransport()?.cancel()
     Tone.getTransport().stop()
+    Tone.getTransport().cancel()
     this.voices?.forEach((voice) => voice.player.stop())
 
     // speed up the voices
@@ -322,7 +322,14 @@ export default class Sound {
     this.voices?.forEach((voice) => {
       voice.player.playbackRate = playbackRate
     })
-    Tone.getTransport().bpm.value *= playbackRate
+    Tone.getTransport().bpm.rampTo(
+      (Tone.getTransport().bpm.value *= playbackRate),
+      0.5
+    )
+
+    this.loop?.stop()
+    this.loop?.cancel()
+    this.loop?.start()
 
     Tone.getTransport().start()
 
@@ -391,8 +398,8 @@ export default class Sound {
   }
 
   stop() {
-    Tone.getTransport()?.cancel()
-    Tone.getTransport()?.stop()
+    Tone.getTransport().cancel()
+    Tone.getTransport().stop()
     this.loop?.dispose()
     this.voices?.forEach((voice) => {
       voice.player.stop()
