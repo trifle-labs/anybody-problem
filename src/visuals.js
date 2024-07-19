@@ -4,8 +4,8 @@ import { themes } from './colors.js'
 
 const BODY_SCALE = 4 // match to calculations.js !!
 const WITHERING_STEPS = 3000
-const GAME_LENGTH_BY_LEVEL_INDEX = [10, 20, 30, 40, 50]
-const LEVELS = GAME_LENGTH_BY_LEVEL_INDEX.length
+const GAME_LENGTH_BY_LEVEL_INDEX = [5, 10, 20, 30, 40, 50]
+const LEVELS = GAME_LENGTH_BY_LEVEL_INDEX.length - 1
 
 const rot = {
   fg: {
@@ -135,13 +135,6 @@ export const Visuals = {
       button.visible = false
     }
     if (!this.showIt) return
-    if (this.bodies.length < 1) {
-      this.p.textSize(40)
-      this.p.text('Use the panel to the right to add Bodies -> -> ->', 100, 400)
-      this.p.text('(You need minimum 1 Bodies in your Problem)', 100, 500)
-      this.setPause(true)
-      return
-    }
     if (!this.firstFrame && !this.hasStarted) {
       this.hasStarted = true
       this.started()
@@ -216,7 +209,7 @@ export const Visuals = {
 
     const ranOutOfTime =
       this.frames - this.startingFrame + this.FPS >= this.timer
-    const hitHeroBody = this.bodies[0].radius == 0
+    const hitHeroBody = this.bodies[0].radius == 0 && this.level !== 0
 
     if ((ranOutOfTime || hitHeroBody) && !this.handledGameOver) {
       this.handleGameOver({ won: false, ranOutOfTime, hitHeroBody })
@@ -224,7 +217,9 @@ export const Visuals = {
     if (
       !this.won &&
       this.mode == 'game' &&
-      this.bodies.slice(1).reduce((a, c) => a + c.radius, 0) == 0 &&
+      this.bodies
+        .slice(this.level == 0 ? 0 : 1)
+        .reduce((a, c) => a + c.radius, 0) == 0 &&
       !this.handledGameOver
     ) {
       this.handleGameOver({ won: true })
@@ -499,8 +494,7 @@ export const Visuals = {
     const runningFrames = this.frames - this.startingFrame
     const seconds = (this.framesTook || runningFrames) / this.FPS
     const secondsLeft =
-      (this.level > 5 ? 60 : GAME_LENGTH_BY_LEVEL_INDEX[this.level - 1]) -
-      seconds
+      (this.level > 5 ? 60 : GAME_LENGTH_BY_LEVEL_INDEX[this.level]) - seconds
     if (this.gameOver) {
       this.scoreSize = this.initialScoreSize
       p.pop()
@@ -752,8 +746,9 @@ export const Visuals = {
     this.drawBodiesLooped(body, radius, this.drawBody)
 
     // begin middle box baddie body pyramid
-    this.winScreenBadies ||= this.getDisplayBaddies()
-    const baddies = this.winScreenBadies
+
+    this.winScreenBaddies ||= this.getDisplayBaddies()
+    const baddies = this.winScreenBaddies
     for (let i = 0; i < baddies.length; i++) {
       const row = baddies[i]
       for (let j = 0; j < row.length; j++) {
@@ -1222,22 +1217,25 @@ export const Visuals = {
 
   getDisplayBaddies() {
     const baddies = []
-    const body = this.bodies[this.bodies.length - 1]
-    if (!body) return []
-    const str = JSON.stringify(body)
+    const fallbackBody = this.bodies[this.bodies.length - 1]
+    if (!fallbackBody) return []
+    const str = JSON.stringify(fallbackBody)
     for (let i = 0; i < LEVELS; i++) {
       baddies.push([])
       for (let j = 0; j < i + 1; j++) {
-        const bodyCopy = JSON.parse(str)
-        bodyCopy.position = this.p.createVector(
-          body.position.x,
-          body.position.y
-        )
-        bodyCopy.velocity = this.p.createVector(
-          body.velocity.x,
-          body.velocity.y
-        )
-        baddies[i].push(body)
+        const bodyCopy =
+          j >= this.bodies.length - 1
+            ? JSON.parse(str)
+            : JSON.parse(JSON.stringify(this.bodies[j + 1]))
+        // bodyCopy.position = this.p.createVector(
+        //   body.position.x,
+        //   body.position.y
+        // )
+        // bodyCopy.velocity = this.p.createVector(
+        //   body.velocity.x,
+        //   body.velocity.y
+        // )
+        baddies[i].push(bodyCopy)
       }
     }
     return baddies
@@ -1574,7 +1572,10 @@ export const Visuals = {
     // y-offset of face relative to center
     // const offset = this.getOffset(radius)
 
-    if (body.bodyIndex === 0 || body.hero) {
+    if (
+      (body.bodyIndex === 0 || body.hero) &&
+      (this.level !== 0 || this.paused)
+    ) {
       // draw hero
       const size = Math.floor(body.radius * BODY_SCALE * 2.66)
 
@@ -1847,7 +1848,7 @@ export const Visuals = {
 
   drawBaddie(body) {
     const graphic = body.graphic || this.bodiesGraphic
-    const colorHSL = body.c
+    const colorHSL = body.c.baddie
     const coreWidth = body.radius * BODY_SCALE
     let bgColor = hslToRgb(colorHSL, 0.5)
     const coreColor = hslToRgb(colorHSL)
@@ -1861,7 +1862,8 @@ export const Visuals = {
       graphic
     )
     graphic.push()
-    graphic.rotate(-rotate + body.velocity.heading() + this.p.PI / 2)
+    const heading = this.level == 0 ? -this.p.PI / 2 : body.velocity.heading()
+    graphic.rotate(-rotate + heading + this.p.PI / 2)
     if (!body.backgroundOnly) {
       this.drawImageAsset(BADDIE_SVG.core, coreWidth, coreColor, graphic)
       this.drawImageAsset(BADDIE_SVG.face, coreWidth, coreColor, graphic)
@@ -1883,9 +1885,7 @@ export const Visuals = {
       graphic.circle(rightEye[0], rightEye[1], body.radius)
 
       const angle =
-        Math.atan2(target.y - by, target.x - bx) -
-        body.velocity.heading() -
-        this.p.PI / 2
+        Math.atan2(target.y - by, target.x - bx) - heading - this.p.PI / 2
 
       const distance = body.radius * 0.3
       const leftX = distance * Math.cos(angle)
