@@ -478,7 +478,7 @@ export class Anybody extends EventEmitter {
       this.setOptions(options)
     }
     this.clearValues()
-    // this.sound?.stop()
+    this.sound?.stop()
     this.sound?.playStart()
     this.init()
     this.draw()

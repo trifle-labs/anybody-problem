@@ -1,6 +1,5 @@
 import * as Tone from 'tone'
 const {
-  Transport,
   Player,
   PanVol,
   Panner,
@@ -240,7 +239,7 @@ export default class Sound {
   }
 
   pause() {
-    Transport?.stop()
+    Tone.getTransport().stop()
     this.voices?.forEach((voice) => voice.player.stop())
     this.playOneShot(bongoHard, -22)
   }
@@ -290,6 +289,7 @@ export default class Sound {
   }
 
   async playOneShot(url, volume, opts = false) {
+    await start()
     this.oneShots = this.oneShots || {}
     const key = `${url}-${volume}-${opts && JSON.stringify(opts)}`
     if (!this.oneShots[key]) {
@@ -303,18 +303,17 @@ export default class Sound {
     // play if it's been loaded or loads quickly, otherwise load and skip
     const now = Date.now()
     await loaded()
-    if (Date.now() - now < 40) {
-      // if (!this.anybody.gameOver) {
+    if (Date.now() - now < 200) {
       this.oneShots[key].start()
       return this.oneShots[key]
-      // }
     }
   }
 
   async playGameOver({ win }) {
     if (this.playedGameOver) return
     this.playedGameOver = true
-    Transport.stop()
+    Tone.getTransport().stop()
+    Tone.getTransport().cancel()
     this.voices?.forEach((voice) => voice.player.stop())
 
     // speed up the voices
@@ -323,9 +322,16 @@ export default class Sound {
     this.voices?.forEach((voice) => {
       voice.player.playbackRate = playbackRate
     })
-    Transport.bpm.value *= playbackRate
+    Tone.getTransport().bpm.rampTo(
+      (Tone.getTransport().bpm.value *= playbackRate),
+      0.5
+    )
 
-    Transport.start()
+    this.loop?.stop()
+    this.loop?.cancel()
+    this.loop?.start()
+
+    Tone.getTransport().start()
 
     if (this.anybody.sfx === 'space') {
       this.playOneShot(affirmative, -22, { playbackRate: 1 })
@@ -392,7 +398,8 @@ export default class Sound {
   }
 
   stop() {
-    Transport?.stop()
+    Tone.getTransport().cancel()
+    Tone.getTransport().stop()
     this.loop?.dispose()
     this.voices?.forEach((voice) => {
       voice.player.stop()
@@ -406,7 +413,7 @@ export default class Sound {
 
   async play(song) {
     // only start if it hasn't started yet
-    if (Transport.state === 'started') return
+    // if (Tone.getTransport().state === 'started') return
     await start()
     this.playingGameOver = false
 
@@ -436,10 +443,9 @@ export default class Sound {
         .connect(this.compressor)
         .connect(this.masterVolume)
 
-      Transport.bpm.value = song.bpm
+      Tone.getTransport().bpm.value = song.bpm
 
       await loaded()
-
       this.loop = new Loop((time) => {
         this.currentMeasure++
         this.voices.forEach((voice, i) => {
@@ -460,34 +466,17 @@ export default class Sound {
               ? part[2]
               : part[1]
           if (Math.random() > probability) {
-            voice.panVol.volume.linearRampTo(-Infinity, 0.1)
+            voice.panVol.volume.linearRampTo(-Infinity, 0.1, time)
           } else {
-            voice.panVol.volume.linearRampTo(TRACK_VOLUME, 0.1)
+            voice.panVol.volume.linearRampTo(TRACK_VOLUME, 0.1, time)
           }
 
           voice.player.start(time)
         })
-      }, song.interval || '2m').start(0)
+      }, song.interval || '2m').start()
     }
 
     // PLAY
-    Transport.start()
-  }
-
-  // given the state of anybody, modify voices
-  async render(anybody) {
-    if (!this.voices) return
-
-    // map the x position of each body to a voice's panning
-    this.voices.forEach((voice, i) => {
-      const body = anybody.bodies[i]
-      if (!body) return
-      const { x } = body.position
-
-      const xFactor = x / anybody.windowWidth
-
-      // panning
-      voice.panVol.pan.linearRampTo(xFactor * PAN_RANGE - PAN_RANGE / 2, 0.5)
-    })
+    Tone.getTransport().start()
   }
 }
