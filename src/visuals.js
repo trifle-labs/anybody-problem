@@ -340,14 +340,7 @@ export const Visuals = {
   },
 
   drawBg() {
-    if (this.lastMissileCantBeUndone) {
-      this.p.background('rgb(150,150,150)')
-      this.p.textSize(100)
-      this.p.textAlign(this.p.CENTER, this.p.CENTER)
-      this.p.text('YOUR GUN\nIS BROKEN!', this.windowWidth / 2, 100)
-    } else {
-      this.p.background(THEME.bg)
-    }
+    this.p.background(THEME.bg)
 
     if (!this.starBG) {
       this.starBG = this.p.createGraphics(this.windowWidth, this.windowHeight)
