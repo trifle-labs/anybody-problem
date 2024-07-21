@@ -538,7 +538,12 @@ export const Visuals = {
         fg: THEME.iris_30
       })
     } else {
-      this.drawStatsScreen()
+      if (this.level == 0) {
+        this.level++
+        this.restart(null, false)
+      } else {
+        this.drawStatsScreen()
+      }
     }
   },
 
@@ -632,9 +637,9 @@ export const Visuals = {
     const levelTimes = this.levelSpeeds
       .map((result) => result?.framesTook / this.FPS)
       .filter((l) => l !== undefined)
-
     const bestTimes =
-      this.bestTimes ?? Array.from({ length: 5 }, (_, i) => levelTimes[i] || 0)
+      this.todaysRecords?.levels.map((l) => l.events[0].time / this.FPS) ||
+      Array.from({ length: 5 }, (_, i) => levelTimes[i] || 0)
     const plusMinus = bestTimes
       .map((best, i) => {
         if (i >= levelTimes.length) return ''
@@ -676,6 +681,7 @@ export const Visuals = {
     }
     for (let i = 0; i < LEVELS; i++) {
       const best = i < bestTimes.length ? bestTimes[i] : '-'
+      console.log({ best })
       const light = i % 2 == 1 && i < levelTimes.length
       p.fill(light ? THEME.iris_30 : THEME.iris_60)
       p.text(
@@ -704,7 +710,9 @@ export const Visuals = {
     p.textSize(64)
 
     // middle box text - sum line
-    const bestTime = bestTimes.reduce((a, b) => a + b, 0)
+    const bestTime = bestTimes
+      .slice(0, levelTimes.length)
+      .reduce((a, b) => a + b, 0)
     const levelTimeSum = levelTimes.reduce((a, b) => a + b, 0)
     const sumLine = [
       levelTimeSum.toFixed(2),

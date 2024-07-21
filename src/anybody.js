@@ -127,6 +127,7 @@ export class Anybody extends EventEmitter {
       day: 324000,
       level: 0,
       bodyData: null,
+      todaysRecords: {},
       // Add default properties and their initial values here
       startingBodies: 1,
       windowWidth: 1000,
