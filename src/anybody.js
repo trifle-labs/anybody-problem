@@ -10,7 +10,7 @@ import { loadFonts } from './fonts.js'
 import { Buttons } from './buttons.js'
 // import wc from './witness_calculator.js'
 
-const GAME_LENGTH_BY_LEVEL_INDEX = [10, 20, 30, 40, 50]
+const GAME_LENGTH_BY_LEVEL_INDEX = [5, 10, 20, 30, 40, 50]
 const NORMAL_GRAVITY = 100
 const proverTickIndex = {
   2: 250,
@@ -125,8 +125,9 @@ export class Anybody extends EventEmitter {
   setOptions(options = {}) {
     const defaultOptions = {
       day: 324000,
-      level: 1,
+      level: 0,
       bodyData: null,
+      todaysRecords: {},
       // Add default properties and their initial values here
       startingBodies: 1,
       windowWidth: 1000,
@@ -188,6 +189,7 @@ export class Anybody extends EventEmitter {
     this.lastMissileCantBeUndone = false
     this.speedFactor = 2
     this.speedLimit = 10
+    this.missileSpeed = 10
     this.G = NORMAL_GRAVITY
     this.vectorLimit = this.speedLimit * this.speedFactor
     this.FPS = 25
@@ -195,8 +197,7 @@ export class Anybody extends EventEmitter {
     this.P5_FPS = this.FPS * this.P5_FPS_MULTIPLIER
     this.p?.frameRate(this.P5_FPS)
     this.timer =
-      (this.level > 5 ? 60 : GAME_LENGTH_BY_LEVEL_INDEX[this.level - 1]) *
-      this.FPS
+      (this.level > 5 ? 60 : GAME_LENGTH_BY_LEVEL_INDEX[this.level]) * this.FPS
     this.deadOpacity = '0.9'
     this.initialScoreSize = 120
     this.scoreSize = this.initialScoreSize
@@ -253,6 +254,7 @@ export class Anybody extends EventEmitter {
   // run once at initilization
   init() {
     this.skipAhead = false
+    this.winScreenBaddies = undefined
     this.seed = utils.solidityKeccak256(['uint256'], [this.day])
     this.rng = new Prando(this.seed.toString(16))
     this.generateBodies()
@@ -458,6 +460,7 @@ export class Anybody extends EventEmitter {
     void this.setStatsText(stats)
     void this.setShowPlayAgain()
     this.emit('done', {
+      level: this.level,
       won,
       ticks: this.frames - this.startingFrame,
       dust,
@@ -678,7 +681,9 @@ export class Anybody extends EventEmitter {
     // this.setPause(false)
     if (
       this.mode == 'game' &&
-      this.bodies.slice(1).reduce((a, c) => a + c.radius, 0) == 0
+      this.bodies
+        .slice(this.level == 0 ? 0 : 1)
+        .reduce((a, c) => a + c.radius, 0) == 0
     ) {
       this.finalBatchSent = true
     }
@@ -692,7 +697,9 @@ export class Anybody extends EventEmitter {
     if (this.missiles.length > 0) {
       this.lastMissileCantBeUndone = true
     }
-    this.levelSpeeds[level - 1] = results
+    if (level !== 0) {
+      this.levelSpeeds[level - 1] = results
+    }
     return results
   }
 
@@ -715,6 +722,15 @@ export class Anybody extends EventEmitter {
     body.bodyIndex = index
     body.seed = dayLevelIndexSeed
     body.radius = this.genRadius(index)
+
+    if (this.level == 0) {
+      body.px = parseInt((BigInt(this.windowWidth) * this.scalingFactor) / 2n)
+      body.py = parseInt((BigInt(this.windowWidth) * this.scalingFactor) / 2n)
+      body.vx = parseInt(maxVectorScaled)
+      body.vy = parseInt(maxVectorScaled)
+      console.log({ body })
+      return body
+    }
 
     let rand = utils.solidityKeccak256(['bytes32'], [dayLevelIndexSeed])
     body.px = this.randomRange(
@@ -799,23 +815,20 @@ export class Anybody extends EventEmitter {
       position: this.createVector(px, py),
       velocity: this.createVector(vx, vy),
       radius: radius,
-      c: this.getBodyColor(bodyIndex)
+      c: this.getBodyColor()
     }
   }
 
-  getBodyColor(bodyIndex) {
-    if (bodyIndex == 0) {
-      // TEMP random body theme
-      const themes = Object.keys(bodyThemes)
-      const theme = themes[this.random(0, themes.length - 1)]
+  getBodyColor() {
+    // TEMP random body theme
+    const themes = Object.keys(bodyThemes)
+    const theme = themes[this.random(0, themes.length - 1)]
 
-      return {
-        bg: hslToRgb(randHSL(bodyThemes[theme].bg, this.random.bind(this))),
-        core: hslToRgb(randHSL(bodyThemes[theme].cr, this.random.bind(this))),
-        fg: hslToRgb(randHSL(bodyThemes[theme].fg, this.random.bind(this)))
-      }
-    } else {
-      return randHSL([undefined, '90-100', '55-60'], this.random.bind(this))
+    return {
+      bg: hslToRgb(randHSL(bodyThemes[theme].bg, this.random.bind(this))),
+      core: hslToRgb(randHSL(bodyThemes[theme].cr, this.random.bind(this))),
+      fg: hslToRgb(randHSL(bodyThemes[theme].fg, this.random.bind(this))),
+      baddie: randHSL([undefined, '90-100', '55-60'], this.random.bind(this))
     }
   }
 
@@ -878,7 +891,7 @@ export class Anybody extends EventEmitter {
       radius
     }
     // b.velocity.setMag(this.speedLimit * this.speedFactor)
-    b.velocity.limit(this.speedLimit * this.speedFactor)
+    b.velocity.limit(this.missileSpeed * this.speedFactor)
     // const bodyCount = this.bodies.filter((b) => b.radius !== 0).length - 1
     // this.missiles = this.missiles.slice(0, bodyCount)
     // this.missiles = this.missiles.slice(-bodyCount)

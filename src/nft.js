@@ -7,7 +7,7 @@ window.anybody
 
 q5.setup = () => {
   const options = {
-    level: 1,
+    level: 0,
     bestTimes: [1.45, 2.44, 16.79, 23.45, 36.45]
   }
   if (day && day !== '') {
