@@ -10,7 +10,7 @@ import { loadFonts } from './fonts.js'
 import { Buttons } from './buttons.js'
 // import wc from './witness_calculator.js'
 
-const GAME_LENGTH_BY_LEVEL_INDEX = [5, 10, 20, 30, 40, 50]
+const GAME_LENGTH_BY_LEVEL_INDEX = [30, 10, 20, 30, 40, 50]
 const NORMAL_GRAVITY = 100
 const proverTickIndex = {
   2: 250,
@@ -170,11 +170,13 @@ export class Anybody extends EventEmitter {
     Object.assign(this, mergedOptions)
   }
   removeCSS() {
+    console.log('removeCSS')
     if (typeof document === 'undefined') return
     const style = document.getElementById('canvas-cursor')
     style && document.head.removeChild(style)
   }
   addCSS() {
+    console.log('addCSS')
     if (typeof document === 'undefined') return
     if (document.getElementById('canvas-cursor')) return
     const style = document.createElement('style')
@@ -194,7 +196,7 @@ export class Anybody extends EventEmitter {
     this.lastMissileCantBeUndone = false
     this.speedFactor = 2
     this.speedLimit = 10
-    this.missileSpeed = 10
+    this.missileSpeed = 15
     this.G = NORMAL_GRAVITY
     this.vectorLimit = this.speedLimit * this.speedFactor
     this.FPS = 25
@@ -211,6 +213,7 @@ export class Anybody extends EventEmitter {
     this.tailMod = this.globalStyle == 'psycho' ? 2 : 1
     this.explosions = []
     this.missiles = []
+    this.stillVisibleMissiles = []
     this.missileInits = []
     this.bodies = []
     this.witheringBodies = []
@@ -448,11 +451,27 @@ export class Anybody extends EventEmitter {
   handleGameOver = ({ won }) => {
     if (this.handledGameOver) return
     this.handledGameOver = true
-
     this.sound?.playGameOver({ won })
     this.gameOver = true
     this.won = won
-    this.G = 2000 // make the badies dance
+    if (this.level !== 0 && !this.won && this.bodies[0].radius !== 0) {
+      const gravityIndex = this.bodies
+        .slice(1)
+        .filter((b) => b.radius !== 0n).length
+      const newBodies = this.generateLevelData(
+        this.day,
+        6 - gravityIndex
+      ).slice(1)
+      this.bodies.push(
+        ...newBodies.map(this.bodyDataToBodies.bind(this)).map((b) => {
+          b.position.x = 0
+          b.position.y = 0
+          b.py = 0n
+          b.px = 0n
+          return b
+        })
+      )
+    }
     this.P5_FPS *= 3
     this.p.frameRate(this.P5_FPS)
     var dust = 0
@@ -554,7 +573,10 @@ export class Anybody extends EventEmitter {
     var results = this.detectCollision(this.bodies, this.missiles)
     this.bodies = results.bodies
     this.missiles = results.missiles || []
-
+    if (this.missiles.length > 0) {
+      const missileCopy = JSON.parse(JSON.stringify(this.missiles[0]))
+      this.stillVisibleMissiles.push(missileCopy)
+    }
     if (this.missiles.length > 0 && this.missiles[0].radius == 0) {
       this.missiles.splice(0, 1)
     } else if (this.missiles.length > 1 && this.missiles[0].radius !== 0) {
@@ -731,7 +753,7 @@ export class Anybody extends EventEmitter {
     if (this.level == 0) {
       body.px = parseInt((BigInt(this.windowWidth) * this.scalingFactor) / 2n)
       body.py = parseInt((BigInt(this.windowWidth) * this.scalingFactor) / 2n)
-      body.vx = parseInt(maxVectorScaled)
+      body.vx = parseInt(maxVectorScaled) - 5000
       body.vy = parseInt(maxVectorScaled)
       console.log({ body })
       return body
