@@ -1,10 +1,9 @@
-import { hslToRgb, rgbaOpacity, THEME } from './colors.js'
+import { hslToRgb, rgbaOpacity, THEME, themes, randHSL } from './colors.js'
 import { fonts, drawKernedText } from './fonts.js'
-import { themes } from './colors.js'
 
 const BODY_SCALE = 4 // match to calculations.js !!
 const WITHERING_STEPS = 3000
-const GAME_LENGTH_BY_LEVEL_INDEX = [5, 10, 20, 30, 40, 50]
+const GAME_LENGTH_BY_LEVEL_INDEX = [30, 10, 20, 30, 40, 50]
 const LEVELS = GAME_LENGTH_BY_LEVEL_INDEX.length - 1
 
 const rot = {
@@ -1348,60 +1347,206 @@ export const Visuals = {
     this.p.strokeWeight(0)
   },
 
+  hslToGrayscale(hslArray) {
+    return [hslArray[0], 0, hslArray[2]]
+  },
+
+  rgbaToGrayscale(rgba) {
+    const rgbaArray = rgba.split(',')
+    const r = parseInt(rgbaArray[0].split('(')[1])
+    const g = parseInt(rgbaArray[1])
+    const b = parseInt(rgbaArray[2])
+    const a = parseFloat(rgbaArray[3].split(')')[0])
+    const avg = (r + g + b) / 3
+    return `rgba(${avg},${avg},${avg},${a})`
+  },
+
   drawExplosions() {
-    const { p, explosions } = this
+    if (this.paused || (this.gameOver && !this.celebrating && this.won)) return
+    const { explosions } = this
 
     for (let i = 0; i < explosions.length; i++) {
       const _explosion = explosions[i]
-      const bomb = _explosion[0]
-      p.fill('rgba(255,255,255,0.5)')
-      p.stroke('white')
-      p.strokeWeight(2)
-      p.ellipse(bomb.x, bomb.y, bomb.i * 2, bomb.i * 2)
-      p.ellipse(bomb.x, bomb.y, bomb.i * 1.8, bomb.i * 1.8)
-      p.ellipse(bomb.x, bomb.y, bomb.i * 1.6, bomb.i * 1.6)
-      p.ellipse(bomb.x, bomb.y, bomb.i * 1.4, bomb.i * 1.4)
-      p.ellipse(bomb.x, bomb.y, bomb.i * 1.6, bomb.i * 1.6)
-      p.fill('rgba(255,255,255,0.9)')
-      p.ellipse(bomb.x, bomb.y, bomb.i * 1.4, bomb.i * 1.4)
-      _explosion.shift()
-      if (_explosion.length == 0) {
-        explosions.splice(i, 1)
-      }
+
+      _explosion.c.bg = this.rgbaToGrayscale(_explosion.c.bg)
+      _explosion.c.fg = this.rgbaToGrayscale(_explosion.c.fg)
+      _explosion.c.core = this.rgbaToGrayscale(_explosion.c.core)
+      _explosion.c.baddie = this.hslToGrayscale(_explosion.c.baddie)
+
+      this.drawBody(
+        _explosion.position.x,
+        _explosion.position.y,
+        _explosion.v,
+        _explosion.radius,
+        _explosion
+      )
+      // const bomb = _explosion[0]
+      // p.fill('rgba(255,255,255,0.5)')
+      // p.stroke('white')
+      // p.strokeWeight(2)
+      // p.ellipse(bomb.x, bomb.y, bomb.i * 2, bomb.i * 2)
+      // p.ellipse(bomb.x, bomb.y, bomb.i * 1.8, bomb.i * 1.8)
+      // p.ellipse(bomb.x, bomb.y, bomb.i * 1.6, bomb.i * 1.6)
+      // p.ellipse(bomb.x, bomb.y, bomb.i * 1.4, bomb.i * 1.4)
+      // p.ellipse(bomb.x, bomb.y, bomb.i * 1.6, bomb.i * 1.6)
+      // p.fill('rgba(255,255,255,0.9)')
+      // p.ellipse(bomb.x, bomb.y, bomb.i * 1.4, bomb.i * 1.4)
+      // _explosion.shift()
+      // if (_explosion.length == 0) {
+      //   explosions.splice(i, 1)
+      // }
     }
   },
 
   drawMissiles() {
+    if (this.paused || this.gameOver) return
     this.p.noStroke()
     this.p.strokeWeight(0)
 
-    const missileReverbLevels = 10
-    const green = '2,247,123'
+    // const missileReverbLevels = 20
+    // const green = '2,247,123'
     // const yellow = '255,255,0'
-    const color = green
-    const c =
-      Math.floor(this.frames / missileReverbLevels) % 2 == 0
-        ? `rgb(${color})`
-        : 'white'
+    // const color = yellow
+    // const c =
+    //   Math.floor(this.frames / missileReverbLevels) % 2 == 0
+    //     ? `rgb(${color})`
+    //     : 'white'
 
-    for (let i = 0; i < this.missiles.length; i++) {
-      const body = this.missiles[i]
-      this.p.noStroke()
-      this.p.fill(c)
-      this.p.ellipse(body.position.x, body.position.y, body.radius, body.radius)
+    const starRadius = 10
 
-      this.p.noFill()
-      this.p.strokeWeight(10)
-      for (let i = 0; i < missileReverbLevels; i++) {
-        const c =
-          Math.floor((this.frames - i) / missileReverbLevels) % 2 == 0
-            ? `rgba(${color},${(missileReverbLevels - i) / missileReverbLevels})`
-            : `rgba(255,255,255,${(missileReverbLevels - i) / missileReverbLevels})`
-        this.p.stroke(c)
-        const reverb = body.radius * (i + 1)
-        this.p.ellipse(body.position.x, body.position.y, reverb, reverb)
+    const star = (x, y, radius1, radius2, npoints, color, rotateBy, index) => {
+      const { p } = this
+      let angle = p.TWO_PI / npoints
+      let halfAngle = angle / 2.0
+      p.beginShape()
+      if (index == 0) {
+        p.fill(color)
+      } else {
+        p.noFill()
+        p.strokeWeight(1)
+        p.stroke(color)
       }
+      for (let a = rotateBy; a < p.TWO_PI + rotateBy; a += angle) {
+        let sx = x + p.cos(a) * radius2
+        let sy = y + p.sin(a) * radius2
+        p.vertex(sx, sy)
+        sx = x + p.cos(a + halfAngle) * radius1
+        sy = y + p.sin(a + halfAngle) * radius1
+        p.vertex(sx, sy)
+      }
+      p.endShape(p.CLOSE)
+      return p
     }
+    //   for (let i = 0; i < missileReverbLevels; i++) {
+    //     const alpha = 1 //(missileReverbLevels - i) / missileReverbLevels
+    //     console.log({ alpha })
+    //     const rainbowColor = `hsla(${(i / missileReverbLevels) * 360}, 100%, 50%, ${alpha})`
+    //     const maxStarRadius = starRadius * missileReverbLevels
+    //     this.starMissile.push(
+    //       this.p.createGraphics(maxStarRadius * 2, maxStarRadius * 2)
+    //     )
+    //     this.starMissile[i].noStroke()
+    //     this.starMissile[i].fill(rainbowColor)
+    //     // if (i == 0) {
+    //     //   this.starMissile[i].stroke('black')
+    //     //   this.starMissile[i].strokeWeight(20)
+    //     //   this.starMissile[i].fill(`rgba(255,255,255,1)`)
+    //     // }
+    //     // this.starMissile.rect(0, 0, maxStarRadius * 2, maxStarRadius * 2)
+    //     this.starMissile[i] = star(
+    //       this.starMissile[i],
+    //       maxStarRadius,
+    //       maxStarRadius,
+    //       maxStarRadius,
+    //       maxStarRadius / 2,
+    //       5
+    //     )
+    //   }
+    // }
+
+    const maxLife = 60
+
+    // const colors = ['white', 'cyan', 'yellow', 'magenta']
+    // const colors = ['255,255,255', '0,255,255', '255,255,0', '255,0,255']
+
+    for (let i = 0; i < this.stillVisibleMissiles.length; i++) {
+      const body = this.stillVisibleMissiles[i]
+      if (!body.phase) {
+        const life = 0
+
+        const color = hslToRgb(
+          randHSL(
+            themes.bodies.default['bg:pastel__core:highlighter__fg:marker'].cr,
+            this.random.bind(this)
+          )
+        )
+        // const color = [
+        //   this.random(100, 255),
+        //   this.random(100, 255),
+        //   this.random(100, 255)
+        // ] //colors[this.frames % colors.length]
+        const rotateBy = this.frames % 360
+        body.phase = {
+          color,
+          life,
+          rotateBy
+        }
+      } else if (!this.paused) {
+        body.phase.life++
+        if (body.phase.life >= maxLife) {
+          this.stillVisibleMissiles.splice(i, 1)
+          i--
+          continue
+        }
+      }
+      this.stillVisibleMissiles[i] = body
+
+      // const alpha = 1 //(maxLife - body.phase.life) / maxLife
+      // const rainbowColor = `hsla(${body.phase.color}, 100%, 50%, ${alpha})`
+      const rainbowColor = body.phase.color //`rgba(${body.phase.color},${alpha})`
+      const thisRadius =
+        starRadius / 1.5 +
+        starRadius * (((body.phase.life / 25) * body.phase.life) / 25)
+
+      this.p.push()
+      this.p.translate(body.position.x, body.position.y)
+      // const rotateBy = (i * 2 + this.frames / 4) % 360
+      // this.p.rotate(body.phase.rotateBy)
+      // const modulo = missileReverbLevels
+      // const n = missileReverbLevels + Math.floor(this.frames / 1.8) - i
+      // const n = i
+      // const index = n % modulo
+      star(
+        0,
+        0,
+        thisRadius,
+        thisRadius / 2,
+        5,
+        rainbowColor,
+        body.phase.rotateBy,
+        body.phase.life
+      )
+
+      this.p.pop()
+    }
+
+    // this.p.push()
+    // // const c =
+    // //   Math.floor((this.frames - i) / missileReverbLevels) % 2 == 0
+    // //     ? `rgba(${color},${(missileReverbLevels - i) / missileReverbLevels})`
+    // //     : `rgba(255,255,255,${(missileReverbLevels - i) / missileReverbLevels})`
+    // // this.p.stroke(c)
+    // this.p.translate(body.position.x, body.position.y)
+    // const rotateBy = (this.frames * 2) % 360
+    // this.p.rotate(rotateBy)
+    // this.p.image(
+    //   this.starMissile[0],
+    //   -starRadius / 2,
+    //   -starRadius / 2,
+    //   starRadius,
+    //   starRadius
+    // )
+    // this.p.pop()
   },
 
   isMissileClose(body) {
@@ -1423,7 +1568,13 @@ export const Visuals = {
     return closeEnough
   },
 
-  drawImageAsset(assetUrl, width, fill, myP = this.bodiesGraphic) {
+  drawImageAsset(
+    assetUrl,
+    width,
+    fill,
+    myP = this.bodiesGraphic,
+    strokeWidth = 1
+  ) {
     this.imgAssets ||= {}
     // TODO: remove width from ID when colors aren't temp-random
     const id = assetUrl + width + fill
@@ -1435,7 +1586,7 @@ export const Visuals = {
         .then((resp) => resp.text())
         .then((svg) => {
           svg = fill ? replaceAttribute(svg, 'fill', fill) : svg
-          svg = replaceAttribute(svg, 'stroke-width', '2')
+          svg = replaceAttribute(svg, 'stroke-width', strokeWidth)
           svg = 'data:image/svg+xml,' + encodeURIComponent(svg)
 
           this.p.loadImage(svg, (img) => {
@@ -1611,6 +1762,8 @@ export const Visuals = {
     drawFunction(body.position.x, body.position.y, body.velocity, radius, body)
 
     if (this.paused) return
+    if (this.gameOver) return
+    if (body.bodyIndex !== 0 || this.level == 0) return
     let loopedX = false,
       loopedY = false,
       loopX = body.position.x,
@@ -1845,19 +1998,28 @@ export const Visuals = {
 
   brighten(c, amount = 20) {
     let cc = c
-      .split(',')
-      .map((c) => parseFloat(c.replace(')', '').replace('hsla(', '')))
+    let inhsla = false
+    if (c.includes('rgba')) {
+      inhsla = true
+      cc = c
+        .split(',')
+        .map((c) => parseFloat(c.replace(')', '').replace('hsla(', '')))
+    } else {
+      cc = cc.map((c) => {
+        return parseFloat(('' + c).replace('%', ''))
+      })
+    }
     cc[2] = cc[2] + amount
-    cc[1] = cc[1] + '%'
-    cc[2] = cc[2] + '%'
-    return `hsla(${cc.join(',')})`
+    cc[1] = cc[1] + (inhsla ? '%' : '')
+    cc[2] = cc[2] + (inhsla ? '%' : '')
+    return inhsla ? `hsla(${cc.join(',')})` : cc
   },
 
   drawBaddie(body) {
     const graphic = body.graphic || this.bodiesGraphic
     const colorHSL = body.c.baddie
     const coreWidth = body.radius * BODY_SCALE
-    let bgColor = hslToRgb(colorHSL, 0.5)
+    let bgColor = hslToRgb(this.brighten(colorHSL, -20), 1)
     const coreColor = hslToRgb(colorHSL)
     graphic.push()
     const rotate = (this.frames / 30) % 360
@@ -1866,13 +2028,14 @@ export const Visuals = {
       BADDIE_SVG.bg,
       Math.floor(coreWidth * (310 / 111.2)),
       bgColor,
-      graphic
+      graphic,
+      '0.5'
     )
     graphic.push()
     const heading = this.level == 0 ? -this.p.PI / 2 : body.velocity.heading()
     graphic.rotate(-rotate + heading + this.p.PI / 2)
     if (!body.backgroundOnly) {
-      this.drawImageAsset(BADDIE_SVG.core, coreWidth, coreColor, graphic)
+      this.drawImageAsset(BADDIE_SVG.core, coreWidth, coreColor, graphic, '0.5')
       this.drawImageAsset(BADDIE_SVG.face, coreWidth, coreColor, graphic)
 
       // pupils always looking at missile, if no missile, look at mouse
@@ -1888,45 +2051,48 @@ export const Visuals = {
       const rightEye = [body.radius * 0.6, -body.radius * 0.15]
 
       graphic.fill('white')
+      graphic.strokeWeight(1)
+      graphic.stroke('black')
       graphic.circle(leftEye[0], leftEye[1], body.radius)
       graphic.circle(rightEye[0], rightEye[1], body.radius)
 
       const angle =
         Math.atan2(target.y - by, target.x - bx) - heading - this.p.PI / 2
 
-      const distance = body.radius * 0.3
+      const distance = body.radius * 0.2
       const leftX = distance * Math.cos(angle)
       const leftY = distance * Math.sin(angle)
 
       graphic.fill('black')
-      graphic.circle(leftX + leftEye[0], leftY + leftEye[1], body.radius * 0.4)
+      graphic.circle(leftX + leftEye[0], leftY + leftEye[1], body.radius * 0.5)
       graphic.circle(
         leftX + rightEye[0],
         leftY + rightEye[1],
-        body.radius * 0.4
+        body.radius * 0.5
       )
 
-      const heroBody = this.bodies[0]
-      const minDistance = heroBody.radius * 2 + body.radius * 4
-      const currentDistance = graphic.dist(
-        heroBody.position.x,
-        heroBody.position.y,
-        body.position.x,
-        body.position.y
-      )
-      const closeToBody = currentDistance <= minDistance
+      // const heroBody = this.bodies[0]
+      // const minDistance = heroBody.radius * 2 + body.radius * 4
+      // const currentDistance = graphic.dist(
+      //   heroBody.position.x,
+      //   heroBody.position.y,
+      //   body.position.x,
+      //   body.position.y
+      // )
+      // const closeToBody = currentDistance <= minDistance
 
-      if (closeToBody) {
-        graphic.fill(coreColor)
-        graphic.triangle(
-          0,
-          -body.radius * 0.2,
-          leftEye[0] * 2,
-          -body.radius * 0.8,
-          rightEye[0] * 2,
-          -body.radius * 0.8
-        )
-      }
+      // if (true) {
+      // graphic.noStroke()
+      // graphic.fill(coreColor)
+      // graphic.triangle(
+      //   0,
+      //   -body.radius * 0.2,
+      //   leftEye[0] * 2,
+      //   -body.radius * 0.8,
+      //   rightEye[0] * 2,
+      //   -body.radius * 0.8
+      // )
+      // }
     }
 
     graphic.pop()
