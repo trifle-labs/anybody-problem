@@ -6,8 +6,9 @@ import { leaderboards, updateLeaderboard } from './leaderboard'
 import { Chain, sources } from '../shovel-config'
 import { publish, addSubscriber, unsubscribe } from './publish'
 import { cors } from 'hono/cors'
+import wallet from './wallet'
 
-// This is a read-only API server that serves the leaderboard state.
+// This is a read-only API server that serves the leaderboard state and wallet state.
 // It uses Server Sent Events (SSE) to push updates to the client.
 
 // Design notes:
@@ -19,8 +20,10 @@ import { cors } from 'hono/cors'
 // Optimization ideas to explore if we need to scale further:
 // - Add indexes to the DB for the most common queries
 // - Bigger server
+// - Only publish SSE when change effects leaderboard or user's wallet
 // - Cache aggregated state and incrementally update with each DB notification
 // - Materialized view for leaderboard to scale horizontally
+// - Do not calculate wallets, pass the events to the client and let the client calculate the wallets
 
 async function setupListener() {
   db.on('notification', async (msg) => {
@@ -60,6 +63,7 @@ async function* streamGenerator(
   yield {
     data: JSON.stringify({
       leaderboard: leaderboards[chain],
+      wallet: await wallet(chain, address),
       address
     }),
     event: 'message',
@@ -118,6 +122,12 @@ app.use(
 app.post('/sse/:chain', async (c) => {
   const chain = c.req.param('chain') as Chain
   return streamSSE(c, streamHandler(c.req.raw.signal, chain))
+})
+
+app.post('/sse/:chain/:address', async (c) => {
+  const address = c.req.param('address')
+  const chain = c.req.param('chain') as Chain
+  return streamSSE(c, streamHandler(c.req.raw.signal, chain, address))
 })
 
 app.get('/', serveStatic({ path: './src/demo.html' }))
