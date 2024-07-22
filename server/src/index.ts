@@ -86,6 +86,7 @@ async function* streamGenerator(
     yield {
       data: JSON.stringify({
         leaderboard: leaderboards[chain],
+        wallet: await wallet(chain, address),
         address
       }),
       event: 'message',

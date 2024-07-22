@@ -2,7 +2,7 @@ import { Chain } from '../shovel-config'
 import db from './db'
 import { currentDayInUnixTime } from './util'
 
-async function getOwnedBodies(chain: Chain, address?: string) {
+async function getScores(chain: Chain, address?: string) {
   if (!address) return []
 
   const today = currentDayInUnixTime()
@@ -98,7 +98,7 @@ player_stats AS (
     player_days_played
   UNION ALL
   SELECT
-    'Problems Solved' AS category,
+    'Levels Solved' AS category,
     player,
     solve_count AS metric,
     NULL::jsonb AS additional_info
@@ -116,15 +116,27 @@ FROM
     [chain, address.replace(/^0x/, ''), today, yesterday]
   )
 
-  console.log(problems.rows)
-
-  return problems.rows
+  return {
+    currentStreak: parseInt(
+      problems.rows.find((r) => r.category === 'Current Streak')?.metric
+    ),
+    fastestCompleted: parseInt(
+      problems.rows.find((r) => r.category === 'Fastest Completed Problem')
+        ?.metric
+    ),
+    daysPlayed: parseInt(
+      problems.rows.find((r) => r.category === 'Days Played')?.metric
+    ),
+    levelsSolved: parseInt(
+      problems.rows.find((r) => r.category === 'Levels Solved')?.metric
+    )
+  }
 }
 
 export default async function wallet(chain: Chain, address?: string) {
   if (!address) return {}
   const start = Date.now()
-  const bodies = await getOwnedBodies(chain, address)
+  const scores = await getScores(chain, address)
   console.log('wallet', address, 'queried in', Date.now() - start, 'ms')
-  return { bodies }
+  return scores
 }
