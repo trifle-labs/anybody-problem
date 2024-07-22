@@ -1,83 +1,122 @@
 import { Chain } from '../shovel-config'
 import db from './db'
+import { currentDayInUnixTime } from './util'
 
 async function getOwnedBodies(chain: Chain, address?: string) {
   if (!address) return []
 
+  const today = currentDayInUnixTime()
+  const yesterday = today - 24 * 60 * 60
+
   const problems = await db.query(
     `
-    WITH latest_transactions AS (
-      SELECT
-          token_id,
-          "to",
-          ROW_NUMBER() OVER (PARTITION BY token_id ORDER BY block_num DESC, tx_idx DESC, log_idx DESC) AS rn
-      FROM
-        problems_transfer
-      WHERE
-        "to" = decode($1, 'hex')
-        AND src_name = '${chain}'
-  ),
-  current_owners AS (
-      SELECT
-          token_id
-      FROM
-          latest_transactions
-      WHERE
-          rn = 1
-  ),
-  body_add_remove_events AS (
-      SELECT
-          ba.problem_id,
-          ba.body_id,
-          ba.block_num,
-          ba.tx_idx,
-          ba.log_idx,
-          'added' AS status
-      FROM
-      problems_body_added ba
-      WHERE src_name = '${chain}'
-      UNION ALL
-      SELECT
-          br.problem_id,
-          br.body_id,
-          br.block_num,
-          br.tx_idx,
-          br.log_idx,
-          'removed' AS status
-      FROM
-      problems_body_removed br
-      WHERE src_name = '${chain}'
-  ),
-  body_final_status AS (
-      SELECT
-          problem_id,
-          body_id,
-          status,
-          ROW_NUMBER() OVER (PARTITION BY problem_id, body_id ORDER BY block_num DESC, tx_idx DESC, log_idx DESC) AS rn
-      FROM
-          body_add_remove_events
-  )
+WITH player_streaks AS (
   SELECT
-      ba.problem_id,
-      ba.body_id,
-      ba.minted_body_index,
-      ba.tick,
-      ba.px,
-      ba.py,
-      ba.radius,
-      CONCAT('0x', encode(ba.seed, 'hex')) AS seed,
-      CONCAT('0x', encode(ba.log_addr, 'hex')) AS log_addr
+    player,
+    MAX(streak_length) AS current_streak
+  FROM (
+    SELECT
+      player,
+      COUNT(*) AS streak_length
+    FROM (
+      SELECT
+        day,
+        player,
+        ROW_NUMBER() OVER (PARTITION BY run_id ORDER BY day) -
+        ROW_NUMBER() OVER (PARTITION BY run_id, day ORDER BY day) AS streak
+      FROM
+        anybody_problem_run_solved
+      WHERE
+        src_name = $1 AND player = decode($2, 'hex')
+    ) AS subquery
+    GROUP BY
+      player, streak
+    HAVING MAX(day) = $3 OR MAX(day) = $4 -- ensure the streak is current
+  ) AS streaks
+  GROUP BY
+    player
+),
+player_fastest_completed AS (
+  SELECT
+    run_id,
+    player,
+    accumulative_time as time,
+    day
   FROM
-    problems_body_added ba
-  JOIN
-      current_owners co ON ba.problem_id = co.token_id
-  JOIN
-      body_final_status bfs ON ba.problem_id = bfs.problem_id AND ba.body_id = bfs.body_id
+    anybody_problem_run_solved
   WHERE
-      bfs.rn = 1
-      AND bfs.status = 'added';`,
-    [address.replace(/^0x/, '')]
+    src_name = $1 AND player = decode($2, 'hex')
+  ORDER BY
+    time ASC
+  LIMIT 1
+),
+player_days_played AS (
+  SELECT
+    player,
+    COUNT(DISTINCT day) AS days_played
+  FROM
+    anybody_problem_level_solved
+  WHERE
+    src_name = $1 AND player = decode($2, 'hex')
+  GROUP BY
+    player
+),
+player_levels_solved AS (
+  SELECT
+    player,
+    COUNT(DISTINCT (run_id, level)) AS solve_count
+  FROM
+    anybody_problem_level_solved
+  WHERE
+    src_name = $1 AND player = decode($2, 'hex')
+  GROUP BY
+    player
+),
+player_stats AS (
+  SELECT
+    'Current Streak' AS category,
+    player,
+    current_streak AS metric,
+    NULL::jsonb AS additional_info
+  FROM
+    player_streaks
+  UNION ALL
+  SELECT
+    'Fastest Completed Problem' AS category,
+    player,
+    time AS metric,
+    jsonb_build_object('runId', run_id, 'day', day) AS additional_info
+  FROM
+    player_fastest_completed
+  UNION ALL
+  SELECT
+    'Days Played' AS category,
+    player,
+    days_played AS metric,
+    NULL::jsonb AS additional_info
+  FROM
+    player_days_played
+  UNION ALL
+  SELECT
+    'Problems Solved' AS category,
+    player,
+    solve_count AS metric,
+    NULL::jsonb AS additional_info
+  FROM
+    player_levels_solved
+)
+SELECT
+  category,
+  CONCAT('0x', encode(player, 'hex')) as player,
+  metric,
+  additional_info->>'runId' AS runId,
+  additional_info->>'day' AS day
+FROM
+  player_stats;`,
+    [chain, address.replace(/^0x/, ''), today, yesterday]
   )
+
+  console.log(problems.rows)
 
   return problems.rows
 }

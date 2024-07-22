@@ -1,5 +1,6 @@
 import { Chain } from '../shovel-config'
 import db from './db'
+import { currentDayInUnixTime } from './util'
 
 type LeaderboardLine = {
   player: string
@@ -44,12 +45,6 @@ const MAX_BODY_COUNT = 6
 const DAILY_CATEGORY_LIMIT = 3
 
 export const leaderboards: Record<Chain, Leaderboard> | {} = {}
-
-function currentDayInUnixTime() {
-  const date = new Date()
-  date.setUTCHours(0, 0, 0, 0)
-  return date.getTime() / 1000
-}
 
 async function calculateDailyLeaderboard(day: number, chain: Chain) {
   const q = `
