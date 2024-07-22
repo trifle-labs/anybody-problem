@@ -681,7 +681,6 @@ export const Visuals = {
     }
     for (let i = 0; i < LEVELS; i++) {
       const best = i < bestTimes.length ? bestTimes[i] : '-'
-      console.log({ best })
       const light = i % 2 == 1 && i < levelTimes.length
       p.fill(light ? THEME.iris_30 : THEME.iris_60)
       p.text(
