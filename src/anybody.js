@@ -219,7 +219,6 @@ export class Anybody extends EventEmitter {
     this.witheringBodies = []
     this.bodyInits = []
     this.bodyFinal = []
-    this.allCopiesOfBodies = []
     this.missileCount = 0
     this.frames = 0
     this.p5Frames = 0

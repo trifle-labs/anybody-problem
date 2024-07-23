@@ -251,7 +251,7 @@ export const Visuals = {
 
     const p = this.pauseGraphic
 
-    const unpauseDuration = 2
+    const unpauseDuration = this.level == 0 ? 2 : 0
     const unpauseFrames = unpauseDuration * this.P5_FPS
     if (this.willUnpause && !this.beganUnpauseAt) {
       this.willUnpause = true
@@ -514,9 +514,14 @@ export const Visuals = {
       runningFrames > 2 &&
       (!this.gameOver || (this.gameOver && this.won && !this.skipAhead))
     ) {
-      p.text(secondsLeft.toFixed(2), 20, 10)
-      p.textAlign(p.RIGHT, p.TOP)
-      p.text('Lvl ' + this.level, this.windowWidth - 20, 10)
+      if (this.won) {
+        p.textSize(this.scoreSize * 2)
+        p.text(seconds.toFixed(2) + 's', 20, 10)
+      } else {
+        p.text(secondsLeft.toFixed(2), 20, 10)
+        p.textAlign(p.RIGHT, p.TOP)
+        p.text('Lvl ' + this.level, this.windowWidth - 20, 10)
+      }
     }
 
     p.pop()
@@ -1921,10 +1926,6 @@ export const Visuals = {
       bodyCopy.position = this.p.createVector(body.position.x, body.position.y)
       bodyCopy.velocity = this.p.createVector(body.velocity.x, body.velocity.y)
       bodyCopies.push(bodyCopy)
-    }
-    this.frames % this.tailMod == 0 && this.allCopiesOfBodies.push(bodyCopies)
-    if (this.allCopiesOfBodies.length > this.tailLength) {
-      this.allCopiesOfBodies.shift()
     }
     if (attachToCanvas) {
       this.p.image(this.bodiesGraphic, 0, 0)
