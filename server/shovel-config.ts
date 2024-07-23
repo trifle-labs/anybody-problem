@@ -53,8 +53,8 @@ const baseSepolia: KnownSource = {
   chain_id: 84532,
   url: process.env.BASE_SEPOLIA_RPC,
   batch_size: 1000,
-  concurrency: 1,
-  poll_duration: '12s'
+  concurrency: 1
+  // poll_duration: '12s' // default is 1s, uncomment for slower polling in dev
 }
 
 const solTypeToPgType: Record<string, PGColumnType> = {
