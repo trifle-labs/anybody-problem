@@ -10,7 +10,7 @@ async function getScores(chain: Chain, address?: string) {
 
   const problems = await db.query(
     `
-WITH player_streaks AS (
+WITH player_current_streaks AS (
   SELECT
     player,
     MAX(streak_length) AS current_streak
@@ -32,6 +32,31 @@ WITH player_streaks AS (
     GROUP BY
       player, streak
     HAVING MAX(day) = $3 OR MAX(day) = $4 -- ensure the streak is current
+  ) AS streaks
+  GROUP BY
+    player
+),
+player_streaks AS (
+  SELECT
+    player,
+    MAX(streak_length) AS current_streak
+  FROM (
+    SELECT
+      player,
+      COUNT(*) AS streak_length
+    FROM (
+      SELECT
+        day,
+        player,
+        ROW_NUMBER() OVER (PARTITION BY run_id ORDER BY day) -
+        ROW_NUMBER() OVER (PARTITION BY run_id, day ORDER BY day) AS streak
+      FROM
+        anybody_problem_run_solved
+      WHERE
+        src_name = $1 AND player = decode($2, 'hex')
+    ) AS subquery
+    GROUP BY
+      player, streak
   ) AS streaks
   GROUP BY
     player
@@ -79,6 +104,14 @@ player_stats AS (
     current_streak AS metric,
     NULL::jsonb AS additional_info
   FROM
+    player_current_streaks
+  UNION ALL
+  SELECT
+    'Longest Streak' AS category,
+    player,
+    current_streak AS metric,
+    NULL::jsonb AS additional_info
+  FROM
     player_streaks
   UNION ALL
   SELECT
@@ -119,6 +152,9 @@ FROM
   return {
     currentStreak: parseInt(
       problems.rows.find((r) => r.category === 'Current Streak')?.metric
+    ),
+    longestStreak: parseInt(
+      problems.rows.find((r) => r.category === 'Longest Streak')?.metric
     ),
     fastestCompleted: parseInt(
       problems.rows.find((r) => r.category === 'Fastest Completed Problem')

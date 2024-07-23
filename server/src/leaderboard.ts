@@ -35,6 +35,7 @@ type Leaderboard = {
   allTime: {
     mostSolved: SolvedScore[]
     currentStreak: StreakScore[]
+    longestStreak: StreakScore[]
     fastest: SpeedScore[]
     daysPlayed: DaysPlayedScore[]
   }
@@ -59,7 +60,7 @@ async function calculateDailyLeaderboard(day: number, chain: Chain) {
       WHERE 
           day = ${day}
           AND src_name = $1
-      GROUP BY 
+      GROUP BY
           run_id, level, player
   ),
   cumulative_times AS (
@@ -72,7 +73,7 @@ async function calculateDailyLeaderboard(day: number, chain: Chain) {
       WHERE 
           day = ${day}
           AND src_name = $1
-      GROUP BY 
+      GROUP BY
           run_id, player
       HAVING 
           COUNT(level) = ${MAX_BODY_COUNT - 1}
@@ -189,6 +190,34 @@ WITH current_streaks AS (
         current_streak DESC
     LIMIT ${n}
 ),
+longest_streaks AS (
+    SELECT
+        player,
+        MAX(streak_length) AS current_streak
+    FROM (
+        SELECT
+            player,
+            COUNT(*) AS streak_length
+        FROM (
+            SELECT
+                day,
+                player,
+                ROW_NUMBER() OVER (PARTITION BY run_id ORDER BY day) -
+                ROW_NUMBER() OVER (PARTITION BY run_id, day ORDER BY day) AS streak
+            FROM
+                anybody_problem_run_solved
+            WHERE
+                src_name = $1
+        ) AS subquery
+        GROUP BY
+            player, streak
+    ) AS streaks
+    GROUP BY
+        player
+    ORDER BY
+        current_streak DESC
+    LIMIT ${n}
+),
 fastest_completed AS (
     SELECT
         run_id,
@@ -241,6 +270,14 @@ leaderboard AS (
         current_streaks
     UNION ALL
     SELECT
+        'Longest Streak' AS category,
+        player,
+        current_streak AS metric,
+        NULL::jsonb AS additional_info
+    FROM
+        longest_streaks
+    UNION ALL
+    SELECT
         'Fastest Completed Problem' AS category,
         player,
         time AS metric,
@@ -284,6 +321,13 @@ FROM
       })),
     currentStreak: result.rows
       .filter((r: any) => r.category === 'Current Streak')
+      .map((r: any) => ({
+        runId: r.run_id,
+        streak: parseInt(r.metric),
+        player: r.player
+      })),
+    longestStreak: result.rows
+      .filter((r: any) => r.category === 'Longest Streak')
       .map((r: any) => ({
         runId: r.run_id,
         streak: parseInt(r.metric),
