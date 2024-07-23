@@ -62,20 +62,20 @@ const FG_SVGS = [
 ]
 
 const FACE_SVGS = [
-  new URL('/public/bodies/faces/face1.svg', import.meta.url).href,
-  new URL('/public/bodies/faces/face2.svg', import.meta.url).href,
-  new URL('/public/bodies/faces/face3.svg', import.meta.url).href,
-  new URL('/public/bodies/faces/face4.svg', import.meta.url).href,
-  new URL('/public/bodies/faces/face5.svg', import.meta.url).href,
-  new URL('/public/bodies/faces/face6.svg', import.meta.url).href,
-  new URL('/public/bodies/faces/face7.svg', import.meta.url).href,
-  new URL('/public/bodies/faces/face8.svg', import.meta.url).href,
-  new URL('/public/bodies/faces/face9.svg', import.meta.url).href,
-  new URL('/public/bodies/faces/face10.svg', import.meta.url).href,
-  new URL('/public/bodies/faces/face11.svg', import.meta.url).href,
-  new URL('/public/bodies/faces/face12.svg', import.meta.url).href,
-  new URL('/public/bodies/faces/face13.svg', import.meta.url).href,
-  new URL('/public/bodies/faces/face14.svg', import.meta.url).href
+  new URL('/public/bodies/faces/1.svg', import.meta.url).href,
+  new URL('/public/bodies/faces/2.svg', import.meta.url).href,
+  new URL('/public/bodies/faces/3.svg', import.meta.url).href,
+  new URL('/public/bodies/faces/4.svg', import.meta.url).href,
+  new URL('/public/bodies/faces/5.svg', import.meta.url).href,
+  new URL('/public/bodies/faces/6.svg', import.meta.url).href,
+  new URL('/public/bodies/faces/7.svg', import.meta.url).href,
+  new URL('/public/bodies/faces/8.svg', import.meta.url).href,
+  new URL('/public/bodies/faces/9.svg', import.meta.url).href,
+  new URL('/public/bodies/faces/10.svg', import.meta.url).href,
+  new URL('/public/bodies/faces/11.svg', import.meta.url).href,
+  new URL('/public/bodies/faces/12.svg', import.meta.url).href,
+  new URL('/public/bodies/faces/13.svg', import.meta.url).href,
+  new URL('/public/bodies/faces/14.svg', import.meta.url).href
 ]
 
 const FACE_BLINK_SVGS = [
@@ -189,13 +189,13 @@ export const Visuals = {
 
     this.drawPause()
     this.drawScore()
+    this.drawGun()
 
     if (
       this.mode == 'game' &&
       this.frames - this.startingFrame + this.FPS < this.timer &&
       this.bodies.reduce((a, c) => a + c.radius, 0) != 0
     ) {
-      this.drawGun()
       this.drawMissiles()
     }
     this.drawExplosions()
@@ -482,6 +482,7 @@ export const Visuals = {
   },
 
   drawScore() {
+    if (this.paused) return
     const { p } = this
     p.push()
     p.fill('white')
@@ -509,8 +510,13 @@ export const Visuals = {
 
     p.textFont(fonts.body)
     p.textSize(this.scoreSize)
-    if (runningFrames > 2) {
+    if (
+      runningFrames > 2 &&
+      (!this.gameOver || (this.gameOver && this.won && !this.skipAhead))
+    ) {
       p.text(secondsLeft.toFixed(2), 20, 10)
+      p.textAlign(p.RIGHT, p.TOP)
+      p.text('Lvl ' + this.level, this.windowWidth - 20, 10)
     }
 
     p.pop()
@@ -526,13 +532,13 @@ export const Visuals = {
     this.winScreenVisibleForFrames++
     this.winScreenLastVisibleFrame = this.p5Frames
 
-    const celebrationTime = 3 // seconds
+    const celebrationTime = 5 // seconds
     this.celebrating =
       this.winScreenVisibleForFrames / this.P5_FPS < celebrationTime
 
     if (this.celebrating && !this.skipAhead) {
       this.drawGameOverTicker({
-        text: '                 YAYYYYYYYYYYY',
+        text: '                 HELL YEA DAMN SICK YES',
         bottom: true,
         fg: THEME.iris_30
       })
@@ -637,7 +643,7 @@ export const Visuals = {
       .map((result) => result?.framesTook / this.FPS)
       .filter((l) => l !== undefined)
     const bestTimes =
-      this.todaysRecords?.levels.map((l) => l.events[0].time / this.FPS) ||
+      this.todaysRecords?.levels?.map((l) => l.events[0].time / this.FPS) ||
       Array.from({ length: 5 }, (_, i) => levelTimes[i] || 0)
     const plusMinus = bestTimes
       .map((best, i) => {
@@ -1251,12 +1257,12 @@ export const Visuals = {
     const doubleText = `${text} ${text} `
 
     const { p } = this
-
+    p.noStroke()
     p.fill(fg)
     p.textSize(200)
     p.textAlign(p.LEFT, p.TOP)
     p.textFont(fonts.dot)
-    const tickerSpeed = -200 / this.P5_FPS
+    const tickerSpeed = -1000 / this.P5_FPS
     const textWidth = p.textWidth(doubleText)
     if (
       !this.gameoverTickerX ||
@@ -1278,7 +1284,10 @@ export const Visuals = {
     p.noStroke()
     p.fill(this.randomColor(100))
 
-    this.drawGameOverTicker({ text: 'GAME OVER', fg: THEME.red })
+    this.drawGameOverTicker({
+      text: '                 GAME OVER',
+      fg: THEME.red
+    })
 
     if (this.showPlayAgain) {
       this.drawFatButton({
@@ -1362,7 +1371,11 @@ export const Visuals = {
   },
 
   drawExplosions() {
-    if (this.paused || (this.gameOver && !this.celebrating && this.won)) return
+    if (
+      this.paused ||
+      (this.gameOver && (!this.celebrating || this.skipAhead) && this.won)
+    )
+      return
     const { explosions } = this
 
     for (let i = 0; i < explosions.length; i++) {
@@ -1423,7 +1436,7 @@ export const Visuals = {
         p.fill(color)
       } else {
         p.noFill()
-        p.strokeWeight(1)
+        p.strokeWeight(2)
         p.stroke(color)
       }
       for (let a = rotateBy; a < p.TWO_PI + rotateBy; a += angle) {
@@ -1639,7 +1652,10 @@ export const Visuals = {
     const graphic = body.graphic || this.bodiesGraphic
 
     const baddiesNear = this.closeTo(body)
-    if (baddiesNear && !this.paused) {
+    if (
+      (baddiesNear && !this.paused) ||
+      (this.gameOver && !this.won && !this.skipAhead)
+    ) {
       this.drawImageAsset(FACE_SHOT_SVGS[this.fIndex], width, null, graphic)
       return
     }
@@ -1671,7 +1687,10 @@ export const Visuals = {
       ...rot.fg,
       ...(rotOverride?.fg?.[fgIndex] ?? {})
     }
-    const rotateBy = r.speed == 0 ? 0 : (this.frames / r.speed) % 360
+    const rotateBy =
+      r.speed == 0
+        ? 0
+        : (this.p5Frames / this.P5_FPS_MULTIPLIER / r.speed) % 360
     graphic.rotate(r.direction * rotateBy)
     this.drawImageAsset(FG_SVGS[fgIndex], width, fill, graphic)
     graphic.pop()
@@ -1685,7 +1704,10 @@ export const Visuals = {
       ...rot.core,
       ...(rotOverride?.core?.[0] ?? {})
     }
-    const rotateBy = r.speed == 0 ? 0 : (this.frames / r.speed) % 360
+    const rotateBy =
+      r.speed == 0
+        ? 0
+        : (this.p5Frames / this.P5_FPS_MULTIPLIER / r.speed) % 360
     graphic.rotate(r.direction * rotateBy)
     this.drawImageAsset(CORE_SVGS[0], width, fill, graphic)
     graphic.pop()
@@ -1701,7 +1723,10 @@ export const Visuals = {
       ...rot.bg,
       ...(rotOverride?.bg?.[bgIndex] ?? {})
     }
-    const rotateBy = r.speed == 0 ? 0 : (this.frames / r.speed) % 360
+    const rotateBy =
+      r.speed == 0
+        ? 0
+        : (this.p5Frames / this.P5_FPS_MULTIPLIER / r.speed) % 360
     graphic.rotate(r.direction * rotateBy)
     this.drawImageAsset(BG_SVGS[bgIndex], width, fill, graphic)
     graphic.pop()
@@ -1868,7 +1893,7 @@ export const Visuals = {
   },
 
   async drawBodies(attachToCanvas = true) {
-    if (this.won && !this.celebrating) return
+    if (this.won && (!this.celebrating || this.skipAhead)) return
     this.bodiesGraphic ||= this.p.createGraphics(
       this.windowWidth,
       this.windowHeight
@@ -2022,7 +2047,7 @@ export const Visuals = {
     let bgColor = hslToRgb(this.brighten(colorHSL, -20), 1)
     const coreColor = hslToRgb(colorHSL)
     graphic.push()
-    const rotate = (this.frames / 30) % 360
+    const rotate = (this.p5Frames / this.P5_FPS_MULTIPLIER / 30) % 360
     graphic.rotate(rotate)
     this.drawImageAsset(
       BADDIE_SVG.bg,
