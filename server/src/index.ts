@@ -50,7 +50,7 @@ setupListener()
 
 // uncomment to test the connection
 // setInterval(async () => {
-//   await updateLeaderboard('sepolia')
+//   await updateLeaderboard('base_sepolia')
 //   await publish()
 // }, 3000)
 
@@ -121,11 +121,13 @@ app.use(
 )
 
 app.post('/sse/:chain', async (c) => {
+  c.header('X-Accel-Buffering', 'no')
   const chain = c.req.param('chain') as Chain
   return streamSSE(c, streamHandler(c.req.raw.signal, chain))
 })
 
 app.post('/sse/:chain/:address', async (c) => {
+  c.header('X-Accel-Buffering', 'no')
   const address = c.req.param('address')
   const chain = c.req.param('chain') as Chain
   return streamSSE(c, streamHandler(c.req.raw.signal, chain, address))
