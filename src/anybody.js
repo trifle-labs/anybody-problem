@@ -183,7 +183,7 @@ export class Anybody extends EventEmitter {
     style.id = 'canvas-cursor' // Add an id to the style element
 
     style.innerHTML = `
-      canvas {
+      #canvas, canvas {
         cursor: none;
       }
     `
@@ -196,7 +196,7 @@ export class Anybody extends EventEmitter {
     this.lastMissileCantBeUndone = false
     this.speedFactor = 2
     this.speedLimit = 10
-    this.missileSpeed = 15
+    this.missileSpeed = 10
     this.G = NORMAL_GRAVITY
     this.vectorLimit = this.speedLimit * this.speedFactor
     this.FPS = 25
@@ -219,7 +219,6 @@ export class Anybody extends EventEmitter {
     this.witheringBodies = []
     this.bodyInits = []
     this.bodyFinal = []
-    this.allCopiesOfBodies = []
     this.missileCount = 0
     this.frames = 0
     this.p5Frames = 0
@@ -454,7 +453,7 @@ export class Anybody extends EventEmitter {
     this.sound?.playGameOver({ won })
     this.gameOver = true
     this.won = won
-    if (this.level !== 0 && !this.won && this.bodies[0].radius !== 0) {
+    if (this.level !== 0 && !this.won) {
       const gravityIndex = this.bodies
         .slice(1)
         .filter((b) => b.radius !== 0n).length
@@ -494,7 +493,6 @@ export class Anybody extends EventEmitter {
     if (won) {
       this.bodyData = null
     }
-    this.removeCSS()
     if (won) {
       this.finish()
     }
