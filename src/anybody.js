@@ -400,7 +400,7 @@ export class Anybody extends EventEmitter {
   }
 
   handleGameClick = (e) => {
-    if (this.gameOver) {
+    if (this.gameOver && this.won) {
       this.skipAhead = true
     }
     const { x, y } = this.getXY(e)
@@ -426,7 +426,7 @@ export class Anybody extends EventEmitter {
   }
 
   handleGameKeyDown = (e) => {
-    if (this.gameOver) {
+    if (this.gameOver && this.won) {
       this.skipAhead = true
     }
     const modifierKeyActive = e.shiftKey && e.altKey && e.ctrlKey && e.metaKey
@@ -471,7 +471,7 @@ export class Anybody extends EventEmitter {
         })
       )
     }
-    this.P5_FPS *= 3
+    this.P5_FPS *= 2
     this.p.frameRate(this.P5_FPS)
     var dust = 0
     var timeTook = 0
@@ -565,6 +565,7 @@ export class Anybody extends EventEmitter {
 
   step() {
     if (this.missiles.length == 0 && this.lastMissileCantBeUndone) {
+      console.log('LASTMISSILECANTBEUNDONE = FALSE')
       this.lastMissileCantBeUndone = false
     }
     this.bodies = this.forceAccumulator(this.bodies)
@@ -720,6 +721,7 @@ export class Anybody extends EventEmitter {
     // is removed from the missileInits array to prevent it from being used as incoming missile
     // during the next chunk.
     if (this.missiles.length > 0) {
+      console.log('LASTMISSILECANTBEUNDONE = TRUE')
       this.lastMissileCantBeUndone = true
     }
     if (level !== 0) {
@@ -753,7 +755,6 @@ export class Anybody extends EventEmitter {
       body.py = parseInt((BigInt(this.windowWidth) * this.scalingFactor) / 2n)
       body.vx = parseInt(maxVectorScaled) - 5000
       body.vy = parseInt(maxVectorScaled)
-      console.log({ body })
       return body
     }
 
@@ -790,7 +791,7 @@ export class Anybody extends EventEmitter {
 
   genRadius(index) {
     const radii = [36n, 27n, 22n, 17n, 12n, 7n] // n * 5 + 2
-    let size = radii[index % radii.length]
+    let size = this.level == 0 ? 27n : radii[index % radii.length]
     return parseInt(size * BigInt(this.scalingFactor))
   }
 
@@ -901,6 +902,7 @@ export class Anybody extends EventEmitter {
       if (this.lastMissileCantBeUndone) {
         this.emit('remove-last-missile')
         this.lastMissileCantBeUndone = false
+        console.log('LASTMISSILECANTBEUNDONE = FALSE')
       }
       this.missileInits.pop()
       this.missileCount--
