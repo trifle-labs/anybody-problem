@@ -543,7 +543,7 @@ export const Visuals = {
 
     if (this.celebrating && !this.skipAhead) {
       this.drawGameOverTicker({
-        text: '                 HELL YEA DAMN SICK YES',
+        text: '                 YES  YES  YES  YES  YES  YES  YES  YES',
         bottom: true,
         fg: THEME.iris_30
       })
@@ -1267,7 +1267,7 @@ export const Visuals = {
     p.textSize(200)
     p.textAlign(p.LEFT, p.TOP)
     p.textFont(fonts.dot)
-    const tickerSpeed = -1000 / this.P5_FPS
+    const tickerSpeed = -600 / this.P5_FPS
     const textWidth = p.textWidth(doubleText)
     if (
       !this.gameoverTickerX ||
@@ -1288,9 +1288,12 @@ export const Visuals = {
     p.push()
     p.noStroke()
     p.fill(this.randomColor(100))
-
+    const text =
+      this.bodies[0].radius == 0
+        ? 'PROTECT HERO!!   KILL BADDIES!!'
+        : 'TIME IS UP   TIME IS UP  TIME IS UP'
     this.drawGameOverTicker({
-      text: '                 GAME OVER',
+      text: '                 ' + text,
       fg: THEME.red
     })
 
@@ -1365,13 +1368,13 @@ export const Visuals = {
     return [hslArray[0], 0, hslArray[2]]
   },
 
-  rgbaToGrayscale(rgba) {
+  rgbaToGrayscale(rgba, split = 3) {
     const rgbaArray = rgba.split(',')
     const r = parseInt(rgbaArray[0].split('(')[1])
     const g = parseInt(rgbaArray[1])
     const b = parseInt(rgbaArray[2])
     const a = parseFloat(rgbaArray[3].split(')')[0])
-    const avg = (r + g + b) / 3
+    const avg = Math.min(Math.floor((r + g + b) / split), 255)
     return `rgba(${avg},${avg},${avg},${a})`
   },
 
@@ -1384,12 +1387,14 @@ export const Visuals = {
     const { explosions } = this
 
     for (let i = 0; i < explosions.length; i++) {
-      const _explosion = explosions[i]
+      const v = explosions[i].velocity
+      const _explosion = JSON.parse(JSON.stringify(explosions[i]))
+      _explosion.velocity = v
 
-      _explosion.c.bg = this.rgbaToGrayscale(_explosion.c.bg)
-      _explosion.c.fg = this.rgbaToGrayscale(_explosion.c.fg)
-      _explosion.c.core = this.rgbaToGrayscale(_explosion.c.core)
-      _explosion.c.baddie = this.hslToGrayscale(_explosion.c.baddie)
+      _explosion.c.bg = this.rgbaToGrayscale(explosions[i].c.bg, 1.5)
+      _explosion.c.fg = this.rgbaToGrayscale(explosions[i].c.fg)
+      _explosion.c.core = this.rgbaToGrayscale(explosions[i].c.core)
+      _explosion.c.baddie = this.hslToGrayscale(explosions[i].c.baddie)
 
       this.drawBody(
         _explosion.position.x,
