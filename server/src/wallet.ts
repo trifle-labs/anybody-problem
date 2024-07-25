@@ -78,7 +78,8 @@ player_fastest_completed AS (
 player_days_played AS (
   SELECT
     player,
-    COUNT(DISTINCT day) AS days_played
+    COUNT(DISTINCT day) AS days_played,
+    jsonb_agg(DISTINCT day ORDER BY day) AS days_played_array
   FROM
     anybody_problem_level_solved
   WHERE
@@ -126,7 +127,7 @@ player_stats AS (
     'Days Played' AS category,
     player,
     days_played AS metric,
-    NULL::jsonb AS additional_info
+    jsonb_build_object('days', days_played_array) AS additional_info
   FROM
     player_days_played
   UNION ALL
@@ -143,10 +144,15 @@ SELECT
   CONCAT('0x', encode(player, 'hex')) as player,
   metric,
   additional_info->>'runId' AS runId,
-  additional_info->>'day' AS day
+  additional_info->>'day' AS day,
+  additional_info->'days' AS days
 FROM
   player_stats;`,
     [chain, address.replace(/^0x/, ''), today, yesterday]
+  )
+
+  const fastestCompleted = problems.rows.find(
+    (r) => r.category === 'Fastest Completed Problem'
   )
 
   return {
@@ -156,13 +162,12 @@ FROM
     longestStreak: parseInt(
       problems.rows.find((r) => r.category === 'Longest Streak')?.metric
     ),
-    fastestCompleted: parseInt(
-      problems.rows.find((r) => r.category === 'Fastest Completed Problem')
-        ?.metric
-    ),
-    daysPlayed: parseInt(
-      problems.rows.find((r) => r.category === 'Days Played')?.metric
-    ),
+    fastestCompleted: {
+      runId: fastestCompleted?.runid,
+      day: fastestCompleted?.day,
+      time: parseInt(fastestCompleted?.metric)
+    },
+    daysPlayed: problems.rows.find((r) => r.category === 'Days Played')?.days,
     levelsSolved: parseInt(
       problems.rows.find((r) => r.category === 'Levels Solved')?.metric
     )
