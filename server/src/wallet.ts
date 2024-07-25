@@ -10,144 +10,91 @@ async function getScores(chain: Chain, address?: string) {
 
   const problems = await db.query(
     `
-WITH player_current_streaks AS (
-  SELECT
-    player,
-    MAX(streak_length) AS current_streak
-  FROM (
+  WITH player_data AS (
+    SELECT *
+    FROM anybody_problem_run_solved
+    WHERE src_name = $1 AND player = decode($2, 'hex')
+),
+daily_activity AS (
+    SELECT DISTINCT day
+    FROM player_data
+    ORDER BY day
+),
+streak_calc AS (
     SELECT
-      player,
-      COUNT(*) AS streak_length
-    FROM (
-      SELECT
         day,
-        player,
-        ROW_NUMBER() OVER (PARTITION BY run_id ORDER BY day) -
-        ROW_NUMBER() OVER (PARTITION BY run_id, day ORDER BY day) AS streak
-      FROM
-        anybody_problem_run_solved
-      WHERE
-        src_name = $1 AND player = decode($2, 'hex')
-    ) AS subquery
-    GROUP BY
-      player, streak
-    HAVING MAX(day) = $3 OR MAX(day) = $4 -- ensure the streak is current
-  ) AS streaks
-  GROUP BY
-    player
+        day - LAG(day, 1, day - 86400) OVER (ORDER BY day) AS day_diff
+    FROM daily_activity
 ),
-player_streaks AS (
-  SELECT
-    player,
-    MAX(streak_length) AS current_streak
-  FROM (
+streak_groups AS (
     SELECT
-      player,
-      COUNT(*) AS streak_length
-    FROM (
-      SELECT
         day,
-        player,
-        ROW_NUMBER() OVER (PARTITION BY run_id ORDER BY day) -
-        ROW_NUMBER() OVER (PARTITION BY run_id, day ORDER BY day) AS streak
-      FROM
-        anybody_problem_run_solved
-      WHERE
-        src_name = $1 AND player = decode($2, 'hex')
-    ) AS subquery
-    GROUP BY
-      player, streak
-  ) AS streaks
-  GROUP BY
-    player
+        SUM(CASE WHEN day_diff > 86400 THEN 1 ELSE 0 END) OVER (ORDER BY day) AS streak_group
+    FROM streak_calc
 ),
-player_fastest_completed AS (
-  SELECT
-    run_id,
-    player,
-    accumulative_time as time,
-    day
-  FROM
-    anybody_problem_run_solved
-  WHERE
-    src_name = $1 AND player = decode($2, 'hex')
-  ORDER BY
-    time ASC
-  LIMIT 1
+streak_lengths AS (
+    SELECT
+        streak_group,
+        COUNT(*) AS streak_length,
+        MAX(day) AS streak_end
+    FROM streak_groups
+    GROUP BY streak_group
 ),
-player_days_played AS (
-  SELECT
-    player,
-    COUNT(DISTINCT day) AS days_played,
-    jsonb_agg(DISTINCT day ORDER BY day) AS days_played_array
-  FROM
-    anybody_problem_level_solved
-  WHERE
-    src_name = $1 AND player = decode($2, 'hex')
-  GROUP BY
-    player
+streak_stats AS (
+    SELECT
+        MAX(streak_length) AS longest_streak,
+        CASE 
+            WHEN MAX(streak_end) IN ($3, $4)
+            THEN MAX(CASE WHEN streak_end IN ($3, $4) THEN streak_length ELSE 0 END)
+            ELSE 0
+        END AS current_streak
+    FROM streak_lengths
 ),
-player_levels_solved AS (
-  SELECT
-    player,
-    COUNT(DISTINCT (run_id, level)) AS solve_count
-  FROM
-    anybody_problem_level_solved
-  WHERE
-    src_name = $1 AND player = decode($2, 'hex')
-  GROUP BY
-    player
+fastest_completed AS (
+    SELECT accumulative_time AS time, run_id, day
+    FROM player_data
+    ORDER BY accumulative_time ASC
+    LIMIT 1
 ),
 player_stats AS (
-  SELECT
-    'Current Streak' AS category,
-    player,
-    current_streak AS metric,
-    NULL::jsonb AS additional_info
-  FROM
-    player_current_streaks
-  UNION ALL
-  SELECT
-    'Longest Streak' AS category,
-    player,
-    current_streak AS metric,
-    NULL::jsonb AS additional_info
-  FROM
-    player_streaks
-  UNION ALL
-  SELECT
-    'Fastest Completed Problem' AS category,
-    player,
-    time AS metric,
-    jsonb_build_object('runId', run_id, 'day', day) AS additional_info
-  FROM
-    player_fastest_completed
-  UNION ALL
-  SELECT
-    'Days Played' AS category,
-    player,
-    days_played AS metric,
-    jsonb_build_object('days', days_played_array) AS additional_info
-  FROM
-    player_days_played
-  UNION ALL
-  SELECT
-    'Levels Solved' AS category,
-    player,
-    solve_count AS metric,
-    NULL::jsonb AS additional_info
-  FROM
-    player_levels_solved
+    SELECT
+      'Current Streak' AS category,
+      current_streak AS metric,
+      NULL::jsonb AS additional_info
+    FROM streak_stats
+    UNION ALL
+    SELECT
+      'Longest Streak' AS category,
+      longest_streak AS metric,
+      NULL::jsonb AS additional_info
+    FROM streak_stats
+    UNION ALL
+    SELECT
+      'Fastest Completed Problem' AS category, 
+      time AS metric, 
+      jsonb_build_object('runId', run_id, 'day', day) AS additional_info
+    FROM fastest_completed
+    UNION ALL
+    SELECT
+      'Days Played' AS category, 
+      COUNT(DISTINCT day) AS metric, 
+      jsonb_build_object('days', jsonb_agg(DISTINCT day ORDER BY day)) AS additional_info
+    FROM player_data
+    UNION ALL
+    SELECT
+      'Runs Solved' AS category, 
+      COUNT(*) AS metric, 
+      NULL::jsonb AS additional_info
+    FROM player_data
 )
 SELECT
-  category,
-  CONCAT('0x', encode(player, 'hex')) as player,
-  COALESCE(metric, 0) as metric,
-  additional_info->>'runId' AS runId,
-  additional_info->>'day' AS day,
-  additional_info->'days' AS days
-FROM
-  player_stats;`,
+    category,
+    COALESCE(metric, 0) as metric,
+    additional_info->>'runId' AS runId,
+    additional_info->>'day' AS day,
+    additional_info->'days' AS days
+FROM player_stats;
+`,
     [chain, address.replace(/^0x/, ''), today, yesterday]
   )
 
@@ -171,9 +118,9 @@ FROM
     },
     daysPlayed:
       problems.rows.find((r) => r.category === 'Days Played')?.days || [],
-    levelsSolved:
+    runsSolved:
       parseInt(
-        problems.rows.find((r) => r.category === 'Levels Solved')?.metric
+        problems.rows.find((r) => r.category === 'Runs Solved')?.metric
       ) || 0
   }
 }
