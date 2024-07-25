@@ -26,7 +26,6 @@ type LevelLeaderboard = {
 }
 
 type DailyLeaderboard = {
-  levels: LevelLeaderboard[]
   cumulative: SpeedScore[]
 }
 
@@ -43,71 +42,26 @@ type Leaderboard = {
 
 // TODO: pull this from the contract
 const MAX_BODY_COUNT = 6
-const DAILY_CATEGORY_LIMIT = 3
+const DAILY_CATEGORY_LIMIT = 10
 
 export const leaderboards: Record<Chain, Leaderboard> | {} = {}
 
 async function calculateDailyLeaderboard(day: number, chain: Chain) {
   const q = `
-  WITH fastest_times AS (
+  WITH ranked_cumulative_times AS (
       SELECT 
           run_id,
-          level,
-          MIN(time) AS fastest_time,
+          accumulative_time AS total_time,
           player
-      FROM
-          anybody_problem_level_solved
+      FROM 
+        anybody_problem_run_solved
       WHERE 
-          day = ${day}
-          AND src_name = $1
-      GROUP BY
-          run_id, level, player
-  ),
-  cumulative_times AS (
-      SELECT 
-          run_id,
-          SUM(time) AS total_time,
-          player
-      FROM 
-          anybody_problem_level_solved
-      WHERE 
-          day = ${day}
-          AND src_name = $1
-      GROUP BY
-          run_id, player
-      HAVING 
-          COUNT(level) = ${MAX_BODY_COUNT - 1}
-  ),
-  ranked_fastest_times AS (
-      SELECT 
-          run_id,
-          level,
-          fastest_time,
-          ROW_NUMBER() OVER (PARTITION BY level ORDER BY fastest_time) AS rank,
-          player
-      FROM 
-          fastest_times
-  ),
-  ranked_cumulative_times AS (
-      SELECT 
-          run_id,
-          total_time,
-          ROW_NUMBER() OVER (ORDER BY total_time) AS rank,
-          player
-      FROM 
-          cumulative_times
+        day = ${day}
+        AND src_name = $1
+    ORDER BY total_time ASC
+      LIMIT ${DAILY_CATEGORY_LIMIT}
   ),
   leaderboard AS (
-      SELECT
-          level,
-          run_id,
-          fastest_time AS time,
-          player
-      FROM
-          ranked_fastest_times
-      WHERE
-          rank <= ${DAILY_CATEGORY_LIMIT}
-      UNION ALL
       SELECT 
           NULL AS level,
           run_id,
@@ -115,8 +69,6 @@ async function calculateDailyLeaderboard(day: number, chain: Chain) {
           player
       FROM 
           ranked_cumulative_times
-      WHERE 
-          rank <= ${DAILY_CATEGORY_LIMIT}
   )
   SELECT 
       leaderboard.level,
@@ -124,9 +76,7 @@ async function calculateDailyLeaderboard(day: number, chain: Chain) {
       leaderboard.time,
       concat('0x', encode(player, 'hex')) as player
   FROM
-      leaderboard
-  ORDER BY
-      COALESCE(leaderboard.level, 0), leaderboard.time;
+      leaderboard;
   `
   const result = await db.query(q, [chain])
   function scores(rows: any[]): SpeedScore[] {
@@ -139,18 +89,9 @@ async function calculateDailyLeaderboard(day: number, chain: Chain) {
     }))
   }
 
-  const levels: LevelLeaderboard[] = []
-  for (let i = 1; i <= MAX_BODY_COUNT; i++) {
-    const events = scores(result.rows.filter((r: any) => r.level === `${i}`))
-    if (!events.length) continue
-    levels.push({
-      level: i,
-      events
-    })
-  }
   const cumulativeEvents = scores(result.rows.filter((r: any) => !r.level))
 
-  return { levels, cumulative: cumulativeEvents }
+  return { cumulative: cumulativeEvents }
 }
 
 async function calculateAllTimeLeaderboard(
@@ -351,16 +292,43 @@ FROM
   }
 }
 
+export async function recentSolvesToday(chain: Chain) {
+  const today = currentDayInUnixTime()
+  const result = await db.query(
+    `
+    SELECT
+        run_id,
+        CONCAT('0x', encode(player, 'hex')) as player,
+        accumulative_time as time,
+        day
+    FROM
+        anybody_problem_run_solved
+    WHERE
+        src_name = $1
+        AND day = ${today}
+    ORDER BY
+        run_id DESC
+    LIMIT 20
+    `,
+    [chain]
+  )
+  return result.rows.map((r: any) => ({
+    runId: parseInt(r.run_id),
+    day: parseInt(r.day),
+    date: new Date(r.day * 1000).toISOString().split('T')[0],
+    time: parseInt(r.time),
+    player: r.player
+  }))
+}
+
 export async function updateLeaderboard(chain: Chain) {
   const start = Date.now()
-
-  const seasonStart = 1719532800
 
   // calculate daily leaderboards
   const today = currentDayInUnixTime()
   const daysSoFar: number[] = []
   const ONE_DAY_SECONDS = 86400
-  for (let i = seasonStart; i <= today; i += ONE_DAY_SECONDS) {
+  for (let i = today; i > today - ONE_DAY_SECONDS * 21; i -= ONE_DAY_SECONDS) {
     daysSoFar.push(i)
   }
 
@@ -380,10 +348,14 @@ export async function updateLeaderboard(chain: Chain) {
     {} as Record<number, DailyLeaderboard>
   )
 
-  const allTime = await calculateAllTimeLeaderboard(today, chain)
+  const [allTime, feed] = await Promise.all([
+    calculateAllTimeLeaderboard(today, chain),
+    recentSolvesToday(chain)
+  ])
 
   leaderboards[chain] = {
     daily,
+    feed,
     allTime
   }
 
@@ -393,6 +365,6 @@ export async function updateLeaderboard(chain: Chain) {
     'leaderboard updated in',
     Date.now() - start,
     'ms with',
-    `(${doneWithDaily - start}ms for daily)`
+    `(${doneWithDaily - start}ms for ${dailies.length} days)`
   )
 }
