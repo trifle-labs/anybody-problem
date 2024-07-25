@@ -160,18 +160,20 @@ FROM
       parseInt(
         problems.rows.find((r) => r.category === 'Current Streak')?.metric
       ) || 0,
-    longestStreak: parseInt(
-      problems.rows.find((r) => r.category === 'Longest Streak')?.metric
-    ),
+    longestStreak:
+      parseInt(
+        problems.rows.find((r) => r.category === 'Longest Streak')?.metric
+      ) || 0,
     fastestCompleted: {
       runId: fastestCompleted?.runid,
       day: fastestCompleted?.day,
       time: parseInt(fastestCompleted?.metric)
     },
     daysPlayed: problems.rows.find((r) => r.category === 'Days Played')?.days,
-    levelsSolved: parseInt(
-      problems.rows.find((r) => r.category === 'Levels Solved')?.metric
-    )
+    levelsSolved:
+      parseInt(
+        problems.rows.find((r) => r.category === 'Levels Solved')?.metric
+      ) || 0
   }
 }
 
