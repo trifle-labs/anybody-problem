@@ -81,6 +81,7 @@ export async function recentSolvesToday(chain: Chain) {
   const result = await db.query(
     `
     SELECT
+        rank() OVER (ORDER BY accumulative_time ASC) as rank,
         run_id,
         CONCAT('0x', encode(player, 'hex')) as player,
         accumulative_time as time,
@@ -97,6 +98,7 @@ export async function recentSolvesToday(chain: Chain) {
     [chain]
   )
   return result.rows.map((r: any) => ({
+    rank: parseInt(r.rank),
     runId: parseInt(r.run_id),
     day: parseInt(r.day),
     date: new Date(r.day * 1000).toISOString().split('T')[0],
