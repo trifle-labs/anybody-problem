@@ -5,7 +5,7 @@ import Sound from './sound.js'
 import { Visuals } from './visuals.js'
 import { Calculations } from './calculations.js'
 import { utils } from 'ethers'
-import { randHSL, hslToRgb, bodyThemes } from './colors.js'
+import { hslToRgb, bodyThemes } from './colors.js'
 import { loadFonts } from './fonts.js'
 import { Buttons } from './buttons.js'
 // import wc from './witness_calculator.js'
@@ -796,9 +796,11 @@ export class Anybody extends EventEmitter {
   }
 
   randomRange(minBigInt, maxBigInt, seed) {
+    if (minBigInt == maxBigInt) return minBigInt
     minBigInt = typeof minBigInt === 'bigint' ? minBigInt : BigInt(minBigInt)
     maxBigInt = typeof maxBigInt === 'bigint' ? maxBigInt : BigInt(maxBigInt)
     seed = typeof seed === 'bigint' ? seed : BigInt(seed)
+    console.log({ seed, maxBigInt, minBigInt })
     return parseInt((seed % (maxBigInt - minBigInt)) + minBigInt)
   }
 
@@ -841,21 +843,103 @@ export class Anybody extends EventEmitter {
       position: this.createVector(px, py),
       velocity: this.createVector(vx, vy),
       radius: radius,
-      c: this.getBodyColor()
+      c: this.getBodyColor(this.day, bodyIndex)
     }
   }
 
-  getBodyColor() {
-    // TEMP random body theme
-    const themes = Object.keys(bodyThemes)
-    const theme = themes[this.random(0, themes.length - 1)]
+  getBodyColor(day, bodyIndex = 0) {
+    console.log({ day, bodyIndex })
+    let baddieSeed = utils.solidityKeccak256(
+      ['uint256', 'uint256'],
+      [day, bodyIndex]
+    )
+    const baddieHue = this.randomRange(0, 359, baddieSeed)
+    baddieSeed = utils.solidityKeccak256(['bytes32'], [baddieSeed])
+    const baddieSaturation = this.randomRange(90, 100, baddieSeed)
+    baddieSeed = utils.solidityKeccak256(['bytes32'], [baddieSeed])
+    const baddieLightness = this.randomRange(55, 60, baddieSeed)
 
-    return {
-      bg: hslToRgb(randHSL(bodyThemes[theme].bg, this.random.bind(this))),
-      core: hslToRgb(randHSL(bodyThemes[theme].cr, this.random.bind(this))),
-      fg: hslToRgb(randHSL(bodyThemes[theme].fg, this.random.bind(this))),
-      baddie: randHSL([undefined, '90-100', '55-60'], this.random.bind(this))
+    // hero body info
+    const themes = Object.keys(bodyThemes)
+    const numberOfThemes = themes.length
+    let rand = utils.solidityKeccak256(['uint256'], [day])
+    const bgOptions = 14
+    const fgOptions = 14
+    const coreOptions = 1
+    const bgIndex = this.randomRange(0, bgOptions - 1, rand)
+    rand = utils.solidityKeccak256(['bytes32'], [rand])
+    const fgIndex = this.randomRange(0, fgOptions - 1, rand)
+    rand = utils.solidityKeccak256(['bytes32'], [rand])
+    const coreIndex = this.randomRange(0, coreOptions - 1, rand)
+
+    const dailyThemeIndex = this.randomRange(0, numberOfThemes - 1, rand)
+
+    const themeName = themes[dailyThemeIndex]
+    const theme = bodyThemes[themeName]
+    console.log({ theme, dailyThemeIndex, bodyThemes })
+
+    rand = utils.solidityKeccak256(['bytes32'], [rand])
+    const bgHue = this.randomRange(0, 359, rand)
+    rand = utils.solidityKeccak256(['bytes32'], [rand])
+    const bgSaturationRange = theme.bg[1].split('-')
+    const bgSaturation = this.randomRange(
+      bgSaturationRange[0],
+      bgSaturationRange[1],
+      rand
+    )
+    rand = utils.solidityKeccak256(['bytes32'], [rand])
+    const bgLightnessRange = theme.bg[2].split('-')
+    const bgLightness = this.randomRange(
+      bgLightnessRange[0],
+      bgLightnessRange[1],
+      rand
+    )
+
+    rand = utils.solidityKeccak256(['bytes32'], [rand])
+    const coreHue = this.randomRange(0, 359, rand)
+    rand = utils.solidityKeccak256(['bytes32'], [rand])
+    const coreSaturationRange = theme.cr[1].split('-')
+    const coreSaturation = this.randomRange(
+      coreSaturationRange[0],
+      coreSaturationRange[1],
+      rand
+    )
+    rand = utils.solidityKeccak256(['bytes32'], [rand])
+    const coreLightnessRange = theme.cr[2].split('-')
+    const coreLightness = this.randomRange(
+      coreLightnessRange[0],
+      coreLightnessRange[1],
+      rand
+    )
+
+    rand = utils.solidityKeccak256(['bytes32'], [rand])
+    const fgHue = this.randomRange(0, 359, rand)
+    rand = utils.solidityKeccak256(['bytes32'], [rand])
+    const fgSaturationRange = theme.fg[1].split('-')
+    const fgSaturation = this.randomRange(
+      fgSaturationRange[0],
+      fgSaturationRange[1],
+      rand
+    )
+    rand = utils.solidityKeccak256(['bytes32'], [rand])
+    const fgLightnessRange = theme.fg[2].split('-')
+    const fgLightness = this.randomRange(
+      fgLightnessRange[0],
+      fgLightnessRange[1],
+      rand
+    )
+
+    const info = {
+      bgIndex,
+      fgIndex,
+      coreIndex,
+      bg: hslToRgb([bgHue, bgSaturation, bgLightness]),
+      core: hslToRgb([coreHue, coreSaturation, coreLightness]),
+      fg: hslToRgb([fgHue, fgSaturation, fgLightness]),
+      baddie: [baddieHue, baddieSaturation, baddieLightness]
     }
+    console.log({ info })
+    return info
   }
 
   random(min, max, rng = this.rng) {

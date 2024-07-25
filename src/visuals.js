@@ -1691,8 +1691,8 @@ export const Visuals = {
     const graphic = body.graphic || this.bodiesGraphic
     graphic.push()
 
-    this.fgIndex ||= this.random(0, FG_SVGS.length - 1)
-    const fgIndex = (this.bgIndex + body.bodyIndex) % FG_SVGS.length
+    this.fgIndex = body.c.fgIndex
+    const { fgIndex } = this
     const r = {
       ...rot.fg,
       ...(rotOverride?.fg?.[fgIndex] ?? {})
@@ -1727,8 +1727,8 @@ export const Visuals = {
     const fill = body.c.bg
     const graphic = body.graphic || this.bodiesGraphic
     graphic.push()
-    this.bgIndex ||= this.random(0, BG_SVGS.length - 1)
-    const bgIndex = (this.bgIndex + body.bodyIndex) % BG_SVGS.length
+    this.bgIndex = body.c.bgIndex
+    const { bgIndex } = this
     const r = {
       ...rot.bg,
       ...(rotOverride?.bg?.[bgIndex] ?? {})

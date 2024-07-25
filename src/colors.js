@@ -47,30 +47,29 @@ export const themes = {
     // random hues
     default: {
       'saturated-exclude-darks': {
-        bg: [undefined, '80-100', '18-100'],
+        bg: [undefined, '80-100', '18-100'], // undefined = 0—359
         cr: [undefined, '80-100', '18-100'],
         fg: [undefined, '80-100', '18-100']
       },
-      'bg:pastel__core:highlighter__fg:marker': {
+      pastel_highlighter_marker: {
         bg: [undefined, '80-100', '85-95'],
-        cr: [undefined, '100', '55-60'],
-        fg: [undefined, '70-90', '67']
+        cr: [undefined, '100-100', '55-60'],
+        fg: [undefined, '70-90', '67-67']
       },
-      'bg:marker__core:pastel__fg:highlighter': {
-        bg: [undefined, '100', '60'],
-        cr: [undefined, '100', '90-95'],
-        fg: [undefined, '100', '55-60']
+      marker_pastel_highlighter: {
+        bg: [undefined, '100-100', '60-60'],
+        cr: [undefined, '100-100', '90-95'],
+        fg: [undefined, '100-100', '55-60']
       },
-      'bg:shadow__core:highlighter__fg:marker': {
+      shadow_highlighter_marker: {
         bg: [undefined, '80-100', '18-25'],
-        cr: [undefined, '100', '55-60'],
-        fg: [undefined, '70-90', '67']
+        cr: [undefined, '100-100', '55-60'],
+        fg: [undefined, '70-90', '67-67']
       },
-      // "berlin"
-      'bg:dark__core:burnt__fg:crayon': {
-        bg: [undefined, '100', '18'],
-        cr: [undefined, '100', '45'],
-        fg: [undefined, '100', '30']
+      berlin: {
+        bg: [undefined, '100-100', '18-18'],
+        cr: [undefined, '100-100', '45-45'],
+        fg: [undefined, '100-100', '30-30']
       }
     },
     // reds / OPTIMISM
