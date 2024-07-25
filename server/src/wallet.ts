@@ -169,7 +169,8 @@ FROM
       day: fastestCompleted?.day,
       time: parseInt(fastestCompleted?.metric)
     },
-    daysPlayed: problems.rows.find((r) => r.category === 'Days Played')?.days,
+    daysPlayed:
+      problems.rows.find((r) => r.category === 'Days Played')?.days || [],
     levelsSolved:
       parseInt(
         problems.rows.find((r) => r.category === 'Levels Solved')?.metric
