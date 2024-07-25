@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 import { serveStatic } from 'hono/bun'
 import { SSEStreamingApi, streamSSE } from 'hono/streaming'
 import db from './db'
-import { leaderboards, updateLeaderboard } from './leaderboard'
+import { leaderboards, rankToday, updateLeaderboard } from './leaderboard'
 import { Chain, sources } from '../shovel-config'
 import { publish, addSubscriber, unsubscribe } from './publish'
 import { cors } from 'hono/cors'
@@ -131,6 +131,19 @@ app.post('/sse/:chain/:address', async (c) => {
   const address = c.req.param('address')
   const chain = c.req.param('chain') as Chain
   return streamSSE(c, streamHandler(c.req.raw.signal, chain, address))
+})
+
+// return the rank for a certain time
+app.get('/rank', async (c) => {
+  // never cache
+  c.header('Cache-Control', 'no-store')
+
+  const { time } = c.req.query()
+  if (!time) {
+    return c.json({ error: 'time is required' })
+  }
+  const rank = await rankToday(parseInt(time))
+  return c.json({ time, rank })
 })
 
 app.get('/', serveStatic({ path: './src/demo.html' }))

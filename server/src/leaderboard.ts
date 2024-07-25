@@ -150,3 +150,20 @@ export async function updateLeaderboard(chain: Chain) {
     `(${doneWithDaily - start}ms for ${dailies.length} days)`
   )
 }
+
+export async function rankToday(time) {
+  const today = currentDayInUnixTime()
+  const query = `
+  SELECT
+      COUNT(*) + 1 as rank
+  FROM
+      anybody_problem_run_solved
+  WHERE
+      day = $1
+      AND accumulative_time < $2
+  `
+
+  const result = await db.query(query, [today, time])
+
+  return result.rows[0].rank
+}
