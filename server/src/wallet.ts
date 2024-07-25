@@ -142,7 +142,7 @@ player_stats AS (
 SELECT
   category,
   CONCAT('0x', encode(player, 'hex')) as player,
-  metric,
+  COALESCE(metric, 0) as metric,
   additional_info->>'runId' AS runId,
   additional_info->>'day' AS day,
   additional_info->'days' AS days
@@ -156,9 +156,10 @@ FROM
   )
 
   return {
-    currentStreak: parseInt(
-      problems.rows.find((r) => r.category === 'Current Streak')?.metric
-    ),
+    currentStreak:
+      parseInt(
+        problems.rows.find((r) => r.category === 'Current Streak')?.metric
+      ) || 0,
     longestStreak: parseInt(
       problems.rows.find((r) => r.category === 'Longest Streak')?.metric
     ),
