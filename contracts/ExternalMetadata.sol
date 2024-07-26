@@ -21,7 +21,7 @@ contract ExternalMetadata is Ownable {
     address payable public speedruns;
     uint256 constant radiusMultiplyer = 100;
 
-    enum ThemeNames {
+    enum ThemeName {
         SaturatedExcludeDarks,
         PastelHighlighterMarker,
         MarkerPastelHighlighter,
@@ -35,8 +35,11 @@ contract ExternalMetadata is Ownable {
         FG
     }
 
+    mapping(ThemeLayer => uint256) private svgSizes;
+    mapping(ThemeLayer => string[]) private svgPaths;
+
     struct ThemeGroup {
-        ThemeNames name;
+        ThemeName name;
         Theme[3] themes;
     }
 
@@ -50,9 +53,37 @@ contract ExternalMetadata is Ownable {
         uint256 lightnessEnd;
     }
 
-    ThemeGroup[] public themes;
+    ThemeGroup[] public themeGroups;
 
     constructor() {
+        setupColorThemes();
+    }
+
+    function setupSVGPaths() internal {
+
+        // svgSizes[ThemeLayer.BG] = 7;
+        // svgPaths[ThemeLayer.BG].push('<svg>...</svg>');
+        // svgPaths[ThemeLayer.BG].push('<svg>...</svg>');
+        // svgPaths[ThemeLayer.BG].push('<svg>...</svg>');
+        // svgPaths[ThemeLayer.BG].push('<svg>...</svg>');
+        // svgPaths[ThemeLayer.BG].push('<svg>...</svg>');
+        // svgPaths[ThemeLayer.BG].push('<svg>...</svg>');
+        // svgPaths[ThemeLayer.BG].push('<svg>...</svg>');
+
+        // svgSizes[ThemeLayer.Core] = 3;
+        // svgPaths[ThemeLayer.Core].push('<svg>...</svg>');
+        // svgPaths[ThemeLayer.Core].push('<svg>...</svg>');
+        // svgPaths[ThemeLayer.Core].push('<svg>...</svg>');
+
+        // svgSizes[ThemeLayer.FG] = 4;
+        // svgPaths[ThemeLayer.FG].push('<svg>...</svg>');
+        // svgPaths[ThemeLayer.FG].push('<svg>...</svg>');
+        // svgPaths[ThemeLayer.FG].push('<svg>...</svg>');
+        // svgPaths[ThemeLayer.FG].push('<svg>...</svg>');
+    }
+
+    function setupColorThemes() internal {
+
         Theme memory saturated = Theme({
             layer: ThemeLayer.BG,
             hueStart: 0,
@@ -64,20 +95,20 @@ contract ExternalMetadata is Ownable {
         });
 
         ThemeGroup memory saturatedGroup = ThemeGroup({
-            name: ThemeNames.SaturatedExcludeDarks,
+            name: ThemeName.SaturatedExcludeDarks,
             themes: [saturated, saturated, saturated]
         });
         saturatedGroup.themes[0].layer = ThemeLayer.BG;
         saturatedGroup.themes[1].layer = ThemeLayer.Core;
         saturatedGroup.themes[2].layer = ThemeLayer.FG;
-        themes.push(saturatedGroup);
+        themeGroups.push(saturatedGroup);
 
         Theme memory pastelTemplate;
         pastelTemplate.hueStart = 0;
         pastelTemplate.hueEnd = 360;
 
         ThemeGroup memory pastelGroup = ThemeGroup({
-            name: ThemeNames.PastelHighlighterMarker,
+            name: ThemeName.PastelHighlighterMarker,
             themes: [pastelTemplate, pastelTemplate, pastelTemplate]
         });
         pastelGroup.themes[0].layer = ThemeLayer.BG;
@@ -97,10 +128,10 @@ contract ExternalMetadata is Ownable {
         pastelGroup.themes[2].saturationEnd = 90;
         pastelGroup.themes[2].lightnessStart = 67;
         pastelGroup.themes[2].lightnessEnd = 67;
-        themes.push(pastelGroup);
+        themeGroups.push(pastelGroup);
 
         ThemeGroup memory markerGroup = ThemeGroup({
-            name: ThemeNames.MarkerPastelHighlighter,
+            name: ThemeName.MarkerPastelHighlighter,
             themes: [pastelTemplate, pastelTemplate, pastelTemplate]
         });
         markerGroup.themes[0].layer = ThemeLayer.BG;
@@ -120,10 +151,10 @@ contract ExternalMetadata is Ownable {
         markerGroup.themes[2].saturationEnd = 100;
         markerGroup.themes[2].lightnessStart = 55;
         markerGroup.themes[2].lightnessEnd = 60;
-        themes.push(markerGroup);
+        themeGroups.push(markerGroup);
 
         ThemeGroup memory shadowGroup = ThemeGroup({
-            name: ThemeNames.ShadowHighlighterMarker,
+            name: ThemeName.ShadowHighlighterMarker,
             themes: [pastelTemplate, pastelTemplate, pastelTemplate]
         });
         shadowGroup.themes[0].layer = ThemeLayer.BG;
@@ -143,10 +174,10 @@ contract ExternalMetadata is Ownable {
         shadowGroup.themes[2].saturationEnd = 90;
         shadowGroup.themes[2].lightnessStart = 67;
         shadowGroup.themes[2].lightnessEnd = 67;
-        themes.push(shadowGroup);
+        themeGroups.push(shadowGroup);
 
         ThemeGroup memory berlinGroup = ThemeGroup({
-            name: ThemeNames.Berlin,
+            name: ThemeName.Berlin,
             themes: [pastelTemplate, pastelTemplate, pastelTemplate]
         });
         berlinGroup.themes[0].layer = ThemeLayer.BG;
@@ -166,7 +197,7 @@ contract ExternalMetadata is Ownable {
         berlinGroup.themes[2].saturationEnd = 100;
         berlinGroup.themes[2].lightnessStart = 30;
         berlinGroup.themes[2].lightnessEnd = 30;
-        themes.push(berlinGroup);
+        themeGroups.push(berlinGroup);
     }
 
     // string public baseURI = "https://";
@@ -360,14 +391,6 @@ contract ExternalMetadata is Ownable {
         return path;
     }
 
-    // NOTE: I think this could actually be returning HSL and then we don't need to implement conversion
-    function getBodyColor(
-        uint256 day,
-        uint256 bodyIndex
-    ) public pure returns (uint256[3] memory rgb) {
-        if (bodyIndex == 0) {} else {}
-    }
-
     function seedToColor(bytes32 seed) public pure returns (string memory) {
         uint256 blocker = 0xffff;
         uint256 color = (uint256(seed) & blocker) % 360;
@@ -465,5 +488,94 @@ contract ExternalMetadata is Ownable {
         address payable speedruns_
     ) public onlyOwner {
         speedruns = speedruns_;
+    }
+
+    function getHeroBodyLayerColor(
+        uint256 seed,
+        uint256 dayThemeGroupIdx,
+        ThemeLayer layer
+    ) public view returns (uint256[3] memory hsl) {
+        uint256 rand = uint256(keccak256(abi.encodePacked(seed)));
+        uint256 dayThemeIndex = randomRange(0, themeGroups.length - 1, rand);
+        Theme storage theme = themeGroups[dayThemeIndex].themes[uint256(layer)];
+        
+        rand = uint256(keccak256(abi.encodePacked(rand)));
+        uint256 hue = randomRange(theme.hueStart, theme.hueEnd, rand);
+
+        rand = uint256(keccak256(abi.encodePacked(rand)));
+        uint256 saturation = randomRange(theme.saturationStart, theme.saturationEnd, rand);
+
+        rand = uint256(keccak256(abi.encodePacked(rand)));
+        uint256 lightness = randomRange(theme.lightnessStart, theme.lightnessEnd, rand);
+
+        hsl = [hue, saturation, lightness];
+    }
+
+    function getHeroBodyLayerPath(
+        uint256 seed,
+        ThemeLayer layer
+    ) public view returns (string memory) {
+        uint256 options = svgSizes[layer];
+        uint256 rand = uint256(keccak256(abi.encodePacked(seed)));
+        uint256 pathIdx = randomRange(0, options - 1, rand);
+        return svgPaths[layer][pathIdx];
+    }
+
+    function getHeroBodySVG(
+        uint256 day
+    ) internal view returns (string memory) {
+        uint256 rand = uint256(keccak256(abi.encodePacked(day)));
+        uint256 themeGroupOfDay = randomRange(0, themeGroups.length - 1, rand);
+
+        // BG
+        rand = uint256(keccak256(abi.encodePacked(rand)));
+        string memory bgPath = getHeroBodyLayerPath(rand, ThemeLayer.BG);
+
+        rand = uint256(keccak256(abi.encodePacked(rand)));
+        uint256[3] memory bgColor = getHeroBodyLayerColor(rand, themeGroupOfDay, ThemeLayer.BG);
+
+        // CORE
+        rand = uint256(keccak256(abi.encodePacked(rand)));
+        string memory corePath = getHeroBodyLayerPath(rand, ThemeLayer.Core);
+
+        rand = uint256(keccak256(abi.encodePacked(rand)));
+        uint256[3] memory coreColor = getHeroBodyLayerColor(rand, themeGroupOfDay, ThemeLayer.Core);
+
+        // FG
+        rand = uint256(keccak256(abi.encodePacked(rand)));
+        string memory fgPath = getHeroBodyLayerPath(rand, ThemeLayer.FG);
+
+        rand = uint256(keccak256(abi.encodePacked(rand)));
+        uint256[3] memory fgColor = getHeroBodyLayerColor(rand, themeGroupOfDay, ThemeLayer.FG);
+
+        //TODO: compose total SVG here
+        return "edfddfd";
+    }
+
+    function getBaddieBodyColor(
+        uint256 day,
+        uint256 bodyIndex
+    ) internal pure returns (uint256[3] memory hsl) {
+        uint256 rand = uint256(keccak256(abi.encodePacked(day, bodyIndex)));
+        uint256 hue = randomRange(0, 359, rand);
+        
+        rand = uint256(keccak256(abi.encodePacked(rand)));
+        uint256 saturation = randomRange(90, 100, rand);
+
+        rand = uint256(keccak256(abi.encodePacked(rand)));
+        uint256 lightness = randomRange(55, 60, rand);
+
+        return [hue, saturation, lightness];
+    }
+
+    function randomRange(
+        uint256 min, 
+        uint256 max, 
+        uint256 seed
+    ) internal pure returns (uint256) {
+        require(min <= max, "Min should be less than or equal to max");
+        uint256 range = max - min;
+        uint256 randomValue = (seed % range) + min;        
+        return randomValue;
     }
 }
