@@ -360,6 +360,14 @@ contract ExternalMetadata is Ownable {
         return path;
     }
 
+    // NOTE: I think this could actually be returning HSL and then we don't need to implement conversion
+    function getBodyColor(
+        uint256 day,
+        uint256 bodyIndex
+    ) public pure returns (uint256[3] memory rgb) {
+        if (bodyIndex == 0) {} else {}
+    }
+
     function seedToColor(bytes32 seed) public pure returns (string memory) {
         uint256 blocker = 0xffff;
         uint256 color = (uint256(seed) & blocker) % 360;

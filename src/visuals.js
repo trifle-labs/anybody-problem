@@ -1499,7 +1499,7 @@ export const Visuals = {
 
         const color = hslToRgb(
           randHSL(
-            themes.bodies.default['bg:pastel__core:highlighter__fg:marker'].cr,
+            themes.bodies.default['pastel_highlighter_marker'].cr,
             this.random.bind(this)
           )
         )
@@ -1656,9 +1656,8 @@ export const Visuals = {
   },
 
   drawFaceSvg(body, width) {
-    const maxIndex = Math.min(FACE_BLINK_SVGS.length, FACE_SVGS.length)
-    this.fIndex ||= this.random(0, maxIndex - 1)
-    const fIndex = (this.fIndex + body.bodyIndex) % maxIndex
+    this.fIndex = body.c.fIndex
+    const { fIndex } = this
     const graphic = body.graphic || this.bodiesGraphic
 
     const baddiesNear = this.closeTo(body)

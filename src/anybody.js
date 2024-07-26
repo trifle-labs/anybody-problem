@@ -545,8 +545,8 @@ export class Anybody extends EventEmitter {
 
     if (newPauseState) {
       this.pauseBodies = PAUSE_BODY_DATA.map(this.bodyDataToBodies.bind(this))
-      this.pauseBodies[1].c = this.getBodyColor(0)
-      this.pauseBodies[2].c = this.getBodyColor(0)
+      this.pauseBodies[1].c = this.getBodyColor(this.day + 1, 0)
+      this.pauseBodies[2].c = this.getBodyColor(this.day + 2, 0)
       this.paused = newPauseState
       this.willUnpause = false
       delete this.beganUnpauseAt
@@ -800,7 +800,6 @@ export class Anybody extends EventEmitter {
     minBigInt = typeof minBigInt === 'bigint' ? minBigInt : BigInt(minBigInt)
     maxBigInt = typeof maxBigInt === 'bigint' ? maxBigInt : BigInt(maxBigInt)
     seed = typeof seed === 'bigint' ? seed : BigInt(seed)
-    console.log({ seed, maxBigInt, minBigInt })
     return parseInt((seed % (maxBigInt - minBigInt)) + minBigInt)
   }
 
@@ -848,7 +847,6 @@ export class Anybody extends EventEmitter {
   }
 
   getBodyColor(day, bodyIndex = 0) {
-    console.log({ day, bodyIndex })
     let baddieSeed = utils.solidityKeccak256(
       ['uint256', 'uint256'],
       [day, bodyIndex]
@@ -863,9 +861,12 @@ export class Anybody extends EventEmitter {
     const themes = Object.keys(bodyThemes)
     const numberOfThemes = themes.length
     let rand = utils.solidityKeccak256(['uint256'], [day])
-    const bgOptions = 14
-    const fgOptions = 14
+    const faceOptions = 14
+    const bgOptions = 10
+    const fgOptions = 10
     const coreOptions = 1
+    const fIndex = this.randomRange(0, faceOptions - 1, rand)
+    rand = utils.solidityKeccak256(['bytes32'], [rand])
     const bgIndex = this.randomRange(0, bgOptions - 1, rand)
     rand = utils.solidityKeccak256(['bytes32'], [rand])
     const fgIndex = this.randomRange(0, fgOptions - 1, rand)
@@ -876,7 +877,6 @@ export class Anybody extends EventEmitter {
 
     const themeName = themes[dailyThemeIndex]
     const theme = bodyThemes[themeName]
-    console.log({ theme, dailyThemeIndex, bodyThemes })
 
     rand = utils.solidityKeccak256(['bytes32'], [rand])
     const bgHue = this.randomRange(0, 359, rand)
@@ -930,6 +930,7 @@ export class Anybody extends EventEmitter {
     )
 
     const info = {
+      fIndex,
       bgIndex,
       fgIndex,
       coreIndex,
@@ -938,7 +939,6 @@ export class Anybody extends EventEmitter {
       fg: hslToRgb([fgHue, fgSaturation, fgLightness]),
       baddie: [baddieHue, baddieSaturation, baddieLightness]
     }
-    console.log({ info })
     return info
   }
 
