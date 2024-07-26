@@ -8,7 +8,7 @@
   "main": "src/index.js",
   "scripts": {
     "build": "yarn parcel build src/index.html",
-    "dev": "yarn parcel src/index.html --open",
+    "dev": "rm -rf .parcel-cache && yarn parcel src/index.html --open",
     "chain": "hardhat node",
     "circom": "./scripts/basic_circom.sh",
     "circom:nft-test": "yarn circom nft_3_20 && yarn circom nft_4_20 && yarn circom nft_5_20 && yarn circom nft_6_20 && yarn circom nft_7_20 && yarn circom nft_8_20 && yarn circom nft_9_20 && yarn circom nft_10_20",
@@ -64,8 +64,7 @@
     "root": true
   },
   "dependencies": {
-    "prando": "^6.0.1",
-    "tone": "14.7.77"
+    "tone": "^15.0.4"
   },
   "devDependencies": {
     "@babel/core": "^7.24.0",

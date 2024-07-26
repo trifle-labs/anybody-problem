@@ -349,7 +349,7 @@ export const Calculations = {
         const x = this.convertScaledBigIntToFloat(body.position.x)
         const y = this.convertScaledBigIntToFloat(body.position.y)
         this.explosions.push(
-          _explosion(x, y, this.convertScaledBigIntToFloat(body.radius))
+          ...this.convertBigIntsToBodies([JSON.parse(JSON.stringify(body))])
         )
         this.sound?.playExplosion(x, y)
 

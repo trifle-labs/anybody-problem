@@ -931,7 +931,14 @@
   resolved "https://registry.yarnpkg.com/@babel/regjsgen/-/regjsgen-0.8.0.tgz#f0ba69b075e1f05fb2825b7fad991e7adbb18310"
   integrity sha512-x/rqGMdzj+fWZvCOYForTghzbtqPDZ5gPwaoNGHdgDfF2QA/XZbCBp4Moo5scrkAMPhB7z26XM/AaHuIJdgauA==
 
-"@babel/runtime@^7.24.5", "@babel/runtime@^7.8.4":
+"@babel/runtime@^7.24.8":
+  version "7.24.8"
+  resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.24.8.tgz#5d958c3827b13cc6d05e038c07fb2e5e3420d82e"
+  integrity sha512-5F7SDGs1T72ZczbRwbGO9lQi0NLjQxzl6i4lJxLxfW9U5UluCSyEJeniWvnhl3/euNiqQVbo8zruhsDfid0esA==
+  dependencies:
+    regenerator-runtime "^0.14.0"
+
+"@babel/runtime@^7.8.4":
   version "7.24.7"
   resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.24.7.tgz#f4f0d5530e8dbdf59b3451b9b3e594b6ba082e12"
   integrity sha512-UwgBRMjJP+xv857DCngvqXI3Iq6J4v0wXmwc6sapg+zyhbwmQX67LUEFrkK5tbyJ30jGuG3ZvWpBiB9LCy1kWw==
@@ -3573,13 +3580,13 @@ atob@^2.1.2:
   resolved "https://registry.yarnpkg.com/atob/-/atob-2.1.2.tgz#6d9517eb9e030d2436666651e86bd9f6f13533c9"
   integrity sha512-Wm6ukoaOGJi/73p/cl2GvLjTI5JM1k/O14isD73YML8StrH/7/lRFgmg8nICZgD3bZZvjwCGxtMOD3wWNAu8cg==
 
-automation-events@^7.0.5:
-  version "7.0.5"
-  resolved "https://registry.yarnpkg.com/automation-events/-/automation-events-7.0.5.tgz#aba561f4cd79e43617c969ff54468a4f087f5942"
-  integrity sha512-Ni6vhZg0mKmVlew1kxWAzWL7QY1LYDdoYgp6yF9OHeskDrjyJp2SqoKoPQYeiMYjeIlbSpnxXm/JI55VcmX5Wg==
+automation-events@^7.0.7:
+  version "7.0.7"
+  resolved "https://registry.yarnpkg.com/automation-events/-/automation-events-7.0.7.tgz#4f5c93f7e03db40690ebd6d7f0f84ee78d183165"
+  integrity sha512-eg7aK2P0jrq4QqnZRWXOQJDYs6lxZXK/erfZ/WPTVPP/YQlgt+J0KvIzTo86zYszkru2J/QCW1FFJYgJVd7TgA==
   dependencies:
-    "@babel/runtime" "^7.24.5"
-    tslib "^2.6.2"
+    "@babel/runtime" "^7.24.8"
+    tslib "^2.6.3"
 
 available-typed-arrays@^1.0.7:
   version "1.0.7"
@@ -9989,11 +9996,6 @@ posthtml@^0.16.4, posthtml@^0.16.5:
     posthtml-parser "^0.11.0"
     posthtml-render "^3.0.0"
 
-prando@^6.0.1:
-  version "6.0.1"
-  resolved "https://registry.yarnpkg.com/prando/-/prando-6.0.1.tgz#ffa8de84c2adc4975dd9df37ae4ada0458face53"
-  integrity sha512-ghUWxQ1T9IJmPu6eshc3VU0OwveUtXQ33ZLXYUcz1Oc5ppKLDXKp0TBDj6b0epwhEctzcQSNGR2iHyvQSn4W5A==
-
 precond@0.2:
   version "0.2.3"
   resolved "https://registry.yarnpkg.com/precond/-/precond-0.2.3.tgz#aa9591bcaa24923f1e0f4849d240f47efc1075ac"
@@ -11144,14 +11146,14 @@ stacktrace-parser@^0.1.10:
   dependencies:
     type-fest "^0.7.1"
 
-standardized-audio-context@^25.1.8:
-  version "25.3.72"
-  resolved "https://registry.yarnpkg.com/standardized-audio-context/-/standardized-audio-context-25.3.72.tgz#8606512199e575f9c6bbc6127db0eda305c00d58"
-  integrity sha512-Dvwu2NuqafQqWxUWoo6G9ze/cvVNlFDpmIOA8XjuItrfR0h/REjgjoYCT3Y7nbkUJKGoz8SqqVzR7JATQV4XeQ==
+standardized-audio-context@^25.3.70:
+  version "25.3.75"
+  resolved "https://registry.yarnpkg.com/standardized-audio-context/-/standardized-audio-context-25.3.75.tgz#41126bc4449b5a6d64a9c6f816edf5086eedae7f"
+  integrity sha512-N7/Si1d0kuo1umRnWOsQESqxJlkMxBZfdfNRo5HeE7pA0lmo6PNrMkOSiM0NutFxpwA+KcPexo5JkTWWAAUaNQ==
   dependencies:
-    "@babel/runtime" "^7.24.5"
-    automation-events "^7.0.5"
-    tslib "^2.6.2"
+    "@babel/runtime" "^7.24.8"
+    automation-events "^7.0.7"
+    tslib "^2.6.3"
 
 static-eval@2.0.2:
   version "2.0.2"
@@ -11554,13 +11556,13 @@ toidentifier@1.0.1:
   resolved "https://registry.yarnpkg.com/toidentifier/-/toidentifier-1.0.1.tgz#3be34321a88a820ed1bd80dfaa33e479fbb8dd35"
   integrity sha512-o5sSPKEkg/DIQNmH43V0/uerLrpzVedkUh8tGNvaeXpfpuwjKenlSox/2O/BTlZUtEe+JG7s5YhEz608PlAHRA==
 
-tone@14.7.77:
-  version "14.7.77"
-  resolved "https://registry.yarnpkg.com/tone/-/tone-14.7.77.tgz#12a2a9f033952ccdb552275a6384ca5d36d4b5ed"
-  integrity sha512-tCfK73IkLHyzoKUvGq47gyDyxiKLFvKiVCOobynGgBB9Dl0NkxTM2p+eRJXyCYrjJwy9Y0XCMqD3uOYsYt2Fdg==
+tone@^15.0.4:
+  version "15.0.4"
+  resolved "https://registry.yarnpkg.com/tone/-/tone-15.0.4.tgz#d98f76a5886c0fd7bff41c43399972ac088f1ee6"
+  integrity sha512-Fr2xATgdkNhzwMZhrU0DXpkXQyambq73hjHRrBiC0Wkc6aPYRdmkySE9kRFAW878zgMiD+Lqvn/uNHt/7hbdnQ==
   dependencies:
-    standardized-audio-context "^25.1.8"
-    tslib "^2.0.1"
+    standardized-audio-context "^25.3.70"
+    tslib "^2.3.1"
 
 tough-cookie@~2.5.0:
   version "2.5.0"
@@ -11610,7 +11612,7 @@ tslib@^1.9.3:
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-1.14.1.tgz#cf2d38bdc34a134bcaf1091c41f6619e2f672d00"
   integrity sha512-Xni35NKzjgMrwevysHTCArtLDpPvye8zV/0E4EyYn43P7/7qvQwPh9BGkHewbMulVntbigmcT7rdX3BNo9wRJg==
 
-tslib@^2.0.1, tslib@^2.4.0, tslib@^2.6.2:
+tslib@^2.3.1, tslib@^2.4.0, tslib@^2.6.3:
   version "2.6.3"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.6.3.tgz#0438f810ad7a9edcde7a241c3d80db693c8cbfe0"
   integrity sha512-xNvxJEOUiWPGhUuUdQgAJPKOOJfGnIyKySOc09XkKsgdUV/3E2zvwZYdejjmRgPCgcym1juLH3226yA7sEFJKQ==

@@ -1,16 +1,14 @@
-import Prando from 'prando'
-
 import EventEmitter from 'events'
 import Sound from './sound.js'
 import { Visuals } from './visuals.js'
 import { Calculations } from './calculations.js'
 import { utils } from 'ethers'
-import { randHSL, hslToRgb, bodyThemes } from './colors.js'
+import { bodyThemes } from './colors.js'
 import { loadFonts } from './fonts.js'
 import { Buttons } from './buttons.js'
 // import wc from './witness_calculator.js'
 
-const GAME_LENGTH_BY_LEVEL_INDEX = [10, 20, 30, 40, 50]
+const GAME_LENGTH_BY_LEVEL_INDEX = [30, 10, 20, 30, 40, 50]
 const NORMAL_GRAVITY = 100
 const proverTickIndex = {
   2: 250,
@@ -125,13 +123,19 @@ export class Anybody extends EventEmitter {
   setOptions(options = {}) {
     const defaultOptions = {
       day: 324000,
-      level: 1,
+      level: 0,
       bodyData: null,
+      todaysRecords: {},
       // Add default properties and their initial values here
       startingBodies: 1,
       windowWidth: 1000,
       windowHeight: 1000,
-      pixelDensity: typeof window !== 'undefined' ? window.devicePixelRatio : 4, //4, // Math.min(4, 4 * (window.devicePixelRatio ?? 1)),
+      pixelDensity:
+        typeof window !== 'undefined'
+          ? window.devicePixelRatio < 2
+            ? 2
+            : window.devicePixelRatio
+          : 2, //4, // Math.min(4, 4 * (window.devicePixelRatio ?? 1)),
       scalingFactor: 10n ** 3n,
       minDistanceSquared: 200 * 200,
       G: NORMAL_GRAVITY, // Gravitational constant
@@ -164,18 +168,20 @@ export class Anybody extends EventEmitter {
     Object.assign(this, mergedOptions)
   }
   removeCSS() {
+    console.log('removeCSS')
     if (typeof document === 'undefined') return
     const style = document.getElementById('canvas-cursor')
     style && document.head.removeChild(style)
   }
   addCSS() {
+    console.log('addCSS')
     if (typeof document === 'undefined') return
     if (document.getElementById('canvas-cursor')) return
     const style = document.createElement('style')
     style.id = 'canvas-cursor' // Add an id to the style element
 
     style.innerHTML = `
-      canvas {
+      #canvas, canvas {
         cursor: none;
       }
     `
@@ -188,6 +194,7 @@ export class Anybody extends EventEmitter {
     this.lastMissileCantBeUndone = false
     this.speedFactor = 2
     this.speedLimit = 10
+    this.missileSpeed = 10
     this.G = NORMAL_GRAVITY
     this.vectorLimit = this.speedLimit * this.speedFactor
     this.FPS = 25
@@ -195,8 +202,7 @@ export class Anybody extends EventEmitter {
     this.P5_FPS = this.FPS * this.P5_FPS_MULTIPLIER
     this.p?.frameRate(this.P5_FPS)
     this.timer =
-      (this.level > 5 ? 60 : GAME_LENGTH_BY_LEVEL_INDEX[this.level - 1]) *
-      this.FPS
+      (this.level > 5 ? 60 : GAME_LENGTH_BY_LEVEL_INDEX[this.level]) * this.FPS
     this.deadOpacity = '0.9'
     this.initialScoreSize = 120
     this.scoreSize = this.initialScoreSize
@@ -205,12 +211,12 @@ export class Anybody extends EventEmitter {
     this.tailMod = this.globalStyle == 'psycho' ? 2 : 1
     this.explosions = []
     this.missiles = []
+    this.stillVisibleMissiles = []
     this.missileInits = []
     this.bodies = []
     this.witheringBodies = []
     this.bodyInits = []
     this.bodyFinal = []
-    this.allCopiesOfBodies = []
     this.missileCount = 0
     this.frames = 0
     this.p5Frames = 0
@@ -253,8 +259,8 @@ export class Anybody extends EventEmitter {
   // run once at initilization
   init() {
     this.skipAhead = false
+    this.winScreenBaddies = undefined
     this.seed = utils.solidityKeccak256(['uint256'], [this.day])
-    this.rng = new Prando(this.seed.toString(16))
     this.generateBodies()
     this.frames = this.alreadyRun
     this.startingFrame = this.alreadyRun
@@ -391,7 +397,7 @@ export class Anybody extends EventEmitter {
   }
 
   handleGameClick = (e) => {
-    if (this.gameOver) {
+    if (this.gameOver && this.won) {
       this.skipAhead = true
     }
     const { x, y } = this.getXY(e)
@@ -417,7 +423,7 @@ export class Anybody extends EventEmitter {
   }
 
   handleGameKeyDown = (e) => {
-    if (this.gameOver) {
+    if (this.gameOver && this.won) {
       this.skipAhead = true
     }
     const modifierKeyActive = e.shiftKey && e.altKey && e.ctrlKey && e.metaKey
@@ -441,12 +447,29 @@ export class Anybody extends EventEmitter {
   handleGameOver = ({ won }) => {
     if (this.handledGameOver) return
     this.handledGameOver = true
-
+    this.gameoverTickerX = 0
     this.sound?.playGameOver({ won })
     this.gameOver = true
     this.won = won
-    this.G = 2000 // make the badies dance
-    this.P5_FPS *= 3
+    if (this.level !== 0 && !this.won) {
+      const gravityIndex = this.bodies
+        .slice(1)
+        .filter((b) => b.radius !== 0n).length
+      const newBodies = this.generateLevelData(
+        this.day,
+        6 - gravityIndex
+      ).slice(1)
+      this.bodies.push(
+        ...newBodies.map(this.bodyDataToBodies.bind(this)).map((b) => {
+          b.position.x = 0
+          b.position.y = 0
+          b.py = 0n
+          b.px = 0n
+          return b
+        })
+      )
+    }
+    this.P5_FPS *= 2
     this.p.frameRate(this.P5_FPS)
     var dust = 0
     var timeTook = 0
@@ -458,6 +481,7 @@ export class Anybody extends EventEmitter {
     void this.setStatsText(stats)
     void this.setShowPlayAgain()
     this.emit('done', {
+      level: this.level,
       won,
       ticks: this.frames - this.startingFrame,
       dust,
@@ -466,9 +490,6 @@ export class Anybody extends EventEmitter {
     })
     if (won) {
       this.bodyData = null
-    }
-    this.removeCSS()
-    if (won) {
       this.finish()
     }
   }
@@ -478,8 +499,9 @@ export class Anybody extends EventEmitter {
       this.setOptions(options)
     }
     this.clearValues()
-    // this.sound?.stop()
+    this.sound?.stop()
     this.sound?.playStart()
+    this.sound?.setSong()
     this.init()
     this.draw()
     if (!beginPaused) {
@@ -520,8 +542,8 @@ export class Anybody extends EventEmitter {
 
     if (newPauseState) {
       this.pauseBodies = PAUSE_BODY_DATA.map(this.bodyDataToBodies.bind(this))
-      this.pauseBodies[1].c = this.getBodyColor(0)
-      this.pauseBodies[2].c = this.getBodyColor(0)
+      this.pauseBodies[1].c = this.getBodyColor(this.day + 1, 0)
+      this.pauseBodies[2].c = this.getBodyColor(this.day + 2, 0)
       this.paused = newPauseState
       this.willUnpause = false
       delete this.beganUnpauseAt
@@ -540,13 +562,17 @@ export class Anybody extends EventEmitter {
 
   step() {
     if (this.missiles.length == 0 && this.lastMissileCantBeUndone) {
+      console.log('LASTMISSILECANTBEUNDONE = FALSE')
       this.lastMissileCantBeUndone = false
     }
     this.bodies = this.forceAccumulator(this.bodies)
     var results = this.detectCollision(this.bodies, this.missiles)
     this.bodies = results.bodies
     this.missiles = results.missiles || []
-
+    if (this.missiles.length > 0) {
+      const missileCopy = JSON.parse(JSON.stringify(this.missiles[0]))
+      this.stillVisibleMissiles.push(missileCopy)
+    }
     if (this.missiles.length > 0 && this.missiles[0].radius == 0) {
       this.missiles.splice(0, 1)
     } else if (this.missiles.length > 1 && this.missiles[0].radius !== 0) {
@@ -678,7 +704,9 @@ export class Anybody extends EventEmitter {
     // this.setPause(false)
     if (
       this.mode == 'game' &&
-      this.bodies.slice(1).reduce((a, c) => a + c.radius, 0) == 0
+      this.bodies
+        .slice(this.level == 0 ? 0 : 1)
+        .reduce((a, c) => a + c.radius, 0) == 0
     ) {
       this.finalBatchSent = true
     }
@@ -690,9 +718,12 @@ export class Anybody extends EventEmitter {
     // is removed from the missileInits array to prevent it from being used as incoming missile
     // during the next chunk.
     if (this.missiles.length > 0) {
+      console.log('LASTMISSILECANTBEUNDONE = TRUE')
       this.lastMissileCantBeUndone = true
     }
-    this.levelSpeeds[level - 1] = results
+    if (level !== 0) {
+      this.levelSpeeds[level - 1] = results
+    }
     return results
   }
 
@@ -715,6 +746,14 @@ export class Anybody extends EventEmitter {
     body.bodyIndex = index
     body.seed = dayLevelIndexSeed
     body.radius = this.genRadius(index)
+
+    if (this.level == 0) {
+      body.px = parseInt((BigInt(this.windowWidth) * this.scalingFactor) / 2n)
+      body.py = parseInt((BigInt(this.windowWidth) * this.scalingFactor) / 2n)
+      body.vx = parseInt(maxVectorScaled) - 5000
+      body.vy = parseInt(maxVectorScaled)
+      return body
+    }
 
     let rand = utils.solidityKeccak256(['bytes32'], [dayLevelIndexSeed])
     body.px = this.randomRange(
@@ -749,11 +788,12 @@ export class Anybody extends EventEmitter {
 
   genRadius(index) {
     const radii = [36n, 27n, 22n, 17n, 12n, 7n] // n * 5 + 2
-    let size = radii[index % radii.length]
+    let size = this.level == 0 ? 27n : radii[index % radii.length]
     return parseInt(size * BigInt(this.scalingFactor))
   }
 
   randomRange(minBigInt, maxBigInt, seed) {
+    if (minBigInt == maxBigInt) return minBigInt
     minBigInt = typeof minBigInt === 'bigint' ? minBigInt : BigInt(minBigInt)
     maxBigInt = typeof maxBigInt === 'bigint' ? maxBigInt : BigInt(maxBigInt)
     seed = typeof seed === 'bigint' ? seed : BigInt(seed)
@@ -765,19 +805,6 @@ export class Anybody extends EventEmitter {
       this.bodyData || this.generateLevelData(this.day, this.level)
     this.bodies = this.bodyData.map(this.bodyDataToBodies.bind(this))
     this.startingBodies = this.bodies.length
-  }
-
-  getFaceIdx(seed) {
-    const face = this.random(0, 1000, new Prando(seed))
-    const faceDistribution = [200, 400, 600, 700, 800, 850, 900, 950, 980, 1000]
-    let faceIndex = 0
-    for (let i = 0; i < faceDistribution.length; i++) {
-      if (face < faceDistribution[i]) {
-        faceIndex = i
-        break
-      }
-    }
-    return faceIndex
   }
 
   bodyDataToBodies(b) {
@@ -799,40 +826,106 @@ export class Anybody extends EventEmitter {
       position: this.createVector(px, py),
       velocity: this.createVector(vx, vy),
       radius: radius,
-      c: this.getBodyColor(bodyIndex)
+      c: this.getBodyColor(this.day, bodyIndex)
     }
   }
 
-  getBodyColor(bodyIndex) {
-    if (bodyIndex == 0) {
-      // TEMP random body theme
-      const themes = Object.keys(bodyThemes)
-      const theme = themes[this.random(0, themes.length - 1)]
+  getBodyColor(day, bodyIndex = 0) {
+    let baddieSeed = utils.solidityKeccak256(
+      ['uint256', 'uint256'],
+      [day, bodyIndex]
+    )
+    const baddieHue = this.randomRange(0, 359, baddieSeed)
+    baddieSeed = utils.solidityKeccak256(['bytes32'], [baddieSeed])
+    const baddieSaturation = this.randomRange(90, 100, baddieSeed)
+    baddieSeed = utils.solidityKeccak256(['bytes32'], [baddieSeed])
+    const baddieLightness = this.randomRange(55, 60, baddieSeed)
 
-      return {
-        bg: hslToRgb(randHSL(bodyThemes[theme].bg, this.random.bind(this))),
-        core: hslToRgb(randHSL(bodyThemes[theme].cr, this.random.bind(this))),
-        fg: hslToRgb(randHSL(bodyThemes[theme].fg, this.random.bind(this)))
-      }
-    } else {
-      return randHSL([undefined, '90-100', '55-60'], this.random.bind(this))
+    // hero body info
+    const themes = Object.keys(bodyThemes)
+    const numberOfThemes = themes.length
+    let rand = utils.solidityKeccak256(['uint256'], [day])
+    const faceOptions = 14
+    const bgOptions = 10
+    const fgOptions = 10
+    const coreOptions = 1
+    const fIndex = this.randomRange(0, faceOptions - 1, rand)
+    rand = utils.solidityKeccak256(['bytes32'], [rand])
+    const bgIndex = this.randomRange(0, bgOptions - 1, rand)
+    rand = utils.solidityKeccak256(['bytes32'], [rand])
+    const fgIndex = this.randomRange(0, fgOptions - 1, rand)
+    rand = utils.solidityKeccak256(['bytes32'], [rand])
+    const coreIndex = this.randomRange(0, coreOptions - 1, rand)
+
+    const dailyThemeIndex = this.randomRange(0, numberOfThemes - 1, rand)
+
+    const themeName = themes[dailyThemeIndex]
+    const theme = bodyThemes[themeName]
+
+    rand = utils.solidityKeccak256(['bytes32'], [rand])
+    const bgHue = this.randomRange(0, 359, rand)
+    rand = utils.solidityKeccak256(['bytes32'], [rand])
+    const bgSaturationRange = theme.bg[1].split('-')
+    const bgSaturation = this.randomRange(
+      bgSaturationRange[0],
+      bgSaturationRange[1],
+      rand
+    )
+    rand = utils.solidityKeccak256(['bytes32'], [rand])
+    const bgLightnessRange = theme.bg[2].split('-')
+    const bgLightness = this.randomRange(
+      bgLightnessRange[0],
+      bgLightnessRange[1],
+      rand
+    )
+
+    rand = utils.solidityKeccak256(['bytes32'], [rand])
+    const coreHue = this.randomRange(0, 359, rand)
+    rand = utils.solidityKeccak256(['bytes32'], [rand])
+    const coreSaturationRange = theme.cr[1].split('-')
+    const coreSaturation = this.randomRange(
+      coreSaturationRange[0],
+      coreSaturationRange[1],
+      rand
+    )
+    rand = utils.solidityKeccak256(['bytes32'], [rand])
+    const coreLightnessRange = theme.cr[2].split('-')
+    const coreLightness = this.randomRange(
+      coreLightnessRange[0],
+      coreLightnessRange[1],
+      rand
+    )
+
+    rand = utils.solidityKeccak256(['bytes32'], [rand])
+    const fgHue = this.randomRange(0, 359, rand)
+    rand = utils.solidityKeccak256(['bytes32'], [rand])
+    const fgSaturationRange = theme.fg[1].split('-')
+    const fgSaturation = this.randomRange(
+      fgSaturationRange[0],
+      fgSaturationRange[1],
+      rand
+    )
+    rand = utils.solidityKeccak256(['bytes32'], [rand])
+    const fgLightnessRange = theme.fg[2].split('-')
+    const fgLightness = this.randomRange(
+      fgLightnessRange[0],
+      fgLightnessRange[1],
+      rand
+    )
+
+    const info = {
+      fIndex,
+      bgIndex,
+      fgIndex,
+      coreIndex,
+      bg: `hsl(${bgHue},${bgSaturation}%,${bgLightness}%`,
+      core: `hsl(${coreHue},${coreSaturation}%,${coreLightness}%`,
+      fg: `hsl(${fgHue},${fgSaturation}%,${fgLightness}%`,
+      baddie: [baddieHue, baddieSaturation, baddieLightness]
     }
+    return info
   }
 
-  random(min, max, rng = this.rng) {
-    return rng.nextInt(min, max)
-  }
-
-  randomColor(min = 0, max = 359, rng = this.rng) {
-    const color = []
-
-    // let c = Math.floor(this.random(min, max, rng))
-    let c = this.random(min, max, rng)
-    color.push(c) // Hue
-    color.push(this.random(0, 100, rng) + '%') // Saturation
-    color.push(this.random(40, 80, rng) + '%') // Lightness
-    return color
-  }
   prepareP5() {
     this.p.frameRate(this.P5_FPS)
     this.p.createCanvas(this.windowWidth, this.windowWidth)
@@ -863,6 +956,7 @@ export class Anybody extends EventEmitter {
       if (this.lastMissileCantBeUndone) {
         this.emit('remove-last-missile')
         this.lastMissileCantBeUndone = false
+        console.log('LASTMISSILECANTBEUNDONE = FALSE')
       }
       this.missileInits.pop()
       this.missileCount--
@@ -878,7 +972,7 @@ export class Anybody extends EventEmitter {
       radius
     }
     // b.velocity.setMag(this.speedLimit * this.speedFactor)
-    b.velocity.limit(this.speedLimit * this.speedFactor)
+    b.velocity.limit(this.missileSpeed * this.speedFactor)
     // const bodyCount = this.bodies.filter((b) => b.radius !== 0).length - 1
     // this.missiles = this.missiles.slice(0, bodyCount)
     // this.missiles = this.missiles.slice(-bodyCount)
