@@ -1499,7 +1499,7 @@ export const Visuals = {
 
         const color = hslToRgb(
           randHSL(
-            themes.bodies.default['bg:pastel__core:highlighter__fg:marker'].cr,
+            themes.bodies.default['pastel_highlighter_marker'].cr,
             this.random.bind(this)
           )
         )
@@ -1656,9 +1656,8 @@ export const Visuals = {
   },
 
   drawFaceSvg(body, width) {
-    const maxIndex = Math.min(FACE_BLINK_SVGS.length, FACE_SVGS.length)
-    this.fIndex ||= this.random(0, maxIndex - 1)
-    const fIndex = (this.fIndex + body.bodyIndex) % maxIndex
+    this.fIndex = body.c.fIndex
+    const { fIndex } = this
     const graphic = body.graphic || this.bodiesGraphic
 
     const baddiesNear = this.closeTo(body)
@@ -1691,8 +1690,8 @@ export const Visuals = {
     const graphic = body.graphic || this.bodiesGraphic
     graphic.push()
 
-    this.fgIndex ||= this.random(0, FG_SVGS.length - 1)
-    const fgIndex = (this.bgIndex + body.bodyIndex) % FG_SVGS.length
+    this.fgIndex = body.c.fgIndex
+    const { fgIndex } = this
     const r = {
       ...rot.fg,
       ...(rotOverride?.fg?.[fgIndex] ?? {})
@@ -1727,8 +1726,8 @@ export const Visuals = {
     const fill = body.c.bg
     const graphic = body.graphic || this.bodiesGraphic
     graphic.push()
-    this.bgIndex ||= this.random(0, BG_SVGS.length - 1)
-    const bgIndex = (this.bgIndex + body.bodyIndex) % BG_SVGS.length
+    this.bgIndex = body.c.bgIndex
+    const { bgIndex } = this
     const r = {
       ...rot.bg,
       ...(rotOverride?.bg?.[bgIndex] ?? {})
