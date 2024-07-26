@@ -14,7 +14,13 @@ type SpeedScore = LeaderboardLine & {
   day: number
 }
 
+type LevelLeaderboard = {
+  level: number
+  events: SpeedScore[]
+}
+
 type DailyLeaderboard = {
+  levels: LevelLeaderboard[]
   cumulative: SpeedScore[]
 }
 
@@ -28,9 +34,35 @@ const DAILY_CATEGORY_LIMIT = 10
 
 export const leaderboards: Record<Chain, Leaderboard> | {} = {}
 
-async function calculateDailyLeaderboard(day: number, chain: Chain) {
+async function calculateDailyLeaderboard(
+  day: number,
+  chain: Chain,
+  today: number
+) {
   const q = `
-  WITH ranked_cumulative_times AS (
+  WITH ranked_level_times AS (
+      SELECT
+          player,
+          level,
+          time,
+          ROW_NUMBER() OVER (PARTITION BY level ORDER BY time ASC) AS rank,
+          day,
+          run_id
+      FROM anybody_problem_level_solved
+      WHERE day = ${day}
+  ),
+  fastest_level_times AS (
+      SELECT
+          level,
+          player,
+          time,
+          day,
+          run_id
+      FROM ranked_level_times
+      WHERE rank = 1
+      ORDER BY level
+  ),
+  ranked_cumulative_times AS (
       SELECT 
           run_id,
           accumulative_time AS total_time,
@@ -40,10 +72,18 @@ async function calculateDailyLeaderboard(day: number, chain: Chain) {
       WHERE 
         day = ${day}
         AND src_name = $1
-    ORDER BY total_time ASC
+      ORDER BY total_time ASC
       LIMIT ${DAILY_CATEGORY_LIMIT}
   ),
   leaderboard AS (
+      SELECT
+          level,
+          run_id,
+          time,
+          player
+      FROM
+          fastest_level_times
+      UNION ALL
       SELECT 
           NULL AS level,
           run_id,
@@ -71,9 +111,22 @@ async function calculateDailyLeaderboard(day: number, chain: Chain) {
     }))
   }
 
+  const levels: LevelLeaderboard[] = []
+  // delete the if to include level scores for every day
+  const includeLevelScores = today === day
+  if (includeLevelScores) {
+    for (let i = 1; i <= MAX_BODY_COUNT; i++) {
+      const events = scores(result.rows.filter((r: any) => r.level === `${i}`))
+      if (!events.length) continue
+      levels.push({
+        level: i,
+        events
+      })
+    }
+  }
   const cumulativeEvents = scores(result.rows.filter((r: any) => !r.level))
 
-  return { cumulative: cumulativeEvents }
+  return { levels, cumulative: cumulativeEvents }
 }
 
 export async function recentSolvesToday(chain: Chain) {
@@ -120,7 +173,7 @@ export async function updateLeaderboard(chain: Chain) {
 
   const dailies = await Promise.all(
     daysSoFar.map(async (day) => {
-      return calculateDailyLeaderboard(day, chain)
+      return calculateDailyLeaderboard(day, chain, today)
     })
   )
 
