@@ -1,11 +1,9 @@
-import Prando from 'prando'
-
 import EventEmitter from 'events'
 import Sound from './sound.js'
 import { Visuals } from './visuals.js'
 import { Calculations } from './calculations.js'
 import { utils } from 'ethers'
-import { hslToRgb, bodyThemes } from './colors.js'
+import { bodyThemes } from './colors.js'
 import { loadFonts } from './fonts.js'
 import { Buttons } from './buttons.js'
 // import wc from './witness_calculator.js'
@@ -263,7 +261,6 @@ export class Anybody extends EventEmitter {
     this.skipAhead = false
     this.winScreenBaddies = undefined
     this.seed = utils.solidityKeccak256(['uint256'], [this.day])
-    this.rng = new Prando(this.seed.toString(16))
     this.generateBodies()
     this.frames = this.alreadyRun
     this.startingFrame = this.alreadyRun
@@ -450,6 +447,7 @@ export class Anybody extends EventEmitter {
   handleGameOver = ({ won }) => {
     if (this.handledGameOver) return
     this.handledGameOver = true
+    this.gameoverTickerX = 0
     this.sound?.playGameOver({ won })
     this.gameOver = true
     this.won = won
@@ -492,8 +490,6 @@ export class Anybody extends EventEmitter {
     })
     if (won) {
       this.bodyData = null
-    }
-    if (won) {
       this.finish()
     }
   }
@@ -505,6 +501,7 @@ export class Anybody extends EventEmitter {
     this.clearValues()
     this.sound?.stop()
     this.sound?.playStart()
+    this.sound?.setSong()
     this.init()
     this.draw()
     if (!beginPaused) {
@@ -810,19 +807,6 @@ export class Anybody extends EventEmitter {
     this.startingBodies = this.bodies.length
   }
 
-  getFaceIdx(seed) {
-    const face = this.random(0, 1000, new Prando(seed))
-    const faceDistribution = [200, 400, 600, 700, 800, 850, 900, 950, 980, 1000]
-    let faceIndex = 0
-    for (let i = 0; i < faceDistribution.length; i++) {
-      if (face < faceDistribution[i]) {
-        faceIndex = i
-        break
-      }
-    }
-    return faceIndex
-  }
-
   bodyDataToBodies(b) {
     const bodyIndex = b.bodyIndex
     const px = b.px / parseInt(this.scalingFactor)
@@ -934,28 +918,14 @@ export class Anybody extends EventEmitter {
       bgIndex,
       fgIndex,
       coreIndex,
-      bg: hslToRgb([bgHue, bgSaturation, bgLightness]),
-      core: hslToRgb([coreHue, coreSaturation, coreLightness]),
-      fg: hslToRgb([fgHue, fgSaturation, fgLightness]),
+      bg: `hsl(${bgHue},${bgSaturation}%,${bgLightness}%`,
+      core: `hsl(${coreHue},${coreSaturation}%,${coreLightness}%`,
+      fg: `hsl(${fgHue},${fgSaturation}%,${fgLightness}%`,
       baddie: [baddieHue, baddieSaturation, baddieLightness]
     }
     return info
   }
 
-  random(min, max, rng = this.rng) {
-    return rng.nextInt(min, max)
-  }
-
-  randomColor(min = 0, max = 359, rng = this.rng) {
-    const color = []
-
-    // let c = Math.floor(this.random(min, max, rng))
-    let c = this.random(min, max, rng)
-    color.push(c) // Hue
-    color.push(this.random(0, 100, rng) + '%') // Saturation
-    color.push(this.random(40, 80, rng) + '%') // Lightness
-    return color
-  }
   prepareP5() {
     this.p.frameRate(this.P5_FPS)
     this.p.createCanvas(this.windowWidth, this.windowWidth)
