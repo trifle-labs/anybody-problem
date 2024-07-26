@@ -47,30 +47,29 @@ export const themes = {
     // random hues
     default: {
       'saturated-exclude-darks': {
-        bg: [undefined, '80-100', '18-100'],
+        bg: [undefined, '80-100', '18-100'], // undefined = 0—359
         cr: [undefined, '80-100', '18-100'],
         fg: [undefined, '80-100', '18-100']
       },
-      'bg:pastel__core:highlighter__fg:marker': {
+      pastel_highlighter_marker: {
         bg: [undefined, '80-100', '85-95'],
-        cr: [undefined, '100', '55-60'],
-        fg: [undefined, '70-90', '67']
+        cr: [undefined, '100-100', '55-60'],
+        fg: [undefined, '70-90', '67-67']
       },
-      'bg:marker__core:pastel__fg:highlighter': {
-        bg: [undefined, '100', '60'],
-        cr: [undefined, '100', '90-95'],
-        fg: [undefined, '100', '55-60']
+      marker_pastel_highlighter: {
+        bg: [undefined, '100-100', '60-60'],
+        cr: [undefined, '100-100', '90-95'],
+        fg: [undefined, '100-100', '55-60']
       },
-      'bg:shadow__core:highlighter__fg:marker': {
+      shadow_highlighter_marker: {
         bg: [undefined, '80-100', '18-25'],
-        cr: [undefined, '100', '55-60'],
-        fg: [undefined, '70-90', '67']
+        cr: [undefined, '100-100', '55-60'],
+        fg: [undefined, '70-90', '67-67']
       },
-      // "berlin"
-      'bg:dark__core:burnt__fg:crayon': {
-        bg: [undefined, '100', '18'],
-        cr: [undefined, '100', '45'],
-        fg: [undefined, '100', '30']
+      berlin: {
+        bg: [undefined, '100-100', '18-18'],
+        cr: [undefined, '100-100', '45-45'],
+        fg: [undefined, '100-100', '30-30']
       }
     },
     // reds / OPTIMISM
@@ -164,12 +163,12 @@ export function hslToRgb(values, alpha = 1) {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`
 }
 
-// function randInt(min, max) {
-//   // min and max included
-//   return Math.floor(Math.random() * (max - min + 1) + min)
-// }
+function randInt(min, max) {
+  // min and max included
+  return Math.floor(Math.random() * (max - min + 1)) + min
+}
 
-export function randHSL(ranges, rand) {
+export function randHSL(ranges) {
   let hues = ranges[0] ?? '0-359'
   let sats = ranges[1] ?? '0-100'
   let lights = ranges[2] ?? '0-100'
@@ -181,16 +180,16 @@ export function randHSL(ranges, rand) {
 
   // if hue range loops (350-10), randomly select a position from the two sections (0-10, 350-359)
   if (hues[0] > hues[1]) {
-    hues = [rand(0, hues[1]), rand(hues[0], '359')][rand(0, 1)]
+    hues = [randInt(0, hues[1]), randInt(hues[0], '359')][randInt(0, 1)]
     hues = [hues]
   }
 
   // generate in ranges
-  const h = rand(hues[0], hues[1] || hues[0])
-  const s = rand(sats[0], sats[1] || sats[0])
-  const l = rand(lights[0], lights[1] || lights[0])
+  const h = randInt(hues[0], hues[1] || hues[0])
+  const s = randInt(sats[0], sats[1] || sats[0])
+  const l = randInt(lights[0], lights[1] || lights[0])
 
-  return [h, s, l]
+  return `hsl(${h},${s}%,${l}%)`
 }
 
 export function rgbaOpacity(color, opacity) {

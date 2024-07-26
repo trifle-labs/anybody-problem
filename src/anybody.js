@@ -1,11 +1,9 @@
-import Prando from 'prando'
-
 import EventEmitter from 'events'
 import Sound from './sound.js'
 import { Visuals } from './visuals.js'
 import { Calculations } from './calculations.js'
 import { utils } from 'ethers'
-import { randHSL, hslToRgb, bodyThemes } from './colors.js'
+import { bodyThemes } from './colors.js'
 import { loadFonts } from './fonts.js'
 import { Buttons } from './buttons.js'
 // import wc from './witness_calculator.js'
@@ -263,7 +261,6 @@ export class Anybody extends EventEmitter {
     this.skipAhead = false
     this.winScreenBaddies = undefined
     this.seed = utils.solidityKeccak256(['uint256'], [this.day])
-    this.rng = new Prando(this.seed.toString(16))
     this.generateBodies()
     this.frames = this.alreadyRun
     this.startingFrame = this.alreadyRun
@@ -450,6 +447,7 @@ export class Anybody extends EventEmitter {
   handleGameOver = ({ won }) => {
     if (this.handledGameOver) return
     this.handledGameOver = true
+    this.gameoverTickerX = 0
     this.sound?.playGameOver({ won })
     this.gameOver = true
     this.won = won
@@ -492,8 +490,6 @@ export class Anybody extends EventEmitter {
     })
     if (won) {
       this.bodyData = null
-    }
-    if (won) {
       this.finish()
     }
   }
@@ -505,6 +501,7 @@ export class Anybody extends EventEmitter {
     this.clearValues()
     this.sound?.stop()
     this.sound?.playStart()
+    this.sound?.setSong()
     this.init()
     this.draw()
     if (!beginPaused) {
@@ -545,8 +542,8 @@ export class Anybody extends EventEmitter {
 
     if (newPauseState) {
       this.pauseBodies = PAUSE_BODY_DATA.map(this.bodyDataToBodies.bind(this))
-      this.pauseBodies[1].c = this.getBodyColor(0)
-      this.pauseBodies[2].c = this.getBodyColor(0)
+      this.pauseBodies[1].c = this.getBodyColor(this.day + 1, 0)
+      this.pauseBodies[2].c = this.getBodyColor(this.day + 2, 0)
       this.paused = newPauseState
       this.willUnpause = false
       delete this.beganUnpauseAt
@@ -796,6 +793,7 @@ export class Anybody extends EventEmitter {
   }
 
   randomRange(minBigInt, maxBigInt, seed) {
+    if (minBigInt == maxBigInt) return minBigInt
     minBigInt = typeof minBigInt === 'bigint' ? minBigInt : BigInt(minBigInt)
     maxBigInt = typeof maxBigInt === 'bigint' ? maxBigInt : BigInt(maxBigInt)
     seed = typeof seed === 'bigint' ? seed : BigInt(seed)
@@ -807,19 +805,6 @@ export class Anybody extends EventEmitter {
       this.bodyData || this.generateLevelData(this.day, this.level)
     this.bodies = this.bodyData.map(this.bodyDataToBodies.bind(this))
     this.startingBodies = this.bodies.length
-  }
-
-  getFaceIdx(seed) {
-    const face = this.random(0, 1000, new Prando(seed))
-    const faceDistribution = [200, 400, 600, 700, 800, 850, 900, 950, 980, 1000]
-    let faceIndex = 0
-    for (let i = 0; i < faceDistribution.length; i++) {
-      if (face < faceDistribution[i]) {
-        faceIndex = i
-        break
-      }
-    }
-    return faceIndex
   }
 
   bodyDataToBodies(b) {
@@ -841,37 +826,106 @@ export class Anybody extends EventEmitter {
       position: this.createVector(px, py),
       velocity: this.createVector(vx, vy),
       radius: radius,
-      c: this.getBodyColor()
+      c: this.getBodyColor(this.day, bodyIndex)
     }
   }
 
-  getBodyColor() {
-    // TEMP random body theme
+  getBodyColor(day, bodyIndex = 0) {
+    let baddieSeed = utils.solidityKeccak256(
+      ['uint256', 'uint256'],
+      [day, bodyIndex]
+    )
+    const baddieHue = this.randomRange(0, 359, baddieSeed)
+    baddieSeed = utils.solidityKeccak256(['bytes32'], [baddieSeed])
+    const baddieSaturation = this.randomRange(90, 100, baddieSeed)
+    baddieSeed = utils.solidityKeccak256(['bytes32'], [baddieSeed])
+    const baddieLightness = this.randomRange(55, 60, baddieSeed)
+
+    // hero body info
     const themes = Object.keys(bodyThemes)
-    const theme = themes[this.random(0, themes.length - 1)]
+    const numberOfThemes = themes.length
+    let rand = utils.solidityKeccak256(['uint256'], [day])
+    const faceOptions = 14
+    const bgOptions = 10
+    const fgOptions = 10
+    const coreOptions = 1
+    const fIndex = this.randomRange(0, faceOptions - 1, rand)
+    rand = utils.solidityKeccak256(['bytes32'], [rand])
+    const bgIndex = this.randomRange(0, bgOptions - 1, rand)
+    rand = utils.solidityKeccak256(['bytes32'], [rand])
+    const fgIndex = this.randomRange(0, fgOptions - 1, rand)
+    rand = utils.solidityKeccak256(['bytes32'], [rand])
+    const coreIndex = this.randomRange(0, coreOptions - 1, rand)
 
-    return {
-      bg: hslToRgb(randHSL(bodyThemes[theme].bg, this.random.bind(this))),
-      core: hslToRgb(randHSL(bodyThemes[theme].cr, this.random.bind(this))),
-      fg: hslToRgb(randHSL(bodyThemes[theme].fg, this.random.bind(this))),
-      baddie: randHSL([undefined, '90-100', '55-60'], this.random.bind(this))
+    const dailyThemeIndex = this.randomRange(0, numberOfThemes - 1, rand)
+
+    const themeName = themes[dailyThemeIndex]
+    const theme = bodyThemes[themeName]
+
+    rand = utils.solidityKeccak256(['bytes32'], [rand])
+    const bgHue = this.randomRange(0, 359, rand)
+    rand = utils.solidityKeccak256(['bytes32'], [rand])
+    const bgSaturationRange = theme.bg[1].split('-')
+    const bgSaturation = this.randomRange(
+      bgSaturationRange[0],
+      bgSaturationRange[1],
+      rand
+    )
+    rand = utils.solidityKeccak256(['bytes32'], [rand])
+    const bgLightnessRange = theme.bg[2].split('-')
+    const bgLightness = this.randomRange(
+      bgLightnessRange[0],
+      bgLightnessRange[1],
+      rand
+    )
+
+    rand = utils.solidityKeccak256(['bytes32'], [rand])
+    const coreHue = this.randomRange(0, 359, rand)
+    rand = utils.solidityKeccak256(['bytes32'], [rand])
+    const coreSaturationRange = theme.cr[1].split('-')
+    const coreSaturation = this.randomRange(
+      coreSaturationRange[0],
+      coreSaturationRange[1],
+      rand
+    )
+    rand = utils.solidityKeccak256(['bytes32'], [rand])
+    const coreLightnessRange = theme.cr[2].split('-')
+    const coreLightness = this.randomRange(
+      coreLightnessRange[0],
+      coreLightnessRange[1],
+      rand
+    )
+
+    rand = utils.solidityKeccak256(['bytes32'], [rand])
+    const fgHue = this.randomRange(0, 359, rand)
+    rand = utils.solidityKeccak256(['bytes32'], [rand])
+    const fgSaturationRange = theme.fg[1].split('-')
+    const fgSaturation = this.randomRange(
+      fgSaturationRange[0],
+      fgSaturationRange[1],
+      rand
+    )
+    rand = utils.solidityKeccak256(['bytes32'], [rand])
+    const fgLightnessRange = theme.fg[2].split('-')
+    const fgLightness = this.randomRange(
+      fgLightnessRange[0],
+      fgLightnessRange[1],
+      rand
+    )
+
+    const info = {
+      fIndex,
+      bgIndex,
+      fgIndex,
+      coreIndex,
+      bg: `hsl(${bgHue},${bgSaturation}%,${bgLightness}%`,
+      core: `hsl(${coreHue},${coreSaturation}%,${coreLightness}%`,
+      fg: `hsl(${fgHue},${fgSaturation}%,${fgLightness}%`,
+      baddie: [baddieHue, baddieSaturation, baddieLightness]
     }
+    return info
   }
 
-  random(min, max, rng = this.rng) {
-    return rng.nextInt(min, max)
-  }
-
-  randomColor(min = 0, max = 359, rng = this.rng) {
-    const color = []
-
-    // let c = Math.floor(this.random(min, max, rng))
-    let c = this.random(min, max, rng)
-    color.push(c) // Hue
-    color.push(this.random(0, 100, rng) + '%') // Saturation
-    color.push(this.random(40, 80, rng) + '%') // Lightness
-    return color
-  }
   prepareP5() {
     this.p.frameRate(this.P5_FPS)
     this.p.createCanvas(this.windowWidth, this.windowWidth)

@@ -1266,7 +1266,7 @@ export const Visuals = {
     p.fill(fg)
     p.textSize(200)
     p.textAlign(p.LEFT, p.TOP)
-    p.textFont(fonts.dot)
+    p.textFont(fonts.body)
     const tickerSpeed = -600 / this.P5_FPS
     const textWidth = p.textWidth(doubleText)
     if (
@@ -1287,10 +1287,9 @@ export const Visuals = {
     const { p } = this
     p.push()
     p.noStroke()
-    p.fill(this.randomColor(100))
     const text =
       this.bodies[0].radius == 0
-        ? 'PROTECT HERO!!   KILL BADDIES!!'
+        ? 'NOOO, KILL BADDIES NOT BODY!!'
         : 'TIME IS UP   TIME IS UP  TIME IS UP'
     this.drawGameOverTicker({
       text: '                 ' + text,
@@ -1365,6 +1364,13 @@ export const Visuals = {
   },
 
   hslToGrayscale(hslArray) {
+    if (typeof hslArray == 'string') {
+      hslArray = hslArray.split(',')
+      hslArray[0] = parseInt(hslArray[0].split('(')[1])
+      hslArray[1] = parseInt(hslArray[1])
+      hslArray[2] = parseInt(hslArray[2].split(')')[0])
+      return `hsl(${hslArray[0]},0%,${hslArray[2]}%)`
+    }
     return [hslArray[0], 0, hslArray[2]]
   },
 
@@ -1391,9 +1397,9 @@ export const Visuals = {
       const _explosion = JSON.parse(JSON.stringify(explosions[i]))
       _explosion.velocity = v
 
-      _explosion.c.bg = this.rgbaToGrayscale(explosions[i].c.bg, 1.5)
-      _explosion.c.fg = this.rgbaToGrayscale(explosions[i].c.fg)
-      _explosion.c.core = this.rgbaToGrayscale(explosions[i].c.core)
+      _explosion.c.bg = this.hslToGrayscale(explosions[i].c.bg, 1.5)
+      _explosion.c.fg = this.hslToGrayscale(explosions[i].c.fg)
+      _explosion.c.core = this.hslToGrayscale(explosions[i].c.core)
       _explosion.c.baddie = this.hslToGrayscale(explosions[i].c.baddie)
 
       this.drawBody(
@@ -1497,17 +1503,9 @@ export const Visuals = {
       if (!body.phase) {
         const life = 0
 
-        const color = hslToRgb(
-          randHSL(
-            themes.bodies.default['bg:pastel__core:highlighter__fg:marker'].cr,
-            this.random.bind(this)
-          )
+        const color = randHSL(
+          themes.bodies.default['pastel_highlighter_marker'].cr
         )
-        // const color = [
-        //   this.random(100, 255),
-        //   this.random(100, 255),
-        //   this.random(100, 255)
-        // ] //colors[this.frames % colors.length]
         const rotateBy = this.frames % 360
         body.phase = {
           color,
@@ -1656,9 +1654,8 @@ export const Visuals = {
   },
 
   drawFaceSvg(body, width) {
-    const maxIndex = Math.min(FACE_BLINK_SVGS.length, FACE_SVGS.length)
-    this.fIndex ||= this.random(0, maxIndex - 1)
-    const fIndex = (this.fIndex + body.bodyIndex) % maxIndex
+    this.fIndex = body.c.fIndex
+    const { fIndex } = this
     const graphic = body.graphic || this.bodiesGraphic
 
     const baddiesNear = this.closeTo(body)
@@ -1691,8 +1688,8 @@ export const Visuals = {
     const graphic = body.graphic || this.bodiesGraphic
     graphic.push()
 
-    this.fgIndex ||= this.random(0, FG_SVGS.length - 1)
-    const fgIndex = (this.bgIndex + body.bodyIndex) % FG_SVGS.length
+    this.fgIndex = body.c.fgIndex
+    const { fgIndex } = this
     const r = {
       ...rot.fg,
       ...(rotOverride?.fg?.[fgIndex] ?? {})
@@ -1727,8 +1724,8 @@ export const Visuals = {
     const fill = body.c.bg
     const graphic = body.graphic || this.bodiesGraphic
     graphic.push()
-    this.bgIndex ||= this.random(0, BG_SVGS.length - 1)
-    const bgIndex = (this.bgIndex + body.bodyIndex) % BG_SVGS.length
+    this.bgIndex = body.c.bgIndex
+    const { bgIndex } = this
     const r = {
       ...rot.bg,
       ...(rotOverride?.bg?.[bgIndex] ?? {})
@@ -2051,7 +2048,7 @@ export const Visuals = {
     const colorHSL = body.c.baddie
     const coreWidth = body.radius * BODY_SCALE
     let bgColor = hslToRgb(this.brighten(colorHSL, -20), 1)
-    const coreColor = hslToRgb(colorHSL)
+    const coreColor = `hsl(${colorHSL[0]},${colorHSL[1]}%,${colorHSL[2]}%)`
     graphic.push()
     const rotate = (this.p5Frames / this.P5_FPS_MULTIPLIER / 30) % 360
     graphic.rotate(rotate)

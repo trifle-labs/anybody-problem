@@ -64,7 +64,6 @@
     "root": true
   },
   "dependencies": {
-    "prando": "^6.0.1",
     "tone": "^15.0.4"
   },
   "devDependencies": {
