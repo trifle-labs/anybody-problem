@@ -160,7 +160,6 @@ export class Anybody extends EventEmitter {
       sfx: 'bubble', // 'space' or 'bubble'
       playerName: undefined,
       practiceMode: false,
-      ownerPresent: false,
       bestTimes: null
     }
     // Merge the default options with the provided options
@@ -482,8 +481,6 @@ export class Anybody extends EventEmitter {
     dust = stats.dust
     timeTook = stats.timeTook
     this.framesTook = stats.framesTook
-    void this.setStatsText(stats)
-    void this.setShowPlayAgain()
     this.emit('done', {
       level: this.level,
       won,
@@ -516,27 +513,6 @@ export class Anybody extends EventEmitter {
 
   doubleTextInverted(text) {
     return text.slice(0, -1) + text.split('').reverse().join('')
-  }
-
-  setStatsText = async (stats) => {
-    const statLines = [
-      this.doubleTextInverted(`¸♩·¯·♬¸¸♬·¯·♩¸¸♪¯`),
-      `${stats.bodiesIncluded - 1} bodies cleared`,
-      `in ${stats.timeTook} sec 🐎`,
-      `with ${stats.missilesShot} missiles 🚀`,
-      `👈👈 Save Your Game👈👈`
-    ]
-    const toShow = statLines.join('\n')
-    this.statsText = toShow
-
-    await this.setShowPlayAgain(1000)
-    this.sound?.playSuccess()
-  }
-
-  setShowPlayAgain = async (timeout = 2000) => {
-    if (this.ownerPresent) return // retry button in vue frontend
-    await new Promise((resolve) => setTimeout(resolve, timeout))
-    this.showPlayAgain = true
   }
 
   setPause(newPauseState = !this.paused, mute = false) {
