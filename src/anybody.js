@@ -158,14 +158,18 @@ export class Anybody extends EventEmitter {
       target: 'inside', // 'outside' or 'inside'
       faceRotation: 'mania', // 'time' or 'hitcycle' or 'mania'
       sfx: 'bubble', // 'space' or 'bubble'
-      owner: 'YOU',
-      ownerPresent: false,
-      bestTimes: null
+      playerName: undefined,
+      practiceMode: false,
+      bestTimes: null,
+      popup: null
     }
     // Merge the default options with the provided options
     const mergedOptions = { ...defaultOptions, ...options }
     // Assign the merged options to the instance properties
     Object.assign(this, mergedOptions)
+  }
+  setPlayer(name = undefined) {
+    this.playerName = name
   }
   removeCSS() {
     console.log('removeCSS')
@@ -478,8 +482,6 @@ export class Anybody extends EventEmitter {
     dust = stats.dust
     timeTook = stats.timeTook
     this.framesTook = stats.framesTook
-    void this.setStatsText(stats)
-    void this.setShowPlayAgain()
     this.emit('done', {
       level: this.level,
       won,
@@ -512,27 +514,6 @@ export class Anybody extends EventEmitter {
 
   doubleTextInverted(text) {
     return text.slice(0, -1) + text.split('').reverse().join('')
-  }
-
-  setStatsText = async (stats) => {
-    const statLines = [
-      this.doubleTextInverted(`¸♩·¯·♬¸¸♬·¯·♩¸¸♪¯`),
-      `${stats.bodiesIncluded - 1} bodies cleared`,
-      `in ${stats.timeTook} sec 🐎`,
-      `with ${stats.missilesShot} missiles 🚀`,
-      `👈👈 Save Your Game👈👈`
-    ]
-    const toShow = statLines.join('\n')
-    this.statsText = toShow
-
-    await this.setShowPlayAgain(1000)
-    this.sound?.playSuccess()
-  }
-
-  setShowPlayAgain = async (timeout = 2000) => {
-    if (this.ownerPresent) return // retry button in vue frontend
-    await new Promise((resolve) => setTimeout(resolve, timeout))
-    this.showPlayAgain = true
   }
 
   setPause(newPauseState = !this.paused, mute = false) {

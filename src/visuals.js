@@ -189,6 +189,7 @@ export const Visuals = {
 
     this.drawPause()
     this.drawScore()
+    this.drawPopup()
     this.drawGun()
 
     if (
@@ -286,9 +287,44 @@ export const Visuals = {
     drawKernedText(p, 'Problem', 46, titleY + 240, 2)
 
     if (!this.willUnpause) {
+      // play button
       this.drawFatButton({
         text: 'PLAY',
         onClick: () => {
+          if (!this.playerName) {
+            // tell parent app to connect wallet
+            // this.emit('connect-wallet')
+            this.popup = {
+              header: 'Play Onchain',
+              body: [
+                'Free to play—just gas to mint your wins!',
+                'Connect a wallet to validate your gameplay.'
+              ],
+              buttons: [
+                {
+                  text: 'PRACTICE',
+                  fg: THEME.violet_50,
+                  bg: THEME.violet_25,
+                  stroke: THEME.violet_50,
+                  onClick: () => {
+                    this.popup = false
+                    this.sound?.playStart()
+                    this.setPause(false)
+                  }
+                },
+                {
+                  text: 'CONNECT',
+                  fg: THEME.violet_25,
+                  bg: THEME.violet_50,
+                  stroke: THEME.violet_50,
+                  onClick: () => {
+                    this.emit('connect-wallet')
+                  }
+                }
+              ]
+            }
+            return
+          }
           this.sound?.playStart()
           this.setPause(false)
         },
@@ -469,6 +505,89 @@ export const Visuals = {
     // }
   },
 
+  drawPopup() {
+    if (!this.popup) return
+    const { p, popup } = this
+
+    const justEntered = popup.lastVisibleFrame !== this.p5Frames - 1
+    if (justEntered) {
+      popup.visibleForFrames = 0
+    }
+    popup.visibleForFrames++
+    popup.lastVisibleFrame = this.p5Frames
+
+    const animDuration = 0.2 // seconds
+
+    // animate in scrim when it is visible
+    const alpha = Math.min(
+      0.7,
+      popup.visibleForFrames / (animDuration * this.P5_FPS)
+    )
+
+    p.fill(`rgba(20, 4, 32, ${alpha})`)
+    p.noStroke()
+    p.rect(0, 0, this.windowWidth, this.windowHeight)
+
+    const x = 180
+    const w = 640
+    const pad = [36, 48, 120, 48]
+    const fz = [72, 32]
+
+    const h = pad[0] + fz[0] + fz[1] * popup.body.length + pad[2]
+    const animY = Math.max(
+      0,
+      50 - (50 / (animDuration * this.P5_FPS)) * popup.visibleForFrames
+    )
+    const y = (this.windowHeight - h) / 2 + animY
+
+    // modal
+    p.fill(THEME.violet_25)
+    p.stroke(THEME.violet_50)
+    p.strokeWeight(3)
+    p.rect(x, y, w, h, 24, 24, 24, 24)
+
+    // heading
+    if (!fonts.dot) return
+    p.textFont(fonts.dot)
+    p.fill(THEME.violet_50)
+    p.textSize(fz[0])
+    p.textAlign(p.CENTER, p.TOP)
+    p.noStroke()
+    p.text(popup.header, x + w / 2, y + pad[0])
+
+    // body
+    if (!fonts.body) return
+    p.textFont(fonts.body)
+    p.textSize(fz[1])
+    p.textAlign(p.CENTER, p.TOP)
+    popup.body.forEach((text, i) => {
+      const lineGap = parseInt(fz[1] * 0.25)
+      const y1 = y + pad[0] + fz[0] + fz[1] * (i + 1) + lineGap * (i + 1) - 10
+      p.text(text, x + w / 2, y1)
+    })
+
+    const btnW = w / 2 - pad[1] / 2 - 5
+    const btnOptions = {
+      height: 84,
+      width: btnW,
+      y: y + h - 84 / 2
+    }
+
+    this.drawButton({
+      x: x + pad[1] / 2,
+      ...popup.buttons[0],
+      ...btnOptions
+    })
+
+    this.drawButton({
+      x: x + w - btnW - pad[1] / 2,
+      ...popup.buttons[1],
+      ...btnOptions
+    })
+
+    p.pop()
+  },
+
   getColorDir(chunk) {
     return Math.floor(this.frames / (255 * chunk)) % 2 == 0
   },
@@ -627,7 +746,7 @@ export const Visuals = {
       .replace(', ', '-')
       .replace(' ', '-')
     p.text(formattedDate, 454, 114)
-    p.text(this.owner, 454, 174)
+    p.text(this.playerName ?? 'YOU', 454, 174)
     // end upper box text
 
     // middle box text
