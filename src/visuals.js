@@ -292,13 +292,12 @@ export const Visuals = {
         text: 'PLAY',
         onClick: () => {
           if (!this.playerName) {
-            // tell parent app to connect wallet
-            // this.emit('connect-wallet')
+            // open connect wallet popup
             this.popup = {
               header: 'Play Onchain',
               body: [
-                'Free to play—just gas to mint your wins!',
-                'Connect a wallet to validate your gameplay.'
+                'Free to play!  ...or practice!',
+                'Connect a wallet to validate your wins.'
               ],
               buttons: [
                 {
@@ -307,9 +306,11 @@ export const Visuals = {
                   bg: THEME.violet_25,
                   stroke: THEME.violet_50,
                   onClick: () => {
-                    this.popup = false
+                    // start practice mode
+                    this.popup = null
                     this.sound?.playStart()
                     this.setPause(false)
+                    this.practiceMode = true
                   }
                 },
                 {
@@ -325,8 +326,10 @@ export const Visuals = {
             }
             return
           }
+          // start play
           this.sound?.playStart()
           this.setPause(false)
+          this.practiceMode = false
         },
         fg: THEME.fuschia,
         bg: THEME.pink,
@@ -509,6 +512,9 @@ export const Visuals = {
     if (!this.popup) return
     const { p, popup } = this
 
+    // animate in
+    const animDuration = 0.2 // seconds
+
     const justEntered = popup.lastVisibleFrame !== this.p5Frames - 1
     if (justEntered) {
       popup.visibleForFrames = 0
@@ -516,11 +522,8 @@ export const Visuals = {
     popup.visibleForFrames++
     popup.lastVisibleFrame = this.p5Frames
 
-    const animDuration = 0.2 // seconds
-
-    // animate in scrim when it is visible
     const alpha = Math.min(
-      0.7,
+      0.75,
       popup.visibleForFrames / (animDuration * this.P5_FPS)
     )
 
@@ -1415,14 +1418,12 @@ export const Visuals = {
       fg: THEME.red
     })
 
-    if (this.showPlayAgain) {
-      this.drawFatButton({
-        text: 'RETRY',
-        onClick: () => this.restart(null, false),
-        fg: THEME.red,
-        bg: THEME.maroon
-      })
-    }
+    this.drawFatButton({
+      text: 'RETRY',
+      onClick: () => this.restart(null, false),
+      fg: THEME.red,
+      bg: THEME.maroon
+    })
 
     p.pop()
   },
