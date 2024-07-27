@@ -286,9 +286,15 @@ export const Visuals = {
     drawKernedText(p, 'Problem', 46, titleY + 240, 2)
 
     if (!this.willUnpause) {
+      // play button
       this.drawFatButton({
         text: 'PLAY',
         onClick: () => {
+          if (!this.playerName) {
+            // tell parent app to connect wallet
+            this.emit('connect-wallet')
+            return
+          }
           this.sound?.playStart()
           this.setPause(false)
         },
@@ -298,24 +304,39 @@ export const Visuals = {
         p
       })
 
+      if (!this.playerName) {
+        this.drawFatButton({
+          text: 'PRACTICE',
+          onClick: () => {
+            this.practiceMode = true
+            this.sound?.playStart()
+            this.setPause(false)
+          },
+          fg: THEME.violet_50,
+          bg: THEME.violet_75,
+          bottom: 13,
+          p
+        })
+      }
+
       // date
-      p.textFont(fonts.body)
-      p.textSize(24)
-      const dateWidth = p.textWidth(this.date)
-      const dateBgWidth = dateWidth + 48
-      const dateBgHeight = 32
-      const dateBottomY = this.windowHeight - 58
-      p.fill(THEME.textBg)
-      p.rect(
-        this.windowWidth / 2 - dateBgWidth / 2,
-        dateBottomY - dateBgHeight / 2,
-        dateBgWidth,
-        dateBgHeight,
-        20
-      )
-      p.textAlign(p.CENTER, p.CENTER)
-      p.fill(THEME.textFg)
-      p.text(this.date, this.windowWidth / 2, dateBottomY)
+      // p.textFont(fonts.body)
+      // p.textSize(24)
+      // const dateWidth = p.textWidth(this.date)
+      // const dateBgWidth = dateWidth + 48
+      // const dateBgHeight = 32
+      // const dateBottomY = this.windowHeight - 58
+      // p.fill(THEME.textBg)
+      // p.rect(
+      //   this.windowWidth / 2 - dateBgWidth / 2,
+      //   dateBottomY - dateBgHeight / 2,
+      //   dateBgWidth,
+      //   dateBgHeight,
+      //   20
+      // )
+      // p.textAlign(p.CENTER, p.CENTER)
+      // p.fill(THEME.textFg)
+      // p.text(this.date, this.windowWidth / 2, dateBottomY)
     }
 
     this.p.image(this.pauseGraphic, 0, 0)
@@ -627,7 +648,7 @@ export const Visuals = {
       .replace(', ', '-')
       .replace(' ', '-')
     p.text(formattedDate, 454, 114)
-    p.text(this.owner, 454, 174)
+    p.text(this.playerName ?? 'YOU', 454, 174)
     // end upper box text
 
     // middle box text

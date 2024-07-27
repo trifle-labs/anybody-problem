@@ -158,7 +158,8 @@ export class Anybody extends EventEmitter {
       target: 'inside', // 'outside' or 'inside'
       faceRotation: 'mania', // 'time' or 'hitcycle' or 'mania'
       sfx: 'bubble', // 'space' or 'bubble'
-      owner: 'YOU',
+      playerName: undefined,
+      practiceMode: false,
       ownerPresent: false,
       bestTimes: null
     }
@@ -166,6 +167,9 @@ export class Anybody extends EventEmitter {
     const mergedOptions = { ...defaultOptions, ...options }
     // Assign the merged options to the instance properties
     Object.assign(this, mergedOptions)
+  }
+  setPlayer(name = undefined) {
+    this.playerName = name
   }
   removeCSS() {
     console.log('removeCSS')

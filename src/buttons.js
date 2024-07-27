@@ -88,7 +88,7 @@ export const Buttons = {
     this.drawButton({
       height: 96,
       textSize: 48,
-      width: 275,
+      width: 296,
       y: this.windowHeight - 96 - bottomPadding,
       x: this.windowWidth / 2 - 275 / 2,
       ...buttonOptions
