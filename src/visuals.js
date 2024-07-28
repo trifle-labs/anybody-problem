@@ -807,37 +807,37 @@ export const Visuals = {
       44,
       811
     )
+    // bottom buttons
+    const buttonCount = this.showShare ? 4 : 3
+    this.drawBottomButton({
+      text: 'RETRY',
+      onClick: () => {
+        this.restart(null, false)
+      },
+      ...themes.buttons.teal,
+      columns: buttonCount,
+      column: 0
+    })
+    this.drawBottomButton({
+      text: 'RESTART',
+      onClick: () => {
+        this.level = 1
+        this.restart(null, false)
+      },
+      ...themes.buttons.flame,
+      columns: buttonCount,
+      column: 1
+    })
+    if (this.showShare) {
+      this.drawBottomButton({
+        text: 'SHARE',
+        onClick: () => this.restart(null, false),
+        ...themes.buttons.pink,
+        columns: buttonCount,
+        column: 2
+      })
+    }
     if (this.level < 5) {
-      // bottom buttons
-      const buttonCount = this.showShare ? 4 : 3
-      this.drawBottomButton({
-        text: 'RETRY',
-        onClick: () => {
-          this.restart(null, false)
-        },
-        ...themes.buttons.teal,
-        columns: buttonCount,
-        column: 0
-      })
-      this.drawBottomButton({
-        text: 'RESTART',
-        onClick: () => {
-          this.level = 1
-          this.restart(null, false)
-        },
-        ...themes.buttons.flame,
-        columns: buttonCount,
-        column: 1
-      })
-      if (this.showShare) {
-        this.drawBottomButton({
-          text: 'SHARE',
-          onClick: () => this.restart(null, false),
-          ...themes.buttons.pink,
-          columns: buttonCount,
-          column: 2
-        })
-      }
       this.drawBottomButton({
         text: 'NEXT',
         onClick: () => {
@@ -853,14 +853,15 @@ export const Visuals = {
         column: buttonCount - 1
       })
     } else {
+      // parent app should handle waiting to save
       this.drawBottomButton({
-        text: this.readyToSave ? 'SAVE' : 'ALMOST READY TO SAVE...',
+        text: 'SAVE',
         onClick: () => {
           this.emit('save')
         },
         ...themes.buttons.green,
-        columns: 1,
-        column: 0
+        columns: buttonCount,
+        column: buttonCount - 1
       })
     }
     p.pop()
