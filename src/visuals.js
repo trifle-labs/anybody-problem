@@ -544,15 +544,15 @@ export const Visuals = {
     const y = (this.windowHeight - h) / 2 + animY
 
     // modal
-    p.fill(THEME.violet_25)
-    p.stroke(THEME.violet_50)
+    p.fill(popup.bg ?? THEME.violet_25)
+    p.stroke(popup.fg ?? THEME.violet_50)
     p.strokeWeight(3)
     p.rect(x, y, w, h, 24, 24, 24, 24)
 
     // heading
     if (!fonts.dot) return
     p.textFont(fonts.dot)
-    p.fill(THEME.violet_50)
+    p.fill(popup.fg ?? THEME.violet_50)
     p.textSize(fz[0])
     p.textAlign(p.CENTER, p.TOP)
     p.noStroke()
@@ -944,8 +944,36 @@ export const Visuals = {
       this.drawBottomButton({
         text: 'RESTART',
         onClick: () => {
-          this.level = 1
-          this.restart(null, false)
+          // confirm in popup
+          this.popup = {
+            bg: THEME.flame_75,
+            fg: THEME.flame_50,
+            stroke: THEME.flame_50,
+            header: 'Start Over?',
+            body: ['Any progress will be lost!'],
+            buttons: [
+              {
+                text: 'CLOSE',
+                fg: THEME.flame_50,
+                bg: THEME.flame_75,
+                stroke: THEME.flame_50,
+                onClick: () => {
+                  this.popup = null
+                }
+              },
+              {
+                text: 'RESTART',
+                fg: THEME.flame_75,
+                bg: THEME.flame_50,
+                stroke: THEME.flame_50,
+                onClick: () => {
+                  this.popup = null
+                  this.level = 1
+                  this.restart(null, false)
+                }
+              }
+            ]
+          }
         },
         ...themes.buttons.flame,
         columns: buttonCount,
