@@ -40,40 +40,32 @@ async function calculateDailyLeaderboard(
   today: number
 ) {
   const q = `
-  WITH ranked_level_times AS (
-      SELECT
-          player,
-          level,
-          time,
-          ROW_NUMBER() OVER (PARTITION BY level ORDER BY time ASC) AS rank,
-          day,
-          run_id
-      FROM anybody_problem_level_solved
-      WHERE day = ${day}
-  ),
-  fastest_level_times AS (
-      SELECT
-          level,
-          player,
-          time,
-          day,
-          run_id
-      FROM ranked_level_times
-      WHERE rank = 1
-      ORDER BY level
-  ),
-  ranked_cumulative_times AS (
+  WITH ranked_cumulative_times AS (
       SELECT 
           run_id,
           accumulative_time AS total_time,
-          player
+          player,
+          ROW_NUMBER() OVER (ORDER BY accumulative_time ASC) AS rank
       FROM 
         anybody_problem_run_solved
       WHERE 
         day = ${day}
         AND src_name = $1
-      ORDER BY total_time ASC
-      LIMIT ${DAILY_CATEGORY_LIMIT}
+  ),
+  fastest_run AS (
+    SELECT run_id, player, total_time
+    FROM ranked_cumulative_times
+    WHERE rank = 1
+  ),
+  level_times AS (
+    SELECT
+        level,
+        time,
+        run_id,
+        player,
+        day
+    FROM anybody_problem_level_solved
+    WHERE day = ${day} AND run_id = (SELECT run_id FROM fastest_run)
   ),
   leaderboard AS (
       SELECT
@@ -82,7 +74,7 @@ async function calculateDailyLeaderboard(
           time,
           player
       FROM
-          fastest_level_times
+          level_times
       UNION ALL
       SELECT 
           NULL AS level,
@@ -91,6 +83,7 @@ async function calculateDailyLeaderboard(
           player
       FROM 
           ranked_cumulative_times
+      WHERE rank <= ${DAILY_CATEGORY_LIMIT}
   )
   SELECT 
       leaderboard.level,
