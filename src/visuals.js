@@ -929,65 +929,65 @@ export const Visuals = {
       44,
       811
     )
-    if (this.level < 5) {
-      // bottom buttons
-      const buttonCount = this.showShare ? 4 : 3
-      this.drawBottomButton({
-        text: 'RETRY',
-        onClick: () => {
-          this.restart(null, false)
-        },
-        ...themes.buttons.teal,
-        columns: buttonCount,
-        column: 0
-      })
-      this.drawBottomButton({
-        text: 'RESTART',
-        onClick: () => {
-          // confirm in popup
-          this.popup = {
-            bg: THEME.flame_75,
-            fg: THEME.flame_50,
-            stroke: THEME.flame_50,
-            header: 'Start Over?',
-            body: ['Any progress will be lost!'],
-            buttons: [
-              {
-                text: 'CLOSE',
-                fg: THEME.flame_50,
-                bg: THEME.flame_75,
-                stroke: THEME.flame_50,
-                onClick: () => {
-                  this.popup = null
-                }
-              },
-              {
-                text: 'RESTART',
-                fg: THEME.flame_75,
-                bg: THEME.flame_50,
-                stroke: THEME.flame_50,
-                onClick: () => {
-                  this.popup = null
-                  this.level = 1
-                  this.restart(null, false)
-                }
+    // bottom buttons
+    const buttonCount = this.showShare ? 4 : 3
+    this.drawBottomButton({
+      text: 'RETRY',
+      onClick: () => {
+        this.restart(null, false)
+      },
+      ...themes.buttons.teal,
+      columns: buttonCount,
+      column: 0
+    })
+    this.drawBottomButton({
+      text: 'RESTART',
+      onClick: () => {
+        // confirm in popup
+        this.popup = {
+          bg: THEME.flame_75,
+          fg: THEME.flame_50,
+          stroke: THEME.flame_50,
+          header: 'Start Over?',
+          body: ['Any progress will be lost!'],
+          buttons: [
+            {
+              text: 'CLOSE',
+              fg: THEME.flame_50,
+              bg: THEME.flame_75,
+              stroke: THEME.flame_50,
+              onClick: () => {
+                this.popup = null
               }
-            ]
-          }
-        },
-        ...themes.buttons.flame,
+            },
+            {
+              text: 'RESTART',
+              fg: THEME.flame_75,
+              bg: THEME.flame_50,
+              stroke: THEME.flame_50,
+              onClick: () => {
+                this.popup = null
+                this.level = 1
+                this.restart(null, false)
+              }
+            }
+          ]
+        }
+      },
+      ...themes.buttons.flame,
+      columns: buttonCount,
+      column: 1
+    })
+    if (this.showShare) {
+      this.drawBottomButton({
+        text: 'SHARE',
+        onClick: () => {},
+        ...themes.buttons.pink,
         columns: buttonCount,
-        column: 1
+        column: 2
       })
-      if (this.showShare) {
-        this.drawBottomButton({
-          text: 'SHARE',
-          onClick: () => this.restart(null, false),
-          ...themes.buttons.pink,
-          columns: buttonCount,
-          column: 2
-        })
-      }
+    }
+    if (this.level < 5) {
       this.drawBottomButton({
         text: 'NEXT',
         onClick: () => {
@@ -1003,14 +1003,15 @@ export const Visuals = {
         column: buttonCount - 1
       })
     } else {
+      // parent app should handle waiting to save
       this.drawBottomButton({
-        text: this.readyToSave ? 'SAVE' : 'ALMOST READY TO SAVE...',
+        text: 'SAVE',
         onClick: () => {
           this.emit('save')
         },
         ...themes.buttons.green,
-        columns: 1,
-        column: 0
+        columns: buttonCount,
+        column: buttonCount - 1
       })
     }
     p.pop()
