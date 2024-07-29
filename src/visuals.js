@@ -769,7 +769,7 @@ export const Visuals = {
     for (let i = 0; i < baddies.length; i++) {
       const row = baddies[i]
       for (let j = 0; j < row.length; j++) {
-        const body = row[j]
+        const body = row[row.length - 1 - j]
         body.position = this.createVector(
           64 + j * 72,
           middleBoxY + i * rowHeight + rowHeight / 2
