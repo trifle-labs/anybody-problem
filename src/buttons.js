@@ -12,7 +12,8 @@ export const Buttons = {
     onClick,
     fg = 'black',
     bg = 'white',
-    fgHover = 'rgba(160, 67, 232, 0.3)',
+    stroke,
+    fgHover = 'rgba(160, 67, 232, 0.25)',
     p = this.p,
     disabled = false,
     key = `${text}-${x}-${y}-${height}-${width}`
@@ -39,15 +40,17 @@ export const Buttons = {
       1,
       button.visibleForFrames / (entranceTime * this.P5_FPS)
     )
+    const isAnimating = scale < 1
     const scaledWidth = width * scale
     const scaledHeight = height * scale
 
     p.push()
     p.noStroke()
+    p.strokeWeight(button.active ? 1 : 3)
     p.textSize(textSize * scale)
-    p.strokeWeight(button.active ? 1 : 4)
     p.fill(button.disabled ? rgbaOpacity(bg, 0.4) : bg)
 
+    if (stroke) p.stroke(stroke)
     p.rect(
       x + width / 2 - scaledWidth / 2,
       y + height / 2 - scaledHeight / 2,
@@ -55,6 +58,7 @@ export const Buttons = {
       scaledHeight,
       height / 2
     )
+    p.noStroke()
 
     if (scale >= 0.3 && fonts.dot) {
       p.textFont(fonts.dot)
@@ -68,12 +72,12 @@ export const Buttons = {
       )
     }
 
-    if (!button.disabled && button.hover) {
+    if (!isAnimating && !button.disabled && button.hover) {
       p.fill(fgHover)
       p.rect(x, y, width, height, height / 2)
     }
 
-    if (!button.disabled && button.active) {
+    if (!isAnimating && !button.disabled && button.active) {
       p.fill(rgbaOpacity(bg, 0.3))
       p.rect(x, y, width, height, height / 2)
     }
