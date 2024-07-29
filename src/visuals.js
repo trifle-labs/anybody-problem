@@ -535,6 +535,9 @@ export const Visuals = {
     const w = 640
     const pad = [36, 48, 120, 48]
     const fz = [72, 32]
+    const bg = popup.bg ?? THEME.violet_25
+    const fg = popup.fg ?? THEME.violet_50
+    const stroke = popup.stroke ?? fg
 
     const h = pad[0] + fz[0] + fz[1] * popup.body.length + pad[2]
     const animY = Math.max(
@@ -544,15 +547,15 @@ export const Visuals = {
     const y = (this.windowHeight - h) / 2 + animY
 
     // modal
-    p.fill(popup.bg ?? THEME.violet_25)
-    p.stroke(popup.fg ?? THEME.violet_50)
+    p.fill(bg)
+    p.stroke(stroke)
     p.strokeWeight(3)
     p.rect(x, y, w, h, 24, 24, 24, 24)
 
     // heading
     if (!fonts.dot) return
     p.textFont(fonts.dot)
-    p.fill(popup.fg ?? THEME.violet_50)
+    p.fill(popup.fg ?? fg)
     p.textSize(fz[0])
     p.textAlign(p.CENTER, p.TOP)
     p.noStroke()
@@ -569,23 +572,27 @@ export const Visuals = {
       p.text(text, x + w / 2, y1)
     })
 
-    const btnW = w / 2 - pad[1] / 2 - 5
-    const btnOptions = {
+    // buttons (max 2)
+    const btnGutter = 10
+    const btnW = w / 2 - pad[1] / 2 - btnGutter / 2
+    const defaultOptions = {
       height: 84,
       width: btnW,
-      y: y + h - 84 / 2
+      y: y + h - 84 / 2,
+      fg,
+      bg,
+      stroke
     }
 
-    this.drawButton({
-      x: x + pad[1] / 2,
-      ...popup.buttons[0],
-      ...btnOptions
-    })
-
-    this.drawButton({
-      x: x + w - btnW - pad[1] / 2,
-      ...popup.buttons[1],
-      ...btnOptions
+    popup.buttons.slice(0, 2).forEach((options, i) => {
+      this.drawButton({
+        x:
+          popup.buttons.length > 1
+            ? x + pad[1] / 2 + (btnW + btnGutter) * i
+            : x + w / 2 - btnW / 2, // centered
+        ...defaultOptions,
+        ...options
+      })
     })
 
     p.pop()
@@ -981,7 +988,10 @@ export const Visuals = {
     if (this.showShare) {
       this.drawBottomButton({
         text: 'SHARE',
-        onClick: () => {},
+        onClick: () => {
+          // TODO: hide bottom btns / paint a promo-message over them
+          this.shareCanvas()
+        },
         ...themes.buttons.pink,
         columns: buttonCount,
         column: 2
@@ -2380,5 +2390,57 @@ export const Visuals = {
     }
 
     return this.lastFrameRate
+  },
+
+  shareCanvas() {
+    const canvas = this.p.canvas
+
+    canvas.toBlob((blob) => {
+      const file = new File([blob], 'p5canvas.png', { type: 'image/png' })
+
+      if (navigator.share) {
+        console.log('sharing canvas...')
+        navigator
+          .share({
+            files: [file]
+          })
+          .catch((error) => console.error('Error sharing:', error))
+      } else if (navigator.clipboard && navigator.clipboard.write) {
+        try {
+          console.log('writing canvas to clipboard...')
+          navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
+          this.popup = {
+            header: 'Go Share!',
+            body: ['Copied results to your clipboard.'],
+            fg: THEME.pink_50,
+            bg: THEME.pink_75,
+            buttons: [
+              {
+                text: 'CLOSE',
+                onClick: () => {
+                  this.popup = null
+                }
+              }
+            ]
+          }
+        } catch (error) {
+          console.error('Error copying to clipboard:', error)
+          this.popup = {
+            header: 'Hmmm',
+            body: ['Couldn’t copy results to your clipboard.'],
+            buttons: [
+              {
+                text: 'CLOSE',
+                onClick: () => {
+                  this.popup = null
+                }
+              }
+            ]
+          }
+        }
+      } else {
+        console.error('no options to share canvas!')
+      }
+    }, 'image/png')
   }
 }
