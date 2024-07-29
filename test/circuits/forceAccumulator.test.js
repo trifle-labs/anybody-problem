@@ -33,14 +33,14 @@ describe('forceAccumulatorMain circuit', () => {
 
   it('has the correct output', async () => {
     const anybody = new Anybody(null, { util: true })
-    const bodies = sampleInput.bodies.map(
-      anybody.convertScaledStringArrayToBody.bind(anybody)
+    const bodies = sampleInput.bodies.map((body) =>
+      anybody.convertScaledStringArrayToBody.call(anybody, body)
     )
     // console.dir({ bodies }, { depth: null })
 
     const out_bodies = anybody
       .forceAccumulatorBigInts(bodies)
-      .map(anybody.convertScaledBigIntBodyToArray.bind(anybody))
+      .map((body) => anybody.convertScaledBigIntBodyToArray.call(anybody, body))
     // console.log({ out_bodies })
     const expected = { out_bodies }
     const witness = await circuit.calculateWitness(sampleInput, sanityCheck)

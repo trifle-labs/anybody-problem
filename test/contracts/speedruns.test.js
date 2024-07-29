@@ -19,23 +19,23 @@ describe('Speedruns Tests', function () {
     const functions = [
       {
         name: '__mint',
-        args: [1, acct1.address]
+        args: [acct1.address, 1, 1, []]
       },
       {
         name: '__mint',
-        args: [2, acct2.address]
+        args: [acct2.address, 1, 2, []]
       },
       {
         name: '__burn',
-        args: [2]
+        args: [acct2.address, 1, 2]
       },
       {
-        name: '__approve',
-        args: [owner.address, 1]
+        name: '__setApprovalForAll',
+        args: [owner.address, acct2.address, true]
       },
       {
-        name: '__transfer_single',
-        args: [acct1.address, acct2.address, 1, 1, '']
+        name: '__safeTransferFrom',
+        args: [acct1.address, acct2.address, 1, 1, []]
       },
       {
         name: 'emitGenericEvent',
@@ -59,8 +59,10 @@ describe('Speedruns Tests', function () {
   it('has all the correct interfaces', async () => {
     const interfaces = [
       { name: 'ERC165', id: '0x01ffc9a7', supported: true },
-      { name: 'ERC721', id: '0x80ac58cd', supported: true },
-      { name: 'ERC721Metadata', id: '0x5b5e139f', supported: true },
+      { name: 'ERC1155', id: '0xd9b67a26', supported: true },
+      { name: 'ERC1155Metadata', id: '0x0e89341c', supported: true },
+      { name: 'ERC721', id: '0x80ac58cd', supported: false },
+      { name: 'ERC721Metadata', id: '0x5b5e139f', supported: false },
       { name: 'ERC4906MetadataUpdate', id: '0x49064906', supported: true },
       { name: 'ERC721Enumerable', id: '0x780e9d63', supported: false },
       { name: 'ERC2981', id: '0x2a55205a', supported: true },
@@ -74,11 +76,5 @@ describe('Speedruns Tests', function () {
       const supportsInterface2 = await speedruns.supportsInterface(id)
       expect(name + supportsInterface2).to.equal(name + supported)
     }
-  })
-
-  it('has a token with id 0 that is owned by itself', async () => {
-    const { Speedruns: speedruns } = await deployContracts()
-    const owner = await speedruns.ownerOf(0)
-    expect(owner).to.equal(speedruns.address)
   })
 })

@@ -18,9 +18,10 @@ describe('stepStateTest circuit', () => {
   // 1 more than actual number of steps
 
   const sampleInputMissiles = new Array(totalSteps + 1).fill(0).map(() => {
-    const m = new Array(5).fill('0')
-    m[2] = '20000'
-    m[3] = '20000'
+    const m = new Array(3).fill('0')
+    m[0] = '30000'
+    m[1] = '30000'
+    m[2] = '10000'
     return m
   })
 
@@ -29,8 +30,8 @@ describe('stepStateTest circuit', () => {
   const inflightMissile = [
     sampleInputBodies[k][0],
     sampleInputBodies[k][1],
-    sampleInputBodies[k][2],
-    sampleInputBodies[k][3],
+    (parseInt(sampleInputBodies[k][2]) + 10000).toString(),
+    (parseInt(sampleInputBodies[k][3]) + 10000).toString(),
     sampleInputBodies[k][4]
   ]
   sampleInputMissiles[missileStep] = inflightMissile
@@ -38,11 +39,11 @@ describe('stepStateTest circuit', () => {
   // move position of missile by velocity of body, the number of missileSteps
   sampleInputMissiles[missileStep][0] = (
     parseInt(sampleInputMissiles[missileStep][0]) +
-    (parseInt(sampleInputBodies[k][2]) - 20000) * missileStep
+    (parseInt(sampleInputBodies[k][2]) - 30000) * missileStep
   ).toString()
   sampleInputMissiles[missileStep][1] = (
     parseInt(sampleInputMissiles[missileStep][1]) +
-    (parseInt(sampleInputBodies[k][3]) - 20000) * missileStep
+    (parseInt(sampleInputBodies[k][3]) - 30000) * missileStep
   ).toString()
 
   // set radius of missile
@@ -57,272 +58,175 @@ describe('stepStateTest circuit', () => {
     inflightMissile: sampleInputMissiles[0]
   }
 
-  // console.dir({ sampleInput }, { depth: null })
-
+  sampleInput.missiles = sampleInput.missiles.map((m) =>
+    m.length == 5
+      ? [
+          (parseInt(m[2]) + 10000).toString(), // add 10000 to missile since max is 30,000 instead of 20,000
+          (parseInt(m[3]) + 10000).toString(),
+          m[4]
+        ]
+      : m
+  )
+  sampleInput.missiles = sampleInput.missiles.map((m) => {
+    if (m.length == 5) {
+      throw new Error('should not have 5')
+    }
+    if (parseInt(m[2]) === 0) {
+      m[0] = '30000'
+      m[1] = '30000'
+    } else {
+      // return [
+      //   (parseInt(m[0]) + 10000).toString(),
+      //   (parseInt(m[1]) + 10000).toString(),
+      //   m[2]
+      // ]
+    }
+    return m
+  })
   const sanityCheck = true
   const steps = sampleInput.missiles.length - 1
   const bodies = sampleInput.bodies.length
 
+  // the following input is from shooting in a real game
   const checkSampleInput = {
     bodies: [
-      ['160320', '282650', '31655', '21164', '36000'],
-      ['519382', '747824', '12536', '30094', '7000']
+      ['467446', '437848', '39892', '21329', '36000'],
+      ['132246', '763106', '12690', '22342', '0'],
+      ['41536', '553684', '10016', '8556', '0'],
+      ['931417', '831774', '20639', '28154', '17000'],
+      ['595936', '254340', '14144', '25652', '0'],
+      ['647352', '77784', '23996', '29723', '0']
     ],
     missiles: [
-      ['31838', '3880', '10'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['31838', '3880', '10'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['31838', '3880', '10'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['31838', '3880', '10'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['31838', '3880', '10'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['31838', '3880', '10'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['31838', '3880', '10'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['31838', '3880', '10'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['31838', '3880', '10'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['31838', '3880', '10'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['31838', '3880', '10'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['31838', '3880', '10'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['31838', '3880', '10'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['31838', '3880', '10'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['31838', '3880', '10'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['31838', '3880', '10'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['31838', '3880', '10'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['31838', '3880', '10'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0'],
-      ['20000', '20000', '0']
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['59999', '29812', '10'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0'],
+      ['30000', '30000', '0']
     ],
-    inflightMissile: ['71028', '903280', '31838', '3880', '10'],
-    address: '0xfa398d672936dcf428116f687244034961545d91'
+    inflightMissile: ['0', '1000000', '30000', '30000', '0'],
+    address: '0xc795344b1b30e3cfee1afa1d5204b141940cf445'
   }
 
   before(async () => {
@@ -330,17 +234,6 @@ describe('stepStateTest circuit', () => {
   })
 
   it('produces a witness with valid constraints', async () => {
-    sampleInput.missiles = sampleInput.missiles.map((m) =>
-      m.length == 5 ? [m[2], m[3], m[4]] : m
-    )
-    sampleInput.missiles = sampleInput.missiles.map((m) => {
-      if (parseInt(m[2]) === 0) {
-        m[0] = '20000'
-        m[1] = '20000'
-      }
-      return m
-    })
-
     const witness = await circuit.calculateWitness(sampleInput, sanityCheck)
     // const inputs =
     //   sampleInput.bodies.length * sampleInput.bodies[0].length +
@@ -352,28 +245,30 @@ describe('stepStateTest circuit', () => {
   })
 
   it('passes one off check input', async () => {
-    const sampleInput = checkSampleInput
-    const inflightMissile = sampleInput.inflightMissile
+    const inflightMissile = checkSampleInput.inflightMissile
 
-    const steps = sampleInput.missiles.length - 1
-    const bodies = sampleInput.bodies.length
+    const steps = checkSampleInput.missiles.length - 1
+    const bodies = checkSampleInput.bodies.length
     const circuitName = `circuits/game_${bodies}_${steps}.circom`
     // console.log({ circuitName })
     const circuit = await wasm_tester(circuitName)
 
-    const witness = await circuit.calculateWitness(sampleInput, sanityCheck)
+    const witness = await circuit.calculateWitness(
+      checkSampleInput,
+      sanityCheck
+    )
     await circuit.checkConstraints(witness)
 
     const anybody = new Anybody(null, { util: true })
-    let abBodies = sampleInput.bodies.map(
-      anybody.convertScaledStringArrayToFloat.bind(anybody)
+    let abBodies = checkSampleInput.bodies.map((body) =>
+      anybody.convertScaledStringArrayToFloat.call(anybody, body)
     )
-    let abMissiles = sampleInput.missiles.map(
-      anybody.convertMissileScaledStringArrayToFloat.bind(anybody)
+    let abMissiles = checkSampleInput.missiles.map((missile) =>
+      anybody.convertMissileScaledStringArrayToFloat.call(anybody, missile)
     )
     // console.dir({ abMissiles_00: abMissiles[0] }, { depth: null })
     // console.log({ inflightMissile })
-    if (parseInt(sampleInput.inflightMissile[4]) !== 0) {
+    if (parseInt(checkSampleInput.inflightMissile[4]) !== 0) {
       abMissiles[0].position.x = anybody.convertScaledBigIntToFloat(
         inflightMissile[0]
       )
@@ -393,7 +288,8 @@ describe('stepStateTest circuit', () => {
       const results = anybody.step()
       abBodies = results.bodies
       abMissiles = results.missiles
-      if (abBodies.filter((b) => b.radius === 0).length == 1) {
+      const nonZeroBodies = abBodies.filter((b) => b.radius !== 0).length
+      if (nonZeroBodies == 1) {
         stepsSinceWin += 1
       }
     }
@@ -401,8 +297,8 @@ describe('stepStateTest circuit', () => {
     const time = steps - stepsSinceWin
 
     abBodies = anybody.convertBodiesToBigInts(abBodies)
-    const out_bodies = abBodies.map(
-      anybody.convertScaledBigIntBodyToArray.bind(anybody)
+    const out_bodies = abBodies.map((body) =>
+      anybody.convertScaledBigIntBodyToArray.call(anybody, body)
     )
     const expected = {
       out_bodies,
@@ -410,22 +306,22 @@ describe('stepStateTest circuit', () => {
       outflightMissile: [
         abMissiles[0].px,
         abMissiles[0].py,
-        parseInt(abMissiles[0].vx) + 20000,
-        parseInt(abMissiles[0].vy) + 20000,
+        parseInt(abMissiles[0].vx) + 30000,
+        parseInt(abMissiles[0].vy) + 30000,
         abMissiles[0].radius
       ]
     }
-    // console.dir({ sampleInput }, { depth: null })
+    // console.dir({ checkSampleInput }, { depth: null })
     await circuit.assertOut(witness, expected)
   })
 
   it('has the correct output when one body and missile positioned to hit and it returns correct number of steps', async () => {
     const anybody = new Anybody(null, { util: true })
-    let bodies = sampleInput.bodies.map(
-      anybody.convertScaledStringArrayToFloat.bind(anybody)
+    let bodies = sampleInput.bodies.map((body) =>
+      anybody.convertScaledStringArrayToFloat.call(anybody, body)
     )
-    let abMissiles = sampleInput.missiles.map(
-      anybody.convertMissileScaledStringArrayToFloat.bind(anybody)
+    let abMissiles = sampleInput.missiles.map((missile) =>
+      anybody.convertMissileScaledStringArrayToFloat.call(anybody, missile)
     )
     abMissiles[0].position.x = anybody.convertScaledBigIntToFloat(
       inflightMissile[0]
@@ -434,10 +330,10 @@ describe('stepStateTest circuit', () => {
       inflightMissile[1]
     )
     abMissiles[0].velocity.x = anybody.convertScaledBigIntToFloat(
-      inflightMissile[2] - 20000
+      inflightMissile[2] - 30000 // get real value after removine body maxVelocity offset
     )
     abMissiles[0].velocity.y = anybody.convertScaledBigIntToFloat(
-      inflightMissile[3] - 20000
+      inflightMissile[3] - 30000 // get real value after removine body maxVelocity offset
     )
     abMissiles[0].radius = anybody.convertScaledBigIntToFloat(
       inflightMissile[4]
@@ -456,8 +352,8 @@ describe('stepStateTest circuit', () => {
     expect(bodies[k].radius).to.eq(0)
 
     bodies = anybody.convertBodiesToBigInts(bodies)
-    const out_bodies = bodies.map(
-      anybody.convertScaledBigIntBodyToArray.bind(anybody)
+    const out_bodies = bodies.map((body) =>
+      anybody.convertScaledBigIntBodyToArray.call(anybody, body)
     )
     const expected = {
       out_bodies,
@@ -465,8 +361,8 @@ describe('stepStateTest circuit', () => {
       outflightMissile: [
         abMissiles[0].px,
         abMissiles[0].py,
-        parseInt(abMissiles[0].vx) + 20000,
-        parseInt(abMissiles[0].vy) + 20000,
+        parseInt(abMissiles[0].vx) + 30000,
+        parseInt(abMissiles[0].vy) + 30000,
         abMissiles[0].radius
       ]
     }

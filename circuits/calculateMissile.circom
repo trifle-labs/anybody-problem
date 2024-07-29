@@ -42,28 +42,27 @@ template CalculateMissile() {
   var windowWidth = 1000; // maxBits: 10
   var windowWidthScaled = windowWidth * scalingFactor; // maxBits: 20 (maxNum: 1_000_000)
 
-  // TODO: confirm the max vector of missiles (may change frequently)
   var time = 2;
-  var maxVector = time * 10; // maxBits: 5
-  var maxVectorScaled = maxVector * scalingFactor; // maxBits: 15 (maxNum: 20_000)
-  // log("maxVectorScaled", maxVectorScaled);
+  var maxMissileVector = time * 15; // maxBits: 5
+  var maxMissileVectorScaled = maxMissileVector * scalingFactor; // maxBits: 15 (maxNum: 30_000)
+  // log("maxMissileVectorScaled", maxMissileVectorScaled);
 
   signal new_pos[2];
    // position_x + vector_x
-  new_pos[0] <== in_missile[0] + in_missile[2]; // maxBits: 20 (maxNum: 1_020_000)
+  new_pos[0] <== in_missile[0] + in_missile[2]; // maxBits: 20 (maxNum: 1_030_000)
    // position_y + vector_y
-  new_pos[1] <== in_missile[1] + in_missile[3]; // maxBits: 20 (maxNum: 1_020_000)
+  new_pos[1] <== in_missile[1] + in_missile[3]; // maxBits: 20 (maxNum: 1_030_000)
 
   // log("new_pos[0]", new_pos[0]);
   // log("new_pos[1]", new_pos[1]);
   // position X is only going to increase from 0 to windowWidthScaled
   // it needs to be kept less than windowWidthScaled
   // can return 0 if it exceeds and use this information to remove the missile
-  // log("positionLimiterX in", new_pos[0] + maxVectorScaled);
-  // log("positionLimiterX limit", windowWidthScaled + maxVectorScaled);
+  // log("positionLimiterX in", new_pos[0] + maxMissileVectorScaled);
+  // log("positionLimiterX limit", windowWidthScaled + maxMissileVectorScaled);
   component calcMissilePositionLimiterX = Limiter(20);
-  calcMissilePositionLimiterX.in <== new_pos[0] + maxVectorScaled; // maxBits: 20 (maxNum: 1_020_000)
-  calcMissilePositionLimiterX.limit <== windowWidthScaled + maxVectorScaled; // maxBits: 20 (maxNum: 1_020_000)
+  calcMissilePositionLimiterX.in <== new_pos[0] + maxMissileVectorScaled; // maxBits: 20 (maxNum: 1_030_000)
+  calcMissilePositionLimiterX.limit <== windowWidthScaled + maxMissileVectorScaled; // maxBits: 20 (maxNum: 1_030_000)
   calcMissilePositionLimiterX.rather <== 0;
   // log("positionLimiterX out", calcMissilePositionLimiterX.out);
 
@@ -80,18 +79,18 @@ template CalculateMissile() {
 
   // Since the plane goes from 0 to windowWidthScaled on the y axis from top to bottom
   // the missile will approach 0 after starting at windowWidthScaled
-  // check whether it goes below 0 by using the maxVectorScaled as a buffer
-  // return 0 if it is below maxVectorScaled to remove the missile
+  // check whether it goes below 0 by using the maxMissileVectorScaled as a buffer
+  // return 0 if it is below maxMissileVectorScaled to remove the missile
   // TODO: this assumes a missile removal at less than or equal to 0
   // make sure the JS also is <= 0 and not just < 0 for the missile removal
 
   // log("new_pos[1]", new_pos[1]);
   // log("positionLowerLimiterY in", new_pos[1]);
-  // log("positionLowerLimiterY limit", maxVectorScaled);
+  // log("positionLowerLimiterY limit", maxMissileVectorScaled);
   // also check the general overboard logic. Would be an edge case but possible.
   component positionLowerLimiterY = LowerLimiter(20); // TODO: confirm type matches bit limit
-  positionLowerLimiterY.in <== new_pos[1]; // maxBits: 20 (maxNum: 1_020_000)
-  positionLowerLimiterY.limit <== maxVectorScaled; // maxBits: 15 (maxNum: 20_000)
+  positionLowerLimiterY.in <== new_pos[1]; // maxBits: 20 (maxNum: 1_030_000)
+  positionLowerLimiterY.limit <== maxMissileVectorScaled; // maxBits: 15 (maxNum: 30_000)
   positionLowerLimiterY.rather <== 0;
   // log("positionLowerLimiterY out", positionLowerLimiterY.out);
 
@@ -102,10 +101,10 @@ template CalculateMissile() {
   muxY.c[1] <== 0;
   muxY.s <== isZeroY.out;
 
-  out_missile[0] <== new_pos[0] - maxVectorScaled; // maxBits: 20 (maxNum: 1_000_000)
-  out_missile[1] <== new_pos[1] - maxVectorScaled; // maxBits: 20 (maxNum: 1_000_000)
-  out_missile[2] <== in_missile[2]; // maxBits: 14 (maxNum: 10_000)
-  out_missile[3] <== in_missile[3]; // maxBits: 14 (maxNum: 10_000)
+  out_missile[0] <== new_pos[0] - maxMissileVectorScaled; // maxBits: 20 (maxNum: 1_000_000)
+  out_missile[1] <== new_pos[1] - maxMissileVectorScaled; // maxBits: 20 (maxNum: 1_000_000)
+  out_missile[2] <== in_missile[2]; // maxBits: 15 (maxNum: 30_000)
+  out_missile[3] <== in_missile[3]; // maxBits: 15 (maxNum: 30_000)
   out_missile[4] <== muxY.out;
 
   // log("out_missile[0]", out_missile[0]);

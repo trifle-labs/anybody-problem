@@ -2,14 +2,7 @@
 // import { assert } from 'chai';
 // import { describe, it, before } from 'mocha';
 import { wasm as wasm_tester } from 'circom_tester'
-
-import index from '../../docs/index.cjs'
-const {
-  // calculateTime,
-  detectCollisionBigInt,
-  convertScaledStringArrayToBody,
-  convertScaledBigIntBodyToArray
-} = index
+import { Anybody } from '../../src/anybody.js'
 // const modp = 21888242871839275222246405745257275088548364400416034343698204186575808495617n
 describe('detectCollisionMain circuit', () => {
   let circuit
@@ -23,10 +16,11 @@ describe('detectCollisionMain circuit', () => {
     missile: ['226000', '42000', '100000']
   }
   const jsSampleInput = JSON.parse(JSON.stringify(sampleInput))
-  jsSampleInput.bodies[0].splice(2, 0, '9999', '3710')
-  jsSampleInput.bodies[1].splice(2, 0, '6680', '13740')
-  jsSampleInput.bodies[2].splice(2, 0, '12290', '12520')
-  jsSampleInput.missile.splice(2, 0, '10000', '10000')
+  // make velocity 0 for all bodies and missiles for sake of test
+  jsSampleInput.bodies[0].splice(2, 0, '20000', '20000')
+  jsSampleInput.bodies[1].splice(2, 0, '20000', '20000')
+  jsSampleInput.bodies[2].splice(2, 0, '20000', '20000')
+  jsSampleInput.missile.splice(2, 0, '30000', '30000')
 
   const sanityCheck = true
 
@@ -46,17 +40,37 @@ describe('detectCollisionMain circuit', () => {
   })
 
   it('has the correct output', async () => {
+    const anybody = new Anybody(null, { util: true })
     const bodiesBefore = []
     for (let i = 0; i < sampleInput.bodies.length; i++) {
-      bodiesBefore.push(convertScaledStringArrayToBody(jsSampleInput.bodies[i]))
+      bodiesBefore.push(
+        anybody.convertScaledStringArrayToBody.call(
+          anybody,
+          jsSampleInput.bodies[i]
+        )
+      )
     }
-    const missiles = [convertScaledStringArrayToBody(jsSampleInput.missile)]
+    const missiles = [
+      anybody.convertScaledStringArrayToMissile.call(
+        anybody,
+        jsSampleInput.missile
+      )
+    ]
+
     // console.dir({ bodiesBefore, missiles }, { depth: null })
-    const results = detectCollisionBigInt(bodiesBefore, missiles)
-    // console.log({ results })
-    let out_bodies = results.bodies.map(convertScaledBigIntBodyToArray)
+    const results = anybody.detectCollisionBigInt.call(
+      anybody,
+      bodiesBefore,
+      missiles
+    )
+    // console.dir({ results }, { depth: null })
+    let out_bodies = results.bodies.map((body) =>
+      anybody.convertScaledBigIntBodyToArray.call(anybody, body)
+    )
     out_bodies.forEach((b) => b.splice(2, 2))
-    let out_missile = results.missiles.map(convertScaledBigIntBodyToArray)[0]
+    let out_missile = results.missiles.map((missile) =>
+      anybody.convertScaledBigIntMissileToArray.call(anybody, missile)
+    )[0]
     out_missile.splice(2, 2)
     // console.log({ out_bodies })
     // console.log({ out_missile })

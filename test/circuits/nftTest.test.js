@@ -45,15 +45,15 @@ describe.skip('nft circuit', () => {
   })
   it('has the correct output', async () => {
     const anybody = new Anybody(null, { util: true })
-    let bodies = sampleInput.bodies.map(
-      anybody.convertScaledStringArrayToBody.bind(anybody)
+    let bodies = sampleInput.bodies.map((body) =>
+      anybody.convertScaledStringArrayToBody.call(anybody, body)
     )
     // console.dir({ bodies }, { depth: null })
     for (let i = 0; i < steps; i++) {
       bodies = anybody.forceAccumulatorBigInts(bodies)
     }
-    const out_bodies = bodies.map(
-      anybody.convertScaledBigIntBodyToArray.bind(anybody)
+    const out_bodies = bodies.map((body) =>
+      anybody.convertScaledBigIntBodyToArray.call(anybody, body)
     )
     // console.log({ out_bodies })
     const expected = { out_bodies }
