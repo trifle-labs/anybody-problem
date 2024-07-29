@@ -427,8 +427,8 @@ describe('AnybodyProblem Tests', function () {
       '0',
       '0', // dummy x
       '0', // dummy y
-      '0', // dummy vx
-      '0', // dummy vy
+      '20000', // dummy vx
+      '20000', // dummy vy
       '0', // dummy radius
       '26',
       '1428531153118459510960519782658600836333166681489',
@@ -444,8 +444,8 @@ describe('AnybodyProblem Tests', function () {
       '17000',
       '0', // dummy x
       '0', // dummy y
-      '0', // dummy vx
-      '0', // dummy vy
+      '20000', // dummy vx
+      '20000', // dummy vy
       '0', // dummy radius
       '0',
       '1000000',

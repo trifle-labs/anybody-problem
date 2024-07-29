@@ -433,7 +433,7 @@ contract ExternalMetadata is Ownable {
                     '[',
                     '{"trait_type":"Day","value":"',
                     StringsExtended.toString(date),
-                    '"}, {"trait_type":"Month","value":"',
+                    '"}, {"trait_type":"Year-Month","value":"',
                     StringsExtended.toString(year),
                     '-',
                     Math.log10(month) + 1 == 1 ? '0' : '',

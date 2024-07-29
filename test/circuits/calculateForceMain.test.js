@@ -100,8 +100,8 @@ describe('calculateForceMain circuit', () => {
     start = Date.now()
     for (let i = 0; i < sampleInputs.length * pad; i++) {
       const sampleInput = sampleInputs[i % sampleInputs.length]
-      let bodies = sampleInput.in_bodies.map(
-        anybody.convertScaledStringArrayToBody.bind(anybody)
+      let bodies = sampleInput.in_bodies.map((body) =>
+        anybody.convertScaledStringArrayToBody.call(anybody, body)
       )
       anybody.calculateForceBigInt(bodies[0], bodies[1])
     }
@@ -122,8 +122,8 @@ describe('calculateForceMain circuit', () => {
       const sampleInput = sampleInputs[i]
 
       const anybody = new Anybody(null, { util: true })
-      let bodies = sampleInput.in_bodies.map(
-        anybody.convertScaledStringArrayToBody.bind(anybody)
+      let bodies = sampleInput.in_bodies.map((body) =>
+        anybody.convertScaledStringArrayToBody.call(anybody, body)
       )
 
       const out_forces = anybody

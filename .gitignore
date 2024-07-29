@@ -34,7 +34,8 @@ contracts/*Verifier.sol
 *_proof.json
 *_public.json
 
-**.ptau
+ptau/*.ptau
+
 proof.json
 public.json
 verification_key.json
