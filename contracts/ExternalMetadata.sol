@@ -587,7 +587,7 @@ contract ExternalMetadata is Ownable {
                             'transform-origin: ', transformOrigin ,';',
                             'transform: translate(', translation, ') rotate(360deg); }',
                     '} ',
-                    'path#id-', bodyId, ' ',
+                    '#id-', bodyId, ' ',
                     '{ ',
                         'animation: move', bodyId, ' ',
                         duration, 's infinite linear; animation-delay: ', delay, 's;',
