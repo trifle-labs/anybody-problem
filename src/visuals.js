@@ -937,6 +937,9 @@ export const Visuals = {
       811
     )
     // bottom buttons
+    if (this.level >= 5) {
+      this.showShare = true
+    }
     const buttonCount = this.showShare ? 4 : 3
     this.drawBottomButton({
       text: 'RETRY',
