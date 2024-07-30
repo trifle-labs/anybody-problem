@@ -456,30 +456,13 @@ contract ExternalMetadata is Ownable {
                 )
             );
 
-            //string memory bodyVectorPath = getHeroBodyLayerPath(date, ThemeLayer.BG);
-
             path = string(
                 abi.encodePacked(
                     path,
-                    // '<style> @keyframes moveBody',
-                    // bodyIDString,
-                    // ' { 0% { ',
-                    // transformOrigin,
-                    // 'transform: rotate(0deg) translate(0px, 10px); } 100% {',
-                    // transformOrigin,
-                    // 'transform: rotate(360deg) translate(0px, 10px); } } ',
-                    // 'g#id-',
-                    // bodyIDString,
-                    // ' { animation: moveBody',
-                    // bodyIDString,
-                    // ' 4s infinite linear; animation-delay: -',
-                    // StringsExtended.toString(i),
-                    // 's; }</style>',
-                    // '<g id="id-',
-                    // bodyIDString,
-                    // '">',
-                    getHeroBodyPath(date)
-                    // '</g>'
+                    getRotationAnimation(bodyIDString, '0px 0px', '0px, 10px', '4', '0' ),
+                    '<g id="id-', bodyIDString,'">',
+                        getHeroBodyPath(date),
+                    '</g>'
                 )
             );
         }
@@ -524,12 +507,12 @@ contract ExternalMetadata is Ownable {
         uint256 pathIdxBG = randomRange(0, svgShapeCategorySizes[ThemeLayer.BG] - 1, rand);
         string memory pathBG = svgShapes[ThemeLayer.BG][pathIdxBG];
 
-        //FOREGROUND SHAPE INDEX
+        //FOREGROUND SHAPE
         rand = keccak256(abi.encodePacked(rand));
         uint256 pathIdxFG = randomRange(0, svgShapeCategorySizes[ThemeLayer.FG] - 1, rand);
         string memory pathFG = svgShapes[ThemeLayer.FG][pathIdxFG];
 
-        //CORE SHAPE INDEX
+        //CORE SHAPE
         rand = keccak256(abi.encodePacked(rand));
         uint256 pathIdxCore = randomRange(0, svgShapeCategorySizes[ThemeLayer.Core] - 1, rand);
         string memory pathCore = svgShapes[ThemeLayer.Core][pathIdxCore];
@@ -540,27 +523,49 @@ contract ExternalMetadata is Ownable {
         ThemeName currentDayTheme = ThemeName(randomRange(0, themegroupsAmount - 1, rand));
 
         //BACKGROUND COLOR
-        uint256[3] memory colorsBG; 
-        (colorsBG, rand) = getHeroBodyLayerColor(rand, currentDayTheme, ThemeLayer.BG);
+        uint256[3] memory colorsBGValues; 
+        (colorsBGValues, rand) = getHeroBodyLayerColor(rand, currentDayTheme, ThemeLayer.BG);
+        string memory colorsBG = string(
+            abi.encodePacked(
+                'hsl(', 
+                StringsExtended.toString(colorsBGValues[0]), ',', 
+                StringsExtended.toString(colorsBGValues[1]), '%,', 
+                StringsExtended.toString(colorsBGValues[2]), '%)'
+            )
+        ); 
 
         //CORE COLOR
-        uint256[3] memory colorsCore; 
-        (colorsCore, rand) = getHeroBodyLayerColor(rand, currentDayTheme, ThemeLayer.Core);
+        uint256[3] memory colorsCoreValues; 
+        (colorsCoreValues, rand) = getHeroBodyLayerColor(rand, currentDayTheme, ThemeLayer.Core);
+        string memory colorsCore= string(
+            abi.encodePacked(
+                'hsl(', 
+                StringsExtended.toString(colorsCoreValues[0]), ',', 
+                StringsExtended.toString(colorsCoreValues[1]), '%,', 
+                StringsExtended.toString(colorsCoreValues[2]), '%)'
+            )
+        ); 
 
         //FOREGROUND COLOR
-        uint256[3] memory colorsFG; 
-        (colorsFG, rand) = getHeroBodyLayerColor(rand, currentDayTheme, ThemeLayer.FG);
+        uint256[3] memory colorsFGValues; 
+        (colorsFGValues, rand) = getHeroBodyLayerColor(rand, currentDayTheme, ThemeLayer.FG);
+        string memory colorsFG = string(
+            abi.encodePacked(
+                'hsl(', 
+                StringsExtended.toString(colorsFGValues[0]), ',', 
+                StringsExtended.toString(colorsFGValues[1]), '%,', 
+                StringsExtended.toString(colorsFGValues[2]), '%)'
+            )
+        ); 
 
         string memory path = string(
             abi.encodePacked(
                 getRotationAnimation('BG', '300px 300px', '0px, 0px', '4', '-3' ),
-                '<path id="id-BG" d="', pathBG, '" ',
-                'fill="hsl(', StringsExtended.toString(colorsBG[0]), ',', StringsExtended.toString(colorsBG[1]), '%,', StringsExtended.toString(colorsBG[2]), '%)" />',
+                '<path id="id-BG" d="', pathBG, '" fill="', colorsBG, '" />',
                 getRotationAnimation('Core', '113px 113px', '187px, 187px', '2', '-6' ),
-                '<path id="id-Core" d="', pathCore, '" ',
-                'fill="hsl(', StringsExtended.toString(colorsCore[0]), ',', StringsExtended.toString(colorsCore[1]), '%,', StringsExtended.toString(colorsCore[2]), '%)" />',
+                '<path id="id-Core" d="', pathCore, '" fill="', colorsCore, '" />',
                 getRotationAnimation('FG', '300px 300px', '0px,0px', '6', '-1.5' ),
-                '<g id="id-FG" fill="hsl(', StringsExtended.toString(colorsFG[0]), ',', StringsExtended.toString(colorsFG[1]), '%,', StringsExtended.toString(colorsFG[2]), '%)" >',
+                '<g id="id-FG" fill="', colorsFG ,'" >',
                     pathFG,
                 '</g>'
             )
