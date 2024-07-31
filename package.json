@@ -61,7 +61,8 @@
     "ignorePatterns": [
       "/docs/index.js",
       "**/*.min.js",
-      "**/*.worker.js"
+      "**/*.worker.js",
+      "/dist/*"
     ],
     "root": true
   },
