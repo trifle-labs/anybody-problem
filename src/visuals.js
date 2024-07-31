@@ -189,6 +189,7 @@ export const Visuals = {
 
     this.drawPause()
     this.drawScore()
+    this.drawPopup()
     this.drawGun()
 
     if (
@@ -286,11 +287,49 @@ export const Visuals = {
     drawKernedText(p, 'Problem', 46, titleY + 240, 2)
 
     if (!this.willUnpause) {
+      // play button
       this.drawFatButton({
         text: 'PLAY',
         onClick: () => {
+          if (!this.playerName) {
+            // open connect wallet popup
+            this.popup = {
+              header: 'Play Onchain',
+              body: [
+                'Free to play!  ...or practice!',
+                'Connect a wallet to validate your wins.'
+              ],
+              buttons: [
+                {
+                  text: 'PRACTICE',
+                  fg: THEME.violet_50,
+                  bg: THEME.violet_25,
+                  stroke: THEME.violet_50,
+                  onClick: () => {
+                    // start practice mode
+                    this.popup = null
+                    this.sound?.playStart()
+                    this.setPause(false)
+                    this.practiceMode = true
+                  }
+                },
+                {
+                  text: 'CONNECT',
+                  fg: THEME.violet_25,
+                  bg: THEME.violet_50,
+                  stroke: THEME.violet_50,
+                  onClick: () => {
+                    this.emit('connect-wallet')
+                  }
+                }
+              ]
+            }
+            return
+          }
+          // start play
           this.sound?.playStart()
           this.setPause(false)
+          this.practiceMode = false
         },
         fg: THEME.fuschia,
         bg: THEME.pink,
@@ -469,6 +508,96 @@ export const Visuals = {
     // }
   },
 
+  drawPopup() {
+    if (!this.popup) return
+    const { p, popup } = this
+
+    // animate in
+    const animDuration = 0.2 // seconds
+
+    const justEntered = popup.lastVisibleFrame !== this.p5Frames - 1
+    if (justEntered) {
+      popup.visibleForFrames = 0
+    }
+    popup.visibleForFrames++
+    popup.lastVisibleFrame = this.p5Frames
+
+    const alpha = Math.min(
+      0.75,
+      popup.visibleForFrames / (animDuration * this.P5_FPS)
+    )
+
+    p.fill(`rgba(20, 4, 32, ${alpha})`)
+    p.noStroke()
+    p.rect(0, 0, this.windowWidth, this.windowHeight)
+
+    const x = 180
+    const w = 640
+    const pad = [36, 48, 120, 48]
+    const fz = [72, 32]
+    const bg = popup.bg ?? THEME.violet_25
+    const fg = popup.fg ?? THEME.violet_50
+    const stroke = popup.stroke ?? fg
+
+    const h = pad[0] + fz[0] + fz[1] * popup.body.length + pad[2]
+    const animY = Math.max(
+      0,
+      50 - (50 / (animDuration * this.P5_FPS)) * popup.visibleForFrames
+    )
+    const y = (this.windowHeight - h) / 2 + animY
+
+    // modal
+    p.fill(bg)
+    p.stroke(stroke)
+    p.strokeWeight(3)
+    p.rect(x, y, w, h, 24, 24, 24, 24)
+
+    // heading
+    if (!fonts.dot) return
+    p.textFont(fonts.dot)
+    p.fill(popup.fg ?? fg)
+    p.textSize(fz[0])
+    p.textAlign(p.CENTER, p.TOP)
+    p.noStroke()
+    p.text(popup.header, x + w / 2, y + pad[0])
+
+    // body
+    if (!fonts.body) return
+    p.textFont(fonts.body)
+    p.textSize(fz[1])
+    p.textAlign(p.CENTER, p.TOP)
+    popup.body.forEach((text, i) => {
+      const lineGap = parseInt(fz[1] * 0.25)
+      const y1 = y + pad[0] + fz[0] + fz[1] * (i + 1) + lineGap * (i + 1) - 10
+      p.text(text, x + w / 2, y1)
+    })
+
+    // buttons (max 2)
+    const btnGutter = 10
+    const btnW = w / 2 - pad[1] / 2 - btnGutter / 2
+    const defaultOptions = {
+      height: 84,
+      width: btnW,
+      y: y + h - 84 / 2,
+      fg,
+      bg,
+      stroke
+    }
+
+    popup.buttons.slice(0, 2).forEach((options, i) => {
+      this.drawButton({
+        x:
+          popup.buttons.length > 1
+            ? x + pad[1] / 2 + (btnW + btnGutter) * i
+            : x + w / 2 - btnW / 2, // centered
+        ...defaultOptions,
+        ...options
+      })
+    })
+
+    p.pop()
+  },
+
   getColorDir(chunk) {
     return Math.floor(this.frames / (255 * chunk)) % 2 == 0
   },
@@ -627,7 +756,7 @@ export const Visuals = {
       .replace(', ', '-')
       .replace(' ', '-')
     p.text(formattedDate, 454, 114)
-    p.text(this.owner, 454, 174)
+    p.text(this.playerName ?? 'YOU', 454, 174)
     // end upper box text
 
     // middle box text
@@ -769,7 +898,7 @@ export const Visuals = {
     for (let i = 0; i < baddies.length; i++) {
       const row = baddies[i]
       for (let j = 0; j < row.length; j++) {
-        const body = row[j]
+        const body = row[row.length - 1 - j]
         body.position = this.createVector(
           64 + j * 72,
           middleBoxY + i * rowHeight + rowHeight / 2
@@ -807,37 +936,71 @@ export const Visuals = {
       44,
       811
     )
+    // bottom buttons
+    if (this.level >= 5) {
+      this.showShare = true
+    }
+    const buttonCount = this.showShare ? 4 : 3
+    this.drawBottomButton({
+      text: 'RETRY',
+      onClick: () => {
+        this.restart(null, false)
+      },
+      ...themes.buttons.teal,
+      columns: buttonCount,
+      column: 0
+    })
+    this.drawBottomButton({
+      text: 'RESTART',
+      onClick: () => {
+        // confirm in popup
+        this.popup = {
+          bg: THEME.flame_75,
+          fg: THEME.flame_50,
+          stroke: THEME.flame_50,
+          header: 'Start Over?',
+          body: ['Any progress will be lost!'],
+          buttons: [
+            {
+              text: 'CLOSE',
+              fg: THEME.flame_50,
+              bg: THEME.flame_75,
+              stroke: THEME.flame_50,
+              onClick: () => {
+                this.popup = null
+              }
+            },
+            {
+              text: 'RESTART',
+              fg: THEME.flame_75,
+              bg: THEME.flame_50,
+              stroke: THEME.flame_50,
+              onClick: () => {
+                this.popup = null
+                this.level = 1
+                this.restart(null, false)
+              }
+            }
+          ]
+        }
+      },
+      ...themes.buttons.flame,
+      columns: buttonCount,
+      column: 1
+    })
+    if (this.showShare) {
+      this.drawBottomButton({
+        text: 'SHARE',
+        onClick: () => {
+          // TODO: hide bottom btns / paint a promo-message over them
+          this.shareCanvas()
+        },
+        ...themes.buttons.pink,
+        columns: buttonCount,
+        column: 2
+      })
+    }
     if (this.level < 5) {
-      // bottom buttons
-      const buttonCount = this.showShare ? 4 : 3
-      this.drawBottomButton({
-        text: 'RETRY',
-        onClick: () => {
-          this.restart(null, false)
-        },
-        ...themes.buttons.teal,
-        columns: buttonCount,
-        column: 0
-      })
-      this.drawBottomButton({
-        text: 'RESTART',
-        onClick: () => {
-          this.level = 1
-          this.restart(null, false)
-        },
-        ...themes.buttons.flame,
-        columns: buttonCount,
-        column: 1
-      })
-      if (this.showShare) {
-        this.drawBottomButton({
-          text: 'SHARE',
-          onClick: () => this.restart(null, false),
-          ...themes.buttons.pink,
-          columns: buttonCount,
-          column: 2
-        })
-      }
       this.drawBottomButton({
         text: 'NEXT',
         onClick: () => {
@@ -853,14 +1016,15 @@ export const Visuals = {
         column: buttonCount - 1
       })
     } else {
+      // parent app should handle waiting to save
       this.drawBottomButton({
-        text: this.readyToSave ? 'SAVE' : 'ALMOST READY TO SAVE...',
+        text: 'SAVE',
         onClick: () => {
           this.emit('save')
         },
         ...themes.buttons.green,
-        columns: 1,
-        column: 0
+        columns: buttonCount,
+        column: buttonCount - 1
       })
     }
     p.pop()
@@ -1296,14 +1460,12 @@ export const Visuals = {
       fg: THEME.red
     })
 
-    if (this.showPlayAgain) {
-      this.drawFatButton({
-        text: 'RETRY',
-        onClick: () => this.restart(null, false),
-        fg: THEME.red,
-        bg: THEME.maroon
-      })
-    }
+    this.drawFatButton({
+      text: 'RETRY',
+      onClick: () => this.restart(null, false),
+      fg: THEME.red,
+      bg: THEME.maroon
+    })
 
     p.pop()
   },
@@ -2231,5 +2393,57 @@ export const Visuals = {
     }
 
     return this.lastFrameRate
+  },
+
+  shareCanvas() {
+    const canvas = this.p.canvas
+
+    canvas.toBlob((blob) => {
+      const file = new File([blob], 'p5canvas.png', { type: 'image/png' })
+
+      if (navigator.share) {
+        console.log('sharing canvas...')
+        navigator
+          .share({
+            files: [file]
+          })
+          .catch((error) => console.error('Error sharing:', error))
+      } else if (navigator.clipboard && navigator.clipboard.write) {
+        try {
+          console.log('writing canvas to clipboard...')
+          navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
+          this.popup = {
+            header: 'Go Share!',
+            body: ['Copied results to your clipboard.'],
+            fg: THEME.pink_50,
+            bg: THEME.pink_75,
+            buttons: [
+              {
+                text: 'CLOSE',
+                onClick: () => {
+                  this.popup = null
+                }
+              }
+            ]
+          }
+        } catch (error) {
+          console.error('Error copying to clipboard:', error)
+          this.popup = {
+            header: 'Hmmm',
+            body: ['Couldn’t copy results to your clipboard.'],
+            buttons: [
+              {
+                text: 'CLOSE',
+                onClick: () => {
+                  this.popup = null
+                }
+              }
+            ]
+          }
+        }
+      } else {
+        console.error('no options to share canvas!')
+      }
+    }, 'image/png')
   }
 }

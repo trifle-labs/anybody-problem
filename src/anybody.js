@@ -158,14 +158,18 @@ export class Anybody extends EventEmitter {
       target: 'inside', // 'outside' or 'inside'
       faceRotation: 'mania', // 'time' or 'hitcycle' or 'mania'
       sfx: 'bubble', // 'space' or 'bubble'
-      owner: 'YOU',
-      ownerPresent: false,
-      bestTimes: null
+      playerName: undefined,
+      practiceMode: false,
+      bestTimes: null,
+      popup: null
     }
     // Merge the default options with the provided options
     const mergedOptions = { ...defaultOptions, ...options }
     // Assign the merged options to the instance properties
     Object.assign(this, mergedOptions)
+  }
+  setPlayer(name = undefined) {
+    this.playerName = name
   }
   removeCSS() {
     console.log('removeCSS')
@@ -194,9 +198,10 @@ export class Anybody extends EventEmitter {
     this.lastMissileCantBeUndone = false
     this.speedFactor = 2
     this.speedLimit = 10
-    this.missileSpeed = 10
+    this.missileSpeed = 15
     this.G = NORMAL_GRAVITY
     this.vectorLimit = this.speedLimit * this.speedFactor
+    this.missileVectorLimit = this.missileSpeed * this.speedFactor
     this.FPS = 25
     this.P5_FPS_MULTIPLIER = 3
     this.P5_FPS = this.FPS * this.P5_FPS_MULTIPLIER
@@ -478,8 +483,6 @@ export class Anybody extends EventEmitter {
     dust = stats.dust
     timeTook = stats.timeTook
     this.framesTook = stats.framesTook
-    void this.setStatsText(stats)
-    void this.setShowPlayAgain()
     this.emit('done', {
       level: this.level,
       won,
@@ -514,27 +517,6 @@ export class Anybody extends EventEmitter {
     return text.slice(0, -1) + text.split('').reverse().join('')
   }
 
-  setStatsText = async (stats) => {
-    const statLines = [
-      this.doubleTextInverted(`¸♩·¯·♬¸¸♬·¯·♩¸¸♪¯`),
-      `${stats.bodiesIncluded - 1} bodies cleared`,
-      `in ${stats.timeTook} sec 🐎`,
-      `with ${stats.missilesShot} missiles 🚀`,
-      `👈👈 Save Your Game👈👈`
-    ]
-    const toShow = statLines.join('\n')
-    this.statsText = toShow
-
-    await this.setShowPlayAgain(1000)
-    this.sound?.playSuccess()
-  }
-
-  setShowPlayAgain = async (timeout = 2000) => {
-    if (this.ownerPresent) return // retry button in vue frontend
-    await new Promise((resolve) => setTimeout(resolve, timeout))
-    this.showPlayAgain = true
-  }
-
   setPause(newPauseState = !this.paused, mute = false) {
     if (typeof newPauseState !== 'boolean') {
       newPauseState = !this.paused
@@ -561,6 +543,13 @@ export class Anybody extends EventEmitter {
   }
 
   step() {
+    // this.steps ||= 0
+    // console.log({ steps: this.steps })
+    // this.steps++
+    // console.dir(
+    //   { bodies: this.bodies, missiles: this.missiles[0] },
+    //   { depth: null }
+    // )
     if (this.missiles.length == 0 && this.lastMissileCantBeUndone) {
       console.log('LASTMISSILECANTBEUNDONE = FALSE')
       this.lastMissileCantBeUndone = false
@@ -594,16 +583,18 @@ export class Anybody extends EventEmitter {
   processMissileInits(missiles) {
     const radius = 10
     return missiles.map((b) => {
-      const maxVectorScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
+      const maxMissileVectorScaled = this.convertFloatToScaledBigInt(
+        this.missileVectorLimit
+      )
       return {
         step: b.step,
         x: this.convertFloatToScaledBigInt(b.position.x).toString(),
         y: this.convertFloatToScaledBigInt(b.position.y).toString(),
         vx: (
-          this.convertFloatToScaledBigInt(b.velocity.x) + maxVectorScaled
+          this.convertFloatToScaledBigInt(b.velocity.x) + maxMissileVectorScaled
         ).toString(),
         vy: (
-          this.convertFloatToScaledBigInt(b.velocity.y) + maxVectorScaled
+          this.convertFloatToScaledBigInt(b.velocity.y) + maxMissileVectorScaled
         ).toString(),
         radius: radius.toString()
       }
@@ -614,8 +605,8 @@ export class Anybody extends EventEmitter {
     if (this.finalBatchSent) return
     // this.finished = true
     // this.setPause(true)
-    const maxVectorScaled = parseInt(
-      this.convertFloatToScaledBigInt(this.vectorLimit)
+    const maxMissileVectorScaled = parseInt(
+      this.convertFloatToScaledBigInt(this.missileVectorLimit)
     ).toString()
 
     this.calculateBodyFinal()
@@ -631,11 +622,15 @@ export class Anybody extends EventEmitter {
           missileInputs.push([missile.vx, missile.vy, missile.radius])
           missileIndex++
         } else {
-          missileInputs.push([maxVectorScaled, maxVectorScaled, '0'])
+          missileInputs.push([
+            maxMissileVectorScaled,
+            maxMissileVectorScaled,
+            '0'
+          ])
         }
       }
       // add one more because missileInits contains one extra for circuit
-      missileInputs.push([maxVectorScaled, maxVectorScaled, '0'])
+      missileInputs.push([maxMissileVectorScaled, maxMissileVectorScaled, '0'])
     }
 
     // define the inflightMissile for the proof from the first missile shot during this chunk
@@ -647,8 +642,8 @@ export class Anybody extends EventEmitter {
         : {
             x: '0',
             y: (this.windowWidth * parseInt(this.scalingFactor)).toString(),
-            vx: '20000',
-            vy: '20000',
+            vx: maxMissileVectorScaled,
+            vy: maxMissileVectorScaled,
             radius: '0'
           }
     inflightMissile = [
@@ -664,8 +659,8 @@ export class Anybody extends EventEmitter {
     const outflightMissileTmp = this.missiles[0] || {
       px: '0',
       py: (this.windowWidth * parseInt(this.scalingFactor)).toString(),
-      vx: '2000',
-      vy: '2000',
+      vx: maxMissileVectorScaled,
+      vy: maxMissileVectorScaled,
       radius: '0'
     }
     const outflightMissile = [
@@ -734,20 +729,20 @@ export class Anybody extends EventEmitter {
         ['uint256', 'uint256', 'uint256'],
         [day, level, i]
       )
-      bodyData.push(this.getRandomValues(dayLevelIndexSeed, i))
+      bodyData.push(this.getRandomValues(dayLevelIndexSeed, i, level))
     }
     return bodyData
   }
 
-  getRandomValues(dayLevelIndexSeed, index) {
+  getRandomValues(dayLevelIndexSeed, index, level = this.level) {
     const maxVectorScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
 
     const body = {}
     body.bodyIndex = index
     body.seed = dayLevelIndexSeed
-    body.radius = this.genRadius(index)
+    body.radius = this.genRadius(index, level)
 
-    if (this.level == 0) {
+    if (level == 0) {
       body.px = parseInt((BigInt(this.windowWidth) * this.scalingFactor) / 2n)
       body.py = parseInt((BigInt(this.windowWidth) * this.scalingFactor) / 2n)
       body.vx = parseInt(maxVectorScaled) - 5000
@@ -786,9 +781,9 @@ export class Anybody extends EventEmitter {
     return body
   }
 
-  genRadius(index) {
+  genRadius(index, level = this.level) {
     const radii = [36n, 27n, 22n, 17n, 12n, 7n] // n * 5 + 2
-    let size = this.level == 0 ? 27n : radii[index % radii.length]
+    let size = level == 0 ? 27n : radii[index % radii.length]
     return parseInt(size * BigInt(this.scalingFactor))
   }
 

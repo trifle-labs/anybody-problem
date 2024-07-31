@@ -12,6 +12,8 @@ const green_50 = 'rgba(125, 241, 115, 1)'
 const green_75 = 'rgba(4, 53, 0, 1)'
 const yellow_50 = 'rgba(252, 255, 105, 1)'
 const yellow_75 = 'rgba(58, 59, 29, 1)'
+const violet_25 = 'rgba(236, 205, 255, 1)'
+const violet_50 = 'rgba(160, 67, 232, 1)'
 
 export const THEME = {
   bg: 'rgb(20,20,20)',
@@ -38,7 +40,9 @@ export const THEME = {
   pink_75,
   green_50,
   green_75,
-  yellow_50
+  yellow_50,
+  violet_25,
+  violet_50
 }
 
 // [hue, saturation, lightness]

@@ -69,7 +69,8 @@ const STARTING_BLOCK = {
   // mainnet: BigInt('2067803')
   sepolia: BigInt('5716600'),
   garnet: BigInt('2067803'),
-  base_sepolia: BigInt('11912350')
+  base_sepolia: BigInt('13259064'),
+  localhost: BigInt('0')
 }
 
 // n.b. sources must match ABI in contracts to correctly sync

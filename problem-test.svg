@@ -28,7 +28,7 @@
     rx="140.0"
     cy="1000.0"
     cx="750.0"
-    fill="hsl(168,53%,63%)"
+    fill="hsl(117,99%,76%)"
   />
   <style>
     @keyframes moveEllipse1 {
@@ -52,7 +52,7 @@
     rx="140.0"
     cy="1000.0"
     cx="10.0"
-    fill="hsl(177,30%,64%)"
+    fill="hsl(300,65%,76%)"
   />
   <style>
     @keyframes moveEllipse2 {
@@ -76,7 +76,7 @@
     rx="140.0"
     cy="1000.0"
     cx="20.0"
-    fill="hsl(26,52%,41%)"
+    fill="hsl(126,39%,57%)"
   />
   <style>
     @keyframes moveEllipse3 {
@@ -100,7 +100,7 @@
     rx="140.0"
     cy="1000.0"
     cx="30.0"
-    fill="hsl(331,29%,63%)"
+    fill="hsl(258,94%,61%)"
   />
   <style>
     @keyframes moveEllipse4 {
@@ -124,7 +124,7 @@
     rx="140.0"
     cy="1000.0"
     cx="40.0"
-    fill="hsl(118,92%,59%)"
+    fill="hsl(299,14%,64%)"
   />
   <style>
     @keyframes moveEllipse5 {
@@ -148,7 +148,7 @@
     rx="140.0"
     cy="1000.0"
     cx="50.0"
-    fill="hsl(75,44%,53%)"
+    fill="hsl(182,27%,43%)"
   />
-  <text x="50" y="550" class="name">Problem #1</text>
+  <text x="50" y="550" class="name">1970-1-1</text>
 </svg>

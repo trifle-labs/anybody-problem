@@ -143,8 +143,12 @@ export const Calculations = {
     return [forceX, forceY]
   },
 
-  convertScaledStringArrayToBody(body) {
-    const maxVectorScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
+  convertScaledStringArrayToMissile(missile) {
+    return this.convertScaledStringArrayToBody(missile, this.missileVectorLimit)
+  },
+
+  convertScaledStringArrayToBody(body, vectorLimit = this.vectorLimit) {
+    const maxVectorScaled = this.convertFloatToScaledBigInt(vectorLimit)
     return {
       position: {
         x: BigInt(body[0]),
@@ -158,8 +162,11 @@ export const Calculations = {
     }
   },
 
-  convertScaledBigIntBodyToArray(b) {
-    const maxVectorScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
+  convertScaledBigIntMissileToArray(m) {
+    return this.convertScaledBigIntBodyToArray(m, this.missileVectorLimit)
+  },
+  convertScaledBigIntBodyToArray(b, vectorLimit = this.vectorLimit) {
+    const maxVectorScaled = this.convertFloatToScaledBigInt(vectorLimit)
     const bodyArray = []
     const noNegativeVelocityX = b.velocity.x + maxVectorScaled
     const noNegativeVelocityY = b.velocity.y + maxVectorScaled
@@ -178,7 +185,9 @@ export const Calculations = {
   },
 
   convertMissileScaledStringArrayToFloat(missile) {
-    const maxVectorScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
+    const maxMissileVectorScaled = this.convertFloatToScaledBigInt(
+      this.missileVectorLimit
+    )
     missile = missile.map(this.convertScaledStringToBigInt.bind(this))
     return {
       position: {
@@ -186,8 +195,8 @@ export const Calculations = {
         y: this.windowWidth
       },
       velocity: {
-        x: this.convertScaledBigIntToFloat(missile[0] - maxVectorScaled),
-        y: this.convertScaledBigIntToFloat(missile[1] - maxVectorScaled)
+        x: this.convertScaledBigIntToFloat(missile[0] - maxMissileVectorScaled),
+        y: this.convertScaledBigIntToFloat(missile[1] - maxMissileVectorScaled)
       },
       radius: parseInt(missile[2])
     }

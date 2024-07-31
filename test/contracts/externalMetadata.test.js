@@ -118,9 +118,8 @@ describe('ExternalMetadata Tests', function () {
 
     const isSVGValid = isValidSVG(SVG)
     expect(isSVGValid).to.be.true
-    // const jsonSeed = json.attributes[1].value
-    // const { seed } = await anybodyProblem.runs(runId)
-    //expect(jsonSeed).to.equal(seed.toString())
+    const yearMonth = json.attributes[1].value
+    expect(yearMonth).to.equal('1970-01')
 
     let svg = await externalMetadata.getSVG(runId)
     svg = svg.replace('data:image/svg+xml;base64,', '')

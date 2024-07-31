@@ -35,6 +35,14 @@ fi
 
 
 echo "----- Generate .zkey file -----"
+
+
+# Check if snarkjs is installed
+if ! command -v snarkjs &> /dev/null; then
+    echo "snarkjs could not be found. Please install snarkjs before running this script."
+    exit 1
+fi
+
 # Generate a .zkey file that will contain the proving and verification keys together with all phase 2 contributions
 node --max-old-space-size=32768 $(which snarkjs) groth16 setup ${CIRCUIT}.r1cs ${PTAU_PATH} ${CIRCUIT}_0000.zkey
 
