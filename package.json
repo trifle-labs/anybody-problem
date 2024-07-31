@@ -10,8 +10,8 @@
   "source": "src/index.js",
   "module": "dist/module.js",
   "scripts": {
-    "build": "rm -rf .parcel-cache && rm -rf dist && yarn parcel build",
-    "dev": "rm -rf .parcel-cache && yarn parcel watch",
+    "build": "rm -rf .parcel-cache && rm -rf dist && yarn parcel build --no-content-hash",
+    "dev": "rm -rf .parcel-cache && yarn parcel watch --no-content-hash",
     "serve": "rm -rf .parcel-cache && yarn parcel src/index.html --open",
     "chain": "hardhat node",
     "circom": "./scripts/basic_circom.sh",
