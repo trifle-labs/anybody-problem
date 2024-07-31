@@ -35,90 +35,156 @@ const rotOverride = {
   }
 }
 
+import BG_SVG_1 from 'bundle-text:/public/bodies/bgs/bg1.svg'
+import BG_SVG_2 from 'bundle-text:/public/bodies/bgs/bg2.svg'
+import BG_SVG_3 from 'bundle-text:/public/bodies/bgs/bg3.svg'
+import BG_SVG_4 from 'bundle-text:/public/bodies/bgs/bg4.svg'
+import BG_SVG_5 from 'bundle-text:/public/bodies/bgs/bg5.svg'
+import BG_SVG_6 from 'bundle-text:/public/bodies/bgs/bg6.svg'
+import BG_SVG_7 from 'bundle-text:/public/bodies/bgs/bg7.svg'
+import BG_SVG_8 from 'bundle-text:/public/bodies/bgs/bg8.svg'
+import BG_SVG_9 from 'bundle-text:/public/bodies/bgs/bg9.svg'
+import BG_SVG_10 from 'bundle-text:/public/bodies/bgs/bg10.svg'
 const BG_SVGS = [
-  new URL('/public/bodies/bgs/bg1.svg', import.meta.url).href,
-  new URL('/public/bodies/bgs/bg2.svg', import.meta.url).href,
-  new URL('/public/bodies/bgs/bg3.svg', import.meta.url).href,
-  new URL('/public/bodies/bgs/bg4.svg', import.meta.url).href,
-  new URL('/public/bodies/bgs/bg5.svg', import.meta.url).href,
-  new URL('/public/bodies/bgs/bg6.svg', import.meta.url).href,
-  new URL('/public/bodies/bgs/bg7.svg', import.meta.url).href,
-  new URL('/public/bodies/bgs/bg8.svg', import.meta.url).href,
-  new URL('/public/bodies/bgs/bg9.svg', import.meta.url).href,
-  new URL('/public/bodies/bgs/bg10.svg', import.meta.url).href
+  BG_SVG_1,
+  BG_SVG_2,
+  BG_SVG_3,
+  BG_SVG_4,
+  BG_SVG_5,
+  BG_SVG_6,
+  BG_SVG_7,
+  BG_SVG_8,
+  BG_SVG_9,
+  BG_SVG_10
 ]
 
+import FG_SVG_1 from 'bundle-text:/public/bodies/fgs/fg1.svg'
+import FG_SVG_2 from 'bundle-text:/public/bodies/fgs/fg2.svg'
+import FG_SVG_3 from 'bundle-text:/public/bodies/fgs/fg3.svg'
+import FG_SVG_4 from 'bundle-text:/public/bodies/fgs/fg4.svg'
+import FG_SVG_5 from 'bundle-text:/public/bodies/fgs/fg5.svg'
+import FG_SVG_6 from 'bundle-text:/public/bodies/fgs/fg6.svg'
+import FG_SVG_7 from 'bundle-text:/public/bodies/fgs/fg7.svg'
+import FG_SVG_8 from 'bundle-text:/public/bodies/fgs/fg8.svg'
+import FG_SVG_9 from 'bundle-text:/public/bodies/fgs/fg9.svg'
+import FG_SVG_10 from 'bundle-text:/public/bodies/fgs/fg10.svg'
 const FG_SVGS = [
-  new URL('/public/bodies/fgs/fg1.svg', import.meta.url).href,
-  new URL('/public/bodies/fgs/fg2.svg', import.meta.url).href,
-  new URL('/public/bodies/fgs/fg3.svg', import.meta.url).href,
-  new URL('/public/bodies/fgs/fg4.svg', import.meta.url).href,
-  new URL('/public/bodies/fgs/fg5.svg', import.meta.url).href,
-  new URL('/public/bodies/fgs/fg6.svg', import.meta.url).href,
-  new URL('/public/bodies/fgs/fg7.svg', import.meta.url).href,
-  new URL('/public/bodies/fgs/fg8.svg', import.meta.url).href,
-  new URL('/public/bodies/fgs/fg9.svg', import.meta.url).href,
-  new URL('/public/bodies/fgs/fg10.svg', import.meta.url).href
+  FG_SVG_1,
+  FG_SVG_2,
+  FG_SVG_3,
+  FG_SVG_4,
+  FG_SVG_5,
+  FG_SVG_6,
+  FG_SVG_7,
+  FG_SVG_8,
+  FG_SVG_9,
+  FG_SVG_10
 ]
 
+import FACE_SVG_1 from 'bundle-text:/public/bodies/faces/1.svg'
+import FACE_SVG_2 from 'bundle-text:/public/bodies/faces/2.svg'
+import FACE_SVG_3 from 'bundle-text:/public/bodies/faces/3.svg'
+import FACE_SVG_4 from 'bundle-text:/public/bodies/faces/4.svg'
+import FACE_SVG_5 from 'bundle-text:/public/bodies/faces/5.svg'
+import FACE_SVG_6 from 'bundle-text:/public/bodies/faces/6.svg'
+import FACE_SVG_7 from 'bundle-text:/public/bodies/faces/7.svg'
+import FACE_SVG_8 from 'bundle-text:/public/bodies/faces/8.svg'
+import FACE_SVG_9 from 'bundle-text:/public/bodies/faces/9.svg'
+import FACE_SVG_10 from 'bundle-text:/public/bodies/faces/10.svg'
+import FACE_SVG_11 from 'bundle-text:/public/bodies/faces/11.svg'
+import FACE_SVG_12 from 'bundle-text:/public/bodies/faces/12.svg'
+import FACE_SVG_13 from 'bundle-text:/public/bodies/faces/13.svg'
+import FACE_SVG_14 from 'bundle-text:/public/bodies/faces/14.svg'
 const FACE_SVGS = [
-  new URL('/public/bodies/faces/1.svg', import.meta.url).href,
-  new URL('/public/bodies/faces/2.svg', import.meta.url).href,
-  new URL('/public/bodies/faces/3.svg', import.meta.url).href,
-  new URL('/public/bodies/faces/4.svg', import.meta.url).href,
-  new URL('/public/bodies/faces/5.svg', import.meta.url).href,
-  new URL('/public/bodies/faces/6.svg', import.meta.url).href,
-  new URL('/public/bodies/faces/7.svg', import.meta.url).href,
-  new URL('/public/bodies/faces/8.svg', import.meta.url).href,
-  new URL('/public/bodies/faces/9.svg', import.meta.url).href,
-  new URL('/public/bodies/faces/10.svg', import.meta.url).href,
-  new URL('/public/bodies/faces/11.svg', import.meta.url).href,
-  new URL('/public/bodies/faces/12.svg', import.meta.url).href,
-  new URL('/public/bodies/faces/13.svg', import.meta.url).href,
-  new URL('/public/bodies/faces/14.svg', import.meta.url).href
+  FACE_SVG_1,
+  FACE_SVG_2,
+  FACE_SVG_3,
+  FACE_SVG_4,
+  FACE_SVG_5,
+  FACE_SVG_6,
+  FACE_SVG_7,
+  FACE_SVG_8,
+  FACE_SVG_9,
+  FACE_SVG_10,
+  FACE_SVG_11,
+  FACE_SVG_12,
+  FACE_SVG_13,
+  FACE_SVG_14
 ]
 
+import FACE_BLINK_SVG_1 from 'bundle-text:/public/bodies/faces_blink/1.svg'
+import FACE_BLINK_SVG_2 from 'bundle-text:/public/bodies/faces_blink/2.svg'
+import FACE_BLINK_SVG_3 from 'bundle-text:/public/bodies/faces_blink/3.svg'
+import FACE_BLINK_SVG_4 from 'bundle-text:/public/bodies/faces_blink/4.svg'
+import FACE_BLINK_SVG_5 from 'bundle-text:/public/bodies/faces_blink/5.svg'
+import FACE_BLINK_SVG_6 from 'bundle-text:/public/bodies/faces_blink/6.svg'
+import FACE_BLINK_SVG_7 from 'bundle-text:/public/bodies/faces_blink/7.svg'
+import FACE_BLINK_SVG_8 from 'bundle-text:/public/bodies/faces_blink/8.svg'
+import FACE_BLINK_SVG_9 from 'bundle-text:/public/bodies/faces_blink/9.svg'
+import FACE_BLINK_SVG_10 from 'bundle-text:/public/bodies/faces_blink/10.svg'
+import FACE_BLINK_SVG_11 from 'bundle-text:/public/bodies/faces_blink/11.svg'
+import FACE_BLINK_SVG_12 from 'bundle-text:/public/bodies/faces_blink/12.svg'
+import FACE_BLINK_SVG_13 from 'bundle-text:/public/bodies/faces_blink/13.svg'
+import FACE_BLINK_SVG_14 from 'bundle-text:/public/bodies/faces_blink/14.svg'
 const FACE_BLINK_SVGS = [
-  new URL('/public/bodies/faces_blink/1.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_blink/2.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_blink/3.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_blink/4.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_blink/5.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_blink/6.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_blink/7.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_blink/8.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_blink/9.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_blink/10.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_blink/11.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_blink/12.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_blink/13.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_blink/14.svg', import.meta.url).href
+  FACE_BLINK_SVG_1,
+  FACE_BLINK_SVG_2,
+  FACE_BLINK_SVG_3,
+  FACE_BLINK_SVG_4,
+  FACE_BLINK_SVG_5,
+  FACE_BLINK_SVG_6,
+  FACE_BLINK_SVG_7,
+  FACE_BLINK_SVG_8,
+  FACE_BLINK_SVG_9,
+  FACE_BLINK_SVG_10,
+  FACE_BLINK_SVG_11,
+  FACE_BLINK_SVG_12,
+  FACE_BLINK_SVG_13,
+  FACE_BLINK_SVG_14
 ]
+
+import FACE_SHOT_SVG_1 from 'bundle-text:/public/bodies/faces_shot/1.svg'
+import FACE_SHOT_SVG_2 from 'bundle-text:/public/bodies/faces_shot/2.svg'
+import FACE_SHOT_SVG_3 from 'bundle-text:/public/bodies/faces_shot/3.svg'
+import FACE_SHOT_SVG_4 from 'bundle-text:/public/bodies/faces_shot/4.svg'
+import FACE_SHOT_SVG_5 from 'bundle-text:/public/bodies/faces_shot/5.svg'
+import FACE_SHOT_SVG_6 from 'bundle-text:/public/bodies/faces_shot/6.svg'
+import FACE_SHOT_SVG_7 from 'bundle-text:/public/bodies/faces_shot/7.svg'
+import FACE_SHOT_SVG_8 from 'bundle-text:/public/bodies/faces_shot/8.svg'
+import FACE_SHOT_SVG_9 from 'bundle-text:/public/bodies/faces_shot/9.svg'
+import FACE_SHOT_SVG_10 from 'bundle-text:/public/bodies/faces_shot/10.svg'
+import FACE_SHOT_SVG_11 from 'bundle-text:/public/bodies/faces_shot/11.svg'
+import FACE_SHOT_SVG_12 from 'bundle-text:/public/bodies/faces_shot/12.svg'
+import FACE_SHOT_SVG_13 from 'bundle-text:/public/bodies/faces_shot/13.svg'
+import FACE_SHOT_SVG_14 from 'bundle-text:/public/bodies/faces_shot/14.svg'
+
 const FACE_SHOT_SVGS = [
-  new URL('/public/bodies/faces_shot/1.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_shot/2.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_shot/3.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_shot/4.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_shot/5.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_shot/6.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_shot/7.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_shot/8.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_shot/9.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_shot/10.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_shot/11.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_shot/12.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_shot/13.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_shot/14.svg', import.meta.url).href
+  FACE_SHOT_SVG_1,
+  FACE_SHOT_SVG_2,
+  FACE_SHOT_SVG_3,
+  FACE_SHOT_SVG_4,
+  FACE_SHOT_SVG_5,
+  FACE_SHOT_SVG_6,
+  FACE_SHOT_SVG_7,
+  FACE_SHOT_SVG_8,
+  FACE_SHOT_SVG_9,
+  FACE_SHOT_SVG_10,
+  FACE_SHOT_SVG_11,
+  FACE_SHOT_SVG_12,
+  FACE_SHOT_SVG_13,
+  FACE_SHOT_SVG_14
 ]
 
-const CORE_SVGS = [
-  new URL('/public/bodies/cores/core-zigzag-lg.svg', import.meta.url).href
-]
+import CORE_SVG from 'bundle-text:/public/bodies/cores/core-zigzag-lg.svg'
+const CORE_SVGS = [CORE_SVG]
 
+import BADDIE_BG_SVG from 'bundle-text:/public/baddies/baddie-bg.svg'
+import BADDIE_CORE_SVG from 'bundle-text:/public/baddies/baddie-core.svg'
+import BADDIE_FACE_SVG from 'bundle-text:/public/baddies/baddie-face.svg'
 const BADDIE_SVG = {
-  bg: new URL('/public/baddies/baddie-bg.svg', import.meta.url).href,
-  core: new URL('/public/baddies/baddie-core.svg', import.meta.url).href,
-  face: new URL('/public/baddies/baddie-face.svg', import.meta.url).href
+  bg: BADDIE_BG_SVG,
+  core: BADDIE_CORE_SVG,
+  face: BADDIE_FACE_SVG
 }
 
 const replaceAttribute = (string, key, color) =>
@@ -1751,43 +1817,43 @@ export const Visuals = {
     return closeEnough
   },
 
-  drawImageAsset(
-    assetUrl,
-    width,
-    fill,
-    myP = this.bodiesGraphic,
-    strokeWidth = 1
-  ) {
+  drawImageAsset(svg, width, fill, myP = this.bodiesGraphic, strokeWidth = 1) {
+    function hashString(str) {
+      let hash = 0
+      for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i)
+        hash = (hash << 5) - hash + char
+        hash |= 0 // Convert to 32bit integer
+      }
+      return hash.toString()
+    }
     this.imgAssets ||= {}
     // TODO: remove width from ID when colors aren't temp-random
-    const id = assetUrl + width + fill
+    const assetHash = hashString(svg)
+    const id = assetHash + width + fill
     const loaded = this.imgAssets[id]
 
     if (!loaded) {
       this.imgAssets[id] = 'loading'
-      fetch(assetUrl)
-        .then((resp) => resp.text())
-        .then((svg) => {
-          svg = fill ? replaceAttribute(svg, 'fill', fill) : svg
-          svg = replaceAttribute(svg, 'stroke-width', strokeWidth)
-          svg = 'data:image/svg+xml,' + encodeURIComponent(svg)
+      svg = fill ? replaceAttribute(svg, 'fill', fill) : svg
+      svg = replaceAttribute(svg, 'stroke-width', strokeWidth)
+      svg = 'data:image/svg+xml,' + encodeURIComponent(svg)
+      try {
+        this.p.loadImage(svg, (img) => {
+          const width = img.width
+          const height = img.height
 
-          this.p.loadImage(svg, (img) => {
-            const width = img.width
-            const height = img.height
+          const foo = this.p.createGraphics(width, height)
+          foo.pixelDensity(this.pixelDensity)
 
-            const foo = this.p.createGraphics(width, height)
-            foo.pixelDensity(this.pixelDensity)
+          foo.image(img, 0, 0, width, height)
 
-            foo.image(img, 0, 0, width, height)
-
-            this.imgAssets[id] = foo
-          })
+          this.imgAssets[id] = foo
         })
-        .catch((e) => {
-          console.error(e)
-          this.imgAssets[id] = undefined
-        })
+      } catch (e) {
+        console.error(e)
+        this.imgAssets[id] = undefined
+      }
     }
 
     if (loaded && loaded !== 'loading') {
@@ -1915,6 +1981,200 @@ export const Visuals = {
     // if (v.y > 0) {
     //   graphic.scale(1, -1)
     // }
+  },
+
+  exportBody(
+    day,
+    shouldRotate = true,
+    width = this.windowWidth,
+    height = this.windowHeight
+  ) {
+    // const graphic = this.p.createGraphics(width, height)
+    // if (!this.starBG) {
+    //   throw new Error('no starbg')
+    // }
+
+    // const starBGpixelData = this.starBG.drawingContext.getImageData(
+    //   0,
+    //   0,
+    //   width,
+    //   height
+    // ).data
+
+    const bodyData = this.generateLevelData(day, 1)
+    const bodies = bodyData.map((b) => this.bodyDataToBodies.call(this, b, day))
+    const heroBody = bodies[0]
+    console.log({ heroBody })
+
+    // create an SVG element with a black background
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+    svg.setAttribute('width', width)
+    svg.setAttribute('height', height)
+    svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+    svg.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+    svg.setAttribute('viewBox', `0 0 ${width} ${height}`)
+    svg.setAttribute('version', '1.1')
+    // make svg have a black background
+    // const bgRect = document.createElementNS(
+    //   'http://www.w3.org/2000/svg',
+    //   'rect'
+    // )
+    // bgRect.setAttribute('x', 0)
+    // bgRect.setAttribute('y', 0)
+    // bgRect.setAttribute('width', width)
+    // bgRect.setAttribute('height', height)
+    // bgRect.setAttribute('fill', 'black')
+    // svg.appendChild(bgRect)
+
+    // add starBGpixelData as PNG to the SVG
+    // const starBG = document.createElementNS(
+    //   'http://www.w3.org/2000/svg',
+    //   'image'
+    // )
+    // starBG.setAttribute('x', 0)
+    // starBG.setAttribute('y', 0)
+    // starBG.setAttribute('width', width)
+    // starBG.setAttribute('height', height)
+    // starBG.setAttribute('href', this.starBG.canvas.toDataURL('image/png'))
+    // svg.appendChild(starBG)
+
+    // add hero body to the SVG
+    const bgIndex = heroBody.c.bgIndex
+    const coreIndex = heroBody.c.coreIndex
+    const fgIndex = heroBody.c.fgIndex
+    const faceIndex = heroBody.c.fIndex
+    const prefix = (svg) => `data:image/svg+xml;base64,${btoa(svg)}`
+
+    const bgSVG = prefix(
+      replaceAttribute(BG_SVGS[bgIndex], 'fill', heroBody.c.bg)
+    )
+    const coreSVG = prefix(
+      replaceAttribute(CORE_SVGS[coreIndex], 'fill', heroBody.c.core)
+    )
+
+    const fgSVG = prefix(
+      replaceAttribute(FG_SVGS[fgIndex], 'fill', heroBody.c.fg)
+    )
+    const faceSVG = prefix(FACE_SVGS[faceIndex])
+
+    const uuid = () => Math.random().toString(36).substr(2, 9)
+    const bgId = `bg-${bgIndex}-${uuid()}`
+    const coreId = `core-${coreIndex}-${uuid()}`
+    const fgId = `fg-${fgIndex}-${uuid()}`
+    const faceId = `f-${faceIndex}-${uuid()}`
+
+    const bgRatio = 1
+    const coreRatio = 0.375
+    const fgRatio = 1
+    const faceRatio = 1
+
+    // add the svg elements to the parent svg
+    const bg = document.createElementNS('http://www.w3.org/2000/svg', 'image')
+    const bgWidth = width * bgRatio
+    const bgHeight = height * bgRatio
+    const bgOffset = (width - bgWidth) / 2
+    const bgYOffset = (height - bgHeight) / 2
+    bg.setAttribute('id', bgId)
+    bg.setAttribute('x', bgOffset)
+    bg.setAttribute('y', bgYOffset)
+    bg.setAttribute('width', bgWidth)
+    bg.setAttribute('height', bgHeight)
+    bg.setAttribute('href', bgSVG)
+    svg.appendChild(bg)
+
+    const core = document.createElementNS('http://www.w3.org/2000/svg', 'image')
+    const coreWidth = width * coreRatio
+    const coreHeight = height * coreRatio
+    const coreOffset = (width - coreWidth) / 2
+    const coreYOffset = (height - coreHeight) / 2
+    core.setAttribute('id', coreId)
+    core.setAttribute('x', coreOffset)
+    core.setAttribute('y', coreYOffset)
+    core.setAttribute('width', coreWidth)
+    core.setAttribute('height', coreHeight)
+    core.setAttribute('href', coreSVG)
+    svg.appendChild(core)
+
+    const fg = document.createElementNS('http://www.w3.org/2000/svg', 'image')
+    const fgWidth = width * fgRatio
+    const fgHeight = height * fgRatio
+    const fgOffset = (width - fgWidth) / 2
+    const fgYOffset = (height - fgHeight) / 2
+    fg.setAttribute('id', fgId)
+    fg.setAttribute('x', fgOffset)
+    fg.setAttribute('y', fgYOffset)
+    fg.setAttribute('width', fgWidth)
+    fg.setAttribute('height', fgHeight)
+    fg.setAttribute('href', fgSVG)
+    svg.appendChild(fg)
+
+    const face = document.createElementNS('http://www.w3.org/2000/svg', 'image')
+    const faceWidth = width * faceRatio
+    const faceHeight = height * faceRatio
+    const faceOffset = (width - faceWidth) / 2
+    const faceYOffset = (height - faceHeight) / 2
+    face.setAttribute('id', faceId)
+    face.setAttribute('x', faceOffset)
+    face.setAttribute('y', faceYOffset)
+    face.setAttribute('width', faceWidth)
+    face.setAttribute('height', faceHeight)
+    face.setAttribute('href', faceSVG)
+    svg.appendChild(face)
+    if (shouldRotate) {
+      const fgSpin = {
+        ...rot.fg,
+        ...(rotOverride?.fg?.[fgIndex] ?? {})
+      }
+      const fgAnimation = fgSpin.direction < 0 ? 'fullRotateR' : 'fullRotate'
+      const fgSpeed = (fgSpin.speed / 3).toFixed(2)
+
+      const bgSpin = {
+        ...rot.bg,
+        ...(rotOverride?.bg?.[bgIndex] ?? {})
+      }
+      const bgAnimation = bgSpin.direction < 0 ? 'fullRotateR' : 'fullRotate'
+      const bgSpeed = (bgSpin.speed / 3).toFixed(2)
+
+      const coreSpin = {
+        ...rot.core
+      }
+      const coreAnimation = 'fullRotate'
+      const coreSpeed = (coreSpin.speed / 3).toFixed(2)
+      // add css to the svg that makes each element rotate
+      const css = document.createElement('style')
+      css.innerHTML = `
+@keyframes fullRotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fullRotateR {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+#${bgId} {
+  animation: ${bgAnimation} ${bgSpeed}s linear infinite;
+  transform-origin: center center; 
+}
+#${coreId} {
+  animation: ${coreAnimation} ${coreSpeed}s linear infinite;
+  transform-origin: center center; 
+}
+#${fgId} {
+  animation: ${fgAnimation} ${fgSpeed}s linear infinite;
+  transform-origin: center center; 
+}`
+      svg.appendChild(css)
+    }
+    return svg
   },
 
   drawBody(x, y, v, radius, body) {
