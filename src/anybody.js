@@ -195,6 +195,7 @@ export class Anybody extends EventEmitter {
 
   // run whenever the class should be reset
   clearValues() {
+    if (this.level <= 1) this.levelSpeeds = new Array(5)
     this.lastMissileCantBeUndone = false
     this.speedFactor = 2
     this.speedLimit = 10
@@ -1009,7 +1010,7 @@ export class Anybody extends EventEmitter {
     const bodiesBoost = BODY_BOOST[bodiesIncluded]
     const { startingFrame, timer, frames } = this
     const secondsLeft = (startingFrame + timer - frames) / this.FPS
-    const framesTook = frames - startingFrame
+    const framesTook = frames - startingFrame - 1 // -1 because the first frame is the starting frame
     const timeTook = framesTook / this.FPS
     const speedBoostIndex = Math.floor(secondsLeft / 10)
     const speedBoost = SPEED_BOOST[speedBoostIndex]
