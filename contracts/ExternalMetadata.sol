@@ -459,7 +459,7 @@ contract ExternalMetadata is Ownable {
             path = string(
                 abi.encodePacked(
                     path,
-                    getRotationAnimation(bodyIDString, '0px 0px', '0px, 10px', '4', '0' ),
+                    getRotationAnimation(bodyIDString, '300px 300px', '0px, 40px', '4', '0' ),
                     '<g id="id-', bodyIDString,'">',
                         getHeroBodyPath(date),
                     '</g>'
@@ -532,7 +532,7 @@ contract ExternalMetadata is Ownable {
                 StringsExtended.toString(colorsBGValues[1]), '%,', 
                 StringsExtended.toString(colorsBGValues[2]), '%)'
             )
-        ); 
+        );
 
         //CORE COLOR
         uint256[3] memory colorsCoreValues; 

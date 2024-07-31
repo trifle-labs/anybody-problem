@@ -76,9 +76,12 @@ describe('ExternalMetadata Tests', function () {
     const tx = await anybodyProblem.batchSolve(...finalArgs, { value: price })
     const receipt = await tx.wait()
     const events = getParsedEventLogs(receipt, anybodyProblem, 'RunCreated')
-    runId = events[0].args.runId
+    const day = events[0].args.day
 
-    const base64Json = await externalMetadata.getMetadata(runId)
+    console.log('day')
+    console.log(day)
+
+    const base64Json = await externalMetadata.getMetadata(day)
     //console.log({ base64Json })
     //console.table( base64Json )
 
