@@ -50,7 +50,6 @@ verification_key.json
 *.wasm
 # !public/*.wasm
 parameters.txt
-/dist
 
 
 # local env files

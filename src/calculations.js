@@ -447,60 +447,60 @@ function _approxDiv(dividend, divisor) {
   // quotient <== lo;
   return lo
 }
-function _calculateTime(constraints, steps = 1) {
-  const totalSteps = (steps * 1_000_000) / constraints
-  const fps = 25
-  const sec = totalSteps / fps
-  return Math.round(sec * 100) / 100
-}
+// function _calculateTime(constraints, steps = 1) {
+//   const totalSteps = (steps * 1_000_000) / constraints
+//   const fps = 25
+//   const sec = totalSteps / fps
+//   return Math.round(sec * 100) / 100
+// }
 
-function _explosion(x, y, radius) {
-  let bombs = []
-  for (let i = 0; i < 100; i++) {
-    bombs.push({
-      x,
-      y,
-      i,
-      radius
-    })
-  }
-  return bombs
-}
+// function _explosion(x, y, radius) {
+//   let bombs = []
+//   for (let i = 0; i < 100; i++) {
+//     bombs.push({
+//       x,
+//       y,
+//       i,
+//       radius
+//     })
+//   }
+//   return bombs
+// }
 
 function _addVectors(v1, v2) {
   return [v1[0] + v2[0], v1[1] + v2[1]]
 }
 
-function _validateSeed(seed) {
-  const error = 'Seed must be a 32-byte value'
-  // ensure that the seed is a 32-byte value
-  if (typeof seed === 'string') {
-    if (seed.length !== 66) {
-      throw new Error(error + ' (1)')
-    }
-    // confirm that all characters are hex characters
-    if (seed.substring(2, 66).match(/[^0-9A-Fa-f]/)) {
-      throw new Error(error + ' (2)')
-    }
-    if (seed.substring(0, 2) !== '0x') {
-      throw new Error(error + ' (3)')
-    }
-    seed = BigInt(seed)
-  }
-  if (typeof seed === 'bigint') {
-    if (seed < 0n) {
-      throw new Error(error + ' (4)')
-    }
-    if (
-      seed > 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffn
-    ) {
-      // if (seed > 115792089237316195423570985008687907853269984665640564039457584007913129639935n) {
-      throw new Error(error + ' (5)')
-    }
-  } else {
-    throw new Error(error + ' (6)')
-  }
-}
+// function _validateSeed(seed) {
+//   const error = 'Seed must be a 32-byte value'
+//   // ensure that the seed is a 32-byte value
+//   if (typeof seed === 'string') {
+//     if (seed.length !== 66) {
+//       throw new Error(error + ' (1)')
+//     }
+//     // confirm that all characters are hex characters
+//     if (seed.substring(2, 66).match(/[^0-9A-Fa-f]/)) {
+//       throw new Error(error + ' (2)')
+//     }
+//     if (seed.substring(0, 2) !== '0x') {
+//       throw new Error(error + ' (3)')
+//     }
+//     seed = BigInt(seed)
+//   }
+//   if (typeof seed === 'bigint') {
+//     if (seed < 0n) {
+//       throw new Error(error + ' (4)')
+//     }
+//     if (
+//       seed > 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffn
+//     ) {
+//       // if (seed > 115792089237316195423570985008687907853269984665640564039457584007913129639935n) {
+//       throw new Error(error + ' (5)')
+//     }
+//   } else {
+//     throw new Error(error + ' (6)')
+//   }
+// }
 
 // function checkCollision(body1, body2) {
 //   const distance = dist(body1.position.x, body1.position.y, body2.position.x, body2.position.y);
@@ -544,8 +544,8 @@ export {
   _approxDist,
   _approxSqrt,
   _approxDiv,
-  _calculateTime,
-  _explosion,
-  _addVectors,
-  _validateSeed
+  // _calculateTime,
+  // _explosion,
+  _addVectors
+  // _validateSeed
 }
