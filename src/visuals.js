@@ -688,7 +688,10 @@ export const Visuals = {
 
   drawStatsScreen() {
     const { p } = this
+    const borderWeight = 1
+    const showCumulativeTimeRow = this.level > 1
 
+    // animation
     const justEntered = this.statsScreenLastVisibleFrame !== this.p5Frames - 1
     if (justEntered) {
       this.statsScreenVisibleForFrames = 0
@@ -704,7 +707,7 @@ export const Visuals = {
       1,
       this.statsScreenVisibleForFrames / (entranceTime * this.P5_FPS)
     )
-
+    
     p.push()
     p.noStroke()
     p.fill('white')
@@ -722,13 +725,14 @@ export const Visuals = {
     // bordered boxes
     p.fill('black')
     p.stroke(THEME.border)
-    p.strokeWeight(1)
+    p.strokeWeight(borderWeight)
     const gutter = 22
+    const boxW = this.windowWidth - gutter * 2
     const middleBoxY = 320
-    p.rect(gutter, 104, this.windowWidth - gutter * 2, 144, 24)
-
-    p.rect(gutter, 320, this.windowWidth - gutter * 2, 444, 24)
-    p.rect(gutter, 796, this.windowWidth - gutter * 2, 64, 24)
+    const middleBoxH = showCumulativeTimeRow ? 444 : 364
+    p.rect(gutter, 104, boxW, 144, 24)
+    p.rect(gutter, middleBoxY, boxW, middleBoxH, 24)
+    p.rect(gutter, 796, boxW, 64, 24)
 
     // upper box text
     p.textSize(32)
@@ -738,7 +742,7 @@ export const Visuals = {
     p.fill(THEME.iris_60)
 
     // upper box text - labels
-    p.text('solver', 330, 132)
+    p.text('player', 330, 132)
     p.text('problem', 330, 192)
 
     // upper box text - values
@@ -776,8 +780,8 @@ export const Visuals = {
         if (i >= levelTimes.length) return ''
         const time = levelTimes[i]
         const diff = time - best
-        const sign = diff > 0 ? '+' : ''
-        return sign + diff.toFixed(2)
+        const sign = Number(diff.toFixed(2)) > 0 ? '+' : '-'
+        return sign + Math.abs(diff).toFixed(2)
       })
       .filter(Boolean)
     const problemComplete = levelTimes.length >= LEVELS
@@ -804,8 +808,7 @@ export const Visuals = {
     // p.translate(0, middleBoxPadding)
     for (let i = 0; i < LEVELS; i++) {
       const time = i < levelTimes.length ? levelTimes[i].toFixed(2) : '-'
-      const light = i % 2 == 0
-      p.fill(light ? THEME.iris_30 : THEME.iris_60)
+      p.fill(THEME.iris_30)
       p.text(
         time,
         col1X,
@@ -816,8 +819,7 @@ export const Visuals = {
     }
     for (let i = 0; i < LEVELS; i++) {
       const best = i < bestTimes.length ? bestTimes[i] : '-'
-      const light = i % 2 == 1 && i < levelTimes.length
-      p.fill(light ? THEME.iris_30 : THEME.iris_60)
+      p.fill(THEME.iris_60)
       p.text(
         best.toFixed(2),
         col2X,
@@ -844,26 +846,35 @@ export const Visuals = {
     p.textSize(64)
 
     // middle box text - sum line
-    const bestTime = bestTimes
-      .slice(0, levelTimes.length)
-      .reduce((a, b) => a + b, 0)
-    const levelTimeSum = levelTimes.reduce((a, b) => a + b, 0)
-    const sumLine = [
-      levelTimeSum.toFixed(2),
-      bestTime.toFixed(2),
-      (levelTimeSum - bestTime).toFixed(2)
-    ]
-    const sumLineY = middleBoxY + rowHeight * bestTimes.length + rowHeight / 2
-    const sumLineHeight = 80
-    p.textAlign(p.LEFT, p.CENTER)
-    p.fill(THEME.iris_30)
-    p.text(problemComplete ? 'solved in' : 'current time', 44, sumLineY)
-    p.textAlign(p.RIGHT, p.CENTER)
-    for (const [i, col] of [col1X, col2X, col3X].entries()) {
-      if (i == 0) p.fill('white')
-      else if (i == 1) p.fill(THEME.iris_60)
-      else p.fill(/^-/.test(sumLine[i]) ? THEME.lime : THEME.flame_75)
-      p.text(sumLine[i], col, sumLineY, 150, sumLineHeight)
+    if (showCumulativeTimeRow) {
+      const bestTime = bestTimes
+        .slice(0, levelTimes.length)
+        .reduce((a, b) => a + b, 0)
+      const levelTimeSum = levelTimes.reduce((a, b) => a + b, 0)
+      let diff = Number((levelTimeSum - bestTime).toFixed(2))
+      const sumLine = [
+        levelTimeSum.toFixed(2),
+        bestTime.toFixed(2),
+        `${diff > 0 ? '+' : '-'}${Math.abs(diff).toFixed(2)}`
+      ]
+      const sumLineY = middleBoxY + rowHeight * bestTimes.length
+      const sumLineHeight = 80
+      const sumLineYText = sumLineY + sumLineHeight / 2
+      p.textAlign(p.LEFT, p.CENTER)
+      p.fill(THEME.iris_60)
+      p.text(problemComplete ? 'solved in' : 'total time', 44, sumLineYText)
+      p.textAlign(p.RIGHT, p.CENTER)
+      for (const [i, col] of [col1X, col2X, col3X].entries()) {
+        if (i == 0) p.fill(THEME.iris_30)
+        else if (i == 1) p.fill(THEME.iris_60)
+        else p.fill(/^-/.test(sumLine[i]) ? THEME.lime : THEME.flame_75)
+        p.text(sumLine[i], col, sumLineYText, 150, sumLineHeight)
+      }
+      // top border line
+      p.strokeWeight(borderWeight)
+      p.stroke(THEME.iris_60)
+      p.line(gutter, sumLineY, boxW + gutter, sumLineY)
+      p.noStroke()
     }
 
     p.pop()
@@ -911,10 +922,14 @@ export const Visuals = {
     // overlay transparent black box to dim past last levelTimes
     p.fill('rgba(0,0,0,0.6)')
     p.rect(
-      gutter,
-      middleBoxY + rowHeight * levelTimes.length,
-      this.windowWidth - gutter * 2,
-      rowHeight * (LEVELS - levelTimes.length)
+      gutter + borderWeight,
+      middleBoxY + rowHeight * levelTimes.length - borderWeight,
+      this.windowWidth - gutter * 2 - (borderWeight * 2),
+      rowHeight * (LEVELS - levelTimes.length),
+      0,
+      0,
+      !showCumulativeTimeRow ? 24 : 0,
+      !showCumulativeTimeRow ? 24 : 0,
     )
 
     // bottom box ticker text
