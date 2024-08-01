@@ -2479,13 +2479,19 @@ export const Visuals = {
       Math.floor(coreWidth * (310 / 111.2)),
       bgColor,
       graphic,
-      '0.5'
+      '0.25'
     )
     graphic.push()
     const heading = this.level == 0 ? -this.p.PI / 2 : body.velocity.heading()
     graphic.rotate(-rotate + heading + this.p.PI / 2)
     if (!body.backgroundOnly) {
-      this.drawImageAsset(BADDIE_SVG.core, coreWidth, coreColor, graphic, '0.5')
+      this.drawImageAsset(
+        BADDIE_SVG.core,
+        coreWidth,
+        coreColor,
+        graphic,
+        '0.25'
+      )
       this.drawImageAsset(BADDIE_SVG.face, coreWidth, coreColor, graphic)
 
       // pupils always looking at missile, if no missile, look at mouse
