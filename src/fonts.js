@@ -1,17 +1,11 @@
-const bodyFontURL = new URL(
-  '/public/fonts/Space-Notorious-rounded.otf',
-  import.meta.url
-).href
+import { space, dots } from './files.js'
 
 // n.b. to make this font load, I had to remove the leading numbers from the filename
-const dotFontURL = new URL(
-  '/public/fonts/A000-Dots-edited-subsetAlphaNumPuncSimple.ttf',
-  import.meta.url
-).href
 export const fonts = { body: null, dot: null }
-
-export function loadFonts(p) {
-  const toLoad = { body: bodyFontURL, dot: dotFontURL }
+export async function loadFonts(p) {
+  const spaceArray = Uint8Array.from(atob(space), (e) => e.charCodeAt(0))
+  const dotArray = Uint8Array.from(atob(dots), (e) => e.charCodeAt(0))
+  const toLoad = { body: spaceArray, dot: dotArray }
 
   for (const fontName in toLoad) {
     if (fonts[fontName]) continue
