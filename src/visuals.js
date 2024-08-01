@@ -738,21 +738,17 @@ export const Visuals = {
     p.fill(THEME.iris_60)
 
     // upper box text - labels
-    p.text('problem', 330, 132)
-    p.text('solver', 330, 192)
+    p.text('solver', 330, 132)
+    p.text('problem', 330, 192)
 
     // upper box text - values
     p.textSize(54)
     p.fill(THEME.iris_30)
-    const date = new Date(this.date)
-    const options = { month: 'short', day: '2-digit', year: 'numeric' }
-    const formattedDate = date
-      .toLocaleDateString('en-US', options)
+    const formattedDate = new Date(this.date)
+      .toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
       .toUpperCase()
-      .replace(', ', '-')
-      .replace(' ', '-')
-    p.text(formattedDate, 454, 114)
-    p.text(this.playerName ?? 'YOU', 454, 174)
+    p.text(this.playerName ?? 'YOU', 454, 114)
+    p.text(formattedDate, 454, 174)
     // end upper box text
 
     // middle box text
