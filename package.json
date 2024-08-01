@@ -5,17 +5,13 @@
   "targets": {
     "module": {
       "optimize": true
-    },
-    "main": {
-      "optimize": true
     }
   },
   "source": "src/index.js",
-  "main": "dist/index.js",
   "module": "dist/module.js",
   "scripts": {
-    "build": "rm -rf .parcel-cache && rm -rf dist && yarn parcel build --no-content-hash",
-    "dev": "rm -rf .parcel-cache && rm -rf dist && yarn parcel watch --no-content-hash",
+    "build": "rm -rf .parcel-cache && rm -rf dist && yarn parcel build src/index.js",
+    "dev": "rm -rf .parcel-cache && rm -rf dist && yarn parcel watch src/index.js",
     "serve": "rm -rf .parcel-cache && yarn parcel src/index.html --open",
     "chain": "hardhat node",
     "circom": "./scripts/basic_circom.sh",
