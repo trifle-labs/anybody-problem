@@ -937,15 +937,18 @@ export const Visuals = {
       this.windowWidth,
       this.windowHeight
     )
-    p.textAlign(p.LEFT, p.TOP)
+    p.textAlign(p.CENTER, p.TOP)
     p.textSize(32)
-    p.fill(THEME.iris_30)
+    // blink text on complete
+    const blinkText = this.levels === LEVELS && Math.floor(p.frameCount / 25) % 2
+    p.fill(blinkText ? THEME.iris_60 : THEME.iris_30)
     p.text(
       this.level == 5
-        ? 'CONGRATS!!! SAVE YOUR GAME TO SOLVE THE PROBLEM!!!!'
-        : 'NICE JOB!!!!    Keep going!!!   Solve this problem and climb the leaderboard.',
-      44,
-      811
+        ? 'SOLVED IT !!!   mint your win to add this celestial body to your galaxy !!!'
+        : `BO${Array(this.level).fill('O').join('')}M!!!  you cleared LEVEL ${this.level} !!!  ... just ${5 - this.level} more to solve this problem !!!`,
+      gutter + boxW / 2,
+      811,
+      boxW - gutter / 2
     )
     // bottom buttons
     this.showShare = this.level >= 5
@@ -1027,7 +1030,7 @@ export const Visuals = {
     } else {
       // parent app should handle waiting to save
       this.drawBottomButton({
-        text: 'SAVE',
+        text: 'MINT',
         onClick: () => {
           this.emit('save')
         },
@@ -1462,7 +1465,7 @@ export const Visuals = {
     p.noStroke()
     const text =
       this.bodies[0].radius == 0
-        ? 'NOOO, KILL BADDIES NOT BODY!!'
+        ? 'NOOO, BLAST BADDIES NOT BODIES!!'
         : 'TIME IS UP   TIME IS UP  TIME IS UP'
     this.drawGameOverTicker({
       text: '                 ' + text,
