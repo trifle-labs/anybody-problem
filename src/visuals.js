@@ -195,6 +195,11 @@ const replaceAttribute = (string, key, color) =>
 
 export const Visuals = {
   async draw() {
+    if (this.shaking && this.shaking > 0) {
+      this.shakeScreen()
+    } else {
+      this.shaking = null
+    }
     for (const key in this.buttons) {
       const button = this.buttons[key]
       button.visible = false
@@ -257,6 +262,8 @@ export const Visuals = {
     this.drawScore()
     this.drawPopup()
     this.drawGun()
+    this.drawGunSmoke()
+    this.drawExplosionSmoke()
 
     if (
       this.mode == 'game' &&
@@ -773,7 +780,7 @@ export const Visuals = {
       1,
       this.statsScreenVisibleForFrames / (entranceTime * this.P5_FPS)
     )
-    
+
     p.push()
     p.noStroke()
     p.fill('white')
@@ -815,7 +822,11 @@ export const Visuals = {
     p.textSize(54)
     p.fill(THEME.iris_30)
     const formattedDate = new Date(this.date)
-      .toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
+      .toLocaleDateString('en-US', {
+        month: 'short',
+        day: '2-digit',
+        year: 'numeric'
+      })
       .toUpperCase()
     p.text(this.playerName ?? 'YOU', 454, 114)
     p.text(formattedDate, 454, 174)
@@ -854,7 +865,9 @@ export const Visuals = {
     const rowHeight = 72
 
     // middle box text - highlight current row (blink via opacity)
-    p.fill(`rgba(146, 118, 255, ${Math.floor(p.frameCount / 18) % 2 ? '0.2' : '0'})`)
+    p.fill(
+      `rgba(146, 118, 255, ${Math.floor(p.frameCount / 18) % 2 ? '0.2' : '0'})`
+    )
     p.rect(
       gutter,
       middleBoxY + (levelTimes.length - 1) * rowHeight,
@@ -990,12 +1003,12 @@ export const Visuals = {
     p.rect(
       gutter + borderWeight,
       middleBoxY + rowHeight * levelTimes.length - borderWeight,
-      this.windowWidth - gutter * 2 - (borderWeight * 2),
+      this.windowWidth - gutter * 2 - borderWeight * 2,
       rowHeight * (LEVELS - levelTimes.length),
       0,
       0,
       !showCumulativeTimeRow ? 24 : 0,
-      !showCumulativeTimeRow ? 24 : 0,
+      !showCumulativeTimeRow ? 24 : 0
     )
 
     // bottom box ticker text
@@ -1006,7 +1019,8 @@ export const Visuals = {
     p.textAlign(p.CENTER, p.TOP)
     p.textSize(32)
     // blink text on complete
-    const blinkText = this.levels === LEVELS && Math.floor(p.frameCount / 25) % 2
+    const blinkText =
+      this.levels === LEVELS && Math.floor(p.frameCount / 25) % 2
     p.fill(blinkText ? THEME.iris_60 : THEME.iris_30)
     p.text(
       this.level == 5
@@ -1667,77 +1681,36 @@ export const Visuals = {
     }
   },
 
+  star(x, y, radius1, radius2, npoints, color, rotateBy, index) {
+    const { p } = this
+    let angle = p.TWO_PI / npoints
+    let halfAngle = angle / 2.0
+    p.beginShape()
+    if (index == 0) {
+      p.fill(color)
+    } else {
+      p.noFill()
+      p.strokeWeight(2)
+      p.stroke(color)
+    }
+    for (let a = rotateBy; a < p.TWO_PI + rotateBy; a += angle) {
+      let sx = x + p.cos(a) * radius2
+      let sy = y + p.sin(a) * radius2
+      p.vertex(sx, sy)
+      sx = x + p.cos(a + halfAngle) * radius1
+      sy = y + p.sin(a + halfAngle) * radius1
+      p.vertex(sx, sy)
+    }
+    p.endShape(p.CLOSE)
+    return p
+  },
+
   drawMissiles() {
     if (this.paused || this.gameOver) return
     this.p.noStroke()
     this.p.strokeWeight(0)
-
-    // const missileReverbLevels = 20
-    // const green = '2,247,123'
-    // const yellow = '255,255,0'
-    // const color = yellow
-    // const c =
-    //   Math.floor(this.frames / missileReverbLevels) % 2 == 0
-    //     ? `rgb(${color})`
-    //     : 'white'
-
     const starRadius = 10
-
-    const star = (x, y, radius1, radius2, npoints, color, rotateBy, index) => {
-      const { p } = this
-      let angle = p.TWO_PI / npoints
-      let halfAngle = angle / 2.0
-      p.beginShape()
-      if (index == 0) {
-        p.fill(color)
-      } else {
-        p.noFill()
-        p.strokeWeight(2)
-        p.stroke(color)
-      }
-      for (let a = rotateBy; a < p.TWO_PI + rotateBy; a += angle) {
-        let sx = x + p.cos(a) * radius2
-        let sy = y + p.sin(a) * radius2
-        p.vertex(sx, sy)
-        sx = x + p.cos(a + halfAngle) * radius1
-        sy = y + p.sin(a + halfAngle) * radius1
-        p.vertex(sx, sy)
-      }
-      p.endShape(p.CLOSE)
-      return p
-    }
-    //   for (let i = 0; i < missileReverbLevels; i++) {
-    //     const alpha = 1 //(missileReverbLevels - i) / missileReverbLevels
-    //     console.log({ alpha })
-    //     const rainbowColor = `hsla(${(i / missileReverbLevels) * 360}, 100%, 50%, ${alpha})`
-    //     const maxStarRadius = starRadius * missileReverbLevels
-    //     this.starMissile.push(
-    //       this.p.createGraphics(maxStarRadius * 2, maxStarRadius * 2)
-    //     )
-    //     this.starMissile[i].noStroke()
-    //     this.starMissile[i].fill(rainbowColor)
-    //     // if (i == 0) {
-    //     //   this.starMissile[i].stroke('black')
-    //     //   this.starMissile[i].strokeWeight(20)
-    //     //   this.starMissile[i].fill(`rgba(255,255,255,1)`)
-    //     // }
-    //     // this.starMissile.rect(0, 0, maxStarRadius * 2, maxStarRadius * 2)
-    //     this.starMissile[i] = star(
-    //       this.starMissile[i],
-    //       maxStarRadius,
-    //       maxStarRadius,
-    //       maxStarRadius,
-    //       maxStarRadius / 2,
-    //       5
-    //     )
-    //   }
-    // }
-
     const maxLife = 60
-
-    // const colors = ['white', 'cyan', 'yellow', 'magenta']
-    // const colors = ['255,255,255', '0,255,255', '255,255,0', '255,0,255']
-
     for (let i = 0; i < this.stillVisibleMissiles.length; i++) {
       const body = this.stillVisibleMissiles[i]
       if (!body.phase) {
@@ -1777,7 +1750,7 @@ export const Visuals = {
       // const n = missileReverbLevels + Math.floor(this.frames / 1.8) - i
       // const n = i
       // const index = n % modulo
-      star(
+      this.star(
         0,
         0,
         thisRadius,
@@ -2723,5 +2696,73 @@ export const Visuals = {
         console.error('no options to share canvas!')
       }
     }, 'image/png')
+  },
+  shakeScreen() {
+    this.shaking ||= this.P5_FPS / 2
+    this.shaking--
+    const shakingAmount = 10
+    this.shakeX = this.p.random(-shakingAmount, shakingAmount)
+    this.shakeY = this.p.random(-shakingAmount, shakingAmount)
+    this.p.translate(this.shakeX, this.shakeY)
+  },
+  makeParticles(x, y) {
+    const array = []
+    const maxSpeed = 10
+
+    const life = 25
+    for (let i = 0; i < 100; i++) {
+      const angle = this.p.random(0, this.p.PI / 2) - this.p.PI / 2
+      const radius = this.p.random(0, maxSpeed)
+      const vx = radius * this.p.cos(angle)
+      const vy = radius * this.p.sin(angle)
+      const px = this.p.random(-1, maxSpeed) + x
+      const py = this.p.random(-maxSpeed, 1) + y
+      const color = randHSL(
+        themes.bodies.default['pastel_highlighter_marker'].cr
+      )
+      array.push({ x: px, y: py, vx, vy, life, color })
+    }
+    return array
+  },
+  drawParticles(particles) {
+    for (let i = 0; i < particles.length; i++) {
+      const particle = particles[i]
+      if (particle.life <= 0) {
+        particles.splice(i, 1)
+        continue
+      }
+      particle.x += particle.vx
+      particle.vx *= this.p.random(1, 1.01)
+      particle.y += particle.vy
+      particle.vy *= this.p.random(1, 1.01)
+      particle.life--
+      this.p.noStroke()
+      const color = particle.color.replace(
+        ')',
+        `, ${(particle.life / 50) * 2})`
+      )
+      this.star(particle.x, particle.y, 6, 4, 5, color, 0, 0)
+    }
+    return particles
+  },
+  makeExplosionStart(x, y) {
+    this.explosionSmoke ||= []
+    const particles = this.makeParticles(x, y)
+    this.explosionSmoke.push(...particles)
+  },
+  makeMissileStart() {
+    this.gunSmoke ||= []
+    const particles = this.makeParticles(0, this.windowHeight)
+    this.gunSmoke.push(...particles)
+  },
+  drawGunSmoke() {
+    if (!this.gunSmoke) return
+    if (this.gunSmoke.length == 0) return
+    this.drawParticles(this.gunSmoke)
+  },
+  drawExplosionSmoke() {
+    if (!this.explosionSmoke) return
+    if (this.explosionSmoke.length == 0) return
+    this.drawParticles(this.explosionSmoke)
   }
 }

@@ -235,13 +235,15 @@ export default class Sound {
     this.playOneShot(bongoHard, -22)
   }
 
-  async playMissile() {
+  async playMissile(vectorMagnitude) {
     this.missilePanner = this.missilePanner || new Panner().connect(this.master)
     this.missilePanner.pan.value = -PAN_RANGE / 2
     let player
     if (this.anybody.sfx === 'space') {
+      const playbackRate =
+        vectorMagnitude < 666_666 ? 3 : vectorMagnitude < 1_333_332 ? 2 : 1
       player = await this.playOneShot(bottlerocket2, -24, {
-        playbackRate: random([1, 2, 3])
+        playbackRate
       })
     } else {
       player = await this.playOneShot(bubble, -26, {
@@ -258,7 +260,7 @@ export default class Sound {
 
   async playExplosion(x) {
     if (this.anybody.sfx === 'space') {
-      const player = await this.playOneShot(bomb, -20, {
+      const player = await this.playOneShot(coin, -20, {
         playbackRate: random([1, 1.4, 0.8])
       })
       if (!player) return
@@ -350,31 +352,31 @@ export default class Sound {
   }
 
   async playStart() {
-    if (this.anybody.sfx === 'space') {
-      this.playOneShot(affirmative, -22, { playbackRate: 1 })
-      this.playOneShot(affirmative, -22, { playbackRate: 2 })
-      this.playOneShot(affirmative, -22, { playbackRate: 0.5 })
-    } else {
-      this.playOneShot(coin, -20)
-    }
+    // if (this.anybody.sfx === 'space') {
+    //   this.playOneShot(affirmative, -22, { playbackRate: 1 })
+    //   this.playOneShot(affirmative, -22, { playbackRate: 2 })
+    //   this.playOneShot(affirmative, -22, { playbackRate: 0.5 })
+    // } else {
+    this.playOneShot(coin, -20)
+    // }
   }
 
   async playStat() {
-    if (this.anybody.sfx === 'space') {
-      this.playOneShot(bottlerocket2, -24, {
-        playbackRate: random([5, 10, 7])
-      })
-    } else {
-      this.playOneShot(bubble, -26, { playbackRate: random([3, 5, 10.5]) })
-    }
+    // if (this.anybody.sfx === 'space') {
+    //   this.playOneShot(bottlerocket2, -24, {
+    //     playbackRate: random([5, 10, 7])
+    //   })
+    // } else {
+    this.playOneShot(bubble, -26, { playbackRate: random([3, 5, 10.5]) })
+    // }
   }
 
   async playSuccess() {
-    if (this.anybody.sfx === 'space') {
-      this.playOneShot(affirmative, -22, { playbackRate: 1 })
-    } else {
-      this.playOneShot(coinBox, -28)
-    }
+    // if (this.anybody.sfx === 'space') {
+    //   this.playOneShot(affirmative, -22, { playbackRate: 1 })
+    // } else {
+    this.playOneShot(coinBox, -28)
+    // }
   }
 
   voiceFromFile(file) {
