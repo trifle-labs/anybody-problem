@@ -1,4 +1,5 @@
 {
+  "contractName": "ExternalMetadata",
   "abi": [
     { "inputs": [], "stateMutability": "nonpayable", "type": "constructor" },
     {
