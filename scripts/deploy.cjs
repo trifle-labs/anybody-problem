@@ -41,7 +41,8 @@ async function copyABI(name, contractName) {
   const readABI = await fs.readFile(pathname)
   const parsedABI = JSON.parse(readABI)
   const abi = parsedABI['abi']
-  const newContent = { abi }
+
+  const newContent = { contractName, abi }
 
   var copy = path.join(
     __dirname,

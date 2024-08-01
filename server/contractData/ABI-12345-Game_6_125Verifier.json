@@ -1,4 +1,5 @@
 {
+  "contractName": "Groth16Verifier",
   "abi": [
     {
       "inputs": [

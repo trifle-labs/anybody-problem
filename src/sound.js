@@ -90,6 +90,9 @@ const hash = (str) => {
 for (const file of base64Files) {
   const fromBase64 = atob(file)
   let arrayBuffer = Uint8Array.from(fromBase64, (e) => e.charCodeAt(0))
+  if (typeof window === 'undefined') {
+    break
+  }
   const audioContext = new window.AudioContext()
   audioContext.decodeAudioData(
     arrayBuffer.buffer,
