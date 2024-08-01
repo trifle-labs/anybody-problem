@@ -96,7 +96,6 @@ const PAUSE_BODY_DATA = [
 export class Anybody extends EventEmitter {
   constructor(p, options = {}) {
     super()
-    console.log('hi')
     Object.assign(this, Visuals)
     Object.assign(this, Calculations)
     Object.assign(this, Buttons)
