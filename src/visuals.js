@@ -789,7 +789,11 @@ export const Visuals = {
       gutter,
       middleBoxY + (levelTimes.length - 1) * rowHeight,
       this.windowWidth - gutter * 2,
-      rowHeight
+      rowHeight,
+      this.level === 1 ? 24 : 0,
+      this.level === 1 ? 24 : 0,
+      0,
+      0
     )
 
     // middle box text - value text
