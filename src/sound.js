@@ -11,85 +11,180 @@ const {
   loaded
 } = Tone
 
-const whistle_8_T7 = new URL(
-  '/public/sound/whistle/whistle_8_T7.mp3',
-  import.meta.url
-).href
-const whistle_4_T3 = new URL(
-  '/public/sound/whistle/whistle_4_T3.mp3',
-  import.meta.url
-).href
-const whistle_7_T6 = new URL(
-  '/public/sound/whistle/whistle_7_T6.mp3',
-  import.meta.url
-).href
-const whistle_12_T11 = new URL(
-  '/public/sound/whistle/whistle_12_T11.mp3',
-  import.meta.url
-).href
-const whistle_8_T7_B = new URL(
-  '/public/sound/whistle/whistle_8_T7_B.mp3',
-  import.meta.url
-).href
+import whistle_8_T7 from 'bundle-text:/public/sound/whistle/whistle_8_T7.mp3'
 
-const wii_2_T1 = new URL('/public/sound/wii/wii_2_T1.mp3', import.meta.url).href
-const wii_4_T3 = new URL('/public/sound/wii/wii_4_T3.mp3', import.meta.url).href
-const wii_8_T7 = new URL('/public/sound/wii/wii_8_T7.mp3', import.meta.url).href
-const wii_10_T9 = new URL('/public/sound/wii/wii_10_T9.mp3', import.meta.url)
-  .href
-const wii_12_T11 = new URL('/public/sound/wii/wii_12_T11.mp3', import.meta.url)
-  .href
-const wii_T5 = new URL('/public/sound/wii/wii_T5.mp3', import.meta.url).href
-const wii_chord = new URL('/public/sound/wii/wii_chord.mp3', import.meta.url)
-  .href
+let arrayBuffer = Uint8Array.from(whistle_8_T7, (e) => e.charCodeAt(0))
+const audioContext = new window.AudioContext()
 
-const ipod_2_T1 = new URL('/public/sound/ipod/ipod_2_T1.mp3', import.meta.url)
-  .href
-const ipod_5_T4 = new URL('/public/sound/ipod/ipod_5_T4.mp3', import.meta.url)
-  .href
-const ipod_7_T6 = new URL('/public/sound/ipod/ipod_7_T6.mp3', import.meta.url)
-  .href
-const ipod_8_T7 = new URL('/public/sound/ipod/ipod_8_T7.mp3', import.meta.url)
-  .href
-const ipod_14_FX = new URL('/public/sound/ipod/ipod_14_FX.mp3', import.meta.url)
-  .href
-const ipod_15_Delay_Reverb = new URL(
-  '/public/sound/ipod/ipod_15_Delay_Reverb.mp3',
-  import.meta.url
-).href
-const ipod_hiss = new URL('/public/sound/ipod/ipod_hiss.mp3', import.meta.url)
-  .href
+const blob = new Blob([arrayBuffer], { type: 'audio/mp3' })
+const reader = new FileReader()
+console.log({ reader })
+reader.onload = function () {
+  var data = reader.result
+  console.log({ data })
+  // var array = new Int8Array(data)
+  // const value = JSON.stringify(array, null, '  ')
+  audioContext.decodeAudioData(
+    data,
+    (audioBuffer) => {
+      // Now you have the AudioBuffer
+      console.log('Decoded AudioBuffer:', audioBuffer)
 
-const orbit_3_Audio = new URL(
-  '/public/sound/orbit/orbit_3-Audio.mp3',
-  import.meta.url
-).href
-const orbit_8_DT1 = new URL(
-  '/public/sound/orbit/orbit_8_DT1.mp3',
-  import.meta.url
-).href
-const orbit_9_DT2 = new URL(
-  '/public/sound/orbit/orbit_9_DT2.mp3',
-  import.meta.url
-).href
-const orbit_10_DT6 = new URL(
-  '/public/sound/orbit/orbit_10_DT6.mp3',
-  import.meta.url
-).href
+      // You can now use the AudioBuffer, for example, to play the sound
+      const source = audioContext.createBufferSource()
+      source.buffer = audioBuffer
+      source.connect(audioContext.destination)
+      source.start(0)
+    },
+    (error) => {
+      console.error('Error decoding audio data:', { error })
+    }
+  )
+  // console.log({ value })
+}
+reader.readAsArrayBuffer(blob)
+// console.log({ blob, url: URL.createObjectURL(blob) })
 
-const coinBox = new URL('/public/sound/fx/coin-box.mp3', import.meta.url).href
-const bongoHard = new URL(
-  '/public/sound/fx/SC_CP_perc_bongo_loud_tap.mp3',
-  import.meta.url
-).href
-const bubble = new URL(
-  '/public/sound/fx/DSC_GST_one_shot_perc_water.mp3',
-  import.meta.url
-).href
-const coin = new URL(
-  '/public/sound/fx/ESM_Game_Notification_83_Coin_Blip_Select_Tap_Button.mp3',
-  import.meta.url
-).href
+// const whistle_8_T7_ = new URL(
+//   '/public/sound/whistle/whistle_8_T7.mp3',
+//   import.meta.url
+// ).href
+
+// audio.src = window.URL.createObjectURL(blob);
+
+// console.log({ audioContext })
+
+// const testPlayer = new Player({
+//   url: whistle_8_T7_
+// })
+
+// testPlayer.start(0)
+
+// Function to read a file as an ArrayBuffer
+// function readFileAsArrayBuffer(file) {
+//   return new Promise((resolve, reject) => {
+//     const reader = new FileReader()
+//     reader.onload = () => resolve(reader.result)
+//     reader.onerror = reject
+//     reader.readAsArrayBuffer(file)
+//   })
+// }
+
+// // Function to decode audio data using Web Audio API
+// function decodeAudioData(arrayBuffer, audioContext) {
+//   return new Promise((resolve, reject) => {
+//     audioContext.decodeAudioData(arrayBuffer, resolve, reject)
+//   })
+// }
+
+// const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+// const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+// const whistle_8_T7 = new URL(
+//   '/public/sound/whistle/whistle_8_T7.mp3',
+//   import.meta.url
+// ).href
+import whistle_4_T3 from 'bundle-text:/public/sound/whistle/whistle_4_T3.mp3'
+// const whistle_4_T3 = new URL(
+//   '/public/sound/whistle/whistle_4_T3.mp3',
+//   import.meta.url
+// ).href
+import whistle_7_T6 from 'bundle-text:/public/sound/whistle/whistle_7_T6.mp3'
+// const whistle_7_T6 = new URL(
+//   '/public/sound/whistle/whistle_7_T6.mp3',
+//   import.meta.url
+// ).href
+import whistle_12_T11 from 'bundle-text:/public/sound/whistle/whistle_12_T11.mp3'
+// const whistle_12_T11 = new URL(
+//   '/public/sound/whistle/whistle_12_T11.mp3',
+//   import.meta.url
+// ).href
+import whistle_8_T7_B from 'bundle-text:/public/sound/whistle/whistle_8_T7_B.mp3'
+// const whistle_8_T7_B = new URL(
+//   '/public/sound/whistle/whistle_8_T7_B.mp3',
+//   import.meta.url
+// ).href
+import wii_2_T1 from 'bundle-text:/public/sound/wii/wii_2_T1.mp3'
+// const wii_2_T1 = new URL('/public/sound/wii/wii_2_T1.mp3', import.meta.url).href
+import wii_4_T3 from 'bundle-text:/public/sound/wii/wii_4_T3.mp3'
+// const wii_4_T3 = new URL('/public/sound/wii/wii_4_T3.mp3', import.meta.url).href
+import wii_8_T7 from 'bundle-text:/public/sound/wii/wii_8_T7.mp3'
+// const wii_8_T7 = new URL('/public/sound/wii/wii_8_T7.mp3', import.meta.url).href
+import wii_10_T9 from 'bundle-text:/public/sound/wii/wii_10_T9.mp3'
+// const wii_10_T9 = new URL('/public/sound/wii/wii_10_T9.mp3', import.meta.url)
+//   .href
+
+import wii_12_T11 from 'bundle-text:/public/sound/wii/wii_12_T11.mp3'
+// const wii_12_T11 = new URL('/public/sound/wii/wii_12_T11.mp3', import.meta.url)
+//   .href
+import wii_T5 from 'bundle-text:/public/sound/wii/wii_T5.mp3'
+// const wii_T5 = new URL('/public/sound/wii/wii_T5.mp3', import.meta.url).href
+import wii_chord from 'bundle-text:/public/sound/wii/wii_chord.mp3'
+// const wii_chord = new URL('/public/sound/wii/wii_chord.mp3', import.meta.url)
+//   .href
+import ipod_2_T1 from 'bundle-text:/public/sound/ipod/ipod_2_T1.mp3'
+// const ipod_2_T1 = new URL('/public/sound/ipod/ipod_2_T1.mp3', import.meta.url)
+//   .href
+import ipod_5_T4 from 'bundle-text:/public/sound/ipod/ipod_5_T4.mp3'
+// const ipod_5_T4 = new URL('/public/sound/ipod/ipod_5_T4.mp3', import.meta.url)
+//   .href
+import ipod_7_T6 from 'bundle-text:/public/sound/ipod/ipod_7_T6.mp3'
+// const ipod_7_T6 = new URL('/public/sound/ipod/ipod_7_T6.mp3', import.meta.url)
+//   .href
+import ipod_8_T7 from 'bundle-text:/public/sound/ipod/ipod_8_T7.mp3'
+// const ipod_8_T7 = new URL('/public/sound/ipod/ipod_8_T7.mp3', import.meta.url)
+//   .href
+import ipod_14_FX from 'bundle-text:/public/sound/ipod/ipod_14_FX.mp3'
+// const ipod_14_FX = new URL('/public/sound/ipod/ipod_14_FX.mp3', import.meta.url)
+//   .href
+import ipod_15_Delay_Reverb from 'bundle-text:/public/sound/ipod/ipod_15_Delay_Reverb.mp3'
+// const ipod_15_Delay_Reverb = new URL(
+//   '/public/sound/ipod/ipod_15_Delay_Reverb.mp3',
+//   import.meta.url
+// ).href
+import ipod_hiss from 'bundle-text:/public/sound/ipod/ipod_hiss.mp3'
+// const ipod_hiss = new URL('/public/sound/ipod/ipod_hiss.mp3', import.meta.url)
+//   .href
+
+import orbit_3_Audio from 'bundle-text:/public/sound/orbit/orbit_3-Audio.mp3'
+// const orbit_3_Audio = new URL(
+//   '/public/sound/orbit/orbit_3-Audio.mp3',
+//   import.meta.url
+// ).href
+import orbit_8_DT1 from 'bundle-text:/public/sound/orbit/orbit_8_DT1.mp3'
+// const orbit_8_DT1 = new URL(
+//   '/public/sound/orbit/orbit_8_DT1.mp3',
+//   import.meta.url
+// ).href
+import orbit_9_DT2 from 'bundle-text:/public/sound/orbit/orbit_9_DT2.mp3'
+// const orbit_9_DT2 = new URL(
+//   '/public/sound/orbit/orbit_9_DT2.mp3',
+//   import.meta.url
+// ).href
+import orbit_10_DT6 from 'bundle-text:/public/sound/orbit/orbit_10_DT6.mp3'
+// const orbit_10_DT6 = new URL(
+//   '/public/sound/orbit/orbit_10_DT6.mp3',
+//   import.meta.url
+// ).href
+
+import coinBox from 'bundle-text:/public/sound/fx/coin-box.mp3'
+// const coinBox = new URL('/public/sound/fx/coin-box.mp3', import.meta.url).href
+import bongoHard from 'bundle-text:/public/sound/fx/SC_CP_perc_bongo_loud_tap.mp3'
+// const bongoHard = new URL(
+//   '/public/sound/fx/SC_CP_perc_bongo_loud_tap.mp3',
+//   import.meta.url
+// ).href
+import bubble from 'bundle-text:/public/sound/fx/DSC_GST_one_shot_perc_water.mp3'
+// const bubble = new URL(
+//   '/public/sound/fx/DSC_GST_one_shot_perc_water.mp3',
+//   import.meta.url
+// ).href
+import coin from 'bundle-text:/public/sound/fx/ESM_Game_Notification_83_Coin_Blip_Select_Tap_Button.mp3'
+// const coin = new URL(
+//   '/public/sound/fx/ESM_Game_Notification_83_Coin_Blip_Select_Tap_Button.mp3',
+//   import.meta.url
+// ).href
+
 // const bottlerocket = new URL(
 //   '/public/sound/fx/space/BottleRocket_BW.60057.mp3',
 //   import.meta.url
@@ -98,22 +193,25 @@ const coin = new URL(
 //   '/public/sound/fx/space/BottleRocket_BW.60058.mp3',
 //   import.meta.url
 // ).href
-const bottlerocket2 = new URL(
-  '/public/sound/fx/space/BottleRocket_S011FI.5.mp3',
-  import.meta.url
-).href
+import bottlerocket2 from 'bundle-text:/public/sound/fx/space/BottleRocket_S011FI.5.mp3'
+// const bottlerocket2 = new URL(
+//   '/public/sound/fx/space/BottleRocket_S011FI.5.mp3',
+//   import.meta.url
+// ).href
 // const heavy = new URL(
 //   '/public/sound/fx/space/ESM_GW_heavy_weapon_one_shot_rocket_launcher_launching_3_rocket_shot_clicky_long_gas_3.mp3',
 //   import.meta.url
 // ).href
-const bomb = new URL(
-  '/public/sound/fx/space/ESM_Builder_Game_Fireworks_Bomb_Explosion_2_Fire_Bomb_Explosive_War_Battle_Rocket_Mortar_Tank_Cannon.mp3',
-  import.meta.url
-).href
-const affirmative = new URL(
-  '/public/sound/fx/space/ESM_Digital_Game_Affirmation_Sound_Sci_fi_Military_Robotic_Robot_Cyber_Futuristic_Transition.mp3',
-  import.meta.url
-).href
+import bomb from 'bundle-text:/public/sound/fx/space/ESM_Builder_Game_Fireworks_Bomb_Explosion_2_Fire_Bomb_Explosive_War_Battle_Rocket_Mortar_Tank_Cannon.mp3'
+// const bomb = new URL(
+//   '/public/sound/fx/space/ESM_Builder_Game_Fireworks_Bomb_Explosion_2_Fire_Bomb_Explosive_War_Battle_Rocket_Mortar_Tank_Cannon.mp3',
+//   import.meta.url
+// ).href
+import affirmative from 'bundle-text:/public/sound/fx/space/ESM_Digital_Game_Affirmation_Sound_Sci_fi_Military_Robotic_Robot_Cyber_Futuristic_Transition.mp3'
+// const affirmative = new URL(
+//   '/public/sound/fx/space/ESM_Digital_Game_Affirmation_Sound_Sci_fi_Military_Robotic_Robot_Cyber_Futuristic_Transition.mp3',
+//   import.meta.url
+// ).href
 
 const SONGS = {
   whistle: {
@@ -293,8 +391,11 @@ export default class Sound {
     this.oneShots = this.oneShots || {}
     const key = `${url}-${volume}-${opts && JSON.stringify(opts)}`
     if (!this.oneShots[key]) {
+      const arrayBuffer = new TextEncoder().encode(url).buffer
+      const blob = new Blob([arrayBuffer], { type: 'audio/mp3' })
+
       this.oneShots[key] = new Player({
-        url,
+        url: URL.createObjectURL(blob),
         volume,
         ...opts
       }).toDestination()
@@ -385,10 +486,22 @@ export default class Sound {
   }
 
   voiceFromFile(file) {
+    const arrayBuffer = new TextEncoder().encode(file).buffer
+    const blob = new Blob([arrayBuffer], { type: 'audio/mp3' })
+
+    // // Create an AudioContext
+    // const audioContext = new (window.AudioContext ||
+    //   window.webkitAudioContext)()
+
+    // // Decode the ArrayBuffer into an AudioBuffer
+    // audioContext.decodeAudioData(arrayBuffer).then((audioBuffer) => {
+    //   console.log({ audioBuffer })
+    // })
+
     const voice = {
       file: file,
       player: new Player({
-        url: `${file}`,
+        url: URL.createObjectURL(blob),
         fadeOut: 0.1
       }),
       panVol: new PanVol()
