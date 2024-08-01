@@ -783,15 +783,15 @@ export const Visuals = {
     const problemComplete = levelTimes.length >= LEVELS
     const rowHeight = 72
 
-    // middle box text - highlight current row
-    p.fill('rgba(146, 118, 255, 0.2)')
+    // middle box text - highlight current row (blink via opacity)
+    p.fill(`rgba(146, 118, 255, ${Math.floor(p.frameCount / 18) % 2 ? '0.2' : '0'})`)
     p.rect(
       gutter,
       middleBoxY + (levelTimes.length - 1) * rowHeight,
       this.windowWidth - gutter * 2,
       rowHeight,
-      this.level === 1 ? 24 : 0,
-      this.level === 1 ? 24 : 0,
+      this.level === 1 ? 24 : 0, // round top corners when first row
+      this.level === 1 ? 24 : 0, // round top corners when first row
       0,
       0
     )
