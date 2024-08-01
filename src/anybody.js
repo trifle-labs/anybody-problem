@@ -156,7 +156,7 @@ export class Anybody extends EventEmitter {
       aimHelper: false,
       target: 'inside', // 'outside' or 'inside'
       faceRotation: 'mania', // 'time' or 'hitcycle' or 'mania'
-      sfx: 'bubble', // 'space' or 'bubble'
+      sfx: 'space', // 'space' or 'bubble'
       playerName: undefined,
       practiceMode: false,
       bestTimes: null,
@@ -977,8 +977,10 @@ export class Anybody extends EventEmitter {
     this.missiles.push(b)
     this.missiles = this.missiles.slice(-1)
 
-    this.sound?.playMissile()
+    const missileVectorMagnitude = x ** 2 + (y - this.windowWidth) ** 2
+    this.sound?.playMissile(missileVectorMagnitude)
     this.missileInits.push(...this.processMissileInits([b]))
+    this.makeMissileStart()
   }
 
   calculateStats = () => {

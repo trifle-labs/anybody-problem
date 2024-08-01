@@ -7,7 +7,7 @@ window.anybody
 
 q5.setup = () => {
   const options = {
-    level: 5,
+    level: 1,
     bestTimes: [1.45, 2.44, 16.79, 23.45, 36.45],
     day: Math.floor(Math.random() * 10000) + 10000000
   }
