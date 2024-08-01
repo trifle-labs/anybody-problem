@@ -727,12 +727,8 @@ export const Visuals = {
     const middleBoxY = 320
     p.rect(gutter, 104, this.windowWidth - gutter * 2, 144, 24)
 
-    if (this.showShare) {
-      p.rect(gutter, 320, this.windowWidth - gutter * 2, 524, 24)
-    } else {
-      p.rect(gutter, 320, this.windowWidth - gutter * 2, 444, 24)
-      p.rect(gutter, 796, this.windowWidth - gutter * 2, 64, 24)
-    }
+    p.rect(gutter, 320, this.windowWidth - gutter * 2, 444, 24)
+    p.rect(gutter, 796, this.windowWidth - gutter * 2, 64, 24)
 
     // upper box text
     p.textSize(32)
@@ -937,6 +933,7 @@ export const Visuals = {
       811
     )
     // bottom buttons
+    this.showShare = this.level >= 5
     const buttonCount = this.showShare ? 4 : 3
     this.drawBottomButton({
       text: 'RETRY',
