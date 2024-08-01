@@ -754,7 +754,10 @@ export const Visuals = {
 
   drawStatsScreen() {
     const { p } = this
+    const borderWeight = 1
+    const showCumulativeTimeRow = this.level > 1
 
+    // animation
     const justEntered = this.statsScreenLastVisibleFrame !== this.p5Frames - 1
     if (justEntered) {
       this.statsScreenVisibleForFrames = 0
@@ -770,7 +773,7 @@ export const Visuals = {
       1,
       this.statsScreenVisibleForFrames / (entranceTime * this.P5_FPS)
     )
-
+    
     p.push()
     p.noStroke()
     p.fill('white')
@@ -788,17 +791,14 @@ export const Visuals = {
     // bordered boxes
     p.fill('black')
     p.stroke(THEME.border)
-    p.strokeWeight(1)
+    p.strokeWeight(borderWeight)
     const gutter = 22
+    const boxW = this.windowWidth - gutter * 2
     const middleBoxY = 320
-    p.rect(gutter, 104, this.windowWidth - gutter * 2, 144, 24)
-
-    if (this.showShare) {
-      p.rect(gutter, 320, this.windowWidth - gutter * 2, 524, 24)
-    } else {
-      p.rect(gutter, 320, this.windowWidth - gutter * 2, 444, 24)
-      p.rect(gutter, 796, this.windowWidth - gutter * 2, 64, 24)
-    }
+    const middleBoxH = showCumulativeTimeRow ? 444 : 364
+    p.rect(gutter, 104, boxW, 144, 24)
+    p.rect(gutter, middleBoxY, boxW, middleBoxH, 24)
+    p.rect(gutter, 796, boxW, 64, 24)
 
     // upper box text
     p.textSize(32)
@@ -808,21 +808,17 @@ export const Visuals = {
     p.fill(THEME.iris_60)
 
     // upper box text - labels
-    p.text('problem', 330, 132)
-    p.text('solver', 330, 192)
+    p.text('player', 330, 132)
+    p.text('problem', 330, 192)
 
     // upper box text - values
     p.textSize(54)
     p.fill(THEME.iris_30)
-    const date = new Date(this.date)
-    const options = { month: 'short', day: '2-digit', year: 'numeric' }
-    const formattedDate = date
-      .toLocaleDateString('en-US', options)
+    const formattedDate = new Date(this.date)
+      .toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
       .toUpperCase()
-      .replace(', ', '-')
-      .replace(' ', '-')
-    p.text(formattedDate, 454, 114)
-    p.text(this.playerName ?? 'YOU', 454, 174)
+    p.text(this.playerName ?? 'YOU', 454, 114)
+    p.text(formattedDate, 454, 174)
     // end upper box text
 
     // middle box text
@@ -850,20 +846,24 @@ export const Visuals = {
         if (i >= levelTimes.length) return ''
         const time = levelTimes[i]
         const diff = time - best
-        const sign = diff > 0 ? '+' : ''
-        return sign + diff.toFixed(2)
+        const sign = Number(diff.toFixed(2)) > 0 ? '+' : '-'
+        return sign + Math.abs(diff).toFixed(2)
       })
       .filter(Boolean)
     const problemComplete = levelTimes.length >= LEVELS
     const rowHeight = 72
 
-    // middle box text - highlight current row
-    p.fill('rgba(146, 118, 255, 0.2)')
+    // middle box text - highlight current row (blink via opacity)
+    p.fill(`rgba(146, 118, 255, ${Math.floor(p.frameCount / 18) % 2 ? '0.2' : '0'})`)
     p.rect(
       gutter,
       middleBoxY + (levelTimes.length - 1) * rowHeight,
       this.windowWidth - gutter * 2,
-      rowHeight
+      rowHeight,
+      this.level === 1 ? 24 : 0, // round top corners when first row
+      this.level === 1 ? 24 : 0, // round top corners when first row
+      0,
+      0
     )
 
     // middle box text - value text
@@ -874,8 +874,7 @@ export const Visuals = {
     // p.translate(0, middleBoxPadding)
     for (let i = 0; i < LEVELS; i++) {
       const time = i < levelTimes.length ? levelTimes[i].toFixed(2) : '-'
-      const light = i % 2 == 0
-      p.fill(light ? THEME.iris_30 : THEME.iris_60)
+      p.fill(THEME.iris_30)
       p.text(
         time,
         col1X,
@@ -886,8 +885,7 @@ export const Visuals = {
     }
     for (let i = 0; i < LEVELS; i++) {
       const best = i < bestTimes.length ? bestTimes[i] : '-'
-      const light = i % 2 == 1 && i < levelTimes.length
-      p.fill(light ? THEME.iris_30 : THEME.iris_60)
+      p.fill(THEME.iris_60)
       p.text(
         best.toFixed(2),
         col2X,
@@ -914,26 +912,35 @@ export const Visuals = {
     p.textSize(64)
 
     // middle box text - sum line
-    const bestTime = bestTimes
-      .slice(0, levelTimes.length)
-      .reduce((a, b) => a + b, 0)
-    const levelTimeSum = levelTimes.reduce((a, b) => a + b, 0)
-    const sumLine = [
-      levelTimeSum.toFixed(2),
-      bestTime.toFixed(2),
-      (levelTimeSum - bestTime).toFixed(2)
-    ]
-    const sumLineY = middleBoxY + rowHeight * bestTimes.length + rowHeight / 2
-    const sumLineHeight = 80
-    p.textAlign(p.LEFT, p.CENTER)
-    p.fill(THEME.iris_30)
-    p.text(problemComplete ? 'solved in' : 'current time', 44, sumLineY)
-    p.textAlign(p.RIGHT, p.CENTER)
-    for (const [i, col] of [col1X, col2X, col3X].entries()) {
-      if (i == 0) p.fill('white')
-      else if (i == 1) p.fill(THEME.iris_60)
-      else p.fill(/^-/.test(sumLine[i]) ? THEME.lime : THEME.flame_75)
-      p.text(sumLine[i], col, sumLineY, 150, sumLineHeight)
+    if (showCumulativeTimeRow) {
+      const bestTime = bestTimes
+        .slice(0, levelTimes.length)
+        .reduce((a, b) => a + b, 0)
+      const levelTimeSum = levelTimes.reduce((a, b) => a + b, 0)
+      let diff = Number((levelTimeSum - bestTime).toFixed(2))
+      const sumLine = [
+        levelTimeSum.toFixed(2),
+        bestTime.toFixed(2),
+        `${diff > 0 ? '+' : '-'}${Math.abs(diff).toFixed(2)}`
+      ]
+      const sumLineY = middleBoxY + rowHeight * bestTimes.length
+      const sumLineHeight = 80
+      const sumLineYText = sumLineY + sumLineHeight / 2
+      p.textAlign(p.LEFT, p.CENTER)
+      p.fill(THEME.iris_60)
+      p.text(problemComplete ? 'solved in' : 'total time', 44, sumLineYText)
+      p.textAlign(p.RIGHT, p.CENTER)
+      for (const [i, col] of [col1X, col2X, col3X].entries()) {
+        if (i == 0) p.fill(THEME.iris_30)
+        else if (i == 1) p.fill(THEME.iris_60)
+        else p.fill(/^-/.test(sumLine[i]) ? THEME.lime : THEME.flame_75)
+        p.text(sumLine[i], col, sumLineYText, 150, sumLineHeight)
+      }
+      // top border line
+      p.strokeWeight(borderWeight)
+      p.stroke(THEME.iris_60)
+      p.line(gutter, sumLineY, boxW + gutter, sumLineY)
+      p.noStroke()
     }
 
     p.pop()
@@ -981,10 +988,14 @@ export const Visuals = {
     // overlay transparent black box to dim past last levelTimes
     p.fill('rgba(0,0,0,0.6)')
     p.rect(
-      gutter,
-      middleBoxY + rowHeight * levelTimes.length,
-      this.windowWidth - gutter * 2,
-      rowHeight * (LEVELS - levelTimes.length)
+      gutter + borderWeight,
+      middleBoxY + rowHeight * levelTimes.length - borderWeight,
+      this.windowWidth - gutter * 2 - (borderWeight * 2),
+      rowHeight * (LEVELS - levelTimes.length),
+      0,
+      0,
+      !showCumulativeTimeRow ? 24 : 0,
+      !showCumulativeTimeRow ? 24 : 0,
     )
 
     // bottom box ticker text
@@ -992,20 +1003,21 @@ export const Visuals = {
       this.windowWidth,
       this.windowHeight
     )
-    p.textAlign(p.LEFT, p.TOP)
+    p.textAlign(p.CENTER, p.TOP)
     p.textSize(32)
-    p.fill(THEME.iris_30)
+    // blink text on complete
+    const blinkText = this.levels === LEVELS && Math.floor(p.frameCount / 25) % 2
+    p.fill(blinkText ? THEME.iris_60 : THEME.iris_30)
     p.text(
       this.level == 5
-        ? 'CONGRATS!!! SAVE YOUR GAME TO SOLVE THE PROBLEM!!!!'
-        : 'NICE JOB!!!!    Keep going!!!   Solve this problem and climb the leaderboard.',
-      44,
-      811
+        ? 'SOLVED IT !!!   mint your win to add this celestial body to your galaxy !!!'
+        : `BO${Array(this.level).fill('O').join('')}M!!!  you cleared LEVEL ${this.level} !!!  ... just ${5 - this.level} more to solve this problem !!!`,
+      gutter + boxW / 2,
+      811,
+      boxW - gutter / 2
     )
     // bottom buttons
-    if (this.level >= 5) {
-      this.showShare = true
-    }
+    this.showShare = this.level >= 5
     const buttonCount = this.showShare ? 4 : 3
     this.drawBottomButton({
       text: 'RETRY',
@@ -1084,7 +1096,7 @@ export const Visuals = {
     } else {
       // parent app should handle waiting to save
       this.drawBottomButton({
-        text: 'SAVE',
+        text: 'MINT',
         onClick: () => {
           this.emit('save')
         },
@@ -1519,7 +1531,7 @@ export const Visuals = {
     p.noStroke()
     const text =
       this.bodies[0].radius == 0
-        ? 'NOOO, KILL BADDIES NOT BODY!!'
+        ? 'NOOO, BLAST BADDIES NOT BODIES!!'
         : 'TIME IS UP   TIME IS UP  TIME IS UP'
     this.drawGameOverTicker({
       text: '                 ' + text,
