@@ -466,48 +466,77 @@ export const Visuals = {
           Math.floor(Math.random() * this.windowHeight)
         )
       }
-      //   const totalLines = 6
-      //   for (let i = 0; i < totalLines; i++) {
-      //     if (i % 5 == 5) {
-      //       this.starBG.strokeWeight(1)
-      //       // this.starBG.stroke(`hsl(${i * (360 / totalLines)}, 100%, 50%)`)
-      //     } else {
-      //       this.starBG.strokeWeight(1)
-      //       // this.starBG.stroke('rgba(0,0,0,0.1)')
-      //     }
-      //     this.starBG.line(i * (this.windowWidth / totalLines), 0, i * (this.windowWidth / totalLines), this.windowHeight)
-      //     this.starBG.line(0, i * (this.windowHeight / totalLines), this.windowWidth, i * (this.windowHeight / totalLines))
-      //   }
-      // }
+      const drawCluster = (graphic, x, y, c) => {
+        const range = 250
+        for (let i = 0; i < 5000; i++) {
+          const angle = graphic.random(0, graphic.TWO_PI)
+          const radius = graphic.random(-range / 2, range)
+          const xOffset = radius * graphic.cos(angle)
+          const yOffset = radius * graphic.sin(angle)
+
+          let variation = graphic.lerpColor(
+            graphic.color(c),
+            graphic.color(
+              graphic.random(150),
+              graphic.random(150),
+              graphic.random(150)
+            ),
+            0.65
+          )
+          variation.setAlpha(100)
+          graphic.fill(variation)
+          // graphic.fill(graphic.color(c))
+          graphic.ellipse(x + xOffset, y + yOffset, 2, 2)
+        }
+      }
+
+      const quadraticPoint = (a, b, c, t) => {
+        return (1 - t) * (1 - t) * a + 2 * (1 - t) * t * b + t * t * c
+      }
+
+      const drawMilky = (graphic) => {
+        graphic.colorMode(graphic.RGB)
+        const startColor = graphic.color(
+          ...hslToRgb(
+            randHSL(themes.bodies.default['berlin'].bg, true),
+            1,
+            true
+          )
+        )
+        const endColor = graphic.color(
+          ...hslToRgb(
+            randHSL(themes.bodies.default['berlin'].bg, true),
+            1,
+            true
+          )
+        )
+        const r = graphic.random(0, 1)
+        const startXLeft = r > 0.5
+        const startYLeft = graphic.random(0, 1) > 0.5
+
+        // Define control points for the Bézier curve
+        let x1 = startXLeft ? -100 : this.windowWidth + 100,
+          y1 = startYLeft ? this.windowHeight + 100 : 0
+        let x2 = startXLeft ? 0 : this.windowWidth,
+          y2 = startYLeft ? 0 : this.windowHeight
+        let x3 = startXLeft ? this.windowWidth : -100,
+          y3 = startYLeft ? -100 : this.windowHeight + 100
+        // Get points along the curve
+        for (let t = 0; t <= 1; t += 0.01) {
+          let x = quadraticPoint(x1, x2, x3, t)
+          let y = quadraticPoint(y1, y2, y3, t)
+
+          let inter = graphic.map(y, 50, 250, 0, 1)
+          let c = graphic.lerpColor(startColor, endColor, inter)
+          graphic.noStroke()
+          drawCluster(graphic, x, y, c)
+        }
+        graphic.colorMode(graphic.RGB)
+      }
+      drawMilky(this.starBG)
     }
     const basicX = 0
-    // Math.floor((this.frames / FPS) * (this.frames / FPS)) % this.windowWidth
     const basicY = 0
-    // Math.floor((this.frames / FPS) * (this.frames / FPS)) % this.windowHeight
-
-    // const basicX = this.accumX % this.windowWidth
-    // const basicY = this.accumY % this.windowHeight
-
-    // const Xleft = basicX - this.windowWidth
-    // const Xright = basicX + this.windowWidth
-
-    // const Ytop = basicY - this.windowHeight
-    // const Ybottom = basicY + this.windowHeight
-
-    // this.confirmedStarPositions ||= []
-    // for (let i = 0; i < this.starPositions?.length; i++) {
-    //   if (i < this.confirmedStarPositions.length) continue
-    //   const starBody = this.starPositions[i]
-    //   const radius = starBody.radius * 4
-    //   if (Xleft < 10) {
-    //     this.drawBodiesLooped(starBody, radius, this.drawStarOnBG)
-    //     if (this.loaded) {
-    //       this.confirmedStarPositions.push(this.starPositions[i])
-    //     }
-    //   } else {
-    //     this.drawBodiesLooped(starBody, radius, this.drawStarOnTopOfBG)
-    //   }
-    // }
 
     this.p.image(
       this.starBG,
@@ -516,69 +545,6 @@ export const Visuals = {
       this.windowWidth,
       this.windowHeight
     )
-    // this.p.image(
-    //   this.starBG,
-    //   Xleft,
-    //   basicY,
-    //   this.windowWidth,
-    //   this.windowHeight
-    // )
-    // this.p.image(
-    //   this.starBG,
-    //   Xright,
-    //   basicY,
-    //   this.windowWidth,
-    //   this.windowHeight
-    // )
-    // this.p.image(this.starBG, basicX, Ytop, this.windowWidth, this.windowHeight)
-    // this.p.image(
-    //   this.starBG,
-    //   basicX,
-    //   Ybottom,
-    //   this.windowWidth,
-    //   this.windowHeight
-    // )
-    // this.p.image(this.starBG, Xleft, Ytop, this.windowWidth, this.windowHeight)
-    // this.p.image(this.starBG, Xright, Ytop, this.windowWidth, this.windowHeight)
-    // this.p.image(
-    //   this.starBG,
-    //   Xleft,
-    //   Ybottom,
-    //   this.windowWidth,
-    //   this.windowHeight
-    // )
-    // this.p.image(
-    //   this.starBG,
-    //   Xright,
-    //   Ybottom,
-    //   this.windowWidth,
-    //   this.windowHeight
-    // )
-
-    // // Grid lines, uncomment for visual debugging and alignment
-    // const boxCount = 6
-    // // this.p.stroke('black')
-    // this.p.stroke('white')
-    // for (let i = 1; i < boxCount; i++) {
-    //   if (i % 5 == 5) {
-    //     this.p.strokeWeight(1)
-    //     // this.starBG.stroke(`hsl(${i * (360 / totalLines)}, 100%, 50%)`)
-    //   } else {
-    //     this.p.strokeWeight(1)
-    //   }
-    //   this.p.line(
-    //     i * (this.windowWidth / boxCount),
-    //     0,
-    //     i * (this.windowWidth / boxCount),
-    //     this.windowHeight
-    //   )
-    //   this.p.line(
-    //     0,
-    //     i * (this.windowHeight / boxCount),
-    //     this.windowWidth,
-    //     i * (this.windowHeight / boxCount)
-    //   )
-    // }
   },
 
   drawPopup() {
@@ -760,6 +726,11 @@ export const Visuals = {
   },
 
   drawStatsScreen() {
+    if (!this.shownStatScreen) {
+      this.shownStatScreen = true
+      this.sound?.stop()
+      this.sound?.resume()
+    }
     const { p } = this
     const borderWeight = 1
     const showCumulativeTimeRow = this.level > 1
@@ -1292,7 +1263,7 @@ export const Visuals = {
         this.p5Frames % Math.floor(this.P5_FPS / 8) === 0 &&
         joined.length > messageText.length
       ) {
-        this.sound?.playStat()
+        this.sound?.playStart()
       }
       const longestLine = lines.sort((a, b) => b.length - a.length)[0]
       p.rect(
