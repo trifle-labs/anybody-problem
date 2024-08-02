@@ -129,7 +129,7 @@ export class Anybody extends EventEmitter {
       startingBodies: 1,
       windowWidth: 1000,
       windowHeight: 1000,
-      pixelDensity: 2,
+      pixelDensity: 1,
       scalingFactor: 10n ** 3n,
       minDistanceSquared: 200 * 200,
       G: NORMAL_GRAVITY, // Gravitational constant
