@@ -55,8 +55,8 @@ const config = {
     },
     networks: {
         hardhat: {
-            gasPrice: 10_000_000_000,
-            blockGasLimit: 30_000_000,
+            gasPrice: 100_000_000, //need to come up with a sensible value here
+            blockGasLimit: 100_000_000, //need to come up with a sensible value here
             chainId: 12345
         }
     }
