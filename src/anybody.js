@@ -129,12 +129,7 @@ export class Anybody extends EventEmitter {
       startingBodies: 1,
       windowWidth: 1000,
       windowHeight: 1000,
-      pixelDensity:
-        typeof window !== 'undefined'
-          ? window.devicePixelRatio < 2
-            ? 2
-            : window.devicePixelRatio
-          : 2, //4, // Math.min(4, 4 * (window.devicePixelRatio ?? 1)),
+      pixelDensity: 2,
       scalingFactor: 10n ** 3n,
       minDistanceSquared: 200 * 200,
       G: NORMAL_GRAVITY, // Gravitational constant
@@ -196,6 +191,7 @@ export class Anybody extends EventEmitter {
     this.speedFactor = 2
     this.speedLimit = 10
     this.missileSpeed = 15
+    this.shownStatScreen = false
     this.G = NORMAL_GRAVITY
     this.vectorLimit = this.speedLimit * this.speedFactor
     this.missileVectorLimit = this.missileSpeed * this.speedFactor
@@ -267,6 +263,7 @@ export class Anybody extends EventEmitter {
     this.frames = this.alreadyRun
     this.startingFrame = this.alreadyRun
     this.stopEvery = this.test ? 20 : this.proverTickIndex(this.level + 1)
+    this.lastLevel = this.level
     // const vectorLimitScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
     this.setPause(this.paused, true)
     this.storeInits()
@@ -337,21 +334,13 @@ export class Anybody extends EventEmitter {
     this.p.mouseReleased = this.handleMouseReleased
     this.p.touchEnded = () => {}
 
-    if (typeof window !== 'undefined' && this.mode == 'game') {
-      canvas.removeEventListener('click', this.handleNFTClick)
-      canvas.addEventListener('click', this.handleGameClick)
-      canvas.addEventListener('touchend', this.handleGameClick)
-      window.addEventListener('keydown', this.handleGameKeyDown)
-    } else {
-      canvas.removeEventListener('click', this.handleGameClick)
-      window?.removeEventListener('keydown', this.handleGameKeyDown)
-      canvas.addEventListener('click', this.handleGameClick)
-    }
+    canvas.addEventListener('click', this.handleGameClick)
+    canvas.addEventListener('touchend', this.handleGameClick)
+    window.addEventListener('keydown', this.handleGameKeyDown)
   }
 
   removeListener() {
     const { canvas } = this.p
-    canvas?.removeEventListener('click', this.handleNFTClick)
     canvas?.removeEventListener('click', this.handleGameClick)
     canvas?.removeEventListener('touchend', this.handleGameClick)
     window?.removeEventListener('keydown', this.handleGameKeyDown)
@@ -499,6 +488,9 @@ export class Anybody extends EventEmitter {
   restart = (options, beginPaused = true) => {
     if (options) {
       this.setOptions(options)
+    }
+    if (this.level !== this.lastLevel) {
+      this.starBG = null
     }
     this.clearValues()
     this.sound?.stop()
