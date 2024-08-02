@@ -326,7 +326,7 @@ contract ExternalMetadata is Ownable {
     }
 
     function getPath(uint256 date) 
-        public 
+        internal 
         view 
         returns (string memory) 
     {
@@ -358,8 +358,8 @@ contract ExternalMetadata is Ownable {
     }
 
     function getHeroBodyPath(uint256 date) 
-        public 
-        view 
+        internal 
+        view
         returns (string memory) 
     {
         //FACE SHAPE
@@ -453,8 +453,8 @@ contract ExternalMetadata is Ownable {
         string memory duration,
         string memory delay,
         string memory direction
-    )   public 
-        view 
+    )   internal  
+        pure
         returns (string memory) 
     {
         string memory path = string(
