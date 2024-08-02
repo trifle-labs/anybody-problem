@@ -914,10 +914,14 @@ export class Anybody extends EventEmitter {
     return info
   }
 
+  setPixelDensity(density) {
+    this.p.pixelDensity(density)
+  }
+
   prepareP5() {
     this.p.frameRate(this.P5_FPS)
     this.p.createCanvas(this.windowWidth, this.windowWidth)
-    this.p.pixelDensity(this.pixelDensity)
+    this.setPixelDensity(this.pixelDensity)
     this.p.background('white')
   }
 
