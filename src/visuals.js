@@ -803,6 +803,12 @@ export const Visuals = {
     p.text(formattedDate, 454, 174)
     // end upper box text
 
+    const bestTimes =
+      this.todaysRecords?.levels?.map((l) => l.events[0].time / this.FPS) ||
+      Array.from({ length: 5 }, (_, i) => levelTimes[i] || 0)
+    
+    const showBestAndDiff = bestTimes.length
+
     // middle box text
     p.textSize(48)
     p.fill(THEME.iris_60)
@@ -810,19 +816,19 @@ export const Visuals = {
     const col1X = 580
     const col2X = 770
     const col3X = 960
+    const timeColX = showBestAndDiff ? col1X : col3X
 
     // middle box text - labels
-    p.text('time', col1X, 264)
-    p.text('best', col2X, 264)
-    p.text('+/-', col3X, 264)
+    p.text('time', timeColX, 264)
+    if (showBestAndDiff) {
+      p.text('best', col2X, 264)
+      p.text('+/-', col3X, 264)
+    }
 
     // middle box text - values
     const levelTimes = this.levelSpeeds
       .map((result) => result?.framesTook / this.FPS)
       .filter((l) => l !== undefined)
-    const bestTimes =
-      this.todaysRecords?.levels?.map((l) => l.events[0].time / this.FPS) ||
-      Array.from({ length: 5 }, (_, i) => levelTimes[i] || 0)
     const plusMinus = bestTimes
       .map((best, i) => {
         if (i >= levelTimes.length) return ''
@@ -856,42 +862,47 @@ export const Visuals = {
     p.textSize(44)
     // const middleBoxPadding = 12
     // p.translate(0, middleBoxPadding)
+    // times
     for (let i = 0; i < LEVELS; i++) {
       const time = i < levelTimes.length ? levelTimes[i].toFixed(2) : '-'
       p.fill(THEME.iris_30)
       p.text(
         time,
-        col1X,
+        timeColX,
         middleBoxY + rowHeight * i + rowHeight / 2,
         150,
         rowHeight
       )
     }
-    for (let i = 0; i < LEVELS; i++) {
-      const best = i < bestTimes.length ? bestTimes[i].toFixed(2) : '-'
-      p.fill(THEME.iris_60)
-      p.text(
-        best,
-        col2X,
-        middleBoxY + rowHeight * i + rowHeight / 2,
-        150,
-        rowHeight
-      )
-    }
-    for (let i = 0; i < LEVELS; i++) {
-      const diff = plusMinus[i] || '-'
-      if (i === levelTimes.length - 1) {
-        p.fill(/^-/.test(diff) ? THEME.lime : THEME.flame_50)
-      } else {
-        p.fill(/^-/.test(diff) ? THEME.green_75 : THEME.flame_75)
+    if (showBestAndDiff) {
+      // best times
+      for (let i = 0; i < LEVELS; i++) {
+        const best = i < bestTimes.length ? bestTimes[i].toFixed(2) : '-'
+        p.fill(THEME.iris_60)
+        p.text(
+          best,
+          col2X,
+          middleBoxY + rowHeight * i + rowHeight / 2,
+          150,
+          rowHeight
+        )
       }
-      p.text(
-        diff,
-        col3X,
-        middleBoxY + rowHeight * i + rowHeight / 2,
-        150,
-        rowHeight
-      )
+      // diff values
+      for (let i = 0; i < LEVELS; i++) {
+        const diff = plusMinus[i] || '-'
+        if (i === levelTimes.length - 1) {
+          p.fill(/^-/.test(diff) ? THEME.lime : THEME.flame_50)
+        } else {
+          p.fill(/^-/.test(diff) ? THEME.green_75 : THEME.flame_75)
+        }
+        p.text(
+          diff,
+          col3X,
+          middleBoxY + rowHeight * i + rowHeight / 2,
+          150,
+          rowHeight
+        )
+      }
     }
     p.textSize(64)
 
@@ -914,7 +925,8 @@ export const Visuals = {
       p.fill(THEME.iris_60)
       p.text(problemComplete ? 'solved in' : 'total time', 44, sumLineYText)
       p.textAlign(p.RIGHT, p.CENTER)
-      for (const [i, col] of [col1X, col2X, col3X].entries()) {
+      const columns = showBestAndDiff ? [col1X, col2X, col3X] : [timeColX]
+      for (const [i, col] of columns.entries()) {
         if (i == 0) p.fill(THEME.iris_30)
         else if (i == 1) p.fill(THEME.iris_60)
         else p.fill(/^-/.test(sumLine[i]) ? THEME.lime : THEME.flame_75)
