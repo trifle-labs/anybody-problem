@@ -907,7 +907,7 @@ export const Visuals = {
         bestTime.toFixed(2),
         `${diff > 0 ? '+' : '-'}${Math.abs(diff).toFixed(2)}`
       ]
-      const sumLineY = middleBoxY + rowHeight * bestTimes.length
+      const sumLineY = middleBoxY + rowHeight * Math.min(5, LEVELS)
       const sumLineHeight = 80
       const sumLineYText = sumLineY + sumLineHeight / 2
       p.textAlign(p.LEFT, p.CENTER)
