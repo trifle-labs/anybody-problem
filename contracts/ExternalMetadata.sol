@@ -425,21 +425,15 @@ contract ExternalMetadata is Ownable {
 
         string memory path = string(
             abi.encodePacked(
-                getRotationAnimation('BG', '300px 300px', '0px, 0px', '8', '0', 'normal' ),
+                getRotationAnimation('BG', '300px 300px', '0px, 0px', '12', '0', 'reverse' ),
                 '<g id="id-BG" fill="', colorsBG ,'" >',
                     pathBG,
                 '</g>',
-                getRotationAnimation('Core', '113px 113px', '187px, 187px', '11', '0', 'reverse' ),
-                // '<style>',
-                //     '#id-Core ',
-                //     '{ ',
-                //         'transform: scale(0.375);', 
-                //     '}',
-                // '</style>'
+                getRotationAnimation('Core', '113px 113px', '187px, 187px', '34', '0', 'normal' ),
                 '<g id="id-Core" fill="', colorsCore ,'" >',
                     pathCore,
                 '</g>',
-                getRotationAnimation('FG', '300px 300px', '0px,0px', '33', '0', 'normal' ),
+                getRotationAnimation('FG', '300px 300px', '0px,0px', '8', '0', 'normal' ),
                 '<g id="id-FG" fill="', colorsFG ,'" >',
                     pathFG,
                 '</g>',
