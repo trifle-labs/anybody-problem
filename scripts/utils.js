@@ -152,10 +152,102 @@ const deployContracts = async (options) => {
   returnObject['Speedruns'] = speedruns
   !testing && log('Speedruns Deployed at ' + String(speedrunsAddress))
 
+
+
+  // deploy Assets1
+  const Assets1 = await hre.ethers.getContractFactory('Assets1')
+  let byteSize = Buffer.from(Assets1.bytecode.slice(2), 'hex').length;
+  console.log(`Assets1 byte size: ${byteSize} bytes`);
+  const assets1 = await Assets1.deploy(
+    {
+        gasLimit: 1_000_000_000 // or higher if needed
+    }
+  )
+  await assets1.deployed()
+  var assets1Address = assets1.address
+  returnObject['Assets1'] = assets1Address
+  !testing && log('Assets1 Deployed at ' + String(assets1Address))
+
+  // deploy Assets2
+  const Assets2 = await hre.ethers.getContractFactory('Assets2')
+  byteSize = Buffer.from(Assets2.bytecode.slice(2), 'hex').length;
+  console.log(`Assets2 byte size: ${byteSize} bytes`);
+  const assets2 = await Assets2.deploy(
+    {
+        gasLimit: 1_000_000_000 // or higher if needed
+    }
+  )
+  await assets2.deployed()
+  var assets2Address = assets2.address
+  returnObject['Assets2'] = assets2Address
+  !testing && log('Assets2 Deployed at ' + String(assets2Address))
+
+  // deploy Assets3
+  const Assets3 = await hre.ethers.getContractFactory('Assets3')
+  byteSize = Buffer.from(Assets3.bytecode.slice(2), 'hex').length;
+  console.log(`Assets3 byte size: ${byteSize} bytes`);
+  const assets3 = await Assets3.deploy(
+    {
+        gasLimit: 1_000_000_000 // or higher if needed
+    }
+  )
+  await assets3.deployed()
+  var assets3Address = assets3.address
+  returnObject['Assets3'] = assets3Address
+  !testing && log('Assets3 Deployed at ' + String(assets3Address))
+
+
+   // deploy Assets4
+   const Assets4 = await hre.ethers.getContractFactory('Assets4')
+   byteSize = Buffer.from(Assets4.bytecode.slice(2), 'hex').length;
+   console.log(`Assets4 byte size: ${byteSize} bytes`);
+   const assets4 = await Assets4.deploy(
+       {
+           gasLimit: 1_000_000_000 // or higher if needed
+       }
+   )
+   await assets4.deployed()
+   var assets4Address = assets4.address
+   returnObject['Assets4'] = assets4Address
+   !testing && log('Assets4 Deployed at ' + String(assets4Address))
+
+
+    // deploy Assets5
+    const Assets5 = await hre.ethers.getContractFactory('Assets5')
+    byteSize = Buffer.from(Assets5.bytecode.slice(2), 'hex').length;
+    console.log(`Assets5 byte size: ${byteSize} bytes`);
+    const assets5 = await Assets5.deploy(
+        {
+            gasLimit: 1_000_000_000 // or higher if needed
+        }
+    )
+    await assets5.deployed()
+    var assets5Address = assets5.address
+    returnObject['Assets5'] = assets5Address
+    !testing && log('Assets5 Deployed at ' + String(assets5Address))
+
+
+
+    console.log('assets1Address: ' + assets1Address)
+    console.log('assets2Address: ' + assets2Address)
+    console.log('assets3Address: ' + assets3Address)
+    console.log('assets4Address: ' + assets4Address)
+    console.log('assets5Address: ' + assets5Address)
+
+
   // deploy ExternalMetadata
   const ExternalMetadata =
     await hre.ethers.getContractFactory('ExternalMetadata')
-  const externalMetadata = await ExternalMetadata.deploy()
+  const externalMetadata = await ExternalMetadata.deploy(
+    assets1Address,
+    assets2Address,
+    assets3Address,
+    assets4Address,
+    assets5Address,
+    {
+        gasLimit: 1_000_000_000 // or higher if needed
+    }
+  )
   await externalMetadata.deployed()
   var externalMetadataAddress = externalMetadata.address
   returnObject['ExternalMetadata'] = externalMetadata

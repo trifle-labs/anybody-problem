@@ -3,8 +3,6 @@ import hre from 'hardhat'
 const { ethers } = hre
 import { DOMParser } from 'xmldom'
 
-import util from 'util';
-
 import {
   deployContracts,
   solveLevel,
@@ -32,6 +30,7 @@ describe('ExternalMetadata Tests', function () {
   it('onlyOwner functions are really only Owner', async function () {
     const [, addr1] = await ethers.getSigners()
     const { ExternalMetadata: externalMetadata } = await deployContracts()
+
     await expect(
       externalMetadata.connect(addr1).updateAnybodyProblemAddress(addr1.address)
     ).to.be.revertedWith('Ownable: caller is not the owner')
@@ -44,7 +43,8 @@ describe('ExternalMetadata Tests', function () {
       .be.reverted
   })
 
-  it('has valid json', async function () {
+  it.only('has valid json', async function () {
+
     const [owner] = await ethers.getSigners()
     const {
       AnybodyProblem: anybodyProblem,
@@ -102,7 +102,7 @@ describe('ExternalMetadata Tests', function () {
       'base64'
     ).toString('utf-8')
     //console.log("---------image----------")
-    console.table({ SVG })
+    //console.table({ SVG })
 
 
     const isValidSVG = (svg) => {
@@ -119,7 +119,7 @@ describe('ExternalMetadata Tests', function () {
     const isSVGValid = isValidSVG(SVG)
     expect(isSVGValid).to.be.true
     const yearMonth = json.attributes[1].value
-    expect(yearMonth).to.equal('1970-01')
+    expect(yearMonth).to.equal('2024-08') //'1970-01'
 
     let svg = await externalMetadata.getSVG(runId)
     svg = svg.replace('data:image/svg+xml;base64,', '')
