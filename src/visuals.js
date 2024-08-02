@@ -35,90 +35,156 @@ const rotOverride = {
   }
 }
 
+import BG_SVG_1 from 'bundle-text:/public/bodies/bgs/bg1.svg'
+import BG_SVG_2 from 'bundle-text:/public/bodies/bgs/bg2.svg'
+import BG_SVG_3 from 'bundle-text:/public/bodies/bgs/bg3.svg'
+import BG_SVG_4 from 'bundle-text:/public/bodies/bgs/bg4.svg'
+import BG_SVG_5 from 'bundle-text:/public/bodies/bgs/bg5.svg'
+import BG_SVG_6 from 'bundle-text:/public/bodies/bgs/bg6.svg'
+import BG_SVG_7 from 'bundle-text:/public/bodies/bgs/bg7.svg'
+import BG_SVG_8 from 'bundle-text:/public/bodies/bgs/bg8.svg'
+import BG_SVG_9 from 'bundle-text:/public/bodies/bgs/bg9.svg'
+import BG_SVG_10 from 'bundle-text:/public/bodies/bgs/bg10.svg'
 const BG_SVGS = [
-  new URL('/public/bodies/bgs/bg1.svg', import.meta.url).href,
-  new URL('/public/bodies/bgs/bg2.svg', import.meta.url).href,
-  new URL('/public/bodies/bgs/bg3.svg', import.meta.url).href,
-  new URL('/public/bodies/bgs/bg4.svg', import.meta.url).href,
-  new URL('/public/bodies/bgs/bg5.svg', import.meta.url).href,
-  new URL('/public/bodies/bgs/bg6.svg', import.meta.url).href,
-  new URL('/public/bodies/bgs/bg7.svg', import.meta.url).href,
-  new URL('/public/bodies/bgs/bg8.svg', import.meta.url).href,
-  new URL('/public/bodies/bgs/bg9.svg', import.meta.url).href,
-  new URL('/public/bodies/bgs/bg10.svg', import.meta.url).href
+  BG_SVG_1,
+  BG_SVG_2,
+  BG_SVG_3,
+  BG_SVG_4,
+  BG_SVG_5,
+  BG_SVG_6,
+  BG_SVG_7,
+  BG_SVG_8,
+  BG_SVG_9,
+  BG_SVG_10
 ]
 
+import FG_SVG_1 from 'bundle-text:/public/bodies/fgs/fg1.svg'
+import FG_SVG_2 from 'bundle-text:/public/bodies/fgs/fg2.svg'
+import FG_SVG_3 from 'bundle-text:/public/bodies/fgs/fg3.svg'
+import FG_SVG_4 from 'bundle-text:/public/bodies/fgs/fg4.svg'
+import FG_SVG_5 from 'bundle-text:/public/bodies/fgs/fg5.svg'
+import FG_SVG_6 from 'bundle-text:/public/bodies/fgs/fg6.svg'
+import FG_SVG_7 from 'bundle-text:/public/bodies/fgs/fg7.svg'
+import FG_SVG_8 from 'bundle-text:/public/bodies/fgs/fg8.svg'
+import FG_SVG_9 from 'bundle-text:/public/bodies/fgs/fg9.svg'
+import FG_SVG_10 from 'bundle-text:/public/bodies/fgs/fg10.svg'
 const FG_SVGS = [
-  new URL('/public/bodies/fgs/fg1.svg', import.meta.url).href,
-  new URL('/public/bodies/fgs/fg2.svg', import.meta.url).href,
-  new URL('/public/bodies/fgs/fg3.svg', import.meta.url).href,
-  new URL('/public/bodies/fgs/fg4.svg', import.meta.url).href,
-  new URL('/public/bodies/fgs/fg5.svg', import.meta.url).href,
-  new URL('/public/bodies/fgs/fg6.svg', import.meta.url).href,
-  new URL('/public/bodies/fgs/fg7.svg', import.meta.url).href,
-  new URL('/public/bodies/fgs/fg8.svg', import.meta.url).href,
-  new URL('/public/bodies/fgs/fg9.svg', import.meta.url).href,
-  new URL('/public/bodies/fgs/fg10.svg', import.meta.url).href
+  FG_SVG_1,
+  FG_SVG_2,
+  FG_SVG_3,
+  FG_SVG_4,
+  FG_SVG_5,
+  FG_SVG_6,
+  FG_SVG_7,
+  FG_SVG_8,
+  FG_SVG_9,
+  FG_SVG_10
 ]
 
+import FACE_SVG_1 from 'bundle-text:/public/bodies/faces/1.svg'
+import FACE_SVG_2 from 'bundle-text:/public/bodies/faces/2.svg'
+import FACE_SVG_3 from 'bundle-text:/public/bodies/faces/3.svg'
+import FACE_SVG_4 from 'bundle-text:/public/bodies/faces/4.svg'
+import FACE_SVG_5 from 'bundle-text:/public/bodies/faces/5.svg'
+import FACE_SVG_6 from 'bundle-text:/public/bodies/faces/6.svg'
+import FACE_SVG_7 from 'bundle-text:/public/bodies/faces/7.svg'
+import FACE_SVG_8 from 'bundle-text:/public/bodies/faces/8.svg'
+import FACE_SVG_9 from 'bundle-text:/public/bodies/faces/9.svg'
+import FACE_SVG_10 from 'bundle-text:/public/bodies/faces/10.svg'
+import FACE_SVG_11 from 'bundle-text:/public/bodies/faces/11.svg'
+import FACE_SVG_12 from 'bundle-text:/public/bodies/faces/12.svg'
+import FACE_SVG_13 from 'bundle-text:/public/bodies/faces/13.svg'
+import FACE_SVG_14 from 'bundle-text:/public/bodies/faces/14.svg'
 const FACE_SVGS = [
-  new URL('/public/bodies/faces/1.svg', import.meta.url).href,
-  new URL('/public/bodies/faces/2.svg', import.meta.url).href,
-  new URL('/public/bodies/faces/3.svg', import.meta.url).href,
-  new URL('/public/bodies/faces/4.svg', import.meta.url).href,
-  new URL('/public/bodies/faces/5.svg', import.meta.url).href,
-  new URL('/public/bodies/faces/6.svg', import.meta.url).href,
-  new URL('/public/bodies/faces/7.svg', import.meta.url).href,
-  new URL('/public/bodies/faces/8.svg', import.meta.url).href,
-  new URL('/public/bodies/faces/9.svg', import.meta.url).href,
-  new URL('/public/bodies/faces/10.svg', import.meta.url).href,
-  new URL('/public/bodies/faces/11.svg', import.meta.url).href,
-  new URL('/public/bodies/faces/12.svg', import.meta.url).href,
-  new URL('/public/bodies/faces/13.svg', import.meta.url).href,
-  new URL('/public/bodies/faces/14.svg', import.meta.url).href
+  FACE_SVG_1,
+  FACE_SVG_2,
+  FACE_SVG_3,
+  FACE_SVG_4,
+  FACE_SVG_5,
+  FACE_SVG_6,
+  FACE_SVG_7,
+  FACE_SVG_8,
+  FACE_SVG_9,
+  FACE_SVG_10,
+  FACE_SVG_11,
+  FACE_SVG_12,
+  FACE_SVG_13,
+  FACE_SVG_14
 ]
 
+import FACE_BLINK_SVG_1 from 'bundle-text:/public/bodies/faces_blink/1.svg'
+import FACE_BLINK_SVG_2 from 'bundle-text:/public/bodies/faces_blink/2.svg'
+import FACE_BLINK_SVG_3 from 'bundle-text:/public/bodies/faces_blink/3.svg'
+import FACE_BLINK_SVG_4 from 'bundle-text:/public/bodies/faces_blink/4.svg'
+import FACE_BLINK_SVG_5 from 'bundle-text:/public/bodies/faces_blink/5.svg'
+import FACE_BLINK_SVG_6 from 'bundle-text:/public/bodies/faces_blink/6.svg'
+import FACE_BLINK_SVG_7 from 'bundle-text:/public/bodies/faces_blink/7.svg'
+import FACE_BLINK_SVG_8 from 'bundle-text:/public/bodies/faces_blink/8.svg'
+import FACE_BLINK_SVG_9 from 'bundle-text:/public/bodies/faces_blink/9.svg'
+import FACE_BLINK_SVG_10 from 'bundle-text:/public/bodies/faces_blink/10.svg'
+import FACE_BLINK_SVG_11 from 'bundle-text:/public/bodies/faces_blink/11.svg'
+import FACE_BLINK_SVG_12 from 'bundle-text:/public/bodies/faces_blink/12.svg'
+import FACE_BLINK_SVG_13 from 'bundle-text:/public/bodies/faces_blink/13.svg'
+import FACE_BLINK_SVG_14 from 'bundle-text:/public/bodies/faces_blink/14.svg'
 const FACE_BLINK_SVGS = [
-  new URL('/public/bodies/faces_blink/1.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_blink/2.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_blink/3.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_blink/4.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_blink/5.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_blink/6.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_blink/7.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_blink/8.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_blink/9.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_blink/10.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_blink/11.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_blink/12.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_blink/13.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_blink/14.svg', import.meta.url).href
+  FACE_BLINK_SVG_1,
+  FACE_BLINK_SVG_2,
+  FACE_BLINK_SVG_3,
+  FACE_BLINK_SVG_4,
+  FACE_BLINK_SVG_5,
+  FACE_BLINK_SVG_6,
+  FACE_BLINK_SVG_7,
+  FACE_BLINK_SVG_8,
+  FACE_BLINK_SVG_9,
+  FACE_BLINK_SVG_10,
+  FACE_BLINK_SVG_11,
+  FACE_BLINK_SVG_12,
+  FACE_BLINK_SVG_13,
+  FACE_BLINK_SVG_14
 ]
+
+import FACE_SHOT_SVG_1 from 'bundle-text:/public/bodies/faces_shot/1.svg'
+import FACE_SHOT_SVG_2 from 'bundle-text:/public/bodies/faces_shot/2.svg'
+import FACE_SHOT_SVG_3 from 'bundle-text:/public/bodies/faces_shot/3.svg'
+import FACE_SHOT_SVG_4 from 'bundle-text:/public/bodies/faces_shot/4.svg'
+import FACE_SHOT_SVG_5 from 'bundle-text:/public/bodies/faces_shot/5.svg'
+import FACE_SHOT_SVG_6 from 'bundle-text:/public/bodies/faces_shot/6.svg'
+import FACE_SHOT_SVG_7 from 'bundle-text:/public/bodies/faces_shot/7.svg'
+import FACE_SHOT_SVG_8 from 'bundle-text:/public/bodies/faces_shot/8.svg'
+import FACE_SHOT_SVG_9 from 'bundle-text:/public/bodies/faces_shot/9.svg'
+import FACE_SHOT_SVG_10 from 'bundle-text:/public/bodies/faces_shot/10.svg'
+import FACE_SHOT_SVG_11 from 'bundle-text:/public/bodies/faces_shot/11.svg'
+import FACE_SHOT_SVG_12 from 'bundle-text:/public/bodies/faces_shot/12.svg'
+import FACE_SHOT_SVG_13 from 'bundle-text:/public/bodies/faces_shot/13.svg'
+import FACE_SHOT_SVG_14 from 'bundle-text:/public/bodies/faces_shot/14.svg'
+
 const FACE_SHOT_SVGS = [
-  new URL('/public/bodies/faces_shot/1.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_shot/2.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_shot/3.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_shot/4.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_shot/5.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_shot/6.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_shot/7.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_shot/8.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_shot/9.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_shot/10.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_shot/11.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_shot/12.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_shot/13.svg', import.meta.url).href,
-  new URL('/public/bodies/faces_shot/14.svg', import.meta.url).href
+  FACE_SHOT_SVG_1,
+  FACE_SHOT_SVG_2,
+  FACE_SHOT_SVG_3,
+  FACE_SHOT_SVG_4,
+  FACE_SHOT_SVG_5,
+  FACE_SHOT_SVG_6,
+  FACE_SHOT_SVG_7,
+  FACE_SHOT_SVG_8,
+  FACE_SHOT_SVG_9,
+  FACE_SHOT_SVG_10,
+  FACE_SHOT_SVG_11,
+  FACE_SHOT_SVG_12,
+  FACE_SHOT_SVG_13,
+  FACE_SHOT_SVG_14
 ]
 
-const CORE_SVGS = [
-  new URL('/public/bodies/cores/core-zigzag-lg.svg', import.meta.url).href
-]
+import CORE_SVG from 'bundle-text:/public/bodies/cores/core-zigzag-lg.svg'
+const CORE_SVGS = [CORE_SVG]
 
+import BADDIE_BG_SVG from 'bundle-text:/public/baddies/baddie-bg.svg'
+import BADDIE_CORE_SVG from 'bundle-text:/public/baddies/baddie-core.svg'
+import BADDIE_FACE_SVG from 'bundle-text:/public/baddies/baddie-face.svg'
 const BADDIE_SVG = {
-  bg: new URL('/public/baddies/baddie-bg.svg', import.meta.url).href,
-  core: new URL('/public/baddies/baddie-core.svg', import.meta.url).href,
-  face: new URL('/public/baddies/baddie-face.svg', import.meta.url).href
+  bg: BADDIE_BG_SVG,
+  core: BADDIE_CORE_SVG,
+  face: BADDIE_FACE_SVG
 }
 
 const replaceAttribute = (string, key, color) =>
@@ -129,6 +195,11 @@ const replaceAttribute = (string, key, color) =>
 
 export const Visuals = {
   async draw() {
+    if (this.shaking && this.shaking > 0) {
+      this.shakeScreen()
+    } else {
+      this.shaking = null
+    }
     for (const key in this.buttons) {
       const button = this.buttons[key]
       button.visible = false
@@ -191,6 +262,8 @@ export const Visuals = {
     this.drawScore()
     this.drawPopup()
     this.drawGun()
+    this.drawGunSmoke()
+    this.drawExplosionSmoke()
 
     if (
       this.mode == 'game' &&
@@ -688,7 +761,10 @@ export const Visuals = {
 
   drawStatsScreen() {
     const { p } = this
+    const borderWeight = 1
+    const showCumulativeTimeRow = this.level > 1
 
+    // animation
     const justEntered = this.statsScreenLastVisibleFrame !== this.p5Frames - 1
     if (justEntered) {
       this.statsScreenVisibleForFrames = 0
@@ -722,17 +798,14 @@ export const Visuals = {
     // bordered boxes
     p.fill('black')
     p.stroke(THEME.border)
-    p.strokeWeight(1)
+    p.strokeWeight(borderWeight)
     const gutter = 22
+    const boxW = this.windowWidth - gutter * 2
     const middleBoxY = 320
-    p.rect(gutter, 104, this.windowWidth - gutter * 2, 144, 24)
-
-    if (this.showShare) {
-      p.rect(gutter, 320, this.windowWidth - gutter * 2, 524, 24)
-    } else {
-      p.rect(gutter, 320, this.windowWidth - gutter * 2, 444, 24)
-      p.rect(gutter, 796, this.windowWidth - gutter * 2, 64, 24)
-    }
+    const middleBoxH = showCumulativeTimeRow ? 444 : 364
+    p.rect(gutter, 104, boxW, 144, 24)
+    p.rect(gutter, middleBoxY, boxW, middleBoxH, 24)
+    p.rect(gutter, 796, boxW, 64, 24)
 
     // upper box text
     p.textSize(32)
@@ -742,21 +815,21 @@ export const Visuals = {
     p.fill(THEME.iris_60)
 
     // upper box text - labels
-    p.text('problem', 330, 132)
-    p.text('solver', 330, 192)
+    p.text('player', 330, 132)
+    p.text('problem', 330, 192)
 
     // upper box text - values
     p.textSize(54)
     p.fill(THEME.iris_30)
-    const date = new Date(this.date)
-    const options = { month: 'short', day: '2-digit', year: 'numeric' }
-    const formattedDate = date
-      .toLocaleDateString('en-US', options)
+    const formattedDate = new Date(this.date)
+      .toLocaleDateString('en-US', {
+        month: 'short',
+        day: '2-digit',
+        year: 'numeric'
+      })
       .toUpperCase()
-      .replace(', ', '-')
-      .replace(' ', '-')
-    p.text(formattedDate, 454, 114)
-    p.text(this.playerName ?? 'YOU', 454, 174)
+    p.text(this.playerName ?? 'YOU', 454, 114)
+    p.text(formattedDate, 454, 174)
     // end upper box text
 
     // middle box text
@@ -784,20 +857,26 @@ export const Visuals = {
         if (i >= levelTimes.length) return ''
         const time = levelTimes[i]
         const diff = time - best
-        const sign = diff > 0 ? '+' : ''
-        return sign + diff.toFixed(2)
+        const sign = Number(diff.toFixed(2)) > 0 ? '+' : '-'
+        return sign + Math.abs(diff).toFixed(2)
       })
       .filter(Boolean)
     const problemComplete = levelTimes.length >= LEVELS
     const rowHeight = 72
 
-    // middle box text - highlight current row
-    p.fill('rgba(146, 118, 255, 0.2)')
+    // middle box text - highlight current row (blink via opacity)
+    p.fill(
+      `rgba(146, 118, 255, ${Math.floor(p.frameCount / 18) % 2 ? '0.2' : '0'})`
+    )
     p.rect(
       gutter,
       middleBoxY + (levelTimes.length - 1) * rowHeight,
       this.windowWidth - gutter * 2,
-      rowHeight
+      rowHeight,
+      this.level === 1 ? 24 : 0, // round top corners when first row
+      this.level === 1 ? 24 : 0, // round top corners when first row
+      0,
+      0
     )
 
     // middle box text - value text
@@ -808,8 +887,7 @@ export const Visuals = {
     // p.translate(0, middleBoxPadding)
     for (let i = 0; i < LEVELS; i++) {
       const time = i < levelTimes.length ? levelTimes[i].toFixed(2) : '-'
-      const light = i % 2 == 0
-      p.fill(light ? THEME.iris_30 : THEME.iris_60)
+      p.fill(THEME.iris_30)
       p.text(
         time,
         col1X,
@@ -820,8 +898,7 @@ export const Visuals = {
     }
     for (let i = 0; i < LEVELS; i++) {
       const best = i < bestTimes.length ? bestTimes[i] : '-'
-      const light = i % 2 == 1 && i < levelTimes.length
-      p.fill(light ? THEME.iris_30 : THEME.iris_60)
+      p.fill(THEME.iris_60)
       p.text(
         best.toFixed(2),
         col2X,
@@ -848,26 +925,35 @@ export const Visuals = {
     p.textSize(64)
 
     // middle box text - sum line
-    const bestTime = bestTimes
-      .slice(0, levelTimes.length)
-      .reduce((a, b) => a + b, 0)
-    const levelTimeSum = levelTimes.reduce((a, b) => a + b, 0)
-    const sumLine = [
-      levelTimeSum.toFixed(2),
-      bestTime.toFixed(2),
-      (levelTimeSum - bestTime).toFixed(2)
-    ]
-    const sumLineY = middleBoxY + rowHeight * bestTimes.length + rowHeight / 2
-    const sumLineHeight = 80
-    p.textAlign(p.LEFT, p.CENTER)
-    p.fill(THEME.iris_30)
-    p.text(problemComplete ? 'solved in' : 'current time', 44, sumLineY)
-    p.textAlign(p.RIGHT, p.CENTER)
-    for (const [i, col] of [col1X, col2X, col3X].entries()) {
-      if (i == 0) p.fill('white')
-      else if (i == 1) p.fill(THEME.iris_60)
-      else p.fill(/^-/.test(sumLine[i]) ? THEME.lime : THEME.flame_75)
-      p.text(sumLine[i], col, sumLineY, 150, sumLineHeight)
+    if (showCumulativeTimeRow) {
+      const bestTime = bestTimes
+        .slice(0, levelTimes.length)
+        .reduce((a, b) => a + b, 0)
+      const levelTimeSum = levelTimes.reduce((a, b) => a + b, 0)
+      let diff = Number((levelTimeSum - bestTime).toFixed(2))
+      const sumLine = [
+        levelTimeSum.toFixed(2),
+        bestTime.toFixed(2),
+        `${diff > 0 ? '+' : '-'}${Math.abs(diff).toFixed(2)}`
+      ]
+      const sumLineY = middleBoxY + rowHeight * bestTimes.length
+      const sumLineHeight = 80
+      const sumLineYText = sumLineY + sumLineHeight / 2
+      p.textAlign(p.LEFT, p.CENTER)
+      p.fill(THEME.iris_60)
+      p.text(problemComplete ? 'solved in' : 'total time', 44, sumLineYText)
+      p.textAlign(p.RIGHT, p.CENTER)
+      for (const [i, col] of [col1X, col2X, col3X].entries()) {
+        if (i == 0) p.fill(THEME.iris_30)
+        else if (i == 1) p.fill(THEME.iris_60)
+        else p.fill(/^-/.test(sumLine[i]) ? THEME.lime : THEME.flame_75)
+        p.text(sumLine[i], col, sumLineYText, 150, sumLineHeight)
+      }
+      // top border line
+      p.strokeWeight(borderWeight)
+      p.stroke(THEME.iris_60)
+      p.line(gutter, sumLineY, boxW + gutter, sumLineY)
+      p.noStroke()
     }
 
     p.pop()
@@ -915,10 +1001,14 @@ export const Visuals = {
     // overlay transparent black box to dim past last levelTimes
     p.fill('rgba(0,0,0,0.6)')
     p.rect(
-      gutter,
-      middleBoxY + rowHeight * levelTimes.length,
-      this.windowWidth - gutter * 2,
-      rowHeight * (LEVELS - levelTimes.length)
+      gutter + borderWeight,
+      middleBoxY + rowHeight * levelTimes.length - borderWeight,
+      this.windowWidth - gutter * 2 - borderWeight * 2,
+      rowHeight * (LEVELS - levelTimes.length),
+      0,
+      0,
+      !showCumulativeTimeRow ? 24 : 0,
+      !showCumulativeTimeRow ? 24 : 0
     )
 
     // bottom box ticker text
@@ -926,20 +1016,22 @@ export const Visuals = {
       this.windowWidth,
       this.windowHeight
     )
-    p.textAlign(p.LEFT, p.TOP)
+    p.textAlign(p.CENTER, p.TOP)
     p.textSize(32)
-    p.fill(THEME.iris_30)
+    // blink text on complete
+    const blinkText =
+      this.levels === LEVELS && Math.floor(p.frameCount / 25) % 2
+    p.fill(blinkText ? THEME.iris_60 : THEME.iris_30)
     p.text(
       this.level == 5
-        ? 'CONGRATS!!! SAVE YOUR GAME TO SOLVE THE PROBLEM!!!!'
-        : 'NICE JOB!!!!    Keep going!!!   Solve this problem and climb the leaderboard.',
-      44,
-      811
+        ? 'SOLVED IT !!!   mint your win to add this celestial body to your galaxy !!!'
+        : `BO${Array(this.level).fill('O').join('')}M!!!  you cleared LEVEL ${this.level} !!!  ... just ${5 - this.level} more to solve this problem !!!`,
+      gutter + boxW / 2,
+      811,
+      boxW - gutter / 2
     )
     // bottom buttons
-    if (this.level >= 5) {
-      this.showShare = true
-    }
+    this.showShare = this.level >= 5
     const buttonCount = this.showShare ? 4 : 3
     this.drawBottomButton({
       text: 'RETRY',
@@ -1018,7 +1110,7 @@ export const Visuals = {
     } else {
       // parent app should handle waiting to save
       this.drawBottomButton({
-        text: 'SAVE',
+        text: 'MINT',
         onClick: () => {
           this.emit('save')
         },
@@ -1453,7 +1545,7 @@ export const Visuals = {
     p.noStroke()
     const text =
       this.bodies[0].radius == 0
-        ? 'NOOO, KILL BADDIES NOT BODY!!'
+        ? 'NOOO, BLAST BADDIES NOT BODIES!!'
         : 'TIME IS UP   TIME IS UP  TIME IS UP'
     this.drawGameOverTicker({
       text: '                 ' + text,
@@ -1589,77 +1681,36 @@ export const Visuals = {
     }
   },
 
+  star(x, y, radius1, radius2, npoints, color, rotateBy, index) {
+    const { p } = this
+    let angle = p.TWO_PI / npoints
+    let halfAngle = angle / 2.0
+    p.beginShape()
+    if (index == 0) {
+      p.fill(color)
+    } else {
+      p.noFill()
+      p.strokeWeight(2)
+      p.stroke(color)
+    }
+    for (let a = rotateBy; a < p.TWO_PI + rotateBy; a += angle) {
+      let sx = x + p.cos(a) * radius2
+      let sy = y + p.sin(a) * radius2
+      p.vertex(sx, sy)
+      sx = x + p.cos(a + halfAngle) * radius1
+      sy = y + p.sin(a + halfAngle) * radius1
+      p.vertex(sx, sy)
+    }
+    p.endShape(p.CLOSE)
+    return p
+  },
+
   drawMissiles() {
     if (this.paused || this.gameOver) return
     this.p.noStroke()
     this.p.strokeWeight(0)
-
-    // const missileReverbLevels = 20
-    // const green = '2,247,123'
-    // const yellow = '255,255,0'
-    // const color = yellow
-    // const c =
-    //   Math.floor(this.frames / missileReverbLevels) % 2 == 0
-    //     ? `rgb(${color})`
-    //     : 'white'
-
     const starRadius = 10
-
-    const star = (x, y, radius1, radius2, npoints, color, rotateBy, index) => {
-      const { p } = this
-      let angle = p.TWO_PI / npoints
-      let halfAngle = angle / 2.0
-      p.beginShape()
-      if (index == 0) {
-        p.fill(color)
-      } else {
-        p.noFill()
-        p.strokeWeight(2)
-        p.stroke(color)
-      }
-      for (let a = rotateBy; a < p.TWO_PI + rotateBy; a += angle) {
-        let sx = x + p.cos(a) * radius2
-        let sy = y + p.sin(a) * radius2
-        p.vertex(sx, sy)
-        sx = x + p.cos(a + halfAngle) * radius1
-        sy = y + p.sin(a + halfAngle) * radius1
-        p.vertex(sx, sy)
-      }
-      p.endShape(p.CLOSE)
-      return p
-    }
-    //   for (let i = 0; i < missileReverbLevels; i++) {
-    //     const alpha = 1 //(missileReverbLevels - i) / missileReverbLevels
-    //     console.log({ alpha })
-    //     const rainbowColor = `hsla(${(i / missileReverbLevels) * 360}, 100%, 50%, ${alpha})`
-    //     const maxStarRadius = starRadius * missileReverbLevels
-    //     this.starMissile.push(
-    //       this.p.createGraphics(maxStarRadius * 2, maxStarRadius * 2)
-    //     )
-    //     this.starMissile[i].noStroke()
-    //     this.starMissile[i].fill(rainbowColor)
-    //     // if (i == 0) {
-    //     //   this.starMissile[i].stroke('black')
-    //     //   this.starMissile[i].strokeWeight(20)
-    //     //   this.starMissile[i].fill(`rgba(255,255,255,1)`)
-    //     // }
-    //     // this.starMissile.rect(0, 0, maxStarRadius * 2, maxStarRadius * 2)
-    //     this.starMissile[i] = star(
-    //       this.starMissile[i],
-    //       maxStarRadius,
-    //       maxStarRadius,
-    //       maxStarRadius,
-    //       maxStarRadius / 2,
-    //       5
-    //     )
-    //   }
-    // }
-
     const maxLife = 60
-
-    // const colors = ['white', 'cyan', 'yellow', 'magenta']
-    // const colors = ['255,255,255', '0,255,255', '255,255,0', '255,0,255']
-
     for (let i = 0; i < this.stillVisibleMissiles.length; i++) {
       const body = this.stillVisibleMissiles[i]
       if (!body.phase) {
@@ -1699,7 +1750,7 @@ export const Visuals = {
       // const n = missileReverbLevels + Math.floor(this.frames / 1.8) - i
       // const n = i
       // const index = n % modulo
-      star(
+      this.star(
         0,
         0,
         thisRadius,
@@ -1751,43 +1802,43 @@ export const Visuals = {
     return closeEnough
   },
 
-  drawImageAsset(
-    assetUrl,
-    width,
-    fill,
-    myP = this.bodiesGraphic,
-    strokeWidth = 1
-  ) {
+  drawImageAsset(svg, width, fill, myP = this.bodiesGraphic, strokeWidth = 1) {
+    function hashString(str) {
+      let hash = 0
+      for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i)
+        hash = (hash << 5) - hash + char
+        hash |= 0 // Convert to 32bit integer
+      }
+      return hash.toString()
+    }
     this.imgAssets ||= {}
     // TODO: remove width from ID when colors aren't temp-random
-    const id = assetUrl + width + fill
+    const assetHash = hashString(svg)
+    const id = assetHash + width + fill
     const loaded = this.imgAssets[id]
 
     if (!loaded) {
       this.imgAssets[id] = 'loading'
-      fetch(assetUrl)
-        .then((resp) => resp.text())
-        .then((svg) => {
-          svg = fill ? replaceAttribute(svg, 'fill', fill) : svg
-          svg = replaceAttribute(svg, 'stroke-width', strokeWidth)
-          svg = 'data:image/svg+xml,' + encodeURIComponent(svg)
+      svg = fill ? replaceAttribute(svg, 'fill', fill) : svg
+      svg = replaceAttribute(svg, 'stroke-width', strokeWidth)
+      svg = 'data:image/svg+xml,' + encodeURIComponent(svg)
+      try {
+        this.p.loadImage(svg, (img) => {
+          const width = img.width
+          const height = img.height
 
-          this.p.loadImage(svg, (img) => {
-            const width = img.width
-            const height = img.height
+          const foo = this.p.createGraphics(width, height)
+          foo.pixelDensity(this.pixelDensity)
 
-            const foo = this.p.createGraphics(width, height)
-            foo.pixelDensity(this.pixelDensity)
+          foo.image(img, 0, 0, width, height)
 
-            foo.image(img, 0, 0, width, height)
-
-            this.imgAssets[id] = foo
-          })
+          this.imgAssets[id] = foo
         })
-        .catch((e) => {
-          console.error(e)
-          this.imgAssets[id] = undefined
-        })
+      } catch (e) {
+        console.error(e)
+        this.imgAssets[id] = undefined
+      }
     }
 
     if (loaded && loaded !== 'loading') {
@@ -1915,6 +1966,200 @@ export const Visuals = {
     // if (v.y > 0) {
     //   graphic.scale(1, -1)
     // }
+  },
+
+  exportBody(
+    day,
+    shouldRotate = true,
+    width = this.windowWidth,
+    height = this.windowHeight
+  ) {
+    // const graphic = this.p.createGraphics(width, height)
+    // if (!this.starBG) {
+    //   throw new Error('no starbg')
+    // }
+
+    // const starBGpixelData = this.starBG.drawingContext.getImageData(
+    //   0,
+    //   0,
+    //   width,
+    //   height
+    // ).data
+
+    const bodyData = this.generateLevelData(day, 1)
+    const bodies = bodyData.map((b) => this.bodyDataToBodies.call(this, b, day))
+    const heroBody = bodies[0]
+    console.log({ heroBody })
+
+    // create an SVG element with a black background
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+    svg.setAttribute('width', width)
+    svg.setAttribute('height', height)
+    svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+    svg.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+    svg.setAttribute('viewBox', `0 0 ${width} ${height}`)
+    svg.setAttribute('version', '1.1')
+    // make svg have a black background
+    // const bgRect = document.createElementNS(
+    //   'http://www.w3.org/2000/svg',
+    //   'rect'
+    // )
+    // bgRect.setAttribute('x', 0)
+    // bgRect.setAttribute('y', 0)
+    // bgRect.setAttribute('width', width)
+    // bgRect.setAttribute('height', height)
+    // bgRect.setAttribute('fill', 'black')
+    // svg.appendChild(bgRect)
+
+    // add starBGpixelData as PNG to the SVG
+    // const starBG = document.createElementNS(
+    //   'http://www.w3.org/2000/svg',
+    //   'image'
+    // )
+    // starBG.setAttribute('x', 0)
+    // starBG.setAttribute('y', 0)
+    // starBG.setAttribute('width', width)
+    // starBG.setAttribute('height', height)
+    // starBG.setAttribute('href', this.starBG.canvas.toDataURL('image/png'))
+    // svg.appendChild(starBG)
+
+    // add hero body to the SVG
+    const bgIndex = heroBody.c.bgIndex
+    const coreIndex = heroBody.c.coreIndex
+    const fgIndex = heroBody.c.fgIndex
+    const faceIndex = heroBody.c.fIndex
+    const prefix = (svg) => `data:image/svg+xml;base64,${btoa(svg)}`
+
+    const bgSVG = prefix(
+      replaceAttribute(BG_SVGS[bgIndex], 'fill', heroBody.c.bg)
+    )
+    const coreSVG = prefix(
+      replaceAttribute(CORE_SVGS[coreIndex], 'fill', heroBody.c.core)
+    )
+
+    const fgSVG = prefix(
+      replaceAttribute(FG_SVGS[fgIndex], 'fill', heroBody.c.fg)
+    )
+    const faceSVG = prefix(FACE_SVGS[faceIndex])
+
+    const uuid = () => Math.random().toString(36).substr(2, 9)
+    const bgId = `bg-${bgIndex}-${uuid()}`
+    const coreId = `core-${coreIndex}-${uuid()}`
+    const fgId = `fg-${fgIndex}-${uuid()}`
+    const faceId = `f-${faceIndex}-${uuid()}`
+
+    const bgRatio = 1
+    const coreRatio = 0.375
+    const fgRatio = 1
+    const faceRatio = 1
+
+    // add the svg elements to the parent svg
+    const bg = document.createElementNS('http://www.w3.org/2000/svg', 'image')
+    const bgWidth = width * bgRatio
+    const bgHeight = height * bgRatio
+    const bgOffset = (width - bgWidth) / 2
+    const bgYOffset = (height - bgHeight) / 2
+    bg.setAttribute('id', bgId)
+    bg.setAttribute('x', bgOffset)
+    bg.setAttribute('y', bgYOffset)
+    bg.setAttribute('width', bgWidth)
+    bg.setAttribute('height', bgHeight)
+    bg.setAttribute('href', bgSVG)
+    svg.appendChild(bg)
+
+    const core = document.createElementNS('http://www.w3.org/2000/svg', 'image')
+    const coreWidth = width * coreRatio
+    const coreHeight = height * coreRatio
+    const coreOffset = (width - coreWidth) / 2
+    const coreYOffset = (height - coreHeight) / 2
+    core.setAttribute('id', coreId)
+    core.setAttribute('x', coreOffset)
+    core.setAttribute('y', coreYOffset)
+    core.setAttribute('width', coreWidth)
+    core.setAttribute('height', coreHeight)
+    core.setAttribute('href', coreSVG)
+    svg.appendChild(core)
+
+    const fg = document.createElementNS('http://www.w3.org/2000/svg', 'image')
+    const fgWidth = width * fgRatio
+    const fgHeight = height * fgRatio
+    const fgOffset = (width - fgWidth) / 2
+    const fgYOffset = (height - fgHeight) / 2
+    fg.setAttribute('id', fgId)
+    fg.setAttribute('x', fgOffset)
+    fg.setAttribute('y', fgYOffset)
+    fg.setAttribute('width', fgWidth)
+    fg.setAttribute('height', fgHeight)
+    fg.setAttribute('href', fgSVG)
+    svg.appendChild(fg)
+
+    const face = document.createElementNS('http://www.w3.org/2000/svg', 'image')
+    const faceWidth = width * faceRatio
+    const faceHeight = height * faceRatio
+    const faceOffset = (width - faceWidth) / 2
+    const faceYOffset = (height - faceHeight) / 2
+    face.setAttribute('id', faceId)
+    face.setAttribute('x', faceOffset)
+    face.setAttribute('y', faceYOffset)
+    face.setAttribute('width', faceWidth)
+    face.setAttribute('height', faceHeight)
+    face.setAttribute('href', faceSVG)
+    svg.appendChild(face)
+    if (shouldRotate) {
+      const fgSpin = {
+        ...rot.fg,
+        ...(rotOverride?.fg?.[fgIndex] ?? {})
+      }
+      const fgAnimation = fgSpin.direction < 0 ? 'fullRotateR' : 'fullRotate'
+      const fgSpeed = (fgSpin.speed / 3).toFixed(2)
+
+      const bgSpin = {
+        ...rot.bg,
+        ...(rotOverride?.bg?.[bgIndex] ?? {})
+      }
+      const bgAnimation = bgSpin.direction < 0 ? 'fullRotateR' : 'fullRotate'
+      const bgSpeed = (bgSpin.speed / 3).toFixed(2)
+
+      const coreSpin = {
+        ...rot.core
+      }
+      const coreAnimation = 'fullRotate'
+      const coreSpeed = (coreSpin.speed / 3).toFixed(2)
+      // add css to the svg that makes each element rotate
+      const css = document.createElement('style')
+      css.innerHTML = `
+@keyframes fullRotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fullRotateR {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+#${bgId} {
+  animation: ${bgAnimation} ${bgSpeed}s linear infinite;
+  transform-origin: center center; 
+}
+#${coreId} {
+  animation: ${coreAnimation} ${coreSpeed}s linear infinite;
+  transform-origin: center center; 
+}
+#${fgId} {
+  animation: ${fgAnimation} ${fgSpeed}s linear infinite;
+  transform-origin: center center; 
+}`
+      svg.appendChild(css)
+    }
+    return svg
   },
 
   drawBody(x, y, v, radius, body) {
@@ -2219,13 +2464,19 @@ export const Visuals = {
       Math.floor(coreWidth * (310 / 111.2)),
       bgColor,
       graphic,
-      '0.5'
+      '0.25'
     )
     graphic.push()
     const heading = this.level == 0 ? -this.p.PI / 2 : body.velocity.heading()
     graphic.rotate(-rotate + heading + this.p.PI / 2)
     if (!body.backgroundOnly) {
-      this.drawImageAsset(BADDIE_SVG.core, coreWidth, coreColor, graphic, '0.5')
+      this.drawImageAsset(
+        BADDIE_SVG.core,
+        coreWidth,
+        coreColor,
+        graphic,
+        '0.25'
+      )
       this.drawImageAsset(BADDIE_SVG.face, coreWidth, coreColor, graphic)
 
       // pupils always looking at missile, if no missile, look at mouse
@@ -2445,5 +2696,73 @@ export const Visuals = {
         console.error('no options to share canvas!')
       }
     }, 'image/png')
+  },
+  shakeScreen() {
+    this.shaking ||= this.P5_FPS / 2
+    this.shaking--
+    const shakingAmount = 10
+    this.shakeX = this.p.random(-shakingAmount, shakingAmount)
+    this.shakeY = this.p.random(-shakingAmount, shakingAmount)
+    this.p.translate(this.shakeX, this.shakeY)
+  },
+  makeParticles(x, y) {
+    const array = []
+    const maxSpeed = 10
+
+    const life = 25
+    for (let i = 0; i < 100; i++) {
+      const angle = this.p.random(0, this.p.PI / 2) - this.p.PI / 2
+      const radius = this.p.random(0, maxSpeed)
+      const vx = radius * this.p.cos(angle)
+      const vy = radius * this.p.sin(angle)
+      const px = this.p.random(-1, maxSpeed) + x
+      const py = this.p.random(-maxSpeed, 1) + y
+      const color = randHSL(
+        themes.bodies.default['pastel_highlighter_marker'].cr
+      )
+      array.push({ x: px, y: py, vx, vy, life, color })
+    }
+    return array
+  },
+  drawParticles(particles) {
+    for (let i = 0; i < particles.length; i++) {
+      const particle = particles[i]
+      if (particle.life <= 0) {
+        particles.splice(i, 1)
+        continue
+      }
+      particle.x += particle.vx
+      particle.vx *= this.p.random(1, 1.01)
+      particle.y += particle.vy
+      particle.vy *= this.p.random(1, 1.01)
+      particle.life--
+      this.p.noStroke()
+      const color = particle.color.replace(
+        ')',
+        `, ${(particle.life / 50) * 2})`
+      )
+      this.star(particle.x, particle.y, 6, 4, 5, color, 0, 0)
+    }
+    return particles
+  },
+  makeExplosionStart(x, y) {
+    this.explosionSmoke ||= []
+    const particles = this.makeParticles(x, y)
+    this.explosionSmoke.push(...particles)
+  },
+  makeMissileStart() {
+    this.gunSmoke ||= []
+    const particles = this.makeParticles(0, this.windowHeight)
+    this.gunSmoke.push(...particles)
+  },
+  drawGunSmoke() {
+    if (!this.gunSmoke) return
+    if (this.gunSmoke.length == 0) return
+    this.drawParticles(this.gunSmoke)
+  },
+  drawExplosionSmoke() {
+    if (!this.explosionSmoke) return
+    if (this.explosionSmoke.length == 0) return
+    this.drawParticles(this.explosionSmoke)
   }
 }

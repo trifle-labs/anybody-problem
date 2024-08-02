@@ -2,7 +2,7 @@
 // import { assert } from 'chai';
 // import { describe, it, before } from 'mocha';
 
-import { Anybody } from '../../src/anybody.js'
+import { Anybody } from '../../dist/module.js'
 import { wasm as wasm_tester } from 'circom_tester'
 import fs from 'fs'
 import {

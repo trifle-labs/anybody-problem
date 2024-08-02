@@ -2,7 +2,7 @@ import { ethers } from 'ethers'
 import hre from 'hardhat'
 import path from 'node:path'
 import { promises as fs } from 'fs'
-import { Anybody } from '../src/anybody.js'
+import { Anybody } from '../dist/module.js'
 import { exportCallDataGroth16 } from './circuits.js'
 
 const correctPrice = ethers.utils.parseEther('0.01')

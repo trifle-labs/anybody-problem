@@ -17,13 +17,13 @@ async function writedata(path, data) {
   }
 }
 
-async function copyContractABI(a, b) {
-  try {
-    await fs.copyFile(a, b)
-  } catch (e) {
-    console.log('e', e)
-  }
-}
+// async function copyContractABI(a, b) {
+//   try {
+//     await fs.copyFile(a, b)
+//   } catch (e) {
+//     console.log('e', e)
+//   }
+// }
 
 async function copyABI(name, contractName) {
   contractName = contractName || name
@@ -38,6 +38,12 @@ async function copyABI(name, contractName) {
     `${name}.sol`,
     `${contractName}.json`
   )
+  const readABI = await fs.readFile(pathname)
+  const parsedABI = JSON.parse(readABI)
+  const abi = parsedABI['abi']
+
+  const newContent = { contractName, abi }
+
   var copy = path.join(
     __dirname,
     '..',
@@ -45,7 +51,10 @@ async function copyABI(name, contractName) {
     'contractData',
     'ABI-' + String(networkinfo['chainId']) + `-${name}.json`
   )
-  await copyContractABI(pathname, copy)
+  // write the new content to the new file
+  await writedata(copy, JSON.stringify(newContent))
+
+  // await copyContractABI(pathname, copy)
   console.log('-- OK')
 }
 

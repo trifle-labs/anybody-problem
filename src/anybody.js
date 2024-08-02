@@ -1,4 +1,4 @@
-import EventEmitter from 'events'
+import { EventEmitter } from 'events'
 import Sound from './sound.js'
 import { Visuals } from './visuals.js'
 import { Calculations } from './calculations.js'
@@ -96,7 +96,6 @@ const PAUSE_BODY_DATA = [
 export class Anybody extends EventEmitter {
   constructor(p, options = {}) {
     super()
-
     Object.assign(this, Visuals)
     Object.assign(this, Calculations)
     Object.assign(this, Buttons)
@@ -157,7 +156,7 @@ export class Anybody extends EventEmitter {
       aimHelper: false,
       target: 'inside', // 'outside' or 'inside'
       faceRotation: 'mania', // 'time' or 'hitcycle' or 'mania'
-      sfx: 'bubble', // 'space' or 'bubble'
+      sfx: 'space', // 'space' or 'bubble'
       playerName: undefined,
       practiceMode: false,
       bestTimes: null,
@@ -172,13 +171,11 @@ export class Anybody extends EventEmitter {
     this.playerName = name
   }
   removeCSS() {
-    console.log('removeCSS')
     if (typeof document === 'undefined') return
     const style = document.getElementById('canvas-cursor')
     style && document.head.removeChild(style)
   }
   addCSS() {
-    console.log('addCSS')
     if (typeof document === 'undefined') return
     if (document.getElementById('canvas-cursor')) return
     const style = document.createElement('style')
@@ -189,12 +186,12 @@ export class Anybody extends EventEmitter {
         cursor: none;
       }
     `
-    console.log({ style })
     document.head.appendChild(style)
   }
 
   // run whenever the class should be reset
   clearValues() {
+    if (this.level <= 1) this.levelSpeeds = new Array(5)
     this.lastMissileCantBeUndone = false
     this.speedFactor = 2
     this.speedLimit = 10
@@ -465,13 +462,15 @@ export class Anybody extends EventEmitter {
         6 - gravityIndex
       ).slice(1)
       this.bodies.push(
-        ...newBodies.map(this.bodyDataToBodies.bind(this)).map((b) => {
-          b.position.x = 0
-          b.position.y = 0
-          b.py = 0n
-          b.px = 0n
-          return b
-        })
+        ...newBodies
+          .map((b) => this.bodyDataToBodies.call(this, b))
+          .map((b) => {
+            b.position.x = 0
+            b.position.y = 0
+            b.py = 0n
+            b.px = 0n
+            return b
+          })
       )
     }
     this.P5_FPS *= 2
@@ -523,7 +522,9 @@ export class Anybody extends EventEmitter {
     }
 
     if (newPauseState) {
-      this.pauseBodies = PAUSE_BODY_DATA.map(this.bodyDataToBodies.bind(this))
+      this.pauseBodies = PAUSE_BODY_DATA.map((b) =>
+        this.bodyDataToBodies.call(this, b)
+      )
       this.pauseBodies[1].c = this.getBodyColor(this.day + 1, 0)
       this.pauseBodies[2].c = this.getBodyColor(this.day + 2, 0)
       this.paused = newPauseState
@@ -798,11 +799,11 @@ export class Anybody extends EventEmitter {
   generateBodies() {
     this.bodyData =
       this.bodyData || this.generateLevelData(this.day, this.level)
-    this.bodies = this.bodyData.map(this.bodyDataToBodies.bind(this))
+    this.bodies = this.bodyData.map((b) => this.bodyDataToBodies.call(this, b))
     this.startingBodies = this.bodies.length
   }
 
-  bodyDataToBodies(b) {
+  bodyDataToBodies(b, day = this.day) {
     const bodyIndex = b.bodyIndex
     const px = b.px / parseInt(this.scalingFactor)
     const py = b.py / parseInt(this.scalingFactor)
@@ -821,7 +822,7 @@ export class Anybody extends EventEmitter {
       position: this.createVector(px, py),
       velocity: this.createVector(vx, vy),
       radius: radius,
-      c: this.getBodyColor(this.day, bodyIndex)
+      c: this.getBodyColor(day, bodyIndex)
     }
   }
 
@@ -976,8 +977,10 @@ export class Anybody extends EventEmitter {
     this.missiles.push(b)
     this.missiles = this.missiles.slice(-1)
 
-    this.sound?.playMissile()
+    const missileVectorMagnitude = x ** 2 + (y - this.windowWidth) ** 2
+    this.sound?.playMissile(missileVectorMagnitude)
     this.missileInits.push(...this.processMissileInits([b]))
+    this.makeMissileStart()
   }
 
   calculateStats = () => {
@@ -1009,7 +1012,7 @@ export class Anybody extends EventEmitter {
     const bodiesBoost = BODY_BOOST[bodiesIncluded]
     const { startingFrame, timer, frames } = this
     const secondsLeft = (startingFrame + timer - frames) / this.FPS
-    const framesTook = frames - startingFrame
+    const framesTook = frames - startingFrame - 1 // -1 because the first frame is the starting frame
     const timeTook = framesTook / this.FPS
     const speedBoostIndex = Math.floor(secondsLeft / 10)
     const speedBoost = SPEED_BOOST[speedBoostIndex]

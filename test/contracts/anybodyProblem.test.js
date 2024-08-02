@@ -13,7 +13,7 @@ import {
   // generateProof
 } from '../../scripts/utils.js'
 
-import { Anybody } from '../../src/anybody.js'
+import { Anybody } from '../../dist/module.js'
 
 // let tx
 describe('AnybodyProblem Tests', function () {

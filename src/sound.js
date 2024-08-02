@@ -11,110 +11,101 @@ const {
   loaded
 } = Tone
 
-const whistle_8_T7 = new URL(
-  '/public/sound/whistle/whistle_8_T7.mp3',
-  import.meta.url
-).href
-const whistle_4_T3 = new URL(
-  '/public/sound/whistle/whistle_4_T3.mp3',
-  import.meta.url
-).href
-const whistle_7_T6 = new URL(
-  '/public/sound/whistle/whistle_7_T6.mp3',
-  import.meta.url
-).href
-const whistle_12_T11 = new URL(
-  '/public/sound/whistle/whistle_12_T11.mp3',
-  import.meta.url
-).href
-const whistle_8_T7_B = new URL(
-  '/public/sound/whistle/whistle_8_T7_B.mp3',
-  import.meta.url
-).href
+import {
+  whistle_8_T7,
+  whistle_4_T3,
+  whistle_7_T6,
+  whistle_12_T11,
+  whistle_8_T7_B,
+  wii_2_T1,
+  wii_4_T3,
+  wii_8_T7,
+  wii_10_T9,
+  wii_12_T11,
+  wii_T5,
+  wii_chord,
+  ipod_2_T1,
+  ipod_5_T4,
+  ipod_7_T6,
+  ipod_8_T7,
+  ipod_14_FX,
+  ipod_15_Delay_Reverb,
+  ipod_hiss,
+  orbit_3_Audio,
+  orbit_8_DT1,
+  orbit_9_DT2,
+  orbit_10_DT6,
+  coinBox,
+  bongoHard,
+  bubble,
+  coin,
+  bottlerocket2,
+  bomb,
+  affirmative
+} from './files.js'
+const base64Files = [
+  whistle_8_T7,
+  whistle_4_T3,
+  whistle_7_T6,
+  whistle_12_T11,
+  whistle_8_T7_B,
+  wii_2_T1,
+  wii_4_T3,
+  wii_8_T7,
+  wii_10_T9,
+  wii_12_T11,
+  wii_T5,
+  wii_chord,
+  ipod_2_T1,
+  ipod_5_T4,
+  ipod_7_T6,
+  ipod_8_T7,
+  ipod_14_FX,
+  ipod_15_Delay_Reverb,
+  ipod_hiss,
+  orbit_3_Audio,
+  orbit_8_DT1,
+  orbit_9_DT2,
+  orbit_10_DT6,
+  coinBox,
+  bongoHard,
+  bubble,
+  coin,
+  bottlerocket2,
+  bomb,
+  affirmative
+]
 
-const wii_2_T1 = new URL('/public/sound/wii/wii_2_T1.mp3', import.meta.url).href
-const wii_4_T3 = new URL('/public/sound/wii/wii_4_T3.mp3', import.meta.url).href
-const wii_8_T7 = new URL('/public/sound/wii/wii_8_T7.mp3', import.meta.url).href
-const wii_10_T9 = new URL('/public/sound/wii/wii_10_T9.mp3', import.meta.url)
-  .href
-const wii_12_T11 = new URL('/public/sound/wii/wii_12_T11.mp3', import.meta.url)
-  .href
-const wii_T5 = new URL('/public/sound/wii/wii_T5.mp3', import.meta.url).href
-const wii_chord = new URL('/public/sound/wii/wii_chord.mp3', import.meta.url)
-  .href
+const audioBuffers = {}
 
-const ipod_2_T1 = new URL('/public/sound/ipod/ipod_2_T1.mp3', import.meta.url)
-  .href
-const ipod_5_T4 = new URL('/public/sound/ipod/ipod_5_T4.mp3', import.meta.url)
-  .href
-const ipod_7_T6 = new URL('/public/sound/ipod/ipod_7_T6.mp3', import.meta.url)
-  .href
-const ipod_8_T7 = new URL('/public/sound/ipod/ipod_8_T7.mp3', import.meta.url)
-  .href
-const ipod_14_FX = new URL('/public/sound/ipod/ipod_14_FX.mp3', import.meta.url)
-  .href
-const ipod_15_Delay_Reverb = new URL(
-  '/public/sound/ipod/ipod_15_Delay_Reverb.mp3',
-  import.meta.url
-).href
-const ipod_hiss = new URL('/public/sound/ipod/ipod_hiss.mp3', import.meta.url)
-  .href
+const hash = (str) => {
+  let hash = 0
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i)
+    hash |= 0 // Convert to 32bit integer
+  }
+  return hash
+}
 
-const orbit_3_Audio = new URL(
-  '/public/sound/orbit/orbit_3-Audio.mp3',
-  import.meta.url
-).href
-const orbit_8_DT1 = new URL(
-  '/public/sound/orbit/orbit_8_DT1.mp3',
-  import.meta.url
-).href
-const orbit_9_DT2 = new URL(
-  '/public/sound/orbit/orbit_9_DT2.mp3',
-  import.meta.url
-).href
-const orbit_10_DT6 = new URL(
-  '/public/sound/orbit/orbit_10_DT6.mp3',
-  import.meta.url
-).href
-
-const coinBox = new URL('/public/sound/fx/coin-box.mp3', import.meta.url).href
-const bongoHard = new URL(
-  '/public/sound/fx/SC_CP_perc_bongo_loud_tap.mp3',
-  import.meta.url
-).href
-const bubble = new URL(
-  '/public/sound/fx/DSC_GST_one_shot_perc_water.mp3',
-  import.meta.url
-).href
-const coin = new URL(
-  '/public/sound/fx/ESM_Game_Notification_83_Coin_Blip_Select_Tap_Button.mp3',
-  import.meta.url
-).href
-// const bottlerocket = new URL(
-//   '/public/sound/fx/space/BottleRocket_BW.60057.mp3',
-//   import.meta.url
-// ).href
-// const bottlerocket1 = new URL(
-//   '/public/sound/fx/space/BottleRocket_BW.60058.mp3',
-//   import.meta.url
-// ).href
-const bottlerocket2 = new URL(
-  '/public/sound/fx/space/BottleRocket_S011FI.5.mp3',
-  import.meta.url
-).href
-// const heavy = new URL(
-//   '/public/sound/fx/space/ESM_GW_heavy_weapon_one_shot_rocket_launcher_launching_3_rocket_shot_clicky_long_gas_3.mp3',
-//   import.meta.url
-// ).href
-const bomb = new URL(
-  '/public/sound/fx/space/ESM_Builder_Game_Fireworks_Bomb_Explosion_2_Fire_Bomb_Explosive_War_Battle_Rocket_Mortar_Tank_Cannon.mp3',
-  import.meta.url
-).href
-const affirmative = new URL(
-  '/public/sound/fx/space/ESM_Digital_Game_Affirmation_Sound_Sci_fi_Military_Robotic_Robot_Cyber_Futuristic_Transition.mp3',
-  import.meta.url
-).href
-
+for (const file of base64Files) {
+  const fromBase64 = atob(file)
+  let arrayBuffer = Uint8Array.from(fromBase64, (e) => e.charCodeAt(0))
+  if (typeof window === 'undefined') {
+    break
+  }
+  const audioContext = new window.AudioContext()
+  audioContext.decodeAudioData(
+    arrayBuffer.buffer,
+    (audioBuffer) => {
+      const source = audioContext.createBufferSource()
+      source.buffer = audioBuffer
+      audioBuffers[hash(file)] = audioBuffer
+    },
+    (error) => {
+      console.error('Error decoding audio data:', { error })
+    }
+  )
+}
 const SONGS = {
   whistle: {
     bpm: 70,
@@ -244,13 +235,15 @@ export default class Sound {
     this.playOneShot(bongoHard, -22)
   }
 
-  async playMissile() {
+  async playMissile(vectorMagnitude) {
     this.missilePanner = this.missilePanner || new Panner().connect(this.master)
     this.missilePanner.pan.value = -PAN_RANGE / 2
     let player
     if (this.anybody.sfx === 'space') {
+      const playbackRate =
+        vectorMagnitude < 666_666 ? 3 : vectorMagnitude < 1_333_332 ? 2 : 1
       player = await this.playOneShot(bottlerocket2, -24, {
-        playbackRate: random([1, 2, 3])
+        playbackRate
       })
     } else {
       player = await this.playOneShot(bubble, -26, {
@@ -267,7 +260,7 @@ export default class Sound {
 
   async playExplosion(x) {
     if (this.anybody.sfx === 'space') {
-      const player = await this.playOneShot(bomb, -20, {
+      const player = await this.playOneShot(coin, -20, {
         playbackRate: random([1, 1.4, 0.8])
       })
       if (!player) return
@@ -289,12 +282,14 @@ export default class Sound {
   }
 
   async playOneShot(url, volume, opts = false) {
+    const audioBuffer = audioBuffers[hash(url)]
     await start()
     this.oneShots = this.oneShots || {}
-    const key = `${url}-${volume}-${opts && JSON.stringify(opts)}`
+    const urlHash = hash(url)
+    const key = `${urlHash}-${volume}-${opts && JSON.stringify(opts)}`
     if (!this.oneShots[key]) {
       this.oneShots[key] = new Player({
-        url,
+        url: audioBuffer,
         volume,
         ...opts
       }).toDestination()
@@ -357,38 +352,38 @@ export default class Sound {
   }
 
   async playStart() {
-    if (this.anybody.sfx === 'space') {
-      this.playOneShot(affirmative, -22, { playbackRate: 1 })
-      this.playOneShot(affirmative, -22, { playbackRate: 2 })
-      this.playOneShot(affirmative, -22, { playbackRate: 0.5 })
-    } else {
-      this.playOneShot(coin, -20)
-    }
+    // if (this.anybody.sfx === 'space') {
+    //   this.playOneShot(affirmative, -22, { playbackRate: 1 })
+    //   this.playOneShot(affirmative, -22, { playbackRate: 2 })
+    //   this.playOneShot(affirmative, -22, { playbackRate: 0.5 })
+    // } else {
+    this.playOneShot(coin, -20)
+    // }
   }
 
   async playStat() {
-    if (this.anybody.sfx === 'space') {
-      this.playOneShot(bottlerocket2, -24, {
-        playbackRate: random([5, 10, 7])
-      })
-    } else {
-      this.playOneShot(bubble, -26, { playbackRate: random([3, 5, 10.5]) })
-    }
+    // if (this.anybody.sfx === 'space') {
+    //   this.playOneShot(bottlerocket2, -24, {
+    //     playbackRate: random([5, 10, 7])
+    //   })
+    // } else {
+    this.playOneShot(bubble, -26, { playbackRate: random([3, 5, 10.5]) })
+    // }
   }
 
   async playSuccess() {
-    if (this.anybody.sfx === 'space') {
-      this.playOneShot(affirmative, -22, { playbackRate: 1 })
-    } else {
-      this.playOneShot(coinBox, -28)
-    }
+    // if (this.anybody.sfx === 'space') {
+    //   this.playOneShot(affirmative, -22, { playbackRate: 1 })
+    // } else {
+    this.playOneShot(coinBox, -28)
+    // }
   }
 
   voiceFromFile(file) {
     const voice = {
       file: file,
       player: new Player({
-        url: `${file}`,
+        url: file,
         fadeOut: 0.1
       }),
       panVol: new PanVol()
@@ -426,7 +421,9 @@ export default class Sound {
 
     if (!this.voices) {
       const parts = song.parts[0]
-      this.voices = parts.map((part) => this.voiceFromFile(part[0]))
+      this.voices = parts.map((part) =>
+        this.voiceFromFile(audioBuffers[hash(part[0])])
+      )
 
       // master output
       this.reverb ||= new Reverb(0.5)
@@ -451,9 +448,11 @@ export default class Sound {
         this.voices.forEach((voice, i) => {
           // just step through parts
           const part = song.parts[this.currentMeasure % song.parts.length][i]
-          const url = part[0]
+          const url = audioBuffers[hash(part[0])]
           if (url) {
-            voice.player.load(url)
+            // TODO: is ok to not do this now that we're not using URLs?
+            // it throws an error because url is not a url
+            // voice.player.load(url)
           } else {
             voice.player.stop()
           }

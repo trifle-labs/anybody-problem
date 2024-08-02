@@ -3,12 +3,16 @@
   "version": "1.0.0",
   "license": "CC-BY-NC-4.0",
   "targets": {
-    "main": false
+    "module": {
+      "optimize": true
+    }
   },
-  "main": "src/index.js",
+  "source": "src/index.js",
+  "module": "dist/module.js",
   "scripts": {
-    "build": "yarn parcel build src/index.html",
-    "dev": "rm -rf .parcel-cache && yarn parcel src/index.html --open",
+    "build": "rm -rf .parcel-cache && rm -rf dist && yarn parcel build src/index.js",
+    "dev": "rm -rf .parcel-cache && rm -rf dist && yarn parcel watch src/index.js",
+    "serve": "rm -rf .parcel-cache && yarn parcel src/index.html --open",
     "chain": "hardhat node",
     "circom": "./scripts/basic_circom.sh",
     "circom:game-test": "yarn circom game_2_20 && yarn circom game_3_20 && yarn circom game_4_20 && yarn circom game_5_20 && yarn circom game_6_20",
@@ -17,7 +21,7 @@
     "test:circom": "ls test/*.js | grep -v -e 'bodies' -e 'problems' -e 'solver' -e 'problemMetadata' -e 'bodyMetadata' | xargs npx hardhat test",
     "test:solidity": "hardhat test test/problems.test.js test/problemMetadata.test.js test/bodyMetadata.test.js test/bodies.test.js test/solver.test.js",
     "test": "hardhat test",
-    "precommit": "lint-staged"
+    "precommit": "lint-staged && yarn build && git add dist"
   },
   "lint-staged": {
     "*.{js,jsx}": [
@@ -57,14 +61,17 @@
     "ignorePatterns": [
       "/docs/index.js",
       "**/*.min.js",
-      "**/*.worker.js"
+      "**/*.worker.js",
+      "/dist/*"
     ],
     "root": true
   },
   "dependencies": {
+    "ethers": "^5.7.0",
     "tone": "^15.0.4"
   },
   "devDependencies": {
+    "@parcel/transformer-inline-string": "2.12.0",
     "@babel/core": "^7.24.0",
     "@babel/eslint-parser": "^7.23.10",
     "@babel/preset-env": "^7.24.0",
@@ -85,7 +92,6 @@
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
     "ethereum-waffle": "*",
-    "ethers": "^5.7.0",
     "hardhat": "2.21.0",
     "hardhat-contract-sizer": "^2.10.0",
     "hardhat-gas-reporter": "^2.2.0",
