@@ -868,10 +868,10 @@ export const Visuals = {
       )
     }
     for (let i = 0; i < LEVELS; i++) {
-      const best = i < bestTimes.length ? bestTimes[i] : '-'
+      const best = i < bestTimes.length ? bestTimes[i].toFixed(2) : '-'
       p.fill(THEME.iris_60)
       p.text(
-        best.toFixed(2),
+        best,
         col2X,
         middleBoxY + rowHeight * i + rowHeight / 2,
         150,
@@ -1960,7 +1960,6 @@ export const Visuals = {
     const bodyData = this.generateLevelData(day, 1)
     const bodies = bodyData.map((b) => this.bodyDataToBodies.call(this, b, day))
     const heroBody = bodies[0]
-    console.log({ heroBody })
 
     // create an SVG element with a black background
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
