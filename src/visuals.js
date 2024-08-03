@@ -803,13 +803,15 @@ export const Visuals = {
     p.text(formattedDate, 454, 174)
     // end upper box text
 
-    const bestTimes =
-      this.todaysRecords?.levels?.map((l) => l.events[0].time / this.FPS) ||
-      Array.from({ length: 5 }, (_, i) => levelTimes[i] || 0)
-    
-    const showBestAndDiff = bestTimes.length
-
     // middle box text
+    const levelTimes = this.levelSpeeds
+      .map((result) => result?.framesTook / this.FPS)
+      .filter((l) => l !== undefined)
+    const bestTimes =
+      this.todaysRecords?.levels?.map((l) => l.events[0].time / this.FPS)
+    
+    const showBestAndDiff = bestTimes?.length
+
     p.textSize(48)
     p.fill(THEME.iris_60)
     p.textAlign(p.RIGHT, p.TOP)
@@ -826,9 +828,6 @@ export const Visuals = {
     }
 
     // middle box text - values
-    const levelTimes = this.levelSpeeds
-      .map((result) => result?.framesTook / this.FPS)
-      .filter((l) => l !== undefined)
     const plusMinus = bestTimes
       .map((best, i) => {
         if (i >= levelTimes.length) return ''
