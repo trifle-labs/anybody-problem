@@ -133,7 +133,7 @@ contract ExternalMetadata is Ownable {
 
         ThemeSpecs memory satXDark = ThemeSpecs({
             hueStart: 0,
-            hueEnd: 360,
+            hueEnd: 359,
             saturationStart: 80,
             saturationEnd: 100,
             lightnessStart: 18,
