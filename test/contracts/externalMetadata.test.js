@@ -121,7 +121,7 @@ describe('ExternalMetadata Tests', function () {
     const yearMonth = json.attributes[1].value
     expect(yearMonth).to.equal('2024-08') //'1970-01'
 
-    let svg = await externalMetadata.getSVG(runId)
+    let svg = await externalMetadata.getSVG(day)
     svg = svg.replace('data:image/svg+xml;base64,', '')
     const base64ToString = (base64) => {
       const buff = Buffer.from(base64, 'base64')
