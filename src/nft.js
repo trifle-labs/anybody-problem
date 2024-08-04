@@ -8,12 +8,12 @@ window.anybody
 q5.setup = () => {
   const options = {
     level: 1,
-    bestTimes: [1.45, 2.44, 16.79, 23.45, 36.45],
-    day: Math.floor(Math.random() * 10000) + 10000000
+    bestTimes: [1.45, 2.44, 16.79, 23.45, 36.45]
+    // day: Math.floor(Math.random() * 10000) + 10000000
   }
-  // if (day && day !== '') {
-  //   options.day = parseInt(day)
-  // }
+  if (day && day !== '') {
+    options.day = parseInt(day)
+  }
   window.anybody = new Anybody(q5, options)
   if (!day) {
     window.location.hash = window.anybody.day.toString()

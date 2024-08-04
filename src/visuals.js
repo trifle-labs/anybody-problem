@@ -533,6 +533,10 @@ export const Visuals = {
         }
         graphic.colorMode(graphic.RGB)
       }
+      // this.milkyBG ||= this.p.createGraphics(
+      //   this.windowWidth,
+      //   this.windowHeight
+      // )
       drawMilky(this.starBG)
     }
     const basicX = 0
@@ -545,6 +549,51 @@ export const Visuals = {
       this.windowWidth,
       this.windowHeight
     )
+    // switch (this.level) {
+    //   case 0:
+    //   case 1:
+    //     this.p.image(
+    //       this.milkyBG,
+    //       basicX,
+    //       basicY,
+    //       this.windowWidth,
+    //       this.windowHeight
+    //     )
+    //     break
+    //   case 2:
+    //     if (!this.milkyBG2) {
+    //       console.log('rotate milkyBG')
+    //       this.milkyBG2 = true //this.milkyBG
+    //       console.log({ milkyBG: this.milkyBG })
+    //       // this.milkyBG.clear()
+    //     }
+    //     this.p.push()
+    //     this.p.rotate(this.p.PI / 2)
+    //     this.p.translate(0, -this.windowHeight)
+    //     this.p.image(
+    //       this.milkyBG,
+    //       basicX,
+    //       basicY,
+    //       this.windowWidth,
+    //       this.windowHeight
+    //     )
+    //     this.p.pop()
+    //     break
+    //   case 3:
+    //     if (!this.milkyBG3) {
+    //       this.milkyBG3 = this.milkyBG2
+    //       this.milkyBG3.rotata(this.p.PI)
+    //       this.milkyBG2.clear()
+    //     }
+    //     this.p.image(
+    //       this.milkyBG3,
+    //       basicX,
+    //       basicY,
+    //       this.windowWidth,
+    //       this.windowHeight
+    //     )
+    //     break
+    // }
   },
 
   drawPopup() {
@@ -2673,7 +2722,11 @@ export const Visuals = {
     const shakingAmount = 10
     this.shakeX = this.p.random(-shakingAmount, shakingAmount)
     this.shakeY = this.p.random(-shakingAmount, shakingAmount)
-    this.p.translate(this.shakeX, this.shakeY)
+    if (this.shaking <= 0) {
+      this.p.translate(0, 0)
+    } else {
+      this.p.translate(this.shakeX, this.shakeY)
+    }
   },
   makeParticles(x, y) {
     const array = []
