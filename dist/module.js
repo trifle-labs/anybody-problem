@@ -1820,8 +1820,8 @@ const $123b50dec58735f8$export$1c8732ad58967379 = {
         // end upper box text
         // middle box text
         const levelTimes = this.levelSpeeds.map((result)=>result?.framesTook / this.FPS).filter((l)=>l !== undefined);
-        const bestTimes = this.todaysRecords?.levels?.map((l)=>l.events[0].time / this.FPS);
-        const showBestAndDiff = bestTimes?.length;
+        const bestTimes = this.todaysRecords?.levels?.map((l)=>l.events[0].time / this.FPS) ?? [];
+        const showBestAndDiff = bestTimes.length;
         p.textSize(48);
         p.fill((0, $d60e3aa22c788113$export$5714e40777c1bcc2).iris_60);
         p.textAlign(p.RIGHT, p.TOP);
@@ -1879,14 +1879,16 @@ const $123b50dec58735f8$export$1c8732ad58967379 = {
         p.textSize(64);
         // middle box text - sum line
         if (showCumulativeTimeRow) {
-            const bestTime = bestTimes.slice(0, levelTimes.length).reduce((a, b)=>a + b, 0);
             const levelTimeSum = levelTimes.reduce((a, b)=>a + b, 0);
-            let diff = Number((levelTimeSum - bestTime).toFixed(2));
             const sumLine = [
-                levelTimeSum.toFixed(2),
-                bestTime.toFixed(2),
-                `${diff > 0 ? "+" : "-"}${Math.abs(diff).toFixed(2)}`
+                levelTimeSum.toFixed(2)
             ];
+            if (showBestAndDiff) {
+                const bestTime = bestTimes.slice(0, levelTimes.length).reduce((a, b)=>a + b, 0);
+                let diff = Number((levelTimeSum - bestTime).toFixed(2));
+                sumLine[1] = bestTime.toFixed(2);
+                sumLine[2] = `${diff > 0 ? "+" : "-"}${Math.abs(diff).toFixed(2)}`;
+            }
             const sumLineY = middleBoxY + rowHeight * Math.min(5, $123b50dec58735f8$var$LEVELS);
             const sumLineHeight = 80;
             const sumLineYText = sumLineY + sumLineHeight / 2;

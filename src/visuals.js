@@ -808,9 +808,9 @@ export const Visuals = {
       .map((result) => result?.framesTook / this.FPS)
       .filter((l) => l !== undefined)
     const bestTimes =
-      this.todaysRecords?.levels?.map((l) => l.events[0].time / this.FPS)
+      this.todaysRecords?.levels?.map((l) => l.events[0].time / this.FPS) ?? []
     
-    const showBestAndDiff = bestTimes?.length
+    const showBestAndDiff = bestTimes.length
 
     p.textSize(48)
     p.fill(THEME.iris_60)
@@ -874,7 +874,7 @@ export const Visuals = {
           const sign = Number(diff.toFixed(2)) > 0 ? '+' : '-'
           return sign + Math.abs(diff).toFixed(2)
         })
-      .filter(Boolean)
+        .filter(Boolean)
       // best times
       for (let i = 0; i < LEVELS; i++) {
         const best = i < bestTimes.length ? bestTimes[i].toFixed(2) : '-'
@@ -908,16 +908,20 @@ export const Visuals = {
 
     // middle box text - sum line
     if (showCumulativeTimeRow) {
-      const bestTime = bestTimes
-        .slice(0, levelTimes.length)
-        .reduce((a, b) => a + b, 0)
       const levelTimeSum = levelTimes.reduce((a, b) => a + b, 0)
-      let diff = Number((levelTimeSum - bestTime).toFixed(2))
       const sumLine = [
-        levelTimeSum.toFixed(2),
-        bestTime.toFixed(2),
-        `${diff > 0 ? '+' : '-'}${Math.abs(diff).toFixed(2)}`
+        levelTimeSum.toFixed(2)
       ]
+
+      if (showBestAndDiff) {
+        const bestTime = bestTimes
+          .slice(0, levelTimes.length)
+          .reduce((a, b) => a + b, 0)
+        let diff = Number((levelTimeSum - bestTime).toFixed(2))
+        sumLine[1] = bestTime.toFixed(2)
+        sumLine[2] = `${diff > 0 ? '+' : '-'}${Math.abs(diff).toFixed(2)}`
+      }
+
       const sumLineY = middleBoxY + rowHeight * Math.min(5, LEVELS)
       const sumLineHeight = 80
       const sumLineYText = sumLineY + sumLineHeight / 2
