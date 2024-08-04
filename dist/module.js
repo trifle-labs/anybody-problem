@@ -3206,63 +3206,76 @@ const $123b50dec58735f8$export$1c8732ad58967379 = {
         }
         return this.lastFrameRate;
     },
-    shareCanvas () {
+    shareCanvas (showPopup = true) {
         const canvas = this.p.canvas;
-        canvas.toBlob((blob)=>{
-            const file = new File([
-                blob
-            ], "p5canvas.png", {
-                type: "image/png"
-            });
-            if (navigator.share) {
-                console.log("sharing canvas...");
-                navigator.share({
-                    files: [
-                        file
-                    ]
-                }).catch((error)=>console.error("Error sharing:", error));
-            } else if (navigator.clipboard && navigator.clipboard.write) try {
-                console.log("writing canvas to clipboard...");
-                navigator.clipboard.write([
-                    new ClipboardItem({
-                        "image/png": blob
-                    })
-                ]);
-                this.popup = {
-                    header: "Go Share!",
-                    body: [
-                        "Copied results to your clipboard."
-                    ],
-                    fg: (0, $d60e3aa22c788113$export$5714e40777c1bcc2).pink_50,
-                    bg: (0, $d60e3aa22c788113$export$5714e40777c1bcc2).pink_75,
-                    buttons: [
-                        {
-                            text: "CLOSE",
-                            onClick: ()=>{
-                                this.popup = null;
+        return new Promise((resolve, reject)=>{
+            canvas.toBlob(async (blob)=>{
+                const file = new File([
+                    blob
+                ], "p5canvas.png", {
+                    type: "image/png"
+                });
+                if (navigator.share) {
+                    console.log("sharing canvas...");
+                    await navigator.share({
+                        files: [
+                            file
+                        ]
+                    }).catch((error)=>{
+                        console.error("Error sharing:", error);
+                        reject(error);
+                    });
+                    resolve();
+                } else if (navigator.clipboard && navigator.clipboard.write) try {
+                    console.log("writing canvas to clipboard...");
+                    await navigator.clipboard.write([
+                        new ClipboardItem({
+                            "image/png": blob
+                        })
+                    ]);
+                    const msg = "Copied results to your clipboard.";
+                    if (showPopup) this.popup = {
+                        header: "Go Share!",
+                        body: [
+                            msg
+                        ],
+                        fg: (0, $d60e3aa22c788113$export$5714e40777c1bcc2).pink_50,
+                        bg: (0, $d60e3aa22c788113$export$5714e40777c1bcc2).pink_75,
+                        buttons: [
+                            {
+                                text: "CLOSE",
+                                onClick: ()=>{
+                                    this.popup = null;
+                                }
                             }
-                        }
-                    ]
-                };
-            } catch (error) {
-                console.error("Error copying to clipboard:", error);
-                this.popup = {
-                    header: "Hmmm",
-                    body: [
-                        "Couldn\u2019t copy results to your clipboard."
-                    ],
-                    buttons: [
-                        {
-                            text: "CLOSE",
-                            onClick: ()=>{
-                                this.popup = null;
+                        ]
+                    };
+                    resolve(msg);
+                } catch (error) {
+                    console.error("Error copying to clipboard:", error);
+                    this.popup = {
+                        header: "Hmmm",
+                        body: [
+                            "Couldn\u2019t copy results to your clipboard."
+                        ],
+                        buttons: [
+                            {
+                                text: "CLOSE",
+                                onClick: ()=>{
+                                    this.popup = null;
+                                }
                             }
-                        }
-                    ]
-                };
-            }
-            else console.error("no options to share canvas!");
-        }, "image/png");
+                        ]
+                    };
+                    reject(error);
+                }
+                else {
+                    const error = new Error("no options to share canvas!");
+                    console.error(error);
+                    reject(error);
+                }
+            }, "image/png");
+        });
     },
     shakeScreen () {
         this.shaking ||= this.P5_FPS / 2;
