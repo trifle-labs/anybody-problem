@@ -853,34 +853,30 @@ export const Visuals = {
     // end upper box text
 
     // middle box text
+    const levelTimes = this.levelSpeeds
+      .map((result) => result?.framesTook / this.FPS)
+      .filter((l) => l !== undefined)
+    const bestTimes =
+      this.todaysRecords?.levels?.map((l) => l.events[0].time / this.FPS) ?? []
+
+    const showBestAndDiff = bestTimes.length
+
     p.textSize(48)
     p.fill(THEME.iris_60)
     p.textAlign(p.RIGHT, p.TOP)
     const col1X = 580
     const col2X = 770
     const col3X = 960
+    const timeColX = showBestAndDiff ? col1X : col3X
 
     // middle box text - labels
-    p.text('time', col1X, 264)
-    p.text('best', col2X, 264)
-    p.text('+/-', col3X, 264)
+    p.text('time', timeColX, 264)
+    if (showBestAndDiff) {
+      p.text('best', col2X, 264)
+      p.text('+/-', col3X, 264)
+    }
 
     // middle box text - values
-    const levelTimes = this.levelSpeeds
-      .map((result) => result?.framesTook / this.FPS)
-      .filter((l) => l !== undefined)
-    const bestTimes =
-      this.todaysRecords?.levels?.map((l) => l.events[0].time / this.FPS) ||
-      Array.from({ length: 5 }, (_, i) => levelTimes[i] || 0)
-    const plusMinus = bestTimes
-      .map((best, i) => {
-        if (i >= levelTimes.length) return ''
-        const time = levelTimes[i]
-        const diff = time - best
-        const sign = Number(diff.toFixed(2)) > 0 ? '+' : '-'
-        return sign + Math.abs(diff).toFixed(2)
-      })
-      .filter(Boolean)
     const problemComplete = levelTimes.length >= LEVELS
     const rowHeight = 72
 
@@ -905,57 +901,74 @@ export const Visuals = {
     p.textSize(44)
     // const middleBoxPadding = 12
     // p.translate(0, middleBoxPadding)
+    // times
     for (let i = 0; i < LEVELS; i++) {
       const time = i < levelTimes.length ? levelTimes[i].toFixed(2) : '-'
       p.fill(THEME.iris_30)
       p.text(
         time,
-        col1X,
+        timeColX,
         middleBoxY + rowHeight * i + rowHeight / 2,
         150,
         rowHeight
       )
     }
-    for (let i = 0; i < LEVELS; i++) {
-      const best = i < bestTimes.length ? bestTimes[i].toFixed(2) : '-'
-      p.fill(THEME.iris_60)
-      p.text(
-        best,
-        col2X,
-        middleBoxY + rowHeight * i + rowHeight / 2,
-        150,
-        rowHeight
-      )
-    }
-    for (let i = 0; i < LEVELS; i++) {
-      const diff = plusMinus[i] || '-'
-      if (i === levelTimes.length - 1) {
-        p.fill(/^-/.test(diff) ? THEME.lime : THEME.flame_50)
-      } else {
-        p.fill(/^-/.test(diff) ? THEME.green_75 : THEME.flame_75)
+    if (showBestAndDiff) {
+      // calc diffs
+      const plusMinus = bestTimes
+        .map((best, i) => {
+          if (i >= levelTimes.length) return ''
+          const time = levelTimes[i]
+          const diff = time - best
+          const sign = Number(diff.toFixed(2)) > 0 ? '+' : '-'
+          return sign + Math.abs(diff).toFixed(2)
+        })
+        .filter(Boolean)
+      // best times
+      for (let i = 0; i < LEVELS; i++) {
+        const best = i < bestTimes.length ? bestTimes[i].toFixed(2) : '-'
+        p.fill(THEME.iris_60)
+        p.text(
+          best,
+          col2X,
+          middleBoxY + rowHeight * i + rowHeight / 2,
+          150,
+          rowHeight
+        )
       }
-      p.text(
-        diff,
-        col3X,
-        middleBoxY + rowHeight * i + rowHeight / 2,
-        150,
-        rowHeight
-      )
+      // diff values
+      for (let i = 0; i < LEVELS; i++) {
+        const diff = plusMinus[i] || '-'
+        if (i === levelTimes.length - 1) {
+          p.fill(/^-/.test(diff) ? THEME.lime : THEME.flame_50)
+        } else {
+          p.fill(/^-/.test(diff) ? THEME.green_75 : THEME.flame_75)
+        }
+        p.text(
+          diff,
+          col3X,
+          middleBoxY + rowHeight * i + rowHeight / 2,
+          150,
+          rowHeight
+        )
+      }
     }
     p.textSize(64)
 
     // middle box text - sum line
     if (showCumulativeTimeRow) {
-      const bestTime = bestTimes
-        .slice(0, levelTimes.length)
-        .reduce((a, b) => a + b, 0)
       const levelTimeSum = levelTimes.reduce((a, b) => a + b, 0)
-      let diff = Number((levelTimeSum - bestTime).toFixed(2))
-      const sumLine = [
-        levelTimeSum.toFixed(2),
-        bestTime.toFixed(2),
-        `${diff > 0 ? '+' : '-'}${Math.abs(diff).toFixed(2)}`
-      ]
+      const sumLine = [levelTimeSum.toFixed(2)]
+
+      if (showBestAndDiff) {
+        const bestTime = bestTimes
+          .slice(0, levelTimes.length)
+          .reduce((a, b) => a + b, 0)
+        let diff = Number((levelTimeSum - bestTime).toFixed(2))
+        sumLine[1] = bestTime.toFixed(2)
+        sumLine[2] = `${diff > 0 ? '+' : '-'}${Math.abs(diff).toFixed(2)}`
+      }
+
       const sumLineY = middleBoxY + rowHeight * Math.min(5, LEVELS)
       const sumLineHeight = 80
       const sumLineYText = sumLineY + sumLineHeight / 2
@@ -963,7 +976,8 @@ export const Visuals = {
       p.fill(THEME.iris_60)
       p.text(problemComplete ? 'solved in' : 'total time', 44, sumLineYText)
       p.textAlign(p.RIGHT, p.CENTER)
-      for (const [i, col] of [col1X, col2X, col3X].entries()) {
+      const columns = showBestAndDiff ? [col1X, col2X, col3X] : [timeColX]
+      for (const [i, col] of columns.entries()) {
         if (i == 0) p.fill(THEME.iris_30)
         else if (i == 1) p.fill(THEME.iris_60)
         else p.fill(/^-/.test(sumLine[i]) ? THEME.lime : THEME.flame_75)
@@ -1054,7 +1068,7 @@ export const Visuals = {
     this.showShare = this.level >= 5
     const buttonCount = this.showShare ? 4 : 3
     this.drawBottomButton({
-      text: 'RETRY',
+      text: 'REDO',
       onClick: () => {
         this.restart(null, false)
       },
@@ -2665,56 +2679,71 @@ export const Visuals = {
     return this.lastFrameRate
   },
 
-  shareCanvas() {
+  shareCanvas(showPopup = true) {
     const canvas = this.p.canvas
 
-    canvas.toBlob((blob) => {
-      const file = new File([blob], 'p5canvas.png', { type: 'image/png' })
+    return new Promise((resolve, reject) => {
+      canvas.toBlob(async (blob) => {
+        const file = new File([blob], 'p5canvas.png', { type: 'image/png' })
 
-      if (navigator.share) {
-        console.log('sharing canvas...')
-        navigator
-          .share({
-            files: [file]
-          })
-          .catch((error) => console.error('Error sharing:', error))
-      } else if (navigator.clipboard && navigator.clipboard.write) {
-        try {
-          console.log('writing canvas to clipboard...')
-          navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
-          this.popup = {
-            header: 'Go Share!',
-            body: ['Copied results to your clipboard.'],
-            fg: THEME.pink_50,
-            bg: THEME.pink_75,
-            buttons: [
-              {
-                text: 'CLOSE',
-                onClick: () => {
-                  this.popup = null
-                }
+        if (navigator.share) {
+          console.log('sharing canvas...')
+          await navigator
+            .share({
+              files: [file]
+            })
+            .catch((error) => {
+              console.error('Error sharing:', error)
+              reject(error)
+            })
+          resolve()
+        } else if (navigator.clipboard && navigator.clipboard.write) {
+          try {
+            console.log('writing canvas to clipboard...')
+            await navigator.clipboard.write([
+              new ClipboardItem({ 'image/png': blob })
+            ])
+            const msg = 'Copied results to your clipboard.'
+            if (showPopup) {
+              this.popup = {
+                header: 'Go Share!',
+                body: [msg],
+                fg: THEME.pink_50,
+                bg: THEME.pink_75,
+                buttons: [
+                  {
+                    text: 'CLOSE',
+                    onClick: () => {
+                      this.popup = null
+                    }
+                  }
+                ]
               }
-            ]
-          }
-        } catch (error) {
-          console.error('Error copying to clipboard:', error)
-          this.popup = {
-            header: 'Hmmm',
-            body: ['Couldn’t copy results to your clipboard.'],
-            buttons: [
-              {
-                text: 'CLOSE',
-                onClick: () => {
-                  this.popup = null
+            }
+            resolve(msg)
+          } catch (error) {
+            console.error('Error copying to clipboard:', error)
+            this.popup = {
+              header: 'Hmmm',
+              body: ['Couldn’t copy results to your clipboard.'],
+              buttons: [
+                {
+                  text: 'CLOSE',
+                  onClick: () => {
+                    this.popup = null
+                  }
                 }
-              }
-            ]
+              ]
+            }
+            reject(error)
           }
+        } else {
+          const error = new Error('no options to share canvas!')
+          console.error(error)
+          reject(error)
         }
-      } else {
-        console.error('no options to share canvas!')
-      }
-    }, 'image/png')
+      }, 'image/png')
+    })
   },
   shakeScreen() {
     this.shaking ||= this.P5_FPS / 2
