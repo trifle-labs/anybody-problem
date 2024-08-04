@@ -1836,13 +1836,6 @@ const $123b50dec58735f8$export$1c8732ad58967379 = {
             p.text("+/-", col3X, 264);
         }
         // middle box text - values
-        const plusMinus = bestTimes.map((best, i)=>{
-            if (i >= levelTimes.length) return "";
-            const time = levelTimes[i];
-            const diff = time - best;
-            const sign = Number(diff.toFixed(2)) > 0 ? "+" : "-";
-            return sign + Math.abs(diff).toFixed(2);
-        }).filter(Boolean);
         const problemComplete = levelTimes.length >= $123b50dec58735f8$var$LEVELS;
         const rowHeight = 72;
         // middle box text - highlight current row (blink via opacity)
@@ -1861,6 +1854,14 @@ const $123b50dec58735f8$export$1c8732ad58967379 = {
             p.text(time, timeColX, middleBoxY + rowHeight * i + rowHeight / 2, 150, rowHeight);
         }
         if (showBestAndDiff) {
+            // calc diffs
+            const plusMinus = bestTimes.map((best, i)=>{
+                if (i >= levelTimes.length) return "";
+                const time = levelTimes[i];
+                const diff = time - best;
+                const sign = Number(diff.toFixed(2)) > 0 ? "+" : "-";
+                return sign + Math.abs(diff).toFixed(2);
+            }).filter(Boolean);
             // best times
             for(let i = 0; i < $123b50dec58735f8$var$LEVELS; i++){
                 const best = i < bestTimes.length ? bestTimes[i].toFixed(2) : "-";

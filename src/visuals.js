@@ -828,15 +828,6 @@ export const Visuals = {
     }
 
     // middle box text - values
-    const plusMinus = bestTimes
-      .map((best, i) => {
-        if (i >= levelTimes.length) return ''
-        const time = levelTimes[i]
-        const diff = time - best
-        const sign = Number(diff.toFixed(2)) > 0 ? '+' : '-'
-        return sign + Math.abs(diff).toFixed(2)
-      })
-      .filter(Boolean)
     const problemComplete = levelTimes.length >= LEVELS
     const rowHeight = 72
 
@@ -874,6 +865,16 @@ export const Visuals = {
       )
     }
     if (showBestAndDiff) {
+      // calc diffs
+      const plusMinus = bestTimes
+        .map((best, i) => {
+          if (i >= levelTimes.length) return ''
+          const time = levelTimes[i]
+          const diff = time - best
+          const sign = Number(diff.toFixed(2)) > 0 ? '+' : '-'
+          return sign + Math.abs(diff).toFixed(2)
+        })
+      .filter(Boolean)
       // best times
       for (let i = 0; i < LEVELS; i++) {
         const best = i < bestTimes.length ? bestTimes[i].toFixed(2) : '-'
