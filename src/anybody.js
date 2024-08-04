@@ -329,20 +329,20 @@ export class Anybody extends EventEmitter {
     // and track mouseX and mouseY
     this.p.touchStarted = () => {}
     this.p.mouseMoved = this.handleMouseMove
-    this.p.touchMoved = this.handleMouseMove
+    // this.p.touchMoved = this.handleMouseMove
     this.p.mousePressed = this.handleMousePressed
     this.p.mouseReleased = this.handleMouseReleased
     this.p.touchEnded = () => {}
 
     canvas.addEventListener('click', this.handleGameClick)
-    canvas.addEventListener('touchend', this.handleGameClick)
+    // canvas.addEventListener('touchend', this.handleGameClick)
     window.addEventListener('keydown', this.handleGameKeyDown)
   }
 
   removeListener() {
     const { canvas } = this.p
     canvas?.removeEventListener('click', this.handleGameClick)
-    canvas?.removeEventListener('touchend', this.handleGameClick)
+    // canvas?.removeEventListener('touchend', this.handleGameClick)
     window?.removeEventListener('keydown', this.handleGameKeyDown)
     window?.removeEventListener('keydown', this.sound.handleKeyDown)
   }
@@ -490,7 +490,7 @@ export class Anybody extends EventEmitter {
       this.setOptions(options)
     }
     if (this.level !== this.lastLevel) {
-      this.starBG = null
+      // this.starBG = null
     }
     this.clearValues()
     this.sound?.stop()
@@ -844,7 +844,7 @@ export class Anybody extends EventEmitter {
     const fgIndex = this.randomRange(0, fgOptions - 1, rand)
     rand = utils.solidityKeccak256(['bytes32'], [rand])
     const coreIndex = this.randomRange(0, coreOptions - 1, rand)
-
+    rand = utils.solidityKeccak256(['bytes32'], [rand])
     const dailyThemeIndex = this.randomRange(0, numberOfThemes - 1, rand)
 
     const themeName = themes[dailyThemeIndex]

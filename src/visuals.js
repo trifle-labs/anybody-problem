@@ -533,6 +533,10 @@ export const Visuals = {
         }
         graphic.colorMode(graphic.RGB)
       }
+      // this.milkyBG ||= this.p.createGraphics(
+      //   this.windowWidth,
+      //   this.windowHeight
+      // )
       drawMilky(this.starBG)
     }
     const basicX = 0
@@ -545,6 +549,51 @@ export const Visuals = {
       this.windowWidth,
       this.windowHeight
     )
+    // switch (this.level) {
+    //   case 0:
+    //   case 1:
+    //     this.p.image(
+    //       this.milkyBG,
+    //       basicX,
+    //       basicY,
+    //       this.windowWidth,
+    //       this.windowHeight
+    //     )
+    //     break
+    //   case 2:
+    //     if (!this.milkyBG2) {
+    //       console.log('rotate milkyBG')
+    //       this.milkyBG2 = true //this.milkyBG
+    //       console.log({ milkyBG: this.milkyBG })
+    //       // this.milkyBG.clear()
+    //     }
+    //     this.p.push()
+    //     this.p.rotate(this.p.PI / 2)
+    //     this.p.translate(0, -this.windowHeight)
+    //     this.p.image(
+    //       this.milkyBG,
+    //       basicX,
+    //       basicY,
+    //       this.windowWidth,
+    //       this.windowHeight
+    //     )
+    //     this.p.pop()
+    //     break
+    //   case 3:
+    //     if (!this.milkyBG3) {
+    //       this.milkyBG3 = this.milkyBG2
+    //       this.milkyBG3.rotata(this.p.PI)
+    //       this.milkyBG2.clear()
+    //     }
+    //     this.p.image(
+    //       this.milkyBG3,
+    //       basicX,
+    //       basicY,
+    //       this.windowWidth,
+    //       this.windowHeight
+    //     )
+    //     break
+    // }
   },
 
   drawPopup() {
@@ -809,7 +858,7 @@ export const Visuals = {
       .filter((l) => l !== undefined)
     const bestTimes =
       this.todaysRecords?.levels?.map((l) => l.events[0].time / this.FPS) ?? []
-    
+
     const showBestAndDiff = bestTimes.length
 
     p.textSize(48)
@@ -909,9 +958,7 @@ export const Visuals = {
     // middle box text - sum line
     if (showCumulativeTimeRow) {
       const levelTimeSum = levelTimes.reduce((a, b) => a + b, 0)
-      const sumLine = [
-        levelTimeSum.toFixed(2)
-      ]
+      const sumLine = [levelTimeSum.toFixed(2)]
 
       if (showBestAndDiff) {
         const bestTime = bestTimes
@@ -2638,7 +2685,7 @@ export const Visuals = {
     return new Promise((resolve, reject) => {
       canvas.toBlob(async (blob) => {
         const file = new File([blob], 'p5canvas.png', { type: 'image/png' })
-        
+
         if (navigator.share) {
           console.log('sharing canvas...')
           await navigator
@@ -2653,7 +2700,9 @@ export const Visuals = {
         } else if (navigator.clipboard && navigator.clipboard.write) {
           try {
             console.log('writing canvas to clipboard...')
-            await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
+            await navigator.clipboard.write([
+              new ClipboardItem({ 'image/png': blob })
+            ])
             const msg = 'Copied results to your clipboard.'
             if (showPopup) {
               this.popup = {
@@ -2689,7 +2738,7 @@ export const Visuals = {
             reject(error)
           }
         } else {
-          const error = new Error ('no options to share canvas!')
+          const error = new Error('no options to share canvas!')
           console.error(error)
           reject(error)
         }
@@ -2702,7 +2751,11 @@ export const Visuals = {
     const shakingAmount = 10
     this.shakeX = this.p.random(-shakingAmount, shakingAmount)
     this.shakeY = this.p.random(-shakingAmount, shakingAmount)
-    this.p.translate(this.shakeX, this.shakeY)
+    if (this.shaking <= 0) {
+      this.p.translate(0, 0)
+    } else {
+      this.p.translate(this.shakeX, this.shakeY)
+    }
   },
   makeParticles(x, y) {
     const array = []
