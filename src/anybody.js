@@ -125,6 +125,7 @@ export class Anybody extends EventEmitter {
       level: 0,
       bodyData: null,
       todaysRecords: {},
+      debug: false,
       // Add default properties and their initial values here
       startingBodies: 1,
       windowWidth: 1000,
@@ -403,6 +404,11 @@ export class Anybody extends EventEmitter {
         button.onClick()
         return
       }
+    }
+
+    const debugZone = { x: this.windowWidth - 100, y: this.windowHeight - 100 }
+    if (x > debugZone.x && y > debugZone.y) {
+      this.debug = !this.debug
     }
 
     if (this.paused || this.gameOver) return
@@ -844,7 +850,7 @@ export class Anybody extends EventEmitter {
     const fgIndex = this.randomRange(0, fgOptions - 1, rand)
     rand = utils.solidityKeccak256(['bytes32'], [rand])
     const coreIndex = this.randomRange(0, coreOptions - 1, rand)
-    rand = utils.solidityKeccak256(['bytes32'], [rand])
+    // rand = utils.solidityKeccak256(['bytes32'], [rand]) // TODO: confirm if this is present in soldity or not
     const dailyThemeIndex = this.randomRange(0, numberOfThemes - 1, rand)
 
     const themeName = themes[dailyThemeIndex]

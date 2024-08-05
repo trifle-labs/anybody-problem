@@ -310,6 +310,85 @@ export const Visuals = {
     } else {
       this.justPaused = false
     }
+
+    if (this.debug) {
+      this.drawDebug()
+    } else {
+      this.drawDebugPrompt()
+    }
+  },
+
+  drawDebugPrompt() {
+    this.p.noStroke()
+    this.p.fill('white')
+    this.p.text('?', this.windowWidth - 20, this.windowHeight - 20)
+  },
+
+  drawDebug() {
+    const rows = 5
+    const rowHeight = 15
+    const leftMargin = 5
+    const avgRate = this.p.avgRate().toFixed(2)
+    const currRate = this.p.currRate().toFixed(2)
+    const boxWidth = 100
+    const boxHeight = rows * rowHeight + 20
+
+    this.p.noStroke()
+    this.p.fill('rgba(0,0,0,0.8)')
+    this.p.rect(
+      this.windowWidth - boxWidth,
+      this.windowHeight - boxHeight,
+      boxWidth,
+      boxHeight
+    )
+    this.p.fill('white')
+    this.p.text(
+      'cur fps: ' + currRate,
+      this.windowWidth - boxWidth + leftMargin,
+      this.windowHeight - boxHeight + rowHeight * 1,
+      boxWidth,
+      boxHeight
+    )
+    this.p.text(
+      'avg fps: ' + avgRate,
+      this.windowWidth - boxWidth + leftMargin,
+      this.windowHeight - boxHeight + rowHeight * 2,
+      boxWidth,
+      boxHeight
+    )
+
+    const cores = navigator.hardwareConcurrency
+    this.p.text(
+      '~' + cores + ' cores',
+      this.windowWidth - boxWidth + leftMargin,
+      this.windowHeight - boxHeight + +rowHeight * 3,
+      boxWidth,
+      boxHeight
+    )
+    const ram = navigator.deviceMemory || 'N/A'
+    this.p.text(
+      '~' + ram + ' GB RAM',
+      this.windowWidth - boxWidth + leftMargin,
+      this.windowHeight - boxHeight + rowHeight * 4,
+      boxWidth,
+      boxHeight
+    )
+    const isIntel = navigator.userAgent.includes('Intel')
+    this.p.text(
+      (isIntel ? 'Intel' : 'AMD') + ' inside',
+      this.windowWidth - boxWidth + leftMargin,
+      this.windowHeight - boxHeight + rowHeight * 5,
+      boxWidth,
+      boxHeight
+    )
+    const pixelDensity = window.devicePixelRatio || 1
+    this.p.text(
+      pixelDensity + 'x pxl density',
+      this.windowWidth - boxWidth + leftMargin,
+      this.windowHeight - boxHeight + rowHeight * 6,
+      boxWidth,
+      boxHeight
+    )
   },
 
   drawPause() {
@@ -2749,12 +2828,12 @@ export const Visuals = {
     this.shaking ||= this.P5_FPS / 2
     this.shaking--
     const shakingAmount = 10
-    this.shakeX = this.p.random(-shakingAmount, shakingAmount)
-    this.shakeY = this.p.random(-shakingAmount, shakingAmount)
+    const shakeX = this.p.random(-shakingAmount, shakingAmount)
+    const shakeY = this.p.random(-shakingAmount, shakingAmount)
     if (this.shaking <= 0) {
       this.p.translate(0, 0)
     } else {
-      this.p.translate(this.shakeX, this.shakeY)
+      this.p.translate(shakeX, shakeY)
     }
   },
   makeParticles(x, y) {
