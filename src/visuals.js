@@ -316,11 +316,25 @@ export const Visuals = {
     } else {
       this.drawDebugPrompt()
     }
+
+    // quick tip solution
+    if (
+      (this.level <= 1 && !this.paused && !this.won && !this.gameOver)
+      // || (this.gameOver && !this.won)
+    ) {
+      this.p.textAlign(this.p.CENTER, this.p.TOP)
+      const fz = 24
+      this.p.textSize(fz)
+      this.p.fill('white')
+      this.p.textFont(fonts.body)
+      this.p.text('CLICK or {SPACE} to shoot, {R} to restart', this.windowWidth / 2, this.windowHeight - (fz + 8))
+    }
   },
 
   drawDebugPrompt() {
     this.p.noStroke()
     this.p.fill('white')
+    this.p.textSize(12)
     this.p.text('?', this.windowWidth - 20, this.windowHeight - 20)
   },
 
