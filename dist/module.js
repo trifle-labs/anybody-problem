@@ -180,57 +180,25 @@ for (const file of $71ffd51f0c004c8c$var$base64Files){
     continue;
 }
 const $71ffd51f0c004c8c$var$SONGS = {
-    whistle: {
-        bpm: 70,
-        parts: [
-            [
-                // each part consists of a set of tracks
-                // type Track: [sample, probability, introProbability?]
-                [
-                    (0, (/*@__PURE__*/$parcel$interopDefault($0961eb4b1e42bce2$exports))),
-                    1,
-                    0
-                ],
-                [
-                    (0, (/*@__PURE__*/$parcel$interopDefault($031d1fa11acf164d$exports))),
-                    0.9,
-                    1
-                ],
-                [
-                    (0, (/*@__PURE__*/$parcel$interopDefault($464b568e51a337bd$exports))),
-                    0.7,
-                    1
-                ],
-                [
-                    (0, (/*@__PURE__*/$parcel$interopDefault($6150e8ba9f053955$exports))),
-                    0.7,
-                    0
-                ]
-            ],
-            [
-                [
-                    (0, (/*@__PURE__*/$parcel$interopDefault($efc7bcd0ea3313dc$exports))),
-                    1,
-                    0
-                ],
-                [
-                    (0, (/*@__PURE__*/$parcel$interopDefault($031d1fa11acf164d$exports))),
-                    0.7,
-                    1
-                ],
-                [
-                    (0, (/*@__PURE__*/$parcel$interopDefault($464b568e51a337bd$exports))),
-                    0.7,
-                    1
-                ],
-                [
-                    (0, (/*@__PURE__*/$parcel$interopDefault($6150e8ba9f053955$exports))),
-                    0.7,
-                    0
-                ]
-            ]
-        ]
-    },
+    // whistle: {
+    //   bpm: 70,
+    //   parts: [
+    //     [
+    //       // each part consists of a set of tracks
+    //       // type Track: [sample, probability, introProbability?]
+    //       [whistle_8_T7, 1, 0],
+    //       [whistle_4_T3, 0.9, 1],
+    //       [whistle_7_T6, 0.7, 1],
+    //       [whistle_12_T11, 0.7, 0]
+    //     ],
+    //     [
+    //       [whistle_8_T7_B, 1, 0],
+    //       [whistle_4_T3, 0.7, 1],
+    //       [whistle_7_T6, 0.7, 1],
+    //       [whistle_12_T11, 0.7, 0]
+    //     ]
+    //   ]
+    // },
     wii: {
         bpm: 70,
         parts: [
@@ -398,10 +366,11 @@ class $71ffd51f0c004c8c$export$2e2bcd8739ae039 {
         window.addEventListener("keydown", this.handleKeyDown);
         this.setSong();
     }
-    setSong() {
+    setSong(index) {
         const songs = Object.values($71ffd51f0c004c8c$var$SONGS);
-        const songIndex = (3 + this.anybody.level) % songs.length;
-        this.currentSong = songs[songIndex];
+        index = index ?? (3 + this.anybody.level) % songs.length;
+        this.currentSong = songs[index];
+        console.log("currentSong:", Object.keys($71ffd51f0c004c8c$var$SONGS)[index]);
     }
     handleKeyDown = (e)=>{
         if (this.anybody.paused) return;

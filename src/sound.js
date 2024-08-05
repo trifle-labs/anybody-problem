@@ -91,25 +91,25 @@ for (const file of base64Files) {
   continue
 }
 const SONGS = {
-  whistle: {
-    bpm: 70,
-    parts: [
-      [
-        // each part consists of a set of tracks
-        // type Track: [sample, probability, introProbability?]
-        [whistle_8_T7, 1, 0],
-        [whistle_4_T3, 0.9, 1],
-        [whistle_7_T6, 0.7, 1],
-        [whistle_12_T11, 0.7, 0]
-      ],
-      [
-        [whistle_8_T7_B, 1, 0],
-        [whistle_4_T3, 0.7, 1],
-        [whistle_7_T6, 0.7, 1],
-        [whistle_12_T11, 0.7, 0]
-      ]
-    ]
-  },
+  // whistle: {
+  //   bpm: 70,
+  //   parts: [
+  //     [
+  //       // each part consists of a set of tracks
+  //       // type Track: [sample, probability, introProbability?]
+  //       [whistle_8_T7, 1, 0],
+  //       [whistle_4_T3, 0.9, 1],
+  //       [whistle_7_T6, 0.7, 1],
+  //       [whistle_12_T11, 0.7, 0]
+  //     ],
+  //     [
+  //       [whistle_8_T7_B, 1, 0],
+  //       [whistle_4_T3, 0.7, 1],
+  //       [whistle_7_T6, 0.7, 1],
+  //       [whistle_12_T11, 0.7, 0]
+  //     ]
+  //   ]
+  // },
   wii: {
     bpm: 70,
     parts: [
@@ -182,10 +182,11 @@ export default class Sound {
     this.setSong()
   }
 
-  setSong() {
+  setSong(index) {
     const songs = Object.values(SONGS)
-    const songIndex = (3 + this.anybody.level) % songs.length
-    this.currentSong = songs[songIndex]
+    index = index ?? (3 + this.anybody.level) % songs.length
+    this.currentSong = songs[index]
+    console.log('currentSong:', Object.keys(SONGS)[index])
   }
 
   handleKeyDown = (e) => {
