@@ -504,8 +504,8 @@ export class Anybody extends EventEmitter {
     this.sound?.setSong()
     this.init()
     this.draw()
-    if (!beginPaused) {
-      this.setPause(false)
+    if (beginPaused) {
+      this.setPause(true)
     }
     this.addCSS()
   }

@@ -759,8 +759,10 @@ export const Visuals = {
     })
 
     // buttons (max 2)
+    const buttons = popup.buttons.slice(0, 2)
     const btnGutter = 10
-    const btnW = w / 2 - pad[1] / 2 - btnGutter / 2
+    const btnW = buttons.length === 1 ? w / 2
+      : w / 2 - pad[1] / 2 - btnGutter / 2
     const defaultOptions = {
       height: 84,
       width: btnW,
@@ -770,7 +772,7 @@ export const Visuals = {
       stroke
     }
 
-    popup.buttons.slice(0, 2).forEach((options, i) => {
+    buttons.forEach((options, i) => {
       this.drawButton({
         x:
           popup.buttons.length > 1
@@ -1202,7 +1204,7 @@ export const Visuals = {
               onClick: () => {
                 this.popup = null
                 this.level = 1
-                this.restart(null, false)
+                this.restart(undefined, this.practiceMode)
               }
             }
           ]
@@ -1242,9 +1244,31 @@ export const Visuals = {
     } else {
       // parent app should handle waiting to save
       this.drawBottomButton({
-        text: 'MINT',
+        text: this.practiceMode ? 'SAVE' : 'MINT',
         onClick: () => {
-          this.emit('save')
+          if (this.practiceMode) {
+            this.popup = {
+              header: 'Nice Job!',
+              body: [
+                'Next time connect a wallet to',
+                'mint your win!'
+              ],
+              fg: THEME.green_50,
+              bg: THEME.green_75,
+              buttons: [
+                {
+                  text: 'NEW GAME',
+                  onClick: () => {
+                    this.popup = null
+                    this.level = 0
+                    this.restart(undefined, true)
+                  }
+                }
+              ]
+            }
+          } else {
+            this.emit('save')
+          }
         },
         ...themes.buttons.green,
         columns: buttonCount,
