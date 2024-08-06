@@ -255,7 +255,6 @@ export const Visuals = {
         this.drawCenter(body)
       }
     }
-    this.drawWitheringBodies()
 
     this.drawPause()
     this.drawScore()
