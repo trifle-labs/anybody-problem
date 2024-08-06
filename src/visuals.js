@@ -2,7 +2,6 @@ import { hslToRgb, rgbaOpacity, THEME, themes, randHSL } from './colors.js'
 import { fonts, drawKernedText } from './fonts.js'
 
 const BODY_SCALE = 4 // match to calculations.js !!
-const WITHERING_STEPS = 3000
 const GAME_LENGTH_BY_LEVEL_INDEX = [30, 10, 20, 30, 40, 50]
 const LEVELS = GAME_LENGTH_BY_LEVEL_INDEX.length - 1
 
@@ -319,7 +318,10 @@ export const Visuals = {
 
     // quick tip solution
     if (
-      (this.level <= 1 && !this.paused && !this.won && !this.gameOver)
+      this.level <= 1 &&
+      !this.paused &&
+      !this.won &&
+      !this.gameOver
       // || (this.gameOver && !this.won)
     ) {
       this.p.textAlign(this.p.CENTER, this.p.TOP)
@@ -327,7 +329,11 @@ export const Visuals = {
       this.p.textSize(fz)
       this.p.fill('white')
       this.p.textFont(fonts.body)
-      this.p.text('CLICK or {SPACE} to shoot, {R} to restart', this.windowWidth / 2, this.windowHeight - (fz + 8))
+      this.p.text(
+        'CLICK or {SPACE} to shoot, {R} to restart',
+        this.windowWidth / 2,
+        this.windowHeight - (fz + 8)
+      )
     }
   },
 
@@ -2325,111 +2331,44 @@ export const Visuals = {
     body.backgroundOnly = false
     drawFunction = drawFunction.bind(this)
     drawFunction(body.position.x, body.position.y, body.velocity, radius, body)
+    return
+    // if (this.paused) return
+    // if (this.gameOver) return
+    // if (body.bodyIndex !== 0 || this.level == 0) return
+    // let loopedX = false,
+    //   loopedY = false,
+    //   loopX = body.position.x,
+    //   loopY = body.position.y
+    // const loopGap = radius * 1.5
+    // body.backgroundOnly = true
+    // // crosses right, draw on left
+    // if (body.position.x > this.windowWidth - loopGap) {
+    //   loopedX = true
+    //   loopX = body.position.x - this.windowWidth
+    //   drawFunction(loopX, body.position.y, body.velocity, radius, body)
+    //   // crosses left, draw on right
+    // } else if (body.position.x < loopGap) {
+    //   loopedX = true
+    //   loopX = body.position.x + this.windowWidth
+    //   drawFunction(loopX, body.position.y, body.velocity, radius, body)
+    // }
 
-    if (this.paused) return
-    if (this.gameOver) return
-    if (body.bodyIndex !== 0 || this.level == 0) return
-    let loopedX = false,
-      loopedY = false,
-      loopX = body.position.x,
-      loopY = body.position.y
-    const loopGap = radius * 1.5
-    body.backgroundOnly = true
-    // crosses right, draw on left
-    if (body.position.x > this.windowWidth - loopGap) {
-      loopedX = true
-      loopX = body.position.x - this.windowWidth
-      drawFunction(loopX, body.position.y, body.velocity, radius, body)
-      // crosses left, draw on right
-    } else if (body.position.x < loopGap) {
-      loopedX = true
-      loopX = body.position.x + this.windowWidth
-      drawFunction(loopX, body.position.y, body.velocity, radius, body)
-    }
+    // // crosses bottom, draw on top
+    // if (body.position.y > this.windowHeight - loopGap) {
+    //   loopedY = true
+    //   loopY = body.position.y - this.windowHeight
+    //   drawFunction(body.position.x, loopY, body.velocity, radius, body)
+    //   // crosses top, draw on bottom
+    // } else if (body.position.y < loopGap) {
+    //   loopedY = true
+    //   loopY = body.position.y + this.windowHeight
+    //   drawFunction(body.position.x, loopY, body.velocity, radius, body)
+    // }
 
-    // crosses bottom, draw on top
-    if (body.position.y > this.windowHeight - loopGap) {
-      loopedY = true
-      loopY = body.position.y - this.windowHeight
-      drawFunction(body.position.x, loopY, body.velocity, radius, body)
-      // crosses top, draw on bottom
-    } else if (body.position.y < loopGap) {
-      loopedY = true
-      loopY = body.position.y + this.windowHeight
-      drawFunction(body.position.x, loopY, body.velocity, radius, body)
-    }
-
-    // crosses corner, draw opposite corner
-    if (loopedX && loopedY) {
-      drawFunction(loopX, loopY, body.velocity, radius, body)
-    }
-  },
-
-  // TODO: add this back as part of a end game animation
-  drawWitheringBodies() {
-    if (this.gameOver) {
-      return
-    }
-    const { p } = this
-
-    this.bodiesGraphic ||= p.createGraphics(this.windowWidth, this.windowHeight)
-
-    this.bodiesGraphic.drawingContext.msImageSmoothingEnabled = false
-    this.bodiesGraphic.drawingContext.mozImageSmoothingEnabled = false
-    this.bodiesGraphic.drawingContext.webkitImageSmoothingEnabled = false
-    this.bodiesGraphic.drawingContext.imageSmoothingEnabled = false
-    // this.bodiesGraphic.pixelDensity(0.2)
-
-    this.bodiesGraphic.drawingContext.msImageSmoothingEnabled = false
-    this.bodiesGraphic.drawingContext.mozImageSmoothingEnabled = false
-    this.bodiesGraphic.drawingContext.webkitImageSmoothingEnabled = false
-    this.bodiesGraphic.drawingContext.imageSmoothingEnabled = false
-    this.bodiesGraphic.noStroke()
-    for (const body of this.witheringBodies) {
-      p.push()
-      p.translate(body.position.x, body.position.y)
-      body.witherSteps ||= 0
-      body.witherSteps++
-      if (body.witherSteps > WITHERING_STEPS) {
-        this.witheringBodies = this.witheringBodies.filter((b) => b !== body)
-        p.pop()
-        continue
-      }
-
-      // the body should shrink to nothing over WITHERING_STEPS
-      const radius = p.map(
-        WITHERING_STEPS - body.witherSteps,
-        0,
-        WITHERING_STEPS,
-        1,
-        30 // start radius
-      )
-
-      // the ghost body pulses a little bit, isn't totally round
-      body.zoff ||= 0
-      p.stroke(255)
-      p.noFill()
-      p.fill(255, 255, 255, 230)
-      p.beginShape()
-      for (let a = 0; a < p.TWO_PI; a += 0.02) {
-        let xoff = p.map(p.cos(a), -1, 1, 0, 2)
-        let yoff = p.map(p.sin(a), -1, 1, 0, 2)
-        const r = p.map(
-          p.noise(xoff, yoff, body.zoff),
-          0,
-          1,
-          radius - 10,
-          radius
-        )
-        let x = r * p.cos(a)
-        let y = r * p.sin(a)
-        p.vertex(x, y)
-      }
-      p.endShape(p.CLOSE)
-      body.zoff += 0.01
-
-      p.pop()
-    }
+    // // crosses corner, draw opposite corner
+    // if (loopedX && loopedY) {
+    //   drawFunction(loopX, loopY, body.velocity, radius, body)
+    // }
   },
 
   async drawBodies(attachToCanvas = true) {

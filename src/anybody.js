@@ -850,7 +850,8 @@ export class Anybody extends EventEmitter {
     const fgIndex = this.randomRange(0, fgOptions - 1, rand)
     rand = utils.solidityKeccak256(['bytes32'], [rand])
     const coreIndex = this.randomRange(0, coreOptions - 1, rand)
-    // rand = utils.solidityKeccak256(['bytes32'], [rand]) // TODO: confirm if this is present in soldity or not
+
+    rand = utils.solidityKeccak256(['bytes32'], [rand])
     const dailyThemeIndex = this.randomRange(0, numberOfThemes - 1, rand)
 
     const themeName = themes[dailyThemeIndex]

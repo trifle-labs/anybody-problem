@@ -30,6 +30,7 @@ describe('ExternalMetadata Tests', function () {
   it('onlyOwner functions are really only Owner', async function () {
     const [, addr1] = await ethers.getSigners()
     const { ExternalMetadata: externalMetadata } = await deployContracts()
+
     await expect(
       externalMetadata.connect(addr1).updateAnybodyProblemAddress(addr1.address)
     ).to.be.revertedWith('Ownable: caller is not the owner')
@@ -46,7 +47,8 @@ describe('ExternalMetadata Tests', function () {
     const [owner] = await ethers.getSigners()
     const {
       AnybodyProblem: anybodyProblem,
-      ExternalMetadata: externalMetadata
+      ExternalMetadata: externalMetadata,
+      Speedruns: speedruns
     } = await deployContracts({
       mock: true
     })
@@ -74,10 +76,10 @@ describe('ExternalMetadata Tests', function () {
     const tx = await anybodyProblem.batchSolve(...finalArgs, { value: price })
     const receipt = await tx.wait()
     const events = getParsedEventLogs(receipt, anybodyProblem, 'RunCreated')
-    runId = events[0].args.runId
+    const day = events[0].args.day
 
-    const base64Json = await externalMetadata.getMetadata(runId)
-    // console.log({ base64Json })
+    const base64Json = await speedruns.uri(day)
+
     const utf8Json = Buffer.from(
       base64Json.replace('data:application/json;base64,', ''),
       'base64'
@@ -86,18 +88,24 @@ describe('ExternalMetadata Tests', function () {
     const json = JSON.parse(utf8Json)
     // console.dir({ json }, { depth: null })
     const base64SVG = json.image
+
+    // console.log('-----base64 image-----')
+    // console.table( base64SVG )
+
     const SVG = Buffer.from(
       base64SVG.replace('data:image/svg+xml;base64,', ''),
       'base64'
     ).toString('utf-8')
-    // console.log({ SVG })
+    //console.log("---------image----------")
+    //console.table({ SVG })
+
     const isValidSVG = (svg) => {
       try {
         const parser = new DOMParser()
         const doc = parser.parseFromString(svg, 'image/svg+xml')
         return doc.documentElement.tagName.toLowerCase() === 'svg'
       } catch (error) {
-        console.log({ error })
+        //console.log({ error })
         return false
       }
     }
@@ -105,9 +113,10 @@ describe('ExternalMetadata Tests', function () {
     const isSVGValid = isValidSVG(SVG)
     expect(isSVGValid).to.be.true
     const yearMonth = json.attributes[1].value
-    expect(yearMonth).to.equal('1970-01')
+    const YYYY_MM = new Date().toISOString().slice(0, 7)
+    expect(yearMonth).to.equal(YYYY_MM) //'1970-01'
 
-    let svg = await externalMetadata.getSVG(runId)
+    let svg = await externalMetadata.getSVG(day)
     svg = svg.replace('data:image/svg+xml;base64,', '')
     const base64ToString = (base64) => {
       const buff = Buffer.from(base64, 'base64')

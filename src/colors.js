@@ -51,9 +51,9 @@ export const themes = {
     // random hues
     default: {
       'saturated-exclude-darks': {
-        bg: [undefined, '80-100', '18-100'], // undefined = 0—359
-        cr: [undefined, '80-100', '18-100'],
-        fg: [undefined, '80-100', '18-100']
+        bg: [undefined, '80-100', '32-100'], // undefined = 0—359
+        cr: [undefined, '80-100', '32-100'],
+        fg: [undefined, '80-100', '32-100']
       },
       pastel_highlighter_marker: {
         bg: [undefined, '80-100', '85-95'],
@@ -66,14 +66,14 @@ export const themes = {
         fg: [undefined, '100-100', '55-60']
       },
       shadow_highlighter_marker: {
-        bg: [undefined, '80-100', '18-25'],
+        bg: [undefined, '80-100', '32-32'],
         cr: [undefined, '100-100', '55-60'],
         fg: [undefined, '70-90', '67-67']
       },
       berlin: {
-        bg: [undefined, '100-100', '18-18'],
+        bg: [undefined, '100-100', '32-32'],
         cr: [undefined, '100-100', '45-45'],
-        fg: [undefined, '100-100', '30-30']
+        fg: [undefined, '100-100', '36-36']
       }
     },
     // reds / OPTIMISM

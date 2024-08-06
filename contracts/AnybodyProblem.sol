@@ -765,9 +765,17 @@ contract AnybodyProblem is Ownable, ERC2981 {
             interfaceId == bytes4(0x49064906); // IERC4906 MetadataUpdate
     }
 
-    // TODO: add external metadata contract for easier upgrades
     function speedrunsTokenURI(uint256 id) public view returns (string memory) {
         return ExternalMetadata(externalMetadata).getMetadata(id);
+    }
+
+    function emitBatchMetadataUpdate() public onlyOwner {
+        bytes32 topic = keccak256('BatchMetadataUpdate(uint256,uint256)');
+        uint256 today = currentDay();
+        bytes memory data = abi.encode(0, today);
+        bytes32[] memory topics = new bytes32[](1);
+        topics[0] = topic;
+        Speedruns(speedruns).emitGenericEvent(topics, data);
     }
 
     function emitMetadataUpdate(uint256 tokenId) internal {

@@ -5,6 +5,8 @@ import { promises as fs } from 'fs'
 import { Anybody } from '../dist/module.js'
 import { exportCallDataGroth16 } from './circuits.js'
 
+const __dirname = path.resolve()
+
 const correctPrice = ethers.utils.parseEther('0.01')
 // TODO: change this to the splitter address
 // const splitterAddress = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266'
@@ -40,7 +42,6 @@ const getPathABI = async (name) => {
   var networkinfo = await hre.ethers.provider.getNetwork()
   var savePath = path.join(
     __dirname,
-    '..',
     'contractData',
     'ABI-' + String(networkinfo['name']) + '-' + String(name) + '.json'
   )
@@ -60,7 +61,6 @@ const getPathAddress = async (name) => {
   var networkinfo = await hre.ethers.provider.getNetwork()
   var savePath = path.join(
     __dirname,
-    '..',
     'contractData',
     String(networkinfo['name']) + '-' + String(name) + '.json'
   )
@@ -102,6 +102,80 @@ const decodeUri = (decodedJson) => {
   let buff = Buffer.from(metaWithoutDataURL, 'base64')
   let text = buff.toString('ascii')
   return text
+}
+
+const deployMetadata = async (testing) => {
+  // deploy Assets1
+  const Assets1 = await hre.ethers.getContractFactory('Assets1')
+  let byteSize = Buffer.from(Assets1.bytecode.slice(2), 'hex').length
+  !testing && console.log(`Assets1 byte size: ${byteSize} bytes`)
+  const assets1 = await Assets1.deploy()
+  await assets1.deployed()
+  var assets1Address = assets1.address
+  !testing && log('Assets1 Deployed at ' + String(assets1Address))
+
+  // deploy Assets2
+  const Assets2 = await hre.ethers.getContractFactory('Assets2')
+  byteSize = Buffer.from(Assets2.bytecode.slice(2), 'hex').length
+  !testing && console.log(`Assets2 byte size: ${byteSize} bytes`)
+  const assets2 = await Assets2.deploy()
+  await assets2.deployed()
+  var assets2Address = assets2.address
+  !testing && log('Assets2 Deployed at ' + String(assets2Address))
+
+  // deploy Assets3
+  const Assets3 = await hre.ethers.getContractFactory('Assets3')
+  byteSize = Buffer.from(Assets3.bytecode.slice(2), 'hex').length
+  !testing && console.log(`Assets3 byte size: ${byteSize} bytes`)
+  const assets3 = await Assets3.deploy()
+  await assets3.deployed()
+  var assets3Address = assets3.address
+  !testing && log('Assets3 Deployed at ' + String(assets3Address))
+
+  // deploy Assets4
+  const Assets4 = await hre.ethers.getContractFactory('Assets4')
+  byteSize = Buffer.from(Assets4.bytecode.slice(2), 'hex').length
+  !testing && console.log(`Assets4 byte size: ${byteSize} bytes`)
+  const assets4 = await Assets4.deploy()
+  await assets4.deployed()
+  var assets4Address = assets4.address
+  !testing && log('Assets4 Deployed at ' + String(assets4Address))
+
+  // deploy Assets5
+  const Assets5 = await hre.ethers.getContractFactory('Assets5')
+  byteSize = Buffer.from(Assets5.bytecode.slice(2), 'hex').length
+  !testing && console.log(`Assets5 byte size: ${byteSize} bytes`)
+  const assets5 = await Assets5.deploy()
+  await assets5.deployed()
+  var assets5Address = assets5.address
+  !testing && log('Assets5 Deployed at ' + String(assets5Address))
+
+  // deploy ExternalMetadata
+  const ExternalMetadata =
+    await hre.ethers.getContractFactory('ExternalMetadata')
+  byteSize = Buffer.from(ExternalMetadata.bytecode.slice(2), 'hex').length
+  !testing && console.log(`ExternalMetadata byte size: ${byteSize} bytes`)
+  const externalMetadata = await ExternalMetadata.deploy()
+  await externalMetadata.deployed()
+  !testing &&
+    log('ExternalMetadata Deployed at ' + String(externalMetadata.address))
+
+  await externalMetadata.setAssets([
+    assets1Address,
+    assets2Address,
+    assets3Address,
+    assets4Address,
+    assets5Address
+  ])
+  !testing && console.log('Assets set')
+
+  const tx = await externalMetadata.setupSVGPaths()
+  await tx.wait()
+
+  await externalMetadata.setupColorThemes()
+  !testing && console.log('Color Themes setup')
+
+  return { externalMetadata, assets1, assets2, assets3, assets4, assets5 }
 }
 
 const deployContracts = async (options) => {
@@ -152,15 +226,16 @@ const deployContracts = async (options) => {
   returnObject['Speedruns'] = speedruns
   !testing && log('Speedruns Deployed at ' + String(speedrunsAddress))
 
-  // deploy ExternalMetadata
-  const ExternalMetadata =
-    await hre.ethers.getContractFactory('ExternalMetadata')
-  const externalMetadata = await ExternalMetadata.deploy()
-  await externalMetadata.deployed()
-  var externalMetadataAddress = externalMetadata.address
+  // deploy Metadata
+  const { externalMetadata, assets1, assets2, assets3, assets4, assets5 } =
+    await deployMetadata(testing, returnObject)
   returnObject['ExternalMetadata'] = externalMetadata
-  !testing &&
-    log('ExternalMetadata Deployed at ' + String(externalMetadataAddress))
+  const externalMetadataAddress = externalMetadata.address
+  returnObject['Assets1'] = assets1
+  returnObject['Assets2'] = assets2
+  returnObject['Assets3'] = assets3
+  returnObject['Assets4'] = assets4
+  returnObject['Assets5'] = assets5
 
   // deploy AnybodyProblem
   const AnybodyProblem = await hre.ethers.getContractFactory(
@@ -236,12 +311,11 @@ const deployContracts = async (options) => {
   return returnObject
 }
 
-const verifyContracts = async (returnObject) => {
+const verifyContracts = async (returnObject, contractToUse) => {
   const blocksToWaitBeforeVerify = 0
   const verificationData = returnObject.verificationData
-  const anybodyProblem = returnObject.AnybodyProblem
   for (let i = 0; i < verificationData.length; i++) {
-    await anybodyProblem.deployTransaction.wait(blocksToWaitBeforeVerify)
+    await contractToUse.deployTransaction.wait(blocksToWaitBeforeVerify)
     log(`Verifying ${verificationData[i].name} Contract`)
     try {
       await hre.run('verify:verify', {
@@ -590,7 +664,68 @@ const generateAndSubmitProof = async (
   return { tx, bodyFinal }
 }
 
+async function copyABI(name, contractName) {
+  contractName = contractName || name
+
+  var networkinfo = await hre.ethers.provider.getNetwork()
+  console.log(`--copy ${name} ABI`)
+  var pathname = path.join(
+    __dirname,
+    'artifacts',
+    'contracts',
+    `${name}.sol`,
+    `${contractName}.json`
+  )
+  const readABI = await fs.readFile(pathname)
+  const parsedABI = JSON.parse(readABI)
+  const abi = parsedABI['abi']
+
+  const newContent = { contractName, abi }
+
+  var copy = path.join(
+    __dirname,
+    'server',
+    'contractData',
+    'ABI-' + String(networkinfo['chainId']) + `-${name}.json`
+  )
+  // write the new content to the new file
+  await writedata(copy, JSON.stringify(newContent))
+
+  // await copyContractABI(pathname, copy)
+  console.log('-- OK')
+}
+
+async function saveAddress(contract, name) {
+  console.log('-save json for ' + name)
+  var networkinfo = await hre.ethers.provider.getNetwork()
+  var newAddress = await contract.address
+  var savePath = path.join(
+    __dirname,
+    'server',
+    'contractData',
+    String(networkinfo['chainId']) + '-' + String(name) + '.json'
+  )
+  var objToWrite = {
+    address: newAddress,
+    chain: networkinfo
+  }
+  await writedata(savePath, JSON.stringify(objToWrite))
+}
+
+async function writedata(path, data) {
+  // await fs.writeFile(path, data, function (err, result) {
+  //   if (err) console.log('error', err);
+  // })
+  try {
+    await fs.writeFile(path, data)
+  } catch (e) {
+    console.log('e', e)
+  }
+}
+
 export {
+  saveAddress,
+  copyABI,
   getTicksRun,
   proverTickIndex,
   generateProof,
@@ -607,6 +742,7 @@ export {
   correctPrice,
   generateWitness,
   verifyContracts,
-  solveLevel
+  solveLevel,
+  deployMetadata
   // splitterAddress
 }
