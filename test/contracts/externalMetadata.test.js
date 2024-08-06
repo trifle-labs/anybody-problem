@@ -43,12 +43,12 @@ describe('ExternalMetadata Tests', function () {
       .be.reverted
   })
 
-  it.only('has valid json', async function () {
-
+  it('has valid json', async function () {
     const [owner] = await ethers.getSigners()
     const {
       AnybodyProblem: anybodyProblem,
-      ExternalMetadata: externalMetadata
+      ExternalMetadata: externalMetadata,
+      Speedruns: speedruns
     } = await deployContracts({
       mock: true
     })
@@ -78,12 +78,7 @@ describe('ExternalMetadata Tests', function () {
     const events = getParsedEventLogs(receipt, anybodyProblem, 'RunCreated')
     const day = events[0].args.day
 
-    console.log('day')
-    console.log(day)
-
-    const base64Json = await externalMetadata.getMetadata(day)
-    //console.log({ base64Json })
-    //console.table( base64Json )
+    const base64Json = await speedruns.uri(day)
 
     const utf8Json = Buffer.from(
       base64Json.replace('data:application/json;base64,', ''),
@@ -104,7 +99,6 @@ describe('ExternalMetadata Tests', function () {
     //console.log("---------image----------")
     //console.table({ SVG })
 
-
     const isValidSVG = (svg) => {
       try {
         const parser = new DOMParser()
@@ -119,7 +113,8 @@ describe('ExternalMetadata Tests', function () {
     const isSVGValid = isValidSVG(SVG)
     expect(isSVGValid).to.be.true
     const yearMonth = json.attributes[1].value
-    expect(yearMonth).to.equal('2024-08') //'1970-01'
+    const YYYY_MM = new Date().toISOString().slice(0, 7)
+    expect(yearMonth).to.equal(YYYY_MM) //'1970-01'
 
     let svg = await externalMetadata.getSVG(day)
     svg = svg.replace('data:image/svg+xml;base64,', '')

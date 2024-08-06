@@ -5,77 +5,28 @@ require('dotenv').config()
 require('@nomicfoundation/hardhat-verify')
 require('solidity-coverage')
 
-const {subtask} = require("hardhat/config");
-const { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } = require("hardhat/builtin-tasks/task-names");
+// const { subtask } = require('hardhat/config')
+// const {
+//   TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS
+// } = require('hardhat/builtin-tasks/task-names')
 
 // Add a subtask that sets the action for the TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS task
 
 //eslint-disable-next-line
-subtask(TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS).setAction(async (_, __, runSuper) => {
-    // Get the list of source paths that would normally be passed to the Solidity compiler
-    const paths = await runSuper();
-    // Apply a filter function to exclude paths that contain the string "ignore"
-    let val = paths.filter((p) => !p.includes("Assets") && !p.includes("Game"));
-    console.log(val);
-    return val;
-  });
-
-// const util = require("util");
-
-// // Import necessary modules
-// const { task } = require("hardhat/config");
-
-// // Define a new task or extend the existing 'test' task
-// task("test", "Runs custom commands before tests", async (taskArgs, hre, runSuper) => {
-//   console.log({ taskArgs })
-//   // Your custom command or function call
-//   console.log("Running custom circom command before tests...");
-
-//   const exec = util.promisify(require("child_process").exec);
-
-//   if (taskArgs.testFiles.length == 0) {
-
+// subtask(TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS).setAction(
+//   async (_, __, runSuper) => {
+//     // Get the list of source paths that would normally be passed to the Solidity compiler
+//     const paths = await runSuper()
+//     // Apply a filter function to exclude paths that contain the string "ignore"
+//     let val = paths.filter((p) => !p.includes('Assets') && !p.includes('Game'))
+//     // console.log(val)
+//     return val
 //   }
-
-//   try {
-//     let resp
-//     resp = await exec("'./utils/1_create_wasm.sh' nft");
-//     console.log(resp.stdout)
-//     resp = await exec("'./utils/2_create_zkey.sh' nft");
-//     console.log(resp.stdout)
-//     resp = await exec("'./utils/5_create_solidity.sh' nft");
-//     console.log(resp.stdout)
-//   } catch (error) {
-//     console.error(`Error executing the commands: ${error}`);
-//   }
-//   // Then run the original test task
-//   await runSuper(taskArgs);
-// });
+// )
 
 /**
  * @type import('hardhat/config').HardhatUserConfig
  */
-
-// const config = {
-//     solidity: {
-//         compilers: [
-//             {
-//                 version: '0.8.15',
-//                 settings: {
-//                     viaIR: true,
-//                     optimizer: { enabled: true, runs: 200 }
-//                 }
-//             }
-//         ]
-//     },
-//     networks: {
-//         hardhat: {
-//             gasPrice: 1_000_000_000,
-//             blockGasLimit: 1_000_000_000,
-//             chainId: 12345
-//         }
-//     }
-// }
 
 const config = {
   mocha: {
@@ -83,6 +34,9 @@ const config = {
   },
   solidity: {
     compilers: [
+      {
+        version: '0.6.11'
+      },
       {
         version: '0.8.15',
         settings: {
@@ -94,30 +48,31 @@ const config = {
   },
   networks: {
     hardhat: {
-      accounts: { mnemonic: process.env.localKey },
-    gasPrice: 1_000_000_000,
-    blockGasLimit: 1_000_000_000,
+      accounts: { mnemonic: process.env.deploymentKey },
+      gasPrice: 1_000_000_000,
+      blockGasLimit: 20_000_000,
       chainId: 12345
       // loggingEnabled: false
     },
     formatest: {
       // url: 'https://sepolia.infura.io/v3/' + process.env.INFURA_API_KEY,
       url: 'https://rpc.sketchpad-1.forma.art/',
-      accounts: { mnemonic: process.env.localKey },
+      accounts: { mnemonic: process.env.deploymentKey },
       gasPrice: 1_000_000_000 // 1 GWEI
     },
     baseSepolia: {
       // network ID: 84532
       // url: 'https://sepolia.base.org',
       url: 'https://public.stackup.sh/api/v1/node/base-sepolia',
-      accounts: { mnemonic: process.env.localKey },
+      accounts: { mnemonic: process.env.deploymentKey },
+      gas: 5_000_000,
       gasPrice: 100_000_000 // 0.1 GWEI
     },
     sepolia: {
       // url: 'https://sepolia.infura.io/v3/' + process.env.INFURA_API_KEY,
       // url: 'https://sepolia.rpc.grove.city/v1/' + process.env.grove,
       url: 'https://ethereum-sepolia.blockpi.network/v1/rpc/public',
-      accounts: { mnemonic: process.env.localKey },
+      accounts: { mnemonic: process.env.deploymentKey },
       gasPrice: 100_000_000_000 // 100 GWEI
       // gas: 12_000_000
     },
@@ -165,11 +120,20 @@ const config = {
     ]
   },
   contractSizer: {
-    alphaSort: false,
+    alphaSort: true,
     disambiguatePaths: false,
     runOnCompile: true,
     strict: false,
-    only: ['AnybodyProblem', 'Speedruns']
+    only: [
+      'AnybodyProblem',
+      'Speedruns',
+      'ExternalMetadata',
+      'Assets1',
+      'Assets2',
+      'Assets3',
+      'Assets4',
+      'Assets5'
+    ]
   }
 }
 module.exports = config
