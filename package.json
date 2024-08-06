@@ -16,7 +16,7 @@
   "module": "dist/module.js",
   "iframe": "dist/index.html",
   "scripts": {
-    "build": "rm -rf .parcel-cache && rm -rf dist && yarn parcel build",
+    "build": "rm -rf .parcel-cache && rm -rf dist && yarn parcel build && mv dist/index.html docs/index.html",
     "dev": "rm -rf .parcel-cache && rm -rf dist && yarn parcel watch src/index.js",
     "serve": "rm -rf .parcel-cache && yarn parcel src/index.html --open",
     "chain": "hardhat node",
