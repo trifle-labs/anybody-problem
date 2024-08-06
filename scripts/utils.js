@@ -228,7 +228,7 @@ const deployContracts = async (options) => {
 
   // deploy Metadata
   const { externalMetadata, assets1, assets2, assets3, assets4, assets5 } =
-    await deployMetadata(testing, returnObject)
+    await deployMetadata(testing)
   returnObject['ExternalMetadata'] = externalMetadata
   const externalMetadataAddress = externalMetadata.address
   returnObject['Assets1'] = assets1

@@ -436,7 +436,7 @@ export default class Sound {
       await loaded()
       this.loop = new Loop((time) => {
         this.currentMeasure++
-        this.voices.forEach((voice, i) => {
+        this.voices?.forEach((voice, i) => {
           // just step through parts
           const part = song.parts[this.currentMeasure % song.parts.length][i]
           const url = audioBuffers[hash(part[0])]

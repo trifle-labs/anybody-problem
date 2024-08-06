@@ -330,7 +330,7 @@ contract AnybodyProblem is Ownable, ERC2981 {
 
         uint256 bodyCount = level + 1;
         address verifier = verifiers[bodyCount + dummyCount][tickCount];
-        require(verifier != address(0), 'Invalid verifier');
+        require(verifier != address(0), 'Invalid verifier, address == 0');
         require(
             address(uint160(input[5 + (bodyCount + dummyCount) * 5 + 1])) ==
                 msg.sender,

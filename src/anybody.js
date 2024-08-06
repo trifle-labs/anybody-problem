@@ -1,4 +1,4 @@
-import { EventEmitter } from 'events'
+import EventEmitter from './events'
 import Sound from './sound.js'
 import { Visuals } from './visuals.js'
 import { Calculations } from './calculations.js'

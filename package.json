@@ -4,13 +4,19 @@
   "license": "CC-BY-NC-4.0",
   "targets": {
     "module": {
-      "optimize": true
+      "optimize": true,
+      "source": "src/index.js",
+      "isLibrary": true
+    },
+    "iframe": {
+      "source": "src/index.html"
     }
   },
   "source": "src/index.js",
   "module": "dist/module.js",
+  "iframe": "dist/index.html",
   "scripts": {
-    "build": "rm -rf .parcel-cache && rm -rf dist && yarn parcel build src/index.js",
+    "build": "rm -rf .parcel-cache && rm -rf dist && yarn parcel build",
     "dev": "rm -rf .parcel-cache && rm -rf dist && yarn parcel watch src/index.js",
     "serve": "rm -rf .parcel-cache && yarn parcel src/index.html --open",
     "chain": "hardhat node",
@@ -113,9 +119,6 @@
     "not dead",
     "not ie 11"
   ],
-  "engines": {
-    "node": ">=16"
-  },
   "readme": "ERROR: No README data found!",
   "_id": "anybody-problem@1.0.0"
 }

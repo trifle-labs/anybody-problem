@@ -360,9 +360,11 @@ export const Calculations = {
         this.explosions.push(
           ...this.convertBigIntsToBodies([JSON.parse(JSON.stringify(body))])
         )
-        this.makeExplosionStart(x, y)
-        this.shakeScreen()
-        this.sound?.playExplosion(x, y)
+        if (!this.util) {
+          this.makeExplosionStart(x, y)
+          this.shakeScreen()
+          this.sound?.playExplosion(x, y)
+        }
 
         bodies[j].radius = 0n
       }
