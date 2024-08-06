@@ -93,6 +93,11 @@ const PAUSE_BODY_DATA = [
   }
 ]
 
+const SECONDS_IN_A_DAY = 86400
+const currentDay = () =>
+  Math.floor(Date.now() / 1000) -
+  (Math.floor(Date.now() / 1000) % SECONDS_IN_A_DAY)
+
 export class Anybody extends EventEmitter {
   constructor(p, options = {}) {
     super()
@@ -121,7 +126,7 @@ export class Anybody extends EventEmitter {
 
   setOptions(options = {}) {
     const defaultOptions = {
-      day: 324000,
+      day: currentDay(),
       level: 0,
       bodyData: null,
       todaysRecords: {},

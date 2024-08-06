@@ -14,6 +14,7 @@ q5.setup = () => {
   }
   window.anybody = new Anybody(q5, options)
   if (!day) {
+    console.log('no day!')
     window.location.hash = window.anybody.day.toString()
   }
 }

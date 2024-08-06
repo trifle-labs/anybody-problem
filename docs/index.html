@@ -38694,30 +38694,32 @@
         return A > F.x && A < F.x + F.width && t > F.y && t < F.y + F.height
       }
       let Ie = [
-        { bodyIndex: 0, radius: 36e3, px: 149311, py: 901865, vx: 0, vy: 0 },
-        { bodyIndex: 1, radius: 32e3, px: 309311, py: 121865, vx: 0, vy: 0 },
-        { bodyIndex: 2, radius: 3e4, px: 850311, py: 811865, vx: 0, vy: 0 },
-        { bodyIndex: 3, radius: 7e3, px: 833406, py: 103029, vx: 0, vy: 0 },
-        {
-          bodyIndex: 4,
-          radius: 2e4,
-          px: 705620,
-          py: 178711,
-          vx: -1e5,
-          vy: -1111e3
-        },
-        { bodyIndex: 5, radius: 17e3, px: 139878, py: 454946, vx: 0, vy: 0 },
-        { bodyIndex: 6, radius: 9e3, px: 289878, py: 694946, vx: 0, vy: 0 },
-        {
-          bodyIndex: 7,
-          radius: 14e3,
-          px: 589878,
-          py: 694946,
-          vx: -1e5,
-          vy: -1111e3
-        }
-      ]
-      class Ii extends Av {
+          { bodyIndex: 0, radius: 36e3, px: 149311, py: 901865, vx: 0, vy: 0 },
+          { bodyIndex: 1, radius: 32e3, px: 309311, py: 121865, vx: 0, vy: 0 },
+          { bodyIndex: 2, radius: 3e4, px: 850311, py: 811865, vx: 0, vy: 0 },
+          { bodyIndex: 3, radius: 7e3, px: 833406, py: 103029, vx: 0, vy: 0 },
+          {
+            bodyIndex: 4,
+            radius: 2e4,
+            px: 705620,
+            py: 178711,
+            vx: -1e5,
+            vy: -1111e3
+          },
+          { bodyIndex: 5, radius: 17e3, px: 139878, py: 454946, vx: 0, vy: 0 },
+          { bodyIndex: 6, radius: 9e3, px: 289878, py: 694946, vx: 0, vy: 0 },
+          {
+            bodyIndex: 7,
+            radius: 14e3,
+            px: 589878,
+            py: 694946,
+            vx: -1e5,
+            vy: -1111e3
+          }
+        ],
+        Ii = () =>
+          Math.floor(Date.now() / 1e3) - (Math.floor(Date.now() / 1e3) % 86400)
+      class IB extends Av {
         constructor(F, A = {}) {
           super(),
             Object.assign(this, qP),
@@ -38738,7 +38740,7 @@
         }
         setOptions(F = {}) {
           Object.assign(this, {
-            day: 324e3,
+            day: Ii(),
             level: 0,
             bodyData: null,
             todaysRecords: {},
@@ -39416,11 +39418,11 @@
               }, 2e3))
         }
       }
-      'undefined' != typeof window && (window.Anybody = Ii),
+      'undefined' != typeof window && (window.Anybody = IB),
         (BigInt.prototype.toJSON = function () {
           return this.toString()
         })
-      let IB = new (function (F, A) {
+      let Is = new (function (F, A) {
           return new (function F(t) {
             let e = 'global' == t ? window : this
             e.canvas = document.createElement('canvas')
@@ -41505,15 +41507,17 @@
               })
           })(F)
         })(),
-        Is = window.location.hash.slice(1)
+        In = window.location.hash.slice(1)
       window.anybody,
-        (IB.setup = () => {
+        (Is.setup = () => {
           let F = { level: 0 }
-          Is && '' !== Is && (F.day = parseInt(Is)),
-            (window.anybody = new Ii(IB, F)),
-            Is || (window.location.hash = window.anybody.day.toString())
+          In && '' !== In && (F.day = parseInt(In)),
+            (window.anybody = new IB(Is, F)),
+            In ||
+              (console.log('no day!'),
+              (window.location.hash = window.anybody.day.toString()))
         }),
-        (IB.draw = () => {
+        (Is.draw = () => {
           window.anybody.draw()
         })
     })()

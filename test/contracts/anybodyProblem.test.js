@@ -341,7 +341,9 @@ describe('AnybodyProblem Tests', function () {
 
   it('has the same results for generateLevelData as anybody.js', async () => {
     const SECONDS_IN_A_DAY = 86400
-    const day = Math.floor(Date.now() / 1000 / SECONDS_IN_A_DAY)
+    const day =
+      Math.floor(Date.now() / 1000) -
+      (Math.floor(Date.now() / 1000) % SECONDS_IN_A_DAY)
     const level = 1
     const { AnybodyProblem: anybodyProblem } = await deployContracts()
     const contractLevelData = await anybodyProblem.generateLevelData(day, level)
