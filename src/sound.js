@@ -11,38 +11,37 @@ const {
   loaded
 } = Tone
 
-import {
-  whistle_8_T7,
-  whistle_4_T3,
-  whistle_7_T6,
-  whistle_12_T11,
-  whistle_8_T7_B,
-  wii_2_T1,
-  wii_4_T3,
-  wii_8_T7,
-  wii_10_T9,
-  wii_12_T11,
-  wii_T5,
-  wii_chord,
-  ipod_2_T1,
-  ipod_5_T4,
-  ipod_7_T6,
-  ipod_8_T7,
-  ipod_14_FX,
-  ipod_15_Delay_Reverb,
-  ipod_hiss,
-  orbit_3_Audio,
-  orbit_8_DT1,
-  orbit_9_DT2,
-  orbit_10_DT6,
-  coinBox,
-  bongoHard,
-  bubble,
-  coin,
-  bottlerocket2,
-  bomb,
-  affirmative
-} from './files.js'
+import whistle_8_T7 from 'data-url:/public/sound/whistle/whistle_8_T7.mp3'
+import whistle_4_T3 from 'data-url:/public/sound/whistle/whistle_4_T3.mp3'
+import whistle_7_T6 from 'data-url:/public/sound/whistle/whistle_7_T6.mp3'
+import whistle_12_T11 from 'data-url:/public/sound/whistle/whistle_12_T11.mp3'
+import whistle_8_T7_B from 'data-url:/public/sound/whistle/whistle_8_T7_B.mp3'
+import wii_2_T1 from 'data-url:/public/sound/wii/wii_2_T1.mp3'
+import wii_4_T3 from 'data-url:/public/sound/wii/wii_4_T3.mp3'
+import wii_8_T7 from 'data-url:/public/sound/wii/wii_8_T7.mp3'
+import wii_10_T9 from 'data-url:/public/sound/wii/wii_10_T9.mp3'
+import wii_12_T11 from 'data-url:/public/sound/wii/wii_12_T11.mp3'
+import wii_T5 from 'data-url:/public/sound/wii/wii_T5.mp3'
+import wii_chord from 'data-url:/public/sound/wii/wii_chord.mp3'
+import ipod_2_T1 from 'data-url:/public/sound/ipod/ipod_2_T1.mp3'
+import ipod_5_T4 from 'data-url:/public/sound/ipod/ipod_5_T4.mp3'
+import ipod_7_T6 from 'data-url:/public/sound/ipod/ipod_7_T6.mp3'
+import ipod_8_T7 from 'data-url:/public/sound/ipod/ipod_8_T7.mp3'
+import ipod_14_FX from 'data-url:/public/sound/ipod/ipod_14_FX.mp3'
+import ipod_15_Delay_Reverb from 'data-url:/public/sound/ipod/ipod_15_Delay_Reverb.mp3'
+import ipod_hiss from 'data-url:/public/sound/ipod/ipod_hiss.mp3'
+import orbit_3_Audio from 'data-url:/public/sound/orbit/orbit_3-Audio.mp3'
+import orbit_8_DT1 from 'data-url:/public/sound/orbit/orbit_8_DT1.mp3'
+import orbit_9_DT2 from 'data-url:/public/sound/orbit/orbit_9_DT2.mp3'
+import orbit_10_DT6 from 'data-url:/public/sound/orbit/orbit_10_DT6.mp3'
+import coinBox from 'data-url:/public/sound/fx/coin-box.mp3'
+import bongoHard from 'data-url:/public/sound/fx/SC_CP_perc_bongo_loud_tap.mp3'
+import bubble from 'data-url:/public/sound/fx/DSC_GST_one_shot_perc_water.mp3'
+import coin from 'data-url:/public/sound/fx/ESM_Game_Notification_83_Coin_Blip_Select_Tap_Button.mp3'
+import bottlerocket2 from 'data-url:/public/sound/fx/space/BottleRocket_S011FI.5.mp3'
+import bomb from 'data-url:/public/sound/fx/space/ESM_Builder_Game_Fireworks_Bomb_Explosion_2_Fire_Bomb_Explosive_War_Battle_Rocket_Mortar_Tank_Cannon.mp3'
+import affirmative from 'data-url:/public/sound/fx/space/ESM_Digital_Game_Affirmation_Sound_Sci_fi_Military_Robotic_Robot_Cyber_Futuristic_Transition.mp3'
+
 const base64Files = [
   whistle_8_T7,
   whistle_4_T3,
@@ -88,44 +87,29 @@ const hash = (str) => {
 }
 
 for (const file of base64Files) {
-  const fromBase64 = atob(file)
-  let arrayBuffer = Uint8Array.from(fromBase64, (e) => e.charCodeAt(0))
-  if (typeof window === 'undefined') {
-    break
-  }
-  const audioContext = new window.AudioContext()
-  audioContext.decodeAudioData(
-    arrayBuffer.buffer,
-    (audioBuffer) => {
-      const source = audioContext.createBufferSource()
-      source.buffer = audioBuffer
-      audioBuffers[hash(file)] = audioBuffer
-    },
-    (error) => {
-      console.error('Error decoding audio data:', { error })
-    }
-  )
+  audioBuffers[hash(file)] = file
+  continue
 }
 const SONGS = {
-  whistle: {
-    bpm: 70,
-    parts: [
-      [
-        // each part consists of a set of tracks
-        // type Track: [sample, probability, introProbability?]
-        [whistle_8_T7, 1, 0],
-        [whistle_4_T3, 0.9, 1],
-        [whistle_7_T6, 0.7, 1],
-        [whistle_12_T11, 0.7, 0]
-      ],
-      [
-        [whistle_8_T7_B, 1, 0],
-        [whistle_4_T3, 0.7, 1],
-        [whistle_7_T6, 0.7, 1],
-        [whistle_12_T11, 0.7, 0]
-      ]
-    ]
-  },
+  // whistle: {
+  //   bpm: 70,
+  //   parts: [
+  //     [
+  //       // each part consists of a set of tracks
+  //       // type Track: [sample, probability, introProbability?]
+  //       [whistle_8_T7, 1, 0],
+  //       [whistle_4_T3, 0.9, 1],
+  //       [whistle_7_T6, 0.7, 1],
+  //       [whistle_12_T11, 0.7, 0]
+  //     ],
+  //     [
+  //       [whistle_8_T7_B, 1, 0],
+  //       [whistle_4_T3, 0.7, 1],
+  //       [whistle_7_T6, 0.7, 1],
+  //       [whistle_12_T11, 0.7, 0]
+  //     ]
+  //   ]
+  // },
   wii: {
     bpm: 70,
     parts: [
@@ -198,10 +182,11 @@ export default class Sound {
     this.setSong()
   }
 
-  setSong() {
+  setSong(index) {
     const songs = Object.values(SONGS)
-    const songIndex = (3 + this.anybody.level) % songs.length
-    this.currentSong = songs[songIndex]
+    index = index ?? (3 + this.anybody.level) % songs.length
+    this.currentSong = songs[index]
+    console.log('currentSong:', Object.keys(SONGS)[index])
   }
 
   handleKeyDown = (e) => {
@@ -302,6 +287,12 @@ export default class Sound {
       this.oneShots[key].start()
       return this.oneShots[key]
     }
+  }
+
+  async playNormalSpeed() {
+    this.voices?.forEach((voice) => {
+      voice.player.playbackRate = 1
+    })
   }
 
   async playGameOver({ win }) {

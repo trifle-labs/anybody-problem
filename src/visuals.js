@@ -309,6 +309,106 @@ export const Visuals = {
     } else {
       this.justPaused = false
     }
+
+    if (this.debug) {
+      this.drawDebug()
+    } else {
+      this.drawDebugPrompt()
+    }
+
+    // quick tip solution
+    if (
+      this.level <= 1 &&
+      !this.paused &&
+      !this.won &&
+      !this.gameOver
+      // || (this.gameOver && !this.won)
+    ) {
+      this.p.textAlign(this.p.CENTER, this.p.TOP)
+      const fz = 24
+      this.p.textSize(fz)
+      this.p.fill('white')
+      this.p.textFont(fonts.body)
+      this.p.text(
+        'CLICK or {SPACE} to shoot, {R} to restart',
+        this.windowWidth / 2,
+        this.windowHeight - (fz + 8)
+      )
+    }
+  },
+
+  drawDebugPrompt() {
+    this.p.noStroke()
+    this.p.fill('white')
+    this.p.textSize(12)
+    this.p.text('?', this.windowWidth - 20, this.windowHeight - 20)
+  },
+
+  drawDebug() {
+    const rows = 5
+    const rowHeight = 15
+    const leftMargin = 5
+    const avgRate = this.p.avgRate().toFixed(2)
+    const currRate = this.p.currRate().toFixed(2)
+    const boxWidth = 100
+    const boxHeight = rows * rowHeight + 20
+
+    this.p.noStroke()
+    this.p.fill('rgba(0,0,0,0.8)')
+    this.p.rect(
+      this.windowWidth - boxWidth,
+      this.windowHeight - boxHeight,
+      boxWidth,
+      boxHeight
+    )
+    this.p.fill('white')
+    this.p.text(
+      'cur fps: ' + currRate,
+      this.windowWidth - boxWidth + leftMargin,
+      this.windowHeight - boxHeight + rowHeight * 1,
+      boxWidth,
+      boxHeight
+    )
+    this.p.text(
+      'avg fps: ' + avgRate,
+      this.windowWidth - boxWidth + leftMargin,
+      this.windowHeight - boxHeight + rowHeight * 2,
+      boxWidth,
+      boxHeight
+    )
+
+    const cores = navigator.hardwareConcurrency
+    this.p.text(
+      '~' + cores + ' cores',
+      this.windowWidth - boxWidth + leftMargin,
+      this.windowHeight - boxHeight + +rowHeight * 3,
+      boxWidth,
+      boxHeight
+    )
+    const ram = navigator.deviceMemory || 'N/A'
+    this.p.text(
+      '~' + ram + ' GB RAM',
+      this.windowWidth - boxWidth + leftMargin,
+      this.windowHeight - boxHeight + rowHeight * 4,
+      boxWidth,
+      boxHeight
+    )
+    const isIntel = navigator.userAgent.includes('Intel')
+    this.p.text(
+      (isIntel ? 'Intel' : 'AMD') + ' inside',
+      this.windowWidth - boxWidth + leftMargin,
+      this.windowHeight - boxHeight + rowHeight * 5,
+      boxWidth,
+      boxHeight
+    )
+    const pixelDensity = window.devicePixelRatio || 1
+    this.p.text(
+      pixelDensity + 'x pxl density',
+      this.windowWidth - boxWidth + leftMargin,
+      this.windowHeight - boxHeight + rowHeight * 6,
+      boxWidth,
+      boxHeight
+    )
   },
 
   drawPause() {
@@ -465,48 +565,81 @@ export const Visuals = {
           Math.floor(Math.random() * this.windowHeight)
         )
       }
-      //   const totalLines = 6
-      //   for (let i = 0; i < totalLines; i++) {
-      //     if (i % 5 == 5) {
-      //       this.starBG.strokeWeight(1)
-      //       // this.starBG.stroke(`hsl(${i * (360 / totalLines)}, 100%, 50%)`)
-      //     } else {
-      //       this.starBG.strokeWeight(1)
-      //       // this.starBG.stroke('rgba(0,0,0,0.1)')
-      //     }
-      //     this.starBG.line(i * (this.windowWidth / totalLines), 0, i * (this.windowWidth / totalLines), this.windowHeight)
-      //     this.starBG.line(0, i * (this.windowHeight / totalLines), this.windowWidth, i * (this.windowHeight / totalLines))
-      //   }
-      // }
+      const drawCluster = (graphic, x, y, c) => {
+        const range = 250
+        for (let i = 0; i < 5000; i++) {
+          const angle = graphic.random(0, graphic.TWO_PI)
+          const radius = graphic.random(-range / 2, range)
+          const xOffset = radius * graphic.cos(angle)
+          const yOffset = radius * graphic.sin(angle)
+
+          let variation = graphic.lerpColor(
+            graphic.color(c),
+            graphic.color(
+              graphic.random(150),
+              graphic.random(150),
+              graphic.random(150)
+            ),
+            0.65
+          )
+          variation.setAlpha(100)
+          graphic.fill(variation)
+          // graphic.fill(graphic.color(c))
+          graphic.ellipse(x + xOffset, y + yOffset, 2, 2)
+        }
+      }
+
+      const quadraticPoint = (a, b, c, t) => {
+        return (1 - t) * (1 - t) * a + 2 * (1 - t) * t * b + t * t * c
+      }
+
+      const drawMilky = (graphic) => {
+        graphic.colorMode(graphic.RGB)
+        const startColor = graphic.color(
+          ...hslToRgb(
+            randHSL(themes.bodies.default['berlin'].bg, true),
+            1,
+            true
+          )
+        )
+        const endColor = graphic.color(
+          ...hslToRgb(
+            randHSL(themes.bodies.default['berlin'].bg, true),
+            1,
+            true
+          )
+        )
+        const r = graphic.random(0, 1)
+        const startXLeft = r > 0.5
+        const startYLeft = graphic.random(0, 1) > 0.5
+
+        // Define control points for the Bézier curve
+        let x1 = startXLeft ? -100 : this.windowWidth + 100,
+          y1 = startYLeft ? this.windowHeight + 100 : 0
+        let x2 = startXLeft ? 0 : this.windowWidth,
+          y2 = startYLeft ? 0 : this.windowHeight
+        let x3 = startXLeft ? this.windowWidth : -100,
+          y3 = startYLeft ? -100 : this.windowHeight + 100
+        // Get points along the curve
+        for (let t = 0; t <= 1; t += 0.01) {
+          let x = quadraticPoint(x1, x2, x3, t)
+          let y = quadraticPoint(y1, y2, y3, t)
+
+          let inter = graphic.map(y, 50, 250, 0, 1)
+          let c = graphic.lerpColor(startColor, endColor, inter)
+          graphic.noStroke()
+          drawCluster(graphic, x, y, c)
+        }
+        graphic.colorMode(graphic.RGB)
+      }
+      // this.milkyBG ||= this.p.createGraphics(
+      //   this.windowWidth,
+      //   this.windowHeight
+      // )
+      drawMilky(this.starBG)
     }
     const basicX = 0
-    // Math.floor((this.frames / FPS) * (this.frames / FPS)) % this.windowWidth
     const basicY = 0
-    // Math.floor((this.frames / FPS) * (this.frames / FPS)) % this.windowHeight
-
-    // const basicX = this.accumX % this.windowWidth
-    // const basicY = this.accumY % this.windowHeight
-
-    // const Xleft = basicX - this.windowWidth
-    // const Xright = basicX + this.windowWidth
-
-    // const Ytop = basicY - this.windowHeight
-    // const Ybottom = basicY + this.windowHeight
-
-    // this.confirmedStarPositions ||= []
-    // for (let i = 0; i < this.starPositions?.length; i++) {
-    //   if (i < this.confirmedStarPositions.length) continue
-    //   const starBody = this.starPositions[i]
-    //   const radius = starBody.radius * 4
-    //   if (Xleft < 10) {
-    //     this.drawBodiesLooped(starBody, radius, this.drawStarOnBG)
-    //     if (this.loaded) {
-    //       this.confirmedStarPositions.push(this.starPositions[i])
-    //     }
-    //   } else {
-    //     this.drawBodiesLooped(starBody, radius, this.drawStarOnTopOfBG)
-    //   }
-    // }
 
     this.p.image(
       this.starBG,
@@ -515,68 +648,50 @@ export const Visuals = {
       this.windowWidth,
       this.windowHeight
     )
-    // this.p.image(
-    //   this.starBG,
-    //   Xleft,
-    //   basicY,
-    //   this.windowWidth,
-    //   this.windowHeight
-    // )
-    // this.p.image(
-    //   this.starBG,
-    //   Xright,
-    //   basicY,
-    //   this.windowWidth,
-    //   this.windowHeight
-    // )
-    // this.p.image(this.starBG, basicX, Ytop, this.windowWidth, this.windowHeight)
-    // this.p.image(
-    //   this.starBG,
-    //   basicX,
-    //   Ybottom,
-    //   this.windowWidth,
-    //   this.windowHeight
-    // )
-    // this.p.image(this.starBG, Xleft, Ytop, this.windowWidth, this.windowHeight)
-    // this.p.image(this.starBG, Xright, Ytop, this.windowWidth, this.windowHeight)
-    // this.p.image(
-    //   this.starBG,
-    //   Xleft,
-    //   Ybottom,
-    //   this.windowWidth,
-    //   this.windowHeight
-    // )
-    // this.p.image(
-    //   this.starBG,
-    //   Xright,
-    //   Ybottom,
-    //   this.windowWidth,
-    //   this.windowHeight
-    // )
-
-    // // Grid lines, uncomment for visual debugging and alignment
-    // const boxCount = 6
-    // // this.p.stroke('black')
-    // this.p.stroke('white')
-    // for (let i = 1; i < boxCount; i++) {
-    //   if (i % 5 == 5) {
-    //     this.p.strokeWeight(1)
-    //     // this.starBG.stroke(`hsl(${i * (360 / totalLines)}, 100%, 50%)`)
-    //   } else {
-    //     this.p.strokeWeight(1)
-    //   }
-    //   this.p.line(
-    //     i * (this.windowWidth / boxCount),
-    //     0,
-    //     i * (this.windowWidth / boxCount),
-    //     this.windowHeight
-    //   )
-    //   this.p.line(
-    //     0,
-    //     i * (this.windowHeight / boxCount),
-    //     this.windowWidth,
-    //     i * (this.windowHeight / boxCount)
-    //   )
+    // switch (this.level) {
+    //   case 0:
+    //   case 1:
+    //     this.p.image(
+    //       this.milkyBG,
+    //       basicX,
+    //       basicY,
+    //       this.windowWidth,
+    //       this.windowHeight
+    //     )
+    //     break
+    //   case 2:
+    //     if (!this.milkyBG2) {
+    //       console.log('rotate milkyBG')
+    //       this.milkyBG2 = true //this.milkyBG
+    //       console.log({ milkyBG: this.milkyBG })
+    //       // this.milkyBG.clear()
+    //     }
+    //     this.p.push()
+    //     this.p.rotate(this.p.PI / 2)
+    //     this.p.translate(0, -this.windowHeight)
+    //     this.p.image(
+    //       this.milkyBG,
+    //       basicX,
+    //       basicY,
+    //       this.windowWidth,
+    //       this.windowHeight
+    //     )
+    //     this.p.pop()
+    //     break
+    //   case 3:
+    //     if (!this.milkyBG3) {
+    //       this.milkyBG3 = this.milkyBG2
+    //       this.milkyBG3.rotata(this.p.PI)
+    //       this.milkyBG2.clear()
+    //     }
+    //     this.p.image(
+    //       this.milkyBG3,
+    //       basicX,
+    //       basicY,
+    //       this.windowWidth,
+    //       this.windowHeight
+    //     )
+    //     break
     // }
   },
 
@@ -759,6 +874,11 @@ export const Visuals = {
   },
 
   drawStatsScreen() {
+    if (!this.shownStatScreen) {
+      this.shownStatScreen = true
+      this.sound?.stop()
+      this.sound?.resume()
+    }
     const { p } = this
     const borderWeight = 1
     const showCumulativeTimeRow = this.level > 1
@@ -832,34 +952,30 @@ export const Visuals = {
     // end upper box text
 
     // middle box text
+    const levelTimes = this.levelSpeeds
+      .map((result) => result?.framesTook / this.FPS)
+      .filter((l) => l !== undefined)
+    const bestTimes =
+      this.todaysRecords?.levels?.map((l) => l.events[0].time / this.FPS) ?? []
+
+    const showBestAndDiff = bestTimes.length
+
     p.textSize(48)
     p.fill(THEME.iris_60)
     p.textAlign(p.RIGHT, p.TOP)
     const col1X = 580
     const col2X = 770
     const col3X = 960
+    const timeColX = showBestAndDiff ? col1X : col3X
 
     // middle box text - labels
-    p.text('time', col1X, 264)
-    p.text('best', col2X, 264)
-    p.text('+/-', col3X, 264)
+    p.text('time', timeColX, 264)
+    if (showBestAndDiff) {
+      p.text('best', col2X, 264)
+      p.text('+/-', col3X, 264)
+    }
 
     // middle box text - values
-    const levelTimes = this.levelSpeeds
-      .map((result) => result?.framesTook / this.FPS)
-      .filter((l) => l !== undefined)
-    const bestTimes =
-      this.todaysRecords?.levels?.map((l) => l.events[0].time / this.FPS) ||
-      Array.from({ length: 5 }, (_, i) => levelTimes[i] || 0)
-    const plusMinus = bestTimes
-      .map((best, i) => {
-        if (i >= levelTimes.length) return ''
-        const time = levelTimes[i]
-        const diff = time - best
-        const sign = Number(diff.toFixed(2)) > 0 ? '+' : '-'
-        return sign + Math.abs(diff).toFixed(2)
-      })
-      .filter(Boolean)
     const problemComplete = levelTimes.length >= LEVELS
     const rowHeight = 72
 
@@ -884,65 +1000,83 @@ export const Visuals = {
     p.textSize(44)
     // const middleBoxPadding = 12
     // p.translate(0, middleBoxPadding)
+    // times
     for (let i = 0; i < LEVELS; i++) {
       const time = i < levelTimes.length ? levelTimes[i].toFixed(2) : '-'
       p.fill(THEME.iris_30)
       p.text(
         time,
-        col1X,
+        timeColX,
         middleBoxY + rowHeight * i + rowHeight / 2,
         150,
         rowHeight
       )
     }
-    for (let i = 0; i < LEVELS; i++) {
-      const best = i < bestTimes.length ? bestTimes[i] : '-'
-      p.fill(THEME.iris_60)
-      p.text(
-        best.toFixed(2),
-        col2X,
-        middleBoxY + rowHeight * i + rowHeight / 2,
-        150,
-        rowHeight
-      )
-    }
-    for (let i = 0; i < LEVELS; i++) {
-      const diff = plusMinus[i] || '-'
-      if (i === levelTimes.length - 1) {
-        p.fill(/^-/.test(diff) ? THEME.lime : THEME.flame_50)
-      } else {
-        p.fill(/^-/.test(diff) ? THEME.green_75 : THEME.flame_75)
+    if (showBestAndDiff) {
+      // calc diffs
+      const plusMinus = bestTimes
+        .map((best, i) => {
+          if (i >= levelTimes.length) return ''
+          const time = levelTimes[i]
+          const diff = time - best
+          const sign = Number(diff.toFixed(2)) > 0 ? '+' : '-'
+          return sign + Math.abs(diff).toFixed(2)
+        })
+        .filter(Boolean)
+      // best times
+      for (let i = 0; i < LEVELS; i++) {
+        const best = i < bestTimes.length ? bestTimes[i].toFixed(2) : '-'
+        p.fill(THEME.iris_60)
+        p.text(
+          best,
+          col2X,
+          middleBoxY + rowHeight * i + rowHeight / 2,
+          150,
+          rowHeight
+        )
       }
-      p.text(
-        diff,
-        col3X,
-        middleBoxY + rowHeight * i + rowHeight / 2,
-        150,
-        rowHeight
-      )
+      // diff values
+      for (let i = 0; i < LEVELS; i++) {
+        const diff = plusMinus[i] || '-'
+        if (i === levelTimes.length - 1) {
+          p.fill(/^-/.test(diff) ? THEME.lime : THEME.flame_50)
+        } else {
+          p.fill(/^-/.test(diff) ? THEME.green_75 : THEME.flame_75)
+        }
+        p.text(
+          diff,
+          col3X,
+          middleBoxY + rowHeight * i + rowHeight / 2,
+          150,
+          rowHeight
+        )
+      }
     }
     p.textSize(64)
 
     // middle box text - sum line
     if (showCumulativeTimeRow) {
-      const bestTime = bestTimes
-        .slice(0, levelTimes.length)
-        .reduce((a, b) => a + b, 0)
       const levelTimeSum = levelTimes.reduce((a, b) => a + b, 0)
-      let diff = Number((levelTimeSum - bestTime).toFixed(2))
-      const sumLine = [
-        levelTimeSum.toFixed(2),
-        bestTime.toFixed(2),
-        `${diff > 0 ? '+' : '-'}${Math.abs(diff).toFixed(2)}`
-      ]
-      const sumLineY = middleBoxY + rowHeight * bestTimes.length
+      const sumLine = [levelTimeSum.toFixed(2)]
+
+      if (showBestAndDiff) {
+        const bestTime = bestTimes
+          .slice(0, levelTimes.length)
+          .reduce((a, b) => a + b, 0)
+        let diff = Number((levelTimeSum - bestTime).toFixed(2))
+        sumLine[1] = bestTime.toFixed(2)
+        sumLine[2] = `${diff > 0 ? '+' : '-'}${Math.abs(diff).toFixed(2)}`
+      }
+
+      const sumLineY = middleBoxY + rowHeight * Math.min(5, LEVELS)
       const sumLineHeight = 80
       const sumLineYText = sumLineY + sumLineHeight / 2
       p.textAlign(p.LEFT, p.CENTER)
       p.fill(THEME.iris_60)
       p.text(problemComplete ? 'solved in' : 'total time', 44, sumLineYText)
       p.textAlign(p.RIGHT, p.CENTER)
-      for (const [i, col] of [col1X, col2X, col3X].entries()) {
+      const columns = showBestAndDiff ? [col1X, col2X, col3X] : [timeColX]
+      for (const [i, col] of columns.entries()) {
         if (i == 0) p.fill(THEME.iris_30)
         else if (i == 1) p.fill(THEME.iris_60)
         else p.fill(/^-/.test(sumLine[i]) ? THEME.lime : THEME.flame_75)
@@ -1033,7 +1167,7 @@ export const Visuals = {
     this.showShare = this.level >= 5
     const buttonCount = this.showShare ? 4 : 3
     this.drawBottomButton({
-      text: 'RETRY',
+      text: 'REDO',
       onClick: () => {
         this.restart(null, false)
       },
@@ -1291,7 +1425,7 @@ export const Visuals = {
         this.p5Frames % Math.floor(this.P5_FPS / 8) === 0 &&
         joined.length > messageText.length
       ) {
-        this.sound?.playStat()
+        this.sound?.playStart()
       }
       const longestLine = lines.sort((a, b) => b.length - a.length)[0]
       p.rect(
@@ -1988,7 +2122,6 @@ export const Visuals = {
     const bodyData = this.generateLevelData(day, 1)
     const bodies = bodyData.map((b) => this.bodyDataToBodies.call(this, b, day))
     const heroBody = bodies[0]
-    console.log({ heroBody })
 
     // create an SVG element with a black background
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
@@ -2578,64 +2711,83 @@ export const Visuals = {
     return this.lastFrameRate
   },
 
-  shareCanvas() {
+  shareCanvas(showPopup = true) {
     const canvas = this.p.canvas
 
-    canvas.toBlob((blob) => {
-      const file = new File([blob], 'p5canvas.png', { type: 'image/png' })
+    return new Promise((resolve, reject) => {
+      canvas.toBlob(async (blob) => {
+        const file = new File([blob], 'p5canvas.png', { type: 'image/png' })
 
-      if (navigator.share) {
-        console.log('sharing canvas...')
-        navigator
-          .share({
-            files: [file]
-          })
-          .catch((error) => console.error('Error sharing:', error))
-      } else if (navigator.clipboard && navigator.clipboard.write) {
-        try {
-          console.log('writing canvas to clipboard...')
-          navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
-          this.popup = {
-            header: 'Go Share!',
-            body: ['Copied results to your clipboard.'],
-            fg: THEME.pink_50,
-            bg: THEME.pink_75,
-            buttons: [
-              {
-                text: 'CLOSE',
-                onClick: () => {
-                  this.popup = null
-                }
+        if (navigator.share) {
+          console.log('sharing canvas...')
+          await navigator
+            .share({
+              files: [file]
+            })
+            .catch((error) => {
+              console.error('Error sharing:', error)
+              reject(error)
+            })
+          resolve()
+        } else if (navigator.clipboard && navigator.clipboard.write) {
+          try {
+            console.log('writing canvas to clipboard...')
+            await navigator.clipboard.write([
+              new ClipboardItem({ 'image/png': blob })
+            ])
+            const msg = 'Copied results to your clipboard.'
+            if (showPopup) {
+              this.popup = {
+                header: 'Go Share!',
+                body: [msg],
+                fg: THEME.pink_50,
+                bg: THEME.pink_75,
+                buttons: [
+                  {
+                    text: 'CLOSE',
+                    onClick: () => {
+                      this.popup = null
+                    }
+                  }
+                ]
               }
-            ]
-          }
-        } catch (error) {
-          console.error('Error copying to clipboard:', error)
-          this.popup = {
-            header: 'Hmmm',
-            body: ['Couldn’t copy results to your clipboard.'],
-            buttons: [
-              {
-                text: 'CLOSE',
-                onClick: () => {
-                  this.popup = null
+            }
+            resolve(msg)
+          } catch (error) {
+            console.error('Error copying to clipboard:', error)
+            this.popup = {
+              header: 'Hmmm',
+              body: ['Couldn’t copy results to your clipboard.'],
+              buttons: [
+                {
+                  text: 'CLOSE',
+                  onClick: () => {
+                    this.popup = null
+                  }
                 }
-              }
-            ]
+              ]
+            }
+            reject(error)
           }
+        } else {
+          const error = new Error('no options to share canvas!')
+          console.error(error)
+          reject(error)
         }
-      } else {
-        console.error('no options to share canvas!')
-      }
-    }, 'image/png')
+      }, 'image/png')
+    })
   },
   shakeScreen() {
     this.shaking ||= this.P5_FPS / 2
     this.shaking--
     const shakingAmount = 10
-    this.shakeX = this.p.random(-shakingAmount, shakingAmount)
-    this.shakeY = this.p.random(-shakingAmount, shakingAmount)
-    this.p.translate(this.shakeX, this.shakeY)
+    const shakeX = this.p.random(-shakingAmount, shakingAmount)
+    const shakeY = this.p.random(-shakingAmount, shakingAmount)
+    if (this.shaking <= 0) {
+      this.p.translate(0, 0)
+    } else {
+      this.p.translate(shakeX, shakeY)
+    }
   },
   makeParticles(x, y) {
     const array = []

@@ -125,16 +125,12 @@ export class Anybody extends EventEmitter {
       level: 0,
       bodyData: null,
       todaysRecords: {},
+      debug: false,
       // Add default properties and their initial values here
       startingBodies: 1,
       windowWidth: 1000,
       windowHeight: 1000,
-      pixelDensity:
-        typeof window !== 'undefined'
-          ? window.devicePixelRatio < 2
-            ? 2
-            : window.devicePixelRatio
-          : 2, //4, // Math.min(4, 4 * (window.devicePixelRatio ?? 1)),
+      pixelDensity: 1,
       scalingFactor: 10n ** 3n,
       minDistanceSquared: 200 * 200,
       G: NORMAL_GRAVITY, // Gravitational constant
@@ -196,6 +192,7 @@ export class Anybody extends EventEmitter {
     this.speedFactor = 2
     this.speedLimit = 10
     this.missileSpeed = 15
+    this.shownStatScreen = false
     this.G = NORMAL_GRAVITY
     this.vectorLimit = this.speedLimit * this.speedFactor
     this.missileVectorLimit = this.missileSpeed * this.speedFactor
@@ -267,6 +264,7 @@ export class Anybody extends EventEmitter {
     this.frames = this.alreadyRun
     this.startingFrame = this.alreadyRun
     this.stopEvery = this.test ? 20 : this.proverTickIndex(this.level + 1)
+    this.lastLevel = this.level
     // const vectorLimitScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
     this.setPause(this.paused, true)
     this.storeInits()
@@ -332,28 +330,20 @@ export class Anybody extends EventEmitter {
     // and track mouseX and mouseY
     this.p.touchStarted = () => {}
     this.p.mouseMoved = this.handleMouseMove
-    this.p.touchMoved = this.handleMouseMove
+    // this.p.touchMoved = this.handleMouseMove
     this.p.mousePressed = this.handleMousePressed
     this.p.mouseReleased = this.handleMouseReleased
     this.p.touchEnded = () => {}
 
-    if (typeof window !== 'undefined' && this.mode == 'game') {
-      canvas.removeEventListener('click', this.handleNFTClick)
-      canvas.addEventListener('click', this.handleGameClick)
-      canvas.addEventListener('touchend', this.handleGameClick)
-      window.addEventListener('keydown', this.handleGameKeyDown)
-    } else {
-      canvas.removeEventListener('click', this.handleGameClick)
-      window?.removeEventListener('keydown', this.handleGameKeyDown)
-      canvas.addEventListener('click', this.handleGameClick)
-    }
+    canvas.addEventListener('click', this.handleGameClick)
+    // canvas.addEventListener('touchend', this.handleGameClick)
+    window.addEventListener('keydown', this.handleGameKeyDown)
   }
 
   removeListener() {
     const { canvas } = this.p
-    canvas?.removeEventListener('click', this.handleNFTClick)
     canvas?.removeEventListener('click', this.handleGameClick)
-    canvas?.removeEventListener('touchend', this.handleGameClick)
+    // canvas?.removeEventListener('touchend', this.handleGameClick)
     window?.removeEventListener('keydown', this.handleGameKeyDown)
     window?.removeEventListener('keydown', this.sound.handleKeyDown)
   }
@@ -414,6 +404,11 @@ export class Anybody extends EventEmitter {
         button.onClick()
         return
       }
+    }
+
+    const debugZone = { x: this.windowWidth - 100, y: this.windowHeight - 100 }
+    if (x > debugZone.x && y > debugZone.y) {
+      this.debug = !this.debug
     }
 
     if (this.paused || this.gameOver) return
@@ -499,6 +494,9 @@ export class Anybody extends EventEmitter {
   restart = (options, beginPaused = true) => {
     if (options) {
       this.setOptions(options)
+    }
+    if (this.level !== this.lastLevel) {
+      // this.starBG = null
     }
     this.clearValues()
     this.sound?.stop()
@@ -923,10 +921,14 @@ export class Anybody extends EventEmitter {
     return info
   }
 
+  setPixelDensity(density) {
+    this.p.pixelDensity(density)
+  }
+
   prepareP5() {
     this.p.frameRate(this.P5_FPS)
     this.p.createCanvas(this.windowWidth, this.windowWidth)
-    this.p.pixelDensity(this.pixelDensity)
+    this.setPixelDensity(this.pixelDensity)
     this.p.background('white')
   }
 

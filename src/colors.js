@@ -121,7 +121,7 @@ export const bodyThemes = themes.bodies[THEME.bodiesTheme]
 
 // helpers
 
-export function hslToRgb(values, alpha = 1) {
+export function hslToRgb(values, alpha = 1, asArray = false) {
   let [h, s, l] = values
 
   s /= 100
@@ -164,6 +164,10 @@ export function hslToRgb(values, alpha = 1) {
   g = Math.round((g + m) * 255)
   b = Math.round((b + m) * 255)
 
+  if (asArray) {
+    return [r, g, b]
+  }
+
   return `rgba(${r}, ${g}, ${b}, ${alpha})`
 }
 
@@ -172,7 +176,7 @@ function randInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min
 }
 
-export function randHSL(ranges) {
+export function randHSL(ranges, asArray = false) {
   let hues = ranges[0] ?? '0-359'
   let sats = ranges[1] ?? '0-100'
   let lights = ranges[2] ?? '0-100'
@@ -192,7 +196,9 @@ export function randHSL(ranges) {
   const h = randInt(hues[0], hues[1] || hues[0])
   const s = randInt(sats[0], sats[1] || sats[0])
   const l = randInt(lights[0], lights[1] || lights[0])
-
+  if (asArray) {
+    return [h, s, l]
+  }
   return `hsl(${h},${s}%,${l}%)`
 }
 
