@@ -380,7 +380,9 @@ contract ExternalMetadata is Ownable {
                             '",',
                             '"home_url": "https://anybody.trifle.life",',
                             '"external_url": "https://anybody.trifle.life",',
-                            // '"animation_url": "', getHTML(tokenId), '",',
+                            '"animation_url": "https://anybody-nft.netlify.app/#',
+                            StringsExtended.toString(date),
+                            '",',
                             '"attributes": ',
                             getAttributes(date),
                             '}'

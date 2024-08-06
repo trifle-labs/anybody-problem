@@ -165,7 +165,7 @@ const SONGS = {
 
 const TRACK_VOLUME = 3 //db
 const MAX_VOLUME = 8 //db
-const INTRO_LENGTH = 1 // measures
+// const INTRO_LENGTH = 1 // measures
 const PAN_RANGE = 1.4 // 2 is hard L/R panning
 
 function random(arr) {
@@ -216,7 +216,9 @@ export default class Sound {
 
   pause() {
     Tone.getTransport().stop()
-    this.voices?.forEach((voice) => voice.player.stop())
+    for (let i = 0; i < this.voices?.length; i++) {
+      this.voices[i].player.stop()
+    }
     this.playOneShot(bongoHard, -22)
   }
 
@@ -290,9 +292,9 @@ export default class Sound {
   }
 
   async playNormalSpeed() {
-    this.voices?.forEach((voice) => {
-      voice.player.playbackRate = 1
-    })
+    for (let i = 0; i < this.voices?.length; i++) {
+      this.voices[i].player.playbackRate = 1
+    }
   }
 
   async playGameOver({ win }) {
@@ -300,14 +302,16 @@ export default class Sound {
     this.playedGameOver = true
     Tone.getTransport().stop()
     Tone.getTransport().cancel()
-    this.voices?.forEach((voice) => voice.player.stop())
+    for (let i = 0; i < this.voices?.length; i++) {
+      this.voices[i].player.stop()
+    }
 
     // speed up the voices
 
     const playbackRate = this.currentSong?.gameoverSpeed || 2
-    this.voices?.forEach((voice) => {
-      voice.player.playbackRate = playbackRate
-    })
+    for (let i = 0; i < this.voices?.length; i++) {
+      this.voices[i].player.playbackRate = playbackRate
+    }
     Tone.getTransport().bpm.rampTo(
       (Tone.getTransport().bpm.value *= playbackRate),
       0.5
@@ -379,7 +383,7 @@ export default class Sound {
       }),
       panVol: new PanVol()
     }
-    voice.panVol.volume.value = -Infinity
+    voice.panVol.volume.value = TRACK_VOLUME
     return voice
   }
 
@@ -387,11 +391,12 @@ export default class Sound {
     Tone.getTransport().cancel()
     Tone.getTransport().stop()
     this.loop?.dispose()
-    this.voices?.forEach((voice) => {
+    for (let i = 0; i < this.voices?.length; i++) {
+      const voice = this.voices[i]
       voice.player.stop()
       voice.player.dispose()
       voice.panVol.dispose()
-    })
+    }
     this.voices = null
     this.currentMeasure = 0
     this.playedGameOver = false
@@ -436,7 +441,8 @@ export default class Sound {
       await loaded()
       this.loop = new Loop((time) => {
         this.currentMeasure++
-        this.voices?.forEach((voice, i) => {
+        for (let i = 0; i < this.voices?.length; i++) {
+          const voice = this.voices[i]
           // just step through parts
           const part = song.parts[this.currentMeasure % song.parts.length][i]
           const url = audioBuffers[hash(part[0])]
@@ -451,18 +457,18 @@ export default class Sound {
           voice.panVol.connect(this.master)
 
           // randomly mute some voices, but keep most on
-          const probability =
-            this.currentMeasure <= INTRO_LENGTH && typeof part[2] === 'number'
-              ? part[2]
-              : part[1]
-          if (Math.random() > probability) {
-            voice.panVol.volume.linearRampTo(-Infinity, 0.1, time)
-          } else {
-            voice.panVol.volume.linearRampTo(TRACK_VOLUME, 0.1, time)
-          }
+          // const probability =
+          //   this.currentMeasure <= INTRO_LENGTH && typeof part[2] === 'number'
+          //     ? part[2]
+          //     : part[1]
+          // if (Math.random() > probability) {
+          //   voice.panVol.volume.linearRampTo(-Infinity, 0.1, time)
+          // } else {
+          //   voice.panVol.volume.linearRampTo(TRACK_VOLUME, 0.1, time)
+          // }
 
           voice.player.start(time)
-        })
+        }
       }, song.interval || '2m').start()
     }
 
