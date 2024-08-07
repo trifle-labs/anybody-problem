@@ -405,7 +405,10 @@ export class Anybody extends EventEmitter {
         }
         break
       case 'KeyR':
-        if (!this.gameOver || !this.won) this.restart(null, false)
+        if (!this.gameOver || !this.won) {
+          this.shaking = 0
+          this.restart(null, false)
+        }
         break
       case 'KeyP':
         if (!this.gameOver) this.setPause()
