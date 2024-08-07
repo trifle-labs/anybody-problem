@@ -196,8 +196,6 @@ const svgs = {
   FG_SVGS
 }
 
-const getBodyRadius = (radius) => radius * 4
-
 const replaceAttribute = (string, key, color) =>
   string.replaceAll(
     new RegExp(`${key}="(?!none)([^"]+)"`, 'g'),
@@ -235,9 +233,7 @@ export const Visuals = {
     this.p5Frames++
     this.drawExplosions()
 
-    if (!this.paused) {
-      this.drawBodies()
-    }
+    this.drawBodies()
     this.drawPause()
     this.drawScore()
     this.drawPopup()
@@ -1062,7 +1058,6 @@ export const Visuals = {
 
     // draw hero this.bodies[0]
     const body = this.getDisplayHero()
-    const radius = getBodyRadius(body.radius)
     const xWobble = p.sin(p.frameCount / this.P5_FPS) * (5 + body.bodyIndex)
     const yWobble =
       p.cos(p.frameCount / this.P5_FPS + body.bodyIndex * 3) *
@@ -1072,7 +1067,7 @@ export const Visuals = {
       x: p.map(scale, 0, 1, -140, 170) + xWobble,
       y: 180 + yWobble
     }
-    this.drawBody(body.position.x, body.position.y, body.velocity, radius, body)
+    this.drawBody(body)
 
     // begin middle box baddie body pyramid
     this.winScreenBaddies ||= this.getDisplayBaddies()
@@ -1087,7 +1082,7 @@ export const Visuals = {
         )
         body.velocity = this.createVector(0, 1)
         body.radius = 6.5
-        this.drawBody(body.position.x, body.position.y, body.velocity, 3, body)
+        this.drawBody(body)
       }
     }
 
@@ -1368,7 +1363,6 @@ export const Visuals = {
 
     // draw hero body
     const body = this.getDisplayHero({ radius: 33 })
-    const radius = getBodyRadius(body.radius)
     const xWobble = p.sin(p.frameCount / this.P5_FPS) * (5 + body.bodyIndex)
     const yWobble =
       p.cos(p.frameCount / this.P5_FPS + body.bodyIndex * 3) *
@@ -1377,7 +1371,7 @@ export const Visuals = {
       x: p.map(scale ** 3, 0, 1, -140, 180) + xWobble,
       y: 670 + yWobble
     }
-    this.drawBody(body.position.x, body.position.y, body.velocity, radius, body)
+    this.drawBody(body)
 
     this.drawMessageBox ||= ({ lines, x, y, color, start, textWidth }) => {
       if (start !== -1 && this.p5Frames < start) return
@@ -1762,13 +1756,7 @@ export const Visuals = {
       _explosion.c.core = this.hslToGrayscale(explosions[i].c.core)
       _explosion.c.baddie = this.hslToGrayscale(explosions[i].c.baddie)
 
-      this.drawBody(
-        _explosion.position.x,
-        _explosion.position.y,
-        _explosion.v,
-        _explosion.radius,
-        _explosion
-      )
+      this.drawBody(_explosion)
     }
   },
 
@@ -1945,10 +1933,9 @@ export const Visuals = {
 
   drawStarForegroundSvg(width, body) {
     this.p.push()
-    const fgIndex = body.c.fgIndex
     const r = {
       ...rot.fg,
-      ...(rotOverride?.fg?.[fgIndex] ?? {})
+      ...(rotOverride?.fg?.[body.c.fgIndex] ?? {})
     }
     const rotateBy =
       r.speed == 0
@@ -1976,10 +1963,9 @@ export const Visuals = {
 
   drawStarBackgroundSvg(width, body) {
     this.p.push()
-    const { bgIndex } = body.c
     const r = {
       ...rot.bg,
-      ...(rotOverride?.bg?.[bgIndex] ?? {})
+      ...(rotOverride?.bg?.[body.c.bgIndex] ?? {})
     }
     const rotateBy =
       r.speed == 0
@@ -1988,11 +1974,6 @@ export const Visuals = {
     this.p.rotate(r.direction * rotateBy)
     this.drawImageAsset('BG_SVGS', body.c.bgIndex, width, body.c.bg)
     this.p.pop()
-  },
-
-  moveAndRotate_PopAfter(graphic, x, y /*v*/) {
-    graphic.push()
-    graphic.translate(x, y)
   },
 
   exportBody(
@@ -2188,11 +2169,9 @@ export const Visuals = {
     return svg
   },
 
-  drawBody(x, y, v, radius, body) {
-    const graphic = this.p
-    this.moveAndRotate_PopAfter(graphic, x, y, v)
-    // y-offset of face relative to center
-    // const offset = this.getOffset(radius)
+  drawBody(body) {
+    this.p.push()
+    this.p.translate(body.position.x, body.position.y)
     if (
       (body.bodyIndex === 0 || body.hero) &&
       (this.level !== 0 || this.paused)
@@ -2201,18 +2180,9 @@ export const Visuals = {
       const size = Math.floor(body.radius * BODY_SCALE * 2.66)
 
       this.drawStarBackgroundSvg(size, body)
-      // this.drawImageAsset('BG_SVGS', body.c.bgIndex, size, body.c.bg)
-
       if (!body.backgroundOnly) {
-        // this.drawImageAsset(
-        //   'CORE_SVGS',
-        //   0,
-        //   body.radius * BODY_SCALE,
-        //   body.c.core
-        // )
         this.drawCoreSvg(body.radius * BODY_SCALE, body)
       }
-      // this.drawImageAsset('FG_SVGS', body.c.fgIndex, size, body.c.fg)
       this.drawStarForegroundSvg(size, body)
 
       if (!body.backgroundOnly) {
@@ -2221,51 +2191,7 @@ export const Visuals = {
     } else {
       this.drawBaddie(body)
     }
-    graphic.pop()
-  },
-
-  drawBodiesLooped(body, radius, drawFunction) {
-    body.backgroundOnly = false
-    drawFunction = drawFunction.bind(this)
-    drawFunction(body.position.x, body.position.y, body.velocity, radius, body)
-    return
-    // if (this.paused) return
-    // if (this.gameOver) return
-    // if (body.bodyIndex !== 0 || this.level == 0) return
-    // let loopedX = false,
-    //   loopedY = false,
-    //   loopX = body.position.x,
-    //   loopY = body.position.y
-    // const loopGap = radius * 1.5
-    // body.backgroundOnly = true
-    // // crosses right, draw on left
-    // if (body.position.x > this.windowWidth - loopGap) {
-    //   loopedX = true
-    //   loopX = body.position.x - this.windowWidth
-    //   drawFunction(loopX, body.position.y, body.velocity, radius, body)
-    //   // crosses left, draw on right
-    // } else if (body.position.x < loopGap) {
-    //   loopedX = true
-    //   loopX = body.position.x + this.windowWidth
-    //   drawFunction(loopX, body.position.y, body.velocity, radius, body)
-    // }
-
-    // // crosses bottom, draw on top
-    // if (body.position.y > this.windowHeight - loopGap) {
-    //   loopedY = true
-    //   loopY = body.position.y - this.windowHeight
-    //   drawFunction(body.position.x, loopY, body.velocity, radius, body)
-    //   // crosses top, draw on bottom
-    // } else if (body.position.y < loopGap) {
-    //   loopedY = true
-    //   loopY = body.position.y + this.windowHeight
-    //   drawFunction(body.position.x, loopY, body.velocity, radius, body)
-    // }
-
-    // // crosses corner, draw opposite corner
-    // if (loopedX && loopedY) {
-    //   drawFunction(loopX, loopY, body.velocity, radius, body)
-    // }
+    this.p.pop()
   },
 
   async drawBodies() {
@@ -2274,14 +2200,7 @@ export const Visuals = {
     for (let i = 0; i < this.bodies.length; i++) {
       const body = this.bodies[i]
       if (body.radius == 0) continue
-      const radius = getBodyRadius(body.radius)
-      this.drawBody(
-        body.position.x,
-        body.position.y,
-        body.velocity,
-        radius,
-        body
-      )
+      this.drawBody(body)
     }
   },
 
@@ -2290,8 +2209,6 @@ export const Visuals = {
       const body = this.pauseBodies[i]
       // after final proof is sent, don't draw upgradable bodies
       if (body.radius == 0) continue
-
-      const radius = getBodyRadius(body.radius)
 
       // calculate x and y wobble factors based on this.p5Frames to make the pause bodies look like they're bobbing around
       const xWobble =
@@ -2338,13 +2255,7 @@ export const Visuals = {
           body.position.y + yWobble + yFlee
         )
       }
-      this.drawBody(
-        bodyCopy.position.x,
-        bodyCopy.position.y,
-        bodyCopy.velocity,
-        radius,
-        bodyCopy
-      )
+      this.drawBody(bodyCopy)
     }
   },
 
