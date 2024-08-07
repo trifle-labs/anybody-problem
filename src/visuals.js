@@ -2277,10 +2277,11 @@ export const Visuals = {
   },
 
   brighten(c, amount = 20) {
-    c[2] = c[2] + amount
-    c[1] = c[1] + '%'
-    c[2] = c[2] + '%'
-    return `hsla(${c.join(',')})`
+    const cc = [...c]
+    cc[2] = cc[2] + amount
+    cc[1] = cc[1] + '%'
+    cc[2] = cc[2] + '%'
+    return `hsla(${cc.join(',')})`
   },
 
   drawBaddie(body) {
