@@ -141,6 +141,13 @@ template StepState(totalBodies, steps) {
       tmp_body[j][4] = detectCollision[i].out_bodies[j][2]; // radius
     }
 
+    // TODO: decide whether to include this, body being alive is currently
+    // enforced by the smart contract. Do we want valid proofs where the user
+    // loses the game?
+    // isZeroStep[i][0] = IsZero();
+    // isZeroStep[i][0].in <== detectCollision[i].out_bodies[0][2]; // radius
+    // isZeroStep[i][0].out === 0; // if the first body is dead, then the game is over
+
     var totalRadius = 0;
     // j = 1 if the first body needs to stay protected
     for (var j = 1; j < totalBodies; j++) {

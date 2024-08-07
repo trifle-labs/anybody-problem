@@ -63,14 +63,14 @@ export const Calculations = {
     for (let i = 0; i < bodies.length; i++) {
       const body = bodies[i]
 
-      if (body.position.x > scaledWindowWidth) {
+      if (body.position.x >= scaledWindowWidth) {
         body.position.x = 0n
-      } else if (body.position.x < 0n) {
+      } else if (body.position.x <= 0n) {
         body.position.x = scaledWindowWidth
       }
-      if (body.position.y > scaledWindowWidth) {
+      if (body.position.y >= scaledWindowWidth) {
         body.position.y = 0n
-      } else if (body.position.y < 0n) {
+      } else if (body.position.y <= 0n) {
         body.position.y = scaledWindowWidth
       }
     }
