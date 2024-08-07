@@ -2277,10 +2277,12 @@ export const Visuals = {
   },
 
   brighten(c, amount = 20) {
+    console.log({ c })
     const cc = [...c]
     cc[2] = cc[2] + amount
     cc[1] = cc[1] + '%'
     cc[2] = cc[2] + '%'
+    console.log({ cc })
     return `hsla(${cc.join(',')})`
   },
 
