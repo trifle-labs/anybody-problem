@@ -9,6 +9,9 @@ class Emitter {
         this.eventsNames[callName] = []
       this.eventsNames[callName].push(callback_f)
     }
+    this.off = (callName) => {
+      return this.removeListeners(callName)
+    }
     this.emit = (callName, datas) => {
       if (this.eventsNames[callName] == undefined) return
       for (let i in this.eventsNames[callName]) {

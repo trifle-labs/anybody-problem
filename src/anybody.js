@@ -296,7 +296,6 @@ export class Anybody extends EventEmitter {
   }
 
   storeInits() {
-    this.bodyCopies = JSON.parse(JSON.stringify(this.bodies))
     this.bodyInits = this.processInits(this.bodies)
   }
 

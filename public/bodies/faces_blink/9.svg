@@ -1,5 +1,5 @@
-<svg width="600" height="600" viewBox="0 0 600 600" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M300.1 372.8C309.4 372.8 316.8 359.4 316.8 342.7H283.2C283.2 359.3 290.7 372.8 300.1 372.8Z" fill="black"/>
-<path d="M174 275.3H265" stroke="black" stroke-width="3" stroke-miterlimit="10"/>
-<path d="M335 275.3H426" stroke="black" stroke-width="3" stroke-miterlimit="10"/>
+<svg name="body-blink-9" width="600" height="600" viewBox="0 0 600 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M300.1 372.8C309.4 372.8 316.8 359.4 316.8 342.7H283.2C283.2 359.3 290.7 372.8 300.1 372.8Z" fill="black" />
+  <path d="M174 275.3H265" stroke="black" stroke-width="3" stroke-miterlimit="10" />
+  <path d="M335 275.3H426" stroke="black" stroke-width="3" stroke-miterlimit="10" />
 </svg>
