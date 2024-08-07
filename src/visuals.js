@@ -2277,42 +2277,29 @@ export const Visuals = {
   },
 
   brighten(c, amount = 20) {
-    let cc = c
-    let inhsla = false
-    if (c.includes('rgba')) {
-      cc = c
-        .split(',')
-        .map((c) => parseFloat(c.replace(')', '').replace('rgba(', '')))
-    } else {
-      inhsla = true
-      cc = cc.map((c) => {
-        return parseFloat(('' + c).replace('%', ''))
-      })
-    }
-    cc[2] = cc[2] + amount
-    cc[1] = cc[1] + (inhsla ? '%' : '')
-    cc[2] = cc[2] + (inhsla ? '%' : '')
-    return inhsla ? `hsla(${cc.join(',')})` : cc
+    c[2] = c[2] + amount
+    c[1] = c[1] + '%'
+    c[2] = c[2] + '%'
+    return `hsla(${c.join(',')})`
   },
 
   drawBaddie(body) {
-    const graphic = this.p
     const colorHSL = body.c.baddie
     const coreWidth = body.radius * BODY_SCALE
     let bgColor = this.brighten(colorHSL, -20)
     const coreColor = `hsl(${colorHSL[0]},${colorHSL[1]}%,${colorHSL[2]}%)`
-    graphic.push()
+    this.p.push()
     const rotate = (this.p5Frames / this.P5_FPS_MULTIPLIER / 30) % 360
-    graphic.rotate(rotate)
+    this.p.rotate(rotate)
     this.drawImageAsset(
       'BADDIE_SVG',
       'bg',
       Math.floor(coreWidth * (310 / 111.2)),
       bgColor
     )
-    graphic.push()
+    this.p.push()
     const heading = this.level == 0 ? -this.p.PI / 2 : body.velocity.heading()
-    graphic.rotate(-rotate + heading + this.p.PI / 2)
+    this.p.rotate(-rotate + heading + this.p.PI / 2)
     if (!body.backgroundOnly) {
       this.drawImageAsset('BADDIE_SVG', 'core', coreWidth, coreColor)
 
@@ -2328,11 +2315,11 @@ export const Visuals = {
       const leftEye = [-body.radius * 0.6, -body.radius * 0.15]
       const rightEye = [body.radius * 0.6, -body.radius * 0.15]
 
-      graphic.fill('white')
-      graphic.strokeWeight(1)
-      graphic.stroke('black')
-      graphic.circle(leftEye[0], leftEye[1], body.radius)
-      graphic.circle(rightEye[0], rightEye[1], body.radius)
+      this.p.fill('white')
+      this.p.strokeWeight(1)
+      this.p.stroke('black')
+      this.p.circle(leftEye[0], leftEye[1], body.radius)
+      this.p.circle(rightEye[0], rightEye[1], body.radius)
 
       const angle =
         Math.atan2(target.y - by, target.x - bx) - heading - this.p.PI / 2
@@ -2341,17 +2328,13 @@ export const Visuals = {
       const leftX = distance * Math.cos(angle)
       const leftY = distance * Math.sin(angle)
 
-      graphic.fill('black')
-      graphic.circle(leftX + leftEye[0], leftY + leftEye[1], body.radius * 0.5)
-      graphic.circle(
-        leftX + rightEye[0],
-        leftY + rightEye[1],
-        body.radius * 0.5
-      )
+      this.p.fill('black')
+      this.p.circle(leftX + leftEye[0], leftY + leftEye[1], body.radius * 0.5)
+      this.p.circle(leftX + rightEye[0], leftY + rightEye[1], body.radius * 0.5)
     }
 
-    graphic.pop()
-    graphic.pop()
+    this.p.pop()
+    this.p.pop()
   },
 
   colorArrayToTxt(cc) {
