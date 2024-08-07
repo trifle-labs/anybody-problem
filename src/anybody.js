@@ -328,41 +328,24 @@ export class Anybody extends EventEmitter {
   }
 
   addListeners() {
-    const { canvas } = this.p
-
-    // binding dummy handlers is necessary for p5 to listen to touchmove
-    // and track mouseX and mouseY
-    this.p.touchStarted = () => {}
     this.p.mouseMoved = this.handleMouseMove
-    // this.p.touchMoved = this.handleMouseMove
-    this.p.mousePressed = this.handleMousePressed
-    this.p.mouseReleased = this.handleMouseReleased
-    this.p.touchEnded = () => {}
-
-    canvas.addEventListener('click', this.handleGameClick)
-    // canvas.addEventListener('touchend', this.handleGameClick)
-    window.addEventListener('keydown', this.handleGameKeyDown)
+    this.p.touchStarted = this.handleGameClick
+    this.p.mouseClicked = this.handleGameClick
+    this.p.keyPressed = this.handleGameKeyDown
   }
 
   removeListener() {
-    const { canvas } = this.p
-    canvas?.removeEventListener('click', this.handleGameClick)
-    // canvas?.removeEventListener('touchend', this.handleGameClick)
-    window?.removeEventListener('keydown', this.handleGameKeyDown)
-    window?.removeEventListener('keydown', this.sound.handleKeyDown)
+    this.p.remove()
   }
 
   getXY(e) {
-    // e may be a touch event or a click event
-    if (e.touches) {
-      e = e.touches[0] || e.changedTouches[0]
-    }
-    let x = e.offsetX || e.pageX
-    let y = e.offsetY || e.pageY
+    let x = e.offsetX || e.layerX
+    let y = e.offsetY || e.layerY
     const rect = e.target.getBoundingClientRect()
     const actualWidth = rect.width
+    const actualHeight = rect.height
     x = (x * this.windowWidth) / actualWidth
-    y = (y * this.windowWidth) / actualWidth
+    y = (y * this.windowHeight) / actualHeight
     return { x, y }
   }
 
@@ -374,21 +357,6 @@ export class Anybody extends EventEmitter {
     for (const key in this.buttons) {
       const button = this.buttons[key]
       button.hover = intersectsButton(button, x, y)
-    }
-  }
-
-  handleMousePressed = (e) => {
-    const { x, y } = this.getXY(e)
-    for (const key in this.buttons) {
-      const button = this.buttons[key]
-      button.active = intersectsButton(button, x, y)
-    }
-  }
-
-  handleMouseReleased = () => {
-    for (const key in this.buttons) {
-      const button = this.buttons[key]
-      if (button.active) button.active = false
     }
   }
 
