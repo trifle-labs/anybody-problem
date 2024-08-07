@@ -354,8 +354,6 @@ export const Calculations = {
       const minDist = missile.radius == 0n ? 0n : body.radius * 2n
       // console.log({ minDist })
       if (distance < minDist) {
-        console.dir({ missile, body }, { depth: null })
-        console.log('MISSILE HIT')
         missile.radius = 0n
         const x = this.convertScaledBigIntToFloat(body.position.x)
         const y = this.convertScaledBigIntToFloat(body.position.y)
