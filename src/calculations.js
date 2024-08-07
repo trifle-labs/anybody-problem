@@ -63,14 +63,14 @@ export const Calculations = {
     for (let i = 0; i < bodies.length; i++) {
       const body = bodies[i]
 
-      if (body.position.x > scaledWindowWidth) {
+      if (body.position.x >= scaledWindowWidth) {
         body.position.x = 0n
-      } else if (body.position.x < 0n) {
+      } else if (body.position.x <= 0n) {
         body.position.x = scaledWindowWidth
       }
-      if (body.position.y > scaledWindowWidth) {
+      if (body.position.y >= scaledWindowWidth) {
         body.position.y = 0n
-      } else if (body.position.y < 0n) {
+      } else if (body.position.y <= 0n) {
         body.position.y = scaledWindowWidth
       }
     }
@@ -354,6 +354,8 @@ export const Calculations = {
       const minDist = missile.radius == 0n ? 0n : body.radius * 2n
       // console.log({ minDist })
       if (distance < minDist) {
+        console.dir({ missile, body }, { depth: null })
+        console.log('MISSILE HIT')
         missile.radius = 0n
         const x = this.convertScaledBigIntToFloat(body.position.x)
         const y = this.convertScaledBigIntToFloat(body.position.y)
