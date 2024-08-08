@@ -483,10 +483,13 @@ export class Anybody extends EventEmitter {
     this.sound?.stop()
     this.sound?.playStart()
     this.sound?.setSong()
+    this.sound?.resume()
+    //this.sound?.playCurrentSong()
     this.init()
     this.draw()
     if (beginPaused) {
-      this.setPause(true)
+        console.log('setPause called in restart: (after NEXT click) ')
+        this.setPause(true) // should be true, true ?
     }
     this.addCSS()
   }
@@ -518,7 +521,10 @@ export class Anybody extends EventEmitter {
     if (newPauseState) {
       if (!mute) this.sound?.pause()
     } else {
-      if (!mute) this.sound?.resume()
+        console.log('resume called')
+        console.log('mute:' + mute)
+        console.log('this.sound:' + this.sound)
+        if (!mute) this.sound?.resume()
     }
   }
 
