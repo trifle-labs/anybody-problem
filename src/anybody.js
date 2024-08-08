@@ -241,6 +241,9 @@ export class Anybody extends EventEmitter {
     this.won = false
     this.finalBatchSent = false
     this.solved = false
+    this.shaking = 0
+    this.explosionSmoke = []
+    this.gunSmoke = []
     this.date = new Date(this.day * 1000)
       .toISOString()
       .split('T')[0]
@@ -410,7 +413,6 @@ export class Anybody extends EventEmitter {
         break
       case 'KeyR':
         if (!this.gameOver || !this.won) {
-          this.shaking = 0
           this.restart(null, false)
         }
         break
