@@ -128,6 +128,7 @@ export class Anybody extends EventEmitter {
     const defaultOptions = {
       day: currentDay(),
       level: 0,
+      skip0: false,
       bodyData: null,
       todaysRecords: {},
       debug: false,
@@ -193,6 +194,9 @@ export class Anybody extends EventEmitter {
   // run whenever the class should be reset
   clearValues() {
     if (this.level <= 1) this.levelSpeeds = new Array(5)
+    if (this.skip0 && this.level == 0) {
+      this.level = 1
+    }
     this.lastMissileCantBeUndone = false
     this.speedFactor = 2
     this.speedLimit = 10
