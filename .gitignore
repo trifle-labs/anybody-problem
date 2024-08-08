@@ -31,6 +31,15 @@ contracts/*Verifier.sol
 
 /*_js/
 /*_cpp/
+
+!game_4_250_cpp
+!game_6_125_cpp
+
+!game_4_250_js
+!game_6_125_js
+
+*/tmp/*
+
 *_proof.json
 *_public.json
 
