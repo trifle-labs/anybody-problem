@@ -57,6 +57,10 @@ verification_key.json
 *.zkey
 # !public/*.zkey
 *.wasm
+
+!game_6_125.wasm
+!game_4_250.wasm
+
 # !public/*.wasm
 parameters.txt
 
