@@ -50,7 +50,7 @@ app.post('/prove', async (c) => {
     const buff = await witnessCalculator.calculateWTNSBin(input, 0)
     writeFileSync(`tmp/${uid}.wtns`, buff)
 
-    const command = `../../rapidsnark/package/bin/prover ../${baseName}_final.zkey tmp/${uid}.wtns tmp/${uid}_proof.json tmp/${uid}_public.json`
+    const command = `../../rapidsnark/package/bin/prover ../../${baseName}_final.zkey tmp/${uid}.wtns tmp/${uid}_proof.json tmp/${uid}_public.json`
     const { stderr } = await execPromise(command)
 
     if (stderr) {
