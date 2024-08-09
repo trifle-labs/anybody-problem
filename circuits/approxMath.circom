@@ -1,7 +1,7 @@
 pragma circom 2.1.6;
-include "../node_modules/circomlib/circuits/mux1.circom";
-include "../node_modules/circomlib/circuits/comparators.circom";
-include "../node_modules/circomlib/circuits/gates.circom";
+include "mux1.circom";
+include "comparators.circom";
+include "gates.circom";
 include "helpers.circom";
 
 function approxSqrt(n) {

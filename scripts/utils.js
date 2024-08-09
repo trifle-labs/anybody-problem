@@ -105,75 +105,81 @@ const decodeUri = (decodedJson) => {
 }
 
 const deployMetadata = async (testing) => {
-  // deploy Assets1
-  const Assets1 = await hre.ethers.getContractFactory('Assets1')
-  let byteSize = Buffer.from(Assets1.bytecode.slice(2), 'hex').length
-  !testing && console.log(`Assets1 byte size: ${byteSize} bytes`)
-  const assets1 = await Assets1.deploy()
-  await assets1.deployed()
-  var assets1Address = assets1.address
-  !testing && log('Assets1 Deployed at ' + String(assets1Address))
+  let externalMetadata, assets1, assets2, assets3, assets4, assets5
+  try {
+    // deploy Assets1
+    const Assets1 = await hre.ethers.getContractFactory('Assets1')
+    let byteSize = Buffer.from(Assets1.bytecode.slice(2), 'hex').length
+    !testing && console.log(`Assets1 byte size: ${byteSize} bytes`)
+    assets1 = await Assets1.deploy()
+    await assets1.deployed()
+    var assets1Address = assets1.address
+    !testing && log('Assets1 Deployed at ' + String(assets1Address))
 
-  // deploy Assets2
-  const Assets2 = await hre.ethers.getContractFactory('Assets2')
-  byteSize = Buffer.from(Assets2.bytecode.slice(2), 'hex').length
-  !testing && console.log(`Assets2 byte size: ${byteSize} bytes`)
-  const assets2 = await Assets2.deploy()
-  await assets2.deployed()
-  var assets2Address = assets2.address
-  !testing && log('Assets2 Deployed at ' + String(assets2Address))
+    // deploy Assets2
+    const Assets2 = await hre.ethers.getContractFactory('Assets2')
+    byteSize = Buffer.from(Assets2.bytecode.slice(2), 'hex').length
+    !testing && console.log(`Assets2 byte size: ${byteSize} bytes`)
+    assets2 = await Assets2.deploy()
+    await assets2.deployed()
+    var assets2Address = assets2.address
+    !testing && log('Assets2 Deployed at ' + String(assets2Address))
 
-  // deploy Assets3
-  const Assets3 = await hre.ethers.getContractFactory('Assets3')
-  byteSize = Buffer.from(Assets3.bytecode.slice(2), 'hex').length
-  !testing && console.log(`Assets3 byte size: ${byteSize} bytes`)
-  const assets3 = await Assets3.deploy()
-  await assets3.deployed()
-  var assets3Address = assets3.address
-  !testing && log('Assets3 Deployed at ' + String(assets3Address))
+    // deploy Assets3
+    const Assets3 = await hre.ethers.getContractFactory('Assets3')
+    byteSize = Buffer.from(Assets3.bytecode.slice(2), 'hex').length
+    !testing && console.log(`Assets3 byte size: ${byteSize} bytes`)
+    assets3 = await Assets3.deploy()
+    await assets3.deployed()
+    var assets3Address = assets3.address
+    !testing && log('Assets3 Deployed at ' + String(assets3Address))
 
-  // deploy Assets4
-  const Assets4 = await hre.ethers.getContractFactory('Assets4')
-  byteSize = Buffer.from(Assets4.bytecode.slice(2), 'hex').length
-  !testing && console.log(`Assets4 byte size: ${byteSize} bytes`)
-  const assets4 = await Assets4.deploy()
-  await assets4.deployed()
-  var assets4Address = assets4.address
-  !testing && log('Assets4 Deployed at ' + String(assets4Address))
+    // deploy Assets4
+    const Assets4 = await hre.ethers.getContractFactory('Assets4')
+    byteSize = Buffer.from(Assets4.bytecode.slice(2), 'hex').length
+    !testing && console.log(`Assets4 byte size: ${byteSize} bytes`)
+    assets4 = await Assets4.deploy()
+    await assets4.deployed()
+    var assets4Address = assets4.address
+    !testing && log('Assets4 Deployed at ' + String(assets4Address))
 
-  // deploy Assets5
-  const Assets5 = await hre.ethers.getContractFactory('Assets5')
-  byteSize = Buffer.from(Assets5.bytecode.slice(2), 'hex').length
-  !testing && console.log(`Assets5 byte size: ${byteSize} bytes`)
-  const assets5 = await Assets5.deploy()
-  await assets5.deployed()
-  var assets5Address = assets5.address
-  !testing && log('Assets5 Deployed at ' + String(assets5Address))
+    // deploy Assets5
+    const Assets5 = await hre.ethers.getContractFactory('Assets5')
+    byteSize = Buffer.from(Assets5.bytecode.slice(2), 'hex').length
+    !testing && console.log(`Assets5 byte size: ${byteSize} bytes`)
+    assets5 = await Assets5.deploy()
+    await assets5.deployed()
+    var assets5Address = assets5.address
+    !testing && log('Assets5 Deployed at ' + String(assets5Address))
 
-  // deploy ExternalMetadata
-  const ExternalMetadata =
-    await hre.ethers.getContractFactory('ExternalMetadata')
-  byteSize = Buffer.from(ExternalMetadata.bytecode.slice(2), 'hex').length
-  !testing && console.log(`ExternalMetadata byte size: ${byteSize} bytes`)
-  const externalMetadata = await ExternalMetadata.deploy()
-  await externalMetadata.deployed()
-  !testing &&
-    log('ExternalMetadata Deployed at ' + String(externalMetadata.address))
+    // deploy ExternalMetadata
+    const ExternalMetadata =
+      await hre.ethers.getContractFactory('ExternalMetadata')
+    byteSize = Buffer.from(ExternalMetadata.bytecode.slice(2), 'hex').length
+    !testing && console.log(`ExternalMetadata byte size: ${byteSize} bytes`)
+    externalMetadata = await ExternalMetadata.deploy()
+    await externalMetadata.deployed()
+    !testing &&
+      log('ExternalMetadata Deployed at ' + String(externalMetadata.address))
 
-  await externalMetadata.setAssets([
-    assets1Address,
-    assets2Address,
-    assets3Address,
-    assets4Address,
-    assets5Address
-  ])
-  !testing && console.log('Assets set')
+    await externalMetadata.setAssets([
+      assets1Address,
+      assets2Address,
+      assets3Address,
+      assets4Address,
+      assets5Address
+    ])
+    !testing && console.log('Assets set')
 
-  const tx = await externalMetadata.setupSVGPaths()
-  await tx.wait()
+    const tx = await externalMetadata.setupSVGPaths()
+    await tx.wait()
+    !testing && console.log('SVG Paths setup')
 
-  await externalMetadata.setupColorThemes()
-  !testing && console.log('Color Themes setup')
+    await externalMetadata.setupColorThemes()
+    !testing && console.log('Color Themes setup')
+  } catch (e) {
+    console.error(e)
+  }
 
   return { externalMetadata, assets1, assets2, assets3, assets4, assets5 }
 }
