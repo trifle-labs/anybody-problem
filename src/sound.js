@@ -1,18 +1,10 @@
 import * as Tone from 'tone'
-const {
-  Player,
-  PanVol,
-  Panner,
-  Volume,
-  Loop,
-  start,
-  loaded
-} = Tone
+const { Player, PanVol, Panner, Volume, Loop, start, loaded } = Tone
 
 //import whistle from 'data-url:/public/sound/tracks/whistle.mp3'
 import orbit from 'data-url:/public/sound/tracks/orbit.mp3'
 import ipod from 'data-url:/public/sound/tracks/ipod.mp3'
-import wii from 'data-url:/public/sound/tracks/wii.mp3'
+// import wii from 'data-url:/public/sound/tracks/wii.mp3'
 import coinBox from 'data-url:/public/sound/fx/coin-box.mp3'
 import bongoHard from 'data-url:/public/sound/fx/SC_CP_perc_bongo_loud_tap.mp3'
 import bubble from 'data-url:/public/sound/fx/DSC_GST_one_shot_perc_water.mp3'
@@ -39,11 +31,11 @@ const SONGS = {
   //   bpm: 70,
   //   audio: whistle
   // },
-  wii: {
-    bpm: 70,
-    interval: '2m',
-    audio: wii,
-  },
+  // wii: {
+  //   bpm: 70,
+  //   interval: '2m',
+  //   audio: wii,
+  // },
   ipod: {
     bpm: 113,
     interval: '4m',
@@ -61,7 +53,6 @@ const SONGS = {
 const PAN_RANGE = 1.4 // 2 is hard L/R panning
 
 export default class Sound {
-
   constructor(anybody) {
     if (typeof window === 'undefined') return
     this.anybody = anybody
@@ -71,7 +62,7 @@ export default class Sound {
   }
 
   async prepareForPlayback() {
-    if (Tone.getContext().state !== "running") {
+    if (Tone.getContext().state !== 'running') {
       await start()
       console.log('ready for audio playback')
     }
@@ -124,7 +115,6 @@ export default class Sound {
   }
 
   async playMissile(vectorMagnitude) {
-
     this.missilePanner = this.missilePanner || new Panner().connect(this.master)
     this.missilePanner.pan.value = -PAN_RANGE / 2
     let player
@@ -148,7 +138,6 @@ export default class Sound {
   }
 
   async playExplosion(x) {
-
     if (this.anybody.sfx === 'space') {
       const player = await this.playOneShot(coin, -20, {
         playbackRate: random([1, 1.4, 0.8])
@@ -195,7 +184,6 @@ export default class Sound {
   }
 
   async playGameOver({ win }) {
-
     // prepare playback
     this.prepareForPlayback()
 
@@ -283,11 +271,11 @@ export default class Sound {
     this.player.playbackRate = 1
 
     // load the current song
-    await this.player.load(this.currentSong.audio);
+    await this.player.load(this.currentSong.audio)
 
-    // play the song in a loop 
+    // play the song in a loop
     this.loop = new Loop((time) => {
-        this.player.start(time)
+      this.player.start(time)
     }, song.interval || '2m').start()
 
     // play the transport
