@@ -131,7 +131,7 @@ export class Anybody extends EventEmitter {
       skip0: false,
       bodyData: null,
       todaysRecords: {},
-      debug: false,
+      // debug: false,
       // Add default properties and their initial values here
       startingBodies: 1,
       windowWidth: 1000,
@@ -336,7 +336,10 @@ export class Anybody extends EventEmitter {
 
   addListeners() {
     this.p.mouseMoved = this.handleMouseMove
-    this.p.touchStarted = this.handleGameClick
+    this.p.touchStarted = (e) => {
+      this.hasTouched = true
+      this.handleGameClick(e)
+    }
     this.p.mouseClicked = this.handleGameClick
     this.p.keyPressed = this.handleGameKeyDown
   }
@@ -385,10 +388,10 @@ export class Anybody extends EventEmitter {
       }
     }
 
-    const debugZone = { x: this.windowWidth - 100, y: this.windowHeight - 100 }
-    if (x > debugZone.x && y > debugZone.y) {
-      this.debug = !this.debug
-    }
+    // const debugZone = { x: this.windowWidth - 100, y: this.windowHeight - 100 }
+    // if (x > debugZone.x && y > debugZone.y) {
+    //   this.debug = !this.debug
+    // }
 
     if (this.paused || this.gameOver) return
     this.missileClick(x, y)
@@ -757,7 +760,7 @@ export class Anybody extends EventEmitter {
   }
 
   genRadius(index, level = this.level) {
-    const radii = [36n, 27n, 22n, 17n, 12n, 7n] // n * 5 + 2
+    const radii = [36n, 27n, 23n, 19n, 15n, 11n] // n * 4 + 2
     let size = level == 0 ? 27n : radii[index % radii.length]
     return parseInt(size * BigInt(this.scalingFactor))
   }

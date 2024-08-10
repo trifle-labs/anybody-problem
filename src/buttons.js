@@ -16,6 +16,7 @@ export const Buttons = {
     fgHover = 'rgba(160, 67, 232, 0.25)',
     p = this.p,
     disabled = false,
+    offsetText = { x: 0, y: 0 },
     key = `${text}-${x}-${y}-${height}-${width}`
   }) {
     // register the button if it's not registered
@@ -67,8 +68,8 @@ export const Buttons = {
       p.text(
         text,
         // tweak to center, somethign about the font
-        x + width / 2 + textSize * 0.13,
-        y + height / 2 + textSize * 0.05
+        x + width / 2 + textSize * 0.13 + offsetText.x,
+        y + height / 2 + textSize * 0.05 + offsetText.y
       )
     }
 

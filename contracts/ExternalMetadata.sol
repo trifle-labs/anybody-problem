@@ -382,6 +382,7 @@ contract ExternalMetadata is Ownable {
                             '"external_url": "https://anybody.trifle.life",',
                             '"animation_url": "https://anybody-nft.netlify.app/#',
                             StringsExtended.toString(date),
+                            getBestTimeEncoded(date),
                             '",',
                             '"attributes": ',
                             getAttributes(date),
@@ -390,6 +391,35 @@ contract ExternalMetadata is Ownable {
                     )
                 )
             );
+    }
+
+    function getBestTimeEncoded(
+        uint256 date
+    ) public view returns (string memory) {
+        uint256 bestRunId = AnybodyProblem(anybodyProblem).fastestByDay(
+            date,
+            0
+        );
+
+        AnybodyProblem.Level[] memory levels = AnybodyProblem(anybodyProblem)
+            .getLevelsData(bestRunId);
+
+        string memory encoded = '{"levels":[';
+
+        for (uint256 i = 0; i < levels.length; i++) {
+            AnybodyProblem.Level memory level = levels[i];
+            encoded = string(
+                abi.encodePacked(
+                    encoded,
+                    '{"events": [{"time":',
+                    StringsExtended.toString(level.time),
+                    '}]}',
+                    (i == levels.length - 1 ? '' : ',')
+                )
+            );
+        }
+        encoded = Base64.encode(abi.encodePacked(encoded, ']}'));
+        return string(abi.encodePacked('-', encoded));
     }
 
     function getName(uint256 date) public pure returns (string memory) {
@@ -692,62 +722,60 @@ contract ExternalMetadata is Ownable {
         return path;
     }
 
+    function getFastestTime(
+        uint256 date,
+        uint256 placeIndex
+    ) public view returns (address, string memory sec) {
+        uint256 runId = AnybodyProblem(anybodyProblem).fastestByDay(
+            date,
+            placeIndex
+        );
+        (address player, , uint256 timeCompleted, , ) = AnybodyProblem(
+            anybodyProblem
+        ).runs(runId);
+
+        uint256 precision = 1000;
+        uint256 fps = 25;
+        timeCompleted = (timeCompleted * precision) / fps;
+        uint256 timeSeconds = timeCompleted / precision;
+        uint256 timeMs = (timeCompleted - timeSeconds * precision) / 10;
+
+        return (
+            player,
+            string(
+                abi.encodePacked(
+                    StringsExtended.toString(timeSeconds),
+                    '.',
+                    StringsExtended.toString(timeMs)
+                )
+            )
+        );
+    }
+
     /// @dev generates the attributes as JSON String
     function getAttributes(uint256 date) public view returns (string memory) {
         (uint year, uint month, ) = BokkyPooBahsDateTimeLibrary.timestampToDate(
             date
         );
-        uint256 fastestRunId = AnybodyProblem(anybodyProblem).fastestByDay(
+
+        (address fastestAddress, string memory fastestTime) = getFastestTime(
             date,
             0
         );
-        uint256 secondFastestRunId = AnybodyProblem(anybodyProblem)
-            .fastestByDay(date, 1);
-        uint256 thirdFastestRunId = AnybodyProblem(anybodyProblem).fastestByDay(
-            date,
-            2
-        );
-        (address fastestAddress, , uint256 fastestTime, , ) = AnybodyProblem(
-            anybodyProblem
-        ).runs(fastestRunId);
         (
             address secondFastestAddress,
-            ,
-            uint256 secondFastestTime,
-            ,
-
-        ) = AnybodyProblem(anybodyProblem).runs(secondFastestRunId);
+            string memory secondFastestTime
+        ) = getFastestTime(date, 1);
         (
             address thirdFastestAddress,
-            ,
-            uint256 thirdFastestTime,
-            ,
-
-        ) = AnybodyProblem(anybodyProblem).runs(thirdFastestRunId);
-
-        uint256 precision = 1000;
-        uint256 fps = 25;
-        fastestTime = (fastestTime * precision) / fps;
-        uint256 fastestTimeSeconds = fastestTime / precision;
-        uint256 fastestTimeMs = (fastestTime - fastestTimeSeconds * precision) /
-            10;
-
-        secondFastestTime = (secondFastestTime * precision) / fps;
-        uint256 secondFastestTimeSeconds = secondFastestTime / precision;
-        uint256 secondFastestTimeMs = (secondFastestTime -
-            secondFastestTimeSeconds *
-            precision) / 10;
-
-        thirdFastestTime = (thirdFastestTime * precision) / fps;
-        uint256 thirdFastestTimeSeconds = thirdFastestTime / precision;
-        uint256 thirdFastestTimeMs = (thirdFastestTime -
-            thirdFastestTimeSeconds *
-            precision) / 10;
+            string memory thirdFastestTime
+        ) = getFastestTime(date, 2);
 
         return
             string(
                 abi.encodePacked(
                     '[',
+                    '{"trait_type":"Galaxy","value":"BASED"},',
                     '{"trait_type":"Day","value":"',
                     StringsExtended.toString(date),
                     '"}, {"trait_type":"Year-Month","value":"',
@@ -758,21 +786,15 @@ contract ExternalMetadata is Ownable {
                     '"}, {"trait_type":"1st Place","value":"0x',
                     StringsExtended.toHexString(fastestAddress),
                     '"}, {"trait_type":"1st Place Time (s)","value":"',
-                    StringsExtended.toString(fastestTimeSeconds),
-                    '.',
-                    StringsExtended.toString(fastestTimeMs),
+                    fastestTime,
                     '"}, {"trait_type":"2nd Place","value":"0x',
                     StringsExtended.toHexString(secondFastestAddress),
                     '"}, {"trait_type":"2nd Place Time (s)","value":"',
-                    StringsExtended.toString(secondFastestTimeSeconds),
-                    '.',
-                    StringsExtended.toString(secondFastestTimeMs),
+                    secondFastestTime,
                     '"}, {"trait_type":"3rd Place","value":"0x',
                     StringsExtended.toHexString(thirdFastestAddress),
                     '"}, {"trait_type":"3rd Place Time (s)","value":"',
-                    StringsExtended.toString(thirdFastestTimeSeconds),
-                    '.',
-                    StringsExtended.toString(thirdFastestTimeMs),
+                    thirdFastestTime,
                     '"}]'
                 )
             );
