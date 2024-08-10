@@ -429,7 +429,7 @@ export const Visuals = {
       this.drawFatButton({
         text: 'PLAY',
         onClick: () => {
-          if (this.popup !== null) { return }
+          if (this.popup !== null) return
           if (!this.playerName) {
             // open connect wallet popup
             this.popup = {
@@ -1125,7 +1125,7 @@ export const Visuals = {
     this.drawBottomButton({
       text: 'REDO',
       onClick: () => {
-        if (this.popup !== null) { return }
+        if (this.popup !== null) return
         this.restart(null, false)
       },
       ...themes.buttons.teal,
@@ -1136,7 +1136,7 @@ export const Visuals = {
       text: 'RESTART',
       onClick: () => {
         // confirm in popup
-        if (this.popup !== null) { return }
+        if (this.popup !== null) return
         this.popup = {
           bg: THEME.flame_75,
           fg: THEME.flame_50,
@@ -1176,7 +1176,9 @@ export const Visuals = {
         text: 'SHARE',
         onClick: () => {
           // TODO: hide bottom btns / paint a promo-message over them
-          if (this.popup !== null) { return }
+          if (this.popup !== null) {
+            return
+          }
           this.shareCanvas()
         },
         ...themes.buttons.pink,
@@ -1205,7 +1207,7 @@ export const Visuals = {
         text: this.practiceMode ? 'SAVE' : 'MINT',
         onClick: () => {
           if (this.practiceMode) {
-            if (this.popup !== null) { return }
+            if (this.popup !== null) return
             this.popup = {
               header: 'Nice Job!',
               body: ['Next time connect a wallet to', 'mint your win!'],
