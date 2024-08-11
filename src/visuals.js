@@ -333,7 +333,7 @@ export const Visuals = {
       const { h } = this.drawTextBubble({})
       const gttr = 24
       let w = this.hasTouched ? 300 : 520
-      let y = this.windowHeight - h * 2 - gttr * 1.5
+      let y = this.windowHeight - h - gttr
       this.drawTextBubble({
         text: this.hasTouched ? 'TAP to Shoot'
         : 'CLICK or {SPACE} to shoot',
@@ -345,17 +345,17 @@ export const Visuals = {
       })
 
       // how to reset
-      w = this.hasTouched ? 700 : 570
-      y = this.windowHeight - (h + 32)
-      this.drawTextBubble({
-        text: this.hasTouched ? 'Tap the TIMER to restart the level'
-        : 'Press {R} to restart the level',
-        w,
-        x: this.windowWidth / 2 - w / 2,
-        y,
-        fg: THEME.teal_50,
-        stroke: 'transparent'
-      })
+      // w = this.hasTouched ? 700 : 570
+      // y = this.windowHeight - (h + 32)
+      // this.drawTextBubble({
+      //   text: this.hasTouched ? 'Tap the TIMER to restart the level'
+      //   : 'Press {R} to restart the level',
+      //   w,
+      //   x: this.windowWidth / 2 - w / 2,
+      //   y,
+      //   fg: THEME.teal_50,
+      //   stroke: 'transparent'
+      // })
     }
   },
 
@@ -727,9 +727,9 @@ export const Visuals = {
     p.noStroke()
     p.rect(0, 0, this.windowWidth, this.windowHeight)
 
-    const w = 820
+    const w = 840
     const x = (this.windowWidth - w) / 2
-    const pad = [40, 48, 148, 48]
+    const pad = [40, 48, 140, 48]
     const fz = [90, 44]
     const bg = popup.bg ?? THEME.violet_25
     const fg = popup.fg ?? THEME.violet_50
@@ -771,13 +771,13 @@ export const Visuals = {
 
     // buttons (max 2)
     const buttons = popup.buttons.slice(0, 2)
-    const btnGutter = 8
+    const btnGutter = 10
     const btnW =
       buttons.length === 1 ? w / 2 : w / 2 - pad[1] / 2 - btnGutter / 2
-    const btnH = 116
+    const btnH = 104
     const defaultOptions = {
       height: btnH,
-      textSize: 59,
+      textSize: 60,
       width: btnW,
       y: y + h - btnH / 2,
       fg,
@@ -1186,7 +1186,38 @@ export const Visuals = {
       text: 'REDO',
       onClick: () => {
         if (this.popup !== null) return
-        this.restart(null, false)
+        if (!this.hasQuickReset) {
+          this.popup = {
+            bg: THEME.teal_75,
+            fg: THEME.teal_50,
+            stroke: THEME.teal_50,
+            header: 'Redo Level?',
+            body: [
+              'PRO TIP !!',
+              this.hasTouched ? 'Tap the TIMER to quickly restart a level'
+                : 'Press {R} to quickly restart a level'
+            ],
+            buttons: [
+              {
+                text: 'CLOSE',
+                onClick: () => {
+                  this.popup = null
+                }
+              },
+              {
+                text: 'REDO',
+                bg: THEME.teal_50,
+                fg: THEME.teal_75,
+                onClick: () => {
+                  this.popup = null
+                  this.restart(null, false)
+                }
+              }
+            ]
+          }
+        } else {
+          this.restart(null, false)
+        }
       },
       ...themes.buttons.teal,
       columns: buttonCount,

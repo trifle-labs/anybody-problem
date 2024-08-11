@@ -1462,7 +1462,7 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
             const { h: h } = this.drawTextBubble({});
             const gttr = 24;
             let w = this.hasTouched ? 300 : 520;
-            let y = this.windowHeight - h * 2 - gttr * 1.5;
+            let y = this.windowHeight - h - gttr;
             this.drawTextBubble({
                 text: this.hasTouched ? "TAP to Shoot" : "CLICK or {SPACE} to shoot",
                 w: w,
@@ -1471,17 +1471,18 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
                 fg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).pink_50,
                 stroke: "transparent"
             });
-            // how to reset
-            w = this.hasTouched ? 700 : 570;
-            y = this.windowHeight - (h + 32);
-            this.drawTextBubble({
-                text: this.hasTouched ? "Tap the TIMER to restart the level" : "Press {R} to restart the level",
-                w: w,
-                x: this.windowWidth / 2 - w / 2,
-                y: y,
-                fg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).teal_50,
-                stroke: "transparent"
-            });
+        // how to reset
+        // w = this.hasTouched ? 700 : 570
+        // y = this.windowHeight - (h + 32)
+        // this.drawTextBubble({
+        //   text: this.hasTouched ? 'Tap the TIMER to restart the level'
+        //   : 'Press {R} to restart the level',
+        //   w,
+        //   x: this.windowWidth / 2 - w / 2,
+        //   y,
+        //   fg: THEME.teal_50,
+        //   stroke: 'transparent'
+        // })
         }
     },
     // drawDebugPrompt() {
@@ -1785,12 +1786,12 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
         p.fill(`rgba(20, 4, 32, ${alpha})`);
         p.noStroke();
         p.rect(0, 0, this.windowWidth, this.windowHeight);
-        const w = 820;
+        const w = 840;
         const x = (this.windowWidth - w) / 2;
         const pad = [
             40,
             48,
-            148,
+            140,
             48
         ];
         const fz = [
@@ -1829,12 +1830,12 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
         }
         // buttons (max 2)
         const buttons = popup.buttons.slice(0, 2);
-        const btnGutter = 8;
+        const btnGutter = 10;
         const btnW = buttons.length === 1 ? w / 2 : w / 2 - pad[1] / 2 - btnGutter / 2;
-        const btnH = 116;
+        const btnH = 104;
         const defaultOptions = {
             height: btnH,
-            textSize: 59,
+            textSize: 60,
             width: btnW,
             y: y + h - btnH / 2,
             fg: fg,
@@ -2129,7 +2130,34 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
             text: "REDO",
             onClick: ()=>{
                 if (this.popup !== null) return;
-                this.restart(null, false);
+                if (!this.hasQuickReset) this.popup = {
+                    bg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).teal_75,
+                    fg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).teal_50,
+                    stroke: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).teal_50,
+                    header: "Redo Level?",
+                    body: [
+                        "PRO TIP !!",
+                        this.hasTouched ? "Tap the TIMER to quickly restart a level" : "Press {R} to quickly restart a level"
+                    ],
+                    buttons: [
+                        {
+                            text: "CLOSE",
+                            onClick: ()=>{
+                                this.popup = null;
+                            }
+                        },
+                        {
+                            text: "REDO",
+                            bg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).teal_50,
+                            fg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).teal_75,
+                            onClick: ()=>{
+                                this.popup = null;
+                                this.restart(null, false);
+                            }
+                        }
+                    ]
+                };
+                else this.restart(null, false);
             },
             ...(0, $dfb043d8446f30b2$export$d9a33280f07116d9).buttons.teal,
             columns: buttonCount,
