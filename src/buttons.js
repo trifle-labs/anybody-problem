@@ -89,11 +89,11 @@ export const Buttons = {
   drawFatButton(buttonOptions) {
     const { bottom } = buttonOptions
     const bottomPadding = bottom || 120
-    const width = 360
-    const height = 116
+    const width = 320
+    const height = 104
     this.drawButton({
       height,
-      textSize: 78,
+      textSize: 72,
       width,
       y: this.windowHeight - height - bottomPadding,
       x: this.windowWidth / 2 - width / 2,

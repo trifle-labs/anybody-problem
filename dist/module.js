@@ -1631,7 +1631,7 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
                     this.setPause(false);
                     this.practiceMode = false;
                 },
-                fg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).fuschia,
+                fg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).violet_50,
                 bg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).pink,
                 bottom: 120,
                 p: p
@@ -1781,21 +1781,21 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
         if (justEntered) popup.visibleForFrames = 0;
         popup.visibleForFrames++;
         popup.lastVisibleFrame = this.p5Frames;
-        const alpha = Math.min(0.75, popup.visibleForFrames / (animDuration * this.P5_FPS));
+        const alpha = Math.min(0.8, popup.visibleForFrames / (animDuration * this.P5_FPS));
         p.fill(`rgba(20, 4, 32, ${alpha})`);
         p.noStroke();
         p.rect(0, 0, this.windowWidth, this.windowHeight);
-        const x = 180;
-        const w = 640;
+        const w = 820;
+        const x = (this.windowWidth - w) / 2;
         const pad = [
-            36,
+            40,
             48,
-            120,
+            148,
             48
         ];
         const fz = [
-            72,
-            32
+            90,
+            44
         ];
         const bg = popup.bg ?? (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).violet_25;
         const fg = popup.fg ?? (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).violet_50;
@@ -1824,17 +1824,19 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
         for(let i = 0; i < popup.body.length; i++){
             const text = popup.body[i];
             const lineGap = parseInt(fz[1] * 0.25);
-            const y1 = y + pad[0] + fz[0] + fz[1] * (i + 1) + lineGap * (i + 1) - 10;
+            const y1 = y + pad[0] + fz[0] + fz[1] * (i + 1) + lineGap * (i + 1) - fz[1] * 0.5;
             p.text(text, x + w / 2, y1);
         }
         // buttons (max 2)
         const buttons = popup.buttons.slice(0, 2);
-        const btnGutter = 10;
+        const btnGutter = 8;
         const btnW = buttons.length === 1 ? w / 2 : w / 2 - pad[1] / 2 - btnGutter / 2;
+        const btnH = 116;
         const defaultOptions = {
-            height: 84,
+            height: btnH,
+            textSize: 59,
             width: btnW,
-            y: y + h - 42,
+            y: y + h - btnH / 2,
             fg: fg,
             bg: bg,
             stroke: stroke
@@ -2212,12 +2214,20 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
                         bg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).green_75,
                         buttons: [
                             {
+                                text: "CLOSE",
+                                onClick: ()=>{
+                                    this.popup = null;
+                                }
+                            },
+                            {
                                 text: "NEW GAME",
                                 onClick: ()=>{
                                     this.popup = null;
                                     this.level = 0;
                                     this.restart(undefined, true);
-                                }
+                                },
+                                fg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).green_75,
+                                bg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).green_50
                             }
                         ]
                     };
@@ -3715,11 +3725,11 @@ const $2d9adae2c5a7d2fc$export$665d5a662b7213f3 = {
     drawFatButton (buttonOptions) {
         const { bottom: bottom } = buttonOptions;
         const bottomPadding = bottom || 120;
-        const width = 360;
-        const height = 116;
+        const width = 320;
+        const height = 104;
         this.drawButton({
             height: height,
-            textSize: 78,
+            textSize: 72,
             width: width,
             y: this.windowHeight - height - bottomPadding,
             x: this.windowWidth / 2 - width / 2,

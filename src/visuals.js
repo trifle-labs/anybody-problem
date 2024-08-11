@@ -517,7 +517,7 @@ export const Visuals = {
           this.setPause(false)
           this.practiceMode = false
         },
-        fg: THEME.fuschia,
+        fg: THEME.violet_50,
         bg: THEME.pink,
         bottom: 120,
         p
@@ -719,7 +719,7 @@ export const Visuals = {
     popup.lastVisibleFrame = this.p5Frames
 
     const alpha = Math.min(
-      0.75,
+      0.8,
       popup.visibleForFrames / (animDuration * this.P5_FPS)
     )
 
@@ -727,10 +727,10 @@ export const Visuals = {
     p.noStroke()
     p.rect(0, 0, this.windowWidth, this.windowHeight)
 
-    const x = 180
-    const w = 640
-    const pad = [36, 48, 120, 48]
-    const fz = [72, 32]
+    const w = 820
+    const x = (this.windowWidth - w) / 2
+    const pad = [40, 48, 148, 48]
+    const fz = [90, 44]
     const bg = popup.bg ?? THEME.violet_25
     const fg = popup.fg ?? THEME.violet_50
     const stroke = popup.stroke ?? fg
@@ -765,19 +765,21 @@ export const Visuals = {
     for (let i = 0; i < popup.body.length; i++) {
       const text = popup.body[i]
       const lineGap = parseInt(fz[1] * 0.25)
-      const y1 = y + pad[0] + fz[0] + fz[1] * (i + 1) + lineGap * (i + 1) - 10
+      const y1 = y + pad[0] + fz[0] + fz[1] * (i + 1) + lineGap * (i + 1) - fz[1] * 0.5
       p.text(text, x + w / 2, y1)
     }
 
     // buttons (max 2)
     const buttons = popup.buttons.slice(0, 2)
-    const btnGutter = 10
+    const btnGutter = 8
     const btnW =
       buttons.length === 1 ? w / 2 : w / 2 - pad[1] / 2 - btnGutter / 2
+    const btnH = 116
     const defaultOptions = {
-      height: 84,
+      height: btnH,
+      textSize: 59,
       width: btnW,
-      y: y + h - 84 / 2,
+      y: y + h - btnH / 2,
       fg,
       bg,
       stroke
@@ -1273,12 +1275,20 @@ export const Visuals = {
               bg: THEME.green_75,
               buttons: [
                 {
+                  text: 'CLOSE',
+                  onClick: () => {
+                    this.popup = null
+                  }
+                },
+                {
                   text: 'NEW GAME',
                   onClick: () => {
                     this.popup = null
                     this.level = 0
                     this.restart(undefined, true)
-                  }
+                  },
+                  fg: THEME.green_75,
+                  bg: THEME.green_50
                 }
               ]
             }
