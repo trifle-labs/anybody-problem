@@ -250,7 +250,8 @@ contract AnybodyProblem is Ownable, ERC2981 {
     }
 
     function genRadius(uint256 index) public pure returns (uint256) {
-        uint8[6] memory radii = [36, 27, 23, 19, 15, 11]; // n * 4 + 2
+        // uint8[6] memory radii = [36, 27, 23, 19, 15, 11]; // n * 4 + 2 TODO: swtich to x4 on next deployment
+        uint8[6] memory radii = [36, 27, 22, 17, 12, 7]; // n * 5 + 2
         return radii[index % radii.length] * scalingFactor;
     }
 

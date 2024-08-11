@@ -760,7 +760,8 @@ export class Anybody extends EventEmitter {
   }
 
   genRadius(index, level = this.level) {
-    const radii = [36n, 27n, 23n, 19n, 15n, 11n] // n * 4 + 2
+    // const radii = [36n, 27n, 23n, 19n, 15n, 11n] // n * 4 + 2 TODO: switch to this on next deployment
+    const radii = [36n, 27n, 22n, 17n, 12n, 7n] // n * 5 + 2
     let size = level == 0 ? 27n : radii[index % radii.length]
     return parseInt(size * BigInt(this.scalingFactor))
   }
