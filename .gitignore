@@ -35,9 +35,6 @@ contracts/*Verifier.sol
 # !game_4_250_cpp
 # !game_6_125_cpp
 
-!game_4_250_js
-!game_6_125_js
-
 */tmp/*
 
 *_proof.json
@@ -58,8 +55,10 @@ verification_key.json
 # !public/*.zkey
 *.wasm
 
-!game_6_125.wasm
-!game_4_250.wasm
+
+!game_4_250_js
+!game_6_125_js
+
 
 # !public/*.wasm
 parameters.txt
