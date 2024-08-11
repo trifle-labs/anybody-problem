@@ -68,7 +68,7 @@ export const Buttons = {
         text,
         // tweak to center, somethign about the font
         x + width / 2 + textSize * 0.13,
-        y + height / 2 + textSize * 0.05
+        y + height / 2 + textSize * 0.06
       )
     }
 
@@ -88,13 +88,15 @@ export const Buttons = {
   // single button with a fat appearance (retry, start)
   drawFatButton(buttonOptions) {
     const { bottom } = buttonOptions
-    const bottomPadding = bottom || 80
+    const bottomPadding = bottom || 120
+    const width = 360
+    const height = 116
     this.drawButton({
-      height: 96,
-      textSize: 48,
-      width: 275,
-      y: this.windowHeight - 96 - bottomPadding,
-      x: this.windowWidth / 2 - 275 / 2,
+      height,
+      textSize: 78,
+      width,
+      y: this.windowHeight - height - bottomPadding,
+      x: this.windowWidth / 2 - width / 2,
       ...buttonOptions
     })
   },

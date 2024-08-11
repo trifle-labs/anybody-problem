@@ -418,6 +418,7 @@ export class Anybody extends EventEmitter {
         }
         break
       case 'KeyR':
+        this.hasQuickReset = true
         this.restart(null, false)
         break
       case 'KeyP':

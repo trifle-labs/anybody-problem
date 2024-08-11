@@ -291,24 +291,71 @@ export const Visuals = {
     //   this.drawDebugPrompt()
     // }
 
-    // quick tip solution
+    this.drawTips()
+  },
+
+  drawTextBubble ({
+    text = '',
+    x = 0,
+    y = 0,
+    w = 240,
+    h = 56,
+    fz = 48,
+    fg,
+    bg,
+    stroke,
+  }) {
+    // return defaults for local calcs
+    if (!text) return { x, y, h, w, fz }
+    const { p } = this
+    p.fill(bg ?? 'black')
+    p.stroke(stroke ?? THEME.iris_60)
+    p.rect(x, y, w, h, 16, 16, 16, 16)
+    p.textFont(fonts.body)
+    p.textAlign(p.CENTER, p.TOP)
+    p.textSize(fz)
+    p.fill(fg ?? THEME.iris_30)
+    p.noStroke()
+    p.text(
+      text,
+      x + w / 2,
+      y + (h - fz) / 2
+    )
+    p.pop()
+  },
+
+  drawTips () {
     if (
-      this.level <= 1 &&
-      !this.paused &&
-      !this.won &&
-      !this.gameOver
-      // || (this.gameOver && !this.won)
+      this.level === 0
+      && !(this.paused || this.won || this.gameOver)
     ) {
-      this.p.textAlign(this.p.CENTER, this.p.TOP)
-      const fz = 24
-      this.p.textSize(fz)
-      this.p.fill('white')
-      this.p.textFont(fonts.body)
-      this.p.text(
-        'CLICK or {SPACE} to shoot, {R} to restart',
-        this.windowWidth / 2,
-        this.windowHeight - (fz + 8)
-      )
+      // how to shoot
+      const { h } = this.drawTextBubble({})
+      const gttr = 24
+      let w = this.hasTouched ? 300 : 520
+      let y = this.windowHeight - h * 2 - gttr * 1.5
+      this.drawTextBubble({
+        text: this.hasTouched ? 'TAP to Shoot'
+        : 'CLICK or {SPACE} to shoot',
+        w,
+        x: this.windowWidth / 2 - w / 2,
+        y,
+        fg: THEME.pink_50,
+        stroke: 'transparent'
+      })
+
+      // how to reset
+      w = this.hasTouched ? 700 : 570
+      y = this.windowHeight - (h + 32)
+      this.drawTextBubble({
+        text: this.hasTouched ? 'Tap the TIMER to restart the level'
+        : 'Press {R} to restart the level',
+        w,
+        x: this.windowWidth / 2 - w / 2,
+        y,
+        fg: THEME.teal_50,
+        stroke: 'transparent'
+      })
     }
   },
 
@@ -803,10 +850,14 @@ export const Visuals = {
         p.textAlign(p.RIGHT, p.TOP)
         if (this.hasTouched) {
           // draw mobile reset button over the countdown
-          this.buttons['touch-timer-reset'] = { x: 0, y: 0, width: 200, height: 105, 
+          this.buttons['touch-timer-reset'] = { x: 0, y: 0, width: 200, height: 110, 
             disabled: false, 
             visible: true,
-            onClick: () => this.restart(null, false)}
+            onClick: () => {
+              this.hasQuickReset = true
+              this.restart(null, false)
+            }
+          }
         }
         p.text('Lvl ' + this.level, this.windowWidth - 20, 0)
       }

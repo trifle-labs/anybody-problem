@@ -1433,14 +1433,55 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
         // } else {
         //   this.drawDebugPrompt()
         // }
-        // quick tip solution
-        if (this.level <= 1 && !this.paused && !this.won && !this.gameOver) {
-            this.p.textAlign(this.p.CENTER, this.p.TOP);
-            const fz = 24;
-            this.p.textSize(fz);
-            this.p.fill("white");
-            this.p.textFont((0, $7ccced6459fd256e$export$f45fbea8fe20ca8a).body);
-            this.p.text("CLICK or {SPACE} to shoot, {R} to restart", this.windowWidth / 2, this.windowHeight - (fz + 8));
+        this.drawTips();
+    },
+    drawTextBubble ({ text: text = "", x: x = 0, y: y = 0, w: w = 240, h: h = 56, fz: fz = 48, fg: fg, bg: bg, stroke: stroke }) {
+        // return defaults for local calcs
+        if (!text) return {
+            x: x,
+            y: y,
+            h: h,
+            w: w,
+            fz: fz
+        };
+        const { p: p } = this;
+        p.fill(bg ?? "black");
+        p.stroke(stroke ?? (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).iris_60);
+        p.rect(x, y, w, h, 16, 16, 16, 16);
+        p.textFont((0, $7ccced6459fd256e$export$f45fbea8fe20ca8a).body);
+        p.textAlign(p.CENTER, p.TOP);
+        p.textSize(fz);
+        p.fill(fg ?? (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).iris_30);
+        p.noStroke();
+        p.text(text, x + w / 2, y + (h - fz) / 2);
+        p.pop();
+    },
+    drawTips () {
+        if (this.level === 0 && !(this.paused || this.won || this.gameOver)) {
+            // how to shoot
+            const { h: h } = this.drawTextBubble({});
+            const gttr = 24;
+            let w = this.hasTouched ? 300 : 520;
+            let y = this.windowHeight - h * 2 - gttr * 1.5;
+            this.drawTextBubble({
+                text: this.hasTouched ? "TAP to Shoot" : "CLICK or {SPACE} to shoot",
+                w: w,
+                x: this.windowWidth / 2 - w / 2,
+                y: y,
+                fg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).pink_50,
+                stroke: "transparent"
+            });
+            // how to reset
+            w = this.hasTouched ? 700 : 570;
+            y = this.windowHeight - (h + 32);
+            this.drawTextBubble({
+                text: this.hasTouched ? "Tap the TIMER to restart the level" : "Press {R} to restart the level",
+                w: w,
+                x: this.windowWidth / 2 - w / 2,
+                y: y,
+                fg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).teal_50,
+                stroke: "transparent"
+            });
         }
     },
     // drawDebugPrompt() {
@@ -1851,10 +1892,13 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
                     x: 0,
                     y: 0,
                     width: 200,
-                    height: 105,
+                    height: 110,
                     disabled: false,
                     visible: true,
-                    onClick: ()=>this.restart(null, false)
+                    onClick: ()=>{
+                        this.hasQuickReset = true;
+                        this.restart(null, false);
+                    }
                 };
                 p.text("Lvl " + this.level, this.windowWidth - 20, 0);
             }
@@ -3655,7 +3699,7 @@ const $2d9adae2c5a7d2fc$export$665d5a662b7213f3 = {
             p.fill(button.disabled ? (0, $dfb043d8446f30b2$export$c08c384652f6dae3)(fg, 0.4) : fg);
             p.textAlign(p.CENTER, p.CENTER);
             p.text(text, // tweak to center, somethign about the font
-            x + width / 2 + textSize * 0.13, y + height / 2 + textSize * 0.05);
+            x + width / 2 + textSize * 0.13, y + height / 2 + textSize * 0.06);
         }
         if (!isAnimating && !button.disabled && button.hover) {
             p.fill(fgHover);
@@ -3670,13 +3714,15 @@ const $2d9adae2c5a7d2fc$export$665d5a662b7213f3 = {
     // single button with a fat appearance (retry, start)
     drawFatButton (buttonOptions) {
         const { bottom: bottom } = buttonOptions;
-        const bottomPadding = bottom || 80;
+        const bottomPadding = bottom || 120;
+        const width = 360;
+        const height = 116;
         this.drawButton({
-            height: 96,
-            textSize: 48,
-            width: 275,
-            y: this.windowHeight - 96 - bottomPadding,
-            x: this.windowWidth / 2 - 137.5,
+            height: height,
+            textSize: 78,
+            width: width,
+            y: this.windowHeight - height - bottomPadding,
+            x: this.windowWidth / 2 - width / 2,
             ...buttonOptions
         });
     },
@@ -4079,6 +4125,7 @@ class $9387f34f78197904$export$52baafc80d354d7 extends (0, $f92b5472d28e57c3$exp
                 }
                 break;
             case "KeyR":
+                this.hasQuickReset = true;
                 this.restart(null, false);
                 break;
             case "KeyP":
