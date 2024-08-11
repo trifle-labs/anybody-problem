@@ -3981,6 +3981,7 @@ class $9387f34f78197904$export$52baafc80d354d7 extends (0, $f92b5472d28e57c3$exp
         if (this.freeze) this.setPause(true, true);
     }
     destroy() {
+        this.resizeObserver.unobserve(this.p.canvas);
         this.setPause(true);
         this.p.noLoop();
         this.removeListener();
@@ -4564,10 +4565,10 @@ class $9387f34f78197904$export$52baafc80d354d7 extends (0, $f92b5472d28e57c3$exp
         this.p.background("white");
         // cache canvas rect, update on changes
         this.canvasRect = this.p.canvas.getBoundingClientRect();
-        const resizeObserver = new ResizeObserver(()=>{
+        this.resizeObserver = new ResizeObserver(()=>{
             this.canvasRect = this.p.canvas.getBoundingClientRect();
         });
-        resizeObserver.observe(this.p.canvas);
+        this.resizeObserver.observe(this.p.canvas);
     }
     missileClick(x, y) {
         if (this.gameOver) return;

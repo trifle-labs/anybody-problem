@@ -293,6 +293,7 @@ export class Anybody extends EventEmitter {
   }
 
   destroy() {
+    this.resizeObserver.unobserve(this.p.canvas)
     this.setPause(true)
     this.p.noLoop()
     this.removeListener()
@@ -917,10 +918,10 @@ export class Anybody extends EventEmitter {
     
     // cache canvas rect, update on changes
     this.canvasRect = this.p.canvas.getBoundingClientRect()
-    const resizeObserver = new ResizeObserver(() => { 
+    this.resizeObserver = new ResizeObserver(() => { 
       this.canvasRect = this.p.canvas.getBoundingClientRect()
     })
-    resizeObserver.observe(this.p.canvas);
+    this.resizeObserver.observe(this.p.canvas);
   }
 
   missileClick(x, y) {
