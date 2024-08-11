@@ -3965,8 +3965,16 @@ class $9387f34f78197904$export$52baafc80d354d7 extends (0, $f92b5472d28e57c3$exp
         this.p.remove();
     }
     getXY(e) {
-        let x = e.offsetX || e.layerX;
-        let y = e.offsetY || e.layerY;
+        let x, y;
+        if (e.touches) {
+            const touch = e.touches[0] || e.changedTouches[0];
+            // android doesn't support offsetX/Y for political reasons lol
+            x = touch.pageX - this.canvasRect.left;
+            y = touch.pageY - this.canvasRect.top;
+        } else {
+            x = e.offsetX || e.layerX;
+            y = e.offsetY || e.layerY;
+        }
         x = x * this.windowWidth / this.canvasRect.width;
         y = y * this.windowHeight / this.canvasRect.height;
         return {
@@ -4496,8 +4504,8 @@ class $9387f34f78197904$export$52baafc80d354d7 extends (0, $f92b5472d28e57c3$exp
         this.p.background("white");
         // cache canvas rect, update on changes
         this.canvasRect = this.p.canvas.getBoundingClientRect();
-        const resizeObserver = new ResizeObserver((entries)=>{
-            this.canvasRect = entries[0].contentRect;
+        const resizeObserver = new ResizeObserver(()=>{
+            this.canvasRect = this.p.canvas.getBoundingClientRect();
         });
         resizeObserver.observe(this.p.canvas);
     }
