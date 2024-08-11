@@ -1,7 +1,7 @@
 pragma circom 2.1.6;
 
 include "getDistance.circom";
-include "../node_modules/circomlib/circuits/mux1.circom";
+include "mux1.circom";
 
 template DetectCollision(totalBodies) {
   signal input bodies[totalBodies][3]; // only storing x, y and radius as 0, 1, 2

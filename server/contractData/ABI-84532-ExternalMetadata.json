@@ -78,6 +78,28 @@
       "inputs": [
         { "internalType": "uint256", "name": "date", "type": "uint256" }
       ],
+      "name": "getBestTimeEncoded",
+      "outputs": [{ "internalType": "string", "name": "", "type": "string" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "date", "type": "uint256" },
+        { "internalType": "uint256", "name": "placeIndex", "type": "uint256" }
+      ],
+      "name": "getFastestTime",
+      "outputs": [
+        { "internalType": "address", "name": "", "type": "address" },
+        { "internalType": "string", "name": "sec", "type": "string" }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "date", "type": "uint256" }
+      ],
       "name": "getHTML",
       "outputs": [{ "internalType": "string", "name": "", "type": "string" }],
       "stateMutability": "view",

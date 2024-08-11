@@ -178,7 +178,6 @@ export default class Sound {
   constructor(anybody) {
     if (typeof window === 'undefined') return
     this.anybody = anybody
-    window.addEventListener('keydown', this.handleKeyDown)
     this.setSong()
   }
 
@@ -189,23 +188,23 @@ export default class Sound {
     console.log('currentSong:', Object.keys(SONGS)[index])
   }
 
-  handleKeyDown = (e) => {
-    if (this.anybody.paused) return
+  // handleKeyDown = (e) => {
+  //   if (this.anybody.paused) return
 
-    if (e.key === '1') {
-      this.stop()
-      this.play(SONGS.whistle)
-    } else if (e.key === '2') {
-      this.stop()
-      this.play(SONGS.wii)
-    } else if (e.key === '3') {
-      this.stop()
-      this.play(SONGS.ipod)
-    } else if (e.key === '4') {
-      this.stop()
-      this.play(SONGS.orbit)
-    }
-  }
+  //   if (e.key === '1') {
+  //     this.stop()
+  //     this.play(SONGS.whistle)
+  //   } else if (e.key === '2') {
+  //     this.stop()
+  //     this.play(SONGS.wii)
+  //   } else if (e.key === '3') {
+  //     this.stop()
+  //     this.play(SONGS.ipod)
+  //   } else if (e.key === '4') {
+  //     this.stop()
+  //     this.play(SONGS.orbit)
+  //   }
+  // }
 
   // this function must be called in response to a user action
   // otherwise safari and chrome will block the audio

@@ -21,7 +21,9 @@ contract AnybodyProblem is Ownable, ERC2981 {
     uint256 public constant FIRST_SUNDAY_AT_6_PM_UTC = 324000;
 
     bool public paused = false;
-    uint256 public price = 0.0025 ether;
+    uint256 public priceToMint = 0.0025 ether;
+    uint256 public priceToSave = 0 ether;
+    uint256 public discount = 2;
     address payable public proceedRecipient;
     address public externalMetadata;
     address payable public speedruns;
@@ -94,9 +96,9 @@ contract AnybodyProblem is Ownable, ERC2981 {
         uint256[] memory verifiersTicks,
         uint256[] memory verifiersBodies
     ) {
-        updateExternalMetadata(externalMetadata_);
         updateProceedRecipient(proceedRecipient_);
         updateSpeedrunsAddress(speedruns_);
+        updateExternalMetadata(externalMetadata_);
         for (uint256 i = 0; i < verifiers_.length; i++) {
             require(verifiersTicks[i] > 0, 'Invalid verifier');
             require(verifiers_[i] != address(0), 'Invalid verifier');
@@ -137,6 +139,8 @@ contract AnybodyProblem is Ownable, ERC2981 {
     // NOTE: the only publicly available function that isn't protected by a modifier
     function batchSolve(
         uint256 runId,
+        bool alsoMint,
+        uint256 day,
         uint256[] memory tickCounts,
         uint[2][] memory a,
         uint[2][2][] memory b,
@@ -144,7 +148,7 @@ contract AnybodyProblem is Ownable, ERC2981 {
         uint[][] memory input
     ) public payable {
         require(!paused, 'Contract is paused');
-        uint256 day = currentDay();
+        // uint256 day = currentDay(); // TODO: this version does not enforce day for solving, just for minting NFT
         if (runId == 0) {
             runId = addNewRun(day);
             addNewLevelData(runId);
@@ -163,6 +167,7 @@ contract AnybodyProblem is Ownable, ERC2981 {
         for (uint256 i = 0; i < input.length; i++) {
             verifyLevelChunk(
                 runId,
+                alsoMint,
                 tickCounts[i],
                 day,
                 a[i],
@@ -247,6 +252,7 @@ contract AnybodyProblem is Ownable, ERC2981 {
     }
 
     function genRadius(uint256 index) public pure returns (uint256) {
+        // uint8[6] memory radii = [36, 27, 23, 19, 15, 11]; // n * 4 + 2 TODO: swtich to x4 on next deployment
         uint8[6] memory radii = [36, 27, 22, 17, 12, 7]; // n * 5 + 2
         return radii[index % radii.length] * scalingFactor;
     }
@@ -309,6 +315,7 @@ contract AnybodyProblem is Ownable, ERC2981 {
 
     function verifyLevelChunk(
         uint256 runId,
+        bool alsoMint,
         uint256 tickCount,
         uint256 day,
         uint[2] memory a,
@@ -414,12 +421,11 @@ contract AnybodyProblem is Ownable, ERC2981 {
             runs[runId].accumulativeTime += levelData.time;
             if (level == LEVELS) {
                 runs[runId].solved = true;
-                require(msg.value == price, 'Incorrect payment');
-                (bool sent, bytes memory data) = proceedRecipient.call{
-                    value: msg.value
-                }('');
-                Speedruns(speedruns).__mint(msg.sender, day, 1, '');
-                emit EthMoved(proceedRecipient, sent, data, msg.value);
+                if (alsoMint) {
+                    mint(priceToSave + (priceToMint / discount), day);
+                } else if (priceToSave > 0) {
+                    makePayment(priceToSave);
+                }
                 emit RunSolved(
                     msg.sender,
                     runId,
@@ -432,6 +438,26 @@ contract AnybodyProblem is Ownable, ERC2981 {
                 addNewLevelData(runId);
             }
         }
+    }
+
+    function makePayment(uint256 payment) internal {
+        require(msg.value >= payment, 'Incorrect payment');
+        require(proceedRecipient != address(0), 'Invalid recipient');
+        (bool sent, bytes memory data) = proceedRecipient.call{value: payment}(
+            ''
+        );
+        emit EthMoved(proceedRecipient, sent, data, payment);
+    }
+
+    function mint(uint256 payment, uint256 day) internal {
+        require(day == currentDay(), 'Can only mint on the current day');
+        require(payment == priceToMint, 'Incorrect price');
+        makePayment(payment);
+        Speedruns(speedruns).__mint(msg.sender, day, 1, '');
+    }
+
+    function mint() public payable {
+        mint(msg.value, currentDay());
     }
 
     function addToLeaderboard(uint256 runId) internal {
@@ -839,8 +865,16 @@ contract AnybodyProblem is Ownable, ERC2981 {
         emit EthMoved(_to, sent, data, amount);
     }
 
-    function updatePrice(uint256 price_) public onlyOwner {
-        price = price_;
+    function updateDiscount(uint256 discount_) public onlyOwner {
+        discount = discount_;
+    }
+
+    function updatePriceToSave(uint256 priceToSave_) public onlyOwner {
+        priceToSave = priceToSave_;
+    }
+
+    function updatePriceToMint(uint256 priceToMint_) public onlyOwner {
+        priceToMint = priceToMint_;
     }
 
     function updatePaused(bool paused_) public onlyOwner {

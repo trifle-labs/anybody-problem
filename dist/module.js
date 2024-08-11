@@ -387,7 +387,6 @@ class $f9c4c6b189f83f5c$export$2e2bcd8739ae039 {
     constructor(anybody){
         if (typeof window === "undefined") return;
         this.anybody = anybody;
-        window.addEventListener("keydown", this.handleKeyDown);
         this.setSong();
     }
     setSong(index) {
@@ -396,22 +395,22 @@ class $f9c4c6b189f83f5c$export$2e2bcd8739ae039 {
         this.currentSong = songs[index];
         console.log("currentSong:", Object.keys($f9c4c6b189f83f5c$var$SONGS)[index]);
     }
-    handleKeyDown = (e)=>{
-        if (this.anybody.paused) return;
-        if (e.key === "1") {
-            this.stop();
-            this.play($f9c4c6b189f83f5c$var$SONGS.whistle);
-        } else if (e.key === "2") {
-            this.stop();
-            this.play($f9c4c6b189f83f5c$var$SONGS.wii);
-        } else if (e.key === "3") {
-            this.stop();
-            this.play($f9c4c6b189f83f5c$var$SONGS.ipod);
-        } else if (e.key === "4") {
-            this.stop();
-            this.play($f9c4c6b189f83f5c$var$SONGS.orbit);
-        }
-    };
+    // handleKeyDown = (e) => {
+    //   if (this.anybody.paused) return
+    //   if (e.key === '1') {
+    //     this.stop()
+    //     this.play(SONGS.whistle)
+    //   } else if (e.key === '2') {
+    //     this.stop()
+    //     this.play(SONGS.wii)
+    //   } else if (e.key === '3') {
+    //     this.stop()
+    //     this.play(SONGS.ipod)
+    //   } else if (e.key === '4') {
+    //     this.stop()
+    //     this.play(SONGS.orbit)
+    //   }
+    // }
     // this function must be called in response to a user action
     // otherwise safari and chrome will block the audio
     resume() {
@@ -1429,8 +1428,28 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
         });
         if (!this.firstFrame && notPaused && framesIsAtStopEveryInterval && didNotJustPause && !ranOutOfTime && !this.handledGameOver) this.finish();
         else this.justPaused = false;
-        if (this.debug) this.drawDebug();
-        else this.drawDebugPrompt();
+        // if (this.debug) {
+        //   this.drawDebug()
+        // } else {
+        //   this.drawDebugPrompt()
+        // }
+        if (this.hasTouched && !this.paused && !this.won && !this.gameOver) this.drawButton({
+            x: this.windowWidth - 124,
+            y: this.windowHeight - 124,
+            width: 100,
+            height: 100,
+            textSize: 100,
+            offsetText: {
+                x: -12,
+                y: -3
+            },
+            fg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).teal_50,
+            bg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).teal_75,
+            text: "\u21BA",
+            onClick: ()=>{
+                this.restart(null, false);
+            }
+        });
         // quick tip solution
         if (this.level <= 1 && !this.paused && !this.won && !this.gameOver) {
             this.p.textAlign(this.p.CENTER, this.p.TOP);
@@ -1441,35 +1460,76 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
             this.p.text("CLICK or {SPACE} to shoot, {R} to restart", this.windowWidth / 2, this.windowHeight - (fz + 8));
         }
     },
-    drawDebugPrompt () {
-        this.p.noStroke();
-        this.p.fill("white");
-        this.p.textSize(12);
-        this.p.text("?", this.windowWidth - 20, this.windowHeight - 20);
-    },
-    drawDebug () {
-        const rows = 5;
-        const rowHeight = 15;
-        const leftMargin = 5;
-        const avgRate = this.p.avgRate().toFixed(2);
-        const currRate = this.p.currRate().toFixed(2);
-        const boxWidth = 100;
-        const boxHeight = rows * rowHeight + 20;
-        this.p.noStroke();
-        this.p.fill("rgba(0,0,0,0.8)");
-        this.p.rect(this.windowWidth - boxWidth, this.windowHeight - boxHeight, boxWidth, boxHeight);
-        this.p.fill("white");
-        this.p.text("cur fps: " + currRate, this.windowWidth - boxWidth + leftMargin, this.windowHeight - boxHeight + rowHeight * 1, boxWidth, boxHeight);
-        this.p.text("avg fps: " + avgRate, this.windowWidth - boxWidth + leftMargin, this.windowHeight - boxHeight + rowHeight * 2, boxWidth, boxHeight);
-        const cores = navigator.hardwareConcurrency;
-        this.p.text("~" + cores + " cores", this.windowWidth - boxWidth + leftMargin, this.windowHeight - boxHeight + +rowHeight * 3, boxWidth, boxHeight);
-        const ram = navigator.deviceMemory || "N/A";
-        this.p.text("~" + ram + " GB RAM", this.windowWidth - boxWidth + leftMargin, this.windowHeight - boxHeight + rowHeight * 4, boxWidth, boxHeight);
-        const isIntel = navigator.userAgent.includes("Intel");
-        this.p.text((isIntel ? "Intel" : "AMD") + " inside", this.windowWidth - boxWidth + leftMargin, this.windowHeight - boxHeight + rowHeight * 5, boxWidth, boxHeight);
-        const pixelDensity = window.devicePixelRatio || 1;
-        this.p.text(pixelDensity + "x pxl density", this.windowWidth - boxWidth + leftMargin, this.windowHeight - boxHeight + rowHeight * 6, boxWidth, boxHeight);
-    },
+    // drawDebugPrompt() {
+    //   this.p.noStroke()
+    //   this.p.fill('white')
+    //   this.p.textSize(12)
+    //   this.p.text('?', this.windowWidth - 20, this.windowHeight - 20)
+    // },
+    // drawDebug() {
+    //   const rows = 5
+    //   const rowHeight = 15
+    //   const leftMargin = 5
+    //   const avgRate = this.p.avgRate().toFixed(2)
+    //   const currRate = this.p.currRate().toFixed(2)
+    //   const boxWidth = 100
+    //   const boxHeight = rows * rowHeight + 20
+    //   this.p.noStroke()
+    //   this.p.fill('rgba(0,0,0,0.8)')
+    //   this.p.rect(
+    //     this.windowWidth - boxWidth,
+    //     this.windowHeight - boxHeight,
+    //     boxWidth,
+    //     boxHeight
+    //   )
+    //   this.p.fill('white')
+    //   this.p.text(
+    //     'cur fps: ' + currRate,
+    //     this.windowWidth - boxWidth + leftMargin,
+    //     this.windowHeight - boxHeight + rowHeight * 1,
+    //     boxWidth,
+    //     boxHeight
+    //   )
+    //   this.p.text(
+    //     'avg fps: ' + avgRate,
+    //     this.windowWidth - boxWidth + leftMargin,
+    //     this.windowHeight - boxHeight + rowHeight * 2,
+    //     boxWidth,
+    //     boxHeight
+    //   )
+    //   const cores = navigator.hardwareConcurrency
+    //   this.p.text(
+    //     '~' + cores + ' cores',
+    //     this.windowWidth - boxWidth + leftMargin,
+    //     this.windowHeight - boxHeight + +rowHeight * 3,
+    //     boxWidth,
+    //     boxHeight
+    //   )
+    //   const ram = navigator.deviceMemory || 'N/A'
+    //   this.p.text(
+    //     '~' + ram + ' GB RAM',
+    //     this.windowWidth - boxWidth + leftMargin,
+    //     this.windowHeight - boxHeight + rowHeight * 4,
+    //     boxWidth,
+    //     boxHeight
+    //   )
+    //   const isIntel = navigator.userAgent.includes('Intel')
+    //   this.p.text(
+    //     (isIntel ? 'Intel' : 'AMD') + ' inside',
+    //     this.windowWidth - boxWidth + leftMargin,
+    //     this.windowHeight - boxHeight + rowHeight * 5,
+    //     boxWidth,
+    //     boxHeight
+    //   )
+    //   const pixelDensity = window.devicePixelRatio || 1
+    //   this.p.text(
+    //     pixelDensity + 'x pxl density',
+    //     this.windowWidth - boxWidth + leftMargin,
+    //     this.windowHeight - boxHeight + rowHeight * 6,
+    //     boxWidth,
+    //     boxHeight
+    //   )
+    // },
     drawPause () {
         if (!(0, $7ccced6459fd256e$export$f45fbea8fe20ca8a).dot || !this.paused || this.showProblemRankingsScreenAt !== -1) return;
         const p = this.p;
@@ -2591,7 +2651,7 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
                 }
             }
             this.stillVisibleMissiles[i] = body;
-            const rainbowColor = body.phase.color //`rgba(${body.phase.color},${alpha})`
+            const rainbowColor = i == this.stillVisibleMissiles.length - 1 ? "white" : body.phase.color //`rgba(${body.phase.color},${alpha})`
             ;
             const thisRadius = starRadius / 1.5 + starRadius * (body.phase.life / 25 * body.phase.life / 25);
             this.p.push();
@@ -3563,7 +3623,10 @@ function $7e45a306e00e2282$export$240a15193e06bf11(v1, v2) {
 
 
 const $2d9adae2c5a7d2fc$export$665d5a662b7213f3 = {
-    drawButton ({ text: text, x: x, y: y, textSize: textSize = 48, height: height, width: width, onClick: onClick, fg: fg = "black", bg: bg = "white", stroke: stroke, fgHover: fgHover = "rgba(160, 67, 232, 0.25)", p: p = this.p, disabled: disabled = false, key: key = `${text}-${x}-${y}-${height}-${width}` }) {
+    drawButton ({ text: text, x: x, y: y, textSize: textSize = 48, height: height, width: width, onClick: onClick, fg: fg = "black", bg: bg = "white", stroke: stroke, fgHover: fgHover = "rgba(160, 67, 232, 0.25)", p: p = this.p, disabled: disabled = false, offsetText: offsetText = {
+        x: 0,
+        y: 0
+    }, key: key = `${text}-${x}-${y}-${height}-${width}` }) {
         // register the button if it's not registered
         let button = this.buttons[key];
         if (!button) {
@@ -3602,7 +3665,7 @@ const $2d9adae2c5a7d2fc$export$665d5a662b7213f3 = {
             p.fill(button.disabled ? (0, $dfb043d8446f30b2$export$c08c384652f6dae3)(fg, 0.4) : fg);
             p.textAlign(p.CENTER, p.CENTER);
             p.text(text, // tweak to center, somethign about the font
-            x + width / 2 + textSize * 0.13, y + height / 2 + textSize * 0.05);
+            x + width / 2 + textSize * 0.13 + offsetText.x, y + height / 2 + textSize * 0.05 + offsetText.y);
         }
         if (!isAnimating && !button.disabled && button.hover) {
             p.fill(fgHover);
@@ -3646,7 +3709,6 @@ const $2d9adae2c5a7d2fc$export$665d5a662b7213f3 = {
 };
 
 
-// import wc from './witness_calculator.js'
 const $9387f34f78197904$var$GAME_LENGTH_BY_LEVEL_INDEX = [
     30,
     10,
@@ -3762,7 +3824,7 @@ class $9387f34f78197904$export$52baafc80d354d7 extends (0, $f92b5472d28e57c3$exp
             skip0: false,
             bodyData: null,
             todaysRecords: {},
-            debug: false,
+            // debug: false,
             // Add default properties and their initial values here
             startingBodies: 1,
             windowWidth: 1000,
@@ -3957,7 +4019,10 @@ class $9387f34f78197904$export$52baafc80d354d7 extends (0, $f92b5472d28e57c3$exp
     }
     addListeners() {
         this.p.mouseMoved = this.handleMouseMove;
-        this.p.touchStarted = this.handleGameClick;
+        this.p.touchStarted = (e)=>{
+            this.hasTouched = true;
+            this.handleGameClick(e);
+        };
         this.p.mouseClicked = this.handleGameClick;
         this.p.keyPressed = this.handleGameKeyDown;
     }
@@ -4003,11 +4068,10 @@ class $9387f34f78197904$export$52baafc80d354d7 extends (0, $f92b5472d28e57c3$exp
                 return;
             }
         }
-        const debugZone = {
-            x: this.windowWidth - 100,
-            y: this.windowHeight - 100
-        };
-        if (x > debugZone.x && y > debugZone.y) this.debug = !this.debug;
+        // const debugZone = { x: this.windowWidth - 100, y: this.windowHeight - 100 }
+        // if (x > debugZone.x && y > debugZone.y) {
+        //   this.debug = !this.debug
+        // }
         if (this.paused || this.gameOver) return;
         this.missileClick(x, y);
     };
@@ -4026,7 +4090,7 @@ class $9387f34f78197904$export$52baafc80d354d7 extends (0, $f92b5472d28e57c3$exp
                 }
                 break;
             case "KeyR":
-                if (!this.gameOver || !this.won) this.restart(null, false);
+                this.restart(null, false);
                 break;
             case "KeyP":
                 if (!this.gameOver) this.setPause();
@@ -4037,9 +4101,7 @@ class $9387f34f78197904$export$52baafc80d354d7 extends (0, $f92b5472d28e57c3$exp
         if (this.handledGameOver) return;
         this.handledGameOver = true;
         this.gameoverTickerX = 0;
-        this.sound?.playGameOver({
-            won: won
-        });
+        // this.sound?.playGameOver({ won }) // TDDO: improve audio
         this.gameOver = true;
         this.won = won;
         if (this.level !== 0 && !this.won) {
@@ -4055,17 +4117,14 @@ class $9387f34f78197904$export$52baafc80d354d7 extends (0, $f92b5472d28e57c3$exp
         }
         this.P5_FPS *= 2;
         this.p.frameRate(this.P5_FPS);
-        var dust = 0;
         var timeTook = 0;
         const stats = this.calculateStats();
-        dust = stats.dust;
         timeTook = stats.timeTook;
         this.framesTook = stats.framesTook;
         this.emit("done", {
             level: this.level,
             won: won,
             ticks: this.frames - this.startingFrame,
-            dust: dust,
             timeTook: timeTook,
             framesTook: this.framesTook
         });
@@ -4316,6 +4375,7 @@ class $9387f34f78197904$export$52baafc80d354d7 extends (0, $f92b5472d28e57c3$exp
         return body;
     }
     genRadius(index, level = this.level) {
+        // const radii = [36n, 27n, 23n, 19n, 15n, 11n] // n * 4 + 2 TODO: switch to this on next deployment
         const radii = [
             36n,
             27n,
@@ -4511,10 +4571,7 @@ class $9387f34f78197904$export$52baafc80d354d7 extends (0, $f92b5472d28e57c3$exp
     }
     missileClick(x, y) {
         if (this.gameOver) return;
-        if (this.paused) {
-            this.setPause(false);
-            return;
-        }
+        if (this.paused) return;
         if (this.bodies.reduce((a, c)=>a + c.radius, 0) == 0 || this.frames - this.startingFrame >= this.timer) return;
         // if (this.missiles.length > 0 && !this.admin) {
         //   // this is a hack to prevent multiple missiles from being fired
@@ -4555,45 +4612,15 @@ class $9387f34f78197904$export$52baafc80d354d7 extends (0, $f92b5472d28e57c3$exp
         this.makeMissileStart();
     }
     calculateStats = ()=>{
-        // n.b. this needs to match the contract in check_boost.cjs
-        const BODY_BOOST = [
-            0,
-            0,
-            0,
-            1,
-            2,
-            4,
-            8,
-            16,
-            32,
-            64,
-            128 // 10th body
-        ];
-        const SPEED_BOOST = [
-            1,
-            2,
-            3,
-            4,
-            5,
-            6 // < 60s left
-        ];
         const bodiesIncluded = this.bodies.length;
-        const bodiesBoost = BODY_BOOST[bodiesIncluded];
-        const { startingFrame: startingFrame, timer: timer, frames: frames } = this;
-        const secondsLeft = (startingFrame + timer - frames) / this.FPS;
+        const { startingFrame: startingFrame, frames: frames } = this;
         const framesTook = frames - startingFrame - 1 // -1 because the first frame is the starting frame
         ;
         const timeTook = framesTook / this.FPS;
-        const speedBoostIndex = Math.floor(secondsLeft / 10);
-        const speedBoost = SPEED_BOOST[speedBoostIndex];
-        let dust = /*bodiesIncluded **/ bodiesBoost * speedBoost;
         const missilesShot = this.missileInits.reduce((p, c)=>c[0] == 0 ? p : p + 1, 0);
         return {
             missilesShot: missilesShot,
             bodiesIncluded: bodiesIncluded,
-            bodiesBoost: bodiesBoost,
-            speedBoost: speedBoost,
-            dust: dust,
             timeTook: timeTook,
             framesTook: framesTook
         };

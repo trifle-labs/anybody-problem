@@ -28,6 +28,7 @@ describe('AnybodyProblem Tests', function () {
       if (name === 'verifiers') continue
       if (name === 'verifiersTicks') continue
       if (name === 'verifiersBodies') continue
+      if (name.indexOf('Assets') > -1) continue
       let storedAddress
       if (name.indexOf('Verifier') > -1) {
         const bodyCount = name.split('_')[1]
@@ -94,6 +95,7 @@ describe('AnybodyProblem Tests', function () {
       { name: 'updateSpeedrunsAddress', args: [addr1.address] },
       { name: 'updateVerifier', args: [addr1.address, 0, 0] },
       { name: 'recoverUnsuccessfulPayment', args: [addr1.address] },
+      { name: 'updateDiscount', args: [0] },
       { name: 'updatePrice', args: [0] },
       { name: 'updatePaused', args: [true] }
     ]
@@ -225,7 +227,7 @@ describe('AnybodyProblem Tests', function () {
     })
     await anybodyProblem.updatePaused(true)
     await expect(
-      anybodyProblem.batchSolve(0, [], [], [], [], [])
+      anybodyProblem.batchSolve(0, true, [], [], [], [], [])
     ).to.be.revertedWith('Contract is paused')
   })
 
@@ -290,7 +292,7 @@ describe('AnybodyProblem Tests', function () {
     let runId = 0
     const day = await anybodyProblem.currentDay()
     let accumulativeTime = 0
-    const finalArgs = [null, [], [], [], [], []]
+    const finalArgs = [null, true, [], [], [], [], []]
     let finalRunId
     for (let i = 0; i < 5; i++) {
       const level = i + 1
@@ -307,14 +309,16 @@ describe('AnybodyProblem Tests', function () {
       finalRunId = solvedReturn.runId
       accumulativeTime += parseInt(time)
       finalArgs[0] = runId
-      finalArgs[1].push(args[1][0])
+      finalArgs[1] = true // alsoMint
       finalArgs[2].push(args[2][0])
       finalArgs[3].push(args[3][0])
       finalArgs[4].push(args[4][0])
       finalArgs[5].push(args[5][0])
+      finalArgs[6].push(args[6][0])
     }
     const price = await anybodyProblem.price()
-    expect(finalArgs.length).to.equal(6)
+    expect(finalArgs.length).to.equal(7)
+
     const tx = await anybodyProblem.batchSolve(...finalArgs, { value: price })
     await expect(tx)
       .to.emit(anybodyProblem, 'RunSolved')
