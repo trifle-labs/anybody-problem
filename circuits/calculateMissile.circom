@@ -81,8 +81,8 @@ template CalculateMissile() {
   // the missile will approach 0 after starting at windowWidthScaled
   // check whether it goes below 0 by using the maxMissileVectorScaled as a buffer
   // return 0 if it is below maxMissileVectorScaled to remove the missile
-  // TODO: this assumes a missile removal at less than or equal to 0
-  // make sure the JS also is <= 0 and not just < 0 for the missile removal
+  // NOTE: this assumes a missile removal at less than or equal to 0
+  // the JS also is <= 0 and not just < 0 for the missile removal
 
   // log("new_pos[1]", new_pos[1]);
   // log("positionLowerLimiterY in", new_pos[1]);
