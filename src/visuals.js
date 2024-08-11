@@ -285,10 +285,27 @@ export const Visuals = {
       this.justPaused = false
     }
 
-    if (this.debug) {
-      this.drawDebug()
-    } else {
-      this.drawDebugPrompt()
+    // if (this.debug) {
+    //   this.drawDebug()
+    // } else {
+    //   this.drawDebugPrompt()
+    // }
+
+    if (this.hasTouched && !this.paused && !this.won && !this.gameOver) {
+      this.drawButton({
+        x: this.windowWidth - 124,
+        y: this.windowHeight - 124,
+        width: 100,
+        height: 100,
+        textSize: 100,
+        offsetText: { x: -12, y: -3 },
+        fg: THEME.teal_50,
+        bg: THEME.teal_75,
+        text: '↺',
+        onClick: () => {
+          this.restart(null, false)
+        }
+      })
     }
 
     // quick tip solution
@@ -312,79 +329,79 @@ export const Visuals = {
     }
   },
 
-  drawDebugPrompt() {
-    this.p.noStroke()
-    this.p.fill('white')
-    this.p.textSize(12)
-    this.p.text('?', this.windowWidth - 20, this.windowHeight - 20)
-  },
+  // drawDebugPrompt() {
+  //   this.p.noStroke()
+  //   this.p.fill('white')
+  //   this.p.textSize(12)
+  //   this.p.text('?', this.windowWidth - 20, this.windowHeight - 20)
+  // },
 
-  drawDebug() {
-    const rows = 5
-    const rowHeight = 15
-    const leftMargin = 5
-    const avgRate = this.p.avgRate().toFixed(2)
-    const currRate = this.p.currRate().toFixed(2)
-    const boxWidth = 100
-    const boxHeight = rows * rowHeight + 20
+  // drawDebug() {
+  //   const rows = 5
+  //   const rowHeight = 15
+  //   const leftMargin = 5
+  //   const avgRate = this.p.avgRate().toFixed(2)
+  //   const currRate = this.p.currRate().toFixed(2)
+  //   const boxWidth = 100
+  //   const boxHeight = rows * rowHeight + 20
 
-    this.p.noStroke()
-    this.p.fill('rgba(0,0,0,0.8)')
-    this.p.rect(
-      this.windowWidth - boxWidth,
-      this.windowHeight - boxHeight,
-      boxWidth,
-      boxHeight
-    )
-    this.p.fill('white')
-    this.p.text(
-      'cur fps: ' + currRate,
-      this.windowWidth - boxWidth + leftMargin,
-      this.windowHeight - boxHeight + rowHeight * 1,
-      boxWidth,
-      boxHeight
-    )
-    this.p.text(
-      'avg fps: ' + avgRate,
-      this.windowWidth - boxWidth + leftMargin,
-      this.windowHeight - boxHeight + rowHeight * 2,
-      boxWidth,
-      boxHeight
-    )
+  //   this.p.noStroke()
+  //   this.p.fill('rgba(0,0,0,0.8)')
+  //   this.p.rect(
+  //     this.windowWidth - boxWidth,
+  //     this.windowHeight - boxHeight,
+  //     boxWidth,
+  //     boxHeight
+  //   )
+  //   this.p.fill('white')
+  //   this.p.text(
+  //     'cur fps: ' + currRate,
+  //     this.windowWidth - boxWidth + leftMargin,
+  //     this.windowHeight - boxHeight + rowHeight * 1,
+  //     boxWidth,
+  //     boxHeight
+  //   )
+  //   this.p.text(
+  //     'avg fps: ' + avgRate,
+  //     this.windowWidth - boxWidth + leftMargin,
+  //     this.windowHeight - boxHeight + rowHeight * 2,
+  //     boxWidth,
+  //     boxHeight
+  //   )
 
-    const cores = navigator.hardwareConcurrency
-    this.p.text(
-      '~' + cores + ' cores',
-      this.windowWidth - boxWidth + leftMargin,
-      this.windowHeight - boxHeight + +rowHeight * 3,
-      boxWidth,
-      boxHeight
-    )
-    const ram = navigator.deviceMemory || 'N/A'
-    this.p.text(
-      '~' + ram + ' GB RAM',
-      this.windowWidth - boxWidth + leftMargin,
-      this.windowHeight - boxHeight + rowHeight * 4,
-      boxWidth,
-      boxHeight
-    )
-    const isIntel = navigator.userAgent.includes('Intel')
-    this.p.text(
-      (isIntel ? 'Intel' : 'AMD') + ' inside',
-      this.windowWidth - boxWidth + leftMargin,
-      this.windowHeight - boxHeight + rowHeight * 5,
-      boxWidth,
-      boxHeight
-    )
-    const pixelDensity = window.devicePixelRatio || 1
-    this.p.text(
-      pixelDensity + 'x pxl density',
-      this.windowWidth - boxWidth + leftMargin,
-      this.windowHeight - boxHeight + rowHeight * 6,
-      boxWidth,
-      boxHeight
-    )
-  },
+  //   const cores = navigator.hardwareConcurrency
+  //   this.p.text(
+  //     '~' + cores + ' cores',
+  //     this.windowWidth - boxWidth + leftMargin,
+  //     this.windowHeight - boxHeight + +rowHeight * 3,
+  //     boxWidth,
+  //     boxHeight
+  //   )
+  //   const ram = navigator.deviceMemory || 'N/A'
+  //   this.p.text(
+  //     '~' + ram + ' GB RAM',
+  //     this.windowWidth - boxWidth + leftMargin,
+  //     this.windowHeight - boxHeight + rowHeight * 4,
+  //     boxWidth,
+  //     boxHeight
+  //   )
+  //   const isIntel = navigator.userAgent.includes('Intel')
+  //   this.p.text(
+  //     (isIntel ? 'Intel' : 'AMD') + ' inside',
+  //     this.windowWidth - boxWidth + leftMargin,
+  //     this.windowHeight - boxHeight + rowHeight * 5,
+  //     boxWidth,
+  //     boxHeight
+  //   )
+  //   const pixelDensity = window.devicePixelRatio || 1
+  //   this.p.text(
+  //     pixelDensity + 'x pxl density',
+  //     this.windowWidth - boxWidth + leftMargin,
+  //     this.windowHeight - boxHeight + rowHeight * 6,
+  //     boxWidth,
+  //     boxHeight
+  //   )
+  // },
 
   drawPause() {
     if (!fonts.dot || !this.paused || this.showProblemRankingsScreenAt !== -1)
@@ -1820,7 +1837,8 @@ export const Visuals = {
         }
       }
       this.stillVisibleMissiles[i] = body
-      const rainbowColor = body.phase.color //`rgba(${body.phase.color},${alpha})`
+      const rainbowColor =
+        i == this.stillVisibleMissiles.length - 1 ? 'white' : body.phase.color //`rgba(${body.phase.color},${alpha})`
       const thisRadius =
         starRadius / 1.5 +
         starRadius * (((body.phase.life / 25) * body.phase.life) / 25)

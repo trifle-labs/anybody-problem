@@ -424,8 +424,8 @@ const solveLevel = async (
   const b = [dataResult.b]
   const c = [dataResult.c]
   const Input = [dataResult.Input]
-
-  const args = [runId, tickCounts, a, b, c, Input]
+  const alsoMint = true
+  const args = [runId, alsoMint, tickCounts, a, b, c, Input]
 
   if (runId == 0) {
     runId = 1
@@ -438,7 +438,7 @@ const solveLevel = async (
     if (level == 5) {
       await expect(
         anybodyProblem.batchSolve(...args, {
-          value: price.add(1)
+          value: price.div(2).sub(1)
         })
       ).to.be.revertedWith('Incorrect payment')
     }
@@ -472,9 +472,9 @@ const mintProblem = async (/*signers, deployedContracts, acct*/) => {
   // await problems.updateStartDate(0)
   // const tx = await problems.connect(acct)['mint()']({ value: correctPrice })
   // const receipt = await tx.wait()
-  // const problemId = getParsedEventLogs(receipt, problems, 'Transfer')[0].args
+  // const runId = getParsedEventLogs(receipt, problems, 'Transfer')[0].args
   //   .tokenId
-  // return { receipt, problemId }
+  // return { receipt, runId }
 }
 
 const generateWitness = async (
@@ -652,9 +652,10 @@ const generateAndSubmitProof = async (
     c.push(dataResult.c)
     Input.push(dataResult.Input)
   }
-
+  const alsoMint = true
   const tx = await anybodyProblem.batchSolve(
     problemId,
+    alsoMint,
     proofLengths,
     a,
     b,
