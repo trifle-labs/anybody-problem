@@ -348,11 +348,8 @@ export class Anybody extends EventEmitter {
   getXY(e) {
     let x = e.offsetX || e.layerX
     let y = e.offsetY || e.layerY
-    const rect = e.target.getBoundingClientRect()
-    const actualWidth = rect.width
-    const actualHeight = rect.height
-    x = (x * this.windowWidth) / actualWidth
-    y = (y * this.windowHeight) / actualHeight
+    x = (x * this.windowWidth) / this.canvasRect.width
+    y = (y * this.windowHeight) / this.canvasRect.height
     return { x, y }
   }
 
@@ -911,6 +908,13 @@ export class Anybody extends EventEmitter {
     this.p.createCanvas(this.windowWidth, this.windowWidth)
     this.setPixelDensity(this.pixelDensity)
     this.p.background('white')
+    
+    // cache canvas rect, update on changes
+    this.canvasRect = this.p.canvas.getBoundingClientRect()
+    const resizeObserver = new ResizeObserver((entries) => { 
+      this.canvasRect = entries[0].contentRect
+    })
+    resizeObserver.observe(this.p.canvas);
   }
 
   missileClick(x, y) {
