@@ -1433,23 +1433,6 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
         // } else {
         //   this.drawDebugPrompt()
         // }
-        if (this.hasTouched && !this.paused && !this.won && !this.gameOver) this.drawButton({
-            x: this.windowWidth - 124,
-            y: this.windowHeight - 124,
-            width: 100,
-            height: 100,
-            textSize: 100,
-            offsetText: {
-                x: -12,
-                y: -3
-            },
-            fg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).teal_50,
-            bg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).teal_75,
-            text: "\u21BA",
-            onClick: ()=>{
-                this.restart(null, false);
-            }
-        });
         // quick tip solution
         if (this.level <= 1 && !this.paused && !this.won && !this.gameOver) {
             this.p.textAlign(this.p.CENTER, this.p.TOP);
@@ -1859,11 +1842,21 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
         if (runningFrames > 2 && (!this.gameOver || this.gameOver && this.won && !this.skipAhead)) {
             if (this.won) {
                 p.textSize(this.scoreSize * 2);
-                p.text(seconds.toFixed(2) + "s", 20, 10);
+                p.text(seconds.toFixed(2) + "s", 20, 0);
             } else {
-                p.text(secondsLeft.toFixed(2), 20, 10);
+                p.text(secondsLeft.toFixed(2), 20, 0);
                 p.textAlign(p.RIGHT, p.TOP);
-                p.text("Lvl " + this.level, this.windowWidth - 20, 10);
+                if (this.hasTouched) // draw mobile reset button over the countdown
+                this.buttons["touch-timer-reset"] = {
+                    x: 0,
+                    y: 0,
+                    width: 200,
+                    height: 105,
+                    disabled: false,
+                    visible: true,
+                    onClick: ()=>this.restart(null, false)
+                };
+                p.text("Lvl " + this.level, this.windowWidth - 20, 0);
             }
         }
         p.pop();
@@ -3623,10 +3616,7 @@ function $7e45a306e00e2282$export$240a15193e06bf11(v1, v2) {
 
 
 const $2d9adae2c5a7d2fc$export$665d5a662b7213f3 = {
-    drawButton ({ text: text, x: x, y: y, textSize: textSize = 48, height: height, width: width, onClick: onClick, fg: fg = "black", bg: bg = "white", stroke: stroke, fgHover: fgHover = "rgba(160, 67, 232, 0.25)", p: p = this.p, disabled: disabled = false, offsetText: offsetText = {
-        x: 0,
-        y: 0
-    }, key: key = `${text}-${x}-${y}-${height}-${width}` }) {
+    drawButton ({ text: text, x: x, y: y, textSize: textSize = 48, height: height, width: width, onClick: onClick, fg: fg = "black", bg: bg = "white", stroke: stroke, fgHover: fgHover = "rgba(160, 67, 232, 0.25)", p: p = this.p, disabled: disabled = false, key: key = `${text}-${x}-${y}-${height}-${width}` }) {
         // register the button if it's not registered
         let button = this.buttons[key];
         if (!button) {
@@ -3665,7 +3655,7 @@ const $2d9adae2c5a7d2fc$export$665d5a662b7213f3 = {
             p.fill(button.disabled ? (0, $dfb043d8446f30b2$export$c08c384652f6dae3)(fg, 0.4) : fg);
             p.textAlign(p.CENTER, p.CENTER);
             p.text(text, // tweak to center, somethign about the font
-            x + width / 2 + textSize * 0.13 + offsetText.x, y + height / 2 + textSize * 0.05 + offsetText.y);
+            x + width / 2 + textSize * 0.13, y + height / 2 + textSize * 0.05);
         }
         if (!isAnimating && !button.disabled && button.hover) {
             p.fill(fgHover);

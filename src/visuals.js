@@ -291,23 +291,6 @@ export const Visuals = {
     //   this.drawDebugPrompt()
     // }
 
-    if (this.hasTouched && !this.paused && !this.won && !this.gameOver) {
-      this.drawButton({
-        x: this.windowWidth - 124,
-        y: this.windowHeight - 124,
-        width: 100,
-        height: 100,
-        textSize: 100,
-        offsetText: { x: -12, y: -3 },
-        fg: THEME.teal_50,
-        bg: THEME.teal_75,
-        text: '↺',
-        onClick: () => {
-          this.restart(null, false)
-        }
-      })
-    }
-
     // quick tip solution
     if (
       this.level <= 1 &&
@@ -814,11 +797,18 @@ export const Visuals = {
     ) {
       if (this.won) {
         p.textSize(this.scoreSize * 2)
-        p.text(seconds.toFixed(2) + 's', 20, 10)
+        p.text(seconds.toFixed(2) + 's', 20, 0)
       } else {
-        p.text(secondsLeft.toFixed(2), 20, 10)
+        p.text(secondsLeft.toFixed(2), 20, 0)
         p.textAlign(p.RIGHT, p.TOP)
-        p.text('Lvl ' + this.level, this.windowWidth - 20, 10)
+        if (this.hasTouched) {
+          // draw mobile reset button over the countdown
+          this.buttons['touch-timer-reset'] = { x: 0, y: 0, width: 200, height: 105, 
+            disabled: false, 
+            visible: true,
+            onClick: () => this.restart(null, false)}
+        }
+        p.text('Lvl ' + this.level, this.windowWidth - 20, 0)
       }
     }
 
