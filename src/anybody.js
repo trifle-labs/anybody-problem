@@ -293,7 +293,7 @@ export class Anybody extends EventEmitter {
   }
 
   destroy() {
-    this.resizeObserver.unobserve(this.p.canvas)
+    this.resizeObserver.disconnect(this.p.canvas)
     this.setPause(true)
     this.p.noLoop()
     this.removeListener()
@@ -351,10 +351,8 @@ export class Anybody extends EventEmitter {
   getXY(e) {
     let x, y
     if (e.touches) {
-      const touch = e.touches[0] || e.changedTouches[0]
-      // android doesn't support offsetX/Y for political reasons lol
-      x = touch.pageX - this.canvasRect.left
-      y = touch.pageY - this.canvasRect.top
+      x = e.touches[0].pageX - this.canvasRect.left
+      y = e.touches[0].pageY - this.canvasRect.top
     } else {
       x = e.offsetX || e.layerX
       y = e.offsetY || e.layerY
