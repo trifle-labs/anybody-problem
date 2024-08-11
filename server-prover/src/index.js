@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { serveStatic } from 'hono/bun'
 import { cors } from 'hono/cors'
-const wc = require('./witness_calculator.js')
+const wc = require('../../game_4_250_js/witness_calculator.js')
 const { readFileSync, writeFileSync, unlinkSync, existsSync } = require('fs')
 const { exec } = require('child_process')
 const util = require('util')
