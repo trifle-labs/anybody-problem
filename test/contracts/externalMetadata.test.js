@@ -52,7 +52,7 @@ describe('ExternalMetadata Tests', function () {
     } = await deployContracts({
       mock: true
     })
-    const finalArgs = [null, [], [], [], [], []]
+    const finalArgs = [null, true, [], [], [], [], []]
     let runId = 0
     for (let i = 0; i < 5; i++) {
       const level = i + 1
@@ -66,11 +66,12 @@ describe('ExternalMetadata Tests', function () {
       )
       const args = solvedReturn.args
       finalArgs[0] = runId
-      finalArgs[1].push(args[1][0])
+      finalArgs[1] = true // alsoMint
       finalArgs[2].push(args[2][0])
       finalArgs[3].push(args[3][0])
       finalArgs[4].push(args[4][0])
       finalArgs[5].push(args[5][0])
+      finalArgs[6].push(args[6][0])
     }
     const price = await anybodyProblem.price()
     const tx = await anybodyProblem.batchSolve(...finalArgs, { value: price })
@@ -112,7 +113,7 @@ describe('ExternalMetadata Tests', function () {
 
     const isSVGValid = isValidSVG(SVG)
     expect(isSVGValid).to.be.true
-    const yearMonth = json.attributes[1].value
+    const yearMonth = json.attributes[2].value
     const YYYY_MM = new Date().toISOString().slice(0, 7)
     expect(yearMonth).to.equal(YYYY_MM) //'1970-01'
 
@@ -128,5 +129,11 @@ describe('ExternalMetadata Tests', function () {
     })
 
     fs.writeFileSync('problem-test.svg', svgString)
+
+    const animation_url = json.animation_url
+    const baseURLScores = animation_url.split('-').pop()
+    const scores = Buffer.from(baseURLScores, 'base64').toString('utf-8')
+    const scoresAsJson = JSON.parse(scores)
+    expect(scoresAsJson.levels.length).to.equal(5)
   })
 })

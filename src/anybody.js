@@ -130,7 +130,7 @@ export class Anybody extends EventEmitter {
       skip0: false,
       bodyData: null,
       todaysRecords: {},
-      debug: false,
+      // debug: false,
       // Add default properties and their initial values here
       startingBodies: 1,
       windowWidth: 1000,
@@ -335,7 +335,10 @@ export class Anybody extends EventEmitter {
 
   addListeners() {
     this.p.mouseMoved = this.handleMouseMove
-    this.p.touchStarted = this.handleGameClick
+    this.p.touchStarted = (e) => {
+      this.hasTouched = true
+      this.handleGameClick(e)
+    }
     this.p.mouseClicked = this.handleGameClick
     this.p.keyPressed = this.handleGameKeyDown
   }
@@ -384,10 +387,10 @@ export class Anybody extends EventEmitter {
       }
     }
 
-    const debugZone = { x: this.windowWidth - 100, y: this.windowHeight - 100 }
-    if (x > debugZone.x && y > debugZone.y) {
-      this.debug = !this.debug
-    }
+    // const debugZone = { x: this.windowWidth - 100, y: this.windowHeight - 100 }
+    // if (x > debugZone.x && y > debugZone.y) {
+    //   this.debug = !this.debug
+    // }
 
     if (this.paused || this.gameOver) return
     this.missileClick(x, y)
@@ -411,9 +414,7 @@ export class Anybody extends EventEmitter {
         }
         break
       case 'KeyR':
-        if (!this.gameOver || !this.won) {
-          this.restart(null, false)
-        }
+        this.restart(null, false)
         break
       case 'KeyP':
         if (!this.gameOver) this.setPause()
@@ -425,7 +426,7 @@ export class Anybody extends EventEmitter {
     if (this.handledGameOver) return
     this.handledGameOver = true
     this.gameoverTickerX = 0
-    this.sound?.playGameOver({ won })
+    // this.sound?.playGameOver({ won }) // TDDO: improve audio
     this.gameOver = true
     this.won = won
     if (this.level !== 0 && !this.won) {
@@ -450,18 +451,15 @@ export class Anybody extends EventEmitter {
     }
     this.P5_FPS *= 2
     this.p.frameRate(this.P5_FPS)
-    var dust = 0
     var timeTook = 0
 
     const stats = this.calculateStats()
-    dust = stats.dust
     timeTook = stats.timeTook
     this.framesTook = stats.framesTook
     this.emit('done', {
       level: this.level,
       won,
       ticks: this.frames - this.startingFrame,
-      dust,
       timeTook,
       framesTook: this.framesTook
     })
@@ -761,6 +759,7 @@ export class Anybody extends EventEmitter {
   }
 
   genRadius(index, level = this.level) {
+    // const radii = [36n, 27n, 23n, 19n, 15n, 11n] // n * 4 + 2 TODO: switch to this on next deployment
     const radii = [36n, 27n, 22n, 17n, 12n, 7n] // n * 5 + 2
     let size = level == 0 ? 27n : radii[index % radii.length]
     return parseInt(size * BigInt(this.scalingFactor))
@@ -914,10 +913,7 @@ export class Anybody extends EventEmitter {
 
   missileClick(x, y) {
     if (this.gameOver) return
-    if (this.paused) {
-      this.setPause(false)
-      return
-    }
+    if (this.paused) return
     if (
       this.bodies.reduce((a, c) => a + c.radius, 0) == 0 ||
       this.frames - this.startingFrame >= this.timer
@@ -967,39 +963,10 @@ export class Anybody extends EventEmitter {
   }
 
   calculateStats = () => {
-    // n.b. this needs to match the contract in check_boost.cjs
-    const BODY_BOOST = [
-      0, // 0th body, just for easier indexing
-      0, // 1st body
-      0, // 2nd body
-      1, // 3rd body
-      2, // 4th body
-      4, // 5th body
-      8, // 6th body
-      16, // 7th body
-      32, // 8th body
-      64, //9th body
-      128 // 10th body
-    ]
-
-    const SPEED_BOOST = [
-      1, // <10s left
-      2, // <20s left
-      3, // <30s left
-      4, // <40s left
-      5, // <50s left
-      6 // < 60s left
-    ]
-
     const bodiesIncluded = this.bodies.length
-    const bodiesBoost = BODY_BOOST[bodiesIncluded]
-    const { startingFrame, timer, frames } = this
-    const secondsLeft = (startingFrame + timer - frames) / this.FPS
+    const { startingFrame, frames } = this
     const framesTook = frames - startingFrame - 1 // -1 because the first frame is the starting frame
     const timeTook = framesTook / this.FPS
-    const speedBoostIndex = Math.floor(secondsLeft / 10)
-    const speedBoost = SPEED_BOOST[speedBoostIndex]
-    let dust = /*bodiesIncluded **/ bodiesBoost * speedBoost
 
     const missilesShot = this.missileInits.reduce(
       (p, c) => (c[0] == 0 ? p : p + 1),
@@ -1009,9 +976,6 @@ export class Anybody extends EventEmitter {
     return {
       missilesShot,
       bodiesIncluded,
-      bodiesBoost,
-      speedBoost,
-      dust,
       timeTook,
       framesTook
     }
