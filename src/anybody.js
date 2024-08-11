@@ -488,8 +488,7 @@ export class Anybody extends EventEmitter {
     this.init()
     this.draw()
     if (beginPaused) {
-        console.log('setPause called in restart: (after NEXT click) ')
-        this.setPause(true) // should be true, true ?
+        this.setPause(true)
     }
     this.addCSS()
   }

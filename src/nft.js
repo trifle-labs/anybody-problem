@@ -7,7 +7,7 @@ window.anybody
 
 q5.setup = () => {
   const options = {
-    level: 5
+    level: 0
   }
   if (day && day !== '') {
     options.day = parseInt(day)

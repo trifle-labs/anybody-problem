@@ -187,7 +187,7 @@ export default class Sound {
     // prepare playback
     this.prepareForPlayback()
 
-    // first stop current player
+    // reset audio player
     this.stop()
 
     // speed up the voices
@@ -202,12 +202,10 @@ export default class Sound {
       0.5
     )
 
-    // this.loop?.stop()
-    // this.loop?.cancel()
+    // restart
     this.loop?.start()
-
-    // play the transport
-    Tone.getTransport().start()
+    this.player.start()
+    Tone.getTransport().start("+0", 0);
 
     if (this.anybody.sfx === 'space') {
       this.playOneShot(affirmative, -22, { playbackRate: 1 })
@@ -247,7 +245,8 @@ export default class Sound {
   stop() {
     Tone.getTransport().cancel()
     Tone.getTransport().stop()
-    this.loop.stop()
+    this.loop?.cancel()
+    this.loop?.stop()
     this.loop?.dispose()
     this.player.stop()
   }
@@ -256,10 +255,8 @@ export default class Sound {
     // prepare playback
     this.prepareForPlayback()
 
-    // if song is different from last one, restart player
-    if (this.currentSong && this.currentSong !== song) {
-      this.stop()
-    }
+    // reset audio player
+    this.stop()
 
     // set current song
     this.currentSong = song
@@ -273,12 +270,15 @@ export default class Sound {
     // load the current song
     await this.player.load(this.currentSong.audio)
 
-    // play the song in a loop
+    // start the song immediately
+    this.player.start();
+
+    // schedule the song to replay in a loop
     this.loop = new Loop((time) => {
       this.player.start(time)
     }, song.interval || '2m').start()
 
-    // play the transport
-    Tone.getTransport().start()
+    // play the transport (immeditately from the beginning)
+    Tone.getTransport().start("+0", 0);
   }
 }
