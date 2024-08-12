@@ -1,7 +1,13 @@
 {
   "contractName": "ExternalMetadata",
   "abi": [
-    { "inputs": [], "stateMutability": "nonpayable", "type": "constructor" },
+    {
+      "inputs": [
+        { "internalType": "address", "name": "themeGroup_", "type": "address" }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
     {
       "anonymous": false,
       "inputs": [
@@ -109,12 +115,12 @@
       "inputs": [
         { "internalType": "bytes32", "name": "seed", "type": "bytes32" },
         {
-          "internalType": "enum ExternalMetadata.ThemeName",
+          "internalType": "enum ThemeGroup.ThemeName",
           "name": "theme",
           "type": "uint8"
         },
         {
-          "internalType": "enum ExternalMetadata.ThemeLayer",
+          "internalType": "enum ThemeGroup.ThemeLayer",
           "name": "layer",
           "type": "uint8"
         }
@@ -151,23 +157,6 @@
       ],
       "name": "getSVG",
       "outputs": [{ "internalType": "string", "name": "", "type": "string" }],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "assetAddress",
-          "type": "address"
-        },
-        { "internalType": "string", "name": "functionName", "type": "string" }
-      ],
-      "name": "makeTuple",
-      "outputs": [
-        { "internalType": "address", "name": "", "type": "address" },
-        { "internalType": "string", "name": "", "type": "string" }
-      ],
       "stateMutability": "view",
       "type": "function"
     },
@@ -210,13 +199,6 @@
     },
     {
       "inputs": [],
-      "name": "setupColorThemes",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [],
       "name": "setupSVGPaths",
       "outputs": [],
       "stateMutability": "nonpayable",
@@ -227,6 +209,15 @@
       "name": "speedruns",
       "outputs": [
         { "internalType": "address payable", "name": "", "type": "address" }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "themeGroup",
+      "outputs": [
+        { "internalType": "contract ThemeGroup", "name": "", "type": "address" }
       ],
       "stateMutability": "view",
       "type": "function"

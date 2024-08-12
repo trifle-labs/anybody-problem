@@ -99,7 +99,6 @@ const currentDay = () =>
 
 export class Anybody extends EventEmitter {
   constructor(p, options = {}) {
-    console.log('linked')
     super()
     Object.assign(this, Visuals)
     Object.assign(this, Calculations)
@@ -763,12 +762,21 @@ export class Anybody extends EventEmitter {
   }
 
   randomRange(minBigInt, maxBigInt, seed) {
-    console.log({ minBigInt, maxBigInt, seed })
     if (minBigInt == maxBigInt) return minBigInt
     minBigInt = typeof minBigInt === 'bigint' ? minBigInt : BigInt(minBigInt)
     maxBigInt = typeof maxBigInt === 'bigint' ? maxBigInt : BigInt(maxBigInt)
     seed = typeof seed === 'bigint' ? seed : BigInt(seed)
-    return parseInt((seed % (maxBigInt - minBigInt)) + minBigInt)
+    if (minBigInt > maxBigInt) {
+      const range = 359n - (minBigInt - maxBigInt)
+      const output = seed % range
+      if (output < maxBigInt) {
+        return parseInt(output)
+      } else {
+        return parseInt(minBigInt - maxBigInt + output)
+      }
+    } else {
+      return parseInt((seed % (maxBigInt - minBigInt)) + minBigInt)
+    }
   }
 
   generateBodies() {
@@ -813,15 +821,17 @@ export class Anybody extends EventEmitter {
     const baddieLightness = this.randomRange(55, 60, baddieSeed)
 
     // hero body info
-    console.log({ bodyThemes })
     const themes = Object.keys(bodyThemes)
     const numberOfThemes = themes.length
-    let rand = utils.solidityKeccak256(['uint256'], [day])
+    const extraSeed = 19
+    // 8, 11, 14, 19
+    // good ones: 2, 8, 10, 11, 13
+    let rand = utils.solidityKeccak256(['uint256', 'uint256'], [day, extraSeed])
+    // let rand = utils.solidityKeccak256(['uint256'], [day])
     const faceOptions = 14
     const bgOptions = 10
     const fgOptions = 10
     const coreOptions = 1
-    console.log(0, faceOptions - 1, rand)
     const fIndex = this.randomRange(0, faceOptions - 1, rand)
     rand = utils.solidityKeccak256(['bytes32'], [rand])
     const bgIndex = this.randomRange(0, bgOptions - 1, rand)
@@ -837,7 +847,8 @@ export class Anybody extends EventEmitter {
     const theme = bodyThemes[themeName]
 
     rand = utils.solidityKeccak256(['bytes32'], [rand])
-    const bgHue = this.randomRange(0, 359, rand)
+    const bgHueRange = theme.bg[0] ? theme.bg[0].split('-') : [0, 359]
+    const bgHue = this.randomRange(bgHueRange[0], bgHueRange[1], rand)
     rand = utils.solidityKeccak256(['bytes32'], [rand])
     const bgSaturationRange = theme.bg[1].split('-')
     const bgSaturation = this.randomRange(
@@ -854,7 +865,8 @@ export class Anybody extends EventEmitter {
     )
 
     rand = utils.solidityKeccak256(['bytes32'], [rand])
-    const coreHue = this.randomRange(0, 359, rand)
+    const coreHueRange = theme.bg[0] ? theme.cr[0].split('-') : [0, 359]
+    const coreHue = this.randomRange(coreHueRange[0], coreHueRange[1], rand)
     rand = utils.solidityKeccak256(['bytes32'], [rand])
     const coreSaturationRange = theme.cr[1].split('-')
     const coreSaturation = this.randomRange(
@@ -871,7 +883,8 @@ export class Anybody extends EventEmitter {
     )
 
     rand = utils.solidityKeccak256(['bytes32'], [rand])
-    const fgHue = this.randomRange(0, 359, rand)
+    const fgHueRange = theme.bg[0] ? theme.fg[0].split('-') : [0, 359]
+    const fgHue = this.randomRange(fgHueRange[0], fgHueRange[1], rand)
     rand = utils.solidityKeccak256(['bytes32'], [rand])
     const fgSaturationRange = theme.fg[1].split('-')
     const fgSaturation = this.randomRange(
