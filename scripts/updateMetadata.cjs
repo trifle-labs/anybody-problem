@@ -42,9 +42,8 @@ async function main() {
     returnObject['ExternalMetadata'].address
   )
 
-  // TODO: add this back once AnybodyProblem has been redeployed
-  // await anybodyProblem.emitBatchMetadataUpdate()
-  // console.log('Batch metadata update emitted')
+  await anybodyProblem.emitBatchMetadataUpdate()
+  console.log('Batch metadata update emitted')
 
   const verificationData = [
     {

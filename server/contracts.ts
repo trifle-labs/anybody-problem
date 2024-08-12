@@ -1,4 +1,4 @@
-import AnybodyProblemABI from './contractData/ABI-12345-AnybodyProblem.json' // TODO: update
+import AnybodyProblemABI from './contractData/ABI-84532-AnybodyProblem.json'
 import AnybodyProblemBaseSepolia from './contractData/84532-AnybodyProblem.json'
 import AnybodyProblemLocal from './contractData/12345-AnybodyProblem.json'
 
@@ -10,7 +10,7 @@ export const AnybodyProblem = {
   }
 }
 
-import SpeedrunsABI from './contractData/ABI-12345-Speedruns.json' // TODO: update
+import SpeedrunsABI from './contractData/ABI-84532-Speedruns.json'
 import SpeedrunsBaseSepolia from './contractData/84532-Speedruns.json'
 import SpeedrunsLocal from './contractData/12345-Speedruns.json'
 

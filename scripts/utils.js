@@ -7,9 +7,7 @@ import { exportCallDataGroth16 } from './circuits.js'
 
 const __dirname = path.resolve()
 
-const correctPrice = ethers.utils.parseEther('0.01')
-// TODO: change this to the splitter address
-// const splitterAddress = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266'
+const correctPrice = ethers.utils.parseEther('0.0025')
 
 const proverTickIndex = {
   2: 250,
@@ -422,8 +420,11 @@ const solveLevel = async (
   // 27—31: missile input (5 + 2 * bodyCount * 5 + 2)
 
   const time = dataResult.Input[5 + bodyCount * 5]
-
-  const price = await anybodyProblem.price()
+  const mintingFee = await anybodyProblem.priceToSave()
+  const discount = await anybodyProblem.discount()
+  const price = (await anybodyProblem.priceToMint())
+    .div(discount)
+    .add(mintingFee)
 
   const tickCounts = [ticksRun]
   const a = [dataResult.a]
@@ -431,7 +432,7 @@ const solveLevel = async (
   const c = [dataResult.c]
   const Input = [dataResult.Input]
   const alsoMint = true
-  const args = [runId, alsoMint, tickCounts, a, b, c, Input]
+  const args = [runId, alsoMint, 0, tickCounts, a, b, c, Input]
 
   if (runId == 0) {
     runId = 1
@@ -444,12 +445,13 @@ const solveLevel = async (
     if (level == 5) {
       await expect(
         anybodyProblem.batchSolve(...args, {
-          value: price.div(2).sub(1)
+          value: price.sub(1)
         })
       ).to.be.revertedWith('Incorrect payment')
     }
+    const value = level == 5 ? price : 0
     tx3 = await anybodyProblem.batchSolve(...args, {
-      value: level == 5 ? price : 0
+      value
     })
     await expect(tx3)
       .to.emit(anybodyProblem, 'LevelSolved')
@@ -662,6 +664,7 @@ const generateAndSubmitProof = async (
   const tx = await anybodyProblem.batchSolve(
     problemId,
     alsoMint,
+    0,
     proofLengths,
     a,
     b,

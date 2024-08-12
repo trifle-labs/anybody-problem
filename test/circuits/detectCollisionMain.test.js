@@ -13,14 +13,14 @@ describe('detectCollisionMain circuit', () => {
       ['363000', '658000', '75000'],
       ['679000', '500000', '50000']
     ],
-    missile: ['226000', '42000', '100000']
+    missile: ['26000', '22000', '100000']
   }
   const jsSampleInput = JSON.parse(JSON.stringify(sampleInput))
   // make velocity 0 for all bodies and missiles for sake of test
   jsSampleInput.bodies[0].splice(2, 0, '20000', '20000')
   jsSampleInput.bodies[1].splice(2, 0, '20000', '20000')
   jsSampleInput.bodies[2].splice(2, 0, '20000', '20000')
-  jsSampleInput.missile.splice(2, 0, '30000', '30000')
+  jsSampleInput.missile.splice(2, 0, '0', '0')
 
   const sanityCheck = true
 

@@ -4,7 +4,6 @@ const ethers = hre.ethers
 
 import {
   deployContracts
-  // correctPrice
   // getParsedEventLogs,
   // mintProblem
 } from '../../scripts/utils.js'

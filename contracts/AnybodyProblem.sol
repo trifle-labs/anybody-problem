@@ -147,6 +147,9 @@ contract AnybodyProblem is Ownable, ERC2981 {
         uint[2][] memory c,
         uint[][] memory input
     ) public payable {
+        if (day == 0) {
+            day = currentDay();
+        }
         require(!paused, 'Contract is paused');
         // uint256 day = currentDay(); // TODO: this version does not enforce day for solving, just for minting NFT
         if (runId == 0) {
@@ -252,8 +255,7 @@ contract AnybodyProblem is Ownable, ERC2981 {
     }
 
     function genRadius(uint256 index) public pure returns (uint256) {
-        // uint8[6] memory radii = [36, 27, 23, 19, 15, 11]; // n * 4 + 2 TODO: swtich to x4 on next deployment
-        uint8[6] memory radii = [36, 27, 22, 17, 12, 7]; // n * 5 + 2
+        uint8[6] memory radii = [36, 27, 23, 19, 15, 11]; // n * 4 + 2
         return radii[index % radii.length] * scalingFactor;
     }
 
@@ -451,13 +453,12 @@ contract AnybodyProblem is Ownable, ERC2981 {
 
     function mint(uint256 payment, uint256 day) internal {
         require(day == currentDay(), 'Can only mint on the current day');
-        require(payment == priceToMint, 'Incorrect price');
         makePayment(payment);
         Speedruns(speedruns).__mint(msg.sender, day, 1, '');
     }
 
     function mint() public payable {
-        mint(msg.value, currentDay());
+        mint(priceToMint, currentDay());
     }
 
     function addToLeaderboard(uint256 runId) internal {

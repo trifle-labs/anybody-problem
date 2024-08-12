@@ -243,6 +243,8 @@
     {
       "inputs": [
         { "internalType": "uint256", "name": "runId", "type": "uint256" },
+        { "internalType": "bool", "name": "alsoMint", "type": "bool" },
+        { "internalType": "uint256", "name": "day", "type": "uint256" },
         {
           "internalType": "uint256[]",
           "name": "tickCounts",
@@ -397,6 +399,20 @@
       "name": "currentWeek",
       "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
       "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "discount",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "emitBatchMetadataUpdate",
+      "outputs": [],
+      "stateMutability": "nonpayable",
       "type": "function"
     },
     {
@@ -665,6 +681,13 @@
       "type": "function"
     },
     {
+      "inputs": [],
+      "name": "mint",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
       "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
       "name": "mostGames",
       "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
@@ -687,7 +710,14 @@
     },
     {
       "inputs": [],
-      "name": "price",
+      "name": "priceToMint",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "priceToSave",
       "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
       "stateMutability": "view",
       "type": "function"
@@ -840,6 +870,15 @@
     },
     {
       "inputs": [
+        { "internalType": "uint256", "name": "discount_", "type": "uint256" }
+      ],
+      "name": "updateDiscount",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
         {
           "internalType": "address",
           "name": "externalMetadata_",
@@ -860,9 +899,18 @@
     },
     {
       "inputs": [
-        { "internalType": "uint256", "name": "price_", "type": "uint256" }
+        { "internalType": "uint256", "name": "priceToMint_", "type": "uint256" }
       ],
-      "name": "updatePrice",
+      "name": "updatePriceToMint",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "priceToSave_", "type": "uint256" }
+      ],
+      "name": "updatePriceToSave",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"

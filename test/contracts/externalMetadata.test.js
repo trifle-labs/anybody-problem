@@ -52,7 +52,7 @@ describe('ExternalMetadata Tests', function () {
     } = await deployContracts({
       mock: true
     })
-    const finalArgs = [null, true, [], [], [], [], []]
+    const finalArgs = [null, true, 0, [], [], [], [], []]
     let runId = 0
     for (let i = 0; i < 5; i++) {
       const level = i + 1
@@ -67,13 +67,14 @@ describe('ExternalMetadata Tests', function () {
       const args = solvedReturn.args
       finalArgs[0] = runId
       finalArgs[1] = true // alsoMint
-      finalArgs[2].push(args[2][0])
+      finalArgs[2] = 0 // day
       finalArgs[3].push(args[3][0])
       finalArgs[4].push(args[4][0])
       finalArgs[5].push(args[5][0])
       finalArgs[6].push(args[6][0])
+      finalArgs[7].push(args[7][0])
     }
-    const price = await anybodyProblem.price()
+    const price = await anybodyProblem.priceToMint()
     const tx = await anybodyProblem.batchSolve(...finalArgs, { value: price })
     const receipt = await tx.wait()
     const events = getParsedEventLogs(receipt, anybodyProblem, 'RunCreated')
