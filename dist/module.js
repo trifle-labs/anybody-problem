@@ -1591,41 +1591,41 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
             text: "PLAY",
             onClick: ()=>{
                 if (this.popup !== null) return;
-                if (!this.playerName) {
-                    // open connect wallet popup
-                    this.popup = {
-                        header: "Play Onchain",
-                        body: [
-                            "Free to play!  ...or practice!",
-                            "Connect a wallet to validate your wins."
-                        ],
-                        buttons: [
-                            {
-                                text: "PRACTICE",
-                                fg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).violet_50,
-                                bg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).violet_25,
-                                stroke: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).violet_50,
-                                onClick: ()=>{
-                                    // start practice mode
-                                    this.popup = null;
-                                    this.sound?.playStart();
-                                    this.setPause(false);
-                                    this.practiceMode = true;
-                                }
-                            },
-                            {
-                                text: "CONNECT",
-                                fg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).violet_25,
-                                bg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).violet_50,
-                                stroke: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).violet_50,
-                                onClick: ()=>{
-                                    this.emit("connect-wallet");
-                                }
-                            }
-                        ]
-                    };
-                    return;
-                }
+                // if (!this.playerName) {
+                //   // open connect wallet popup
+                //   this.popup = {
+                //     header: 'Play Onchain',
+                //     body: [
+                //       'Free to play!  ...or practice!',
+                //       'Connect a wallet to validate your wins.'
+                //     ],
+                //     buttons: [
+                //       {
+                //         text: 'PRACTICE',
+                //         fg: THEME.violet_50,
+                //         bg: THEME.violet_25,
+                //         stroke: THEME.violet_50,
+                //         onClick: () => {
+                //           // start practice mode
+                //           this.popup = null
+                //           this.sound?.playStart()
+                //           this.setPause(false)
+                //           this.practiceMode = true
+                //         }
+                //       },
+                //       {
+                //         text: 'CONNECT',
+                //         fg: THEME.violet_25,
+                //         bg: THEME.violet_50,
+                //         stroke: THEME.violet_50,
+                //         onClick: () => {
+                //           this.emit('connect-wallet')
+                //         }
+                //       }
+                //     ]
+                //   }
+                //   return
+                // }
                 // start play
                 this.sound?.playStart();
                 this.setPause(false);
