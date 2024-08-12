@@ -890,6 +890,9 @@ export const Visuals = {
         this.level++
         this.restart(null, false)
       } else {
+        if (this.sound?.playbackRate !== 'normal') {
+          this.sound?.setPlaybackRate('normal')
+        }
         this.drawStatsScreen()
       }
     }

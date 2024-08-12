@@ -59,6 +59,7 @@ export default class Sound {
     this.createPlayer()
     window.addEventListener('keydown', this.handleKeyDown)
     this.setSong()
+    this.playbackRate = 'normal'
   }
 
   async prepareForPlayback() {
@@ -120,13 +121,14 @@ export default class Sound {
     this.missilePanner.pan.value = -PAN_RANGE / 2
     let player
     if (this.anybody.sfx === 'space') {
+      console.log({ vectorMagnitude })
       const playbackRate =
         vectorMagnitude < 666_666 ? 3 : vectorMagnitude < 1_333_332 ? 2 : 1
-      player = await this.playOneShot(bottlerocket2, -24, {
+      player = await this.playOneShot(bottlerocket2, -34, {
         playbackRate
       })
     } else {
-      player = await this.playOneShot(bubble, -26, {
+      player = await this.playOneShot(bubble, -36, {
         playbackRate: random([1, 0.9, 1.3])
       })
     }
@@ -184,30 +186,33 @@ export default class Sound {
     }
   }
 
+  // TODO: this explodes whenever you reset quickly
   async setPlaybackRate(speed = 'normal') {
-    // prepare playback
-    this.prepareForPlayback()
+    this.playbackRate = speed
+    return
+    // // prepare playback
+    // this.prepareForPlayback()
 
-    // reset audio player
-    this.stop()
+    // // reset audio player
+    // this.stop()
 
-    // speed up the voices
-    const playbackRate =
-      speed == 'normal' ? 1 : this.currentSong?.gameoverSpeed || 2
+    // // speed up the voices
+    // const playbackRate =
+    //   speed == 'normal' ? 1 : this.currentSong?.gameoverSpeed || 2
 
-    // set new gameover playback rate
-    this.player.playbackRate = playbackRate
+    // // set new gameover playback rate
+    // this.player.playbackRate = playbackRate
 
-    // speed up the BPM w ramp
-    Tone.getTransport().bpm.rampTo(
-      (Tone.getTransport().bpm.value *= playbackRate),
-      0.5
-    )
+    // // speed up the BPM w ramp
+    // Tone.getTransport().bpm.rampTo(
+    //   (Tone.getTransport().bpm.value *= playbackRate),
+    //   0.5
+    // )
 
-    // restart
-    this.loop?.start()
-    this.player.start()
-    Tone.getTransport().start('+0', 0)
+    // // restart
+    // this.loop?.start()
+    // this.player.start()
+    // Tone.getTransport().start('+0', 0)
   }
 
   async playGameOver({ win }) {

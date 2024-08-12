@@ -439,7 +439,9 @@ export class Anybody extends EventEmitter {
     if (this.handledGameOver) return
     this.handledGameOver = true
     this.gameoverTickerX = 0
-    this.sound?.playGameOver({ won }) // TDDO: improve audio
+    if (this.level !== 0) {
+      this.sound?.playGameOver({ won }) // TDDO: improve audio
+    }
     this.gameOver = true
     this.won = won
     if (this.level !== 0 && !this.won) {
@@ -487,11 +489,14 @@ export class Anybody extends EventEmitter {
       this.setOptions(options)
     }
     this.clearValues()
-    if (this.level !== this.lastLevel && this.level !== 1) {
+    if (this.level !== this.lastLevel && this.level !== 1 && this.level !== 0) {
       this.sound?.stop()
       this.sound?.playStart()
       this.sound?.setSong()
       this.sound?.resume()
+    }
+    if (this.sound?.playbackRate !== 'normal') {
+      this.sound?.setPlaybackRate('normal')
     }
     this.init()
     this.draw()
@@ -526,12 +531,13 @@ export class Anybody extends EventEmitter {
 
     this.emit('paused', newPauseState)
     if (newPauseState) {
-      if (!mute) this.sound?.pause()
+      if (!mute) {
+        this.sound?.pause()
+      }
     } else {
-      console.log('resume called')
-      console.log('mute:' + mute)
-      console.log('this.sound:' + this.sound)
-      if (!mute) this.sound?.resume()
+      if (!mute) {
+        this.sound?.resume()
+      }
     }
   }
 
