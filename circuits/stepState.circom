@@ -3,9 +3,9 @@ pragma circom 2.1.1;
 include "forceAccumulator.circom";
 include "calculateMissile.circom";
 include "detectCollision.circom";
-include "../node_modules/circomlib/circuits/mux1.circom";
-include "../node_modules/circomlib/circuits/comparators.circom";
-include "../node_modules/circomlib/circuits/gates.circom";
+include "mux1.circom";
+include "comparators.circom";
+include "gates.circom";
 
 template StepState(totalBodies, steps) {
   signal input address;
@@ -55,21 +55,6 @@ template StepState(totalBodies, steps) {
 
   signal preventReplay <== address * address;
 
-
-  // ensure missiles are not faster than limit of 15
-  // var time = 2;
-  // var maxMissileVector = time * 15; // maxBits: 5
-  // var maxMissileVectorScaled = maxVector * scalingFactor; // maxBits: 15 (maxNum: 30_000)
-  // var missileLimit = 42426; // 30_000√2 ~= 42,426.4068711929
-  // // vx is always positive
-  // // vy is always negative
-  // // the sum of the absolute values of vx and vy must be less than missileLimit
-  // // according to the triangle inequality threorem that limits the magnitude of the vector
-  // signal mustBeLessThanMissileLimit <== inflightMissile[2] + (inflightMissile[3] - inflightMissile[3] - inflightMissile[3]);
-  // component lessThanMissileLimit = LessEqThan(15);
-  // lessThanMissileLimit.in[0] <== mustBeLessThanMissileLimit;
-  // lessThanMissileLimit.in[1] <== missileLimit + maxMissileVectorScaled + maxMissileVectorScaled;
-  // lessThanMissileLimit.out === 1;
 
   signal output out_bodies[totalBodies][5];
   var time_tmp = 0;

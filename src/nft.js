@@ -2,12 +2,22 @@ import Q5 from './q5.min.js'
 import { Anybody } from './anybody.js'
 
 const q5 = new Q5()
-const day = window.location.hash.slice(1)
+const hash = window.location.hash.slice(1)
+const day = hash.split('-')[0]
+let todaysRecords
+try {
+  const baseURLScores = hash.split('-')[1]
+  const scores = Buffer.from(baseURLScores, 'base64').toString('utf-8')
+  todaysRecords = JSON.parse(scores)
+} catch (error) {
+  console.log(`parsing hash failed`, { hash, error })
+}
 window.anybody
 
 q5.setup = () => {
   const options = {
-    level: 0
+    level: 0,
+    todaysRecords
   }
   if (day && day !== '') {
     options.day = parseInt(day)

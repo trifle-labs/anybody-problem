@@ -63,7 +63,7 @@ const config = {
     baseSepolia: {
       // network ID: 84532
       // url: 'https://sepolia.base.org',
-      url: 'https://public.stackup.sh/api/v1/node/base-sepolia',
+      url: process.env.baseSepoliaRPC,
       accounts: { mnemonic: process.env.deploymentKey },
       gas: 5_000_000,
       gasPrice: 100_000_000 // 0.1 GWEI
@@ -73,8 +73,8 @@ const config = {
       // url: 'https://sepolia.rpc.grove.city/v1/' + process.env.grove,
       url: 'https://ethereum-sepolia.blockpi.network/v1/rpc/public',
       accounts: { mnemonic: process.env.deploymentKey },
-      gasPrice: 100_000_000_000 // 100 GWEI
-      // gas: 12_000_000
+      gasPrice: 15_000_000_000, // 10 GWEI
+      gas: 10_000_000
     },
     garnet: {
       url: 'https://rpc.garnetchain.com',
@@ -96,6 +96,7 @@ const config = {
   etherscan: {
     apiKey: {
       mainnet: process.env.etherscanApiNew,
+      sepolia: process.env.etherscanApiNew,
       baseSepolia: process.env.etherscanApiBase
     },
 

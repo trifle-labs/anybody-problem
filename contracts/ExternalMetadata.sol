@@ -6,6 +6,7 @@ import 'base64-sol/base64.sol';
 import './AnybodyProblem.sol';
 import './BokkyPooBahsDateTimeLibrary.sol';
 import './StringsExtended.sol';
+import './ThemeGroupBlues.sol';
 
 /// @title ExternalMetadata
 /// @notice
@@ -16,47 +17,24 @@ contract ExternalMetadata is Ownable {
     using BokkyPooBahsDateTimeLibrary for uint;
     address payable public anybodyProblem;
     address payable public speedruns;
+    ThemeGroup public themeGroup;
     address public assets1;
     address public assets2;
     address public assets3;
     address public assets4;
     address public assets5;
 
-    enum ThemeName {
-        SaturatedExcludeDarks,
-        PastelHighlighterMarker,
-        MarkerPastelHighlighter,
-        ShadowHighlighterMarker,
-        Berlin
-    }
-
-    enum ThemeLayer {
-        BG,
-        Core,
-        FG,
-        Face
-    }
-
-    struct ThemeSpecs {
-        uint256 hueStart;
-        uint256 hueEnd;
-        uint256 saturationStart;
-        uint256 saturationEnd;
-        uint256 lightnessStart;
-        uint256 lightnessEnd;
-    }
-
     struct AssetData {
         address assetAddress;
         string functionName;
     }
 
-    mapping(ThemeLayer => uint256) private svgShapeCategorySizes;
-    mapping(ThemeLayer => AssetData[]) private svgShapes;
-    mapping(ThemeName => mapping(ThemeLayer => ThemeSpecs))
-        private colourThemes;
+    mapping(ThemeGroup.ThemeLayer => uint256) private svgShapeCategorySizes;
+    mapping(ThemeGroup.ThemeLayer => AssetData[]) private svgShapes;
 
-    constructor() {}
+    constructor(address themeGroup_) {
+        themeGroup = ThemeGroup(themeGroup_);
+    }
 
     function setAssets(address[5] memory assets) public onlyOwner {
         assets1 = assets[0];
@@ -77,26 +55,16 @@ contract ExternalMetadata is Ownable {
         return abi.decode(data, (string));
     }
 
-    function makeTuple(
-        address assetAddress,
-        string memory functionName
-    ) public view returns (address, string memory) {
-        return (
-            assetAddress,
-            readValueFromContract(assetAddress, functionName)
-        );
-    }
-
     function setupSVGPaths() public onlyOwner {
-        AssetData[] storage faceShapes = svgShapes[ThemeLayer.Face];
-        AssetData[] storage coreShapes = svgShapes[ThemeLayer.Core];
-        AssetData[] storage bgShapes = svgShapes[ThemeLayer.BG];
-        AssetData[] storage fgShapes = svgShapes[ThemeLayer.FG];
+        AssetData[] storage faceShapes = svgShapes[ThemeGroup.ThemeLayer.Face];
+        AssetData[] storage coreShapes = svgShapes[ThemeGroup.ThemeLayer.Core];
+        AssetData[] storage bgShapes = svgShapes[ThemeGroup.ThemeLayer.BG];
+        AssetData[] storage fgShapes = svgShapes[ThemeGroup.ThemeLayer.FG];
 
-        svgShapeCategorySizes[ThemeLayer.Face] = 14;
-        svgShapeCategorySizes[ThemeLayer.BG] = 10;
-        svgShapeCategorySizes[ThemeLayer.FG] = 10;
-        svgShapeCategorySizes[ThemeLayer.Core] = 1;
+        svgShapeCategorySizes[ThemeGroup.ThemeLayer.Face] = 14;
+        svgShapeCategorySizes[ThemeGroup.ThemeLayer.BG] = 10;
+        svgShapeCategorySizes[ThemeGroup.ThemeLayer.FG] = 10;
+        svgShapeCategorySizes[ThemeGroup.ThemeLayer.Core] = 1;
 
         faceShapes.push(
             AssetData({assetAddress: assets5, functionName: 'FACE_SHAPE_1()'})
@@ -205,159 +173,6 @@ contract ExternalMetadata is Ownable {
         );
     }
 
-    function setupColorThemes() public onlyOwner {
-        ThemeSpecs memory satXDark = ThemeSpecs({
-            hueStart: 0,
-            hueEnd: 359,
-            saturationStart: 80,
-            saturationEnd: 100,
-            lightnessStart: 32,
-            lightnessEnd: 100
-        });
-
-        //SaturatedExcludeDarks
-
-        colourThemes[ThemeName.SaturatedExcludeDarks][ThemeLayer.BG] = satXDark;
-        colourThemes[ThemeName.SaturatedExcludeDarks][
-            ThemeLayer.Core
-        ] = satXDark;
-        colourThemes[ThemeName.SaturatedExcludeDarks][ThemeLayer.FG] = satXDark;
-
-        //PastelHighlighterMarker
-
-        colourThemes[ThemeName.PastelHighlighterMarker][
-            ThemeLayer.BG
-        ] = satXDark;
-        colourThemes[ThemeName.PastelHighlighterMarker][ThemeLayer.BG]
-            .saturationStart = 80;
-        colourThemes[ThemeName.PastelHighlighterMarker][ThemeLayer.BG]
-            .saturationEnd = 100;
-        colourThemes[ThemeName.PastelHighlighterMarker][ThemeLayer.BG]
-            .lightnessStart = 85;
-        colourThemes[ThemeName.PastelHighlighterMarker][ThemeLayer.BG]
-            .lightnessEnd = 95;
-
-        colourThemes[ThemeName.PastelHighlighterMarker][
-            ThemeLayer.Core
-        ] = satXDark;
-        colourThemes[ThemeName.PastelHighlighterMarker][ThemeLayer.Core]
-            .saturationStart = 100;
-        colourThemes[ThemeName.PastelHighlighterMarker][ThemeLayer.Core]
-            .saturationEnd = 100;
-        colourThemes[ThemeName.PastelHighlighterMarker][ThemeLayer.Core]
-            .lightnessStart = 55;
-        colourThemes[ThemeName.PastelHighlighterMarker][ThemeLayer.Core]
-            .lightnessEnd = 60;
-
-        colourThemes[ThemeName.PastelHighlighterMarker][
-            ThemeLayer.FG
-        ] = satXDark;
-        colourThemes[ThemeName.PastelHighlighterMarker][ThemeLayer.FG]
-            .saturationStart = 70;
-        colourThemes[ThemeName.PastelHighlighterMarker][ThemeLayer.FG]
-            .saturationEnd = 90;
-        colourThemes[ThemeName.PastelHighlighterMarker][ThemeLayer.FG]
-            .lightnessStart = 67;
-        colourThemes[ThemeName.PastelHighlighterMarker][ThemeLayer.FG]
-            .lightnessEnd = 67;
-
-        //MarkerPastelHighlighter
-
-        colourThemes[ThemeName.MarkerPastelHighlighter][
-            ThemeLayer.BG
-        ] = satXDark;
-        colourThemes[ThemeName.MarkerPastelHighlighter][ThemeLayer.BG]
-            .saturationStart = 100;
-        colourThemes[ThemeName.MarkerPastelHighlighter][ThemeLayer.BG]
-            .saturationEnd = 100;
-        colourThemes[ThemeName.MarkerPastelHighlighter][ThemeLayer.BG]
-            .lightnessStart = 60;
-        colourThemes[ThemeName.MarkerPastelHighlighter][ThemeLayer.BG]
-            .lightnessEnd = 60;
-
-        colourThemes[ThemeName.MarkerPastelHighlighter][
-            ThemeLayer.Core
-        ] = satXDark;
-        colourThemes[ThemeName.MarkerPastelHighlighter][ThemeLayer.Core]
-            .saturationStart = 100;
-        colourThemes[ThemeName.MarkerPastelHighlighter][ThemeLayer.Core]
-            .saturationEnd = 100;
-        colourThemes[ThemeName.MarkerPastelHighlighter][ThemeLayer.Core]
-            .lightnessStart = 90;
-        colourThemes[ThemeName.MarkerPastelHighlighter][ThemeLayer.Core]
-            .lightnessEnd = 95;
-
-        colourThemes[ThemeName.MarkerPastelHighlighter][
-            ThemeLayer.FG
-        ] = satXDark;
-        colourThemes[ThemeName.MarkerPastelHighlighter][ThemeLayer.FG]
-            .saturationStart = 100;
-        colourThemes[ThemeName.MarkerPastelHighlighter][ThemeLayer.FG]
-            .saturationEnd = 100;
-        colourThemes[ThemeName.MarkerPastelHighlighter][ThemeLayer.FG]
-            .lightnessStart = 55;
-        colourThemes[ThemeName.MarkerPastelHighlighter][ThemeLayer.FG]
-            .lightnessEnd = 60;
-
-        //ShadowHighlighterMarker
-
-        colourThemes[ThemeName.ShadowHighlighterMarker][
-            ThemeLayer.BG
-        ] = satXDark;
-        colourThemes[ThemeName.ShadowHighlighterMarker][ThemeLayer.BG]
-            .saturationStart = 80;
-        colourThemes[ThemeName.ShadowHighlighterMarker][ThemeLayer.BG]
-            .saturationEnd = 100;
-        colourThemes[ThemeName.ShadowHighlighterMarker][ThemeLayer.BG]
-            .lightnessStart = 32;
-        colourThemes[ThemeName.ShadowHighlighterMarker][ThemeLayer.BG]
-            .lightnessEnd = 32;
-
-        colourThemes[ThemeName.ShadowHighlighterMarker][
-            ThemeLayer.Core
-        ] = satXDark;
-        colourThemes[ThemeName.ShadowHighlighterMarker][ThemeLayer.Core]
-            .saturationStart = 100;
-        colourThemes[ThemeName.ShadowHighlighterMarker][ThemeLayer.Core]
-            .saturationEnd = 100;
-        colourThemes[ThemeName.ShadowHighlighterMarker][ThemeLayer.Core]
-            .lightnessStart = 55;
-        colourThemes[ThemeName.ShadowHighlighterMarker][ThemeLayer.Core]
-            .lightnessEnd = 60;
-
-        colourThemes[ThemeName.ShadowHighlighterMarker][
-            ThemeLayer.FG
-        ] = satXDark;
-        colourThemes[ThemeName.ShadowHighlighterMarker][ThemeLayer.FG]
-            .saturationStart = 70;
-        colourThemes[ThemeName.ShadowHighlighterMarker][ThemeLayer.FG]
-            .saturationEnd = 90;
-        colourThemes[ThemeName.ShadowHighlighterMarker][ThemeLayer.FG]
-            .lightnessStart = 67;
-        colourThemes[ThemeName.ShadowHighlighterMarker][ThemeLayer.FG]
-            .lightnessEnd = 67;
-
-        //ShadowHighlighterMarker
-
-        colourThemes[ThemeName.Berlin][ThemeLayer.BG] = satXDark;
-        colourThemes[ThemeName.Berlin][ThemeLayer.BG].saturationStart = 100;
-        colourThemes[ThemeName.Berlin][ThemeLayer.BG].saturationEnd = 100;
-        colourThemes[ThemeName.Berlin][ThemeLayer.BG].lightnessStart = 32;
-        colourThemes[ThemeName.Berlin][ThemeLayer.BG].lightnessEnd = 32;
-
-        colourThemes[ThemeName.Berlin][ThemeLayer.Core] = satXDark;
-        colourThemes[ThemeName.Berlin][ThemeLayer.Core].saturationStart = 100;
-        colourThemes[ThemeName.Berlin][ThemeLayer.Core].saturationEnd = 100;
-        colourThemes[ThemeName.Berlin][ThemeLayer.Core].lightnessStart = 45;
-        colourThemes[ThemeName.Berlin][ThemeLayer.Core].lightnessEnd = 45;
-
-        colourThemes[ThemeName.Berlin][ThemeLayer.FG] = satXDark;
-        colourThemes[ThemeName.Berlin][ThemeLayer.FG].saturationStart = 100;
-        colourThemes[ThemeName.Berlin][ThemeLayer.FG].saturationEnd = 100;
-        colourThemes[ThemeName.Berlin][ThemeLayer.FG].lightnessStart = 36;
-        colourThemes[ThemeName.Berlin][ThemeLayer.FG].lightnessEnd = 36;
-    }
-
     /// @dev generates the problemMetadata
     /// @param date the date
     function getMetadata(uint256 date) public view returns (string memory) {
@@ -382,6 +197,7 @@ contract ExternalMetadata is Ownable {
                             '"external_url": "https://anybody.trifle.life",',
                             '"animation_url": "https://anybody-nft.netlify.app/#',
                             StringsExtended.toString(date),
+                            getBestTimeEncoded(date),
                             '",',
                             '"attributes": ',
                             getAttributes(date),
@@ -390,6 +206,35 @@ contract ExternalMetadata is Ownable {
                     )
                 )
             );
+    }
+
+    function getBestTimeEncoded(
+        uint256 date
+    ) public view returns (string memory) {
+        uint256 bestRunId = AnybodyProblem(anybodyProblem).fastestByDay(
+            date,
+            0
+        );
+
+        AnybodyProblem.Level[] memory levels = AnybodyProblem(anybodyProblem)
+            .getLevelsData(bestRunId);
+
+        string memory encoded = '{"levels":[';
+
+        for (uint256 i = 0; i < levels.length; i++) {
+            AnybodyProblem.Level memory level = levels[i];
+            encoded = string(
+                abi.encodePacked(
+                    encoded,
+                    '{"events": [{"time":',
+                    StringsExtended.toString(level.time),
+                    '}]}',
+                    (i == levels.length - 1 ? '' : ',')
+                )
+            );
+        }
+        encoded = Base64.encode(abi.encodePacked(encoded, ']}'));
+        return string(abi.encodePacked('-', encoded));
     }
 
     function getName(uint256 date) public pure returns (string memory) {
@@ -467,13 +312,17 @@ contract ExternalMetadata is Ownable {
         uint256 date
     ) internal view returns (string memory) {
         //FACE SHAPE
-        bytes32 rand = keccak256(abi.encodePacked(date));
+        uint256 extraSeed = 19;
+
+        bytes32 rand = keccak256(abi.encodePacked(date, extraSeed));
         uint256 pathIdxFace = randomRange(
             0,
-            svgShapeCategorySizes[ThemeLayer.Face] - 1,
+            svgShapeCategorySizes[ThemeGroup.ThemeLayer.Face] - 1,
             rand
         );
-        AssetData memory pathFaceData = svgShapes[ThemeLayer.Face][pathIdxFace];
+        AssetData memory pathFaceData = svgShapes[ThemeGroup.ThemeLayer.Face][
+            pathIdxFace
+        ];
         string memory pathFace = readValueFromContract(
             pathFaceData.assetAddress,
             pathFaceData.functionName
@@ -483,10 +332,12 @@ contract ExternalMetadata is Ownable {
         rand = keccak256(abi.encodePacked(rand));
         uint256 pathIdxBG = randomRange(
             0,
-            svgShapeCategorySizes[ThemeLayer.BG] - 1,
+            svgShapeCategorySizes[ThemeGroup.ThemeLayer.BG] - 1,
             rand
         );
-        AssetData memory pathBGData = svgShapes[ThemeLayer.BG][pathIdxBG];
+        AssetData memory pathBGData = svgShapes[ThemeGroup.ThemeLayer.BG][
+            pathIdxBG
+        ];
         string memory pathBG = readValueFromContract(
             pathBGData.assetAddress,
             pathBGData.functionName
@@ -496,10 +347,12 @@ contract ExternalMetadata is Ownable {
         rand = keccak256(abi.encodePacked(rand));
         uint256 pathIdxFG = randomRange(
             0,
-            svgShapeCategorySizes[ThemeLayer.FG] - 1,
+            svgShapeCategorySizes[ThemeGroup.ThemeLayer.FG] - 1,
             rand
         );
-        AssetData memory pathFGData = svgShapes[ThemeLayer.FG][pathIdxFG];
+        AssetData memory pathFGData = svgShapes[ThemeGroup.ThemeLayer.FG][
+            pathIdxFG
+        ];
         string memory pathFG = readValueFromContract(
             pathFGData.assetAddress,
             pathFGData.functionName
@@ -509,10 +362,12 @@ contract ExternalMetadata is Ownable {
         rand = keccak256(abi.encodePacked(rand));
         uint256 pathIdxCore = randomRange(
             0,
-            svgShapeCategorySizes[ThemeLayer.Core] - 1,
+            svgShapeCategorySizes[ThemeGroup.ThemeLayer.Core] - 1,
             rand
         );
-        AssetData memory pathCoreData = svgShapes[ThemeLayer.Core][pathIdxCore];
+        AssetData memory pathCoreData = svgShapes[ThemeGroup.ThemeLayer.Core][
+            pathIdxCore
+        ];
         string memory pathCore = readValueFromContract(
             pathCoreData.assetAddress,
             pathCoreData.functionName
@@ -520,8 +375,8 @@ contract ExternalMetadata is Ownable {
 
         //DAILY COLOR THEME
         rand = keccak256(abi.encodePacked(rand));
-        uint8 themegroupsAmount = 5;
-        ThemeName currentDayTheme = ThemeName(
+        uint8 themegroupsAmount = themeGroup.themeCount();
+        ThemeGroup.ThemeName currentDayTheme = ThemeGroup.ThemeName(
             randomRange(0, themegroupsAmount - 1, rand)
         );
 
@@ -530,7 +385,7 @@ contract ExternalMetadata is Ownable {
         (colorsBGValues, rand) = getHeroBodyLayerColor(
             rand,
             currentDayTheme,
-            ThemeLayer.BG
+            ThemeGroup.ThemeLayer.BG
         );
         string memory colorsBG = string(
             abi.encodePacked(
@@ -549,7 +404,7 @@ contract ExternalMetadata is Ownable {
         (colorsCoreValues, rand) = getHeroBodyLayerColor(
             rand,
             currentDayTheme,
-            ThemeLayer.Core
+            ThemeGroup.ThemeLayer.Core
         );
         string memory colorsCore = string(
             abi.encodePacked(
@@ -568,7 +423,7 @@ contract ExternalMetadata is Ownable {
         (colorsFGValues, rand) = getHeroBodyLayerColor(
             rand,
             currentDayTheme,
-            ThemeLayer.FG
+            ThemeGroup.ThemeLayer.FG
         );
         string memory colorsFG = string(
             abi.encodePacked(
@@ -692,62 +547,60 @@ contract ExternalMetadata is Ownable {
         return path;
     }
 
+    function getFastestTime(
+        uint256 date,
+        uint256 placeIndex
+    ) public view returns (address, string memory sec) {
+        uint256 runId = AnybodyProblem(anybodyProblem).fastestByDay(
+            date,
+            placeIndex
+        );
+        (address player, , uint256 timeCompleted, , ) = AnybodyProblem(
+            anybodyProblem
+        ).runs(runId);
+
+        uint256 precision = 1000;
+        uint256 fps = 25;
+        timeCompleted = (timeCompleted * precision) / fps;
+        uint256 timeSeconds = timeCompleted / precision;
+        uint256 timeMs = (timeCompleted - timeSeconds * precision) / 10;
+
+        return (
+            player,
+            string(
+                abi.encodePacked(
+                    StringsExtended.toString(timeSeconds),
+                    '.',
+                    StringsExtended.toString(timeMs)
+                )
+            )
+        );
+    }
+
     /// @dev generates the attributes as JSON String
     function getAttributes(uint256 date) public view returns (string memory) {
         (uint year, uint month, ) = BokkyPooBahsDateTimeLibrary.timestampToDate(
             date
         );
-        uint256 fastestRunId = AnybodyProblem(anybodyProblem).fastestByDay(
+
+        (address fastestAddress, string memory fastestTime) = getFastestTime(
             date,
             0
         );
-        uint256 secondFastestRunId = AnybodyProblem(anybodyProblem)
-            .fastestByDay(date, 1);
-        uint256 thirdFastestRunId = AnybodyProblem(anybodyProblem).fastestByDay(
-            date,
-            2
-        );
-        (address fastestAddress, , uint256 fastestTime, , ) = AnybodyProblem(
-            anybodyProblem
-        ).runs(fastestRunId);
         (
             address secondFastestAddress,
-            ,
-            uint256 secondFastestTime,
-            ,
-
-        ) = AnybodyProblem(anybodyProblem).runs(secondFastestRunId);
+            string memory secondFastestTime
+        ) = getFastestTime(date, 1);
         (
             address thirdFastestAddress,
-            ,
-            uint256 thirdFastestTime,
-            ,
-
-        ) = AnybodyProblem(anybodyProblem).runs(thirdFastestRunId);
-
-        uint256 precision = 1000;
-        uint256 fps = 25;
-        fastestTime = (fastestTime * precision) / fps;
-        uint256 fastestTimeSeconds = fastestTime / precision;
-        uint256 fastestTimeMs = (fastestTime - fastestTimeSeconds * precision) /
-            10;
-
-        secondFastestTime = (secondFastestTime * precision) / fps;
-        uint256 secondFastestTimeSeconds = secondFastestTime / precision;
-        uint256 secondFastestTimeMs = (secondFastestTime -
-            secondFastestTimeSeconds *
-            precision) / 10;
-
-        thirdFastestTime = (thirdFastestTime * precision) / fps;
-        uint256 thirdFastestTimeSeconds = thirdFastestTime / precision;
-        uint256 thirdFastestTimeMs = (thirdFastestTime -
-            thirdFastestTimeSeconds *
-            precision) / 10;
+            string memory thirdFastestTime
+        ) = getFastestTime(date, 2);
 
         return
             string(
                 abi.encodePacked(
                     '[',
+                    '{"trait_type":"Galaxy","value":"BASED"},',
                     '{"trait_type":"Day","value":"',
                     StringsExtended.toString(date),
                     '"}, {"trait_type":"Year-Month","value":"',
@@ -758,21 +611,15 @@ contract ExternalMetadata is Ownable {
                     '"}, {"trait_type":"1st Place","value":"0x',
                     StringsExtended.toHexString(fastestAddress),
                     '"}, {"trait_type":"1st Place Time (s)","value":"',
-                    StringsExtended.toString(fastestTimeSeconds),
-                    '.',
-                    StringsExtended.toString(fastestTimeMs),
+                    fastestTime,
                     '"}, {"trait_type":"2nd Place","value":"0x',
                     StringsExtended.toHexString(secondFastestAddress),
                     '"}, {"trait_type":"2nd Place Time (s)","value":"',
-                    StringsExtended.toString(secondFastestTimeSeconds),
-                    '.',
-                    StringsExtended.toString(secondFastestTimeMs),
+                    secondFastestTime,
                     '"}, {"trait_type":"3rd Place","value":"0x',
                     StringsExtended.toHexString(thirdFastestAddress),
                     '"}, {"trait_type":"3rd Place Time (s)","value":"',
-                    StringsExtended.toString(thirdFastestTimeSeconds),
-                    '.',
-                    StringsExtended.toString(thirdFastestTimeMs),
+                    thirdFastestTime,
                     '"}]'
                 )
             );
@@ -780,27 +627,28 @@ contract ExternalMetadata is Ownable {
 
     function getHeroBodyLayerColor(
         bytes32 seed,
-        ThemeName theme,
-        ThemeLayer layer
+        ThemeGroup.ThemeName theme,
+        ThemeGroup.ThemeLayer layer
     ) public view returns (uint256[3] memory, bytes32) {
         bytes32 rand = keccak256(abi.encodePacked(seed));
-        uint256 hue = randomRange(
-            colourThemes[theme][layer].hueStart,
-            colourThemes[theme][layer].hueEnd,
-            rand
+        ThemeGroup.ThemeSpecs memory themeSpecs = themeGroup.getColourThemes(
+            theme,
+            layer
         );
+
+        uint256 hue = randomRange(themeSpecs.hueStart, themeSpecs.hueEnd, rand);
 
         rand = keccak256(abi.encodePacked(rand));
         uint256 sat = randomRange(
-            colourThemes[theme][layer].saturationStart,
-            colourThemes[theme][layer].saturationEnd,
+            themeSpecs.saturationStart,
+            themeSpecs.saturationEnd,
             rand
         );
 
         rand = keccak256(abi.encodePacked(rand));
         uint256 light = randomRange(
-            colourThemes[theme][layer].lightnessStart,
-            colourThemes[theme][layer].lightnessEnd,
+            themeSpecs.lightnessStart,
+            themeSpecs.lightnessEnd,
             rand
         );
 
@@ -827,13 +675,20 @@ contract ExternalMetadata is Ownable {
         uint256 max,
         bytes32 seed
     ) internal pure returns (uint256) {
-        require(min <= max, 'Min should be less than or equal to max');
         if (min == max) {
             return min;
+        } else if (min < max) {
+            uint256 range = max - min;
+            return (uint256(seed) % range) + min;
+        } else {
+            uint256 range = 359 - (min - max);
+            uint256 output = uint256(seed) % range;
+            if (output < max) {
+                return output;
+            } else {
+                return min - max + output;
+            }
         }
-        uint256 range = max - min;
-        uint256 randomValue = (uint256(seed) % range) + min;
-        return randomValue;
     }
 
     function updateAnybodyProblemAddress(

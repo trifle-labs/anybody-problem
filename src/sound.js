@@ -1,7 +1,7 @@
 import * as Tone from 'tone'
 const { Player, PanVol, Panner, Volume, Loop, start, loaded } = Tone
 
-//import whistle from 'data-url:/public/sound/tracks/whistle.mp3'
+import whistle from 'data-url:/public/sound/tracks/whistle.mp3'
 //import wii_B from 'data-url:/public/sound/tracks/wii_B.mp3'
 import orbit from 'data-url:/public/sound/tracks/orbit.mp3'
 import ipod from 'data-url:/public/sound/tracks/ipod.mp3'
@@ -28,14 +28,14 @@ function random(arr) {
 }
 
 const SONGS = {
-  // whistle: {
-  //   bpm: 70,
-  //   audio: whistle
-  // },
+  whistle: {
+    bpm: 70,
+    audio: whistle
+  },
   wii_A: {
     bpm: 70,
     interval: '2m',
-    audio: wii_A,
+    audio: wii_A
   },
   ipod: {
     bpm: 113,
@@ -78,7 +78,8 @@ export default class Sound {
 
   setSong(index) {
     const songs = Object.values(SONGS)
-    index = index ?? this.anybody.level % songs.length
+    const level = this.anybody.level == 0 ? 1 : this.anybody.level
+    index = index ?? (level + 1) % songs.length
     this.currentSong = songs[index]
     console.log('currentSong:', Object.keys(SONGS)[index])
   }
@@ -88,16 +89,16 @@ export default class Sound {
 
     if (e.key === '1') {
       this.stop()
-      this.playSong(SONGS.whistle)
+      this.play(SONGS.whistle)
     } else if (e.key === '2') {
       this.stop()
-      this.playSong(SONGS.wii_A)
+      this.play(SONGS.wii)
     } else if (e.key === '3') {
       this.stop()
-      this.playSong(SONGS.ipod)
+      this.play(SONGS.ipod)
     } else if (e.key === '4') {
       this.stop()
-      this.playSong(SONGS.orbit)
+      this.play(SONGS.orbit)
     }
   }
 
@@ -183,7 +184,7 @@ export default class Sound {
     }
   }
 
-  async playGameOver({ win }) {
+  async setPlaybackRate(speed = 'normal') {
     // prepare playback
     this.prepareForPlayback()
 
@@ -191,7 +192,8 @@ export default class Sound {
     this.stop()
 
     // speed up the voices
-    const playbackRate = this.currentSong?.gameoverSpeed || 2
+    const playbackRate =
+      speed == 'normal' ? 1 : this.currentSong?.gameoverSpeed || 2
 
     // set new gameover playback rate
     this.player.playbackRate = playbackRate
@@ -205,7 +207,11 @@ export default class Sound {
     // restart
     this.loop?.start()
     this.player.start()
-    Tone.getTransport().start("+0", 0);
+    Tone.getTransport().start('+0', 0)
+  }
+
+  async playGameOver({ win }) {
+    this.setPlaybackRate('not-normal?')
 
     if (this.anybody.sfx === 'space') {
       this.playOneShot(affirmative, -22, { playbackRate: 1 })
@@ -271,7 +277,7 @@ export default class Sound {
     await this.player.load(this.currentSong.audio)
 
     // start the song immediately
-    this.player.start();
+    this.player.start()
 
     // schedule the song to replay in a loop
     this.loop = new Loop((time) => {
@@ -279,6 +285,6 @@ export default class Sound {
     }, song.interval || '2m').start()
 
     // play the transport (immeditately from the beginning)
-    Tone.getTransport().start("+0", 0);
+    Tone.getTransport().start('+0', 0)
   }
 }

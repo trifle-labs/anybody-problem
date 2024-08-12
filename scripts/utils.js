@@ -7,9 +7,7 @@ import { exportCallDataGroth16 } from './circuits.js'
 
 const __dirname = path.resolve()
 
-const correctPrice = ethers.utils.parseEther('0.01')
-// TODO: change this to the splitter address
-// const splitterAddress = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266'
+const correctPrice = ethers.utils.parseEther('0.0025')
 
 const proverTickIndex = {
   2: 250,
@@ -104,78 +102,110 @@ const decodeUri = (decodedJson) => {
   return text
 }
 
+const getThemeName = (chainId) => {
+  switch (chainId) {
+    case 1:
+      return 'contracts/ThemeGroupDefault.sol:ThemeGroup'
+    case 84532:
+    case 8453:
+    case 12345:
+    default:
+      return 'contracts/ThemeGroupBlues.sol:ThemeGroup'
+  }
+}
+
 const deployMetadata = async (testing) => {
-  // deploy Assets1
-  const Assets1 = await hre.ethers.getContractFactory('Assets1')
-  let byteSize = Buffer.from(Assets1.bytecode.slice(2), 'hex').length
-  !testing && console.log(`Assets1 byte size: ${byteSize} bytes`)
-  const assets1 = await Assets1.deploy()
-  await assets1.deployed()
-  var assets1Address = assets1.address
-  !testing && log('Assets1 Deployed at ' + String(assets1Address))
+  let externalMetadata, assets1, assets2, assets3, assets4, assets5
+  try {
+    const network = await hre.ethers.provider.getNetwork()
+    let themeName = getThemeName(network['chainId'])
 
-  // deploy Assets2
-  const Assets2 = await hre.ethers.getContractFactory('Assets2')
-  byteSize = Buffer.from(Assets2.bytecode.slice(2), 'hex').length
-  !testing && console.log(`Assets2 byte size: ${byteSize} bytes`)
-  const assets2 = await Assets2.deploy()
-  await assets2.deployed()
-  var assets2Address = assets2.address
-  !testing && log('Assets2 Deployed at ' + String(assets2Address))
+    const Theme = await hre.ethers.getContractFactory(themeName)
+    const theme = await Theme.deploy()
+    await theme.deployed()
+    var themeAddress = theme.address
+    !testing && log(themeName + ' Deployed at ' + String(themeAddress))
 
-  // deploy Assets3
-  const Assets3 = await hre.ethers.getContractFactory('Assets3')
-  byteSize = Buffer.from(Assets3.bytecode.slice(2), 'hex').length
-  !testing && console.log(`Assets3 byte size: ${byteSize} bytes`)
-  const assets3 = await Assets3.deploy()
-  await assets3.deployed()
-  var assets3Address = assets3.address
-  !testing && log('Assets3 Deployed at ' + String(assets3Address))
+    // deploy Assets1
+    const Assets1 = await hre.ethers.getContractFactory('Assets1')
+    let byteSize = Buffer.from(Assets1.bytecode.slice(2), 'hex').length
+    !testing && console.log(`Assets1 byte size: ${byteSize} bytes`)
+    assets1 = await Assets1.deploy()
+    await assets1.deployed()
+    var assets1Address = assets1.address
+    !testing && log('Assets1 Deployed at ' + String(assets1Address))
 
-  // deploy Assets4
-  const Assets4 = await hre.ethers.getContractFactory('Assets4')
-  byteSize = Buffer.from(Assets4.bytecode.slice(2), 'hex').length
-  !testing && console.log(`Assets4 byte size: ${byteSize} bytes`)
-  const assets4 = await Assets4.deploy()
-  await assets4.deployed()
-  var assets4Address = assets4.address
-  !testing && log('Assets4 Deployed at ' + String(assets4Address))
+    // deploy Assets2
+    const Assets2 = await hre.ethers.getContractFactory('Assets2')
+    byteSize = Buffer.from(Assets2.bytecode.slice(2), 'hex').length
+    !testing && console.log(`Assets2 byte size: ${byteSize} bytes`)
+    assets2 = await Assets2.deploy()
+    await assets2.deployed()
+    var assets2Address = assets2.address
+    !testing && log('Assets2 Deployed at ' + String(assets2Address))
 
-  // deploy Assets5
-  const Assets5 = await hre.ethers.getContractFactory('Assets5')
-  byteSize = Buffer.from(Assets5.bytecode.slice(2), 'hex').length
-  !testing && console.log(`Assets5 byte size: ${byteSize} bytes`)
-  const assets5 = await Assets5.deploy()
-  await assets5.deployed()
-  var assets5Address = assets5.address
-  !testing && log('Assets5 Deployed at ' + String(assets5Address))
+    // deploy Assets3
+    const Assets3 = await hre.ethers.getContractFactory('Assets3')
+    byteSize = Buffer.from(Assets3.bytecode.slice(2), 'hex').length
+    !testing && console.log(`Assets3 byte size: ${byteSize} bytes`)
+    assets3 = await Assets3.deploy()
+    await assets3.deployed()
+    var assets3Address = assets3.address
+    !testing && log('Assets3 Deployed at ' + String(assets3Address))
 
-  // deploy ExternalMetadata
-  const ExternalMetadata =
-    await hre.ethers.getContractFactory('ExternalMetadata')
-  byteSize = Buffer.from(ExternalMetadata.bytecode.slice(2), 'hex').length
-  !testing && console.log(`ExternalMetadata byte size: ${byteSize} bytes`)
-  const externalMetadata = await ExternalMetadata.deploy()
-  await externalMetadata.deployed()
-  !testing &&
-    log('ExternalMetadata Deployed at ' + String(externalMetadata.address))
+    // deploy Assets4
+    const Assets4 = await hre.ethers.getContractFactory('Assets4')
+    byteSize = Buffer.from(Assets4.bytecode.slice(2), 'hex').length
+    !testing && console.log(`Assets4 byte size: ${byteSize} bytes`)
+    assets4 = await Assets4.deploy()
+    await assets4.deployed()
+    var assets4Address = assets4.address
+    !testing && log('Assets4 Deployed at ' + String(assets4Address))
 
-  await externalMetadata.setAssets([
-    assets1Address,
-    assets2Address,
-    assets3Address,
-    assets4Address,
-    assets5Address
-  ])
-  !testing && console.log('Assets set')
+    // deploy Assets5
+    const Assets5 = await hre.ethers.getContractFactory('Assets5')
+    byteSize = Buffer.from(Assets5.bytecode.slice(2), 'hex').length
+    !testing && console.log(`Assets5 byte size: ${byteSize} bytes`)
+    assets5 = await Assets5.deploy()
+    await assets5.deployed()
+    var assets5Address = assets5.address
+    !testing && log('Assets5 Deployed at ' + String(assets5Address))
 
-  const tx = await externalMetadata.setupSVGPaths()
-  await tx.wait()
+    // deploy ExternalMetadata
+    const ExternalMetadata =
+      await hre.ethers.getContractFactory('ExternalMetadata')
+    byteSize = Buffer.from(ExternalMetadata.bytecode.slice(2), 'hex').length
+    !testing && console.log(`ExternalMetadata byte size: ${byteSize} bytes`)
+    externalMetadata = await ExternalMetadata.deploy(themeAddress)
+    await externalMetadata.deployed()
+    !testing &&
+      log('ExternalMetadata Deployed at ' + String(externalMetadata.address))
 
-  await externalMetadata.setupColorThemes()
-  !testing && console.log('Color Themes setup')
+    await externalMetadata.setAssets([
+      assets1Address,
+      assets2Address,
+      assets3Address,
+      assets4Address,
+      assets5Address
+    ])
+    !testing && console.log('Assets set')
 
-  return { externalMetadata, assets1, assets2, assets3, assets4, assets5 }
+    const tx = await externalMetadata.setupSVGPaths()
+    await tx.wait()
+    !testing && console.log('SVG Paths setup')
+  } catch (e) {
+    console.error(e)
+  }
+
+  return {
+    externalMetadata,
+    themeAddress,
+    assets1,
+    assets2,
+    assets3,
+    assets4,
+    assets5
+  }
 }
 
 const deployContracts = async (options) => {
@@ -227,8 +257,15 @@ const deployContracts = async (options) => {
   !testing && log('Speedruns Deployed at ' + String(speedrunsAddress))
 
   // deploy Metadata
-  const { externalMetadata, assets1, assets2, assets3, assets4, assets5 } =
-    await deployMetadata(testing)
+  const {
+    externalMetadata,
+    assets1,
+    assets2,
+    assets3,
+    assets4,
+    assets5,
+    themeAddress
+  } = await deployMetadata(testing)
   returnObject['ExternalMetadata'] = externalMetadata
   const externalMetadataAddress = externalMetadata.address
   returnObject['Assets1'] = assets1
@@ -236,6 +273,7 @@ const deployContracts = async (options) => {
   returnObject['Assets3'] = assets3
   returnObject['Assets4'] = assets4
   returnObject['Assets5'] = assets5
+  returnObject['ThemeGroup'] = themeAddress
 
   // deploy AnybodyProblem
   const AnybodyProblem = await hre.ethers.getContractFactory(
@@ -277,7 +315,7 @@ const deployContracts = async (options) => {
     const verificationData = [
       {
         name: 'ExternalMetadata',
-        constructorArguments: []
+        constructorArguments: [themeAddress]
       },
       {
         name: 'Speedruns',
@@ -323,6 +361,7 @@ const verifyContracts = async (returnObject, contractToUse) => {
         constructorArguments: verificationData[i].constructorArguments
       })
     } catch (e) {
+      i--
       log({ e, verificationData: verificationData[i] })
     }
   }
@@ -416,16 +455,19 @@ const solveLevel = async (
   // 27—31: missile input (5 + 2 * bodyCount * 5 + 2)
 
   const time = dataResult.Input[5 + bodyCount * 5]
-
-  const price = await anybodyProblem.price()
+  const mintingFee = await anybodyProblem.priceToSave()
+  const discount = await anybodyProblem.discount()
+  const price = (await anybodyProblem.priceToMint())
+    .div(discount)
+    .add(mintingFee)
 
   const tickCounts = [ticksRun]
   const a = [dataResult.a]
   const b = [dataResult.b]
   const c = [dataResult.c]
   const Input = [dataResult.Input]
-
-  const args = [runId, tickCounts, a, b, c, Input]
+  const alsoMint = true
+  const args = [runId, alsoMint, 0, tickCounts, a, b, c, Input]
 
   if (runId == 0) {
     runId = 1
@@ -438,12 +480,13 @@ const solveLevel = async (
     if (level == 5) {
       await expect(
         anybodyProblem.batchSolve(...args, {
-          value: price.add(1)
+          value: price.sub(1)
         })
       ).to.be.revertedWith('Incorrect payment')
     }
+    const value = level == 5 ? price : 0
     tx3 = await anybodyProblem.batchSolve(...args, {
-      value: level == 5 ? price : 0
+      value
     })
     await expect(tx3)
       .to.emit(anybodyProblem, 'LevelSolved')
@@ -472,9 +515,9 @@ const mintProblem = async (/*signers, deployedContracts, acct*/) => {
   // await problems.updateStartDate(0)
   // const tx = await problems.connect(acct)['mint()']({ value: correctPrice })
   // const receipt = await tx.wait()
-  // const problemId = getParsedEventLogs(receipt, problems, 'Transfer')[0].args
+  // const runId = getParsedEventLogs(receipt, problems, 'Transfer')[0].args
   //   .tokenId
-  // return { receipt, problemId }
+  // return { receipt, runId }
 }
 
 const generateWitness = async (
@@ -652,9 +695,11 @@ const generateAndSubmitProof = async (
     c.push(dataResult.c)
     Input.push(dataResult.Input)
   }
-
+  const alsoMint = true
   const tx = await anybodyProblem.batchSolve(
     problemId,
+    alsoMint,
+    0,
     proofLengths,
     a,
     b,
@@ -743,6 +788,7 @@ export {
   generateWitness,
   verifyContracts,
   solveLevel,
-  deployMetadata
+  deployMetadata,
+  getThemeName
   // splitterAddress
 }
