@@ -1870,26 +1870,29 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
         p.textFont((0, $7ccced6459fd256e$export$f45fbea8fe20ca8a).body);
         p.textSize(this.scoreSize);
         if (runningFrames > 2 && (!this.gameOver || this.gameOver && this.won && !this.skipAhead)) {
-            if (this.won) {
-                p.textSize(this.scoreSize * 2);
-                p.text(seconds.toFixed(2) + "s", 20, 0);
-            } else {
-                p.text(secondsLeft.toFixed(2), 20, 0);
-                p.textAlign(p.RIGHT, p.TOP);
-                if (this.hasTouched) // draw mobile reset button over the countdown
-                this.buttons["touch-timer-reset"] = {
-                    x: 0,
-                    y: 0,
-                    width: 200,
-                    height: 110,
-                    disabled: false,
-                    visible: true,
-                    onClick: ()=>{
-                        this.hasQuickReset = true;
-                        this.restart(null, false);
-                    }
-                };
-                p.text("Lvl " + this.level, this.windowWidth - 20, 0);
+            const hideUI = new URLSearchParams(window.location.search).get("hideUI");
+            if (!hideUI) {
+                if (this.won) {
+                    p.textSize(this.scoreSize * 2);
+                    p.text(seconds.toFixed(2) + "s", 20, 0);
+                } else {
+                    p.text(secondsLeft.toFixed(2), 20, 0);
+                    p.textAlign(p.RIGHT, p.TOP);
+                    if (this.hasTouched) // draw mobile reset button over the countdown
+                    this.buttons["touch-timer-reset"] = {
+                        x: 0,
+                        y: 0,
+                        width: 200,
+                        height: 110,
+                        disabled: false,
+                        visible: true,
+                        onClick: ()=>{
+                            this.hasQuickReset = true;
+                            this.restart(null, false);
+                        }
+                    };
+                    p.text("Lvl " + this.level, this.windowWidth - 20, 0);
+                }
             }
         }
         p.pop();

@@ -16,7 +16,7 @@ window.anybody
 
 q5.setup = () => {
   const options = {
-    level: 0,
+    level: new URLSearchParams(window.location.search).get('level') ?? 0, 
     todaysRecords
   }
   if (day && day !== '') {
