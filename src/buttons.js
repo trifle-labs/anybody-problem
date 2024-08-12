@@ -16,7 +16,6 @@ export const Buttons = {
     fgHover = 'rgba(160, 67, 232, 0.25)',
     p = this.p,
     disabled = false,
-    offsetText = { x: 0, y: 0 },
     key = `${text}-${x}-${y}-${height}-${width}`
   }) {
     // register the button if it's not registered
@@ -68,8 +67,8 @@ export const Buttons = {
       p.text(
         text,
         // tweak to center, somethign about the font
-        x + width / 2 + textSize * 0.13 + offsetText.x,
-        y + height / 2 + textSize * 0.05 + offsetText.y
+        x + width / 2 + textSize * 0.13,
+        y + height / 2 + textSize * 0.06
       )
     }
 
@@ -89,13 +88,15 @@ export const Buttons = {
   // single button with a fat appearance (retry, start)
   drawFatButton(buttonOptions) {
     const { bottom } = buttonOptions
-    const bottomPadding = bottom || 80
+    const bottomPadding = bottom || 120
+    const width = 320
+    const height = 104
     this.drawButton({
-      height: 96,
-      textSize: 48,
-      width: 275,
-      y: this.windowHeight - 96 - bottomPadding,
-      x: this.windowWidth / 2 - 275 / 2,
+      height,
+      textSize: 72,
+      width,
+      y: this.windowHeight - height - bottomPadding,
+      x: this.windowWidth / 2 - width / 2,
       ...buttonOptions
     })
   },

@@ -294,6 +294,7 @@ export class Anybody extends EventEmitter {
   }
 
   destroy() {
+    this.resizeObserver.disconnect(this.p.canvas)
     this.setPause(true)
     this.p.noLoop()
     this.removeListener()
@@ -349,13 +350,16 @@ export class Anybody extends EventEmitter {
   }
 
   getXY(e) {
-    let x = e.offsetX || e.layerX
-    let y = e.offsetY || e.layerY
-    const rect = e.target.getBoundingClientRect()
-    const actualWidth = rect.width
-    const actualHeight = rect.height
-    x = (x * this.windowWidth) / actualWidth
-    y = (y * this.windowHeight) / actualHeight
+    let x, y
+    if (e.touches) {
+      x = e.touches[0].pageX - this.canvasRect.left
+      y = e.touches[0].pageY - this.canvasRect.top
+    } else {
+      x = e.offsetX || e.layerX
+      y = e.offsetY || e.layerY
+    }
+    x = (x * this.windowWidth) / this.canvasRect.width
+    y = (y * this.windowHeight) / this.canvasRect.height
     return { x, y }
   }
 
@@ -419,6 +423,7 @@ export class Anybody extends EventEmitter {
         }
         break
       case 'KeyR':
+        this.hasQuickReset = true
         this.restart(null, false)
         break
       case 'KeyP':
@@ -922,6 +927,13 @@ export class Anybody extends EventEmitter {
     this.p.createCanvas(this.windowWidth, this.windowWidth)
     this.setPixelDensity(this.pixelDensity)
     this.p.background('white')
+
+    // cache canvas rect, update on changes
+    this.canvasRect = this.p.canvas.getBoundingClientRect()
+    this.resizeObserver = new ResizeObserver(() => {
+      this.canvasRect = this.p.canvas.getBoundingClientRect()
+    })
+    this.resizeObserver.observe(this.p.canvas)
   }
 
   missileClick(x, y) {
