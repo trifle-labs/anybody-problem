@@ -522,25 +522,6 @@ export const Visuals = {
         bottom: 120,
         p
       })
-
-      // date
-      p.textFont(fonts.body)
-      p.textSize(24)
-      const dateWidth = p.textWidth(this.date)
-      const dateBgWidth = dateWidth + 48
-      const dateBgHeight = 32
-      const dateBottomY = this.windowHeight - 58
-      p.fill(THEME.textBg)
-      p.rect(
-        this.windowWidth / 2 - dateBgWidth / 2,
-        dateBottomY - dateBgHeight / 2,
-        dateBgWidth,
-        dateBgHeight,
-        20
-      )
-      p.textAlign(p.CENTER, p.CENTER)
-      p.fill(THEME.textFg)
-      p.text(this.date, this.windowWidth / 2, dateBottomY)
     }
   },
   drawBodyOutlines() {

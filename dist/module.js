@@ -1586,70 +1586,56 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
         const titleY = this.windowHeight / 2 - 270;
         (0, $7ccced6459fd256e$export$da5f36cd073f8491)(p, "Anybody", 46, titleY, 0.8);
         (0, $7ccced6459fd256e$export$da5f36cd073f8491)(p, "Problem", 46, titleY + 240, 2);
-        if (!this.willUnpause) {
-            // play button
-            this.drawFatButton({
-                text: "PLAY",
-                onClick: ()=>{
-                    if (this.popup !== null) return;
-                    if (!this.playerName) {
-                        // open connect wallet popup
-                        this.popup = {
-                            header: "Play Onchain",
-                            body: [
-                                "Free to play!  ...or practice!",
-                                "Connect a wallet to validate your wins."
-                            ],
-                            buttons: [
-                                {
-                                    text: "PRACTICE",
-                                    fg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).violet_50,
-                                    bg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).violet_25,
-                                    stroke: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).violet_50,
-                                    onClick: ()=>{
-                                        // start practice mode
-                                        this.popup = null;
-                                        this.sound?.playStart();
-                                        this.setPause(false);
-                                        this.practiceMode = true;
-                                    }
-                                },
-                                {
-                                    text: "CONNECT",
-                                    fg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).violet_25,
-                                    bg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).violet_50,
-                                    stroke: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).violet_50,
-                                    onClick: ()=>{
-                                        this.emit("connect-wallet");
-                                    }
+        if (!this.willUnpause) // play button
+        this.drawFatButton({
+            text: "PLAY",
+            onClick: ()=>{
+                if (this.popup !== null) return;
+                if (!this.playerName) {
+                    // open connect wallet popup
+                    this.popup = {
+                        header: "Play Onchain",
+                        body: [
+                            "Free to play!  ...or practice!",
+                            "Connect a wallet to validate your wins."
+                        ],
+                        buttons: [
+                            {
+                                text: "PRACTICE",
+                                fg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).violet_50,
+                                bg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).violet_25,
+                                stroke: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).violet_50,
+                                onClick: ()=>{
+                                    // start practice mode
+                                    this.popup = null;
+                                    this.sound?.playStart();
+                                    this.setPause(false);
+                                    this.practiceMode = true;
                                 }
-                            ]
-                        };
-                        return;
-                    }
-                    // start play
-                    this.sound?.playStart();
-                    this.setPause(false);
-                    this.practiceMode = false;
-                },
-                fg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).violet_50,
-                bg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).pink,
-                bottom: 120,
-                p: p
-            });
-            // date
-            p.textFont((0, $7ccced6459fd256e$export$f45fbea8fe20ca8a).body);
-            p.textSize(24);
-            const dateWidth = p.textWidth(this.date);
-            const dateBgWidth = dateWidth + 48;
-            const dateBgHeight = 32;
-            const dateBottomY = this.windowHeight - 58;
-            p.fill((0, $dfb043d8446f30b2$export$5714e40777c1bcc2).textBg);
-            p.rect(this.windowWidth / 2 - dateBgWidth / 2, dateBottomY - dateBgHeight / 2, dateBgWidth, dateBgHeight, 20);
-            p.textAlign(p.CENTER, p.CENTER);
-            p.fill((0, $dfb043d8446f30b2$export$5714e40777c1bcc2).textFg);
-            p.text(this.date, this.windowWidth / 2, dateBottomY);
-        }
+                            },
+                            {
+                                text: "CONNECT",
+                                fg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).violet_25,
+                                bg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).violet_50,
+                                stroke: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).violet_50,
+                                onClick: ()=>{
+                                    this.emit("connect-wallet");
+                                }
+                            }
+                        ]
+                    };
+                    return;
+                }
+                // start play
+                this.sound?.playStart();
+                this.setPause(false);
+                this.practiceMode = false;
+            },
+            fg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).violet_50,
+            bg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).pink,
+            bottom: 120,
+            p: p
+        });
     },
     drawBodyOutlines () {
         for(let i = 0; i < this.bodies.length; i++){
