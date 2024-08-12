@@ -2,9 +2,10 @@ import * as Tone from 'tone'
 const { Player, PanVol, Panner, Volume, Loop, start, loaded } = Tone
 
 //import whistle from 'data-url:/public/sound/tracks/whistle.mp3'
+//import wii_B from 'data-url:/public/sound/tracks/wii_B.mp3'
 import orbit from 'data-url:/public/sound/tracks/orbit.mp3'
 import ipod from 'data-url:/public/sound/tracks/ipod.mp3'
-// import wii from 'data-url:/public/sound/tracks/wii.mp3'
+import wii_A from 'data-url:/public/sound/tracks/wii_A.mp3'
 import coinBox from 'data-url:/public/sound/fx/coin-box.mp3'
 import bongoHard from 'data-url:/public/sound/fx/SC_CP_perc_bongo_loud_tap.mp3'
 import bubble from 'data-url:/public/sound/fx/DSC_GST_one_shot_perc_water.mp3'
@@ -31,11 +32,11 @@ const SONGS = {
   //   bpm: 70,
   //   audio: whistle
   // },
-  // wii: {
-  //   bpm: 70,
-  //   interval: '2m',
-  //   audio: wii,
-  // },
+  wii_A: {
+    bpm: 70,
+    interval: '2m',
+    audio: wii_A,
+  },
   ipod: {
     bpm: 113,
     interval: '4m',
@@ -45,7 +46,6 @@ const SONGS = {
   orbit: {
     bpm: 96,
     interval: '4m',
-    volume: -6,
     audio: orbit
   }
 }
@@ -78,7 +78,7 @@ export default class Sound {
 
   setSong(index) {
     const songs = Object.values(SONGS)
-    index = index ?? (3 + this.anybody.level) % songs.length
+    index = index ?? this.anybody.level % songs.length
     this.currentSong = songs[index]
     console.log('currentSong:', Object.keys(SONGS)[index])
   }
@@ -91,7 +91,7 @@ export default class Sound {
       this.playSong(SONGS.whistle)
     } else if (e.key === '2') {
       this.stop()
-      this.playSong(SONGS.wii)
+      this.playSong(SONGS.wii_A)
     } else if (e.key === '3') {
       this.stop()
       this.playSong(SONGS.ipod)
