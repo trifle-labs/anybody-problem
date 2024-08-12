@@ -973,6 +973,21 @@ export class Anybody extends EventEmitter {
     }
     // b.velocity.setMag(this.missileSpeed * this.speedFactor)
     b.velocity.limit(this.missileSpeed * this.speedFactor)
+    let sum = b.velocity.x - b.velocity.y
+    const max = this.missileVectorLimitSum / 1000
+    if (sum > max) {
+      b.velocity.limit(this.missileSpeed * this.speedFactor * 0.999)
+      console.error({
+        x: b.velocity.x,
+        y: b.velocity.y,
+        max: this.missileVectorLimitSum / 1000
+      })
+      sum = b.velocity.x - b.velocity.y
+      if (sum > max) {
+        console.error('still too fast')
+        return
+      }
+    }
     // const bodyCount = this.bodies.filter((b) => b.radius !== 0).length - 1
     // this.missiles = this.missiles.slice(0, bodyCount)
     // this.missiles = this.missiles.slice(-bodyCount)
