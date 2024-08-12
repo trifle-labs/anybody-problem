@@ -63,7 +63,7 @@ const config = {
     baseSepolia: {
       // network ID: 84532
       // url: 'https://sepolia.base.org',
-      url: 'https://public.stackup.sh/api/v1/node/base-sepolia',
+      url: process.env.baseSepoliaRPC,
       accounts: { mnemonic: process.env.deploymentKey },
       gas: 5_000_000,
       gasPrice: 100_000_000 // 0.1 GWEI

@@ -18,7 +18,7 @@ const violet_50 = 'rgba(160, 67, 232, 1)'
 export const THEME = {
   bg: 'rgb(20,20,20)',
   fg: 'white',
-  bodiesTheme: 'default',
+  bodiesTheme: 'blues',
   border: iris_60,
   // colors
   lime: 'rgba(125, 241, 115, 1)',
@@ -90,6 +90,19 @@ export const themes = {
         bg: ['40-60', '95-100', '50-60'],
         cr: [undefined, '90-100', '85-95'],
         fg: [undefined, '90', '60']
+      }
+    },
+    // blues / BASE
+    blues: {
+      blues_bg_dark: {
+        bg: ['175-270', '95-100', '50-55'],
+        cr: ['135-105', '100-100', '85-90'],
+        fg: ['135-105', '95-100', '55-60']
+      },
+      blues_bg_light: {
+        bg: ['180-250', '100-100', '55-95'],
+        cr: ['135-105', '95-100', '50-60'],
+        fg: ['135-105', '95-100', '50-60']
       }
     }
   },

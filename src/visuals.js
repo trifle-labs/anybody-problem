@@ -294,7 +294,7 @@ export const Visuals = {
     this.drawTips()
   },
 
-  drawTextBubble ({
+  drawTextBubble({
     text = '',
     x = 0,
     y = 0,
@@ -303,7 +303,7 @@ export const Visuals = {
     fz = 48,
     fg,
     bg,
-    stroke,
+    stroke
   }) {
     // return defaults for local calcs
     if (!text) return { x, y, h, w, fz }
@@ -316,27 +316,19 @@ export const Visuals = {
     p.textSize(fz)
     p.fill(fg ?? THEME.iris_30)
     p.noStroke()
-    p.text(
-      text,
-      x + w / 2,
-      y + (h - fz) / 2
-    )
+    p.text(text, x + w / 2, y + (h - fz) / 2)
     p.pop()
   },
 
-  drawTips () {
-    if (
-      this.level === 0
-      && !(this.paused || this.won || this.gameOver)
-    ) {
+  drawTips() {
+    if (this.level === 0 && !(this.paused || this.won || this.gameOver)) {
       // how to shoot
       const { h } = this.drawTextBubble({})
       const gttr = 24
       let w = this.hasTouched ? 300 : 520
       let y = this.windowHeight - h - gttr
       this.drawTextBubble({
-        text: this.hasTouched ? 'TAP to Shoot'
-        : 'CLICK or {SPACE} to shoot',
+        text: this.hasTouched ? 'TAP to Shoot' : 'CLICK or {SPACE} to shoot',
         w,
         x: this.windowWidth / 2 - w / 2,
         y,
@@ -765,7 +757,8 @@ export const Visuals = {
     for (let i = 0; i < popup.body.length; i++) {
       const text = popup.body[i]
       const lineGap = parseInt(fz[1] * 0.25)
-      const y1 = y + pad[0] + fz[0] + fz[1] * (i + 1) + lineGap * (i + 1) - fz[1] * 0.5
+      const y1 =
+        y + pad[0] + fz[0] + fz[1] * (i + 1) + lineGap * (i + 1) - fz[1] * 0.5
       p.text(text, x + w / 2, y1)
     }
 
@@ -852,8 +845,12 @@ export const Visuals = {
         p.textAlign(p.RIGHT, p.TOP)
         if (this.hasTouched) {
           // draw mobile reset button over the countdown
-          this.buttons['touch-timer-reset'] = { x: 0, y: 0, width: 200, height: 110, 
-            disabled: false, 
+          this.buttons['touch-timer-reset'] = {
+            x: 0,
+            y: 0,
+            width: 200,
+            height: 110,
+            disabled: false,
             visible: true,
             onClick: () => {
               this.hasQuickReset = true
@@ -1194,7 +1191,8 @@ export const Visuals = {
             header: 'Redo Level?',
             body: [
               'PRO TIP !!',
-              this.hasTouched ? 'Tap the TIMER to quickly restart a level'
+              this.hasTouched
+                ? 'Tap the TIMER to quickly restart a level'
                 : 'Press {R} to quickly restart a level'
             ],
             buttons: [

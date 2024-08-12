@@ -204,6 +204,7 @@ export class Anybody extends EventEmitter {
     this.G = NORMAL_GRAVITY
     this.vectorLimit = this.speedLimit * this.speedFactor
     this.missileVectorLimit = this.missileSpeed * this.speedFactor
+    this.missileVectorLimitSum = 42426 // 30_000√2
     this.FPS = 25
     this.P5_FPS_MULTIPLIER = 3
     this.P5_FPS = this.FPS * this.P5_FPS_MULTIPLIER
@@ -416,6 +417,10 @@ export class Anybody extends EventEmitter {
           e.preventDefault()
           this.missileClick(this.mouseX, this.mouseY)
         }
+        if (this.shownStatScreen) {
+          this.level++
+          this.restart(null, false)
+        }
         break
       case 'KeyR':
         this.hasQuickReset = true
@@ -565,19 +570,15 @@ export class Anybody extends EventEmitter {
   processMissileInits(missiles) {
     const radius = 10
     return missiles.map((b) => {
-      const maxMissileVectorScaled = this.convertFloatToScaledBigInt(
-        this.missileVectorLimit
-      )
+      // const maxMissileVectorScaled = this.convertFloatToScaledBigInt(
+      //   this.missileVectorLimit
+      // )
       return {
         step: b.step,
         x: this.convertFloatToScaledBigInt(b.position.x).toString(),
         y: this.convertFloatToScaledBigInt(b.position.y).toString(),
-        vx: (
-          this.convertFloatToScaledBigInt(b.velocity.x) + maxMissileVectorScaled
-        ).toString(),
-        vy: (
-          this.convertFloatToScaledBigInt(b.velocity.y) + maxMissileVectorScaled
-        ).toString(),
+        vx: this.convertFloatToScaledBigInt(b.velocity.x).toString(),
+        vy: this.convertFloatToScaledBigInt(b.velocity.y).toString(),
         radius: radius.toString()
       }
     })
@@ -587,9 +588,9 @@ export class Anybody extends EventEmitter {
     if (this.finalBatchSent) return
     // this.finished = true
     // this.setPause(true)
-    const maxMissileVectorScaled = parseInt(
-      this.convertFloatToScaledBigInt(this.missileVectorLimit)
-    ).toString()
+    // const maxMissileVectorScaled = parseInt(
+    //   this.convertFloatToScaledBigInt(this.missileVectorLimit)
+    // ).toString()
 
     this.calculateBodyFinal()
     const missileInputs = []
@@ -601,18 +602,14 @@ export class Anybody extends EventEmitter {
         // otherwise fill the missileInit array with an empty missile
         if (this.missileInits[missileIndex]?.step == i) {
           const missile = this.missileInits[missileIndex]
-          missileInputs.push([missile.vx, missile.vy, missile.radius])
+          missileInputs.push([missile.vx, -missile.vy, missile.radius])
           missileIndex++
         } else {
-          missileInputs.push([
-            maxMissileVectorScaled,
-            maxMissileVectorScaled,
-            '0'
-          ])
+          missileInputs.push(['0', '0', '0'])
         }
       }
       // add one more because missileInits contains one extra for circuit
-      missileInputs.push([maxMissileVectorScaled, maxMissileVectorScaled, '0'])
+      missileInputs.push(['0', '0', '0'])
     }
 
     // define the inflightMissile for the proof from the first missile shot during this chunk
@@ -624,15 +621,15 @@ export class Anybody extends EventEmitter {
         : {
             x: '0',
             y: (this.windowWidth * parseInt(this.scalingFactor)).toString(),
-            vx: maxMissileVectorScaled,
-            vy: maxMissileVectorScaled,
+            vx: '0',
+            vy: '0',
             radius: '0'
           }
     inflightMissile = [
       inflightMissile.x,
       inflightMissile.y,
       inflightMissile.vx,
-      inflightMissile.vy,
+      -inflightMissile.vy,
       inflightMissile.radius
     ]
 
@@ -641,15 +638,15 @@ export class Anybody extends EventEmitter {
     const outflightMissileTmp = this.missiles[0] || {
       px: '0',
       py: (this.windowWidth * parseInt(this.scalingFactor)).toString(),
-      vx: maxMissileVectorScaled,
-      vy: maxMissileVectorScaled,
+      vx: '0',
+      vy: '0',
       radius: '0'
     }
     const outflightMissile = [
       outflightMissileTmp.px,
       outflightMissileTmp.py,
       outflightMissileTmp.vx,
-      outflightMissileTmp.vy,
+      -outflightMissileTmp.vy,
       outflightMissileTmp.radius
     ]
 
@@ -764,8 +761,7 @@ export class Anybody extends EventEmitter {
   }
 
   genRadius(index, level = this.level) {
-    // const radii = [36n, 27n, 23n, 19n, 15n, 11n] // n * 4 + 2 TODO: switch to this on next deployment
-    const radii = [36n, 27n, 22n, 17n, 12n, 7n] // n * 5 + 2
+    const radii = [36n, 27n, 23n, 19n, 15n, 11n] // n * 4 + 2
     let size = level == 0 ? 27n : radii[index % radii.length]
     return parseInt(size * BigInt(this.scalingFactor))
   }
@@ -775,7 +771,17 @@ export class Anybody extends EventEmitter {
     minBigInt = typeof minBigInt === 'bigint' ? minBigInt : BigInt(minBigInt)
     maxBigInt = typeof maxBigInt === 'bigint' ? maxBigInt : BigInt(maxBigInt)
     seed = typeof seed === 'bigint' ? seed : BigInt(seed)
-    return parseInt((seed % (maxBigInt - minBigInt)) + minBigInt)
+    if (minBigInt > maxBigInt) {
+      const range = 359n - (minBigInt - maxBigInt)
+      const output = seed % range
+      if (output < maxBigInt) {
+        return parseInt(output)
+      } else {
+        return parseInt(minBigInt - maxBigInt + output)
+      }
+    } else {
+      return parseInt((seed % (maxBigInt - minBigInt)) + minBigInt)
+    }
   }
 
   generateBodies() {
@@ -822,7 +828,11 @@ export class Anybody extends EventEmitter {
     // hero body info
     const themes = Object.keys(bodyThemes)
     const numberOfThemes = themes.length
-    let rand = utils.solidityKeccak256(['uint256'], [day])
+    const extraSeed = 19
+    // 8, 11, 14, 19
+    // good ones: 2, 8, 10, 11, 13
+    let rand = utils.solidityKeccak256(['uint256', 'uint256'], [day, extraSeed])
+    // let rand = utils.solidityKeccak256(['uint256'], [day])
     const faceOptions = 14
     const bgOptions = 10
     const fgOptions = 10
@@ -842,7 +852,8 @@ export class Anybody extends EventEmitter {
     const theme = bodyThemes[themeName]
 
     rand = utils.solidityKeccak256(['bytes32'], [rand])
-    const bgHue = this.randomRange(0, 359, rand)
+    const bgHueRange = theme.bg[0] ? theme.bg[0].split('-') : [0, 359]
+    const bgHue = this.randomRange(bgHueRange[0], bgHueRange[1], rand)
     rand = utils.solidityKeccak256(['bytes32'], [rand])
     const bgSaturationRange = theme.bg[1].split('-')
     const bgSaturation = this.randomRange(
@@ -859,7 +870,8 @@ export class Anybody extends EventEmitter {
     )
 
     rand = utils.solidityKeccak256(['bytes32'], [rand])
-    const coreHue = this.randomRange(0, 359, rand)
+    const coreHueRange = theme.bg[0] ? theme.cr[0].split('-') : [0, 359]
+    const coreHue = this.randomRange(coreHueRange[0], coreHueRange[1], rand)
     rand = utils.solidityKeccak256(['bytes32'], [rand])
     const coreSaturationRange = theme.cr[1].split('-')
     const coreSaturation = this.randomRange(
@@ -876,7 +888,8 @@ export class Anybody extends EventEmitter {
     )
 
     rand = utils.solidityKeccak256(['bytes32'], [rand])
-    const fgHue = this.randomRange(0, 359, rand)
+    const fgHueRange = theme.bg[0] ? theme.fg[0].split('-') : [0, 359]
+    const fgHue = this.randomRange(fgHueRange[0], fgHueRange[1], rand)
     rand = utils.solidityKeccak256(['bytes32'], [rand])
     const fgSaturationRange = theme.fg[1].split('-')
     const fgSaturation = this.randomRange(
@@ -914,13 +927,13 @@ export class Anybody extends EventEmitter {
     this.p.createCanvas(this.windowWidth, this.windowWidth)
     this.setPixelDensity(this.pixelDensity)
     this.p.background('white')
-    
+
     // cache canvas rect, update on changes
     this.canvasRect = this.p.canvas.getBoundingClientRect()
-    this.resizeObserver = new ResizeObserver(() => { 
+    this.resizeObserver = new ResizeObserver(() => {
       this.canvasRect = this.p.canvas.getBoundingClientRect()
     })
-    this.resizeObserver.observe(this.p.canvas);
+    this.resizeObserver.observe(this.p.canvas)
   }
 
   missileClick(x, y) {
@@ -958,7 +971,7 @@ export class Anybody extends EventEmitter {
       velocity: this.p.createVector(x, y - this.windowWidth),
       radius
     }
-    // b.velocity.setMag(this.speedLimit * this.speedFactor)
+    // b.velocity.setMag(this.missileSpeed * this.speedFactor)
     b.velocity.limit(this.missileSpeed * this.speedFactor)
     // const bodyCount = this.bodies.filter((b) => b.radius !== 0).length - 1
     // this.missiles = this.missiles.slice(0, bodyCount)

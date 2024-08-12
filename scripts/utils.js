@@ -7,9 +7,7 @@ import { exportCallDataGroth16 } from './circuits.js'
 
 const __dirname = path.resolve()
 
-const correctPrice = ethers.utils.parseEther('0.01')
-// TODO: change this to the splitter address
-// const splitterAddress = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266'
+const correctPrice = ethers.utils.parseEther('0.0025')
 
 const proverTickIndex = {
   2: 250,
@@ -104,9 +102,30 @@ const decodeUri = (decodedJson) => {
   return text
 }
 
+const getThemeName = (chainId) => {
+  switch (chainId) {
+    case 1:
+      return 'contracts/ThemeGroupDefault.sol:ThemeGroup'
+    case 84532:
+    case 8453:
+    case 12345:
+    default:
+      return 'contracts/ThemeGroupBlues.sol:ThemeGroup'
+  }
+}
+
 const deployMetadata = async (testing) => {
   let externalMetadata, assets1, assets2, assets3, assets4, assets5
   try {
+    const network = await hre.ethers.provider.getNetwork()
+    let themeName = getThemeName(network['chainId'])
+
+    const Theme = await hre.ethers.getContractFactory(themeName)
+    const theme = await Theme.deploy()
+    await theme.deployed()
+    var themeAddress = theme.address
+    !testing && log(themeName + ' Deployed at ' + String(themeAddress))
+
     // deploy Assets1
     const Assets1 = await hre.ethers.getContractFactory('Assets1')
     let byteSize = Buffer.from(Assets1.bytecode.slice(2), 'hex').length
@@ -157,7 +176,7 @@ const deployMetadata = async (testing) => {
       await hre.ethers.getContractFactory('ExternalMetadata')
     byteSize = Buffer.from(ExternalMetadata.bytecode.slice(2), 'hex').length
     !testing && console.log(`ExternalMetadata byte size: ${byteSize} bytes`)
-    externalMetadata = await ExternalMetadata.deploy()
+    externalMetadata = await ExternalMetadata.deploy(themeAddress)
     await externalMetadata.deployed()
     !testing &&
       log('ExternalMetadata Deployed at ' + String(externalMetadata.address))
@@ -174,14 +193,19 @@ const deployMetadata = async (testing) => {
     const tx = await externalMetadata.setupSVGPaths()
     await tx.wait()
     !testing && console.log('SVG Paths setup')
-
-    await externalMetadata.setupColorThemes()
-    !testing && console.log('Color Themes setup')
   } catch (e) {
     console.error(e)
   }
 
-  return { externalMetadata, assets1, assets2, assets3, assets4, assets5 }
+  return {
+    externalMetadata,
+    themeAddress,
+    assets1,
+    assets2,
+    assets3,
+    assets4,
+    assets5
+  }
 }
 
 const deployContracts = async (options) => {
@@ -233,8 +257,15 @@ const deployContracts = async (options) => {
   !testing && log('Speedruns Deployed at ' + String(speedrunsAddress))
 
   // deploy Metadata
-  const { externalMetadata, assets1, assets2, assets3, assets4, assets5 } =
-    await deployMetadata(testing)
+  const {
+    externalMetadata,
+    assets1,
+    assets2,
+    assets3,
+    assets4,
+    assets5,
+    themeAddress
+  } = await deployMetadata(testing)
   returnObject['ExternalMetadata'] = externalMetadata
   const externalMetadataAddress = externalMetadata.address
   returnObject['Assets1'] = assets1
@@ -242,6 +273,7 @@ const deployContracts = async (options) => {
   returnObject['Assets3'] = assets3
   returnObject['Assets4'] = assets4
   returnObject['Assets5'] = assets5
+  returnObject['ThemeGroup'] = themeAddress
 
   // deploy AnybodyProblem
   const AnybodyProblem = await hre.ethers.getContractFactory(
@@ -283,7 +315,7 @@ const deployContracts = async (options) => {
     const verificationData = [
       {
         name: 'ExternalMetadata',
-        constructorArguments: []
+        constructorArguments: [themeAddress]
       },
       {
         name: 'Speedruns',
@@ -329,6 +361,7 @@ const verifyContracts = async (returnObject, contractToUse) => {
         constructorArguments: verificationData[i].constructorArguments
       })
     } catch (e) {
+      i--
       log({ e, verificationData: verificationData[i] })
     }
   }
@@ -422,8 +455,11 @@ const solveLevel = async (
   // 27—31: missile input (5 + 2 * bodyCount * 5 + 2)
 
   const time = dataResult.Input[5 + bodyCount * 5]
-
-  const price = await anybodyProblem.price()
+  const mintingFee = await anybodyProblem.priceToSave()
+  const discount = await anybodyProblem.discount()
+  const price = (await anybodyProblem.priceToMint())
+    .div(discount)
+    .add(mintingFee)
 
   const tickCounts = [ticksRun]
   const a = [dataResult.a]
@@ -431,7 +467,7 @@ const solveLevel = async (
   const c = [dataResult.c]
   const Input = [dataResult.Input]
   const alsoMint = true
-  const args = [runId, alsoMint, tickCounts, a, b, c, Input]
+  const args = [runId, alsoMint, 0, tickCounts, a, b, c, Input]
 
   if (runId == 0) {
     runId = 1
@@ -444,12 +480,13 @@ const solveLevel = async (
     if (level == 5) {
       await expect(
         anybodyProblem.batchSolve(...args, {
-          value: price.div(2).sub(1)
+          value: price.sub(1)
         })
       ).to.be.revertedWith('Incorrect payment')
     }
+    const value = level == 5 ? price : 0
     tx3 = await anybodyProblem.batchSolve(...args, {
-      value: level == 5 ? price : 0
+      value
     })
     await expect(tx3)
       .to.emit(anybodyProblem, 'LevelSolved')
@@ -662,6 +699,7 @@ const generateAndSubmitProof = async (
   const tx = await anybodyProblem.batchSolve(
     problemId,
     alsoMint,
+    0,
     proofLengths,
     a,
     b,
@@ -750,6 +788,7 @@ export {
   generateWitness,
   verifyContracts,
   solveLevel,
-  deployMetadata
+  deployMetadata,
+  getThemeName
   // splitterAddress
 }

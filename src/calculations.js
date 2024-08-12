@@ -144,7 +144,7 @@ export const Calculations = {
   },
 
   convertScaledStringArrayToMissile(missile) {
-    return this.convertScaledStringArrayToBody(missile, this.missileVectorLimit)
+    return this.convertScaledStringArrayToBody(missile, 0)
   },
 
   convertScaledStringArrayToBody(body, vectorLimit = this.vectorLimit) {
@@ -163,7 +163,7 @@ export const Calculations = {
   },
 
   convertScaledBigIntMissileToArray(m) {
-    return this.convertScaledBigIntBodyToArray(m, this.missileVectorLimit)
+    return this.convertScaledBigIntBodyToArray(m, 0)
   },
   convertScaledBigIntBodyToArray(b, vectorLimit = this.vectorLimit) {
     const maxVectorScaled = this.convertFloatToScaledBigInt(vectorLimit)
@@ -185,9 +185,9 @@ export const Calculations = {
   },
 
   convertMissileScaledStringArrayToFloat(missile) {
-    const maxMissileVectorScaled = this.convertFloatToScaledBigInt(
-      this.missileVectorLimit
-    )
+    // const maxMissileVectorScaled = this.convertFloatToScaledBigInt(
+    //   this.missileVectorLimit
+    // )
     missile = missile.map(this.convertScaledStringToBigInt.bind(this))
     return {
       position: {
@@ -195,8 +195,8 @@ export const Calculations = {
         y: this.windowWidth
       },
       velocity: {
-        x: this.convertScaledBigIntToFloat(missile[0] - maxMissileVectorScaled),
-        y: this.convertScaledBigIntToFloat(missile[1] - maxMissileVectorScaled)
+        x: this.convertScaledBigIntToFloat(missile[0]),
+        y: -this.convertScaledBigIntToFloat(missile[1])
       },
       radius: parseInt(missile[2])
     }
@@ -321,7 +321,37 @@ export const Calculations = {
       return { bodies, missiles }
     }
     const missile = missiles[0]
-    // console.dir({ missile_in: missile }, { depth: null })
+    const scaledMissileVectorLimit = this.convertFloatToScaledBigInt(
+      this.missileVectorLimit
+    )
+    if (missile.velocity.y > 0n) {
+      throw new Error(
+        `Missile velocity.y ${missile.velocity.y} should be negative`
+      )
+    }
+    if (missile.velocity.y < -scaledMissileVectorLimit) {
+      throw new Error(
+        `Missile velocity.y ${missile.velocity.y} should be greater than ${-scaledMissileVectorLimit}`
+      )
+    }
+    if (missile.velocity.x < 0n) {
+      throw new Error(
+        `Missile velocity.x ${missile.velocity.x} should be positive`
+      )
+    }
+    if (missile.velocity.x > scaledMissileVectorLimit) {
+      throw new Error(
+        `Missile velocity.x ${missile.velocity.x} should be less than ${scaledMissileVectorLimit}`
+      )
+    }
+    const missileAbsSum = BigInt(
+      Math.abs(parseInt(missile.velocity.x)) +
+        Math.abs(parseInt(missile.velocity.y))
+    )
+    if (missileAbsSum > this.missileVectorLimitSum) {
+      console.log({ missileAbsSum })
+      throw new Error('Missile is too fast')
+    }
     missile.position.x += missile.velocity.x
     missile.position.y += missile.velocity.y
 

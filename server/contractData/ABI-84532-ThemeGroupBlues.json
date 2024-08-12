@@ -1,0 +1,102 @@
+{
+  "contractName": "ThemeGroup",
+  "abi": [
+    { "inputs": [], "stateMutability": "nonpayable", "type": "constructor" },
+    {
+      "inputs": [
+        {
+          "internalType": "enum ThemeGroup.ThemeName",
+          "name": "",
+          "type": "uint8"
+        },
+        {
+          "internalType": "enum ThemeGroup.ThemeLayer",
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "name": "colourThemes",
+      "outputs": [
+        { "internalType": "uint256", "name": "hueStart", "type": "uint256" },
+        { "internalType": "uint256", "name": "hueEnd", "type": "uint256" },
+        {
+          "internalType": "uint256",
+          "name": "saturationStart",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "saturationEnd",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "lightnessStart",
+          "type": "uint256"
+        },
+        { "internalType": "uint256", "name": "lightnessEnd", "type": "uint256" }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "enum ThemeGroup.ThemeName",
+          "name": "themeName",
+          "type": "uint8"
+        },
+        {
+          "internalType": "enum ThemeGroup.ThemeLayer",
+          "name": "themeLayer",
+          "type": "uint8"
+        }
+      ],
+      "name": "getColourThemes",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "hueStart",
+              "type": "uint256"
+            },
+            { "internalType": "uint256", "name": "hueEnd", "type": "uint256" },
+            {
+              "internalType": "uint256",
+              "name": "saturationStart",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "saturationEnd",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "lightnessStart",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "lightnessEnd",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct ThemeGroup.ThemeSpecs",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "themeCount",
+      "outputs": [{ "internalType": "uint8", "name": "", "type": "uint8" }],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ]
+}
