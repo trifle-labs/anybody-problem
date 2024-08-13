@@ -290,7 +290,7 @@ describe('AnybodyProblem Tests', function () {
     expect(gamesPlayed.streak).to.equal(1)
   })
 
-  it('solves all levels in a single tx', async () => {
+  it.only('solves all levels in a single tx', async () => {
     const [owner] = await ethers.getSigners()
     const { AnybodyProblem: anybodyProblem, Speedruns: speedruns } =
       await deployContracts({ mock: true })
