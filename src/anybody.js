@@ -148,7 +148,7 @@ export class Anybody extends EventEmitter {
       alreadyRun: 0,
       paintSteps: 0,
       chunk: 1,
-      mute: true,
+      mute: false,
       freeze: false,
       test: false,
       util: false,
