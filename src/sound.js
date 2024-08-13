@@ -121,14 +121,13 @@ export default class Sound {
     this.missilePanner.pan.value = -PAN_RANGE / 2
     let player
     if (this.anybody.sfx === 'space') {
-      console.log({ vectorMagnitude })
       const playbackRate =
-        vectorMagnitude < 666_666 ? 3 : vectorMagnitude < 1_333_332 ? 2 : 1
-      player = await this.playOneShot(bottlerocket2, -34, {
+        vectorMagnitude < 100_000 ? 3 : vectorMagnitude < 500_000 ? 2 : 1
+      player = await this.playOneShot(bottlerocket2, -14, {
         playbackRate
       })
     } else {
-      player = await this.playOneShot(bubble, -36, {
+      player = await this.playOneShot(bubble, -16, {
         playbackRate: random([1, 0.9, 1.3])
       })
     }

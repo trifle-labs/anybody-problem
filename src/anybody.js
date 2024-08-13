@@ -112,6 +112,7 @@ export class Anybody extends EventEmitter {
     // this.p.blendMode(this.p.DIFFERENCE)
 
     this.levelSpeeds = new Array(5)
+    this.introStage = -1
     this.clearValues()
     !this.util && this.prepareP5()
     this.sound = new Sound(this)
@@ -196,6 +197,7 @@ export class Anybody extends EventEmitter {
     if (this.skip0 && this.level == 0) {
       this.level = 1
     }
+    this.totalIntroStages = 4
     this.lastMissileCantBeUndone = false
     this.speedFactor = 2
     this.speedLimit = 10
@@ -397,7 +399,11 @@ export class Anybody extends EventEmitter {
     //   this.debug = !this.debug
     // }
 
-    if (this.paused || this.gameOver) return
+    if (this.introStage < this.totalIntroStages - 1 && !this.paused) {
+      this.introStage++
+      return
+    }
+
     this.missileClick(x, y)
   }
 
@@ -539,9 +545,13 @@ export class Anybody extends EventEmitter {
         this.sound?.resume()
       }
     }
+
+    if (!newPauseState && this.introStage < 0) {
+      this.introStage = 0
+    }
   }
 
-  step() {
+  step(bodies = this.bodies, missiles = this.missiles) {
     // this.steps ||= 0
     // console.log({ steps: this.steps })
     // this.steps++
@@ -549,26 +559,26 @@ export class Anybody extends EventEmitter {
     //   { bodies: this.bodies, missiles: this.missiles[0] },
     //   { depth: null }
     // )
-    if (this.missiles.length == 0 && this.lastMissileCantBeUndone) {
+    if (missiles.length == 0 && this.lastMissileCantBeUndone) {
       console.log('LASTMISSILECANTBEUNDONE = FALSE')
       this.lastMissileCantBeUndone = false
     }
-    this.bodies = this.forceAccumulator(this.bodies)
-    var results = this.detectCollision(this.bodies, this.missiles)
-    this.bodies = results.bodies
-    this.missiles = results.missiles || []
-    if (this.missiles.length > 0) {
-      const missileCopy = JSON.parse(JSON.stringify(this.missiles[0]))
+    bodies = this.forceAccumulator(bodies)
+    var results = this.detectCollision(bodies, this.missiles)
+    bodies = results.bodies
+    missiles = results.missiles || []
+    if (missiles.length > 0) {
+      const missileCopy = JSON.parse(JSON.stringify(missiles[0]))
       this.stillVisibleMissiles.push(missileCopy)
     }
-    if (this.missiles.length > 0 && this.missiles[0].radius == 0) {
-      this.missiles.splice(0, 1)
-    } else if (this.missiles.length > 1 && this.missiles[0].radius !== 0) {
+    if (missiles.length > 0 && missiles[0].radius == 0) {
+      missiles.splice(0, 1)
+    } else if (missiles.length > 1 && missiles[0].radius !== 0) {
       // NOTE: follows logic of circuit
-      const newMissile = this.missiles.splice(0, 1)
-      this.missiles.splice(0, 1, newMissile[0])
+      const newMissile = missiles.splice(0, 1)
+      missiles.splice(0, 1, newMissile[0])
     }
-    return { bodies: this.bodies, missiles: this.missiles }
+    return { bodies, missiles }
   }
 
   started() {
@@ -736,7 +746,7 @@ export class Anybody extends EventEmitter {
     if (level == 0) {
       body.px = parseInt((BigInt(this.windowWidth) * this.scalingFactor) / 2n)
       body.py = parseInt((BigInt(this.windowWidth) * this.scalingFactor) / 2n)
-      body.vx = parseInt(maxVectorScaled) - 5000
+      body.vx = parseInt(maxVectorScaled)
       body.vy = parseInt(maxVectorScaled)
       return body
     }
@@ -950,7 +960,8 @@ export class Anybody extends EventEmitter {
 
   missileClick(x, y) {
     if (this.gameOver) return
-    if (this.paused) return
+    if (this.paused && this.introStage !== 3) return
+
     if (
       this.bodies.reduce((a, c) => a + c.radius, 0) == 0 ||
       this.frames - this.startingFrame >= this.timer
@@ -976,7 +987,6 @@ export class Anybody extends EventEmitter {
 
     this.missileCount++
     const radius = 10
-
     const b = {
       step: this.frames,
       position: this.p.createVector(0, this.windowWidth),
