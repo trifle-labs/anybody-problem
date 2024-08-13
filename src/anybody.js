@@ -431,6 +431,7 @@ export class Anybody extends EventEmitter {
         break
       case 'KeyM':
         this.mute = !this.mute
+        this.sound.setMuted(this.mute)
         break
     }
   }

@@ -77,6 +77,10 @@ export default class Sound {
     this.panner.connect(this.master)
   }
 
+  setMuted(isMuted) {
+    this.master.mute = isMuted
+  }
+
   setSong(index) {
     const songs = Object.values(SONGS)
     const level = this.anybody.level == 0 ? 1 : this.anybody.level
@@ -174,7 +178,9 @@ export default class Sound {
         url,
         volume,
         ...opts
-      }).toDestination()
+      })
+
+      this.oneShots[key].connect(this.master)
     }
 
     // play if it's been loaded or loads quickly, otherwise load and skip
