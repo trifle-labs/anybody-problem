@@ -493,11 +493,11 @@ export class Anybody extends EventEmitter {
     if (this.level !== this.lastLevel && this.level !== 1 && this.level !== 0) {
       this.sound?.stop()
       this.sound?.playStart()
-      this.sound?.setSong()
+      this.sound?.advanceToNextLevelSong()
       this.sound?.resume()
     }
     if (this.sound?.playbackRate !== 'normal') {
-      this.sound?.setPlaybackRate('normal')
+      this.sound?.playCurrentSong()
     }
     this.init()
     this.draw()
