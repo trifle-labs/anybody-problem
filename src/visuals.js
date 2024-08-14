@@ -237,7 +237,7 @@ export const Visuals = {
     this.drawPause()
     this.drawScore()
     this.drawPopup()
-    this.drawGun()
+    if (!this.renderingCanvasToShare) { this.drawGun() }
     this.drawGunSmoke()
     this.drawExplosionSmoke()
 
@@ -2511,6 +2511,10 @@ export const Visuals = {
   shareCanvas(showPopup = true) {
     const canvas = this.p.canvas
 
+    // draw the canvas without croshair before rendering
+    this.renderingCanvasToShare = true
+    this.draw()
+
     return new Promise((resolve, reject) => {
       canvas.toBlob(async (blob) => {
         const file = new File([blob], 'p5canvas.png', { type: 'image/png' })
@@ -2525,6 +2529,7 @@ export const Visuals = {
               console.error('Error sharing:', error)
               reject(error)
             })
+          this.renderingCanvasToShare = false
           resolve()
         } else if (navigator.clipboard && navigator.clipboard.write) {
           try {
@@ -2549,6 +2554,7 @@ export const Visuals = {
                 ]
               }
             }
+            this.renderingCanvasToShare = false
             resolve(msg)
           } catch (error) {
             console.error('Error copying to clipboard:', error)
@@ -2564,11 +2570,13 @@ export const Visuals = {
                 }
               ]
             }
+            this.renderingCanvasToShare = false
             reject(error)
           }
         } else {
           const error = new Error('no options to share canvas!')
           console.error(error)
+          this.renderingCanvasToShare = false
           reject(error)
         }
       }, 'image/png')
