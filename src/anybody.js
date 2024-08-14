@@ -28,65 +28,53 @@ function intersectsButton(button, x, y) {
 const PAUSE_BODY_DATA = [
   {
     bodyIndex: 0,
-    radius: 36000,
-    px: 149311,
-    py: 901865,
+    radius: 51000,
+    px: 500300,
+    py: 290750,
     vx: 0,
     vy: 0
   },
+  // upper right
   {
     bodyIndex: 1,
-    radius: 32000,
-    px: 309311,
-    py: 121865,
+    radius: 7000,
+    px: 793406,
+    py: 133029,
     vx: 0,
     vy: 0
   },
+  // mid right
   {
     bodyIndex: 2,
-    radius: 30000,
-    px: 850311,
-    py: 811865,
-    vx: 0,
-    vy: 0
-  },
-  {
-    bodyIndex: 3,
-    radius: 7000,
-    px: 833406,
-    py: 103029,
-    vx: 0,
-    vy: 0
-  },
-  {
-    bodyIndex: 4,
     radius: 20000,
-    px: 705620,
-    py: 178711,
+    px: 825620,
+    py: 418711,
     vx: -100000,
     vy: -1111000
   },
+  // upper left
+  {
+    bodyIndex: 3,
+    radius: 17000,
+    px: 159878,
+    py: 234946,
+    vx: 0,
+    vy: 0
+  },
+  // 
+  {
+    bodyIndex: 4,
+    radius: 9000,
+    px: 229878,
+    py: 464946,
+    vx: 0,
+    vy: 0
+  },
   {
     bodyIndex: 5,
-    radius: 17000,
-    px: 139878,
-    py: 454946,
-    vx: 0,
-    vy: 0
-  },
-  {
-    bodyIndex: 6,
-    radius: 9000,
-    px: 289878,
-    py: 694946,
-    vx: 0,
-    vy: 0
-  },
-  {
-    bodyIndex: 7,
     radius: 14000,
-    px: 589878,
-    py: 694946,
+    px: 679878,
+    py: 668946,
     vx: -100000,
     vy: -1111000
   }
@@ -246,10 +234,11 @@ export class Anybody extends EventEmitter {
     this.shaking = 0
     this.explosionSmoke = []
     this.gunSmoke = []
-    this.date = new Date(this.day * 1000)
-      .toISOString()
-      .split('T')[0]
-      .replace(/-/g, '.')
+    this.date = new Date(this.day * 1000).toLocaleDateString( 'en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
     this.framesTook = false
     this.showProblemRankingsScreenAt = -1
     this.saveStatus = 'unsaved' // 'unsaved' -> 'validating' -> 'validated' -> 'saving' -> 'saved' | 'error'
@@ -525,8 +514,8 @@ export class Anybody extends EventEmitter {
       this.pauseBodies = PAUSE_BODY_DATA.map((b) =>
         this.bodyDataToBodies.call(this, b)
       )
-      this.pauseBodies[1].c = this.getBodyColor(this.day + 1, 0)
-      this.pauseBodies[2].c = this.getBodyColor(this.day + 2, 0)
+      // preview other bodies
+      // this.pauseBodies[0].c = this.getBodyColor(this.day + 13, 0)
       this.paused = newPauseState
       this.willUnpause = false
       delete this.beganUnpauseAt

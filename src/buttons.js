@@ -68,7 +68,7 @@ export const Buttons = {
         text,
         // tweak to center, somethign about the font
         x + width / 2 + textSize * 0.13,
-        y + height / 2 + textSize * 0.06
+        y + height / 2 + textSize * 0.05
       )
     }
 
