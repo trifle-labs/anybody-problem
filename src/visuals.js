@@ -431,7 +431,7 @@ export const Visuals = {
 
     const p = this.p
 
-    const unpauseDuration = this.level == 0 ? 2 : 0
+    const unpauseDuration = this.level == 0 ? 1.8 : 0
     const unpauseFrames = unpauseDuration * this.P5_FPS
     if (this.willUnpause && !this.beganUnpauseAt) {
       this.willUnpause = true
@@ -451,21 +451,49 @@ export const Visuals = {
       const fadeOut = this.p.map(fadeOutProgress, 0, fadeOutFrames, 1, 0)
       p.fill(rgbaOpacity(THEME.pink, fadeOut))
     } else {
+      // draw box
+      p.stroke(THEME.iris_60)
+      p.strokeWeight(THEME.borderWt)
+      p.noFill()
+      p.rect(40, 60, 920, 860, 32, 32, 32, 32)
+
+      // date
+      p.textFont(fonts.body)
+      p.textSize(52)
+      const dateWidth = p.textWidth(this.date)
+      const dateBgWidth = dateWidth + 48
+      p.fill('black')
+      p.stroke(THEME.iris_60)
+      p.strokeWeight(THEME.borderWt)
+      p.rect(
+        80,
+        30,
+        dateBgWidth,
+        60,
+        80
+      )
+      p.textAlign(p.LEFT, p.CENTER)
+      p.fill(THEME.violet_25)
+      p.noStroke()
+      p.text(this.date, 80 + 48 / 2, 30 + 60 / 2)
+
       p.fill(THEME.pink)
     }
-    this.drawPauseBodies()
-
+    
     // draw logo
     p.textFont(fonts.dot)
-    p.textSize(200)
+    p.textSize(180)
     p.textAlign(p.LEFT, p.TOP)
     p.noStroke()
-    const titleY = this.windowHeight / 2 - 270
-    drawKernedText(p, 'Anybody', 46, titleY, 0.8)
-    drawKernedText(p, 'Problem', 46, titleY + 240, 2)
+    const titleY = 480 // this.windowHeight / 2 - 270
+    drawKernedText(p, 'Anybody', 92, titleY, 0.8)
+    drawKernedText(p, 'Problem', 92, titleY + 183, 2)
+
+    this.drawPauseBodies()
+
     if (!this.willUnpause) {
       // play button
-      this.drawFatButton({
+      this.drawButton({
         text: 'PLAY',
         onClick: () => {
           if (this.popup !== null) return
@@ -511,28 +539,31 @@ export const Visuals = {
         },
         fg: THEME.violet_50,
         bg: THEME.pink,
-        bottom: 120,
+        width: 410,
+        height: 108,
+        textSize: 78,
+        x: 508,
+        y: 862,
         p
       })
 
-      // date
-      p.textFont(fonts.body)
-      p.textSize(24)
-      const dateWidth = p.textWidth(this.date)
-      const dateBgWidth = dateWidth + 48
-      const dateBgHeight = 32
-      const dateBottomY = this.windowHeight - 58
-      p.fill(THEME.textBg)
-      p.rect(
-        this.windowWidth / 2 - dateBgWidth / 2,
-        dateBottomY - dateBgHeight / 2,
-        dateBgWidth,
-        dateBgHeight,
-        20
-      )
-      p.textAlign(p.CENTER, p.CENTER)
-      p.fill(THEME.textFg)
-      p.text(this.date, this.windowWidth / 2, dateBottomY)
+      // mint button
+      this.drawButton({
+        text: 'MINT',
+        onClick: () => {
+          this.emit('mint')
+        },
+        fg: THEME.violet_25,
+        bg: '#241465', // THEME.iris_75,
+        width: 410,
+        height: 108,
+        textSize: 78,
+        x: 82,
+        y: 862,
+        p
+      })
+
+      p.pop()
     }
   },
   drawBodyOutlines() {
@@ -1786,7 +1817,7 @@ export const Visuals = {
     // Bottom left corner coordinates
     let startX = 0
     let startY = this.windowHeight
-    this.p.strokeWeight(2)
+    this.p.strokeWeight(THEME.borderWt)
 
     const crossHairSize = 25
 
@@ -1874,7 +1905,7 @@ export const Visuals = {
       p.fill(color)
     } else {
       p.noFill()
-      p.strokeWeight(2)
+      p.strokeWeight(THEME.borderWt)
       p.stroke(color)
     }
     for (let a = rotateBy; a < p.TWO_PI + rotateBy; a += angle) {
@@ -2352,7 +2383,7 @@ export const Visuals = {
 
       const bodyCopy = {
         bodyIndex: body.bodyIndex,
-        hero: i < 3,
+        hero: !i,
         c: body.c,
         radius: body.radius,
         velocity: this.p.createVector(body.velocity.x, body.velocity.y),
