@@ -270,7 +270,14 @@ export class Anybody extends EventEmitter {
     // const vectorLimitScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
     this.setPause(this.paused, true)
     this.storeInits()
-    // this.prepareWitness()
+
+    // try to fetch muted state from session storage
+    try {
+      this.mute = JSON.parse(sessionStorage.getItem('muted')) || false
+      this.sound.setMuted(this.mute)
+    } catch (_) {
+      sessionStorage.removeItem('muted')
+    }
   }
 
   async start() {
