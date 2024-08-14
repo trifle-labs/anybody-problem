@@ -889,11 +889,45 @@ export const Visuals = {
             }
           }
         }
+        // lvl
         p.text('Lvl ' + this.level, this.windowWidth - 20, 0)
+        
+        // draw mute btn in bottom right corner
+        p.push()
+        p.noStroke()
+        p.fill('white')
+        p.translate(this.windowWidth - 108, this.windowWidth - 116) // move 0,0 to bottom right corner
+        // Scale factor based on the input width
+        const scale = Math.floor(48 / 6)
+        // Draw speaker body
+        this.drawMuteIconRect(0, 3, 1, 4, scale);
+        this.drawMuteIconRect(2, 3, 1, 4, scale);
+        this.drawMuteIconRect(3, 2, 1, 6, scale);
+        this.drawMuteIconRect(4, 1, 1, 8, scale);
+        this.drawMuteIconRect(5, 0, 1, 10, scale);
+        this.drawMuteIconRect(1, 3, 1, 4, scale);
+        // SOUNDWAVE rectangles (HIDE when NO SOUND)
+        this.drawMuteIconRect(6.5, 4, 1, 2, scale); //
+        this.drawMuteIconRect(8, 3, 1, 4, scale); //
+        // NO SOUND rectangles (HIDE when SOUND active)
+        // this.drawMuteIconRect(7, 4.5, 2.5, 1, scale);
+
+        // button tap area a bit margin around icon
+        const muteBtnTapArea = {
+          x: this.hasTouched ? -20 : -6,
+          y: this.hasTouched ? -20 : -6,
+          w: 200
+        }
+        // ADD BUTTON
+        p.pop()
       }
     }
 
     p.pop()
+  },
+
+  drawMuteIconRect(x, y, w, h, scale) {
+    this.p.rect(x * scale, y * scale, w * scale, h * scale, 1);
   },
 
   drawWinScreen() {
