@@ -998,6 +998,12 @@ export class Anybody extends EventEmitter {
     }
     // b.velocity.setMag(this.missileSpeed * this.speedFactor)
     b.velocity.limit(this.missileSpeed * this.speedFactor)
+    if (b.velocity.x < 0) {
+      b.velocity.x = 0
+    }
+    if (b.velocity.y > 0) {
+      b.velocity.y = 0
+    }
     let sum = b.velocity.x - b.velocity.y
     const max = this.missileVectorLimitSum / 1000
     if (sum > max) {
