@@ -61,7 +61,6 @@ const PAUSE_BODY_DATA = [
     vx: 0,
     vy: 0
   },
-  // 
   {
     bodyIndex: 4,
     radius: 9000,
@@ -99,12 +98,26 @@ export class Anybody extends EventEmitter {
     !this.util && loadFonts(this.p)
     // this.p.blendMode(this.p.DIFFERENCE)
 
-    this.levelSpeeds = new Array(5)
     this.clearValues()
     !this.util && this.prepareP5()
     this.sound = new Sound(this)
     this.init()
     !this.util && this.start()
+    this.checkIfDone()
+  }
+
+  checkIfDone() {
+    if (this.level == 5 && this.levelSpeeds.length == 5) {
+      this.bodies?.map((b, i) => {
+        return (b.radius = i == 0 ? b.radius : 0)
+      })
+      this.skipAhead = true
+      this.paused = false
+      this.gameOver = true
+      this.won = true
+      this.hasStarted = true
+      this.handledGameOver = true
+    }
   }
 
   proverTickIndex(i) {
@@ -116,8 +129,8 @@ export class Anybody extends EventEmitter {
       day: currentDay(),
       level: 0,
       skip0: false,
-      bodyData: null,
       todaysRecords: {},
+      levelSpeeds: new Array(5),
       // debug: false,
       // Add default properties and their initial values here
       startingBodies: 1,
@@ -147,6 +160,7 @@ export class Anybody extends EventEmitter {
       target: 'inside', // 'outside' or 'inside'
       faceRotation: 'mania', // 'time' or 'hitcycle' or 'mania'
       sfx: 'space', // 'space' or 'bubble'
+      address: undefined,
       playerName: undefined,
       practiceMode: false,
       bestTimes: null,
@@ -157,8 +171,9 @@ export class Anybody extends EventEmitter {
     // Assign the merged options to the instance properties
     Object.assign(this, mergedOptions)
   }
-  setPlayer(name = undefined) {
+  setPlayer({ name = undefined, address = undefined } = {}) {
     this.playerName = name
+    this.address = address
   }
   removeCSS() {
     if (typeof document === 'undefined') return
@@ -233,7 +248,7 @@ export class Anybody extends EventEmitter {
     this.shaking = 0
     this.explosionSmoke = []
     this.gunSmoke = []
-    this.date = new Date(this.day * 1000).toLocaleDateString( 'en-US', {
+    this.date = new Date(this.day * 1000).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
@@ -399,7 +414,7 @@ export class Anybody extends EventEmitter {
     if (this.gameOver && this.won) {
       this.skipAhead = true
     }
-    const modifierKeyActive = e.shiftKey && e.altKey && e.ctrlKey && e.metaKey
+    const modifierKeyActive = e.shiftKey || e.altKey || e.ctrlKey || e.metaKey
     if (modifierKeyActive) return
     switch (e.code) {
       case 'Space':
@@ -470,7 +485,6 @@ export class Anybody extends EventEmitter {
       framesTook: this.framesTook
     })
     if (won) {
-      this.bodyData = null
       this.finish()
     }
   }
@@ -653,7 +667,7 @@ export class Anybody extends EventEmitter {
       outflightMissileTmp.radius
     ]
 
-    const { day, level, bodyInits, bodyFinal, framesTook } = this
+    const { address, day, level, bodyInits, bodyFinal, framesTook } = this
 
     const results = JSON.parse(
       JSON.stringify({
@@ -664,7 +678,8 @@ export class Anybody extends EventEmitter {
         bodyInits,
         bodyFinal,
         framesTook,
-        outflightMissile
+        outflightMissile,
+        address
       })
     )
 
@@ -788,9 +803,8 @@ export class Anybody extends EventEmitter {
   }
 
   generateBodies() {
-    this.bodyData =
-      this.bodyData || this.generateLevelData(this.day, this.level)
-    this.bodies = this.bodyData.map((b) => this.bodyDataToBodies.call(this, b))
+    const bodyData = this.generateLevelData(this.day, this.level)
+    this.bodies = bodyData.map((b) => this.bodyDataToBodies.call(this, b))
     this.startingBodies = this.bodies.length
   }
 
@@ -818,15 +832,15 @@ export class Anybody extends EventEmitter {
   }
 
   getBodyColor(day, bodyIndex = 0) {
-    let baddieSeed = utils.solidityKeccak256(
-      ['uint256', 'uint256'],
-      [day, bodyIndex]
-    )
-    const baddieHue = this.randomRange(0, 359, baddieSeed)
-    baddieSeed = utils.solidityKeccak256(['bytes32'], [baddieSeed])
-    const baddieSaturation = this.randomRange(90, 100, baddieSeed)
-    baddieSeed = utils.solidityKeccak256(['bytes32'], [baddieSeed])
-    const baddieLightness = this.randomRange(55, 60, baddieSeed)
+    // let baddieSeed = utils.solidityKeccak256(
+    //   ['uint256', 'uint256'],
+    //   [day, bodyIndex]
+    // )
+    // const baddieHue = this.randomRange(0, 359, baddieSeed)
+    // baddieSeed = utils.solidityKeccak256(['bytes32'], [baddieSeed])
+    // const baddieSaturation = this.randomRange(90, 100, baddieSeed)
+    // baddieSeed = utils.solidityKeccak256(['bytes32'], [baddieSeed])
+    // const baddieLightness = this.randomRange(55, 60, baddieSeed)
 
     // hero body info
     const themes = Object.keys(bodyThemes)
@@ -908,6 +922,14 @@ export class Anybody extends EventEmitter {
       rand
     )
 
+    const baddieColors = [
+      [260, 90, 58],
+      [260, 90, 58],
+      [241, 95, 59],
+      [113, 99, 55],
+      [60, 98, 58],
+      [352, 96, 57]
+    ]
     const info = {
       fIndex,
       bgIndex,
@@ -916,7 +938,7 @@ export class Anybody extends EventEmitter {
       bg: `hsl(${bgHue},${bgSaturation}%,${bgLightness}%`,
       core: `hsl(${coreHue},${coreSaturation}%,${coreLightness}%`,
       fg: `hsl(${fgHue},${fgSaturation}%,${fgLightness}%`,
-      baddie: [baddieHue, baddieSaturation, baddieLightness]
+      baddie: baddieColors[bodyIndex]
     }
     return info
   }

@@ -56,6 +56,19 @@ fastest_completed AS (
     ORDER BY accumulative_time ASC
     LIMIT 1
 ),
+nft_balance AS (
+    SELECT 
+        id,
+        SUM(CASE WHEN "to" = decode($2, 'hex') THEN value 
+                 WHEN "from" = decode($2, 'hex') THEN -value 
+                 ELSE 0 END) AS balance
+    FROM "speedruns_transfer_single"
+    WHERE "to" = decode($2, 'hex') OR "from" = decode($2, 'hex')
+    GROUP BY id
+    HAVING SUM(CASE WHEN "to" = decode($2, 'hex') THEN value 
+                    WHEN "from" = decode($2, 'hex') THEN -value 
+                    ELSE 0 END) > 0
+),
 player_stats AS (
     SELECT
       'Current Streak' AS category,
@@ -86,13 +99,20 @@ player_stats AS (
       COUNT(*) AS metric, 
       NULL::jsonb AS additional_info
     FROM player_data
+    UNION ALL
+    SELECT
+      'NFT Balance' AS category,
+      COUNT(*) AS metric,
+      jsonb_build_object('nfts', jsonb_agg(jsonb_build_object('id', id, 'balance', balance))) AS additional_info
+    FROM nft_balance
 )
 SELECT
     category,
     COALESCE(metric, 0) as metric,
     additional_info->>'runId' AS runId,
     additional_info->>'day' AS day,
-    additional_info->'days' AS days
+    additional_info->'days' AS days,
+    additional_info->'nfts' AS nfts
 FROM player_stats;
 `,
     [chain, address.replace(/^0x/, ''), today, yesterday]
@@ -100,6 +120,10 @@ FROM player_stats;
 
   const fastestCompleted = problems.rows.find(
     (r) => r.category === 'Fastest Completed Problem'
+  )
+
+  const nftBalance = problems.rows.find(
+    (r) => r.category === 'NFT Balance'
   )
 
   return {
@@ -121,7 +145,8 @@ FROM player_stats;
     runsSolved:
       parseInt(
         problems.rows.find((r) => r.category === 'Runs Solved')?.metric
-      ) || 0
+      ) || 0,
+    nftBalances: nftBalance?.nfts || []
   }
 }
 

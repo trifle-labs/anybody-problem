@@ -239,7 +239,7 @@ export default class Sound {
     }, this.currentSong.interval || '2m').start(0)
 
     // play the transport (immeditately from the beginning)
-    Tone.getTransport().start("+0", "0:0:0")
+    Tone.getTransport().start('+0', '0:0:0')
 
     if (this.anybody.sfx === 'space') {
       this.playOneShot(affirmative, -22, { playbackRate: 1 })
@@ -286,7 +286,6 @@ export default class Sound {
   }
 
   async playSong(song) {
-
     // prepare playback
     this.prepareForPlayback()
 
@@ -296,11 +295,11 @@ export default class Sound {
     // reset audio player
     this.stop()
 
-    // set game over playback speed
-    this.setPlaybackRate('normal')
-
     // load the current song
     await this.player.load(this.currentSong.audio)
+
+    // set game over playback speed
+    this.setPlaybackRate('normal')
 
     // start song and schedule to replay in a loop
     this.loop = new Loop((time) => {
@@ -308,6 +307,6 @@ export default class Sound {
     }, song.interval || '2m').start(0)
 
     // play the transport (immeditately from the beginning)
-    Tone.getTransport().start("+0", "0:0:0")
+    Tone.getTransport().start('+0', '0:0:0')
   }
 }
