@@ -106,7 +106,7 @@ export const Buttons = {
     const { columns, column } = buttonOptions
     const gutter = 24
     const interButtonGutter = 6
-    const frameWidth = this.windowWidth - 2 * gutter
+    const frameWidth = this.windowWidth - (2 * gutter)
     const width = (frameWidth - (columns - 1) * interButtonGutter) / columns
     this.drawButton({
       height: 84,

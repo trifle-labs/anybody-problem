@@ -1208,9 +1208,11 @@ export const Visuals = {
       811,
       boxW - gutter / 2
     )
+
     // bottom buttons
+    this.showRestart = this.level >= 2
     this.showShare = this.level >= 5
-    const buttonCount = this.showShare ? 4 : 3
+    let buttonCount = 2 + Number(this.showRestart) + Number(this.showShare)
     this.drawBottomButton({
       text: 'REDO',
       onClick: () => {
@@ -1253,45 +1255,47 @@ export const Visuals = {
       columns: buttonCount,
       column: 0
     })
-    this.drawBottomButton({
-      text: 'RESTART',
-      onClick: () => {
-        // confirm in popup
-        if (this.popup !== null) return
-        this.popup = {
-          bg: THEME.flame_75,
-          fg: THEME.flame_50,
-          stroke: THEME.flame_50,
-          header: 'Start Over?',
-          body: ['Any progress will be lost!'],
-          buttons: [
-            {
-              text: 'CLOSE',
-              fg: THEME.flame_50,
-              bg: THEME.flame_75,
-              stroke: THEME.flame_50,
-              onClick: () => {
-                this.popup = null
+    if (this.showRestart) {
+      this.drawBottomButton({
+        text: 'RESTART',
+        onClick: () => {
+          // confirm in popup
+          if (this.popup !== null) return
+          this.popup = {
+            bg: THEME.flame_75,
+            fg: THEME.flame_50,
+            stroke: THEME.flame_50,
+            header: 'Start Over?',
+            body: ['Any progress will be lost!'],
+            buttons: [
+              {
+                text: 'CLOSE',
+                fg: THEME.flame_50,
+                bg: THEME.flame_75,
+                stroke: THEME.flame_50,
+                onClick: () => {
+                  this.popup = null
+                }
+              },
+              {
+                text: 'RESTART',
+                fg: THEME.flame_75,
+                bg: THEME.flame_50,
+                stroke: THEME.flame_50,
+                onClick: () => {
+                  this.popup = null
+                  this.level = 1
+                  this.restart(undefined, this.practiceMode)
+                }
               }
-            },
-            {
-              text: 'RESTART',
-              fg: THEME.flame_75,
-              bg: THEME.flame_50,
-              stroke: THEME.flame_50,
-              onClick: () => {
-                this.popup = null
-                this.level = 1
-                this.restart(undefined, this.practiceMode)
-              }
-            }
-          ]
-        }
-      },
-      ...themes.buttons.flame,
-      columns: buttonCount,
-      column: 1
-    })
+            ]
+          }
+        },
+        ...themes.buttons.flame,
+        columns: buttonCount,
+        column: 1
+      })
+    }
     if (this.showShare) {
       this.drawBottomButton({
         text: 'SHARE',
