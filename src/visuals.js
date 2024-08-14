@@ -1,5 +1,6 @@
 import { hslToRgb, rgbaOpacity, THEME, themes, randHSL } from './colors.js'
 import { fonts, drawKernedText } from './fonts.js'
+import { utils } from 'ethers'
 
 const BODY_SCALE = 4 // match to calculations.js !!
 const GAME_LENGTH_BY_LEVEL_INDEX = [30, 10, 20, 30, 40, 50]
@@ -198,7 +199,7 @@ const svgs = {
 
 const replaceAttribute = (string, key, color) =>
   string.replaceAll(
-    new RegExp(`${key}="(?!none)([^"]+)"`, 'g'),
+    new RegExp(`(?<=\\s|^)${key}="(?!none)([^"]+)"`, 'g'),
     `${key}="${color}"`
   )
 
@@ -323,16 +324,21 @@ export const Visuals = {
     }
   },
 
-  drawIntroStage3() {
-    this.levelCountdown ||= 300
-    this.levelCountdown -= 1
+  drawIntroStage2() {
+    this.levelCounting ||= 0
+    this.levelCounting += 1
 
     this.introBodies ||= [
-      JSON.parse(JSON.stringify(this.bodies[0])),
+      (() => {
+        const b = JSON.parse(JSON.stringify(this.bodies[0]))
+        b.velocity.x = -6.5
+        b.velocity.y = 6.5
+        return b
+      })(),
       {
         position: { x: this.windowWidth - 100, y: 100 },
         velocity: { x: 0, y: 0 },
-        radius: 20,
+        radius: 42,
         c: { baddie: this.bodies[0].c.baddie }
       }
     ]
@@ -341,7 +347,6 @@ export const Visuals = {
     })
     if (this.p5Frames % this.P5_FPS_MULTIPLIER == 0) {
       const results = this.step(this.introBodies, this.missiles)
-      // this.introStage++
 
       this.introBodies = results.bodies
       this.missiles = results.missiles
@@ -362,7 +367,7 @@ export const Visuals = {
 
       this.timeout ||= setTimeout(() => {
         const b = this.introBodies[0]
-        b.radius = 27
+        b.radius = 56
         b.position = {
           x: this.windowWidth / 2,
           y: this.windowHeight / 2
@@ -378,16 +383,25 @@ export const Visuals = {
       }, 3000)
     }
 
-    // this.shakeScreen()
-    // this.drawGun()
-    // this.drawMissiles()
-    // this.drawExplosions()
-    // this.drawGunSmoke()
+    let w, text
 
-    if (this.levelCountdown > 0 && this.introBodies[0].radius > 0) {
-      const w = 268
+    const chunk_1 = 1.5 * this.P5_FPS
+    const chunk_2 = 2.5 * this.P5_FPS
+    const chunk_3 = 2 * this.P5_FPS
+    const levelMaxTime = chunk_1 + chunk_2 + chunk_3
+    if (this.levelCounting < chunk_1) {
+      w = 268
+      text = 'oh no !!'
+    } else if (this.levelCounting < chunk_1 + chunk_2) {
+      w = 523
+      text = 'a BADDIE is approaching !!'
+    } else {
+      w = 268
+      text = 'BLAST IT !!!'
+    }
+
+    if (this.levelCounting < levelMaxTime && this.introBodies[0].radius > 0) {
       const y = 780
-      const text = 'BLAST IT !!!'
       this.drawTextBubble({
         text,
         w,
@@ -397,8 +411,6 @@ export const Visuals = {
         stroke: THEME.iris_30,
         bg: THEME.bg
       })
-    } else if (this.levelCountdown == 0) {
-      this.levelCountdown--
     } else if (this.introBodies[1].radius == 0) {
       const w = 568
       const y = 780
@@ -414,57 +426,13 @@ export const Visuals = {
       })
 
       this.timeout ||= setTimeout(() => {
-        this.introStage = 4
+        this.introStage++
         clearTimeout(this.timeout)
         this.timeout = null
         this.skipAhead = true
         this.handleGameOver({ won: true })
         this.playedIntro = true
       }, 3000)
-    }
-  },
-
-  drawIntroStage2() {
-    this.levelCountdown ||= 300
-    this.levelCountdown -= 1
-
-    const baddie = {
-      position: {
-        x: this.windowWidth - 100,
-        y: 100
-      },
-      velocity: this.createVector(0, 0),
-      radius: 20,
-      c: { baddie: this.bodies[0].c.baddie }
-    }
-    this.p.push()
-    this.p.translate(baddie.position.x, baddie.position.y)
-    this.drawBaddie(baddie)
-    this.p.pop()
-
-    const body = this.bodies[0]
-    this.drawBody(body)
-
-    let w, text
-    if (this.levelCountdown > 200) {
-      w = 268
-      text = 'oh no !!'
-    } else {
-      w = 523
-      text = 'a BADDIE is approaching !!'
-    }
-    const y = 780
-    this.drawTextBubble({
-      text,
-      w,
-      x: this.windowWidth / 2 - w / 2,
-      y,
-      fg: THEME.iris_30,
-      stroke: THEME.iris_30,
-      bg: THEME.bg
-    })
-    if (this.levelCountdown <= 0) {
-      this.introStage++
     }
   },
 
@@ -520,15 +488,19 @@ export const Visuals = {
       position: { x: this.windowWidth / 2, y: this.windowHeight / 2 },
       velocity: this.createVector(0, 0),
       radius: currentSize,
+      maxRadius: 40,
       c: { baddie: [0, 0, 0, 0], strokeColor: '#FFF', strokeWidth: 1.5 },
-      backgroundOnly: true
+      backgroundOnly: true,
+      rotationSpeedOffset: 2
     }
     const baddie2 = JSON.parse(JSON.stringify(baddie))
     baddie2.radius = currentSize * 0.74
+    baddie2.rotationSpeedOffset = -1
 
     const baddie3 = JSON.parse(JSON.stringify(baddie))
     baddie3.radius = currentSize * 0.47
     baddie3.c.baddie = [0, 0, 120]
+    baddie3.rotationSpeedOffset = 0
 
     this.p.push()
     this.p.translate(baddie.position.x, baddie.position.y)
@@ -616,7 +588,11 @@ export const Visuals = {
   },
 
   drawTips() {
-    if (this.introStage == 3 && !(this.paused || this.won || this.gameOver)) {
+    if (
+      this.introStage == this.totalIntroStages - 1 &&
+      this.levelCounting >= 6 * this.P5_FPS &&
+      !(this.paused || this.won || this.gameOver)
+    ) {
       // how to shoot
       const { h } = this.drawTextBubble({})
       const gttr = 24
@@ -875,17 +851,37 @@ export const Visuals = {
     }
 
     const drawMilky = (graphic) => {
+      const rand = (min, max, offset = 0) => {
+        let rand = utils.solidityKeccak256(['bytes32'], [this.seed])
+        if (offset !== 0) {
+          rand = utils.solidityKeccak256(['bytes32', 'uint256'], [rand, offset])
+        }
+        return this.randomRange(min, max, rand)
+      }
+
       graphic.colorMode(graphic.RGB)
       const startColor = graphic.color(
-        ...hslToRgb(randHSL(themes.bodies.default['berlin'].bg, true), 1, true)
+        ...hslToRgb(
+          randHSL(themes.bodies.default['berlin'].bg, true, rand.bind(this), 0),
+          1,
+          true
+        )
       )
       const endColor = graphic.color(
-        ...hslToRgb(randHSL(themes.bodies.default['berlin'].bg, true), 1, true)
+        ...hslToRgb(
+          randHSL(
+            themes.bodies.default['berlin'].bg,
+            true,
+            rand.bind(this),
+            100
+          ),
+          1,
+          true
+        )
       )
-      const r = graphic.random(0, 1)
-      const startXLeft = r > 0.5
-      const startYLeft = graphic.random(0, 1) > 0.5
-
+      const r = rand(0, 1, 0)
+      const startXLeft = r == 0
+      const startYLeft = rand(0, 1, 1) == 0
       // Define control points for the Bézier curve
       let x1 = startXLeft ? -100 : this.windowWidth + 100,
         y1 = startYLeft ? this.windowHeight + 100 : 0
@@ -925,11 +921,7 @@ export const Visuals = {
       //   this.windowWidth,
       //   this.windowHeight
       // )
-      // drawMilky(this.starBG)
-    }
-    if (!this.milkyDrawn && this.level > 0) {
       drawMilky(this.starBG)
-      this.milkyDrawn = true
     }
     const basicX = 0
     const basicY = 0
@@ -2099,7 +2091,8 @@ export const Visuals = {
     )
 
     if (
-      (this.introStage !== 3 && this.introStage < this.totalIntroStages) ||
+      (this.introStage !== this.totalIntroStages - 1 &&
+        this.introStage < this.totalIntroStages) ||
       this.paused ||
       this.gameOver
     )
@@ -2153,6 +2146,7 @@ export const Visuals = {
       const _explosion = JSON.parse(JSON.stringify(explosions[i]))
       _explosion.velocity = v
       if (_explosion.bodyIndex == 0) {
+        _explosion.cry = true
         _explosion.c.bg = this.hslToGrayscale(explosions[i].c.bg, 1.5)
         _explosion.c.fg = this.hslToGrayscale(explosions[i].c.fg)
         _explosion.c.core = this.hslToGrayscale(explosions[i].c.core)
@@ -2189,7 +2183,11 @@ export const Visuals = {
   },
 
   drawMissiles() {
-    if (this.introStage !== 3 && (this.paused || this.gameOver)) return
+    if (
+      this.introStage !== this.totalIntroStages - 1 &&
+      (this.paused || this.gameOver)
+    )
+      return
     this.p.noStroke()
     this.p.strokeWeight(0)
     const starRadius = 10
@@ -2202,13 +2200,13 @@ export const Visuals = {
         const color = randHSL(
           themes.bodies.default['pastel_highlighter_marker'].cr
         )
-        const rotateBy = this.frames % 360
+        const rotateBy = (this.p5Frames / this.P5_FPS_MULTIPLIER) % 360
         body.phase = {
           color,
           life,
           rotateBy
         }
-      } else if (!this.paused || this.introStage == 3) {
+      } else if (!this.paused || this.introStage == this.totalIntroStages - 1) {
         body.phase.life++
         if (body.phase.life >= maxLife) {
           this.stillVisibleMissiles.splice(i, 1)
@@ -2259,8 +2257,14 @@ export const Visuals = {
     return closeEnough
   },
 
-  drawImageAsset(cat, id, width, fill, strokeColor, strokeWidth) {
-    const ref = cat + id + fill
+  drawImageAsset(
+    cat,
+    id,
+    width,
+    { fill, strokeColor, strokeWidth, maxWidth } = {}
+  ) {
+    maxWidth = maxWidth || width
+    const ref = cat + id + fill + maxWidth
     this.imgAssets ||= {}
     const loaded = this.imgAssets[ref]
     if (!loaded) {
@@ -2268,6 +2272,8 @@ export const Visuals = {
       this.imgAssets[ref] = 'loading'
       svg = fill ? replaceAttribute(svg, 'fill', fill) : svg
       svg = strokeColor ? replaceAttribute(svg, 'stroke', strokeColor) : svg
+      svg = replaceAttribute(svg, 'width', maxWidth * this.pixelDensity)
+      svg = replaceAttribute(svg, 'height', maxWidth * this.pixelDensity)
       svg = strokeWidth
         ? replaceAttribute(svg, 'stroke-width', strokeWidth)
         : svg
@@ -2322,7 +2328,8 @@ export const Visuals = {
     const baddiesNear = this.closeTo(body)
     if (
       (baddiesNear && !this.paused) ||
-      (this.gameOver && !this.won && !this.skipAhead)
+      (this.gameOver && !this.won && !this.skipAhead) ||
+      body.cry
     ) {
       this.drawImageAsset('FACE_SHOT_SVGS', body.c.fIndex, width)
       return
@@ -2355,7 +2362,7 @@ export const Visuals = {
         ? 0
         : (this.p5Frames / this.P5_FPS_MULTIPLIER / r.speed) % 360
     this.p.rotate(r.direction * rotateBy)
-    this.drawImageAsset('FG_SVGS', body.c.fgIndex, width, body.c.fg)
+    this.drawImageAsset('FG_SVGS', body.c.fgIndex, width, { fill: body.c.fg })
     this.p.pop()
   },
 
@@ -2370,7 +2377,7 @@ export const Visuals = {
         ? 0
         : (this.p5Frames / this.P5_FPS_MULTIPLIER / r.speed) % 360
     this.p.rotate(r.direction * rotateBy)
-    this.drawImageAsset('CORE_SVGS', 0, width, body.c.core)
+    this.drawImageAsset('CORE_SVGS', 0, width, { fill: body.c.core })
     this.p.pop()
   },
 
@@ -2385,7 +2392,7 @@ export const Visuals = {
         ? 0
         : (this.p5Frames / this.P5_FPS_MULTIPLIER / r.speed) % 360
     this.p.rotate(r.direction * rotateBy)
-    this.drawImageAsset('BG_SVGS', body.c.bgIndex, width, body.c.bg)
+    this.drawImageAsset('BG_SVGS', body.c.bgIndex, width, { fill: body.c.bg })
     this.p.pop()
   },
 
@@ -2415,6 +2422,7 @@ export const Visuals = {
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
     svg.setAttribute('width', width)
     svg.setAttribute('height', height)
+    svg.setAttribute('day', day)
     svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
     svg.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
     svg.setAttribute('viewBox', `0 0 ${width} ${height}`)
@@ -2700,10 +2708,14 @@ export const Visuals = {
   drawBaddie(body) {
     const colorHSL = body.c.baddie
     const coreWidth = body.radius * BODY_SCALE
+    const maxWidth = (body.maxRadius || body.radius) * BODY_SCALE
     let bgColor = this.brighten(colorHSL, -20)
     const coreColor = `hsl(${colorHSL[0]},${colorHSL[1]}%,${colorHSL[2]}%)`
     this.p.push()
-    const rotate = (this.p5Frames / this.P5_FPS_MULTIPLIER / 30) % 360
+    const rotationSpeedOffset = body.rotationSpeedOffset || 1
+    const rotate =
+      (this.p5Frames / this.P5_FPS_MULTIPLIER / (30 / rotationSpeedOffset)) %
+      360
     this.p.rotate(rotate)
     let strokeColor = body.c.strokeColor
     let strokeWidth = body.c.strokeWidth
@@ -2711,15 +2723,18 @@ export const Visuals = {
       'BADDIE_SVG',
       'bg',
       Math.floor(coreWidth * (310 / 111.2)),
-      bgColor,
-      strokeColor,
-      strokeWidth
+      {
+        fill: bgColor,
+        strokeColor,
+        strokeWidth,
+        maxWidth: Math.floor(maxWidth * (310 / 111.2))
+      }
     )
     this.p.push()
     const heading = this.level == 0 ? -this.p.PI / 2 : body.velocity.heading()
     this.p.rotate(-rotate + heading + this.p.PI / 2)
     if (!body.backgroundOnly) {
-      this.drawImageAsset('BADDIE_SVG', 'core', coreWidth, coreColor)
+      this.drawImageAsset('BADDIE_SVG', 'core', coreWidth, { fill: coreColor })
 
       // pupils always looking at missile, if no missile, look at mouse
       const target =

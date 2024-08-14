@@ -197,7 +197,7 @@ export class Anybody extends EventEmitter {
     if (this.skip0 && this.level == 0) {
       this.level = 1
     }
-    this.totalIntroStages = 4
+    this.totalIntroStages = 3
     this.lastMissileCantBeUndone = false
     this.speedFactor = 2
     this.speedLimit = 10
@@ -741,9 +741,10 @@ export class Anybody extends EventEmitter {
     const body = {}
     body.bodyIndex = index
     body.seed = dayLevelIndexSeed
-    body.radius = this.genRadius(index, level)
+    body.radius = this.genRadius(index)
 
     if (level == 0) {
+      body.radius = parseInt(56n * this.scalingFactor)
       body.px = parseInt((BigInt(this.windowWidth) * this.scalingFactor) / 2n)
       body.py = parseInt((BigInt(this.windowWidth) * this.scalingFactor) / 2n)
       body.vx = parseInt(maxVectorScaled)
@@ -782,19 +783,20 @@ export class Anybody extends EventEmitter {
     return body
   }
 
-  genRadius(index, level = this.level) {
+  genRadius(index) {
     const radii = [36n, 27n, 23n, 19n, 15n, 11n] // n * 4 + 2
-    let size = level == 0 ? 27n : radii[index % radii.length]
+    let size = radii[index % radii.length]
     return parseInt(size * BigInt(this.scalingFactor))
   }
 
   randomRange(minBigInt, maxBigInt, seed) {
+    const fuckup = this.day == 1723766400 ? 0n : 1n
     if (minBigInt == maxBigInt) return minBigInt
     minBigInt = typeof minBigInt === 'bigint' ? minBigInt : BigInt(minBigInt)
     maxBigInt = typeof maxBigInt === 'bigint' ? maxBigInt : BigInt(maxBigInt)
     seed = typeof seed === 'bigint' ? seed : BigInt(seed)
     if (minBigInt > maxBigInt) {
-      const range = 359n - (minBigInt - maxBigInt)
+      const range = 359n - (minBigInt - maxBigInt + fuckup)
       const output = seed % range
       if (output < maxBigInt) {
         return parseInt(output)
@@ -802,7 +804,7 @@ export class Anybody extends EventEmitter {
         return parseInt(minBigInt - maxBigInt + output)
       }
     } else {
-      return parseInt((seed % (maxBigInt - minBigInt)) + minBigInt)
+      return parseInt((seed % (maxBigInt - minBigInt + fuckup)) + minBigInt)
     }
   }
 
@@ -960,7 +962,7 @@ export class Anybody extends EventEmitter {
 
   missileClick(x, y) {
     if (this.gameOver) return
-    if (this.paused && this.introStage !== 3) return
+    if (this.paused && this.introStage !== this.totalIntroStages - 1) return
 
     if (
       this.bodies.reduce((a, c) => a + c.radius, 0) == 0 ||

@@ -309,16 +309,17 @@ contract ExternalMetadata is Ownable {
     }
 
     function getHeroBodyPath(
-        uint256 date
+        uint256 day
     ) internal view returns (string memory) {
         //FACE SHAPE
         uint256 extraSeed = 19;
 
-        bytes32 rand = keccak256(abi.encodePacked(date, extraSeed));
+        bytes32 rand = keccak256(abi.encodePacked(day, extraSeed));
         uint256 pathIdxFace = randomRange(
             0,
             svgShapeCategorySizes[ThemeGroup.ThemeLayer.Face] - 1,
-            rand
+            rand,
+            day
         );
         AssetData memory pathFaceData = svgShapes[ThemeGroup.ThemeLayer.Face][
             pathIdxFace
@@ -333,7 +334,8 @@ contract ExternalMetadata is Ownable {
         uint256 pathIdxBG = randomRange(
             0,
             svgShapeCategorySizes[ThemeGroup.ThemeLayer.BG] - 1,
-            rand
+            rand,
+            day
         );
         AssetData memory pathBGData = svgShapes[ThemeGroup.ThemeLayer.BG][
             pathIdxBG
@@ -348,7 +350,8 @@ contract ExternalMetadata is Ownable {
         uint256 pathIdxFG = randomRange(
             0,
             svgShapeCategorySizes[ThemeGroup.ThemeLayer.FG] - 1,
-            rand
+            rand,
+            day
         );
         AssetData memory pathFGData = svgShapes[ThemeGroup.ThemeLayer.FG][
             pathIdxFG
@@ -363,7 +366,8 @@ contract ExternalMetadata is Ownable {
         uint256 pathIdxCore = randomRange(
             0,
             svgShapeCategorySizes[ThemeGroup.ThemeLayer.Core] - 1,
-            rand
+            rand,
+            day
         );
         AssetData memory pathCoreData = svgShapes[ThemeGroup.ThemeLayer.Core][
             pathIdxCore
@@ -377,7 +381,7 @@ contract ExternalMetadata is Ownable {
         rand = keccak256(abi.encodePacked(rand));
         uint8 themegroupsAmount = themeGroup.themeCount();
         ThemeGroup.ThemeName currentDayTheme = ThemeGroup.ThemeName(
-            randomRange(0, themegroupsAmount - 1, rand)
+            randomRange(0, themegroupsAmount - 1, rand, day)
         );
 
         //BACKGROUND COLOR (Hue, Saturation, Lightness)
@@ -385,7 +389,8 @@ contract ExternalMetadata is Ownable {
         (colorsBGValues, rand) = getHeroBodyLayerColor(
             rand,
             currentDayTheme,
-            ThemeGroup.ThemeLayer.BG
+            ThemeGroup.ThemeLayer.BG,
+            day
         );
         string memory colorsBG = string(
             abi.encodePacked(
@@ -404,7 +409,8 @@ contract ExternalMetadata is Ownable {
         (colorsCoreValues, rand) = getHeroBodyLayerColor(
             rand,
             currentDayTheme,
-            ThemeGroup.ThemeLayer.Core
+            ThemeGroup.ThemeLayer.Core,
+            day
         );
         string memory colorsCore = string(
             abi.encodePacked(
@@ -423,7 +429,8 @@ contract ExternalMetadata is Ownable {
         (colorsFGValues, rand) = getHeroBodyLayerColor(
             rand,
             currentDayTheme,
-            ThemeGroup.ThemeLayer.FG
+            ThemeGroup.ThemeLayer.FG,
+            day
         );
         string memory colorsFG = string(
             abi.encodePacked(
@@ -628,7 +635,8 @@ contract ExternalMetadata is Ownable {
     function getHeroBodyLayerColor(
         bytes32 seed,
         ThemeGroup.ThemeName theme,
-        ThemeGroup.ThemeLayer layer
+        ThemeGroup.ThemeLayer layer,
+        uint256 day
     ) public view returns (uint256[3] memory, bytes32) {
         bytes32 rand = keccak256(abi.encodePacked(seed));
         ThemeGroup.ThemeSpecs memory themeSpecs = themeGroup.getColourThemes(
@@ -636,20 +644,27 @@ contract ExternalMetadata is Ownable {
             layer
         );
 
-        uint256 hue = randomRange(themeSpecs.hueStart, themeSpecs.hueEnd, rand);
+        uint256 hue = randomRange(
+            themeSpecs.hueStart,
+            themeSpecs.hueEnd,
+            rand,
+            day
+        );
 
         rand = keccak256(abi.encodePacked(rand));
         uint256 sat = randomRange(
             themeSpecs.saturationStart,
             themeSpecs.saturationEnd,
-            rand
+            rand,
+            day
         );
 
         rand = keccak256(abi.encodePacked(rand));
         uint256 light = randomRange(
             themeSpecs.lightnessStart,
             themeSpecs.lightnessEnd,
-            rand
+            rand,
+            day
         );
 
         return ([hue, sat, light], rand);
@@ -660,12 +675,12 @@ contract ExternalMetadata is Ownable {
         uint256 bodyIndex
     ) internal pure returns (uint256[3] memory hsl) {
         bytes32 rand = keccak256(abi.encodePacked(day, bodyIndex));
-        uint256 hue = randomRange(0, 359, rand);
+        uint256 hue = randomRange(0, 359, rand, day);
         rand = keccak256(abi.encodePacked(rand));
-        uint256 saturation = randomRange(90, 100, rand);
+        uint256 saturation = randomRange(90, 100, rand, day);
 
         rand = keccak256(abi.encodePacked(rand));
-        uint256 lightness = randomRange(55, 60, rand);
+        uint256 lightness = randomRange(55, 60, rand, day);
 
         return [hue, saturation, lightness];
     }
@@ -673,15 +688,17 @@ contract ExternalMetadata is Ownable {
     function randomRange(
         uint256 min,
         uint256 max,
-        bytes32 seed
+        bytes32 seed,
+        uint256 day
     ) internal pure returns (uint256) {
+        uint256 fuckup = day == 1723766400 ? 0 : 1;
         if (min == max) {
             return min;
         } else if (min < max) {
-            uint256 range = max - min;
+            uint256 range = max - min + fuckup;
             return (uint256(seed) % range) + min;
         } else {
-            uint256 range = 359 - (min - max);
+            uint256 range = 359 - (min - max + fuckup);
             uint256 output = uint256(seed) % range;
             if (output < max) {
                 return output;
