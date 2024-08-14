@@ -922,7 +922,7 @@ export const Visuals = {
         this.restart(null, false)
       } else {
         if (this.sound?.playbackRate !== 'normal') {
-          this.sound?.setPlaybackRate('normal')
+          this.sound?.playCurrentSong()
         }
         this.drawStatsScreen()
       }

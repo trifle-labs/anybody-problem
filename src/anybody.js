@@ -136,7 +136,7 @@ export class Anybody extends EventEmitter {
       alreadyRun: 0,
       paintSteps: 0,
       chunk: 1,
-      mute: true,
+      mute: false,
       freeze: false,
       test: false,
       util: false,
@@ -420,6 +420,7 @@ export class Anybody extends EventEmitter {
         break
       case 'KeyM':
         this.mute = !this.mute
+        this.sound.setMuted(this.mute)
         break
     }
   }
@@ -481,11 +482,11 @@ export class Anybody extends EventEmitter {
     if (this.level !== this.lastLevel && this.level !== 1 && this.level !== 0) {
       this.sound?.stop()
       this.sound?.playStart()
-      this.sound?.setSong()
+      this.sound?.advanceToNextLevelSong()
       this.sound?.resume()
     }
     if (this.sound?.playbackRate !== 'normal') {
-      this.sound?.setPlaybackRate('normal')
+      this.sound?.playCurrentSong()
     }
     this.init()
     this.draw()
