@@ -141,6 +141,7 @@ export class Anybody extends EventEmitter {
       test: false,
       util: false,
       paused: true,
+      renderingCanvasToShare: false,
       globalStyle: 'default', // 'default', 'psycho'
       aimHelper: false,
       target: 'inside', // 'outside' or 'inside'
