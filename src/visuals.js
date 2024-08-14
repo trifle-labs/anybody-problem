@@ -237,7 +237,7 @@ export const Visuals = {
     this.drawPause()
     this.drawScore()
     this.drawPopup()
-    if (!this.renderingCanvasToShare) { this.drawGun() }
+    if (!this.renderingCanvasToShare) this.drawGun()
     this.drawGunSmoke()
     this.drawExplosionSmoke()
 
@@ -465,13 +465,7 @@ export const Visuals = {
       p.fill('black')
       p.stroke(THEME.iris_60)
       p.strokeWeight(THEME.borderWt)
-      p.rect(
-        80,
-        30,
-        dateBgWidth,
-        60,
-        80
-      )
+      p.rect(80, 30, dateBgWidth, 60, 80)
       p.textAlign(p.LEFT, p.CENTER)
       p.fill(THEME.violet_25)
       p.noStroke()
@@ -479,7 +473,6 @@ export const Visuals = {
 
       p.fill(THEME.pink)
     }
-    
     // draw logo
     p.textFont(fonts.dot)
     p.textSize(180)
@@ -1238,8 +1231,9 @@ export const Visuals = {
               },
               {
                 text: 'REDO',
-                bg: THEME.teal_50,
-                fg: THEME.teal_75,
+                bg: THEME.teal_75,
+                fg: THEME.teal_50,
+                stroke: THEME.teal_50,
                 onClick: () => {
                   this.popup = null
                   this.restart(null, false)
@@ -1730,25 +1724,18 @@ export const Visuals = {
 
   getDisplayBaddies() {
     const baddies = []
-    const fallbackBody = this.bodies[this.bodies.length - 1]
+    const bodyData = this.generateLevelData(this.day, 5)
+    const bodies = bodyData.map((b) =>
+      this.bodyDataToBodies.call(this, b, this.day)
+    )
+
+    const fallbackBody = bodies[bodies.length - 1]
     if (!fallbackBody) return []
-    const str = JSON.stringify(fallbackBody)
+    // const str = JSON.stringify(fallbackBody)
     for (let i = 0; i < LEVELS; i++) {
       baddies.push([])
       for (let j = 0; j < i + 1; j++) {
-        const bodyCopy =
-          j >= this.bodies.length - 1
-            ? JSON.parse(str)
-            : JSON.parse(JSON.stringify(this.bodies[j + 1]))
-        // bodyCopy.position = this.p.createVector(
-        //   body.position.x,
-        //   body.position.y
-        // )
-        // bodyCopy.velocity = this.p.createVector(
-        //   body.velocity.x,
-        //   body.velocity.y
-        // )
-        baddies[i].push(bodyCopy)
+        baddies[i].push(JSON.parse(JSON.stringify(bodies[j + 1])))
       }
     }
     return baddies
@@ -1791,13 +1778,69 @@ export const Visuals = {
       text: '                 ' + text,
       fg: THEME.red
     })
+    const buttonWidth = 200
+    if (this.level > 1) {
+      const x = this.windowWidth / 2 - (4 * buttonWidth) / 2
+      this.drawFatButton({
+        text: 'REDO',
+        onClick: () => this.restart(null, false),
+        x,
+        bg: THEME.teal_75,
+        fg: THEME.teal_50,
+        stroke: THEME.teal_50
+      })
 
-    this.drawFatButton({
-      text: 'RETRY',
-      onClick: () => this.restart(null, false),
-      fg: THEME.red,
-      bg: THEME.maroon
-    })
+      this.drawFatButton({
+        text: 'EXIT',
+        x: this.windowWidth / 2 + buttonWidth / 2,
+        // onClick: () => this.restart(null, false),
+
+        bg: THEME.flame_75,
+        fg: THEME.flame_50,
+        stroke: THEME.flame_50,
+        onClick: () => {
+          // confirm in popup
+          if (this.popup !== null) return
+          this.popup = {
+            bg: THEME.flame_75,
+            fg: THEME.flame_50,
+            stroke: THEME.flame_50,
+            header: 'Start Over?',
+            body: ['Any progress will be lost!'],
+            buttons: [
+              {
+                text: 'CLOSE',
+                fg: THEME.flame_50,
+                bg: THEME.flame_75,
+                stroke: THEME.flame_50,
+                onClick: () => {
+                  this.popup = null
+                }
+              },
+              {
+                text: 'EXIT',
+                fg: THEME.flame_75,
+                bg: THEME.flame_50,
+                stroke: THEME.flame_50,
+                onClick: () => {
+                  this.popup = null
+                  this.level = 1
+                  this.restart(undefined, true)
+                }
+              }
+            ]
+          }
+        }
+      })
+    } else {
+      this.drawFatButton({
+        text: 'REDO',
+        onClick: () => this.restart(null, false),
+        bg: THEME.teal_75,
+        fg: THEME.teal_50,
+        stroke: THEME.teal_50
+      })
+    }
 
     p.pop()
   },
