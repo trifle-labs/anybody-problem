@@ -296,11 +296,11 @@ export default class Sound {
     // reset audio player
     this.stop()
 
-    // load the current song
-    await this.player.load(this.currentSong.audio)
-
     // set game over playback speed
     this.setPlaybackRate('normal')
+
+    // load the current song
+    await this.player.load(this.currentSong.audio)
 
     // start song and schedule to replay in a loop
     this.loop = new Loop((time) => {
