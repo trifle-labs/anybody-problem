@@ -237,7 +237,7 @@ export const Visuals = {
     this.drawPause()
     this.drawScore()
     this.drawPopup()
-    this.drawGun()
+    if (!this.renderingCanvasToShare) { this.drawGun() }
     this.drawGunSmoke()
     this.drawExplosionSmoke()
 
@@ -956,7 +956,7 @@ export const Visuals = {
         this.restart(null, false)
       } else {
         if (this.sound?.playbackRate !== 'normal') {
-          this.sound?.setPlaybackRate('normal')
+          this.sound?.playCurrentSong()
         }
         this.drawStatsScreen()
       }
@@ -1242,9 +1242,11 @@ export const Visuals = {
       811,
       boxW - gutter / 2
     )
+
     // bottom buttons
+    this.showRestart = this.level >= 2
     this.showShare = this.level >= 5
-    const buttonCount = this.showShare ? 4 : 3
+    let buttonCount = 2 + Number(this.showRestart) + Number(this.showShare)
     this.drawBottomButton({
       text: 'REDO',
       onClick: () => {
@@ -1287,45 +1289,47 @@ export const Visuals = {
       columns: buttonCount,
       column: 0
     })
-    this.drawBottomButton({
-      text: 'RESTART',
-      onClick: () => {
-        // confirm in popup
-        if (this.popup !== null) return
-        this.popup = {
-          bg: THEME.flame_75,
-          fg: THEME.flame_50,
-          stroke: THEME.flame_50,
-          header: 'Start Over?',
-          body: ['Any progress will be lost!'],
-          buttons: [
-            {
-              text: 'CLOSE',
-              fg: THEME.flame_50,
-              bg: THEME.flame_75,
-              stroke: THEME.flame_50,
-              onClick: () => {
-                this.popup = null
+    if (this.showRestart) {
+      this.drawBottomButton({
+        text: 'RESTART',
+        onClick: () => {
+          // confirm in popup
+          if (this.popup !== null) return
+          this.popup = {
+            bg: THEME.flame_75,
+            fg: THEME.flame_50,
+            stroke: THEME.flame_50,
+            header: 'Start Over?',
+            body: ['Any progress will be lost!'],
+            buttons: [
+              {
+                text: 'CLOSE',
+                fg: THEME.flame_50,
+                bg: THEME.flame_75,
+                stroke: THEME.flame_50,
+                onClick: () => {
+                  this.popup = null
+                }
+              },
+              {
+                text: 'RESTART',
+                fg: THEME.flame_75,
+                bg: THEME.flame_50,
+                stroke: THEME.flame_50,
+                onClick: () => {
+                  this.popup = null
+                  this.level = 1
+                  this.restart(undefined, this.practiceMode)
+                }
               }
-            },
-            {
-              text: 'RESTART',
-              fg: THEME.flame_75,
-              bg: THEME.flame_50,
-              stroke: THEME.flame_50,
-              onClick: () => {
-                this.popup = null
-                this.level = 1
-                this.restart(undefined, this.practiceMode)
-              }
-            }
-          ]
-        }
-      },
-      ...themes.buttons.flame,
-      columns: buttonCount,
-      column: 1
-    })
+            ]
+          }
+        },
+        ...themes.buttons.flame,
+        columns: buttonCount,
+        column: 1
+      })
+    }
     if (this.showShare) {
       this.drawBottomButton({
         text: 'SHARE',
@@ -2541,6 +2545,10 @@ export const Visuals = {
   shareCanvas(showPopup = true) {
     const canvas = this.p.canvas
 
+    // draw the canvas without croshair before rendering
+    this.renderingCanvasToShare = true
+    this.draw()
+
     return new Promise((resolve, reject) => {
       canvas.toBlob(async (blob) => {
         const file = new File([blob], 'p5canvas.png', { type: 'image/png' })
@@ -2555,6 +2563,7 @@ export const Visuals = {
               console.error('Error sharing:', error)
               reject(error)
             })
+          this.renderingCanvasToShare = false
           resolve()
         } else if (navigator.clipboard && navigator.clipboard.write) {
           try {
@@ -2579,6 +2588,7 @@ export const Visuals = {
                 ]
               }
             }
+            this.renderingCanvasToShare = false
             resolve(msg)
           } catch (error) {
             console.error('Error copying to clipboard:', error)
@@ -2594,11 +2604,13 @@ export const Visuals = {
                 }
               ]
             }
+            this.renderingCanvasToShare = false
             reject(error)
           }
         } else {
           const error = new Error('no options to share canvas!')
           console.error(error)
+          this.renderingCanvasToShare = false
           reject(error)
         }
       }, 'image/png')
