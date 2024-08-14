@@ -896,7 +896,9 @@ export const Visuals = {
         p.push()
         p.noStroke()
         p.fill('white')
-        p.translate(this.windowWidth - 108, this.windowWidth - 116) // move 0,0 to bottom right corner
+        const xOffset = this.windowWidth - 108
+        const yOfffset = this.windowWidth - 116
+        p.translate(xOffset, yOfffset) // move 0,0 to bottom right corner
         // Scale factor based on the input width
         const scale = Math.floor(48 / 6)
         // Draw speaker body
@@ -906,11 +908,15 @@ export const Visuals = {
         this.drawMuteIconRect(4, 1, 1, 8, scale);
         this.drawMuteIconRect(5, 0, 1, 10, scale);
         this.drawMuteIconRect(1, 3, 1, 4, scale);
-        // SOUNDWAVE rectangles (HIDE when NO SOUND)
-        this.drawMuteIconRect(6.5, 4, 1, 2, scale); //
-        this.drawMuteIconRect(8, 3, 1, 4, scale); //
-        // NO SOUND rectangles (HIDE when SOUND active)
-        // this.drawMuteIconRect(7, 4.5, 2.5, 1, scale);
+
+        if (this.mute) {
+          // NO SOUND rectangles (DISPLAY ON MUTE)
+          this.drawMuteIconRect(7, 4.5, 2.5, 1, scale);
+        } else {
+          // SOUNDWAVE rectangles (DISPLAY ON SOUND)
+          this.drawMuteIconRect(6.5, 4, 1, 2, scale);
+          this.drawMuteIconRect(8, 3, 1, 4, scale);
+        }
 
         // button tap area a bit margin around icon
         const muteBtnTapArea = {
@@ -918,6 +924,24 @@ export const Visuals = {
           y: this.hasTouched ? -20 : -6,
           w: 200
         }
+
+        let muteButton = this.buttons['mute-button']
+        if (!muteButton) {
+          this.buttons['mute-button'] = { 
+            x: xOffset + muteBtnTapArea.x, 
+            y: yOfffset + muteBtnTapArea.y, 
+            width: muteBtnTapArea.w, 
+            height: muteBtnTapArea.w, 
+            onClick: () => {
+              this.mute = !this.mute
+              this.sound.setMuted(this.mute)
+            }
+          }
+          muteButton = this.buttons['mute-button']
+          muteButton.disabled = false
+        }
+        muteButton.visible = true
+
         // ADD BUTTON
         p.pop()
       }
