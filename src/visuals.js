@@ -1447,7 +1447,13 @@ export const Visuals = {
       // diff values
       for (let i = 0; i < LEVELS; i++) {
         const diff = plusMinus[i] || '-'
-        p.fill(/^-/.test(diff) ? THEME.lime : THEME.flame_50)
+        p.fill(
+          diff === '-'
+            ? THEME.iris_30
+            : /^-/.test(diff)
+              ? THEME.lime
+              : THEME.flame_50
+        )
         p.text(
           diff,
           col3X,

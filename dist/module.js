@@ -2206,7 +2206,7 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
             // diff values
             for(let i = 0; i < $ad1b55143941bae3$var$LEVELS; i++){
                 const diff = plusMinus[i] || "-";
-                p.fill(/^-/.test(diff) ? (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).lime : (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).flame_50);
+                p.fill(diff === "-" ? (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).iris_30 : /^-/.test(diff) ? (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).lime : (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).flame_50);
                 p.text(diff, col3X, middleBoxY + rowHeight * i + rowHeight / 2, 150, rowHeight);
             }
         }
