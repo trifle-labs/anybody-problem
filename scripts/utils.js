@@ -129,7 +129,7 @@ const deployMetadata = async (testing) => {
     // deploy Assets1
     const Assets1 = await hre.ethers.getContractFactory('Assets1')
     let byteSize = Buffer.from(Assets1.bytecode.slice(2), 'hex').length
-    !testing && console.log(`Assets1 byte size: ${byteSize} bytes`)
+    !testing && log(`Assets1 byte size: ${byteSize} bytes`)
     assets1 = await Assets1.deploy()
     await assets1.deployed()
     var assets1Address = assets1.address
@@ -138,7 +138,7 @@ const deployMetadata = async (testing) => {
     // deploy Assets2
     const Assets2 = await hre.ethers.getContractFactory('Assets2')
     byteSize = Buffer.from(Assets2.bytecode.slice(2), 'hex').length
-    !testing && console.log(`Assets2 byte size: ${byteSize} bytes`)
+    !testing && log(`Assets2 byte size: ${byteSize} bytes`)
     assets2 = await Assets2.deploy()
     await assets2.deployed()
     var assets2Address = assets2.address
@@ -147,7 +147,7 @@ const deployMetadata = async (testing) => {
     // deploy Assets3
     const Assets3 = await hre.ethers.getContractFactory('Assets3')
     byteSize = Buffer.from(Assets3.bytecode.slice(2), 'hex').length
-    !testing && console.log(`Assets3 byte size: ${byteSize} bytes`)
+    !testing && log(`Assets3 byte size: ${byteSize} bytes`)
     assets3 = await Assets3.deploy()
     await assets3.deployed()
     var assets3Address = assets3.address
@@ -156,7 +156,7 @@ const deployMetadata = async (testing) => {
     // deploy Assets4
     const Assets4 = await hre.ethers.getContractFactory('Assets4')
     byteSize = Buffer.from(Assets4.bytecode.slice(2), 'hex').length
-    !testing && console.log(`Assets4 byte size: ${byteSize} bytes`)
+    !testing && log(`Assets4 byte size: ${byteSize} bytes`)
     assets4 = await Assets4.deploy()
     await assets4.deployed()
     var assets4Address = assets4.address
@@ -165,7 +165,7 @@ const deployMetadata = async (testing) => {
     // deploy Assets5
     const Assets5 = await hre.ethers.getContractFactory('Assets5')
     byteSize = Buffer.from(Assets5.bytecode.slice(2), 'hex').length
-    !testing && console.log(`Assets5 byte size: ${byteSize} bytes`)
+    !testing && log(`Assets5 byte size: ${byteSize} bytes`)
     assets5 = await Assets5.deploy()
     await assets5.deployed()
     var assets5Address = assets5.address
@@ -175,7 +175,7 @@ const deployMetadata = async (testing) => {
     const ExternalMetadata =
       await hre.ethers.getContractFactory('ExternalMetadata')
     byteSize = Buffer.from(ExternalMetadata.bytecode.slice(2), 'hex').length
-    !testing && console.log(`ExternalMetadata byte size: ${byteSize} bytes`)
+    !testing && log(`ExternalMetadata byte size: ${byteSize} bytes`)
     externalMetadata = await ExternalMetadata.deploy(themeAddress)
     await externalMetadata.deployed()
     !testing &&
@@ -188,11 +188,11 @@ const deployMetadata = async (testing) => {
       assets4Address,
       assets5Address
     ])
-    !testing && console.log('Assets set')
+    !testing && log('Assets set')
 
     const tx = await externalMetadata.setupSVGPaths()
     await tx.wait()
-    !testing && console.log('SVG Paths setup')
+    !testing && log('SVG Paths setup')
   } catch (e) {
     console.error(e)
   }
