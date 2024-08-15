@@ -123,7 +123,8 @@
           "internalType": "enum ThemeGroup.ThemeLayer",
           "name": "layer",
           "type": "uint8"
-        }
+        },
+        { "internalType": "uint256", "name": "day", "type": "uint256" }
       ],
       "name": "getHeroBodyLayerColor",
       "outputs": [
