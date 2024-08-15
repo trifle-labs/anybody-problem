@@ -304,8 +304,6 @@ export class Anybody extends EventEmitter {
         this.mute = false
         sessionStorage.removeItem('muted')
       }
-    } else {
-      this.mute = false
     }
     this.sound?.setMuted(this.mute)
   }

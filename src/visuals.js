@@ -828,20 +828,22 @@ export const Visuals = {
       })
 
       // mint button
-      this.drawButton({
-        text: 'MINT',
-        onClick: () => {
-          this.emit('mint')
-        },
-        fg: THEME.violet_25,
-        bg: '#241465', // THEME.iris_75,
-        width: 410,
-        height: 108,
-        textSize: 78,
-        x: 82,
-        y: 862,
-        p
-      })
+      if (this.opensea !== true) {
+        this.drawButton({
+          text: 'MINT',
+          onClick: () => {
+            this.emit('mint')
+          },
+          fg: THEME.violet_25,
+          bg: '#241465', // THEME.iris_75,
+          width: 410,
+          height: 108,
+          textSize: 78,
+          x: 82,
+          y: 862,
+          p
+        })
+      }
 
       p.pop()
     }
@@ -1259,7 +1261,7 @@ export const Visuals = {
     this.winScreenVisibleForFrames++
     this.winScreenLastVisibleFrame = this.p5Frames
 
-    const celebrationTime = 5 // seconds
+    const celebrationTime = 2.5 // seconds
     this.celebrating =
       this.winScreenVisibleForFrames / this.P5_FPS < celebrationTime
 
