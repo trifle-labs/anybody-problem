@@ -180,7 +180,7 @@ const CORE_SVGS = [CORE_SVG]
 
 import BADDIE_BG_SVG from 'bundle-text:/public/baddies/baddie-bg.svg'
 import BADDIE_CORE_SVG from 'bundle-text:/public/baddies/baddie-core.svg'
-import BADDIE_FACE_SVG from 'bundle-text:/public/baddies/baddie-face.svg'
+import BADDIE_FACE_SVG from 'bundle-text:/public/baddies/baddie-eye.svg'
 const BADDIE_SVG = {
   bg: BADDIE_BG_SVG,
   core: BADDIE_CORE_SVG,
@@ -2901,8 +2901,17 @@ export const Visuals = {
       const bx = body.position.x
       const by = body.position.y
 
-      const leftEye = [-body.radius * 0.6, -body.radius * 0.15]
-      const rightEye = [body.radius * 0.6, -body.radius * 0.15]
+      const eyeOffsetXRatio = 0.7
+      const eyeOffsetYRatio = 0.15
+
+      const leftEye = [
+        -body.radius * eyeOffsetXRatio,
+        -body.radius * eyeOffsetYRatio
+      ]
+      const rightEye = [
+        body.radius * eyeOffsetXRatio,
+        -body.radius * eyeOffsetYRatio
+      ]
 
       this.p.fill('white')
       this.p.strokeWeight(1)
@@ -2913,13 +2922,29 @@ export const Visuals = {
       const angle =
         Math.atan2(target.y - by, target.x - bx) - heading - this.p.PI / 2
 
-      const distance = body.radius * 0.2
-      const leftX = distance * Math.cos(angle)
-      const leftY = distance * Math.sin(angle)
+      const distanceFromCenter = body.radius * 0.15
+      const leftX = distanceFromCenter * Math.cos(angle)
+      const leftY = distanceFromCenter * Math.sin(angle)
 
       this.p.fill('black')
-      this.p.circle(leftX + leftEye[0], leftY + leftEye[1], body.radius * 0.5)
-      this.p.circle(leftX + rightEye[0], leftY + rightEye[1], body.radius * 0.5)
+      this.p.circle(leftX + leftEye[0], leftY + leftEye[1], body.radius * 0.6)
+      this.p.circle(leftX + rightEye[0], leftY + rightEye[1], body.radius * 0.6)
+      this.p.push()
+      const sparkleOffset = body.radius * 0.1
+      const sparkleRatio = 0.45
+      this.p.translate(
+        leftX + leftEye[0] - sparkleOffset,
+        leftY + leftEye[1] - sparkleOffset
+      )
+      this.drawImageAsset('BADDIE_SVG', 'face', body.radius * sparkleRatio)
+      this.p.pop()
+      this.p.push()
+      this.p.translate(
+        leftX + rightEye[0] - sparkleOffset,
+        leftY + rightEye[1] - sparkleOffset
+      )
+      this.drawImageAsset('BADDIE_SVG', 'face', body.radius * sparkleRatio)
+      this.p.pop()
     }
 
     this.p.pop()

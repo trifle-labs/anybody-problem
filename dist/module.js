@@ -1037,8 +1037,8 @@ var $22aff38f16cc9ba5$exports = {};
 $22aff38f16cc9ba5$exports = "<svg name=\"baddie-core\" width=\"113\" height=\"112\" viewBox=\"0 0 113 112\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n  <path stroke-width=\"0.25\" stroke=\"#000000\" d=\"M56.5136 0L63.2136 13.5L73.7136 2.7L75.8136 17.6L89.2136 10.6L86.6136 25.5L101.514 22.9L94.4136 36.2L109.414 38.4L98.5136 48.9L112.114 55.6L98.5136 62.2L109.414 72.7L94.4136 74.9L101.514 88.2L86.6136 85.7L89.2136 100.5L75.8136 93.5L73.7136 108.4L63.2136 97.6L56.5136 111.2L49.9136 97.6L39.3136 108.4L37.2136 93.5L23.8136 100.5L26.4136 85.7L11.5136 88.2L18.6136 74.9L3.61357 72.7L14.5136 62.2L0.913574 55.6L14.5136 48.9L3.61357 38.4L18.6136 36.2L11.5136 22.9L26.4136 25.5L23.8136 10.6L37.2136 17.6L39.3136 2.7L49.9136 13.5L56.5136 0Z\" fill=\"#CCCCCC\"></path>\n</svg>";
 
 
-var $76c98962b81eabd6$exports = {};
-$76c98962b81eabd6$exports = "<svg name=\"baddie-face\" width=\"113\" height=\"112\" viewBox=\"0 0 113 112\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n  <path d=\"M39.0136 68.4303C47.1874 68.4303 53.8136 60.9534 53.8136 51.7303C53.8136 42.5071 47.1874 35.0303 39.0136 35.0303C30.8398 35.0303 24.2136 42.5071 24.2136 51.7303C24.2136 60.9534 30.8398 68.4303 39.0136 68.4303Z\" fill=\"white\"></path>\n  <path d=\"M47.3137 59.1305C49.2467 59.1305 50.8137 57.4739 50.8137 55.4305C50.8137 53.387 49.2467 51.7305 47.3137 51.7305C45.3807 51.7305 43.8137 53.387 43.8137 55.4305C43.8137 57.4739 45.3807 59.1305 47.3137 59.1305Z\" fill=\"black\"></path>\n  <path d=\"M74.0136 68.4303C82.1874 68.4303 88.8136 60.9534 88.8136 51.7303C88.8136 42.5071 82.1874 35.0303 74.0136 35.0303C65.8398 35.0303 59.2136 42.5071 59.2136 51.7303C59.2136 60.9534 65.8398 68.4303 74.0136 68.4303Z\" fill=\"white\"></path>\n  <path d=\"M65.7136 59.1305C67.6466 59.1305 69.2136 57.4739 69.2136 55.4305C69.2136 53.387 67.6466 51.7305 65.7136 51.7305C63.7806 51.7305 62.2136 53.387 62.2136 55.4305C62.2136 57.4739 63.7806 59.1305 65.7136 59.1305Z\" fill=\"black\"></path>\n</svg>";
+var $a0b969613b4648aa$exports = {};
+$a0b969613b4648aa$exports = "<svg width=\"8\" height=\"9\" viewBox=\"0 0 8 9\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path d=\"M2.70017 3.20002L3.60016 0.9C3.70016 0.7 4.00016 0.7 4.00016 0.9L4.90015 3.20002C4.90015 3.30002 5.00016 3.29999 5.00016 3.29999L7.30015 4.20002C7.50015 4.30002 7.50015 4.60001 7.30015 4.60001L5.00016 5.50001C4.90016 5.50001 4.90015 5.60001 4.90015 5.60001L4.00016 7.9C3.90016 8.1 3.60016 8.1 3.60016 7.9L2.70017 5.60001C2.70017 5.50001 2.60016 5.50001 2.60016 5.50001L0.300146 4.60001C0.100146 4.50001 0.100146 4.20002 0.300146 4.20002L2.60016 3.29999C2.70016 3.29999 2.70017 3.30002 2.70017 3.20002Z\" fill=\"white\"></path>\n</svg>\n";
 
 
 const $ad1b55143941bae3$var$BODY_SCALE = 4 // match to calculations.js !!
@@ -1157,7 +1157,7 @@ const $ad1b55143941bae3$var$CORE_SVGS = [
 const $ad1b55143941bae3$var$BADDIE_SVG = {
     bg: (0, (/*@__PURE__*/$parcel$interopDefault($f3d815c8c8c8d32a$exports))),
     core: (0, (/*@__PURE__*/$parcel$interopDefault($22aff38f16cc9ba5$exports))),
-    face: (0, (/*@__PURE__*/$parcel$interopDefault($76c98962b81eabd6$exports)))
+    face: (0, (/*@__PURE__*/$parcel$interopDefault($a0b969613b4648aa$exports)))
 };
 const $ad1b55143941bae3$var$svgs = {
     BADDIE_SVG: $ad1b55143941bae3$var$BADDIE_SVG,
@@ -3327,13 +3327,15 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
             };
             const bx = body.position.x;
             const by = body.position.y;
+            const eyeOffsetXRatio = 0.7;
+            const eyeOffsetYRatio = 0.15;
             const leftEye = [
-                -body.radius * 0.6,
-                -body.radius * 0.15
+                -body.radius * eyeOffsetXRatio,
+                -body.radius * eyeOffsetYRatio
             ];
             const rightEye = [
-                body.radius * 0.6,
-                -body.radius * 0.15
+                body.radius * eyeOffsetXRatio,
+                -body.radius * eyeOffsetYRatio
             ];
             this.p.fill("white");
             this.p.strokeWeight(1);
@@ -3341,12 +3343,22 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
             this.p.circle(leftEye[0], leftEye[1], body.radius);
             this.p.circle(rightEye[0], rightEye[1], body.radius);
             const angle = Math.atan2(target.y - by, target.x - bx) - heading - this.p.PI / 2;
-            const distance = body.radius * 0.2;
-            const leftX = distance * Math.cos(angle);
-            const leftY = distance * Math.sin(angle);
+            const distanceFromCenter = body.radius * 0.15;
+            const leftX = distanceFromCenter * Math.cos(angle);
+            const leftY = distanceFromCenter * Math.sin(angle);
             this.p.fill("black");
-            this.p.circle(leftX + leftEye[0], leftY + leftEye[1], body.radius * 0.5);
-            this.p.circle(leftX + rightEye[0], leftY + rightEye[1], body.radius * 0.5);
+            this.p.circle(leftX + leftEye[0], leftY + leftEye[1], body.radius * 0.6);
+            this.p.circle(leftX + rightEye[0], leftY + rightEye[1], body.radius * 0.6);
+            this.p.push();
+            const sparkleOffset = body.radius * 0.1;
+            const sparkleRatio = 0.45;
+            this.p.translate(leftX + leftEye[0] - sparkleOffset, leftY + leftEye[1] - sparkleOffset);
+            this.drawImageAsset("BADDIE_SVG", "face", body.radius * sparkleRatio);
+            this.p.pop();
+            this.p.push();
+            this.p.translate(leftX + rightEye[0] - sparkleOffset, leftY + rightEye[1] - sparkleOffset);
+            this.drawImageAsset("BADDIE_SVG", "face", body.radius * sparkleRatio);
+            this.p.pop();
         }
         this.p.pop();
         this.p.pop();
