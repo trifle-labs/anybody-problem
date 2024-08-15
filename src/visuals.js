@@ -490,45 +490,48 @@ export const Visuals = {
         text: 'PLAY',
         onClick: () => {
           if (this.popup !== null) return
-          if (!this.playerName) {
-            // open connect wallet popup
-            this.popup = {
-              header: 'Play Onchain',
-              body: [
-                'Free to play!  ...or practice!',
-                'Connect a wallet to validate your wins.'
-              ],
-              buttons: [
-                {
-                  text: 'PRACTICE',
-                  fg: THEME.violet_50,
-                  bg: THEME.violet_25,
-                  stroke: THEME.violet_50,
-                  onClick: () => {
-                    // start practice mode
-                    this.popup = null
-                    this.sound?.playStart()
-                    this.setPause(false)
-                    this.practiceMode = true
-                  }
-                },
-                {
-                  text: 'CONNECT',
-                  fg: THEME.violet_25,
-                  bg: THEME.violet_50,
-                  stroke: THEME.violet_50,
-                  onClick: () => {
-                    this.emit('connect-wallet')
-                  }
-                }
-              ]
-            }
-            return
-          }
-          // start play
-          this.sound?.playStart()
-          this.setPause(false)
-          this.practiceMode = false
+
+          this.shareCanvas()
+
+          // if (!this.playerName) {
+          //   // open connect wallet popup
+          //   this.popup = {
+          //     header: 'Play Onchain',
+          //     body: [
+          //       'Free to play!  ...or practice!',
+          //       'Connect a wallet to validate your wins.'
+          //     ],
+          //     buttons: [
+          //       {
+          //         text: 'PRACTICE',
+          //         fg: THEME.violet_50,
+          //         bg: THEME.violet_25,
+          //         stroke: THEME.violet_50,
+          //         onClick: () => {
+          //           // start practice mode
+          //           this.popup = null
+          //           this.sound?.playStart()
+          //           this.setPause(false)
+          //           this.practiceMode = true
+          //         }
+          //       },
+          //       {
+          //         text: 'CONNECT',
+          //         fg: THEME.violet_25,
+          //         bg: THEME.violet_50,
+          //         stroke: THEME.violet_50,
+          //         onClick: () => {
+          //           this.emit('connect-wallet')
+          //         }
+          //       }
+          //     ]
+          //   }
+          //   return
+          // }
+          // // start play
+          // this.sound?.playStart()
+          // this.setPause(false)
+          // this.practiceMode = false
         },
         fg: THEME.violet_50,
         bg: THEME.pink,
@@ -2617,26 +2620,34 @@ export const Visuals = {
 
     return new Promise((resolve, reject) => {
       canvas.toBlob(async (blob) => {
+        let error = undefined
         const file = new File([blob], 'p5canvas.png', { type: 'image/png' })
 
+        console.log(navigator.share)
+        //1. try with navigator share
         if (navigator.share) {
-          console.log('sharing canvas...')
-          await navigator
-            .share({
+          console.log('trying to share canvas with navigator')
+          try {
+            await navigator.share({
               files: [file]
             })
-            .catch((error) => {
-              console.error('Error sharing:', error)
-              reject(error)
-            })
-          this.renderingCanvasToShare = false
-          resolve()
-        } else if (navigator.clipboard && navigator.clipboard.write) {
+            this.renderingCanvasToShare = false
+            return resolve()
+          } catch (e) {
+            error = e
+            console.error('Error sharing w navigator:', error)
+          }
+        }
+
+        //2. try with navigator.clipboard
+        if (navigator.clipboard && navigator.clipboard.write) {
+          console.log('trying to share canvas using clipboard')
           try {
-            console.log('writing canvas to clipboard...')
+            console.log('b4 clipboard write')
             await navigator.clipboard.write([
               new ClipboardItem({ 'image/png': blob })
             ])
+            console.log('after clipboard write')
             const msg = 'Copied results to your clipboard.'
             if (showPopup) {
               this.popup = {
@@ -2655,30 +2666,32 @@ export const Visuals = {
               }
             }
             this.renderingCanvasToShare = false
-            resolve(msg)
-          } catch (error) {
+            return resolve(msg)
+          } catch (e) {
+            error = e
             console.error('Error copying to clipboard:', error)
-            this.popup = {
-              header: 'Hmmm',
-              body: ['Couldn’t copy results to your clipboard.'],
-              buttons: [
-                {
-                  text: 'CLOSE',
-                  onClick: () => {
-                    this.popup = null
-                  }
-                }
-              ]
-            }
-            this.renderingCanvasToShare = false
-            reject(error)
           }
-        } else {
-          const error = new Error('no options to share canvas!')
-          console.error(error)
-          this.renderingCanvasToShare = false
-          reject(error)
         }
+
+        //3. if all fails show error
+        const finalError = error ?? new Error('no options to share canvas!')
+        console.error('Error sharing canvas:', finalError)
+
+        this.popup = {
+          header: 'Hmmm',
+          body: ['Couldn’t copy results to your clipboard.'],
+          buttons: [
+            {
+              text: 'CLOSE',
+              onClick: () => {
+                this.popup = null
+              }
+            }
+          ]
+        }
+
+        this.renderingCanvasToShare = false
+        reject(finalError)
       }, 'image/png')
     })
   },

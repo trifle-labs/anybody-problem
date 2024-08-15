@@ -17,7 +17,7 @@
   "module": "dist/module.js",
   "iframe": "dist/index.html",
   "scripts": {
-    "prepare": "husky",
+    "prepare": "npx husky",
     "build": "rm -rf .parcel-cache && rm -rf dist && yarn parcel build",
     "dev": "rm -rf .parcel-cache && rm -rf dist && yarn parcel watch src/index.js",
     "serve": "rm -rf .parcel-cache && yarn parcel src/index.html --open",
