@@ -5097,7 +5097,7 @@ $7973f6389e28ce3d$exports = JSON.parse('{"contractName":"AnybodyProblem","abi":[
 
 
 var $74ac3a897fb18929$exports = {};
-$74ac3a897fb18929$exports = JSON.parse('{"address":"0x53E96ACF13dcb21e37bA1527868A2fBfd3d0d87C","chain":{"chainId":84532,"name":"unknown"}}');
+$74ac3a897fb18929$exports = JSON.parse('{"address":"0x697163DcB57716DB253413B484319641b40B0649","chain":{"chainId":84532,"name":"unknown"}}');
 
 
 var $5931231d1de06281$exports = {};
@@ -5109,7 +5109,7 @@ $03fd13a79e54ef6c$exports = JSON.parse('{"contractName":"Speedruns","abi":[{"inp
 
 
 var $867154649f761c8f$exports = {};
-$867154649f761c8f$exports = JSON.parse('{"address":"0x3bA8e90b930C3Aa06E3bB9A6a9688996e5b28640","chain":{"chainId":84532,"name":"unknown"}}');
+$867154649f761c8f$exports = JSON.parse('{"address":"0x127b889FcE2b1Bd3b0941FF7ce4Fd0e2EEfe69B9","chain":{"chainId":84532,"name":"unknown"}}');
 
 
 var $a230d41339cc7b47$exports = {};
