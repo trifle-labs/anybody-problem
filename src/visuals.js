@@ -219,9 +219,9 @@ export const Visuals = {
       this.hasStarted = true
       this.started()
     }
-
+    const pastIntro = this.introStage >= this.totalIntroStages
     if (
-      (this.introStage >= this.totalIntroStages || this.level > 0) &&
+      (pastIntro || this.level > 0) &&
       !this.paused &&
       this.p5Frames % this.P5_FPS_MULTIPLIER == 0
     ) {
@@ -238,7 +238,7 @@ export const Visuals = {
     this.p5Frames++
     this.drawExplosions()
 
-    if (this.introStage >= this.totalIntroStages || this.level > 0) {
+    if (pastIntro || this.level > 0) {
       this.drawPause()
       this.drawBodies()
     } else {
@@ -564,7 +564,6 @@ export const Visuals = {
         fg: THEME.iris_30,
         stroke: THEME.iris_30,
         bg: THEME.bg
-        // align: [this.p.LEFT, this.p.TOP]
       })
     }
     if (this.levelCountdown <= 0) {
@@ -2239,10 +2238,11 @@ export const Visuals = {
       this.scaleX(this.p.mouseY) + crossHairSize
     )
 
+    const notPreIntro = this.introStage !== this.totalIntroStages - 1
+    const duringIntro = this.introStage < this.totalIntroStages
+    const isLevel0 = this.level < 1
     if (
-      (this.introStage !== this.totalIntroStages - 1 &&
-        this.introStage < this.totalIntroStages &&
-        this.level < 1) ||
+      (notPreIntro && duringIntro && isLevel0) ||
       this.paused ||
       this.gameOver
     )
