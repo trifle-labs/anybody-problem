@@ -366,7 +366,7 @@ export class Anybody extends EventEmitter {
       this.handleGameClick(e)
     }
     this.p.mouseClicked = this.handleGameClick
-    this.p.keyPressed = this.handleGameKeyDown
+    this.p.keyPressed = this.handleKeyPressed
   }
 
   removeListener() {
@@ -434,7 +434,7 @@ export class Anybody extends EventEmitter {
     this.setPause()
   }
 
-  handleGameKeyDown = (e) => {
+  handleKeyPressed = (e) => {
     if (this.gameOver && this.won) {
       this.skipAhead = true
     }
@@ -1009,9 +1009,8 @@ export class Anybody extends EventEmitter {
   missileClick(x, y) {
     if (this.gameOver) return
     if (
-      this.paused &&
-      this.introStage !== this.totalIntroStages - 1 &&
-      this.level < 1
+      this.paused ||
+      (this.introStage !== this.totalIntroStages - 1 && this.level < 1)
     )
       return
     if (this.introStage == this.totalIntroStages - 1 && this.level < 1) {
