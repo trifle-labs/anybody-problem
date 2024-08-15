@@ -892,8 +892,7 @@ export const Visuals = {
         const yOfffset = this.windowWidth - (this.hasTouched ? 116 : 87)
         p.translate(xOffset, yOfffset) // move 0,0 to bottom right corner
         // Scale factor based on the input width
-        const scale = this.hasTouched ? Math.floor(48 / 6)
-          : Math.floor(36 / 6)
+        const scale = this.hasTouched ? Math.floor(48 / 6) : Math.floor(36 / 6)
         // Draw speaker body
         this.drawMuteIconRect(0, 3, 1, 4, scale)
         this.drawMuteIconRect(2, 3, 1, 4, scale)
@@ -930,7 +929,7 @@ export const Visuals = {
             height: muteBtnTapArea.w,
             onClick: () => {
               this.mute = !this.mute
-              this.sound.setMuted(this.mute)
+              this.sound?.setMuted(this.mute)
             }
           }
           muteButton = this.buttons['mute-button']

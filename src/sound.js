@@ -79,8 +79,9 @@ export default class Sound {
   }
 
   setMuted(isMuted) {
+    if (!this.master) return
     this.master.mute = isMuted
-    if (!this.anybody.opensea) {
+    if (!this.anybody.opensea && !this.anybody.util) {
       sessionStorage.setItem('muted', JSON.stringify(isMuted))
     }
   }

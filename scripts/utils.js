@@ -576,7 +576,6 @@ const generateProof = async (
     ...(inputData.missiles.length > 0 ? inputData.missiles[0] : [0, 0, 0])
   ]
 
-  // console.dir({ inputData }, { depth: null })
   const bodyFinal = results.bodyFinal
   // const outflightMissile = results.outflightMissiles
   // const startTime = Date.now()
