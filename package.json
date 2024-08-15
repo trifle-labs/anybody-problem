@@ -10,7 +10,7 @@
     },
     "iframe": {
       "source": "src/index.html",
-      "optimize": true
+      "optimize": false
     }
   },
   "source": "src/index.js",
