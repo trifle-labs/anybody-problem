@@ -1015,11 +1015,11 @@ export const Visuals = {
     if (!fonts.dot) return
     p.textFont(fonts.dot)
     p.fill(THEME.pink)
-    p.textSize(60)
+    p.textSize(64)
     p.textAlign(p.LEFT, p.TOP)
-    const logoY = p.map(scale, 0, 1, -100, 22)
-    drawKernedText(p, 'Anybody', 334, logoY, 0.8)
-    drawKernedText(p, 'Problem', 640, logoY, 2)
+    const logoY = p.map(scale, 0, 1, -100, 19)
+    drawKernedText(p, 'Anybody', 340, logoY, 0.8)
+    drawKernedText(p, 'Problem', 662, logoY, 2)
 
     // bordered boxes
     p.fill('black')
@@ -1034,15 +1034,15 @@ export const Visuals = {
     p.rect(gutter, 796, boxW, 64, 24)
 
     // upper box text
-    p.textSize(32)
+    p.textSize(36)
     p.noStroke()
     if (!fonts.body) return
     p.textFont(fonts.body)
-    p.fill(THEME.iris_60)
+    p.fill(THEME.iris_50)
 
     // upper box text - labels
-    p.text('player', 330, 132)
-    p.text('problem', 330, 192)
+    p.text('player', 341, 128)
+    p.text('problem', 341, 188)
 
     // upper box text - values
     p.textSize(54)
@@ -1054,8 +1054,8 @@ export const Visuals = {
         year: 'numeric'
       })
       .toUpperCase()
-    p.text(this.playerName ?? 'YOU', 454, 114)
-    p.text(formattedDate, 454, 174)
+    p.text(this.playerName ?? 'YOU', 495, 114)
+    p.text(formattedDate, 495, 174)
     // end upper box text
 
     // middle box text
@@ -1068,18 +1068,19 @@ export const Visuals = {
     const showBestAndDiff = bestTimes.length
 
     p.textSize(48)
-    p.fill(THEME.iris_60)
+    const midHeadY = 264
+    p.fill(THEME.iris_30)
     p.textAlign(p.RIGHT, p.TOP)
     const col1X = 580
-    const col2X = 770
-    const col3X = 960
+    const col2X = 780
+    const col3X = 964
     const timeColX = showBestAndDiff ? col1X : col3X
 
     // middle box text - labels
-    p.text('time', timeColX, 264)
+    p.text('time', timeColX, midHeadY)
     if (showBestAndDiff) {
-      p.text('best', col2X, 264)
-      p.text('+/-', col3X, 264)
+      p.text('best', col2X, midHeadY)
+      p.text('diff', col3X, midHeadY)
     }
 
     // middle box text - values
@@ -1104,7 +1105,7 @@ export const Visuals = {
     // middle box text - value text
     p.push()
     p.textAlign(p.RIGHT, p.CENTER)
-    p.textSize(44)
+    p.textSize(56)
     // const middleBoxPadding = 12
     // p.translate(0, middleBoxPadding)
     // times
@@ -1133,7 +1134,7 @@ export const Visuals = {
       // best times
       for (let i = 0; i < LEVELS; i++) {
         const best = i < bestTimes.length ? bestTimes[i].toFixed(2) : '-'
-        p.fill(THEME.iris_60)
+        p.fill(THEME.iris_50)
         p.text(
           best,
           col2X,
@@ -1145,11 +1146,7 @@ export const Visuals = {
       // diff values
       for (let i = 0; i < LEVELS; i++) {
         const diff = plusMinus[i] || '-'
-        if (i === levelTimes.length - 1) {
-          p.fill(/^-/.test(diff) ? THEME.lime : THEME.flame_50)
-        } else {
-          p.fill(/^-/.test(diff) ? THEME.green_75 : THEME.flame_75)
-        }
+        p.fill(/^-/.test(diff) ? THEME.lime : THEME.flame_50)
         p.text(
           diff,
           col3X,
@@ -1179,14 +1176,14 @@ export const Visuals = {
       const sumLineHeight = 80
       const sumLineYText = sumLineY + sumLineHeight / 2
       p.textAlign(p.LEFT, p.CENTER)
-      p.fill(THEME.iris_60)
+      p.fill(THEME.iris_50)
       p.text(problemComplete ? 'solved in' : 'total time', 44, sumLineYText)
       p.textAlign(p.RIGHT, p.CENTER)
       const columns = showBestAndDiff ? [col1X, col2X, col3X] : [timeColX]
       for (const [i, col] of columns.entries()) {
         if (i == 0) p.fill(THEME.iris_30)
         else if (i == 1) p.fill(THEME.iris_60)
-        else p.fill(/^-/.test(sumLine[i]) ? THEME.lime : THEME.flame_75)
+        else p.fill(/^-/.test(sumLine[i]) ? THEME.lime : THEME.flame_50)
         p.text(sumLine[i], col, sumLineYText, 150, sumLineHeight)
       }
       // top border line
@@ -1248,17 +1245,17 @@ export const Visuals = {
       this.windowHeight
     )
     p.textAlign(p.CENTER, p.TOP)
-    p.textSize(32)
+    p.textSize(44)
     // blink text on complete
     const blinkText =
       this.levels === LEVELS && Math.floor(p.frameCount / 25) % 2
     p.fill(blinkText ? THEME.iris_60 : THEME.iris_30)
     p.text(
       this.level == 5
-        ? 'SOLVED IT !!!   mint your win to add this celestial body to your galaxy !!!'
-        : `BO${Array(this.level).fill('O').join('')}M!!!  you cleared LEVEL ${this.level} !!!  ... just ${5 - this.level} more to solve this problem !!!`,
+        ? 'YOU WON !!   save your score to the leaderboard !!'
+        : `BOOM !! ... just ${5 - this.level} more levels to solve this problem !!`,
       gutter + boxW / 2,
-      811,
+      805,
       boxW - gutter / 2
     )
 
@@ -1383,7 +1380,7 @@ export const Visuals = {
     } else {
       // parent app should handle waiting to save
       this.drawBottomButton({
-        text: this.practiceMode ? 'SAVE' : 'MINT',
+        text: 'SAVE',
         onClick: () => {
           if (this.practiceMode) {
             if (this.popup !== null) return
@@ -1472,7 +1469,7 @@ export const Visuals = {
     p.textSize(60)
     p.textAlign(p.LEFT, p.TOP)
     drawKernedText(p, 'Anybody', 46, 44, 0.8)
-    drawKernedText(p, 'Problem', 352, 44, 2)
+    drawKernedText(p, 'Problem', 356, 44, 2)
 
     // upper box text - date
     p.textSize(56)
