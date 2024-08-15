@@ -3942,11 +3942,13 @@ const $2d9adae2c5a7d2fc$export$665d5a662b7213f3 = {
         p.rect(x + width / 2 - scaledWidth / 2, y + height / 2 - scaledHeight / 2, scaledWidth, scaledHeight, height / 2);
         p.noStroke();
         if (scale >= 0.3 && (0, $7ccced6459fd256e$export$f45fbea8fe20ca8a).dot) {
+            const isFirefox = typeof InstallTrigger !== "undefined" // claude
+            ;
             p.textFont((0, $7ccced6459fd256e$export$f45fbea8fe20ca8a).dot);
             p.fill(button.disabled ? (0, $dfb043d8446f30b2$export$c08c384652f6dae3)(fg, 0.4) : fg);
             p.textAlign(p.CENTER, p.CENTER);
             p.text(text, // tweak to center, somethign about the font
-            x + width / 2 + textSize * 0.13, y + height / 2 + textSize * 0.022);
+            x + width / 2 + textSize * 0.13, y + height / 2 + textSize * (isFirefox ? 0.1 : 0.04));
         }
         if (!isAnimating && !button.disabled && button.hover) {
             p.fill(fgHover);
