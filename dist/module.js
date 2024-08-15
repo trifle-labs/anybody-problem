@@ -1925,7 +1925,6 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
                         text: "CLOSE",
                         onClick: ()=>{
                             this.popup = null;
-                            this.skipRedoPopupTip = true;
                         }
                     }
                 ] : [],
@@ -1937,7 +1936,6 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
                     onClick: ()=>{
                         this.popup = null;
                         this.restart(null, false);
-                        this.skipRedoPopupTip = true;
                     }
                 }
             ]
@@ -4413,7 +4411,7 @@ class $9387f34f78197904$export$52baafc80d354d7 extends (0, $f92b5472d28e57c3$exp
                 break;
             case "KeyR":
                 if (this.level < 1) return;
-                this.hasQuickReset = true;
+                this.skipRedoPopupTip = true;
                 this.restart(null, false);
                 break;
             case "KeyP":

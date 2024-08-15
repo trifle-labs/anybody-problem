@@ -1086,7 +1086,6 @@ export const Visuals = {
                   text: 'CLOSE',
                   onClick: () => {
                     this.popup = null
-                    this.skipRedoPopupTip = true
                   }
                 }
               ]
@@ -1099,7 +1098,6 @@ export const Visuals = {
             onClick: () => {
               this.popup = null
               this.restart(null, false)
-              this.skipRedoPopupTip = true
             }
           }
         ]
