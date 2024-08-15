@@ -1910,6 +1910,40 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
         }
         p.pop();
     },
+    handleRedoButtonClick (showCloseButton = true) {
+        if (!this.skipRedoPopupTip) this.popup = {
+            bg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).teal_75,
+            fg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).teal_50,
+            stroke: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).teal_50,
+            header: "Tip",
+            body: [
+                this.hasTouched ? "Tap the TIMER to restart levels" : "Press {R} to restart levels"
+            ],
+            buttons: [
+                ...showCloseButton ? [
+                    {
+                        text: "CLOSE",
+                        onClick: ()=>{
+                            this.popup = null;
+                            this.skipRedoPopupTip = true;
+                        }
+                    }
+                ] : [],
+                {
+                    text: "REDO",
+                    bg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).teal_50,
+                    fg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).teal_75,
+                    stroke: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).teal_50,
+                    onClick: ()=>{
+                        this.popup = null;
+                        this.restart(null, false);
+                        this.skipRedoPopupTip = true;
+                    }
+                }
+            ]
+        };
+        else this.restart(null, false);
+    },
     getColorDir (chunk) {
         return Math.floor(this.frames / (255 * chunk)) % 2 == 0;
     },
@@ -1957,7 +1991,7 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
                     disabled: false,
                     visible: true,
                     onClick: ()=>{
-                        this.hasQuickReset = true;
+                        this.skipRedoPopupTip = true;
                         this.restart(null, false);
                     }
                 };
@@ -2243,35 +2277,7 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
             text: "REDO",
             onClick: ()=>{
                 if (this.popup) return;
-                if (!this.hasQuickReset) this.popup = {
-                    bg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).teal_75,
-                    fg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).teal_50,
-                    stroke: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).teal_50,
-                    header: "Redo Level?",
-                    body: [
-                        "PRO TIP !!",
-                        this.hasTouched ? "Tap the TIMER to quickly restart a level" : "Press {R} to quickly restart a level"
-                    ],
-                    buttons: [
-                        {
-                            text: "CLOSE",
-                            onClick: ()=>{
-                                this.popup = null;
-                            }
-                        },
-                        {
-                            text: "REDO",
-                            bg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).teal_50,
-                            fg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).teal_75,
-                            stroke: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).teal_50,
-                            onClick: ()=>{
-                                this.popup = null;
-                                this.restart(null, false);
-                            }
-                        }
-                    ]
-                };
-                else this.restart(null, false);
+                this.handleRedoButtonClick();
             },
             ...(0, $dfb043d8446f30b2$export$d9a33280f07116d9).buttons.teal,
             columns: buttonCount,
@@ -2711,7 +2717,9 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
             const x = this.windowWidth / 2 - 4 * buttonWidth / 2 + 20;
             this.drawFatButton({
                 text: "REDO",
-                onClick: ()=>this.restart(null, false),
+                onClick: ()=>{
+                    this.handleRedoButtonClick();
+                },
                 x: x,
                 bg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).teal_75,
                 fg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).teal_50
@@ -2759,7 +2767,7 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
             });
         } else this.drawFatButton({
             text: "REDO",
-            onClick: ()=>this.restart(null, false),
+            onClick: ()=>this.handleRedoButtonClick(false),
             bg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).teal_75,
             fg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).teal_50
         });

@@ -1067,6 +1067,48 @@ export const Visuals = {
     p.pop()
   },
 
+  handleRedoButtonClick(showCloseButton = true) {
+    if (!this.skipRedoPopupTip) {
+      this.popup = {
+        bg: THEME.teal_75,
+        fg: THEME.teal_50,
+        stroke: THEME.teal_50,
+        header: 'Tip',
+        body: [
+          this.hasTouched
+            ? 'Tap the TIMER to restart levels'
+            : 'Press {R} to restart levels'
+        ],
+        buttons: [
+          ...(showCloseButton
+            ? [
+                {
+                  text: 'CLOSE',
+                  onClick: () => {
+                    this.popup = null
+                    this.skipRedoPopupTip = true
+                  }
+                }
+              ]
+            : []),
+          {
+            text: 'REDO',
+            bg: THEME.teal_50,
+            fg: THEME.teal_75,
+            stroke: THEME.teal_50,
+            onClick: () => {
+              this.popup = null
+              this.restart(null, false)
+              this.skipRedoPopupTip = true
+            }
+          }
+        ]
+      }
+    } else {
+      this.restart(null, false)
+    }
+  },
+
   getColorDir(chunk) {
     return Math.floor(this.frames / (255 * chunk)) % 2 == 0
   },
@@ -1128,7 +1170,7 @@ export const Visuals = {
             disabled: false,
             visible: true,
             onClick: () => {
-              this.hasQuickReset = true
+              this.skipRedoPopupTip = true
               this.restart(null, false)
             }
           }
@@ -1524,40 +1566,7 @@ export const Visuals = {
       text: 'REDO',
       onClick: () => {
         if (this.popup) return
-        if (!this.hasQuickReset) {
-          this.popup = {
-            bg: THEME.teal_75,
-            fg: THEME.teal_50,
-            stroke: THEME.teal_50,
-            header: 'Redo Level?',
-            body: [
-              'PRO TIP !!',
-              this.hasTouched
-                ? 'Tap the TIMER to quickly restart a level'
-                : 'Press {R} to quickly restart a level'
-            ],
-            buttons: [
-              {
-                text: 'CLOSE',
-                onClick: () => {
-                  this.popup = null
-                }
-              },
-              {
-                text: 'REDO',
-                bg: THEME.teal_50,
-                fg: THEME.teal_75,
-                stroke: THEME.teal_50,
-                onClick: () => {
-                  this.popup = null
-                  this.restart(null, false)
-                }
-              }
-            ]
-          }
-        } else {
-          this.restart(null, false)
-        }
+        this.handleRedoButtonClick()
       },
       ...themes.buttons.teal,
       columns: buttonCount,
@@ -2102,7 +2111,9 @@ export const Visuals = {
       const x = this.windowWidth / 2 - (4 * buttonWidth) / 2 + 20
       this.drawFatButton({
         text: 'REDO',
-        onClick: () => this.restart(null, false),
+        onClick: () => {
+          this.handleRedoButtonClick()
+        },
         x,
         bg: THEME.teal_75,
         fg: THEME.teal_50
@@ -2150,7 +2161,7 @@ export const Visuals = {
     } else {
       this.drawFatButton({
         text: 'REDO',
-        onClick: () => this.restart(null, false),
+        onClick: () => this.handleRedoButtonClick(false),
         bg: THEME.teal_75,
         fg: THEME.teal_50
       })
