@@ -28,7 +28,7 @@ function intersectsButton(button, x, y) {
 const PAUSE_BODY_DATA = [
   {
     bodyIndex: 0,
-    radius: 51000,
+    radius: 51_000,
     px: 500300,
     py: 290750,
     vx: 0,
@@ -36,8 +36,8 @@ const PAUSE_BODY_DATA = [
   },
   // upper right
   {
-    bodyIndex: 1,
-    radius: 7000,
+    bodyIndex: 5,
+    radius: 11_000,
     px: 793406,
     py: 133029,
     vx: 0,
@@ -46,7 +46,7 @@ const PAUSE_BODY_DATA = [
   // mid right
   {
     bodyIndex: 2,
-    radius: 20000,
+    radius: 23_000,
     px: 825620,
     py: 418711,
     vx: -100000,
@@ -54,24 +54,24 @@ const PAUSE_BODY_DATA = [
   },
   // upper left
   {
-    bodyIndex: 3,
-    radius: 17000,
+    bodyIndex: 1,
+    radius: 27_000,
     px: 159878,
     py: 234946,
     vx: 0,
     vy: 0
   },
   {
-    bodyIndex: 4,
-    radius: 9000,
+    bodyIndex: 3,
+    radius: 19_000,
     px: 229878,
     py: 464946,
     vx: 0,
     vy: 0
   },
   {
-    bodyIndex: 5,
-    radius: 14000,
+    bodyIndex: 4,
+    radius: 15_000,
     px: 679878,
     py: 668946,
     vx: -100000,
@@ -968,12 +968,12 @@ export class Anybody extends EventEmitter {
     )
 
     const baddieColors = [
-      [260, 90, 58],
-      [260, 90, 58],
-      [241, 95, 59],
-      [113, 99, 55],
-      [60, 98, 58],
-      [352, 96, 57]
+      [342, 100, 48], // intro baddie?
+      [342, 100, 48],
+      [260, 94, 62],
+      [151, 100, 63],
+      [11, 100, 62],
+      [58, 100, 54]
     ]
     const info = {
       fIndex,

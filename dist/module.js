@@ -4025,8 +4025,8 @@ const $9387f34f78197904$var$PAUSE_BODY_DATA = [
     },
     // upper right
     {
-        bodyIndex: 1,
-        radius: 7000,
+        bodyIndex: 5,
+        radius: 11000,
         px: 793406,
         py: 133029,
         vx: 0,
@@ -4035,7 +4035,7 @@ const $9387f34f78197904$var$PAUSE_BODY_DATA = [
     // mid right
     {
         bodyIndex: 2,
-        radius: 20000,
+        radius: 23000,
         px: 825620,
         py: 418711,
         vx: -100000,
@@ -4043,24 +4043,24 @@ const $9387f34f78197904$var$PAUSE_BODY_DATA = [
     },
     // upper left
     {
-        bodyIndex: 3,
-        radius: 17000,
+        bodyIndex: 1,
+        radius: 27000,
         px: 159878,
         py: 234946,
         vx: 0,
         vy: 0
     },
     {
-        bodyIndex: 4,
-        radius: 9000,
+        bodyIndex: 3,
+        radius: 19000,
         px: 229878,
         py: 464946,
         vx: 0,
         vy: 0
     },
     {
-        bodyIndex: 5,
-        radius: 14000,
+        bodyIndex: 4,
+        radius: 15000,
         px: 679878,
         py: 668946,
         vx: -100000,
@@ -4884,34 +4884,34 @@ class $9387f34f78197904$export$52baafc80d354d7 extends (0, $f92b5472d28e57c3$exp
         const fgLightness = this.randomRange(fgLightnessRange[0], fgLightnessRange[1], rand, day);
         const baddieColors = [
             [
-                260,
-                90,
-                58
+                342,
+                100,
+                48
+            ],
+            [
+                342,
+                100,
+                48
             ],
             [
                 260,
-                90,
-                58
+                94,
+                62
             ],
             [
-                241,
-                95,
-                59
+                151,
+                100,
+                63
             ],
             [
-                113,
-                99,
-                55
+                11,
+                100,
+                62
             ],
             [
-                60,
-                98,
-                58
-            ],
-            [
-                352,
-                96,
-                57
+                58,
+                100,
+                54
             ]
         ];
         const info = {
