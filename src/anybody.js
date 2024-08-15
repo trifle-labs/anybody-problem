@@ -107,7 +107,7 @@ export class Anybody extends EventEmitter {
   }
 
   checkIfDone() {
-    if (this.level == 5 && this.levelSpeeds.length == 5) {
+    if (this.level == 5 && this.levelSpeeds.length == 5 && !this.opensea) {
       this.bodies?.map((b, i) => {
         return (b.radius = i == 0 ? b.radius : 0)
       })
@@ -134,6 +134,7 @@ export class Anybody extends EventEmitter {
       // debug: false,
       // Add default properties and their initial values here
       startingBodies: 1,
+      opensea: false,
       windowWidth: 1000,
       windowHeight: 1000,
       pixelDensity: 1,
@@ -287,15 +288,15 @@ export class Anybody extends EventEmitter {
     this.storeInits()
 
     // try to fetch muted state from session storage
-    try {
-      this.mute = JSON.parse(sessionStorage.getItem('muted')) || false
-    } catch (_) {
-      this.mute = false
+    if (!this.opensea) {
       try {
-        sessionStorage.removeItem('muted')
+        this.mute = JSON.parse(sessionStorage.getItem('muted')) || false
       } catch (_) {
-        console.log('session storage not available')
+        this.mute = false
+        sessionStorage.removeItem('muted')
       }
+    } else {
+      this.mute = false
     }
     this.sound.setMuted(this.mute)
   }

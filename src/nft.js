@@ -17,6 +17,7 @@ window.anybody
 q5.setup = () => {
   const options = {
     level: 0,
+    opensea: true,
     todaysRecords
   }
   if (day && day !== '') {
