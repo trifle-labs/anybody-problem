@@ -131,6 +131,7 @@ export class Anybody extends EventEmitter {
       skip0: false,
       todaysRecords: {},
       levelSpeeds: new Array(5),
+      bodyData: null,
       // debug: false,
       // Add default properties and their initial values here
       startingBodies: 1,
@@ -171,6 +172,11 @@ export class Anybody extends EventEmitter {
     const mergedOptions = { ...defaultOptions, ...options }
     // Assign the merged options to the instance properties
     Object.assign(this, mergedOptions)
+    if (this.day % SECONDS_IN_A_DAY !== 0) {
+      console.error(
+        `Anybody using an invalid "day" (${this.day}) which wont be possible to submit to the contract`
+      )
+    }
   }
   setPlayer({ name = undefined, address = undefined } = {}) {
     this.playerName = name
@@ -288,7 +294,7 @@ export class Anybody extends EventEmitter {
     this.storeInits()
 
     // try to fetch muted state from session storage
-    if (!this.opensea) {
+    if (!this.opensea && !this.util) {
       try {
         this.mute = JSON.parse(sessionStorage.getItem('muted')) || false
       } catch (_) {
@@ -298,7 +304,7 @@ export class Anybody extends EventEmitter {
     } else {
       this.mute = false
     }
-    this.sound.setMuted(this.mute)
+    this.sound?.setMuted(this.mute)
   }
 
   async start() {
@@ -316,7 +322,7 @@ export class Anybody extends EventEmitter {
     this.setPause(true)
     this.p.noLoop()
     this.removeListener()
-    this.sound.stop()
+    this.sound?.stop()
     this.sound = null
     this.p.remove()
   }
@@ -449,7 +455,7 @@ export class Anybody extends EventEmitter {
         break
       case 'KeyM':
         this.mute = !this.mute
-        this.sound.setMuted(this.mute)
+        this.sound?.setMuted(this.mute)
         break
     }
   }
@@ -818,7 +824,8 @@ export class Anybody extends EventEmitter {
   }
 
   generateBodies() {
-    const bodyData = this.generateLevelData(this.day, this.level)
+    const bodyData =
+      this.bodyData || this.generateLevelData(this.day, this.level)
     this.bodies = bodyData.map((b) => this.bodyDataToBodies.call(this, b))
     this.startingBodies = this.bodies.length
   }

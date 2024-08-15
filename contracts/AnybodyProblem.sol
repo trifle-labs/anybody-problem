@@ -150,8 +150,11 @@ contract AnybodyProblem is Ownable, ERC2981 {
         if (day == 0) {
             day = currentDay();
         }
+        require(
+            day % SECONDS_IN_A_DAY == 0,
+            'One problem per day, invalid day'
+        );
         require(!paused, 'Contract is paused');
-        // uint256 day = currentDay(); // TODO: this version does not enforce day for solving, just for minting NFT
         if (runId == 0) {
             runId = addNewRun(day);
             addNewLevelData(runId);
@@ -452,7 +455,6 @@ contract AnybodyProblem is Ownable, ERC2981 {
     }
 
     function mint(uint256 payment, uint256 day) internal {
-        require(day == currentDay(), 'Can only mint on the current day');
         makePayment(payment);
         Speedruns(speedruns).__mint(msg.sender, day, 1, '');
     }

@@ -929,7 +929,7 @@ export const Visuals = {
             height: muteBtnTapArea.w,
             onClick: () => {
               this.mute = !this.mute
-              this.sound.setMuted(this.mute)
+              this.sound?.setMuted(this.mute)
             }
           }
           muteButton = this.buttons['mute-button']
