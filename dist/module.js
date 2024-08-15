@@ -416,7 +416,7 @@ class $f9c4c6b189f83f5c$export$2e2bcd8739ae039 {
 const $dfb043d8446f30b2$var$iris_30 = "rgba(163, 140, 222, 1)";
 const $dfb043d8446f30b2$var$iris_60 = "rgba(88, 59, 209, 1)";
 const $dfb043d8446f30b2$var$iris_50 = "rgba(121, 88, 255, 1)";
-// const iris_75 = 'rgba(23, 12, 67, 1)'
+const $dfb043d8446f30b2$var$iris_75 = "rgba(23, 12, 67, 1)";
 const $dfb043d8446f30b2$var$iris_100 = "rgba(25, 15, 66, 1)";
 const $dfb043d8446f30b2$var$teal_50 = "rgba(137, 255, 248, 1)";
 const $dfb043d8446f30b2$var$teal_75 = "rgba(13, 61, 58, 1)";
@@ -449,8 +449,8 @@ const $dfb043d8446f30b2$export$5714e40777c1bcc2 = {
     iris_30: $dfb043d8446f30b2$var$iris_30,
     iris_50: $dfb043d8446f30b2$var$iris_50,
     iris_60: $dfb043d8446f30b2$var$iris_60,
-    teal_50: // iris_75,
-    $dfb043d8446f30b2$var$teal_50,
+    iris_75: $dfb043d8446f30b2$var$iris_75,
+    teal_50: $dfb043d8446f30b2$var$teal_50,
     teal_75: $dfb043d8446f30b2$var$teal_75,
     flame_50: $dfb043d8446f30b2$var$flame_50,
     flame_75: $dfb043d8446f30b2$var$flame_75,
@@ -1281,7 +1281,7 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
             this.introBodies = results.bodies;
             this.missiles = results.missiles;
         }
-        let w, text, fg = (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).iris_30, stroke = (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).iris_30;
+        let w, text, fg = (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).iris_30, stroke = (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).iris_60;
         const chunk_1 = 1.5 * this.P5_FPS;
         const chunk_2 = 2.5 * this.P5_FPS;
         const chunk_3 = 2 * this.P5_FPS;
@@ -1290,17 +1290,17 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
             w = 180;
             text = "oh no !!";
         } else if (this.levelCounting < chunk_1 + chunk_2) {
-            w = 523;
+            w = 530;
             text = "a BADDIE came into orbit !!";
         } else {
             w = 268;
             text = "BLAST IT !!!";
             fg = (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).pink_50;
-            stroke = (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).pink_50;
+            stroke = (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).pink_75;
         }
         if (this.introBodies[0].radius == 0 && this.introBodies[1].radius !== 0) {
             const w = 368;
-            const y = 780;
+            const y = 800;
             if (this.levelCounting > levelMaxTime) this.drawTextBubble({
                 text: "oops, try again !!",
                 w: w,
@@ -1308,7 +1308,7 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
                 y: y,
                 fg: fg,
                 stroke: stroke,
-                bg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).bg
+                bg: "black"
             });
             this.timeout ||= setTimeout(()=>{
                 const b = this.introBodies[0];
@@ -1331,7 +1331,7 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
             }, 3000);
         }
         if (this.levelCounting < levelMaxTime && this.introBodies[0].radius > 0) {
-            const y = 780;
+            const y = 800;
             this.drawTextBubble({
                 text: text,
                 w: w,
@@ -1339,11 +1339,11 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
                 y: y,
                 fg: fg,
                 stroke: stroke,
-                bg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).bg
+                bg: "black"
             });
         } else if (this.introBodies[1].radius == 0) {
             const w = 330;
-            const y = 780;
+            const y = 800;
             const text = "NICE - let's go !";
             this.drawTextBubble({
                 text: text,
@@ -1351,8 +1351,8 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
                 x: this.windowWidth / 2 - w / 2,
                 y: y,
                 fg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).iris_30,
-                stroke: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).iris_30,
-                bg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).bg
+                stroke: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).iris_60,
+                bg: "black"
             });
             this.timeout ||= setTimeout(()=>{
                 this.introStage++;
@@ -1397,7 +1397,7 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
         const body = this.bodies[0];
         this.drawBody(body);
         const w = 268;
-        const y = 780;
+        const y = 800;
         // const rateCheck = 50
         // const rate = this.p5Frames % rateCheck
         // const numberOfDots =
@@ -1408,8 +1408,8 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
             x: this.windowWidth / 2 - w / 2,
             y: y,
             fg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).iris_30,
-            stroke: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).iris_30,
-            bg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).bg
+            stroke: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).iris_60,
+            bg: "black"
         });
         if (this.levelCountdown <= 0) this.introStage++;
     },
@@ -1464,21 +1464,8 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
         this.p.pop();
         this.drawBaddie(baddie3);
         this.p.pop();
-        // this.drawButton({
-        //   text: 'a new day...',
-        //   x: this.windowWidth / 2,
-        //   y: 780,
-        //   onClick: () => {},
-        //   height: 73,
-        //   width: 268,
-        //   fg: [0, 0, 0, 0],
-        //   bg: [0, 0, 100, 0],
-        //   stroke: THEME.iris_60,
-        //   disabled: true,
-        //   p: this.p
-        // })
-        const w = 268;
-        const y = 780;
+        const w = 254;
+        const y = 800;
         // const rateCheck = 50
         // const rate = this.p5Frames % rateCheck
         // const numberOfDots =
@@ -1489,8 +1476,8 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
             x: this.windowWidth / 2 - w / 2,
             y: y,
             fg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).iris_30,
-            stroke: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).iris_30,
-            bg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).bg
+            stroke: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).iris_60,
+            bg: "black"
         });
         if (this.levelCountdown <= 0) this.introStage++;
     },
@@ -2378,7 +2365,7 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
                                 text: "NEW GAME",
                                 onClick: ()=>{
                                     this.popup = null;
-                                    this.level = 0;
+                                    this.level = 1;
                                     this.restart(undefined, true);
                                 },
                                 fg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).green_75,
