@@ -2635,7 +2635,9 @@ export const Visuals = {
             return resolve()
           } catch (e) {
             error = e
-            console.error('Error sharing w navigator:', error)
+            if (error.name === 'AbortError') {
+              return resolve()
+            }
           }
         }
 
