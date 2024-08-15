@@ -77,7 +77,7 @@ const STARTING_BLOCK = {
 }
 
 // n.b. sources must match ABI in contracts to correctly sync
-export const sources: KnownSource[] = [baseSepolia]
+export const sources: KnownSource[] = [base]
 
 const contracts = Object.fromEntries(
   [AnybodyProblem, Speedruns].map((contract) => {
