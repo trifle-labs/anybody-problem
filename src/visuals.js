@@ -360,7 +360,7 @@ export const Visuals = {
     let w,
       text,
       fg = THEME.iris_30,
-      stroke = THEME.iris_30
+      stroke = THEME.iris_60
 
     const chunk_1 = 1.5 * this.P5_FPS
     const chunk_2 = 2.5 * this.P5_FPS
@@ -370,18 +370,18 @@ export const Visuals = {
       w = 180
       text = 'oh no !!'
     } else if (this.levelCounting < chunk_1 + chunk_2) {
-      w = 523
+      w = 530
       text = 'a BADDIE came into orbit !!'
     } else {
       w = 268
       text = 'BLAST IT !!!'
       fg = THEME.pink_50
-      stroke = THEME.pink_50
+      stroke = THEME.pink_75
     }
 
     if (this.introBodies[0].radius == 0 && this.introBodies[1].radius !== 0) {
       const w = 368
-      const y = 780
+      const y = 800
       if (this.levelCounting > levelMaxTime) {
         this.drawTextBubble({
           text: 'oops, try again !!',
@@ -390,7 +390,7 @@ export const Visuals = {
           y,
           fg,
           stroke,
-          bg: THEME.bg
+          bg: 'black'
         })
       }
 
@@ -413,7 +413,7 @@ export const Visuals = {
     }
 
     if (this.levelCounting < levelMaxTime && this.introBodies[0].radius > 0) {
-      const y = 780
+      const y = 800
       this.drawTextBubble({
         text,
         w,
@@ -421,11 +421,11 @@ export const Visuals = {
         y,
         fg,
         stroke,
-        bg: THEME.bg
+        bg: 'black'
       })
     } else if (this.introBodies[1].radius == 0) {
       const w = 330
-      const y = 780
+      const y = 800
       const text = "NICE - let's go !"
       this.drawTextBubble({
         text,
@@ -433,8 +433,8 @@ export const Visuals = {
         x: this.windowWidth / 2 - w / 2,
         y,
         fg: THEME.iris_30,
-        stroke: THEME.iris_30,
-        bg: THEME.bg
+        stroke: THEME.iris_60,
+        bg: 'black'
       })
 
       this.timeout ||= setTimeout(() => {
@@ -474,7 +474,7 @@ export const Visuals = {
     this.drawBody(body)
 
     const w = 268
-    const y = 780
+    const y = 800
     // const rateCheck = 50
     // const rate = this.p5Frames % rateCheck
     // const numberOfDots =
@@ -485,8 +485,8 @@ export const Visuals = {
       x: this.windowWidth / 2 - w / 2,
       y,
       fg: THEME.iris_30,
-      stroke: THEME.iris_30,
-      bg: THEME.bg
+      stroke: THEME.iris_60,
+      bg: 'black'
     })
     if (this.levelCountdown <= 0) {
       this.introStage++
@@ -535,22 +535,8 @@ export const Visuals = {
 
     this.p.pop()
 
-    // this.drawButton({
-    //   text: 'a new day...',
-    //   x: this.windowWidth / 2,
-    //   y: 780,
-    //   onClick: () => {},
-    //   height: 73,
-    //   width: 268,
-    //   fg: [0, 0, 0, 0],
-    //   bg: [0, 0, 100, 0],
-    //   stroke: THEME.iris_60,
-    //   disabled: true,
-    //   p: this.p
-    // })
-
-    const w = 268
-    const y = 780
+    const w = 254
+    const y = 800
     // const rateCheck = 50
     // const rate = this.p5Frames % rateCheck
     // const numberOfDots =
@@ -562,8 +548,8 @@ export const Visuals = {
         x: this.windowWidth / 2 - w / 2,
         y,
         fg: THEME.iris_30,
-        stroke: THEME.iris_30,
-        bg: THEME.bg
+        stroke: THEME.iris_60,
+        bg: 'black'
       })
     }
     if (this.levelCountdown <= 0) {
@@ -1674,7 +1660,7 @@ export const Visuals = {
                   text: 'NEW GAME',
                   onClick: () => {
                     this.popup = null
-                    this.level = 0
+                    this.level = 1
                     this.restart(undefined, true)
                   },
                   fg: THEME.green_75,
