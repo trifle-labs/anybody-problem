@@ -821,7 +821,7 @@ export const Visuals = {
         width: 410,
         height: 108,
         textSize: 78,
-        x: 508,
+        x: !this.opensea ? 508 : this.windowWidth / 2 - 205,
         y: 862,
         p
       })
