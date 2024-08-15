@@ -959,7 +959,7 @@ export const Visuals = {
     this.winScreenVisibleForFrames++
     this.winScreenLastVisibleFrame = this.p5Frames
 
-    const celebrationTime = 5 // seconds
+    const celebrationTime = 2.5 // seconds
     this.celebrating =
       this.winScreenVisibleForFrames / this.P5_FPS < celebrationTime
 
