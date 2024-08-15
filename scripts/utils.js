@@ -232,6 +232,7 @@ const deployContracts = async (options) => {
   const verifiersBodies = []
 
   for (let i = 2; i <= MAX_BODY_COUNT; i++) {
+    // if (!testing && (i !== 4 || i !== 6)) continue
     const ticks = await getTicksRun(i, ignoreTesting)
     const name = `Game_${i}_${ticks}Verifier`
     const path = `contracts/${name}.sol:Groth16Verifier`
@@ -576,7 +577,6 @@ const generateProof = async (
     ...(inputData.missiles.length > 0 ? inputData.missiles[0] : [0, 0, 0])
   ]
 
-  // console.dir({ inputData }, { depth: null })
   const bodyFinal = results.bodyFinal
   // const outflightMissile = results.outflightMissiles
   // const startTime = Date.now()

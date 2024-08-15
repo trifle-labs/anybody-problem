@@ -626,7 +626,8 @@
           "name": "dayLevelIndexSeed",
           "type": "bytes32"
         },
-        { "internalType": "uint256", "name": "index", "type": "uint256" }
+        { "internalType": "uint256", "name": "index", "type": "uint256" },
+        { "internalType": "uint256", "name": "day", "type": "uint256" }
       ],
       "name": "getRandomValues",
       "outputs": [
@@ -735,7 +736,8 @@
       "inputs": [
         { "internalType": "uint256", "name": "min", "type": "uint256" },
         { "internalType": "uint256", "name": "max", "type": "uint256" },
-        { "internalType": "bytes32", "name": "rand", "type": "bytes32" }
+        { "internalType": "bytes32", "name": "seed", "type": "bytes32" },
+        { "internalType": "uint256", "name": "day", "type": "uint256" }
       ],
       "name": "randomRange",
       "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],

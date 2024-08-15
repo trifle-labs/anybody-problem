@@ -28,65 +28,52 @@ function intersectsButton(button, x, y) {
 const PAUSE_BODY_DATA = [
   {
     bodyIndex: 0,
-    radius: 36000,
-    px: 149311,
-    py: 901865,
+    radius: 51000,
+    px: 500300,
+    py: 290750,
     vx: 0,
     vy: 0
   },
+  // upper right
   {
     bodyIndex: 1,
-    radius: 32000,
-    px: 309311,
-    py: 121865,
+    radius: 7000,
+    px: 793406,
+    py: 133029,
     vx: 0,
     vy: 0
   },
+  // mid right
   {
     bodyIndex: 2,
-    radius: 30000,
-    px: 850311,
-    py: 811865,
-    vx: 0,
-    vy: 0
+    radius: 20000,
+    px: 825620,
+    py: 418711,
+    vx: -100000,
+    vy: -1111000
   },
+  // upper left
   {
     bodyIndex: 3,
-    radius: 7000,
-    px: 833406,
-    py: 103029,
+    radius: 17000,
+    px: 159878,
+    py: 234946,
     vx: 0,
     vy: 0
   },
   {
     bodyIndex: 4,
-    radius: 20000,
-    px: 705620,
-    py: 178711,
-    vx: -100000,
-    vy: -1111000
+    radius: 9000,
+    px: 229878,
+    py: 464946,
+    vx: 0,
+    vy: 0
   },
   {
     bodyIndex: 5,
-    radius: 17000,
-    px: 139878,
-    py: 454946,
-    vx: 0,
-    vy: 0
-  },
-  {
-    bodyIndex: 6,
-    radius: 9000,
-    px: 289878,
-    py: 694946,
-    vx: 0,
-    vy: 0
-  },
-  {
-    bodyIndex: 7,
     radius: 14000,
-    px: 589878,
-    py: 694946,
+    px: 679878,
+    py: 668946,
     vx: -100000,
     vy: -1111000
   }
@@ -112,11 +99,27 @@ export class Anybody extends EventEmitter {
     // this.p.blendMode(this.p.DIFFERENCE)
 
     this.levelSpeeds = new Array(5)
+    this.introStage = -1
     this.clearValues()
     !this.util && this.prepareP5()
     this.sound = new Sound(this)
     this.init()
     !this.util && this.start()
+    this.checkIfDone()
+  }
+
+  checkIfDone() {
+    if (this.level == 5 && this.levelSpeeds.length == 5 && !this.opensea) {
+      this.bodies?.map((b, i) => {
+        return (b.radius = i == 0 ? b.radius : 0)
+      })
+      this.skipAhead = true
+      this.paused = false
+      this.gameOver = true
+      this.won = true
+      this.hasStarted = true
+      this.handledGameOver = true
+    }
   }
 
   proverTickIndex(i) {
@@ -128,11 +131,13 @@ export class Anybody extends EventEmitter {
       day: currentDay(),
       level: 0,
       skip0: false,
-      bodyData: null,
       todaysRecords: {},
+      levelSpeeds: new Array(5),
+      bodyData: null,
       // debug: false,
       // Add default properties and their initial values here
       startingBodies: 1,
+      opensea: false,
       windowWidth: 1000,
       windowHeight: 1000,
       pixelDensity: 1,
@@ -148,18 +153,19 @@ export class Anybody extends EventEmitter {
       alreadyRun: 0,
       paintSteps: 0,
       chunk: 1,
-      mute: true,
+      mute: false,
       freeze: false,
       test: false,
       util: false,
       paused: true,
+      renderingCanvasToShare: false,
       globalStyle: 'default', // 'default', 'psycho'
       aimHelper: false,
       target: 'inside', // 'outside' or 'inside'
       faceRotation: 'mania', // 'time' or 'hitcycle' or 'mania'
       sfx: 'space', // 'space' or 'bubble'
+      address: undefined,
       playerName: undefined,
-      practiceMode: false,
       bestTimes: null,
       popup: null
     }
@@ -167,9 +173,15 @@ export class Anybody extends EventEmitter {
     const mergedOptions = { ...defaultOptions, ...options }
     // Assign the merged options to the instance properties
     Object.assign(this, mergedOptions)
+    if (this.day % SECONDS_IN_A_DAY !== 0) {
+      console.error(
+        `Anybody using an invalid "day" (${this.day}) which wont be possible to submit to the contract`
+      )
+    }
   }
-  setPlayer(name = undefined) {
+  setPlayer({ name = undefined, address = undefined } = {}) {
     this.playerName = name
+    this.address = address
   }
   removeCSS() {
     if (typeof document === 'undefined') return
@@ -196,6 +208,7 @@ export class Anybody extends EventEmitter {
     if (this.skip0 && this.level == 0) {
       this.level = 1
     }
+    this.totalIntroStages = 3
     this.lastMissileCantBeUndone = false
     this.speedFactor = 2
     this.speedLimit = 10
@@ -244,10 +257,11 @@ export class Anybody extends EventEmitter {
     this.shaking = 0
     this.explosionSmoke = []
     this.gunSmoke = []
-    this.date = new Date(this.day * 1000)
-      .toISOString()
-      .split('T')[0]
-      .replace(/-/g, '.')
+    this.date = new Date(this.day * 1000).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
     this.framesTook = false
     this.showProblemRankingsScreenAt = -1
     this.saveStatus = 'unsaved' // 'unsaved' -> 'validating' -> 'validated' -> 'saving' -> 'saved' | 'error'
@@ -280,7 +294,17 @@ export class Anybody extends EventEmitter {
     // const vectorLimitScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
     this.setPause(this.paused, true)
     this.storeInits()
-    // this.prepareWitness()
+
+    // try to fetch muted state from session storage
+    if (!this.opensea && !this.util) {
+      try {
+        this.mute = JSON.parse(sessionStorage.getItem('muted')) || false
+      } catch (_) {
+        this.mute = false
+        sessionStorage.removeItem('muted')
+      }
+    }
+    this.sound?.setMuted(this.mute)
   }
 
   async start() {
@@ -298,7 +322,7 @@ export class Anybody extends EventEmitter {
     this.setPause(true)
     this.p.noLoop()
     this.removeListener()
-    this.sound.stop()
+    this.sound?.stop()
     this.sound = null
     this.p.remove()
   }
@@ -342,7 +366,7 @@ export class Anybody extends EventEmitter {
       this.handleGameClick(e)
     }
     this.p.mouseClicked = this.handleGameClick
-    this.p.keyPressed = this.handleGameKeyDown
+    this.p.keyPressed = this.handleKeyPressed
   }
 
   removeListener() {
@@ -397,7 +421,12 @@ export class Anybody extends EventEmitter {
     //   this.debug = !this.debug
     // }
 
-    if (this.paused || this.gameOver) return
+    const duringIntro = this.introStage < this.totalIntroStages - 1
+    if (duringIntro && !this.paused && this.level < 1) {
+      this.introStage++
+      return
+    }
+
     this.missileClick(x, y)
   }
 
@@ -405,11 +434,11 @@ export class Anybody extends EventEmitter {
     this.setPause()
   }
 
-  handleGameKeyDown = (e) => {
+  handleKeyPressed = (e) => {
     if (this.gameOver && this.won) {
       this.skipAhead = true
     }
-    const modifierKeyActive = e.shiftKey && e.altKey && e.ctrlKey && e.metaKey
+    const modifierKeyActive = e.shiftKey || e.altKey || e.ctrlKey || e.metaKey
     if (modifierKeyActive) return
     switch (e.code) {
       case 'Space':
@@ -417,12 +446,13 @@ export class Anybody extends EventEmitter {
           e.preventDefault()
           this.missileClick(this.mouseX, this.mouseY)
         }
-        if (this.shownStatScreen) {
+        if (this.shownStatScreen && this.level < 5) {
           this.level++
           this.restart(null, false)
         }
         break
       case 'KeyR':
+        if (this.level < 1) return
         this.hasQuickReset = true
         this.restart(null, false)
         break
@@ -431,6 +461,7 @@ export class Anybody extends EventEmitter {
         break
       case 'KeyM':
         this.mute = !this.mute
+        this.sound?.setMuted(this.mute)
         break
     }
   }
@@ -479,7 +510,6 @@ export class Anybody extends EventEmitter {
       framesTook: this.framesTook
     })
     if (won) {
-      this.bodyData = null
       this.finish()
     }
   }
@@ -492,11 +522,11 @@ export class Anybody extends EventEmitter {
     if (this.level !== this.lastLevel && this.level !== 1 && this.level !== 0) {
       this.sound?.stop()
       this.sound?.playStart()
-      this.sound?.setSong()
+      this.sound?.advanceToNextLevelSong()
       this.sound?.resume()
     }
     if (this.sound?.playbackRate !== 'normal') {
-      this.sound?.setPlaybackRate('normal')
+      this.sound?.playCurrentSong()
     }
     this.init()
     this.draw()
@@ -519,8 +549,8 @@ export class Anybody extends EventEmitter {
       this.pauseBodies = PAUSE_BODY_DATA.map((b) =>
         this.bodyDataToBodies.call(this, b)
       )
-      this.pauseBodies[1].c = this.getBodyColor(this.day + 1, 0)
-      this.pauseBodies[2].c = this.getBodyColor(this.day + 2, 0)
+      // preview other bodies
+      // this.pauseBodies[0].c = this.getBodyColor(this.day + 13, 0)
       this.paused = newPauseState
       this.willUnpause = false
       delete this.beganUnpauseAt
@@ -539,9 +569,13 @@ export class Anybody extends EventEmitter {
         this.sound?.resume()
       }
     }
+
+    if (!newPauseState && this.introStage < 0) {
+      this.introStage = 0
+    }
   }
 
-  step() {
+  step(bodies = this.bodies, missiles = this.missiles) {
     // this.steps ||= 0
     // console.log({ steps: this.steps })
     // this.steps++
@@ -549,26 +583,26 @@ export class Anybody extends EventEmitter {
     //   { bodies: this.bodies, missiles: this.missiles[0] },
     //   { depth: null }
     // )
-    if (this.missiles.length == 0 && this.lastMissileCantBeUndone) {
+    if (missiles.length == 0 && this.lastMissileCantBeUndone) {
       console.log('LASTMISSILECANTBEUNDONE = FALSE')
       this.lastMissileCantBeUndone = false
     }
-    this.bodies = this.forceAccumulator(this.bodies)
-    var results = this.detectCollision(this.bodies, this.missiles)
-    this.bodies = results.bodies
-    this.missiles = results.missiles || []
-    if (this.missiles.length > 0) {
-      const missileCopy = JSON.parse(JSON.stringify(this.missiles[0]))
+    bodies = this.forceAccumulator(bodies)
+    var results = this.detectCollision(bodies, this.missiles)
+    bodies = results.bodies
+    missiles = results.missiles || []
+    if (missiles.length > 0) {
+      const missileCopy = JSON.parse(JSON.stringify(missiles[0]))
       this.stillVisibleMissiles.push(missileCopy)
     }
-    if (this.missiles.length > 0 && this.missiles[0].radius == 0) {
-      this.missiles.splice(0, 1)
-    } else if (this.missiles.length > 1 && this.missiles[0].radius !== 0) {
+    if (missiles.length > 0 && missiles[0].radius == 0) {
+      missiles.splice(0, 1)
+    } else if (missiles.length > 1 && missiles[0].radius !== 0) {
       // NOTE: follows logic of circuit
-      const newMissile = this.missiles.splice(0, 1)
-      this.missiles.splice(0, 1, newMissile[0])
+      const newMissile = missiles.splice(0, 1)
+      missiles.splice(0, 1, newMissile[0])
     }
-    return { bodies: this.bodies, missiles: this.missiles }
+    return { bodies, missiles }
   }
 
   started() {
@@ -662,7 +696,7 @@ export class Anybody extends EventEmitter {
       outflightMissileTmp.radius
     ]
 
-    const { day, level, bodyInits, bodyFinal, framesTook } = this
+    const { address, day, level, bodyInits, bodyFinal, framesTook } = this
 
     const results = JSON.parse(
       JSON.stringify({
@@ -673,7 +707,8 @@ export class Anybody extends EventEmitter {
         bodyInits,
         bodyFinal,
         framesTook,
-        outflightMissile
+        outflightMissile,
+        address
       })
     )
 
@@ -714,6 +749,8 @@ export class Anybody extends EventEmitter {
   }
 
   generateLevelData(day, level) {
+    if (!day) throw new Error('day is undefined')
+    if (typeof level == 'undefined') throw new Error('level is undefined')
     const bodyData = []
     for (let i = 0; i <= level; i++) {
       const dayLevelIndexSeed = utils.solidityKeccak256(
@@ -731,12 +768,13 @@ export class Anybody extends EventEmitter {
     const body = {}
     body.bodyIndex = index
     body.seed = dayLevelIndexSeed
-    body.radius = this.genRadius(index, level)
+    body.radius = this.genRadius(index)
 
     if (level == 0) {
+      body.radius = parseInt(56n * this.scalingFactor)
       body.px = parseInt((BigInt(this.windowWidth) * this.scalingFactor) / 2n)
       body.py = parseInt((BigInt(this.windowWidth) * this.scalingFactor) / 2n)
-      body.vx = parseInt(maxVectorScaled) - 5000
+      body.vx = parseInt(maxVectorScaled)
       body.vy = parseInt(maxVectorScaled)
       return body
     }
@@ -772,19 +810,20 @@ export class Anybody extends EventEmitter {
     return body
   }
 
-  genRadius(index, level = this.level) {
+  genRadius(index) {
     const radii = [36n, 27n, 23n, 19n, 15n, 11n] // n * 4 + 2
-    let size = level == 0 ? 27n : radii[index % radii.length]
+    let size = radii[index % radii.length]
     return parseInt(size * BigInt(this.scalingFactor))
   }
 
-  randomRange(minBigInt, maxBigInt, seed) {
+  randomRange(minBigInt, maxBigInt, seed, day = this.day) {
+    const fuckup = day == 1723766400 ? 0n : 1n
     if (minBigInt == maxBigInt) return minBigInt
     minBigInt = typeof minBigInt === 'bigint' ? minBigInt : BigInt(minBigInt)
     maxBigInt = typeof maxBigInt === 'bigint' ? maxBigInt : BigInt(maxBigInt)
     seed = typeof seed === 'bigint' ? seed : BigInt(seed)
     if (minBigInt > maxBigInt) {
-      const range = 359n - (minBigInt - maxBigInt)
+      const range = 359n - (minBigInt - maxBigInt + fuckup)
       const output = seed % range
       if (output < maxBigInt) {
         return parseInt(output)
@@ -792,14 +831,14 @@ export class Anybody extends EventEmitter {
         return parseInt(minBigInt - maxBigInt + output)
       }
     } else {
-      return parseInt((seed % (maxBigInt - minBigInt)) + minBigInt)
+      return parseInt((seed % (maxBigInt - minBigInt + fuckup)) + minBigInt)
     }
   }
 
   generateBodies() {
-    this.bodyData =
+    const bodyData =
       this.bodyData || this.generateLevelData(this.day, this.level)
-    this.bodies = this.bodyData.map((b) => this.bodyDataToBodies.call(this, b))
+    this.bodies = bodyData.map((b) => this.bodyDataToBodies.call(this, b))
     this.startingBodies = this.bodies.length
   }
 
@@ -827,20 +866,20 @@ export class Anybody extends EventEmitter {
   }
 
   getBodyColor(day, bodyIndex = 0) {
-    let baddieSeed = utils.solidityKeccak256(
-      ['uint256', 'uint256'],
-      [day, bodyIndex]
-    )
-    const baddieHue = this.randomRange(0, 359, baddieSeed)
-    baddieSeed = utils.solidityKeccak256(['bytes32'], [baddieSeed])
-    const baddieSaturation = this.randomRange(90, 100, baddieSeed)
-    baddieSeed = utils.solidityKeccak256(['bytes32'], [baddieSeed])
-    const baddieLightness = this.randomRange(55, 60, baddieSeed)
+    // let baddieSeed = utils.solidityKeccak256(
+    //   ['uint256', 'uint256'],
+    //   [day, bodyIndex]
+    // )
+    // const baddieHue = this.randomRange(0, 359, baddieSeed)
+    // baddieSeed = utils.solidityKeccak256(['bytes32'], [baddieSeed])
+    // const baddieSaturation = this.randomRange(90, 100, baddieSeed)
+    // baddieSeed = utils.solidityKeccak256(['bytes32'], [baddieSeed])
+    // const baddieLightness = this.randomRange(55, 60, baddieSeed)
 
     // hero body info
     const themes = Object.keys(bodyThemes)
     const numberOfThemes = themes.length
-    const extraSeed = 19
+    const extraSeed = day == 1723766400 ? 19 : 0
     // 8, 11, 14, 19
     // good ones: 2, 8, 10, 11, 13
     let rand = utils.solidityKeccak256(['uint256', 'uint256'], [day, extraSeed])
@@ -849,74 +888,93 @@ export class Anybody extends EventEmitter {
     const bgOptions = 10
     const fgOptions = 10
     const coreOptions = 1
-    const fIndex = this.randomRange(0, faceOptions - 1, rand)
+    const fIndex = this.randomRange(0, faceOptions - 1, rand, day)
     rand = utils.solidityKeccak256(['bytes32'], [rand])
-    const bgIndex = this.randomRange(0, bgOptions - 1, rand)
+    const bgIndex = this.randomRange(0, bgOptions - 1, rand, day)
     rand = utils.solidityKeccak256(['bytes32'], [rand])
-    const fgIndex = this.randomRange(0, fgOptions - 1, rand)
+    const fgIndex = this.randomRange(0, fgOptions - 1, rand, day)
     rand = utils.solidityKeccak256(['bytes32'], [rand])
-    const coreIndex = this.randomRange(0, coreOptions - 1, rand)
+    const coreIndex = this.randomRange(0, coreOptions - 1, rand, day)
 
     rand = utils.solidityKeccak256(['bytes32'], [rand])
-    const dailyThemeIndex = this.randomRange(0, numberOfThemes - 1, rand)
+    const dailyThemeIndex = this.randomRange(0, numberOfThemes - 1, rand, day)
 
     const themeName = themes[dailyThemeIndex]
     const theme = bodyThemes[themeName]
 
     rand = utils.solidityKeccak256(['bytes32'], [rand])
     const bgHueRange = theme.bg[0] ? theme.bg[0].split('-') : [0, 359]
-    const bgHue = this.randomRange(bgHueRange[0], bgHueRange[1], rand)
+    const bgHue = this.randomRange(bgHueRange[0], bgHueRange[1], rand, day)
     rand = utils.solidityKeccak256(['bytes32'], [rand])
     const bgSaturationRange = theme.bg[1].split('-')
     const bgSaturation = this.randomRange(
       bgSaturationRange[0],
       bgSaturationRange[1],
-      rand
+      rand,
+      day
     )
     rand = utils.solidityKeccak256(['bytes32'], [rand])
     const bgLightnessRange = theme.bg[2].split('-')
     const bgLightness = this.randomRange(
       bgLightnessRange[0],
       bgLightnessRange[1],
-      rand
+      rand,
+      day
     )
 
     rand = utils.solidityKeccak256(['bytes32'], [rand])
     const coreHueRange = theme.bg[0] ? theme.cr[0].split('-') : [0, 359]
-    const coreHue = this.randomRange(coreHueRange[0], coreHueRange[1], rand)
+    const coreHue = this.randomRange(
+      coreHueRange[0],
+      coreHueRange[1],
+      rand,
+      day
+    )
     rand = utils.solidityKeccak256(['bytes32'], [rand])
     const coreSaturationRange = theme.cr[1].split('-')
     const coreSaturation = this.randomRange(
       coreSaturationRange[0],
       coreSaturationRange[1],
-      rand
+      rand,
+      day
     )
     rand = utils.solidityKeccak256(['bytes32'], [rand])
     const coreLightnessRange = theme.cr[2].split('-')
     const coreLightness = this.randomRange(
       coreLightnessRange[0],
       coreLightnessRange[1],
-      rand
+      rand,
+      day
     )
 
     rand = utils.solidityKeccak256(['bytes32'], [rand])
     const fgHueRange = theme.bg[0] ? theme.fg[0].split('-') : [0, 359]
-    const fgHue = this.randomRange(fgHueRange[0], fgHueRange[1], rand)
+    const fgHue = this.randomRange(fgHueRange[0], fgHueRange[1], rand, day)
     rand = utils.solidityKeccak256(['bytes32'], [rand])
     const fgSaturationRange = theme.fg[1].split('-')
     const fgSaturation = this.randomRange(
       fgSaturationRange[0],
       fgSaturationRange[1],
-      rand
+      rand,
+      day
     )
     rand = utils.solidityKeccak256(['bytes32'], [rand])
     const fgLightnessRange = theme.fg[2].split('-')
     const fgLightness = this.randomRange(
       fgLightnessRange[0],
       fgLightnessRange[1],
-      rand
+      rand,
+      day
     )
 
+    const baddieColors = [
+      [260, 90, 58],
+      [260, 90, 58],
+      [241, 95, 59],
+      [113, 99, 55],
+      [60, 98, 58],
+      [352, 96, 57]
+    ]
     const info = {
       fIndex,
       bgIndex,
@@ -925,7 +983,7 @@ export class Anybody extends EventEmitter {
       bg: `hsl(${bgHue},${bgSaturation}%,${bgLightness}%`,
       core: `hsl(${coreHue},${coreSaturation}%,${coreLightness}%`,
       fg: `hsl(${fgHue},${fgSaturation}%,${fgLightness}%`,
-      baddie: [baddieHue, baddieSaturation, baddieLightness]
+      baddie: baddieColors[bodyIndex]
     }
     return info
   }
@@ -950,7 +1008,19 @@ export class Anybody extends EventEmitter {
 
   missileClick(x, y) {
     if (this.gameOver) return
-    if (this.paused) return
+    if (
+      this.paused ||
+      (this.introStage !== this.totalIntroStages - 1 && this.level < 1)
+    )
+      return
+    if (this.introStage == this.totalIntroStages - 1 && this.level < 1) {
+      // NOTE: these values are in drawIntroStage2
+      const chunk_1 = 1.5 * this.P5_FPS
+      const chunk_2 = 2.5 * this.P5_FPS
+      const chunk_3 = 2 * this.P5_FPS
+      const levelMaxTime = chunk_1 + chunk_2 + chunk_3
+      if (this.levelCounting < levelMaxTime) return
+    }
     if (
       this.bodies.reduce((a, c) => a + c.radius, 0) == 0 ||
       this.frames - this.startingFrame >= this.timer
@@ -976,7 +1046,6 @@ export class Anybody extends EventEmitter {
 
     this.missileCount++
     const radius = 10
-
     const b = {
       step: this.frames,
       position: this.p.createVector(0, this.windowWidth),
@@ -985,6 +1054,12 @@ export class Anybody extends EventEmitter {
     }
     // b.velocity.setMag(this.missileSpeed * this.speedFactor)
     b.velocity.limit(this.missileSpeed * this.speedFactor)
+    if (b.velocity.x < 0) {
+      b.velocity.x = 0
+    }
+    if (b.velocity.y > 0) {
+      b.velocity.y = 0
+    }
     let sum = b.velocity.x - b.velocity.y
     const max = this.missileVectorLimitSum / 1000
     if (sum > max) {

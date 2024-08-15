@@ -1,5 +1,6 @@
 import { hslToRgb, rgbaOpacity, THEME, themes, randHSL } from './colors.js'
 import { fonts, drawKernedText } from './fonts.js'
+import { utils } from 'ethers'
 
 const BODY_SCALE = 4 // match to calculations.js !!
 const GAME_LENGTH_BY_LEVEL_INDEX = [30, 10, 20, 30, 40, 50]
@@ -198,7 +199,7 @@ const svgs = {
 
 const replaceAttribute = (string, key, color) =>
   string.replaceAll(
-    new RegExp(`${key}="(?!none)([^"]+)"`, 'g'),
+    new RegExp(`(?<=\\s|^)${key}="(?!none)([^"]+)"`, 'g'),
     `${key}="${color}"`
   )
 
@@ -218,8 +219,12 @@ export const Visuals = {
       this.hasStarted = true
       this.started()
     }
-
-    if (!this.paused && this.p5Frames % this.P5_FPS_MULTIPLIER == 0) {
+    const pastIntro = this.introStage >= this.totalIntroStages
+    if (
+      (pastIntro || this.level > 0) &&
+      !this.paused &&
+      this.p5Frames % this.P5_FPS_MULTIPLIER == 0
+    ) {
       this.firstFrame = false
       this.frames++
       const results = this.step(this.bodies, this.missiles)
@@ -233,11 +238,19 @@ export const Visuals = {
     this.p5Frames++
     this.drawExplosions()
 
-    this.drawBodies()
-    this.drawPause()
+    if (pastIntro || this.level > 0) {
+      this.drawPause()
+      this.drawBodies()
+    } else {
+      if (this.paused) {
+        this.drawPause()
+      } else {
+        this.drawIntro()
+      }
+    }
     this.drawScore()
     this.drawPopup()
-    this.drawGun()
+    if (!this.renderingCanvasToShare) this.drawGun()
     this.drawGunSmoke()
     this.drawExplosionSmoke()
 
@@ -293,6 +306,256 @@ export const Visuals = {
 
     this.drawTips()
   },
+  drawIntro() {
+    switch (this.introStage) {
+      case 0:
+        this.drawIntroStage0()
+        break
+      case 1:
+        this.drawIntroStage1()
+        break
+      case 2:
+        this.drawIntroStage2()
+        break
+      case 3:
+        this.drawIntroStage3()
+        break
+      default:
+    }
+  },
+
+  drawIntroStage2() {
+    if (!this.playedStage2Sound) {
+      this.playedStage2Sound = true
+      this.sound?.floop()
+    }
+
+    this.levelCounting ||= 0
+    this.levelCounting += 1
+
+    this.introBodies ||= [
+      (() => {
+        const b = JSON.parse(JSON.stringify(this.bodies[0]))
+        b.velocity.x = -6.5
+        b.velocity.y = 6.5
+        return b
+      })(),
+      {
+        position: { x: this.windowWidth - 100, y: 100 },
+        velocity: { x: 0, y: 0 },
+        radius: 42,
+        c: { baddie: this.bodies[0].c.baddie }
+      }
+    ]
+    this.introBodies.forEach((body) => {
+      this.drawBody(body)
+    })
+    if (this.p5Frames % this.P5_FPS_MULTIPLIER == 0) {
+      const results = this.step(this.introBodies, this.missiles)
+
+      this.introBodies = results.bodies
+      this.missiles = results.missiles
+    }
+
+    let w,
+      text,
+      fg = THEME.iris_30,
+      stroke = THEME.iris_60
+
+    const chunk_1 = 1.5 * this.P5_FPS
+    const chunk_2 = 2.5 * this.P5_FPS
+    const chunk_3 = 2 * this.P5_FPS
+    const levelMaxTime = chunk_1 + chunk_2 + chunk_3
+    if (this.levelCounting < chunk_1) {
+      w = 180
+      text = 'oh no !!'
+    } else if (this.levelCounting < chunk_1 + chunk_2) {
+      w = 530
+      text = 'a BADDIE came into orbit !!'
+    } else {
+      w = 268
+      text = 'BLAST IT !!!'
+      fg = THEME.pink_50
+      stroke = THEME.pink_75
+    }
+
+    if (this.introBodies[0].radius == 0 && this.introBodies[1].radius !== 0) {
+      const w = 368
+      const y = 800
+      if (this.levelCounting > levelMaxTime) {
+        this.drawTextBubble({
+          text: 'oops, try again !!',
+          w,
+          x: this.windowWidth / 2 - w / 2,
+          y,
+          fg,
+          stroke,
+          bg: 'black'
+        })
+      }
+
+      this.timeout ||= setTimeout(() => {
+        const b = this.introBodies[0]
+        b.radius = 56
+        b.position = {
+          x: this.windowWidth / 2,
+          y: this.windowHeight / 2
+        }
+        b.velocity = { x: 0, y: 0 }
+        b.vx = null
+        b.vy = null
+        b.px = null
+        b.py = null
+        this.explosions = []
+        clearTimeout(this.timeout)
+        this.timeout = null
+      }, 3000)
+    }
+
+    if (this.levelCounting < levelMaxTime && this.introBodies[0].radius > 0) {
+      const y = 800
+      this.drawTextBubble({
+        text,
+        w,
+        x: this.windowWidth / 2 - w / 2,
+        y,
+        fg,
+        stroke,
+        bg: 'black'
+      })
+    } else if (this.introBodies[1].radius == 0) {
+      const w = 330
+      const y = 800
+      const text = "NICE - let's go !"
+      this.drawTextBubble({
+        text,
+        w,
+        x: this.windowWidth / 2 - w / 2,
+        y,
+        fg: THEME.iris_30,
+        stroke: THEME.iris_60,
+        bg: 'black'
+      })
+
+      this.timeout ||= setTimeout(() => {
+        this.introStage++
+        clearTimeout(this.timeout)
+        this.timeout = null
+        this.skipAhead = true
+        this.handleGameOver({ won: true })
+        this.playedIntro = true
+      }, 3000)
+    }
+  },
+
+  drawIntroStage1() {
+    if (!this.playedStage1Sound) {
+      this.playedStage1Sound = true
+      this.sound?.twinkle()
+    }
+    this.levelCountdown ||= 250
+    this.levelCountdown -= 1
+    const baddie = {
+      position: {
+        x: this.windowWidth / 2,
+        y: this.windowHeight / 2
+      },
+      velocity: this.createVector(0, 0),
+      radius: 80,
+      backgroundOnly: true,
+      c: { baddie: [0, 0, 120, 1] }
+    }
+    this.p.push()
+    this.p.translate(baddie.position.x, baddie.position.y)
+    this.drawBaddie(baddie)
+    this.p.pop()
+
+    const body = this.bodies[0]
+    this.drawBody(body)
+
+    const w = 268
+    const y = 800
+    // const rateCheck = 50
+    // const rate = this.p5Frames % rateCheck
+    // const numberOfDots =
+    // rate < rateCheck / 3 ? '.' : rate < rateCheck * (2 / 3) ? '..' : '...'
+    this.drawTextBubble({
+      text: 'a new BODY !',
+      w,
+      x: this.windowWidth / 2 - w / 2,
+      y,
+      fg: THEME.iris_30,
+      stroke: THEME.iris_60,
+      bg: 'black'
+    })
+    if (this.levelCountdown <= 0) {
+      this.introStage++
+    }
+  },
+  drawIntroStage0() {
+    this.levelCountdown ||= 300
+    this.levelCountdown -= 1
+    if (this.levelCountdown > 250) return
+    const maxBaddieSize = 40
+    const growingSize = 84 - this.levelCountdown / 3
+    const currentSize =
+      growingSize > maxBaddieSize ? maxBaddieSize : growingSize
+    const baddie = {
+      position: { x: this.windowWidth / 2, y: this.windowHeight / 2 },
+      velocity: this.createVector(0, 0),
+      radius: currentSize,
+      maxRadius: 40,
+      c: { baddie: [0, 0, 0, 0], strokeColor: '#FFF', strokeWidth: 1.5 },
+      backgroundOnly: true,
+      rotationSpeedOffset: 2
+    }
+    const baddie2 = JSON.parse(JSON.stringify(baddie))
+    baddie2.radius = currentSize * 0.74
+    baddie2.rotationSpeedOffset = -1
+
+    const baddie3 = JSON.parse(JSON.stringify(baddie))
+    baddie3.radius = currentSize * 0.47
+    baddie3.c.baddie = [0, 0, 120]
+    baddie3.rotationSpeedOffset = 0
+
+    this.p.push()
+    this.p.translate(baddie.position.x, baddie.position.y)
+
+    this.p.push()
+    this.p.rotate(11.92)
+    this.drawBaddie(baddie)
+    this.p.pop()
+
+    this.p.push()
+    this.p.rotate(-13.28)
+    this.drawBaddie(baddie2)
+    this.p.pop()
+
+    this.drawBaddie(baddie3)
+
+    this.p.pop()
+
+    const w = 254
+    const y = 800
+    // const rateCheck = 50
+    // const rate = this.p5Frames % rateCheck
+    // const numberOfDots =
+    // rate < rateCheck / 3 ? '.' : rate < rateCheck * (2 / 3) ? '..' : '...'
+    if (this.levelCountdown < 125) {
+      this.drawTextBubble({
+        text: 'a new day...',
+        w,
+        x: this.windowWidth / 2 - w / 2,
+        y,
+        fg: THEME.iris_30,
+        stroke: THEME.iris_60,
+        bg: 'black'
+      })
+    }
+    if (this.levelCountdown <= 0) {
+      this.introStage++
+    }
+  },
 
   drawTextBubble({
     text = '',
@@ -303,7 +566,8 @@ export const Visuals = {
     fz = 48,
     fg,
     bg,
-    stroke
+    stroke,
+    align = [this.p.CENTER, this.p.TOP]
   }) {
     // return defaults for local calcs
     if (!text) return { x, y, h, w, fz }
@@ -311,8 +575,12 @@ export const Visuals = {
     p.fill(bg ?? 'black')
     p.stroke(stroke ?? THEME.iris_60)
     p.rect(x, y, w, h, 16, 16, 16, 16)
+
+    if (align[0] === p.LEFT) {
+      x -= w / 2
+    }
     p.textFont(fonts.body)
-    p.textAlign(p.CENTER, p.TOP)
+    p.textAlign(...align)
     p.textSize(fz)
     p.fill(fg ?? THEME.iris_30)
     p.noStroke()
@@ -321,7 +589,11 @@ export const Visuals = {
   },
 
   drawTips() {
-    if (this.level === 0 && !(this.paused || this.won || this.gameOver)) {
+    if (
+      this.introStage == this.totalIntroStages - 1 &&
+      this.levelCounting >= 6 * this.P5_FPS &&
+      !(this.paused || this.won || this.gameOver)
+    ) {
       // how to shoot
       const { h } = this.drawTextBubble({})
       const gttr = 24
@@ -431,7 +703,7 @@ export const Visuals = {
 
     const p = this.p
 
-    const unpauseDuration = this.level == 0 ? 2 : 0
+    const unpauseDuration = this.level == 0 ? 1 : 0
     const unpauseFrames = unpauseDuration * this.P5_FPS
     if (this.willUnpause && !this.beganUnpauseAt) {
       this.willUnpause = true
@@ -451,88 +723,78 @@ export const Visuals = {
       const fadeOut = this.p.map(fadeOutProgress, 0, fadeOutFrames, 1, 0)
       p.fill(rgbaOpacity(THEME.pink, fadeOut))
     } else {
-      p.fill(THEME.pink)
-    }
-    this.drawPauseBodies()
-
-    // draw logo
-    p.textFont(fonts.dot)
-    p.textSize(200)
-    p.textAlign(p.LEFT, p.TOP)
-    p.noStroke()
-    const titleY = this.windowHeight / 2 - 270
-    drawKernedText(p, 'Anybody', 46, titleY, 0.8)
-    drawKernedText(p, 'Problem', 46, titleY + 240, 2)
-    if (!this.willUnpause) {
-      // play button
-      this.drawFatButton({
-        text: 'PLAY',
-        onClick: () => {
-          if (this.popup !== null) return
-          if (!this.playerName) {
-            // open connect wallet popup
-            this.popup = {
-              header: 'Play Onchain',
-              body: [
-                'Free to play!  ...or practice!',
-                'Connect a wallet to validate your wins.'
-              ],
-              buttons: [
-                {
-                  text: 'PRACTICE',
-                  fg: THEME.violet_50,
-                  bg: THEME.violet_25,
-                  stroke: THEME.violet_50,
-                  onClick: () => {
-                    // start practice mode
-                    this.popup = null
-                    this.sound?.playStart()
-                    this.setPause(false)
-                    this.practiceMode = true
-                  }
-                },
-                {
-                  text: 'CONNECT',
-                  fg: THEME.violet_25,
-                  bg: THEME.violet_50,
-                  stroke: THEME.violet_50,
-                  onClick: () => {
-                    this.emit('connect-wallet')
-                  }
-                }
-              ]
-            }
-            return
-          }
-          // start play
-          this.sound?.playStart()
-          this.setPause(false)
-          this.practiceMode = false
-        },
-        fg: THEME.violet_50,
-        bg: THEME.pink,
-        bottom: 120,
-        p
-      })
+      // draw box
+      p.stroke(THEME.iris_60)
+      p.strokeWeight(THEME.borderWt)
+      p.noFill()
+      p.rect(40, 60, 920, 860, 32, 32, 32, 32)
 
       // date
       p.textFont(fonts.body)
-      p.textSize(24)
+      p.textSize(52)
       const dateWidth = p.textWidth(this.date)
       const dateBgWidth = dateWidth + 48
-      const dateBgHeight = 32
-      const dateBottomY = this.windowHeight - 58
-      p.fill(THEME.textBg)
-      p.rect(
-        this.windowWidth / 2 - dateBgWidth / 2,
-        dateBottomY - dateBgHeight / 2,
-        dateBgWidth,
-        dateBgHeight,
-        20
-      )
-      p.textAlign(p.CENTER, p.CENTER)
-      p.fill(THEME.textFg)
-      p.text(this.date, this.windowWidth / 2, dateBottomY)
+      p.fill('black')
+      p.stroke(THEME.iris_60)
+      p.strokeWeight(THEME.borderWt)
+      p.rect(80, 30, dateBgWidth, 60, 80)
+      p.textAlign(p.LEFT, p.CENTER)
+      p.fill(THEME.violet_25)
+      p.noStroke()
+      p.text(this.date, 80 + 48 / 2, 30 + 60 / 2)
+
+      p.fill(THEME.pink)
+    }
+    // draw logo
+    p.textFont(fonts.dot)
+    p.textSize(180)
+    p.textAlign(p.LEFT, p.TOP)
+    p.noStroke()
+    const titleY = 480 // this.windowHeight / 2 - 270
+    drawKernedText(p, 'Anybody', 92, titleY, 0.8)
+    drawKernedText(p, 'Problem', 92, titleY + 183, 2)
+
+    this.drawPauseBodies()
+
+    if (!this.willUnpause) {
+      // play button
+      this.drawButton({
+        text: 'PLAY',
+        onClick: () => {
+          if (this.popup) return
+          // start play
+          this.sound?.playStart()
+          this.setPause(false)
+        },
+        fg: THEME.violet_50,
+        bg: THEME.pink,
+        width: 410,
+        height: 108,
+        textSize: 78,
+        x: !this.opensea ? 508 : this.windowWidth / 2 - 205,
+        y: 862,
+        p
+      })
+
+      // mint button
+      if (this.opensea !== true) {
+        this.drawButton({
+          text: 'MINT',
+          onClick: () => {
+            this.emit('mint')
+          },
+          fg: THEME.violet_25,
+          bg: '#241465', // THEME.iris_75,
+          width: 410,
+          height: 108,
+          textSize: 78,
+          x: 82,
+          y: 862,
+          p
+        })
+      }
+
+      p.pop()
     }
   },
   drawBodyOutlines() {
@@ -551,6 +813,86 @@ export const Visuals = {
   drawBg() {
     this.p.background(THEME.bg)
 
+    const drawCluster = (graphic, x, y, c) => {
+      const range = 250
+      for (let i = 0; i < 5000; i++) {
+        const angle = graphic.random(0, graphic.TWO_PI)
+        const radius = graphic.random(-range / 2, range)
+        const xOffset = radius * graphic.cos(angle)
+        const yOffset = radius * graphic.sin(angle)
+
+        let variation = graphic.lerpColor(
+          graphic.color(c),
+          graphic.color(
+            graphic.random(150),
+            graphic.random(150),
+            graphic.random(150)
+          ),
+          0.65
+        )
+        variation.setAlpha(100)
+        graphic.fill(variation)
+        // graphic.fill(graphic.color(c))
+        graphic.ellipse(x + xOffset, y + yOffset, 2, 2)
+      }
+    }
+
+    const quadraticPoint = (a, b, c, t) => {
+      return (1 - t) * (1 - t) * a + 2 * (1 - t) * t * b + t * t * c
+    }
+
+    const drawMilky = (graphic) => {
+      const rand = (min, max, offset = 0) => {
+        let rand = utils.solidityKeccak256(['bytes32'], [this.seed])
+        if (offset !== 0) {
+          rand = utils.solidityKeccak256(['bytes32', 'uint256'], [rand, offset])
+        }
+        return this.randomRange(min, max, rand)
+      }
+
+      graphic.colorMode(graphic.RGB)
+      const startColor = graphic.color(
+        ...hslToRgb(
+          randHSL(themes.bodies.default['berlin'].bg, true, rand.bind(this), 0),
+          1,
+          true
+        )
+      )
+      const endColor = graphic.color(
+        ...hslToRgb(
+          randHSL(
+            themes.bodies.default['berlin'].bg,
+            true,
+            rand.bind(this),
+            100
+          ),
+          1,
+          true
+        )
+      )
+      const r = rand(0, 1, 0)
+      const startXLeft = r == 0
+      const startYLeft = rand(0, 1, 1) == 0
+      // Define control points for the Bézier curve
+      let x1 = startXLeft ? -100 : this.windowWidth + 100,
+        y1 = startYLeft ? this.windowHeight + 100 : 0
+      let x2 = startXLeft ? 0 : this.windowWidth,
+        y2 = startYLeft ? 0 : this.windowHeight
+      let x3 = startXLeft ? this.windowWidth : -100,
+        y3 = startYLeft ? -100 : this.windowHeight + 100
+      // Get points along the curve
+      for (let t = 0; t <= 1; t += 0.01) {
+        let x = quadraticPoint(x1, x2, x3, t)
+        let y = quadraticPoint(y1, y2, y3, t)
+
+        let inter = graphic.map(y, 50, 250, 0, 1)
+        let c = graphic.lerpColor(startColor, endColor, inter)
+        graphic.noStroke()
+        drawCluster(graphic, x, y, c)
+      }
+      graphic.colorMode(graphic.RGB)
+    }
+
     if (!this.starBG) {
       this.starBG = this.p.createGraphics(this.windowWidth, this.windowHeight)
       this.starBG.pixelDensity(this.pixelDensity)
@@ -565,73 +907,6 @@ export const Visuals = {
           Math.floor(Math.random() * this.windowWidth),
           Math.floor(Math.random() * this.windowHeight)
         )
-      }
-      const drawCluster = (graphic, x, y, c) => {
-        const range = 250
-        for (let i = 0; i < 5000; i++) {
-          const angle = graphic.random(0, graphic.TWO_PI)
-          const radius = graphic.random(-range / 2, range)
-          const xOffset = radius * graphic.cos(angle)
-          const yOffset = radius * graphic.sin(angle)
-
-          let variation = graphic.lerpColor(
-            graphic.color(c),
-            graphic.color(
-              graphic.random(150),
-              graphic.random(150),
-              graphic.random(150)
-            ),
-            0.65
-          )
-          variation.setAlpha(100)
-          graphic.fill(variation)
-          // graphic.fill(graphic.color(c))
-          graphic.ellipse(x + xOffset, y + yOffset, 2, 2)
-        }
-      }
-
-      const quadraticPoint = (a, b, c, t) => {
-        return (1 - t) * (1 - t) * a + 2 * (1 - t) * t * b + t * t * c
-      }
-
-      const drawMilky = (graphic) => {
-        graphic.colorMode(graphic.RGB)
-        const startColor = graphic.color(
-          ...hslToRgb(
-            randHSL(themes.bodies.default['berlin'].bg, true),
-            1,
-            true
-          )
-        )
-        const endColor = graphic.color(
-          ...hslToRgb(
-            randHSL(themes.bodies.default['berlin'].bg, true),
-            1,
-            true
-          )
-        )
-        const r = graphic.random(0, 1)
-        const startXLeft = r > 0.5
-        const startYLeft = graphic.random(0, 1) > 0.5
-
-        // Define control points for the Bézier curve
-        let x1 = startXLeft ? -100 : this.windowWidth + 100,
-          y1 = startYLeft ? this.windowHeight + 100 : 0
-        let x2 = startXLeft ? 0 : this.windowWidth,
-          y2 = startYLeft ? 0 : this.windowHeight
-        let x3 = startXLeft ? this.windowWidth : -100,
-          y3 = startYLeft ? -100 : this.windowHeight + 100
-        // Get points along the curve
-        for (let t = 0; t <= 1; t += 0.01) {
-          let x = quadraticPoint(x1, x2, x3, t)
-          let y = quadraticPoint(y1, y2, y3, t)
-
-          let inter = graphic.map(y, 50, 250, 0, 1)
-          let c = graphic.lerpColor(startColor, endColor, inter)
-          graphic.noStroke()
-          drawCluster(graphic, x, y, c)
-        }
-        graphic.colorMode(graphic.RGB)
       }
       // this.milkyBG ||= this.p.createGraphics(
       //   this.windowWidth,
@@ -858,11 +1133,71 @@ export const Visuals = {
             }
           }
         }
+        // lvl
         p.text('Lvl ' + this.level, this.windowWidth - 20, 0)
+        // draw mute btn in bottom right corner
+        p.push()
+        p.noStroke()
+        p.fill('white')
+        const xOffset = this.windowWidth - (this.hasTouched ? 108 : 81)
+        const yOfffset = this.windowWidth - (this.hasTouched ? 116 : 87)
+        p.translate(xOffset, yOfffset) // move 0,0 to bottom right corner
+        // Scale factor based on the input width
+        const scale = this.hasTouched ? Math.floor(48 / 6) : Math.floor(36 / 6)
+        // Draw speaker body
+        this.drawMuteIconRect(0, 3, 1, 4, scale)
+        this.drawMuteIconRect(2, 3, 1, 4, scale)
+        this.drawMuteIconRect(3, 2, 1, 6, scale)
+        this.drawMuteIconRect(4, 1, 1, 8, scale)
+        this.drawMuteIconRect(5, 0, 1, 10, scale)
+        this.drawMuteIconRect(1, 3, 1, 4, scale)
+
+        if (this.mute) {
+          // NO SOUND rectangles (DISPLAY ON MUTE)
+          this.drawMuteIconRect(7, 4.5, 2.5, 1, scale)
+        } else {
+          // SOUNDWAVE rectangles (DISPLAY ON SOUND)
+          this.drawMuteIconRect(6.5, 4, 1, 2, scale)
+          this.drawMuteIconRect(8, 3, 1, 4, scale)
+        }
+
+        // button tap area a bit margin around icon
+        const muteBtnTapArea = {
+          x: this.hasTouched ? -20 : -6,
+          y: this.hasTouched ? -20 : -6,
+          w: 200
+        }
+        // p.stroke('white')
+        // p.noFill()
+        // p.rect(muteBtnTapArea.x, muteBtnTapArea.y, muteBtnTapArea.w, muteBtnTapArea.w)
+
+        let muteButton = this.buttons['mute-button']
+        if (!muteButton) {
+          this.buttons['mute-button'] = {
+            x: xOffset + muteBtnTapArea.x,
+            y: yOfffset + muteBtnTapArea.y,
+            width: muteBtnTapArea.w,
+            height: muteBtnTapArea.w,
+            onClick: () => {
+              this.mute = !this.mute
+              this.sound?.setMuted(this.mute)
+            }
+          }
+          muteButton = this.buttons['mute-button']
+          muteButton.disabled = false
+        }
+        muteButton.visible = true
+
+        // ADD BUTTON
+        p.pop()
       }
     }
 
     p.pop()
+  },
+
+  drawMuteIconRect(x, y, w, h, scale) {
+    this.p.rect(x * scale, y * scale, w * scale, h * scale, 1)
   },
 
   drawWinScreen() {
@@ -875,7 +1210,7 @@ export const Visuals = {
     this.winScreenVisibleForFrames++
     this.winScreenLastVisibleFrame = this.p5Frames
 
-    const celebrationTime = 5 // seconds
+    const celebrationTime = 2.5 // seconds
     this.celebrating =
       this.winScreenVisibleForFrames / this.P5_FPS < celebrationTime
 
@@ -891,7 +1226,7 @@ export const Visuals = {
         this.restart(null, false)
       } else {
         if (this.sound?.playbackRate !== 'normal') {
-          this.sound?.setPlaybackRate('normal')
+          this.sound?.playCurrentSong()
         }
         this.drawStatsScreen()
       }
@@ -931,17 +1266,17 @@ export const Visuals = {
     if (!fonts.dot) return
     p.textFont(fonts.dot)
     p.fill(THEME.pink)
-    p.textSize(60)
+    p.textSize(64)
     p.textAlign(p.LEFT, p.TOP)
-    const logoY = p.map(scale, 0, 1, -100, 22)
-    drawKernedText(p, 'Anybody', 334, logoY, 0.8)
-    drawKernedText(p, 'Problem', 640, logoY, 2)
+    const logoY = p.map(scale, 0, 1, -100, 19)
+    drawKernedText(p, 'Anybody', 340, logoY, 0.8)
+    drawKernedText(p, 'Problem', 662, logoY, 2)
 
     // bordered boxes
     p.fill('black')
     p.stroke(THEME.border)
     p.strokeWeight(borderWeight)
-    const gutter = 22
+    const gutter = 20
     const boxW = this.windowWidth - gutter * 2
     const middleBoxY = 320
     const middleBoxH = showCumulativeTimeRow ? 444 : 364
@@ -950,15 +1285,15 @@ export const Visuals = {
     p.rect(gutter, 796, boxW, 64, 24)
 
     // upper box text
-    p.textSize(32)
+    p.textSize(36)
     p.noStroke()
     if (!fonts.body) return
     p.textFont(fonts.body)
-    p.fill(THEME.iris_60)
+    p.fill(THEME.iris_50)
 
     // upper box text - labels
-    p.text('player', 330, 132)
-    p.text('problem', 330, 192)
+    p.text('player', 341, 128)
+    p.text('problem', 341, 188)
 
     // upper box text - values
     p.textSize(54)
@@ -970,8 +1305,8 @@ export const Visuals = {
         year: 'numeric'
       })
       .toUpperCase()
-    p.text(this.playerName ?? 'YOU', 454, 114)
-    p.text(formattedDate, 454, 174)
+    p.text(this.playerName ?? 'YOU', 495, 114)
+    p.text(formattedDate, 495, 174)
     // end upper box text
 
     // middle box text
@@ -984,18 +1319,19 @@ export const Visuals = {
     const showBestAndDiff = bestTimes.length
 
     p.textSize(48)
-    p.fill(THEME.iris_60)
+    const midHeadY = 264
+    p.fill(THEME.iris_30)
     p.textAlign(p.RIGHT, p.TOP)
     const col1X = 580
-    const col2X = 770
-    const col3X = 960
+    const col2X = 780
+    const col3X = 964
     const timeColX = showBestAndDiff ? col1X : col3X
 
     // middle box text - labels
-    p.text('time', timeColX, 264)
+    p.text('time', timeColX, midHeadY)
     if (showBestAndDiff) {
-      p.text('best', col2X, 264)
-      p.text('+/-', col3X, 264)
+      p.text('best', col2X, midHeadY)
+      p.text('diff', col3X, midHeadY)
     }
 
     // middle box text - values
@@ -1020,7 +1356,7 @@ export const Visuals = {
     // middle box text - value text
     p.push()
     p.textAlign(p.RIGHT, p.CENTER)
-    p.textSize(44)
+    p.textSize(56)
     // const middleBoxPadding = 12
     // p.translate(0, middleBoxPadding)
     // times
@@ -1049,7 +1385,7 @@ export const Visuals = {
       // best times
       for (let i = 0; i < LEVELS; i++) {
         const best = i < bestTimes.length ? bestTimes[i].toFixed(2) : '-'
-        p.fill(THEME.iris_60)
+        p.fill(THEME.iris_50)
         p.text(
           best,
           col2X,
@@ -1061,11 +1397,13 @@ export const Visuals = {
       // diff values
       for (let i = 0; i < LEVELS; i++) {
         const diff = plusMinus[i] || '-'
-        if (i === levelTimes.length - 1) {
-          p.fill(/^-/.test(diff) ? THEME.lime : THEME.flame_50)
-        } else {
-          p.fill(/^-/.test(diff) ? THEME.green_75 : THEME.flame_75)
-        }
+        p.fill(
+          diff === '-'
+            ? THEME.iris_30
+            : /^-/.test(diff)
+              ? THEME.lime
+              : THEME.flame_50
+        )
         p.text(
           diff,
           col3X,
@@ -1095,14 +1433,14 @@ export const Visuals = {
       const sumLineHeight = 80
       const sumLineYText = sumLineY + sumLineHeight / 2
       p.textAlign(p.LEFT, p.CENTER)
-      p.fill(THEME.iris_60)
+      p.fill(THEME.iris_50)
       p.text(problemComplete ? 'solved in' : 'total time', 44, sumLineYText)
       p.textAlign(p.RIGHT, p.CENTER)
       const columns = showBestAndDiff ? [col1X, col2X, col3X] : [timeColX]
       for (const [i, col] of columns.entries()) {
         if (i == 0) p.fill(THEME.iris_30)
         else if (i == 1) p.fill(THEME.iris_60)
-        else p.fill(/^-/.test(sumLine[i]) ? THEME.lime : THEME.flame_75)
+        else p.fill(/^-/.test(sumLine[i]) ? THEME.lime : THEME.flame_50)
         p.text(sumLine[i], col, sumLineYText, 150, sumLineHeight)
       }
       // top border line
@@ -1164,26 +1502,28 @@ export const Visuals = {
       this.windowHeight
     )
     p.textAlign(p.CENTER, p.TOP)
-    p.textSize(32)
+    p.textSize(44)
     // blink text on complete
     const blinkText =
       this.levels === LEVELS && Math.floor(p.frameCount / 25) % 2
     p.fill(blinkText ? THEME.iris_60 : THEME.iris_30)
     p.text(
       this.level == 5
-        ? 'SOLVED IT !!!   mint your win to add this celestial body to your galaxy !!!'
-        : `BO${Array(this.level).fill('O').join('')}M!!!  you cleared LEVEL ${this.level} !!!  ... just ${5 - this.level} more to solve this problem !!!`,
+        ? 'YOU WON !!   save your score to the leaderboard !!'
+        : `BOOM !! ... just ${5 - this.level} more levels to solve this problem !!`,
       gutter + boxW / 2,
-      811,
+      805,
       boxW - gutter / 2
     )
+
     // bottom buttons
+    this.showRestart = this.level >= 2
     this.showShare = this.level >= 5
-    const buttonCount = this.showShare ? 4 : 3
+    let buttonCount = 2 + Number(this.showRestart) + Number(this.showShare)
     this.drawBottomButton({
       text: 'REDO',
       onClick: () => {
-        if (this.popup !== null) return
+        if (this.popup) return
         if (!this.hasQuickReset) {
           this.popup = {
             bg: THEME.teal_75,
@@ -1207,6 +1547,7 @@ export const Visuals = {
                 text: 'REDO',
                 bg: THEME.teal_50,
                 fg: THEME.teal_75,
+                stroke: THEME.teal_50,
                 onClick: () => {
                   this.popup = null
                   this.restart(null, false)
@@ -1222,45 +1563,47 @@ export const Visuals = {
       columns: buttonCount,
       column: 0
     })
-    this.drawBottomButton({
-      text: 'RESTART',
-      onClick: () => {
-        // confirm in popup
-        if (this.popup !== null) return
-        this.popup = {
-          bg: THEME.flame_75,
-          fg: THEME.flame_50,
-          stroke: THEME.flame_50,
-          header: 'Start Over?',
-          body: ['Any progress will be lost!'],
-          buttons: [
-            {
-              text: 'CLOSE',
-              fg: THEME.flame_50,
-              bg: THEME.flame_75,
-              stroke: THEME.flame_50,
-              onClick: () => {
-                this.popup = null
+    if (this.showRestart) {
+      this.drawBottomButton({
+        text: 'EXIT',
+        onClick: () => {
+          // confirm in popup
+          if (this.popup) return
+          this.popup = {
+            bg: THEME.flame_75,
+            fg: THEME.flame_50,
+            stroke: THEME.flame_50,
+            header: 'Start Over?',
+            body: ['Any progress will be lost!'],
+            buttons: [
+              {
+                text: 'CLOSE',
+                fg: THEME.flame_50,
+                bg: THEME.flame_75,
+                stroke: THEME.flame_50,
+                onClick: () => {
+                  this.popup = null
+                }
+              },
+              {
+                text: 'EXIT',
+                fg: THEME.flame_75,
+                bg: THEME.flame_50,
+                stroke: THEME.flame_50,
+                onClick: () => {
+                  this.popup = null
+                  this.level = 1
+                  this.restart(undefined, true)
+                }
               }
-            },
-            {
-              text: 'RESTART',
-              fg: THEME.flame_75,
-              bg: THEME.flame_50,
-              stroke: THEME.flame_50,
-              onClick: () => {
-                this.popup = null
-                this.level = 1
-                this.restart(undefined, this.practiceMode)
-              }
-            }
-          ]
-        }
-      },
-      ...themes.buttons.flame,
-      columns: buttonCount,
-      column: 1
-    })
+            ]
+          }
+        },
+        ...themes.buttons.flame,
+        columns: buttonCount,
+        column: 1
+      })
+    }
     if (this.showShare) {
       this.drawBottomButton({
         text: 'SHARE',
@@ -1294,13 +1637,16 @@ export const Visuals = {
     } else {
       // parent app should handle waiting to save
       this.drawBottomButton({
-        text: this.practiceMode ? 'SAVE' : 'MINT',
+        text: 'SAVE',
         onClick: () => {
-          if (this.practiceMode) {
-            if (this.popup !== null) return
+          if (this.popup) return
+          if (this.opensea) {
             this.popup = {
               header: 'Nice Job!',
-              body: ['Next time connect a wallet to', 'mint your win!'],
+              body: [
+                'Next time play on ANYBODY.gg to save',
+                'your win to the leaderboard !!'
+              ],
               fg: THEME.green_50,
               bg: THEME.green_75,
               buttons: [
@@ -1314,7 +1660,7 @@ export const Visuals = {
                   text: 'NEW GAME',
                   onClick: () => {
                     this.popup = null
-                    this.level = 0
+                    this.level = 1
                     this.restart(undefined, true)
                   },
                   fg: THEME.green_75,
@@ -1322,9 +1668,10 @@ export const Visuals = {
                 }
               ]
             }
-          } else {
-            this.emit('save')
+            return
           }
+          //
+          this.emit('save')
         },
         ...themes.buttons.green,
         columns: buttonCount,
@@ -1383,7 +1730,7 @@ export const Visuals = {
     p.textSize(60)
     p.textAlign(p.LEFT, p.TOP)
     drawKernedText(p, 'Anybody', 46, 44, 0.8)
-    drawKernedText(p, 'Problem', 352, 44, 2)
+    drawKernedText(p, 'Problem', 356, 44, 2)
 
     // upper box text - date
     p.textSize(56)
@@ -1695,25 +2042,18 @@ export const Visuals = {
 
   getDisplayBaddies() {
     const baddies = []
-    const fallbackBody = this.bodies[this.bodies.length - 1]
+    const bodyData = this.generateLevelData(this.day, 5)
+    const bodies = bodyData.map((b) =>
+      this.bodyDataToBodies.call(this, b, this.day)
+    )
+
+    const fallbackBody = bodies[bodies.length - 1]
     if (!fallbackBody) return []
-    const str = JSON.stringify(fallbackBody)
+    // const str = JSON.stringify(fallbackBody)
     for (let i = 0; i < LEVELS; i++) {
       baddies.push([])
       for (let j = 0; j < i + 1; j++) {
-        const bodyCopy =
-          j >= this.bodies.length - 1
-            ? JSON.parse(str)
-            : JSON.parse(JSON.stringify(this.bodies[j + 1]))
-        // bodyCopy.position = this.p.createVector(
-        //   body.position.x,
-        //   body.position.y
-        // )
-        // bodyCopy.velocity = this.p.createVector(
-        //   body.velocity.x,
-        //   body.velocity.y
-        // )
-        baddies[i].push(bodyCopy)
+        baddies[i].push(JSON.parse(JSON.stringify(bodies[j + 1])))
       }
     }
     return baddies
@@ -1756,13 +2096,65 @@ export const Visuals = {
       text: '                 ' + text,
       fg: THEME.red
     })
+    const buttonWidth = 200
 
-    this.drawFatButton({
-      text: 'RETRY',
-      onClick: () => this.restart(null, false),
-      fg: THEME.red,
-      bg: THEME.maroon
-    })
+    if (this.level > 1) {
+      const x = this.windowWidth / 2 - (4 * buttonWidth) / 2 + 20
+      this.drawFatButton({
+        text: 'REDO',
+        onClick: () => this.restart(null, false),
+        x,
+        bg: THEME.teal_75,
+        fg: THEME.teal_50
+      })
+
+      this.drawFatButton({
+        text: 'EXIT',
+        x: this.windowWidth / 2 + buttonWidth / 2 - 20,
+        bg: THEME.flame_75,
+        fg: THEME.flame_50,
+        onClick: () => {
+          // confirm in popup
+          if (this.popup) return
+          this.popup = {
+            bg: THEME.flame_75,
+            fg: THEME.flame_50,
+            stroke: THEME.flame_50,
+            header: 'Leave game?',
+            body: ['Any progress will be lost!'],
+            buttons: [
+              {
+                text: 'CLOSE',
+                fg: THEME.flame_50,
+                bg: THEME.flame_75,
+                stroke: THEME.flame_50,
+                onClick: () => {
+                  this.popup = null
+                }
+              },
+              {
+                text: 'EXIT',
+                fg: THEME.flame_75,
+                bg: THEME.flame_50,
+                stroke: THEME.flame_50,
+                onClick: () => {
+                  this.popup = null
+                  this.level = 1
+                  this.restart(undefined, true)
+                }
+              }
+            ]
+          }
+        }
+      })
+    } else {
+      this.drawFatButton({
+        text: 'REDO',
+        onClick: () => this.restart(null, false),
+        bg: THEME.teal_75,
+        fg: THEME.teal_50
+      })
+    }
 
     p.pop()
   },
@@ -1786,7 +2178,7 @@ export const Visuals = {
     // Bottom left corner coordinates
     let startX = 0
     let startY = this.windowHeight
-    this.p.strokeWeight(2)
+    this.p.strokeWeight(THEME.borderWt)
 
     const crossHairSize = 25
 
@@ -1806,7 +2198,15 @@ export const Visuals = {
       this.scaleX(this.p.mouseY) + crossHairSize
     )
 
-    if (this.paused || this.gameOver) return
+    const notPreIntro = this.introStage !== this.totalIntroStages - 1
+    const duringIntro = this.introStage < this.totalIntroStages
+    const isLevel0 = this.level < 1
+    if (
+      (notPreIntro && duringIntro && isLevel0) ||
+      this.paused ||
+      this.gameOver
+    )
+      return
 
     // Draw the line
     const drawingContext = this.p.canvas.getContext('2d')
@@ -1855,11 +2255,14 @@ export const Visuals = {
       const v = explosions[i].velocity
       const _explosion = JSON.parse(JSON.stringify(explosions[i]))
       _explosion.velocity = v
-
-      _explosion.c.bg = this.hslToGrayscale(explosions[i].c.bg, 1.5)
-      _explosion.c.fg = this.hslToGrayscale(explosions[i].c.fg)
-      _explosion.c.core = this.hslToGrayscale(explosions[i].c.core)
-      _explosion.c.baddie = this.hslToGrayscale(explosions[i].c.baddie)
+      if (_explosion.bodyIndex == 0) {
+        _explosion.cry = true
+        _explosion.c.bg = this.hslToGrayscale(explosions[i].c.bg, 1.5)
+        _explosion.c.fg = this.hslToGrayscale(explosions[i].c.fg)
+        _explosion.c.core = this.hslToGrayscale(explosions[i].c.core)
+      } else {
+        _explosion.c.baddie = this.hslToGrayscale(explosions[i].c.baddie)
+      }
 
       this.drawBody(_explosion)
     }
@@ -1874,7 +2277,7 @@ export const Visuals = {
       p.fill(color)
     } else {
       p.noFill()
-      p.strokeWeight(2)
+      p.strokeWeight(THEME.borderWt)
       p.stroke(color)
     }
     for (let a = rotateBy; a < p.TWO_PI + rotateBy; a += angle) {
@@ -1890,7 +2293,11 @@ export const Visuals = {
   },
 
   drawMissiles() {
-    if (this.paused || this.gameOver) return
+    if (
+      this.introStage !== this.totalIntroStages - 1 &&
+      (this.paused || this.gameOver)
+    )
+      return
     this.p.noStroke()
     this.p.strokeWeight(0)
     const starRadius = 10
@@ -1903,13 +2310,13 @@ export const Visuals = {
         const color = randHSL(
           themes.bodies.default['pastel_highlighter_marker'].cr
         )
-        const rotateBy = this.frames % 360
+        const rotateBy = (this.p5Frames / this.P5_FPS_MULTIPLIER) % 360
         body.phase = {
           color,
           life,
           rotateBy
         }
-      } else if (!this.paused) {
+      } else if (!this.paused || this.introStage == this.totalIntroStages - 1) {
         body.phase.life++
         if (body.phase.life >= maxLife) {
           this.stillVisibleMissiles.splice(i, 1)
@@ -1960,14 +2367,26 @@ export const Visuals = {
     return closeEnough
   },
 
-  drawImageAsset(cat, id, width, fill) {
-    const ref = cat + id + fill
+  drawImageAsset(
+    cat,
+    id,
+    width,
+    { fill, strokeColor, strokeWidth, maxWidth } = {}
+  ) {
+    maxWidth = maxWidth || width
+    const ref = cat + id + fill + maxWidth
     this.imgAssets ||= {}
     const loaded = this.imgAssets[ref]
     if (!loaded) {
       let svg = svgs[cat][id]
       this.imgAssets[ref] = 'loading'
       svg = fill ? replaceAttribute(svg, 'fill', fill) : svg
+      svg = strokeColor ? replaceAttribute(svg, 'stroke', strokeColor) : svg
+      svg = replaceAttribute(svg, 'width', maxWidth * this.pixelDensity)
+      svg = replaceAttribute(svg, 'height', maxWidth * this.pixelDensity)
+      svg = strokeWidth
+        ? replaceAttribute(svg, 'stroke-width', strokeWidth)
+        : svg
       svg = 'data:image/svg+xml,' + encodeURIComponent(svg)
       try {
         this.p.loadImage(svg, (img) => {
@@ -1991,10 +2410,14 @@ export const Visuals = {
     }
   },
   closeTo(body) {
+    const bodies =
+      this.introStage < this.totalIntroStages && this.introBodies
+        ? this.introBodies
+        : this.bodies
     let isClose = false
     const minDistance = body.radius * 2
-    for (let i = 1; i < this.bodies.length; i++) {
-      const other = this.bodies[i]
+    for (let i = 1; i < bodies.length; i++) {
+      const other = bodies[i]
       if (other.radius == 0) continue
       const specificDistance = minDistance + other.radius * 4
       const distance = this.p.dist(
@@ -2015,7 +2438,8 @@ export const Visuals = {
     const baddiesNear = this.closeTo(body)
     if (
       (baddiesNear && !this.paused) ||
-      (this.gameOver && !this.won && !this.skipAhead)
+      (this.gameOver && !this.won && !this.skipAhead) ||
+      body.cry
     ) {
       this.drawImageAsset('FACE_SHOT_SVGS', body.c.fIndex, width)
       return
@@ -2048,7 +2472,7 @@ export const Visuals = {
         ? 0
         : (this.p5Frames / this.P5_FPS_MULTIPLIER / r.speed) % 360
     this.p.rotate(r.direction * rotateBy)
-    this.drawImageAsset('FG_SVGS', body.c.fgIndex, width, body.c.fg)
+    this.drawImageAsset('FG_SVGS', body.c.fgIndex, width, { fill: body.c.fg })
     this.p.pop()
   },
 
@@ -2063,7 +2487,7 @@ export const Visuals = {
         ? 0
         : (this.p5Frames / this.P5_FPS_MULTIPLIER / r.speed) % 360
     this.p.rotate(r.direction * rotateBy)
-    this.drawImageAsset('CORE_SVGS', 0, width, body.c.core)
+    this.drawImageAsset('CORE_SVGS', 0, width, { fill: body.c.core })
     this.p.pop()
   },
 
@@ -2078,7 +2502,7 @@ export const Visuals = {
         ? 0
         : (this.p5Frames / this.P5_FPS_MULTIPLIER / r.speed) % 360
     this.p.rotate(r.direction * rotateBy)
-    this.drawImageAsset('BG_SVGS', body.c.bgIndex, width, body.c.bg)
+    this.drawImageAsset('BG_SVGS', body.c.bgIndex, width, { fill: body.c.bg })
     this.p.pop()
   },
 
@@ -2108,6 +2532,7 @@ export const Visuals = {
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
     svg.setAttribute('width', width)
     svg.setAttribute('height', height)
+    svg.setAttribute('day', day)
     svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
     svg.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
     svg.setAttribute('viewBox', `0 0 ${width} ${height}`)
@@ -2276,12 +2701,12 @@ export const Visuals = {
   },
 
   drawBody(body) {
+    if (body.radius == 0) {
+      return
+    }
     this.p.push()
     this.p.translate(body.position.x, body.position.y)
-    if (
-      (body.bodyIndex === 0 || body.hero) &&
-      (this.level !== 0 || this.paused)
-    ) {
+    if (body.bodyIndex === 0 || body.hero) {
       // draw hero
       const size = Math.floor(body.radius * BODY_SCALE * 2.66)
 
@@ -2352,7 +2777,7 @@ export const Visuals = {
 
       const bodyCopy = {
         bodyIndex: body.bodyIndex,
-        hero: i < 3,
+        hero: !i,
         c: body.c,
         radius: body.radius,
         velocity: this.p.createVector(body.velocity.x, body.velocity.y),
@@ -2393,22 +2818,33 @@ export const Visuals = {
   drawBaddie(body) {
     const colorHSL = body.c.baddie
     const coreWidth = body.radius * BODY_SCALE
+    const maxWidth = (body.maxRadius || body.radius) * BODY_SCALE
     let bgColor = this.brighten(colorHSL, -20)
     const coreColor = `hsl(${colorHSL[0]},${colorHSL[1]}%,${colorHSL[2]}%)`
     this.p.push()
-    const rotate = (this.p5Frames / this.P5_FPS_MULTIPLIER / 30) % 360
+    const rotationSpeedOffset = body.rotationSpeedOffset || 1
+    const rotate =
+      (this.p5Frames / this.P5_FPS_MULTIPLIER / (30 / rotationSpeedOffset)) %
+      360
     this.p.rotate(rotate)
+    let strokeColor = body.c.strokeColor
+    let strokeWidth = body.c.strokeWidth
     this.drawImageAsset(
       'BADDIE_SVG',
       'bg',
       Math.floor(coreWidth * (310 / 111.2)),
-      bgColor
+      {
+        fill: bgColor,
+        strokeColor,
+        strokeWidth,
+        maxWidth: Math.floor(maxWidth * (310 / 111.2))
+      }
     )
     this.p.push()
     const heading = this.level == 0 ? -this.p.PI / 2 : body.velocity.heading()
     this.p.rotate(-rotate + heading + this.p.PI / 2)
     if (!body.backgroundOnly) {
-      this.drawImageAsset('BADDIE_SVG', 'core', coreWidth, coreColor)
+      this.drawImageAsset('BADDIE_SVG', 'core', coreWidth, { fill: coreColor })
 
       // pupils always looking at missile, if no missile, look at mouse
       const target =
@@ -2476,6 +2912,10 @@ export const Visuals = {
   shareCanvas(showPopup = true) {
     const canvas = this.p.canvas
 
+    // draw the canvas without croshair before rendering
+    this.renderingCanvasToShare = true
+    this.draw()
+
     return new Promise((resolve, reject) => {
       canvas.toBlob(async (blob) => {
         const file = new File([blob], 'p5canvas.png', { type: 'image/png' })
@@ -2490,6 +2930,7 @@ export const Visuals = {
               console.error('Error sharing:', error)
               reject(error)
             })
+          this.renderingCanvasToShare = false
           resolve()
         } else if (navigator.clipboard && navigator.clipboard.write) {
           try {
@@ -2514,6 +2955,7 @@ export const Visuals = {
                 ]
               }
             }
+            this.renderingCanvasToShare = false
             resolve(msg)
           } catch (error) {
             console.error('Error copying to clipboard:', error)
@@ -2529,11 +2971,13 @@ export const Visuals = {
                 }
               ]
             }
+            this.renderingCanvasToShare = false
             reject(error)
           }
         } else {
           const error = new Error('no options to share canvas!')
           console.error(error)
+          this.renderingCanvasToShare = false
           reject(error)
         }
       }, 'image/png')

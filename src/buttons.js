@@ -68,7 +68,7 @@ export const Buttons = {
         text,
         // tweak to center, somethign about the font
         x + width / 2 + textSize * 0.13,
-        y + height / 2 + textSize * 0.06
+        y + height / 2 + textSize * 0.022
       )
     }
 
@@ -104,15 +104,16 @@ export const Buttons = {
   // buttons that are drawn at the bottom of the screen (win screen)
   drawBottomButton(buttonOptions) {
     const { columns, column } = buttonOptions
-    const gutter = 24
-    const interButtonGutter = 6
+    const gutter = 16
+    const interButtonGutter = 4
     const frameWidth = this.windowWidth - 2 * gutter
     const width = (frameWidth - (columns - 1) * interButtonGutter) / columns
+    const height = 84
     this.drawButton({
-      height: 84,
-      textSize: 44,
+      height,
+      textSize: 56,
       width,
-      y: this.windowHeight - gutter - 84,
+      y: this.windowHeight - 24 - height,
       x: gutter + column * (width + interButtonGutter),
       ...buttonOptions
     })

@@ -234,7 +234,6 @@ describe('stepStateTest circuit', () => {
   })
 
   it('produces a witness with valid constraints', async () => {
-    console.dir({ sampleInput }, { depth: null })
     const witness = await circuit.calculateWitness(sampleInput, sanityCheck)
     // const inputs =
     //   sampleInput.bodies.length * sampleInput.bodies[0].length +
@@ -367,7 +366,6 @@ describe('stepStateTest circuit', () => {
         abMissiles[0].radius
       ]
     }
-    console.log({ expected })
     const witness = await circuit.calculateWitness(sampleInput, sanityCheck)
     await circuit.assertOut(witness, expected)
   })

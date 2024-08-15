@@ -1,7 +1,8 @@
-const iris_50 = 'rgba(121, 88, 255, 1)'
-const iris_100 = 'rgba(25, 15, 66, 1)'
-const iris_60 = 'rgba(88, 59, 209, 1)'
 const iris_30 = 'rgba(163, 140, 222, 1)'
+const iris_60 = 'rgba(88, 59, 209, 1)'
+const iris_50 = 'rgba(121, 88, 255, 1)'
+const iris_75 = 'rgba(23, 12, 67, 1)'
+const iris_100 = 'rgba(25, 15, 66, 1)'
 const teal_50 = 'rgba(137, 255, 248, 1)'
 const teal_75 = 'rgba(13, 61, 58, 1)'
 const flame_50 = 'rgba(255, 88, 88, 1)'
@@ -13,25 +14,28 @@ const green_75 = 'rgba(4, 53, 0, 1)'
 const yellow_50 = 'rgba(252, 255, 105, 1)'
 const yellow_75 = 'rgba(58, 59, 29, 1)'
 const violet_25 = 'rgba(236, 205, 255, 1)'
-const violet_50 = 'rgba(160, 67, 232, 1)'
+const violet_50 = 'rgba(155, 67, 232, 1)'
 
 export const THEME = {
   bg: 'rgb(20,20,20)',
   fg: 'white',
   bodiesTheme: 'blues',
-  border: iris_60,
+  border: iris_50,
+  borderWt: 2,
   // colors
   lime: 'rgba(125, 241, 115, 1)',
   lime_40: 'rgba(125, 241, 115, 0.4)',
   pink: 'rgba(236, 205, 255, 1)',
   pink_40: 'rgba(219, 115, 255, 1)',
-  fuschia: 'rgba(160, 67, 232, 1)',
+  fuschia: 'rgba(155, 67, 232, 1)',
   red: 'rgba(255, 88, 88, 1)',
   maroon: 'rgba(53, 20, 20, 1)',
   textFg: iris_50,
   textBg: iris_100,
   iris_30,
+  iris_50,
   iris_60,
+  iris_75,
   teal_50,
   teal_75,
   flame_50,
@@ -184,12 +188,16 @@ export function hslToRgb(values, alpha = 1, asArray = false) {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`
 }
 
-function randInt(min, max) {
-  // min and max included
-  return Math.floor(Math.random() * (max - min + 1)) + min
+function randInt(min, max, rng, offset) {
+  if (rng) {
+    return rng(min, max, offset)
+  } else {
+    // min and max included
+    return Math.floor(Math.random() * (max - min + 1)) + min
+  }
 }
 
-export function randHSL(ranges, asArray = false) {
+export function randHSL(ranges, asArray = false, rng, offset = 0) {
   let hues = ranges[0] ?? '0-359'
   let sats = ranges[1] ?? '0-100'
   let lights = ranges[2] ?? '0-100'
@@ -201,14 +209,17 @@ export function randHSL(ranges, asArray = false) {
 
   // if hue range loops (350-10), randomly select a position from the two sections (0-10, 350-359)
   if (hues[0] > hues[1]) {
-    hues = [randInt(0, hues[1]), randInt(hues[0], '359')][randInt(0, 1)]
+    hues = [
+      randInt(0, hues[1], rng, offset + 0),
+      randInt(hues[0], '359', rng, offset + 1)
+    ][randInt(0, 1, rng, offset + 2)]
     hues = [hues]
   }
 
   // generate in ranges
-  const h = randInt(hues[0], hues[1] || hues[0])
-  const s = randInt(sats[0], sats[1] || sats[0])
-  const l = randInt(lights[0], lights[1] || lights[0])
+  const h = randInt(hues[0], hues[1] || hues[0], rng, offset + 3)
+  const s = randInt(sats[0], sats[1] || sats[0], rng, offset + 4)
+  const l = randInt(lights[0], lights[1] || lights[0], rng, offset + 5)
   if (asArray) {
     return [h, s, l]
   }
