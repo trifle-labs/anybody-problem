@@ -4078,7 +4078,6 @@ class $9387f34f78197904$export$52baafc80d354d7 extends (0, $f92b5472d28e57c3$exp
         this.p = p;
         !this.util && (0, $7ccced6459fd256e$export$90b262450ff54847)(this.p);
         // this.p.blendMode(this.p.DIFFERENCE)
-        this.levelSpeeds = new Array(5);
         this.introStage = -1;
         this.clearValues();
         !this.util && this.prepareP5();
@@ -4109,7 +4108,7 @@ class $9387f34f78197904$export$52baafc80d354d7 extends (0, $f92b5472d28e57c3$exp
             level: 0,
             skip0: false,
             todaysRecords: {},
-            levelSpeeds: new Array(5),
+            levelSpeeds: [],
             bodyData: null,
             // debug: false,
             // Add default properties and their initial values here
@@ -4179,7 +4178,7 @@ class $9387f34f78197904$export$52baafc80d354d7 extends (0, $f92b5472d28e57c3$exp
     }
     // run whenever the class should be reset
     clearValues() {
-        if (this.level <= 1) this.levelSpeeds = new Array(5);
+        if (this.level <= 1) this.levelSpeeds = [];
         if (this.skip0 && this.level == 0) this.level = 1;
         this.totalIntroStages = 3;
         this.lastMissileCantBeUndone = false;
@@ -4643,7 +4642,10 @@ class $9387f34f78197904$export$52baafc80d354d7 extends (0, $f92b5472d28e57c3$exp
             console.log("LASTMISSILECANTBEUNDONE = TRUE");
             this.lastMissileCantBeUndone = true;
         }
-        if (level !== 0) this.levelSpeeds[level - 1] = results;
+        if (level !== 0) {
+            if (this.levelSpeeds.length < level) this.levelSpeeds.push(results);
+            else this.levelSpeeds[level - 1] = results;
+        }
         return results;
     }
     generateLevelData(day, level) {

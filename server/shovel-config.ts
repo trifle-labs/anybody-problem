@@ -22,7 +22,7 @@ type KnownSource = Source & { name: Chain }
 const base: KnownSource = {
   name: 'base',
   chain_id: 8453,
-  url: process.env.MAINNET_RPC,
+  url: process.env.BASE_RPC,
   batch_size: 1000,
   concurrency: 1
 }
@@ -84,9 +84,10 @@ const contracts = Object.fromEntries(
     const abi = contract.abi.abi
     return [
       contract.abi.contractName,
-      sources.map(
-        (s) => new ethers.Contract(contract.networks[s.chain_id].address, abi)
-      )
+      sources.map((s) => {
+        // console.log('base deployed at ' + contract.networks[s.chain_id].address)
+        return new ethers.Contract(contract.networks[s.chain_id].address, abi)
+      })
     ]
   })
 )

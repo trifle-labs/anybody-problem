@@ -6,9 +6,7 @@
   </head>
 
   <body>
-    <h1>
-      Anybody API /sse/base_sepolia/0xc795344b1b30e3cfee1afa1d5204b141940cf445
-    </h1>
+    <h1>Anybody API /sse/base/0x47E65bC714cd44959360ac0814a5fCa0F5b07145</h1>
     <pre id="sse-data"></pre>
 
     <script type="module">
@@ -17,7 +15,7 @@
       const controller = new AbortController()
       const signal = controller.signal
       const response = await fetch(
-        '/sse/base_sepolia/0xc795344b1b30e3cfee1afa1d5204b141940cf445',
+        '/sse/base/0x47E65bC714cd44959360ac0814a5fCa0F5b07145',
         {
           method: 'POST',
           headers: { 'Content-Type': 'text/event-stream' },
