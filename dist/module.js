@@ -1721,7 +1721,7 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
                 width: 410,
                 height: 108,
                 textSize: 78,
-                x: 508,
+                x: !this.opensea ? 508 : this.windowWidth / 2 - 205,
                 y: 862,
                 p: p
             });
@@ -4377,7 +4377,7 @@ class $9387f34f78197904$export$52baafc80d354d7 extends (0, $f92b5472d28e57c3$exp
             this.handleGameClick(e);
         };
         this.p.mouseClicked = this.handleGameClick;
-        this.p.keyPressed = this.handleGameKeyDown;
+        this.p.keyPressed = this.handleKeyPressed;
     }
     removeListener() {
         this.p.remove();
@@ -4433,7 +4433,7 @@ class $9387f34f78197904$export$52baafc80d354d7 extends (0, $f92b5472d28e57c3$exp
     handleNFTClick = ()=>{
         this.setPause();
     };
-    handleGameKeyDown = (e)=>{
+    handleKeyPressed = (e)=>{
         if (this.gameOver && this.won) this.skipAhead = true;
         const modifierKeyActive = e.shiftKey || e.altKey || e.ctrlKey || e.metaKey;
         if (modifierKeyActive) return;
@@ -4988,7 +4988,7 @@ class $9387f34f78197904$export$52baafc80d354d7 extends (0, $f92b5472d28e57c3$exp
     }
     missileClick(x, y) {
         if (this.gameOver) return;
-        if (this.paused && this.introStage !== this.totalIntroStages - 1 && this.level < 1) return;
+        if (this.paused || this.introStage !== this.totalIntroStages - 1 && this.level < 1) return;
         if (this.introStage == this.totalIntroStages - 1 && this.level < 1) {
             // NOTE: these values are in drawIntroStage2
             const chunk_1 = 1.5 * this.P5_FPS;
