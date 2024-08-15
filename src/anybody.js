@@ -166,7 +166,6 @@ export class Anybody extends EventEmitter {
       sfx: 'space', // 'space' or 'bubble'
       address: undefined,
       playerName: undefined,
-      practiceMode: false,
       bestTimes: null,
       popup: null
     }
