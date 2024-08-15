@@ -2682,7 +2682,7 @@ export const Visuals = {
 
         this.popup = {
           header: 'Hmmm',
-          body: ['Couldn’t copy results to your clipboard.'],
+          body: ['Couldn’t share results. Try again?'],
           buttons: [
             {
               text: 'CLOSE',
