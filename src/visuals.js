@@ -888,11 +888,12 @@ export const Visuals = {
         p.push()
         p.noStroke()
         p.fill('white')
-        const xOffset = this.windowWidth - 108
-        const yOfffset = this.windowWidth - 116
+        const xOffset = this.windowWidth - (this.hasTouched ? 108 : 81)
+        const yOfffset = this.windowWidth - (this.hasTouched ? 116 : 87)
         p.translate(xOffset, yOfffset) // move 0,0 to bottom right corner
         // Scale factor based on the input width
-        const scale = Math.floor(48 / 6)
+        const scale = this.hasTouched ? Math.floor(48 / 6)
+          : Math.floor(36 / 6)
         // Draw speaker body
         this.drawMuteIconRect(0, 3, 1, 4, scale)
         this.drawMuteIconRect(2, 3, 1, 4, scale)
@@ -916,6 +917,9 @@ export const Visuals = {
           y: this.hasTouched ? -20 : -6,
           w: 200
         }
+        // p.stroke('white')
+        // p.noFill()
+        // p.rect(muteBtnTapArea.x, muteBtnTapArea.y, muteBtnTapArea.w, muteBtnTapArea.w)
 
         let muteButton = this.buttons['mute-button']
         if (!muteButton) {
