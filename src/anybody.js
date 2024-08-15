@@ -295,7 +295,6 @@ export class Anybody extends EventEmitter {
 
     // try to fetch muted state from session storage
     if (!this.opensea && !this.util) {
-      console.log('fetch mute from sessionStorage')
       try {
         this.mute = JSON.parse(sessionStorage.getItem('muted')) || false
       } catch (_) {
