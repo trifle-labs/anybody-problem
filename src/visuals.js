@@ -2635,6 +2635,7 @@ export const Visuals = {
             return resolve()
           } catch (e) {
             error = e
+            console.error('error sharing with navigator: ' + error)
             if (error.name === 'AbortError') {
               return resolve()
             }
@@ -2671,7 +2672,7 @@ export const Visuals = {
             return resolve(msg)
           } catch (e) {
             error = e
-            console.error('Error copying to clipboard:', error)
+            console.error('Error copying to clipboard: ', error)
           }
         }
 
