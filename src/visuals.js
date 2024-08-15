@@ -1026,7 +1026,7 @@ export const Visuals = {
     p.fill('black')
     p.stroke(THEME.border)
     p.strokeWeight(borderWeight)
-    const gutter = 22
+    const gutter = 20
     const boxW = this.windowWidth - gutter * 2
     const middleBoxY = 320
     const middleBoxH = showCumulativeTimeRow ? 444 : 364
@@ -1312,7 +1312,7 @@ export const Visuals = {
     })
     if (this.showRestart) {
       this.drawBottomButton({
-        text: 'RESTART',
+        text: 'EXIT',
         onClick: () => {
           // confirm in popup
           if (this.popup !== null) return
