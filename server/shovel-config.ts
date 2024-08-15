@@ -16,12 +16,15 @@ export type Chain =
   | 'garnet'
   | 'base_sepolia'
   | 'localhost'
+  | 'base'
 type KnownSource = Source & { name: Chain }
 
-const mainnet: KnownSource = {
-  name: 'mainnet',
-  chain_id: 1,
-  url: process.env.MAINNET_RPC
+const base: KnownSource = {
+  name: 'base',
+  chain_id: 8453,
+  url: process.env.MAINNET_RPC,
+  batch_size: 1000,
+  concurrency: 1
 }
 
 const sepolia: KnownSource = {
@@ -66,7 +69,7 @@ const solTypeToPgType: Record<string, PGColumnType> = {
 }
 
 const STARTING_BLOCK = {
-  // mainnet: BigInt('2067803')
+  base: BigInt('18465293'),
   sepolia: BigInt('5716600'),
   garnet: BigInt('2067803'),
   base_sepolia: BigInt('13847293'),

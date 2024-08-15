@@ -20,7 +20,7 @@ export const THEME = {
   bg: 'rgb(20,20,20)',
   fg: 'white',
   bodiesTheme: 'blues',
-  border: iris_60,
+  border: iris_50,
   borderWt: 2,
   // colors
   lime: 'rgba(125, 241, 115, 1)',
@@ -33,6 +33,7 @@ export const THEME = {
   textFg: iris_50,
   textBg: iris_100,
   iris_30,
+  iris_50,
   iris_60,
   // iris_75,
   teal_50,

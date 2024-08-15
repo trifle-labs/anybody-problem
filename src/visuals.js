@@ -250,7 +250,7 @@ export const Visuals = {
     }
     this.drawScore()
     this.drawPopup()
-    this.drawGun()
+    if (!this.renderingCanvasToShare) this.drawGun()
     this.drawGunSmoke()
     this.drawExplosionSmoke()
 
@@ -736,13 +736,7 @@ export const Visuals = {
       p.fill('black')
       p.stroke(THEME.iris_60)
       p.strokeWeight(THEME.borderWt)
-      p.rect(
-        80,
-        30,
-        dateBgWidth,
-        60,
-        80
-      )
+      p.rect(80, 30, dateBgWidth, 60, 80)
       p.textAlign(p.LEFT, p.CENTER)
       p.fill(THEME.violet_25)
       p.noStroke()
@@ -750,7 +744,6 @@ export const Visuals = {
 
       p.fill(THEME.pink)
     }
-    
     // draw logo
     p.textFont(fonts.dot)
     p.textSize(180)
@@ -1173,11 +1166,71 @@ export const Visuals = {
             }
           }
         }
+        // lvl
         p.text('Lvl ' + this.level, this.windowWidth - 20, 0)
+        // draw mute btn in bottom right corner
+        p.push()
+        p.noStroke()
+        p.fill('white')
+        const xOffset = this.windowWidth - (this.hasTouched ? 108 : 81)
+        const yOfffset = this.windowWidth - (this.hasTouched ? 116 : 87)
+        p.translate(xOffset, yOfffset) // move 0,0 to bottom right corner
+        // Scale factor based on the input width
+        const scale = this.hasTouched ? Math.floor(48 / 6) : Math.floor(36 / 6)
+        // Draw speaker body
+        this.drawMuteIconRect(0, 3, 1, 4, scale)
+        this.drawMuteIconRect(2, 3, 1, 4, scale)
+        this.drawMuteIconRect(3, 2, 1, 6, scale)
+        this.drawMuteIconRect(4, 1, 1, 8, scale)
+        this.drawMuteIconRect(5, 0, 1, 10, scale)
+        this.drawMuteIconRect(1, 3, 1, 4, scale)
+
+        if (this.mute) {
+          // NO SOUND rectangles (DISPLAY ON MUTE)
+          this.drawMuteIconRect(7, 4.5, 2.5, 1, scale)
+        } else {
+          // SOUNDWAVE rectangles (DISPLAY ON SOUND)
+          this.drawMuteIconRect(6.5, 4, 1, 2, scale)
+          this.drawMuteIconRect(8, 3, 1, 4, scale)
+        }
+
+        // button tap area a bit margin around icon
+        const muteBtnTapArea = {
+          x: this.hasTouched ? -20 : -6,
+          y: this.hasTouched ? -20 : -6,
+          w: 200
+        }
+        // p.stroke('white')
+        // p.noFill()
+        // p.rect(muteBtnTapArea.x, muteBtnTapArea.y, muteBtnTapArea.w, muteBtnTapArea.w)
+
+        let muteButton = this.buttons['mute-button']
+        if (!muteButton) {
+          this.buttons['mute-button'] = {
+            x: xOffset + muteBtnTapArea.x,
+            y: yOfffset + muteBtnTapArea.y,
+            width: muteBtnTapArea.w,
+            height: muteBtnTapArea.w,
+            onClick: () => {
+              this.mute = !this.mute
+              this.sound?.setMuted(this.mute)
+            }
+          }
+          muteButton = this.buttons['mute-button']
+          muteButton.disabled = false
+        }
+        muteButton.visible = true
+
+        // ADD BUTTON
+        p.pop()
       }
     }
 
     p.pop()
+  },
+
+  drawMuteIconRect(x, y, w, h, scale) {
+    this.p.rect(x * scale, y * scale, w * scale, h * scale, 1)
   },
 
   drawWinScreen() {
@@ -1206,7 +1259,7 @@ export const Visuals = {
         this.restart(null, false)
       } else {
         if (this.sound?.playbackRate !== 'normal') {
-          this.sound?.setPlaybackRate('normal')
+          this.sound?.playCurrentSong()
         }
         this.drawStatsScreen()
       }
@@ -1246,17 +1299,17 @@ export const Visuals = {
     if (!fonts.dot) return
     p.textFont(fonts.dot)
     p.fill(THEME.pink)
-    p.textSize(60)
+    p.textSize(64)
     p.textAlign(p.LEFT, p.TOP)
-    const logoY = p.map(scale, 0, 1, -100, 22)
-    drawKernedText(p, 'Anybody', 334, logoY, 0.8)
-    drawKernedText(p, 'Problem', 640, logoY, 2)
+    const logoY = p.map(scale, 0, 1, -100, 19)
+    drawKernedText(p, 'Anybody', 340, logoY, 0.8)
+    drawKernedText(p, 'Problem', 662, logoY, 2)
 
     // bordered boxes
     p.fill('black')
     p.stroke(THEME.border)
     p.strokeWeight(borderWeight)
-    const gutter = 22
+    const gutter = 20
     const boxW = this.windowWidth - gutter * 2
     const middleBoxY = 320
     const middleBoxH = showCumulativeTimeRow ? 444 : 364
@@ -1265,15 +1318,15 @@ export const Visuals = {
     p.rect(gutter, 796, boxW, 64, 24)
 
     // upper box text
-    p.textSize(32)
+    p.textSize(36)
     p.noStroke()
     if (!fonts.body) return
     p.textFont(fonts.body)
-    p.fill(THEME.iris_60)
+    p.fill(THEME.iris_50)
 
     // upper box text - labels
-    p.text('player', 330, 132)
-    p.text('problem', 330, 192)
+    p.text('player', 341, 128)
+    p.text('problem', 341, 188)
 
     // upper box text - values
     p.textSize(54)
@@ -1285,8 +1338,8 @@ export const Visuals = {
         year: 'numeric'
       })
       .toUpperCase()
-    p.text(this.playerName ?? 'YOU', 454, 114)
-    p.text(formattedDate, 454, 174)
+    p.text(this.playerName ?? 'YOU', 495, 114)
+    p.text(formattedDate, 495, 174)
     // end upper box text
 
     // middle box text
@@ -1299,18 +1352,19 @@ export const Visuals = {
     const showBestAndDiff = bestTimes.length
 
     p.textSize(48)
-    p.fill(THEME.iris_60)
+    const midHeadY = 264
+    p.fill(THEME.iris_30)
     p.textAlign(p.RIGHT, p.TOP)
     const col1X = 580
-    const col2X = 770
-    const col3X = 960
+    const col2X = 780
+    const col3X = 964
     const timeColX = showBestAndDiff ? col1X : col3X
 
     // middle box text - labels
-    p.text('time', timeColX, 264)
+    p.text('time', timeColX, midHeadY)
     if (showBestAndDiff) {
-      p.text('best', col2X, 264)
-      p.text('+/-', col3X, 264)
+      p.text('best', col2X, midHeadY)
+      p.text('diff', col3X, midHeadY)
     }
 
     // middle box text - values
@@ -1335,7 +1389,7 @@ export const Visuals = {
     // middle box text - value text
     p.push()
     p.textAlign(p.RIGHT, p.CENTER)
-    p.textSize(44)
+    p.textSize(56)
     // const middleBoxPadding = 12
     // p.translate(0, middleBoxPadding)
     // times
@@ -1364,7 +1418,7 @@ export const Visuals = {
       // best times
       for (let i = 0; i < LEVELS; i++) {
         const best = i < bestTimes.length ? bestTimes[i].toFixed(2) : '-'
-        p.fill(THEME.iris_60)
+        p.fill(THEME.iris_50)
         p.text(
           best,
           col2X,
@@ -1376,11 +1430,7 @@ export const Visuals = {
       // diff values
       for (let i = 0; i < LEVELS; i++) {
         const diff = plusMinus[i] || '-'
-        if (i === levelTimes.length - 1) {
-          p.fill(/^-/.test(diff) ? THEME.lime : THEME.flame_50)
-        } else {
-          p.fill(/^-/.test(diff) ? THEME.green_75 : THEME.flame_75)
-        }
+        p.fill(/^-/.test(diff) ? THEME.lime : THEME.flame_50)
         p.text(
           diff,
           col3X,
@@ -1410,14 +1460,14 @@ export const Visuals = {
       const sumLineHeight = 80
       const sumLineYText = sumLineY + sumLineHeight / 2
       p.textAlign(p.LEFT, p.CENTER)
-      p.fill(THEME.iris_60)
+      p.fill(THEME.iris_50)
       p.text(problemComplete ? 'solved in' : 'total time', 44, sumLineYText)
       p.textAlign(p.RIGHT, p.CENTER)
       const columns = showBestAndDiff ? [col1X, col2X, col3X] : [timeColX]
       for (const [i, col] of columns.entries()) {
         if (i == 0) p.fill(THEME.iris_30)
         else if (i == 1) p.fill(THEME.iris_60)
-        else p.fill(/^-/.test(sumLine[i]) ? THEME.lime : THEME.flame_75)
+        else p.fill(/^-/.test(sumLine[i]) ? THEME.lime : THEME.flame_50)
         p.text(sumLine[i], col, sumLineYText, 150, sumLineHeight)
       }
       // top border line
@@ -1479,22 +1529,24 @@ export const Visuals = {
       this.windowHeight
     )
     p.textAlign(p.CENTER, p.TOP)
-    p.textSize(32)
+    p.textSize(44)
     // blink text on complete
     const blinkText =
       this.levels === LEVELS && Math.floor(p.frameCount / 25) % 2
     p.fill(blinkText ? THEME.iris_60 : THEME.iris_30)
     p.text(
       this.level == 5
-        ? 'SOLVED IT !!!   mint your win to add this celestial body to your galaxy !!!'
-        : `BO${Array(this.level).fill('O').join('')}M!!!  you cleared LEVEL ${this.level} !!!  ... just ${5 - this.level} more to solve this problem !!!`,
+        ? 'YOU WON !!   save your score to the leaderboard !!'
+        : `BOOM !! ... just ${5 - this.level} more levels to solve this problem !!`,
       gutter + boxW / 2,
-      811,
+      805,
       boxW - gutter / 2
     )
+
     // bottom buttons
+    this.showRestart = this.level >= 2
     this.showShare = this.level >= 5
-    const buttonCount = this.showShare ? 4 : 3
+    let buttonCount = 2 + Number(this.showRestart) + Number(this.showShare)
     this.drawBottomButton({
       text: 'REDO',
       onClick: () => {
@@ -1520,8 +1572,9 @@ export const Visuals = {
               },
               {
                 text: 'REDO',
-                bg: THEME.teal_50,
-                fg: THEME.teal_75,
+                bg: THEME.teal_75,
+                fg: THEME.teal_50,
+                stroke: THEME.teal_50,
                 onClick: () => {
                   this.popup = null
                   this.restart(null, false)
@@ -1537,45 +1590,47 @@ export const Visuals = {
       columns: buttonCount,
       column: 0
     })
-    this.drawBottomButton({
-      text: 'RESTART',
-      onClick: () => {
-        // confirm in popup
-        if (this.popup !== null) return
-        this.popup = {
-          bg: THEME.flame_75,
-          fg: THEME.flame_50,
-          stroke: THEME.flame_50,
-          header: 'Start Over?',
-          body: ['Any progress will be lost!'],
-          buttons: [
-            {
-              text: 'CLOSE',
-              fg: THEME.flame_50,
-              bg: THEME.flame_75,
-              stroke: THEME.flame_50,
-              onClick: () => {
-                this.popup = null
+    if (this.showRestart) {
+      this.drawBottomButton({
+        text: 'EXIT',
+        onClick: () => {
+          // confirm in popup
+          if (this.popup !== null) return
+          this.popup = {
+            bg: THEME.flame_75,
+            fg: THEME.flame_50,
+            stroke: THEME.flame_50,
+            header: 'Start Over?',
+            body: ['Any progress will be lost!'],
+            buttons: [
+              {
+                text: 'CLOSE',
+                fg: THEME.flame_50,
+                bg: THEME.flame_75,
+                stroke: THEME.flame_50,
+                onClick: () => {
+                  this.popup = null
+                }
+              },
+              {
+                text: 'RESTART',
+                fg: THEME.flame_75,
+                bg: THEME.flame_50,
+                stroke: THEME.flame_50,
+                onClick: () => {
+                  this.popup = null
+                  this.level = 1
+                  this.restart(undefined, this.practiceMode)
+                }
               }
-            },
-            {
-              text: 'RESTART',
-              fg: THEME.flame_75,
-              bg: THEME.flame_50,
-              stroke: THEME.flame_50,
-              onClick: () => {
-                this.popup = null
-                this.level = 1
-                this.restart(undefined, this.practiceMode)
-              }
-            }
-          ]
-        }
-      },
-      ...themes.buttons.flame,
-      columns: buttonCount,
-      column: 1
-    })
+            ]
+          }
+        },
+        ...themes.buttons.flame,
+        columns: buttonCount,
+        column: 1
+      })
+    }
     if (this.showShare) {
       this.drawBottomButton({
         text: 'SHARE',
@@ -1609,7 +1664,7 @@ export const Visuals = {
     } else {
       // parent app should handle waiting to save
       this.drawBottomButton({
-        text: this.practiceMode ? 'SAVE' : 'MINT',
+        text: 'SAVE',
         onClick: () => {
           if (this.practiceMode) {
             if (this.popup !== null) return
@@ -1698,7 +1753,7 @@ export const Visuals = {
     p.textSize(60)
     p.textAlign(p.LEFT, p.TOP)
     drawKernedText(p, 'Anybody', 46, 44, 0.8)
-    drawKernedText(p, 'Problem', 352, 44, 2)
+    drawKernedText(p, 'Problem', 356, 44, 2)
 
     // upper box text - date
     p.textSize(56)
@@ -2010,25 +2065,18 @@ export const Visuals = {
 
   getDisplayBaddies() {
     const baddies = []
-    const fallbackBody = this.bodies[this.bodies.length - 1]
+    const bodyData = this.generateLevelData(this.day, 5)
+    const bodies = bodyData.map((b) =>
+      this.bodyDataToBodies.call(this, b, this.day)
+    )
+
+    const fallbackBody = bodies[bodies.length - 1]
     if (!fallbackBody) return []
-    const str = JSON.stringify(fallbackBody)
+    // const str = JSON.stringify(fallbackBody)
     for (let i = 0; i < LEVELS; i++) {
       baddies.push([])
       for (let j = 0; j < i + 1; j++) {
-        const bodyCopy =
-          j >= this.bodies.length - 1
-            ? JSON.parse(str)
-            : JSON.parse(JSON.stringify(this.bodies[j + 1]))
-        // bodyCopy.position = this.p.createVector(
-        //   body.position.x,
-        //   body.position.y
-        // )
-        // bodyCopy.velocity = this.p.createVector(
-        //   body.velocity.x,
-        //   body.velocity.y
-        // )
-        baddies[i].push(bodyCopy)
+        baddies[i].push(JSON.parse(JSON.stringify(bodies[j + 1])))
       }
     }
     return baddies
@@ -2071,13 +2119,69 @@ export const Visuals = {
       text: '                 ' + text,
       fg: THEME.red
     })
+    const buttonWidth = 200
+    if (this.level > 1) {
+      const x = this.windowWidth / 2 - (4 * buttonWidth) / 2
+      this.drawFatButton({
+        text: 'REDO',
+        onClick: () => this.restart(null, false),
+        x,
+        bg: THEME.teal_75,
+        fg: THEME.teal_50,
+        stroke: THEME.teal_50
+      })
 
-    this.drawFatButton({
-      text: 'RETRY',
-      onClick: () => this.restart(null, false),
-      fg: THEME.red,
-      bg: THEME.maroon
-    })
+      this.drawFatButton({
+        text: 'EXIT',
+        x: this.windowWidth / 2 + buttonWidth / 2,
+        // onClick: () => this.restart(null, false),
+
+        bg: THEME.flame_75,
+        fg: THEME.flame_50,
+        stroke: THEME.flame_50,
+        onClick: () => {
+          // confirm in popup
+          if (this.popup !== null) return
+          this.popup = {
+            bg: THEME.flame_75,
+            fg: THEME.flame_50,
+            stroke: THEME.flame_50,
+            header: 'Start Over?',
+            body: ['Any progress will be lost!'],
+            buttons: [
+              {
+                text: 'CLOSE',
+                fg: THEME.flame_50,
+                bg: THEME.flame_75,
+                stroke: THEME.flame_50,
+                onClick: () => {
+                  this.popup = null
+                }
+              },
+              {
+                text: 'EXIT',
+                fg: THEME.flame_75,
+                bg: THEME.flame_50,
+                stroke: THEME.flame_50,
+                onClick: () => {
+                  this.popup = null
+                  this.level = 1
+                  this.restart(undefined, true)
+                }
+              }
+            ]
+          }
+        }
+      })
+    } else {
+      this.drawFatButton({
+        text: 'REDO',
+        onClick: () => this.restart(null, false),
+        bg: THEME.teal_75,
+        fg: THEME.teal_50,
+        stroke: THEME.teal_50
+      })
+    }
 
     p.pop()
   },
@@ -2833,6 +2937,10 @@ export const Visuals = {
   shareCanvas(showPopup = true) {
     const canvas = this.p.canvas
 
+    // draw the canvas without croshair before rendering
+    this.renderingCanvasToShare = true
+    this.draw()
+
     return new Promise((resolve, reject) => {
       canvas.toBlob(async (blob) => {
         const file = new File([blob], 'p5canvas.png', { type: 'image/png' })
@@ -2847,6 +2955,7 @@ export const Visuals = {
               console.error('Error sharing:', error)
               reject(error)
             })
+          this.renderingCanvasToShare = false
           resolve()
         } else if (navigator.clipboard && navigator.clipboard.write) {
           try {
@@ -2871,6 +2980,7 @@ export const Visuals = {
                 ]
               }
             }
+            this.renderingCanvasToShare = false
             resolve(msg)
           } catch (error) {
             console.error('Error copying to clipboard:', error)
@@ -2886,11 +2996,13 @@ export const Visuals = {
                 }
               ]
             }
+            this.renderingCanvasToShare = false
             reject(error)
           }
         } else {
           const error = new Error('no options to share canvas!')
           console.error(error)
+          this.renderingCanvasToShare = false
           reject(error)
         }
       }, 'image/png')

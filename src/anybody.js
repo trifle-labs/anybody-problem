@@ -61,7 +61,6 @@ const PAUSE_BODY_DATA = [
     vx: 0,
     vy: 0
   },
-  // 
   {
     bodyIndex: 4,
     radius: 9000,
@@ -106,6 +105,21 @@ export class Anybody extends EventEmitter {
     this.sound = new Sound(this)
     this.init()
     !this.util && this.start()
+    this.checkIfDone()
+  }
+
+  checkIfDone() {
+    if (this.level == 5 && this.levelSpeeds.length == 5 && !this.opensea) {
+      this.bodies?.map((b, i) => {
+        return (b.radius = i == 0 ? b.radius : 0)
+      })
+      this.skipAhead = true
+      this.paused = false
+      this.gameOver = true
+      this.won = true
+      this.hasStarted = true
+      this.handledGameOver = true
+    }
   }
 
   proverTickIndex(i) {
@@ -117,11 +131,13 @@ export class Anybody extends EventEmitter {
       day: currentDay(),
       level: 0,
       skip0: false,
-      bodyData: null,
       todaysRecords: {},
+      levelSpeeds: new Array(5),
+      bodyData: null,
       // debug: false,
       // Add default properties and their initial values here
       startingBodies: 1,
+      opensea: false,
       windowWidth: 1000,
       windowHeight: 1000,
       pixelDensity: 1,
@@ -137,16 +153,18 @@ export class Anybody extends EventEmitter {
       alreadyRun: 0,
       paintSteps: 0,
       chunk: 1,
-      mute: true,
+      mute: false,
       freeze: false,
       test: false,
       util: false,
       paused: true,
+      renderingCanvasToShare: false,
       globalStyle: 'default', // 'default', 'psycho'
       aimHelper: false,
       target: 'inside', // 'outside' or 'inside'
       faceRotation: 'mania', // 'time' or 'hitcycle' or 'mania'
       sfx: 'space', // 'space' or 'bubble'
+      address: undefined,
       playerName: undefined,
       practiceMode: false,
       bestTimes: null,
@@ -156,9 +174,15 @@ export class Anybody extends EventEmitter {
     const mergedOptions = { ...defaultOptions, ...options }
     // Assign the merged options to the instance properties
     Object.assign(this, mergedOptions)
+    if (this.day % SECONDS_IN_A_DAY !== 0) {
+      console.error(
+        `Anybody using an invalid "day" (${this.day}) which wont be possible to submit to the contract`
+      )
+    }
   }
-  setPlayer(name = undefined) {
+  setPlayer({ name = undefined, address = undefined } = {}) {
     this.playerName = name
+    this.address = address
   }
   removeCSS() {
     if (typeof document === 'undefined') return
@@ -234,7 +258,7 @@ export class Anybody extends EventEmitter {
     this.shaking = 0
     this.explosionSmoke = []
     this.gunSmoke = []
-    this.date = new Date(this.day * 1000).toLocaleDateString( 'en-US', {
+    this.date = new Date(this.day * 1000).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
@@ -271,7 +295,19 @@ export class Anybody extends EventEmitter {
     // const vectorLimitScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
     this.setPause(this.paused, true)
     this.storeInits()
-    // this.prepareWitness()
+
+    // try to fetch muted state from session storage
+    if (!this.opensea && !this.util) {
+      try {
+        this.mute = JSON.parse(sessionStorage.getItem('muted')) || false
+      } catch (_) {
+        this.mute = false
+        sessionStorage.removeItem('muted')
+      }
+    } else {
+      this.mute = false
+    }
+    this.sound?.setMuted(this.mute)
   }
 
   async start() {
@@ -289,7 +325,7 @@ export class Anybody extends EventEmitter {
     this.setPause(true)
     this.p.noLoop()
     this.removeListener()
-    this.sound.stop()
+    this.sound?.stop()
     this.sound = null
     this.p.remove()
   }
@@ -404,7 +440,7 @@ export class Anybody extends EventEmitter {
     if (this.gameOver && this.won) {
       this.skipAhead = true
     }
-    const modifierKeyActive = e.shiftKey && e.altKey && e.ctrlKey && e.metaKey
+    const modifierKeyActive = e.shiftKey || e.altKey || e.ctrlKey || e.metaKey
     if (modifierKeyActive) return
     switch (e.code) {
       case 'Space':
@@ -412,7 +448,7 @@ export class Anybody extends EventEmitter {
           e.preventDefault()
           this.missileClick(this.mouseX, this.mouseY)
         }
-        if (this.shownStatScreen) {
+        if (this.shownStatScreen && this.level < 5) {
           this.level++
           this.restart(null, false)
         }
@@ -426,6 +462,7 @@ export class Anybody extends EventEmitter {
         break
       case 'KeyM':
         this.mute = !this.mute
+        this.sound?.setMuted(this.mute)
         break
     }
   }
@@ -474,7 +511,6 @@ export class Anybody extends EventEmitter {
       framesTook: this.framesTook
     })
     if (won) {
-      this.bodyData = null
       this.finish()
     }
   }
@@ -487,11 +523,11 @@ export class Anybody extends EventEmitter {
     if (this.level !== this.lastLevel && this.level !== 1 && this.level !== 0) {
       this.sound?.stop()
       this.sound?.playStart()
-      this.sound?.setSong()
+      this.sound?.advanceToNextLevelSong()
       this.sound?.resume()
     }
     if (this.sound?.playbackRate !== 'normal') {
-      this.sound?.setPlaybackRate('normal')
+      this.sound?.playCurrentSong()
     }
     this.init()
     this.draw()
@@ -661,7 +697,7 @@ export class Anybody extends EventEmitter {
       outflightMissileTmp.radius
     ]
 
-    const { day, level, bodyInits, bodyFinal, framesTook } = this
+    const { address, day, level, bodyInits, bodyFinal, framesTook } = this
 
     const results = JSON.parse(
       JSON.stringify({
@@ -672,7 +708,8 @@ export class Anybody extends EventEmitter {
         bodyInits,
         bodyFinal,
         framesTook,
-        outflightMissile
+        outflightMissile,
+        address
       })
     )
 
@@ -713,6 +750,8 @@ export class Anybody extends EventEmitter {
   }
 
   generateLevelData(day, level) {
+    if (!day) throw new Error('day is undefined')
+    if (typeof level == 'undefined') throw new Error('level is undefined')
     const bodyData = []
     for (let i = 0; i <= level; i++) {
       const dayLevelIndexSeed = utils.solidityKeccak256(
@@ -798,9 +837,9 @@ export class Anybody extends EventEmitter {
   }
 
   generateBodies() {
-    this.bodyData =
+    const bodyData =
       this.bodyData || this.generateLevelData(this.day, this.level)
-    this.bodies = this.bodyData.map((b) => this.bodyDataToBodies.call(this, b))
+    this.bodies = bodyData.map((b) => this.bodyDataToBodies.call(this, b))
     this.startingBodies = this.bodies.length
   }
 
@@ -828,15 +867,15 @@ export class Anybody extends EventEmitter {
   }
 
   getBodyColor(day, bodyIndex = 0) {
-    let baddieSeed = utils.solidityKeccak256(
-      ['uint256', 'uint256'],
-      [day, bodyIndex]
-    )
-    const baddieHue = this.randomRange(0, 359, baddieSeed)
-    baddieSeed = utils.solidityKeccak256(['bytes32'], [baddieSeed])
-    const baddieSaturation = this.randomRange(90, 100, baddieSeed)
-    baddieSeed = utils.solidityKeccak256(['bytes32'], [baddieSeed])
-    const baddieLightness = this.randomRange(55, 60, baddieSeed)
+    // let baddieSeed = utils.solidityKeccak256(
+    //   ['uint256', 'uint256'],
+    //   [day, bodyIndex]
+    // )
+    // const baddieHue = this.randomRange(0, 359, baddieSeed)
+    // baddieSeed = utils.solidityKeccak256(['bytes32'], [baddieSeed])
+    // const baddieSaturation = this.randomRange(90, 100, baddieSeed)
+    // baddieSeed = utils.solidityKeccak256(['bytes32'], [baddieSeed])
+    // const baddieLightness = this.randomRange(55, 60, baddieSeed)
 
     // hero body info
     const themes = Object.keys(bodyThemes)
@@ -918,6 +957,14 @@ export class Anybody extends EventEmitter {
       rand
     )
 
+    const baddieColors = [
+      [260, 90, 58],
+      [260, 90, 58],
+      [241, 95, 59],
+      [113, 99, 55],
+      [60, 98, 58],
+      [352, 96, 57]
+    ]
     const info = {
       fIndex,
       bgIndex,
@@ -926,7 +973,7 @@ export class Anybody extends EventEmitter {
       bg: `hsl(${bgHue},${bgSaturation}%,${bgLightness}%`,
       core: `hsl(${coreHue},${coreSaturation}%,${coreLightness}%`,
       fg: `hsl(${fgHue},${fgSaturation}%,${fgLightness}%`,
-      baddie: [baddieHue, baddieSaturation, baddieLightness]
+      baddie: baddieColors[bodyIndex]
     }
     return info
   }
@@ -986,6 +1033,12 @@ export class Anybody extends EventEmitter {
     }
     // b.velocity.setMag(this.missileSpeed * this.speedFactor)
     b.velocity.limit(this.missileSpeed * this.speedFactor)
+    if (b.velocity.x < 0) {
+      b.velocity.x = 0
+    }
+    if (b.velocity.y > 0) {
+      b.velocity.y = 0
+    }
     let sum = b.velocity.x - b.velocity.y
     const max = this.missileVectorLimitSum / 1000
     if (sum > max) {

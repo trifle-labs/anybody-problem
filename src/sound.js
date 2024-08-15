@@ -30,6 +30,7 @@ function random(arr) {
 const SONGS = {
   whistle: {
     bpm: 70,
+    interval: '4m',
     audio: whistle
   },
   wii_A: {
@@ -58,7 +59,7 @@ export default class Sound {
     this.anybody = anybody
     this.createPlayer()
     window.addEventListener('keydown', this.handleKeyDown)
-    this.setSong()
+    this.advanceToNextLevelSong()
     this.playbackRate = 'normal'
   }
 
@@ -77,10 +78,24 @@ export default class Sound {
     this.panner.connect(this.master)
   }
 
+  setMuted(isMuted) {
+    if (!this.master) return
+    this.master.mute = isMuted
+    if (!this.anybody.opensea && !this.anybody.util) {
+      sessionStorage.setItem('muted', JSON.stringify(isMuted))
+    }
+  }
+
   setSong(index) {
     const songs = Object.values(SONGS)
+    this.currentSong = songs[index]
+    console.log('currentSong:', Object.keys(SONGS)[index])
+  }
+
+  advanceToNextLevelSong() {
+    const songs = Object.values(SONGS)
     const level = this.anybody.level == 0 ? 1 : this.anybody.level
-    index = index ?? (level + 1) % songs.length
+    const index = (level + 1) % songs.length
     this.currentSong = songs[index]
     console.log('currentSong:', Object.keys(SONGS)[index])
   }
@@ -103,11 +118,15 @@ export default class Sound {
     }
   }
 
+  playCurrentSong() {
+    this.playSong(this.currentSong)
+  }
+
   // this function must be called in response to a user action
   // otherwise safari and chrome will block the audio
   resume() {
-    this.playSong(this.currentSong)
     this.playOneShot(bongoHard, -20)
+    this.playCurrentSong()
   }
 
   pause() {
@@ -173,7 +192,9 @@ export default class Sound {
         url,
         volume,
         ...opts
-      }).toDestination()
+      })
+
+      this.oneShots[key].connect(this.master)
     }
 
     // play if it's been loaded or loads quickly, otherwise load and skip
@@ -185,37 +206,43 @@ export default class Sound {
     }
   }
 
-  // TODO: this explodes whenever you reset quickly
+  // TODO: this explodes whenever you reset quickly (Please retest)
   async setPlaybackRate(speed = 'normal') {
+    //change playbackrate
     this.playbackRate = speed
-    return
-    // // prepare playback
-    // this.prepareForPlayback()
 
-    // // reset audio player
-    // this.stop()
+    if (this.playbackRate === 'normal') {
+      // reset playback-rate (after game-over)
+      this.player.playbackRate = 1
 
-    // // speed up the voices
-    // const playbackRate =
-    //   speed == 'normal' ? 1 : this.currentSong?.gameoverSpeed || 2
+      // set the transport BPM
+      Tone.getTransport().bpm.value = this.currentSong.bpm
+    } else {
+      // change playback-rate (game-over)
+      this.player.playbackRate = this.currentSong?.gameoverSpeed || 2
 
-    // // set new gameover playback rate
-    // this.player.playbackRate = playbackRate
-
-    // // speed up the BPM w ramp
-    // Tone.getTransport().bpm.rampTo(
-    //   (Tone.getTransport().bpm.value *= playbackRate),
-    //   0.5
-    // )
-
-    // // restart
-    // this.loop?.start()
-    // this.player.start()
-    // Tone.getTransport().start('+0', 0)
+      // change the transport bpm accordingly (so that looping measures stay correct)
+      Tone.getTransport().bpm.value *= this.player.playbackRate
+    }
   }
 
   async playGameOver({ win }) {
-    this.setPlaybackRate('not-normal?')
+    // prepare playback
+    this.prepareForPlayback()
+
+    // reset audio player
+    this.stop()
+
+    // set game over playback speed
+    this.setPlaybackRate('gameover')
+
+    // start song immediately and schedule to replay in a loop
+    this.loop = new Loop((time) => {
+      this.player.start(time)
+    }, this.currentSong.interval || '2m').start(0)
+
+    // play the transport (immeditately from the beginning)
+    Tone.getTransport().start('+0', '0:0:0')
 
     if (this.anybody.sfx === 'space') {
       this.playOneShot(affirmative, -22, { playbackRate: 1 })
@@ -265,30 +292,24 @@ export default class Sound {
     // prepare playback
     this.prepareForPlayback()
 
-    // reset audio player
-    this.stop()
-
     // set current song
     this.currentSong = song
 
-    // set the transport BPM
-    Tone.getTransport().bpm.value = this.currentSong.bpm
+    // reset audio player
+    this.stop()
 
-    // reset playback-rate (after game-over)
-    this.player.playbackRate = 1
+    // set game over playback speed
+    this.setPlaybackRate('normal')
 
     // load the current song
     await this.player.load(this.currentSong.audio)
 
-    // start the song immediately
-    this.player.start()
-
-    // schedule the song to replay in a loop
+    // start song and schedule to replay in a loop
     this.loop = new Loop((time) => {
       this.player.start(time)
-    }, song.interval || '2m').start()
+    }, song.interval || '2m').start(0)
 
     // play the transport (immeditately from the beginning)
-    Tone.getTransport().start('+0', 0)
+    Tone.getTransport().start('+0', '0:0:0')
   }
 }
