@@ -775,46 +775,10 @@ export const Visuals = {
       this.drawButton({
         text: 'PLAY',
         onClick: () => {
-          if (this.popup !== null) return
-          if (!this.playerName) {
-            // open connect wallet popup
-            this.popup = {
-              header: 'Play Onchain',
-              body: [
-                'Free to play!  ...or practice!',
-                'Connect a wallet to validate your wins.'
-              ],
-              buttons: [
-                {
-                  text: 'PRACTICE',
-                  fg: THEME.violet_50,
-                  bg: THEME.violet_25,
-                  stroke: THEME.violet_50,
-                  onClick: () => {
-                    // start practice mode
-                    this.popup = null
-                    this.sound?.playStart()
-                    this.setPause(false)
-                    this.practiceMode = true
-                  }
-                },
-                {
-                  text: 'CONNECT',
-                  fg: THEME.violet_25,
-                  bg: THEME.violet_50,
-                  stroke: THEME.violet_50,
-                  onClick: () => {
-                    this.emit('connect-wallet')
-                  }
-                }
-              ]
-            }
-            return
-          }
+          if (this.popup) return
           // start play
           this.sound?.playStart()
           this.setPause(false)
-          this.practiceMode = false
         },
         fg: THEME.violet_50,
         bg: THEME.pink,
@@ -1573,7 +1537,7 @@ export const Visuals = {
     this.drawBottomButton({
       text: 'REDO',
       onClick: () => {
-        if (this.popup !== null) return
+        if (this.popup) return
         if (!this.hasQuickReset) {
           this.popup = {
             bg: THEME.teal_75,
@@ -1618,7 +1582,7 @@ export const Visuals = {
         text: 'EXIT',
         onClick: () => {
           // confirm in popup
-          if (this.popup !== null) return
+          if (this.popup) return
           this.popup = {
             bg: THEME.flame_75,
             fg: THEME.flame_50,
@@ -1689,11 +1653,14 @@ export const Visuals = {
       this.drawBottomButton({
         text: 'SAVE',
         onClick: () => {
-          if (this.practiceMode) {
-            if (this.popup !== null) return
+          if (this.popup) return
+          if (this.opensea) {
             this.popup = {
               header: 'Nice Job!',
-              body: ['Next time connect a wallet to', 'mint your win!'],
+              body: [
+                'Next time play on ANYBODY.gg to save',
+                'your win to the leaderboard !!'
+              ],
               fg: THEME.green_50,
               bg: THEME.green_75,
               buttons: [
@@ -1715,9 +1682,10 @@ export const Visuals = {
                 }
               ]
             }
-          } else {
-            this.emit('save')
+            return
           }
+          //
+          this.emit('save')
         },
         ...themes.buttons.green,
         columns: buttonCount,
@@ -2161,7 +2129,7 @@ export const Visuals = {
         fg: THEME.flame_50,
         onClick: () => {
           // confirm in popup
-          if (this.popup !== null) return
+          if (this.popup) return
           this.popup = {
             bg: THEME.flame_75,
             fg: THEME.flame_50,

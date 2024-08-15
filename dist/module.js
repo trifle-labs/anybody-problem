@@ -1675,46 +1675,10 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
             this.drawButton({
                 text: "PLAY",
                 onClick: ()=>{
-                    if (this.popup !== null) return;
-                    if (!this.playerName) {
-                        // open connect wallet popup
-                        this.popup = {
-                            header: "Play Onchain",
-                            body: [
-                                "Free to play!  ...or practice!",
-                                "Connect a wallet to validate your wins."
-                            ],
-                            buttons: [
-                                {
-                                    text: "PRACTICE",
-                                    fg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).violet_50,
-                                    bg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).violet_25,
-                                    stroke: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).violet_50,
-                                    onClick: ()=>{
-                                        // start practice mode
-                                        this.popup = null;
-                                        this.sound?.playStart();
-                                        this.setPause(false);
-                                        this.practiceMode = true;
-                                    }
-                                },
-                                {
-                                    text: "CONNECT",
-                                    fg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).violet_25,
-                                    bg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).violet_50,
-                                    stroke: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).violet_50,
-                                    onClick: ()=>{
-                                        this.emit("connect-wallet");
-                                    }
-                                }
-                            ]
-                        };
-                        return;
-                    }
+                    if (this.popup) return;
                     // start play
                     this.sound?.playStart();
                     this.setPause(false);
-                    this.practiceMode = false;
                 },
                 fg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).violet_50,
                 bg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).pink,
@@ -2291,7 +2255,7 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
         this.drawBottomButton({
             text: "REDO",
             onClick: ()=>{
-                if (this.popup !== null) return;
+                if (this.popup) return;
                 if (!this.hasQuickReset) this.popup = {
                     bg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).teal_75,
                     fg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).teal_50,
@@ -2330,7 +2294,7 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
             text: "EXIT",
             onClick: ()=>{
                 // confirm in popup
-                if (this.popup !== null) return;
+                if (this.popup) return;
                 this.popup = {
                     bg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).flame_75,
                     fg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).flame_50,
@@ -2393,13 +2357,13 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
         this.drawBottomButton({
             text: "SAVE",
             onClick: ()=>{
-                if (this.practiceMode) {
-                    if (this.popup !== null) return;
+                if (this.popup) return;
+                if (this.opensea) {
                     this.popup = {
                         header: "Nice Job!",
                         body: [
-                            "Next time connect a wallet to",
-                            "mint your win!"
+                            "Next time play on ANYBODY.gg to save",
+                            "your win to the leaderboard !!"
                         ],
                         fg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).green_50,
                         bg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).green_75,
@@ -2422,7 +2386,10 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
                             }
                         ]
                     };
-                } else this.emit("save");
+                    return;
+                }
+                //
+                this.emit("save");
             },
             ...(0, $dfb043d8446f30b2$export$d9a33280f07116d9).buttons.green,
             columns: buttonCount,
@@ -2769,7 +2736,7 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
                 fg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).flame_50,
                 onClick: ()=>{
                     // confirm in popup
-                    if (this.popup !== null) return;
+                    if (this.popup) return;
                     this.popup = {
                         bg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).flame_75,
                         fg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).flame_50,
@@ -4189,7 +4156,6 @@ class $9387f34f78197904$export$52baafc80d354d7 extends (0, $f92b5472d28e57c3$exp
             sfx: "space",
             address: undefined,
             playerName: undefined,
-            practiceMode: false,
             bestTimes: null,
             popup: null
         };
