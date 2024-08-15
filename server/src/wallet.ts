@@ -122,9 +122,7 @@ FROM player_stats;
     (r) => r.category === 'Fastest Completed Problem'
   )
 
-  const nftBalance = problems.rows.find(
-    (r) => r.category === 'NFT Balance'
-  )
+  const nftBalance = problems.rows.find((r) => r.category === 'NFT Balance')
 
   return {
     currentStreak:

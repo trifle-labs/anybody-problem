@@ -154,6 +154,7 @@ contract AnybodyProblem is Ownable, ERC2981 {
             day % SECONDS_IN_A_DAY == 0,
             'One problem per day, invalid day'
         );
+        require(day <= currentDay(), 'Cannot solve future problems');
         require(!paused, 'Contract is paused');
         if (runId == 0) {
             runId = addNewRun(day);
@@ -203,7 +204,7 @@ contract AnybodyProblem is Ownable, ERC2981 {
         // NOTE: <= becuase level 5 has 6 bodies
         for (uint256 i = 0; i <= level; i++) {
             bytes32 dayLevelIndexSeed = getLevelSeed(day, level, i);
-            bodyData[i] = getRandomValues(dayLevelIndexSeed, i);
+            bodyData[i] = getRandomValues(dayLevelIndexSeed, i, day);
         }
         bodyCount = level + 1;
     }
@@ -218,7 +219,8 @@ contract AnybodyProblem is Ownable, ERC2981 {
 
     function getRandomValues(
         bytes32 dayLevelIndexSeed,
-        uint256 index
+        uint256 index,
+        uint256 day
     ) public pure returns (Body memory) {
         // NOTE: this function uses a seed consisting of the day + bodyIndex which means
         // that all problems of the same level on the same day will have bodies with the same
@@ -231,10 +233,10 @@ contract AnybodyProblem is Ownable, ERC2981 {
         body.radius = genRadius(index);
 
         bytes32 rand = keccak256(abi.encodePacked(dayLevelIndexSeed));
-        body.px = randomRange(0, windowWidth, rand);
+        body.px = randomRange(0, windowWidth, rand, day);
 
         rand = keccak256(abi.encodePacked(rand));
-        body.py = randomRange(0, windowWidth, rand);
+        body.py = randomRange(0, windowWidth, rand, day);
 
         rand = keccak256(abi.encodePacked(rand));
         // this is actually a range of -1/2 to 1/2 of maxVector since negative offset
@@ -244,14 +246,16 @@ contract AnybodyProblem is Ownable, ERC2981 {
         body.vx = randomRange(
             maxVectorScaled / 2,
             (3 * maxVectorScaled) / 2,
-            rand
+            rand,
+            day
         );
 
         rand = keccak256(abi.encodePacked(rand));
         body.vy = randomRange(
             maxVectorScaled / 2,
             (3 * maxVectorScaled) / 2,
-            rand
+            rand,
+            day
         );
 
         return body;
@@ -265,9 +269,24 @@ contract AnybodyProblem is Ownable, ERC2981 {
     function randomRange(
         uint256 min,
         uint256 max,
-        bytes32 rand
+        bytes32 seed,
+        uint256 day
     ) public pure returns (uint256) {
-        return min + (uint256(rand) % (max - min));
+        uint256 fuckup = day == 1723766400 ? 0 : 1;
+        if (min == max) {
+            return min;
+        } else if (min < max) {
+            uint256 range = max - min + fuckup;
+            return (uint256(seed) % range) + min;
+        } else {
+            uint256 range = 359 - (min - max + fuckup);
+            uint256 output = uint256(seed) % range;
+            if (output < max) {
+                return output;
+            } else {
+                return min - max + output;
+            }
+        }
     }
 
     function currentLevel(uint256 runId) public view returns (uint256) {
@@ -343,11 +362,11 @@ contract AnybodyProblem is Ownable, ERC2981 {
         uint256 bodyCount = level + 1;
         address verifier = verifiers[bodyCount + dummyCount][tickCount];
         require(verifier != address(0), 'Invalid verifier, address == 0');
-        require(
-            address(uint160(input[5 + (bodyCount + dummyCount) * 5 + 1])) ==
-                msg.sender,
-            'Owner of this proof is not the sender'
-        );
+        // require(
+        //     address(uint160(input[5 + (bodyCount + dummyCount) * 5 + 1])) ==
+        //         msg.sender,
+        //     'Owner of this proof is not the sender'
+        // );
 
         // confirm current inflightMissile == previous outflightMissile
         // or confirm that curren inflightMissile (x, y) == (0, windowHeight)

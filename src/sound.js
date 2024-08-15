@@ -141,12 +141,12 @@ export default class Sound {
     let player
     if (this.anybody.sfx === 'space') {
       const playbackRate =
-        vectorMagnitude < 666_666 ? 3 : vectorMagnitude < 1_333_332 ? 2 : 1
-      player = await this.playOneShot(bottlerocket2, -34, {
+        vectorMagnitude < 100_000 ? 3 : vectorMagnitude < 500_000 ? 2 : 1
+      player = await this.playOneShot(bottlerocket2, -10, {
         playbackRate
       })
     } else {
-      player = await this.playOneShot(bubble, -36, {
+      player = await this.playOneShot(bubble, -16, {
         playbackRate: random([1, 0.9, 1.3])
       })
     }
@@ -224,6 +224,26 @@ export default class Sound {
       // change the transport bpm accordingly (so that looping measures stay correct)
       Tone.getTransport().bpm.value *= this.player.playbackRate
     }
+  }
+
+  async twinkle() {
+    this.playOneShot(affirmative, -12, { playbackRate: 1 })
+    this.playOneShot(affirmative, -12, { playbackRate: 2 })
+    this.playOneShot(affirmative, -12, { playbackRate: 0.5 })
+    // this.playOneShot(coin, -10)
+    // this.playOneShot(coinBox, -16)
+  }
+
+  async floop() {
+    this.playOneShot(ipod_hiss, -50)
+    this.playOneShot(bubble, -6, { playbackRate: 4 })
+    await new Promise((resolve) => setTimeout(resolve, 200))
+    this.playOneShot(bubble, -6, { playbackRate: 1 })
+    await new Promise((resolve) => setTimeout(resolve, 200))
+    this.playOneShot(bubble, -6, { playbackRate: 0.8 })
+    await new Promise((resolve) => setTimeout(resolve, 200))
+    this.playOneShot(bubble, -6, { playbackRate: 0.6 })
+    await new Promise((resolve) => setTimeout(resolve, 1000))
   }
 
   async playGameOver({ win }) {

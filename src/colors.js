@@ -188,12 +188,16 @@ export function hslToRgb(values, alpha = 1, asArray = false) {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`
 }
 
-function randInt(min, max) {
-  // min and max included
-  return Math.floor(Math.random() * (max - min + 1)) + min
+function randInt(min, max, rng, offset) {
+  if (rng) {
+    return rng(min, max, offset)
+  } else {
+    // min and max included
+    return Math.floor(Math.random() * (max - min + 1)) + min
+  }
 }
 
-export function randHSL(ranges, asArray = false) {
+export function randHSL(ranges, asArray = false, rng, offset = 0) {
   let hues = ranges[0] ?? '0-359'
   let sats = ranges[1] ?? '0-100'
   let lights = ranges[2] ?? '0-100'
@@ -205,14 +209,17 @@ export function randHSL(ranges, asArray = false) {
 
   // if hue range loops (350-10), randomly select a position from the two sections (0-10, 350-359)
   if (hues[0] > hues[1]) {
-    hues = [randInt(0, hues[1]), randInt(hues[0], '359')][randInt(0, 1)]
+    hues = [
+      randInt(0, hues[1], rng, offset + 0),
+      randInt(hues[0], '359', rng, offset + 1)
+    ][randInt(0, 1, rng, offset + 2)]
     hues = [hues]
   }
 
   // generate in ranges
-  const h = randInt(hues[0], hues[1] || hues[0])
-  const s = randInt(sats[0], sats[1] || sats[0])
-  const l = randInt(lights[0], lights[1] || lights[0])
+  const h = randInt(hues[0], hues[1] || hues[0], rng, offset + 3)
+  const s = randInt(sats[0], sats[1] || sats[0], rng, offset + 4)
+  const l = randInt(lights[0], lights[1] || lights[0], rng, offset + 5)
   if (asArray) {
     return [h, s, l]
   }
