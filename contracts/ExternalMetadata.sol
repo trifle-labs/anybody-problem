@@ -312,7 +312,7 @@ contract ExternalMetadata is Ownable {
         uint256 day
     ) internal view returns (string memory) {
         //FACE SHAPE
-        uint256 extraSeed = 19;
+        uint256 extraSeed = day == 1723766400 ? 19 : 0;
 
         bytes32 rand = keccak256(abi.encodePacked(day, extraSeed));
         uint256 pathIdxFace = randomRange(
@@ -673,7 +673,7 @@ contract ExternalMetadata is Ownable {
     function getBaddieBodyColor(
         uint256 day,
         uint256 bodyIndex
-    ) internal pure returns (uint256[3] memory hsl) {
+    ) internal view returns (uint256[3] memory hsl) {
         bytes32 rand = keccak256(abi.encodePacked(day, bodyIndex));
         uint256 hue = randomRange(0, 359, rand, day);
         rand = keccak256(abi.encodePacked(rand));
@@ -690,22 +690,8 @@ contract ExternalMetadata is Ownable {
         uint256 max,
         bytes32 seed,
         uint256 day
-    ) internal pure returns (uint256) {
-        uint256 fuckup = day == 1723766400 ? 0 : 1;
-        if (min == max) {
-            return min;
-        } else if (min < max) {
-            uint256 range = max - min + fuckup;
-            return (uint256(seed) % range) + min;
-        } else {
-            uint256 range = 359 - (min - max + fuckup);
-            uint256 output = uint256(seed) % range;
-            if (output < max) {
-                return output;
-            } else {
-                return min - max + output;
-            }
-        }
+    ) internal view returns (uint256) {
+        return AnybodyProblem(anybodyProblem).randomRange(min, max, seed, day);
     }
 
     function updateAnybodyProblemAddress(

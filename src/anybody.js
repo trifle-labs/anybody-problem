@@ -424,7 +424,11 @@ export class Anybody extends EventEmitter {
     //   this.debug = !this.debug
     // }
 
-    if (this.introStage < this.totalIntroStages - 1 && !this.paused) {
+    if (
+      this.introStage < this.totalIntroStages - 1 &&
+      !this.paused &&
+      this.level < 1
+    ) {
       this.introStage++
       return
     }
@@ -454,6 +458,7 @@ export class Anybody extends EventEmitter {
         }
         break
       case 'KeyR':
+        if (this.level < 1) return
         this.hasQuickReset = true
         this.restart(null, false)
         break
@@ -817,8 +822,8 @@ export class Anybody extends EventEmitter {
     return parseInt(size * BigInt(this.scalingFactor))
   }
 
-  randomRange(minBigInt, maxBigInt, seed) {
-    const fuckup = this.day == 1723766400 ? 0n : 1n
+  randomRange(minBigInt, maxBigInt, seed, day = this.day) {
+    const fuckup = day == 1723766400 ? 0n : 1n
     if (minBigInt == maxBigInt) return minBigInt
     minBigInt = typeof minBigInt === 'bigint' ? minBigInt : BigInt(minBigInt)
     maxBigInt = typeof maxBigInt === 'bigint' ? maxBigInt : BigInt(maxBigInt)
@@ -880,7 +885,7 @@ export class Anybody extends EventEmitter {
     // hero body info
     const themes = Object.keys(bodyThemes)
     const numberOfThemes = themes.length
-    const extraSeed = 19
+    const extraSeed = day == 1723766400 ? 19 : 0
     // 8, 11, 14, 19
     // good ones: 2, 8, 10, 11, 13
     let rand = utils.solidityKeccak256(['uint256', 'uint256'], [day, extraSeed])
@@ -889,72 +894,83 @@ export class Anybody extends EventEmitter {
     const bgOptions = 10
     const fgOptions = 10
     const coreOptions = 1
-    const fIndex = this.randomRange(0, faceOptions - 1, rand)
+    const fIndex = this.randomRange(0, faceOptions - 1, rand, day)
     rand = utils.solidityKeccak256(['bytes32'], [rand])
-    const bgIndex = this.randomRange(0, bgOptions - 1, rand)
+    const bgIndex = this.randomRange(0, bgOptions - 1, rand, day)
     rand = utils.solidityKeccak256(['bytes32'], [rand])
-    const fgIndex = this.randomRange(0, fgOptions - 1, rand)
+    const fgIndex = this.randomRange(0, fgOptions - 1, rand, day)
     rand = utils.solidityKeccak256(['bytes32'], [rand])
-    const coreIndex = this.randomRange(0, coreOptions - 1, rand)
+    const coreIndex = this.randomRange(0, coreOptions - 1, rand, day)
 
     rand = utils.solidityKeccak256(['bytes32'], [rand])
-    const dailyThemeIndex = this.randomRange(0, numberOfThemes - 1, rand)
+    const dailyThemeIndex = this.randomRange(0, numberOfThemes - 1, rand, day)
 
     const themeName = themes[dailyThemeIndex]
     const theme = bodyThemes[themeName]
 
     rand = utils.solidityKeccak256(['bytes32'], [rand])
     const bgHueRange = theme.bg[0] ? theme.bg[0].split('-') : [0, 359]
-    const bgHue = this.randomRange(bgHueRange[0], bgHueRange[1], rand)
+    const bgHue = this.randomRange(bgHueRange[0], bgHueRange[1], rand, day)
     rand = utils.solidityKeccak256(['bytes32'], [rand])
     const bgSaturationRange = theme.bg[1].split('-')
     const bgSaturation = this.randomRange(
       bgSaturationRange[0],
       bgSaturationRange[1],
-      rand
+      rand,
+      day
     )
     rand = utils.solidityKeccak256(['bytes32'], [rand])
     const bgLightnessRange = theme.bg[2].split('-')
     const bgLightness = this.randomRange(
       bgLightnessRange[0],
       bgLightnessRange[1],
-      rand
+      rand,
+      day
     )
 
     rand = utils.solidityKeccak256(['bytes32'], [rand])
     const coreHueRange = theme.bg[0] ? theme.cr[0].split('-') : [0, 359]
-    const coreHue = this.randomRange(coreHueRange[0], coreHueRange[1], rand)
+    const coreHue = this.randomRange(
+      coreHueRange[0],
+      coreHueRange[1],
+      rand,
+      day
+    )
     rand = utils.solidityKeccak256(['bytes32'], [rand])
     const coreSaturationRange = theme.cr[1].split('-')
     const coreSaturation = this.randomRange(
       coreSaturationRange[0],
       coreSaturationRange[1],
-      rand
+      rand,
+      day
     )
     rand = utils.solidityKeccak256(['bytes32'], [rand])
     const coreLightnessRange = theme.cr[2].split('-')
     const coreLightness = this.randomRange(
       coreLightnessRange[0],
       coreLightnessRange[1],
-      rand
+      rand,
+      day
     )
 
     rand = utils.solidityKeccak256(['bytes32'], [rand])
     const fgHueRange = theme.bg[0] ? theme.fg[0].split('-') : [0, 359]
-    const fgHue = this.randomRange(fgHueRange[0], fgHueRange[1], rand)
+    const fgHue = this.randomRange(fgHueRange[0], fgHueRange[1], rand, day)
     rand = utils.solidityKeccak256(['bytes32'], [rand])
     const fgSaturationRange = theme.fg[1].split('-')
     const fgSaturation = this.randomRange(
       fgSaturationRange[0],
       fgSaturationRange[1],
-      rand
+      rand,
+      day
     )
     rand = utils.solidityKeccak256(['bytes32'], [rand])
     const fgLightnessRange = theme.fg[2].split('-')
     const fgLightness = this.randomRange(
       fgLightnessRange[0],
       fgLightnessRange[1],
-      rand
+      rand,
+      day
     )
 
     const baddieColors = [
@@ -998,8 +1014,20 @@ export class Anybody extends EventEmitter {
 
   missileClick(x, y) {
     if (this.gameOver) return
-    if (this.paused && this.introStage !== this.totalIntroStages - 1) return
-
+    if (
+      this.paused &&
+      this.introStage !== this.totalIntroStages - 1 &&
+      this.level < 1
+    )
+      return
+    if (this.introStage == this.totalIntroStages - 1 && this.level < 1) {
+      // NOTE: these values are in drawIntroStage2
+      const chunk_1 = 1.5 * this.P5_FPS
+      const chunk_2 = 2.5 * this.P5_FPS
+      const chunk_3 = 2 * this.P5_FPS
+      const levelMaxTime = chunk_1 + chunk_2 + chunk_3
+      if (this.levelCounting < levelMaxTime) return
+    }
     if (
       this.bodies.reduce((a, c) => a + c.radius, 0) == 0 ||
       this.frames - this.startingFrame >= this.timer

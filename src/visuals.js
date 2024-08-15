@@ -221,7 +221,7 @@ export const Visuals = {
     }
 
     if (
-      this.introStage >= this.totalIntroStages &&
+      (this.introStage >= this.totalIntroStages || this.level > 0) &&
       !this.paused &&
       this.p5Frames % this.P5_FPS_MULTIPLIER == 0
     ) {
@@ -238,7 +238,7 @@ export const Visuals = {
     this.p5Frames++
     this.drawExplosions()
 
-    if (this.introStage >= this.totalIntroStages) {
+    if (this.introStage >= this.totalIntroStages || this.level > 0) {
       this.drawPause()
       this.drawBodies()
     } else {
@@ -325,6 +325,11 @@ export const Visuals = {
   },
 
   drawIntroStage2() {
+    if (!this.playedStage2Sound) {
+      this.playedStage2Sound = true
+      this.sound?.floop()
+    }
+
     this.levelCounting ||= 0
     this.levelCounting += 1
 
@@ -352,18 +357,42 @@ export const Visuals = {
       this.missiles = results.missiles
     }
 
+    let w,
+      text,
+      fg = THEME.iris_30,
+      stroke = THEME.iris_30
+
+    const chunk_1 = 1.5 * this.P5_FPS
+    const chunk_2 = 2.5 * this.P5_FPS
+    const chunk_3 = 2 * this.P5_FPS
+    const levelMaxTime = chunk_1 + chunk_2 + chunk_3
+    if (this.levelCounting < chunk_1) {
+      w = 180
+      text = 'oh no !!'
+    } else if (this.levelCounting < chunk_1 + chunk_2) {
+      w = 523
+      text = 'a BADDIE came into orbit !!'
+    } else {
+      w = 268
+      text = 'BLAST IT !!!'
+      fg = THEME.pink_50
+      stroke = THEME.pink_50
+    }
+
     if (this.introBodies[0].radius == 0 && this.introBodies[1].radius !== 0) {
       const w = 368
       const y = 780
-      this.drawTextBubble({
-        text: 'uh oh, try again !!',
-        w,
-        x: this.windowWidth / 2 - w / 2,
-        y,
-        fg: THEME.iris_30,
-        stroke: THEME.iris_30,
-        bg: THEME.bg
-      })
+      if (this.levelCounting > levelMaxTime) {
+        this.drawTextBubble({
+          text: 'oops, try again !!',
+          w,
+          x: this.windowWidth / 2 - w / 2,
+          y,
+          fg,
+          stroke,
+          bg: THEME.bg
+        })
+      }
 
       this.timeout ||= setTimeout(() => {
         const b = this.introBodies[0]
@@ -383,23 +412,6 @@ export const Visuals = {
       }, 3000)
     }
 
-    let w, text
-
-    const chunk_1 = 1.5 * this.P5_FPS
-    const chunk_2 = 2.5 * this.P5_FPS
-    const chunk_3 = 2 * this.P5_FPS
-    const levelMaxTime = chunk_1 + chunk_2 + chunk_3
-    if (this.levelCounting < chunk_1) {
-      w = 268
-      text = 'oh no !!'
-    } else if (this.levelCounting < chunk_1 + chunk_2) {
-      w = 523
-      text = 'a BADDIE is approaching !!'
-    } else {
-      w = 268
-      text = 'BLAST IT !!!'
-    }
-
     if (this.levelCounting < levelMaxTime && this.introBodies[0].radius > 0) {
       const y = 780
       this.drawTextBubble({
@@ -407,14 +419,14 @@ export const Visuals = {
         w,
         x: this.windowWidth / 2 - w / 2,
         y,
-        fg: THEME.iris_30,
-        stroke: THEME.iris_30,
+        fg,
+        stroke,
         bg: THEME.bg
       })
     } else if (this.introBodies[1].radius == 0) {
-      const w = 568
+      const w = 330
       const y = 780
-      const text = 'NICE JOB !!! Ready for real?'
+      const text = "NICE - let's go !"
       this.drawTextBubble({
         text,
         w,
@@ -437,6 +449,10 @@ export const Visuals = {
   },
 
   drawIntroStage1() {
+    if (!this.playedStage1Sound) {
+      this.playedStage1Sound = true
+      this.sound?.twinkle()
+    }
     this.levelCountdown ||= 250
     this.levelCountdown -= 1
     const baddie = {
@@ -702,7 +718,7 @@ export const Visuals = {
 
     const p = this.p
 
-    const unpauseDuration = this.level == 0 ? 1.8 : 0
+    const unpauseDuration = this.level == 0 ? 1 : 0
     const unpauseFrames = unpauseDuration * this.P5_FPS
     if (this.willUnpause && !this.beganUnpauseAt) {
       this.willUnpause = true
@@ -1613,14 +1629,14 @@ export const Visuals = {
                 }
               },
               {
-                text: 'RESTART',
+                text: 'EXIT',
                 fg: THEME.flame_75,
                 bg: THEME.flame_50,
                 stroke: THEME.flame_50,
                 onClick: () => {
                   this.popup = null
                   this.level = 1
-                  this.restart(undefined, this.practiceMode)
+                  this.restart(undefined, true)
                 }
               }
             ]
@@ -2227,7 +2243,8 @@ export const Visuals = {
 
     if (
       (this.introStage !== this.totalIntroStages - 1 &&
-        this.introStage < this.totalIntroStages) ||
+        this.introStage < this.totalIntroStages &&
+        this.level < 1) ||
       this.paused ||
       this.gameOver
     )
