@@ -289,10 +289,15 @@ export class Anybody extends EventEmitter {
     // try to fetch muted state from session storage
     try {
       this.mute = JSON.parse(sessionStorage.getItem('muted')) || false
-      this.sound.setMuted(this.mute)
     } catch (_) {
-      sessionStorage.removeItem('muted')
+      this.mute = false
+      try {
+        sessionStorage.removeItem('muted')
+      } catch (_) {
+        console.log('session storage not available')
+      }
     }
+    this.sound.setMuted(this.mute)
   }
 
   async start() {
@@ -429,7 +434,7 @@ export class Anybody extends EventEmitter {
           e.preventDefault()
           this.missileClick(this.mouseX, this.mouseY)
         }
-        if (this.shownStatScreen) {
+        if (this.shownStatScreen && this.level < 5) {
           this.level++
           this.restart(null, false)
         }
@@ -727,6 +732,8 @@ export class Anybody extends EventEmitter {
   }
 
   generateLevelData(day, level) {
+    if (!day) throw new Error('day is undefined')
+    if (typeof level == 'undefined') throw new Error('level is undefined')
     const bodyData = []
     for (let i = 0; i <= level; i++) {
       const dayLevelIndexSeed = utils.solidityKeccak256(
