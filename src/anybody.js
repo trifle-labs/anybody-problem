@@ -422,11 +422,8 @@ export class Anybody extends EventEmitter {
     //   this.debug = !this.debug
     // }
 
-    if (
-      this.introStage < this.totalIntroStages - 1 &&
-      !this.paused &&
-      this.level < 1
-    ) {
+    const duringIntro = this.introStage < this.totalIntroStages - 1
+    if (duringIntro && !this.paused && this.level < 1) {
       this.introStage++
       return
     }
