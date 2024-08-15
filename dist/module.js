@@ -2310,8 +2310,8 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
                         },
                         {
                             text: "REDO",
-                            bg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).teal_75,
-                            fg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).teal_50,
+                            bg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).teal_50,
+                            fg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).teal_75,
                             stroke: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).teal_50,
                             onClick: ()=>{
                                 this.popup = null;
@@ -2754,22 +2754,19 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
         });
         const buttonWidth = 200;
         if (this.level > 1) {
-            const x = this.windowWidth / 2 - 4 * buttonWidth / 2;
+            const x = this.windowWidth / 2 - 4 * buttonWidth / 2 + 20;
             this.drawFatButton({
                 text: "REDO",
                 onClick: ()=>this.restart(null, false),
                 x: x,
                 bg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).teal_75,
-                fg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).teal_50,
-                stroke: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).teal_50
+                fg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).teal_50
             });
             this.drawFatButton({
                 text: "EXIT",
-                x: this.windowWidth / 2 + buttonWidth / 2,
-                // onClick: () => this.restart(null, false),
+                x: this.windowWidth / 2 + buttonWidth / 2 - 20,
                 bg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).flame_75,
                 fg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).flame_50,
-                stroke: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).flame_50,
                 onClick: ()=>{
                     // confirm in popup
                     if (this.popup !== null) return;
@@ -2777,7 +2774,7 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
                         bg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).flame_75,
                         fg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).flame_50,
                         stroke: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).flame_50,
-                        header: "Start Over?",
+                        header: "Leave game?",
                         body: [
                             "Any progress will be lost!"
                         ],
@@ -2810,8 +2807,7 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
             text: "REDO",
             onClick: ()=>this.restart(null, false),
             bg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).teal_75,
-            fg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).teal_50,
-            stroke: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).teal_50
+            fg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).teal_50
         });
         p.pop();
     },
@@ -5101,7 +5097,7 @@ $7973f6389e28ce3d$exports = JSON.parse('{"contractName":"AnybodyProblem","abi":[
 
 
 var $74ac3a897fb18929$exports = {};
-$74ac3a897fb18929$exports = JSON.parse('{"address":"0xACfDb408F78774b1d612f42A463D70c7c4198Ba7","chain":{"chainId":84532,"name":"unknown"}}');
+$74ac3a897fb18929$exports = JSON.parse('{"address":"0x53E96ACF13dcb21e37bA1527868A2fBfd3d0d87C","chain":{"chainId":84532,"name":"unknown"}}');
 
 
 var $5931231d1de06281$exports = {};
@@ -5113,7 +5109,7 @@ $03fd13a79e54ef6c$exports = JSON.parse('{"contractName":"Speedruns","abi":[{"inp
 
 
 var $867154649f761c8f$exports = {};
-$867154649f761c8f$exports = JSON.parse('{"address":"0x4f45c0E2a158A2Dc73462A16c720e8246F1c8452","chain":{"chainId":84532,"name":"unknown"}}');
+$867154649f761c8f$exports = JSON.parse('{"address":"0x3bA8e90b930C3Aa06E3bB9A6a9688996e5b28640","chain":{"chainId":84532,"name":"unknown"}}');
 
 
 var $a230d41339cc7b47$exports = {};
