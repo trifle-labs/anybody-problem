@@ -1589,8 +1589,8 @@ export const Visuals = {
               },
               {
                 text: 'REDO',
-                bg: THEME.teal_75,
-                fg: THEME.teal_50,
+                bg: THEME.teal_50,
+                fg: THEME.teal_75,
                 stroke: THEME.teal_50,
                 onClick: () => {
                   this.popup = null
@@ -2137,25 +2137,22 @@ export const Visuals = {
       fg: THEME.red
     })
     const buttonWidth = 200
+
     if (this.level > 1) {
-      const x = this.windowWidth / 2 - (4 * buttonWidth) / 2
+      const x = this.windowWidth / 2 - (4 * buttonWidth) / 2 + 20
       this.drawFatButton({
         text: 'REDO',
         onClick: () => this.restart(null, false),
         x,
         bg: THEME.teal_75,
-        fg: THEME.teal_50,
-        stroke: THEME.teal_50
+        fg: THEME.teal_50
       })
 
       this.drawFatButton({
         text: 'EXIT',
-        x: this.windowWidth / 2 + buttonWidth / 2,
-        // onClick: () => this.restart(null, false),
-
+        x: this.windowWidth / 2 + buttonWidth / 2 - 20,
         bg: THEME.flame_75,
         fg: THEME.flame_50,
-        stroke: THEME.flame_50,
         onClick: () => {
           // confirm in popup
           if (this.popup !== null) return
@@ -2163,7 +2160,7 @@ export const Visuals = {
             bg: THEME.flame_75,
             fg: THEME.flame_50,
             stroke: THEME.flame_50,
-            header: 'Start Over?',
+            header: 'Leave game?',
             body: ['Any progress will be lost!'],
             buttons: [
               {
@@ -2195,8 +2192,7 @@ export const Visuals = {
         text: 'REDO',
         onClick: () => this.restart(null, false),
         bg: THEME.teal_75,
-        fg: THEME.teal_50,
-        stroke: THEME.teal_50
+        fg: THEME.teal_50
       })
     }
 
