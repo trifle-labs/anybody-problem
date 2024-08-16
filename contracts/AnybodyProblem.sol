@@ -446,12 +446,7 @@ contract AnybodyProblem is Ownable, ERC2981 {
             if (level == LEVELS) {
                 runs[runId].solved = true;
                 if (alsoMint) {
-                    mint(
-                        priceToSave +
-                            (priceToMint /
-                                (day == currentDay() ? discount : 1)),
-                        day
-                    );
+                    mint(priceToSave + (priceToMint / discount), day);
                 } else if (priceToSave > 0) {
                     makePayment(priceToSave);
                 }
@@ -479,6 +474,7 @@ contract AnybodyProblem is Ownable, ERC2981 {
     }
 
     function mint(uint256 payment, uint256 day) internal {
+        require(day == currentDay(), 'Can only mint on the current day');
         makePayment(payment);
         Speedruns(speedruns).__mint(msg.sender, day, 1, '');
     }
