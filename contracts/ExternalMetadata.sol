@@ -183,24 +183,24 @@ contract ExternalMetadata is Ownable {
                     'data:application/json;base64,',
                     Base64.encode(
                         abi.encodePacked(
-                            '{"name":"',
-                            getName(date),
+                            '{"name":"-',
+                            // getName(date),
                             '",',
-                            '"description": "Anybody Problem (https://anybody.gg)",',
+                            '"description": "",',
                             '"image": "',
                             svg,
                             '",',
                             '"image_url": "',
                             svg,
                             '",',
-                            '"home_url": "https://anybody.gg",',
-                            '"external_url": "https://anybody.gg",',
-                            '"animation_url": "https://nft.anybody.gg/#',
-                            StringsExtended.toString(date),
-                            getBestTimeEncoded(date),
-                            '",',
-                            '"attributes": ',
-                            getAttributes(date),
+                            '"home_url": "https://opensea.io",',
+                            '"external_url": "https://opensea.io",',
+                            // '"animation_url": "https://nft.anybody.gg/#',
+                            // StringsExtended.toString(date),
+                            // getBestTimeEncoded(date),
+                            // '",',
+                            '"attributes":[] ',
+                            // getAttributes(date),
                             '}'
                         )
                     )
@@ -278,7 +278,7 @@ contract ExternalMetadata is Ownable {
                         abi.encodePacked(
                             '<?xml version="1.0" encoding="utf-8"?>',
                             '<svg xmlns="http://www.w3.org/2000/svg"  height="100%" width="100%" viewBox="0 0 1000 1000" style="background-color:transparent;">',
-                            getPath(date),
+                            // getPath(date),
                             // '<text x="50" y="550" class="name">',
                             // getName(date),
                             // '</text>','

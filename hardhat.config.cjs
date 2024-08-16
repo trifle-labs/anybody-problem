@@ -74,7 +74,7 @@ const config = {
       url: process.env.baseRPC,
       accounts: { mnemonic: process.env.deploymentKey, initialIndex: 0 },
       // gas: 5_000_000,
-      gasPrice: 10_000_000 // 0.01 GWEI
+      gasPrice: 15_000_000 // 0.015 GWEI
     },
     sepolia: {
       // url: 'https://sepolia.infura.io/v3/' + process.env.INFURA_API_KEY,

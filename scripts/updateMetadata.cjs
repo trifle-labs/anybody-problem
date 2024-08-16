@@ -8,15 +8,23 @@ async function main() {
   )
 
   // Deploy the metadata contract
-  const { externalMetadata, assets1, assets2, assets3, assets4, assets5 } =
-    await deployMetadata(false)
+  const {
+    externalMetadata,
+    assets1,
+    assets2,
+    assets3,
+    assets4,
+    assets5,
+    themeAddress
+  } = await deployMetadata(false)
   const returnObject = {
     ExternalMetadata: externalMetadata,
     Assets1: assets1,
     Assets2: assets2,
     Assets3: assets3,
     Assets4: assets4,
-    Assets5: assets5
+    Assets5: assets5,
+    ThemeAddress: themeAddress
   }
   // Get the currently deployed anybodyProblem contract
   const AnybodyProblem = await ethers.getContractFactory('AnybodyProblem')
@@ -48,7 +56,7 @@ async function main() {
   const verificationData = [
     {
       name: 'ExternalMetadata',
-      constructorArguments: []
+      constructorArguments: [themeAddress]
     }
   ]
   returnObject['verificationData'] = verificationData
