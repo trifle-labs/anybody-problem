@@ -98,7 +98,6 @@ export class Anybody extends EventEmitter {
     !this.util && loadFonts(this.p)
     // this.p.blendMode(this.p.DIFFERENCE)
 
-    this.levelSpeeds = new Array(5)
     this.introStage = -1
     this.clearValues()
     !this.util && this.prepareP5()
@@ -132,7 +131,7 @@ export class Anybody extends EventEmitter {
       level: 0,
       skip0: false,
       todaysRecords: {},
-      levelSpeeds: new Array(5),
+      levelSpeeds: [],
       bodyData: null,
       // debug: false,
       // Add default properties and their initial values here
@@ -204,7 +203,7 @@ export class Anybody extends EventEmitter {
 
   // run whenever the class should be reset
   clearValues() {
-    if (this.level <= 1) this.levelSpeeds = new Array(5)
+    if (this.level <= 1) this.levelSpeeds = []
     if (this.skip0 && this.level == 0) {
       this.level = 1
     }
@@ -743,7 +742,11 @@ export class Anybody extends EventEmitter {
       this.lastMissileCantBeUndone = true
     }
     if (level !== 0) {
-      this.levelSpeeds[level - 1] = results
+      if (this.levelSpeeds.length < level) {
+        this.levelSpeeds.push(results)
+      } else {
+        this.levelSpeeds[level - 1] = results
+      }
     }
     return results
   }

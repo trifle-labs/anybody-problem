@@ -311,7 +311,8 @@ const deployContracts = async (options) => {
     networkinfo['chainId'] == 1 ||
     networkinfo['chainId'] == 11155111 ||
     networkinfo['chainId'] == 17069 ||
-    networkinfo['chainId'] == 84532
+    networkinfo['chainId'] == 84532 ||
+    networkinfo['chainId'] == 8453
   ) {
     const verificationData = [
       {
@@ -363,6 +364,7 @@ const verifyContracts = async (returnObject, contractToUse) => {
       })
     } catch (e) {
       i--
+      await new Promise((r) => setTimeout(r, 1000))
       log({ e, verificationData: verificationData[i] })
     }
   }

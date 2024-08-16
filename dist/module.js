@@ -4086,7 +4086,6 @@ class $9387f34f78197904$export$52baafc80d354d7 extends (0, $f92b5472d28e57c3$exp
         this.p = p;
         !this.util && (0, $7ccced6459fd256e$export$90b262450ff54847)(this.p);
         // this.p.blendMode(this.p.DIFFERENCE)
-        this.levelSpeeds = new Array(5);
         this.introStage = -1;
         this.clearValues();
         !this.util && this.prepareP5();
@@ -4117,7 +4116,7 @@ class $9387f34f78197904$export$52baafc80d354d7 extends (0, $f92b5472d28e57c3$exp
             level: 0,
             skip0: false,
             todaysRecords: {},
-            levelSpeeds: new Array(5),
+            levelSpeeds: [],
             bodyData: null,
             // debug: false,
             // Add default properties and their initial values here
@@ -4187,7 +4186,7 @@ class $9387f34f78197904$export$52baafc80d354d7 extends (0, $f92b5472d28e57c3$exp
     }
     // run whenever the class should be reset
     clearValues() {
-        if (this.level <= 1) this.levelSpeeds = new Array(5);
+        if (this.level <= 1) this.levelSpeeds = [];
         if (this.skip0 && this.level == 0) this.level = 1;
         this.totalIntroStages = 3;
         this.lastMissileCantBeUndone = false;
@@ -4651,7 +4650,10 @@ class $9387f34f78197904$export$52baafc80d354d7 extends (0, $f92b5472d28e57c3$exp
             console.log("LASTMISSILECANTBEUNDONE = TRUE");
             this.lastMissileCantBeUndone = true;
         }
-        if (level !== 0) this.levelSpeeds[level - 1] = results;
+        if (level !== 0) {
+            if (this.levelSpeeds.length < level) this.levelSpeeds.push(results);
+            else this.levelSpeeds[level - 1] = results;
+        }
         return results;
     }
     generateLevelData(day, level) {
@@ -5061,6 +5063,10 @@ var $74ac3a897fb18929$exports = {};
 $74ac3a897fb18929$exports = JSON.parse('{"address":"0x697163DcB57716DB253413B484319641b40B0649","chain":{"chainId":84532,"name":"unknown"}}');
 
 
+var $569e2b3b3a959b0f$exports = {};
+$569e2b3b3a959b0f$exports = JSON.parse('{"address":"0xd28e9E8Ddcb512a0BF4bFCf80BCB802Bc2C109dc","chain":{"chainId":8453,"name":"unknown"}}');
+
+
 var $5931231d1de06281$exports = {};
 $5931231d1de06281$exports = JSON.parse('{"address":"0xEd7C419987D0F765F5001f110a5925aD892a83F9","chain":{"chainId":12345,"name":"unknown"}}');
 
@@ -5073,6 +5079,10 @@ var $867154649f761c8f$exports = {};
 $867154649f761c8f$exports = JSON.parse('{"address":"0x127b889FcE2b1Bd3b0941FF7ce4Fd0e2EEfe69B9","chain":{"chainId":84532,"name":"unknown"}}');
 
 
+var $2eb091f4b1dc646e$exports = {};
+$2eb091f4b1dc646e$exports = JSON.parse('{"address":"0xc44f96A9D113a8A2d35EF096896343904b30F6d0","chain":{"chainId":8453,"name":"unknown"}}');
+
+
 var $a230d41339cc7b47$exports = {};
 $a230d41339cc7b47$exports = JSON.parse('{"address":"0x2C05F9a7dE1EA42Ab57fce1B25565C085728D0af","chain":{"chainId":12345,"name":"unknown"}}');
 
@@ -5081,14 +5091,16 @@ const $7804ebc05fd2923d$export$3f0c1cee0e40865b = {
     abi: (0, (/*@__PURE__*/$parcel$interopDefault($7973f6389e28ce3d$exports))),
     networks: {
         84532: (0, (/*@__PURE__*/$parcel$interopDefault($74ac3a897fb18929$exports))),
-        12345: (0, (/*@__PURE__*/$parcel$interopDefault($5931231d1de06281$exports)))
+        12345: (0, (/*@__PURE__*/$parcel$interopDefault($5931231d1de06281$exports))),
+        8453: (0, (/*@__PURE__*/$parcel$interopDefault($569e2b3b3a959b0f$exports)))
     }
 };
 const $7804ebc05fd2923d$export$67258bae168725a6 = {
     abi: (0, (/*@__PURE__*/$parcel$interopDefault($03fd13a79e54ef6c$exports))),
     networks: {
         84532: (0, (/*@__PURE__*/$parcel$interopDefault($867154649f761c8f$exports))),
-        12345: (0, (/*@__PURE__*/$parcel$interopDefault($a230d41339cc7b47$exports)))
+        12345: (0, (/*@__PURE__*/$parcel$interopDefault($a230d41339cc7b47$exports))),
+        8453: (0, (/*@__PURE__*/$parcel$interopDefault($2eb091f4b1dc646e$exports)))
     }
 };
 

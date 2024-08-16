@@ -68,6 +68,14 @@ const config = {
       gas: 5_000_000,
       gasPrice: 100_000_000 // 0.1 GWEI
     },
+    base: {
+      // network ID: 84532
+      // url: 'https://sepolia.base.org',
+      url: process.env.baseRPC,
+      accounts: { mnemonic: process.env.deploymentKey, initialIndex: 0 },
+      // gas: 5_000_000,
+      gasPrice: 10_000_000 // 0.01 GWEI
+    },
     sepolia: {
       // url: 'https://sepolia.infura.io/v3/' + process.env.INFURA_API_KEY,
       // url: 'https://sepolia.rpc.grove.city/v1/' + process.env.grove,
@@ -97,6 +105,7 @@ const config = {
     apiKey: {
       mainnet: process.env.etherscanApiNew,
       sepolia: process.env.etherscanApiNew,
+      base: process.env.etherscanApiBase,
       baseSepolia: process.env.etherscanApiBase
     },
 

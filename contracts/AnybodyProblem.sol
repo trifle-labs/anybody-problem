@@ -446,7 +446,12 @@ contract AnybodyProblem is Ownable, ERC2981 {
             if (level == LEVELS) {
                 runs[runId].solved = true;
                 if (alsoMint) {
-                    mint(priceToSave + (priceToMint / discount), day);
+                    mint(
+                        priceToSave +
+                            (priceToMint /
+                                (day == currentDay() ? discount : 1)),
+                        day
+                    );
                 } else if (priceToSave > 0) {
                     makePayment(priceToSave);
                 }
