@@ -8,8 +8,15 @@ async function main() {
   )
 
   // Deploy the metadata contract
-  const { externalMetadata, assets1, assets2, assets3, assets4, assets5 } =
-    await deployMetadata(false)
+  const {
+    externalMetadata,
+    assets1,
+    assets2,
+    assets3,
+    assets4,
+    assets5,
+    themeAddress
+  } = await deployMetadata(false)
   const returnObject = {
     ExternalMetadata: externalMetadata,
     Assets1: assets1,
@@ -48,7 +55,7 @@ async function main() {
   const verificationData = [
     {
       name: 'ExternalMetadata',
-      constructorArguments: []
+      constructorArguments: [themeAddress]
     }
   ]
   returnObject['verificationData'] = verificationData
