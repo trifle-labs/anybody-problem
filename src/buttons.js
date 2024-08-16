@@ -61,6 +61,7 @@ export const Buttons = {
     p.noStroke()
 
     if (scale >= 0.3 && fonts.dot) {
+      const isFirefox = typeof InstallTrigger !== 'undefined' // claude
       p.textFont(fonts.dot)
       p.fill(button.disabled ? rgbaOpacity(fg, 0.4) : fg)
       p.textAlign(p.CENTER, p.CENTER)
@@ -68,7 +69,7 @@ export const Buttons = {
         text,
         // tweak to center, somethign about the font
         x + width / 2 + textSize * 0.13,
-        y + height / 2 + textSize * 0.022
+        y + height / 2 + textSize * (isFirefox ? 0.1 : 0.04)
       )
     }
 

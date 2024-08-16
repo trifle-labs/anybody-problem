@@ -452,7 +452,7 @@ export class Anybody extends EventEmitter {
         break
       case 'KeyR':
         if (this.level < 1) return
-        this.hasQuickReset = true
+        this.skipRedoPopupTip = true
         this.restart(null, false)
         break
       case 'KeyP':
