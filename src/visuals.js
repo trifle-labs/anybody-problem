@@ -250,7 +250,7 @@ export const Visuals = {
     }
     this.drawScore()
     this.drawPopup()
-    if (!this.renderingCanvasToShare) this.drawGun()
+    this.drawGun() // draw after score so cursor isnt in share img
     this.drawGunSmoke()
     this.drawExplosionSmoke()
 
@@ -1691,17 +1691,11 @@ export const Visuals = {
     // save canvas for sharing later (so minting doesn't update DIFF col)
     if (this.showShare) {
       if (scale === 1 && !this.shareCanvasBlob) {
-        // draw the canvas without croshair before rendering
-        // this.renderingCanvasToShare = true
-        // this.draw()
-
         p.canvas.toBlob((blob) => {
           this.shareCanvasBlob = new File([blob], 'MyWin.png', {
             type: 'image/png'
           })
         }, 'image/png')
-
-        this.renderingCanvasToShare = false
       }
     } else {
       this.shareCanvasBlob = undefined
@@ -2985,6 +2979,7 @@ export const Visuals = {
       }
     }
 
+    if (!showPopup) return
     this.popup = {
       header: 'Hmmm',
       body: ['Couldn’t share or copy to clipboard.', 'Try again?'],

@@ -1201,7 +1201,8 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
         else this.drawIntro();
         this.drawScore();
         this.drawPopup();
-        if (!this.renderingCanvasToShare) this.drawGun();
+        this.drawGun() // draw after score so cursor isnt in share img
+        ;
         this.drawGunSmoke();
         this.drawExplosionSmoke();
         if (this.frames - this.startingFrame + this.FPS < this.timer && this.bodies.reduce((a, c)=>a + c.radius, 0) != 0) this.drawMissiles();
@@ -2389,19 +2390,13 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
         p.pop();
         // save canvas for sharing later (so minting doesn't update DIFF col)
         if (this.showShare) {
-            if (scale === 1 && !this.shareCanvasBlob) {
-                // draw the canvas without croshair before rendering
-                // this.renderingCanvasToShare = true
-                // this.draw()
-                p.canvas.toBlob((blob)=>{
-                    this.shareCanvasBlob = new File([
-                        blob
-                    ], "MyWin.png", {
-                        type: "image/png"
-                    });
-                }, "image/png");
-                this.renderingCanvasToShare = false;
-            }
+            if (scale === 1 && !this.shareCanvasBlob) p.canvas.toBlob((blob)=>{
+                this.shareCanvasBlob = new File([
+                    blob
+                ], "MyWin.png", {
+                    type: "image/png"
+                });
+            }, "image/png");
         } else this.shareCanvasBlob = undefined;
     },
     drawProblemRankingsScreen () {
@@ -3404,6 +3399,7 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
             console.error("Error copying to clipboard:", error);
             throw new Error("Couldn't copy to clipboard. Blocked by browser?");
         }
+        if (!showPopup) return;
         this.popup = {
             header: "Hmmm",
             body: [
@@ -4144,7 +4140,6 @@ class $9387f34f78197904$export$52baafc80d354d7 extends (0, $f92b5472d28e57c3$exp
             test: false,
             util: false,
             paused: true,
-            renderingCanvasToShare: false,
             globalStyle: "default",
             aimHelper: false,
             target: "inside",
