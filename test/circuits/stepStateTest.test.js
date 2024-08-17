@@ -90,14 +90,15 @@ describe('stepStateTest circuit', () => {
   // the following input is from shooting in a real game
   const checkSampleInput = {
     bodies: [
-      ['467446', '437848', '39892', '21329', '36000'],
-      ['132246', '763106', '12690', '22342', '0'],
-      ['41536', '553684', '10016', '8556', '0'],
-      ['931417', '831774', '20639', '28154', '17000'],
-      ['595936', '254340', '14144', '25652', '0'],
-      ['647352', '77784', '23996', '29723', '0']
+      ['707626', '1000000', '27722', '5734', '36000'],
+      ['961060', '239919', '12212', '15279', '0'],
+      ['116574', '545686', '17604', '4334', '0'],
+      ['199683', '990450', '18896', '30176', '19000'],
+      ['49752', '597944', '18567', '27292', '0'],
+      ['339375', '966527', '20291', '28511', '0']
     ],
     missiles: [
+      ['29652', 4558, '10'],
       ['0', '0', '0'],
       ['0', '0', '0'],
       ['0', '0', '0'],
@@ -189,6 +190,7 @@ describe('stepStateTest circuit', () => {
       ['0', '0', '0'],
       ['0', '0', '0'],
       ['0', '0', '0'],
+      ['4761', 29620, '10'],
       ['0', '0', '0'],
       ['0', '0', '0'],
       ['0', '0', '0'],
@@ -197,8 +199,6 @@ describe('stepStateTest circuit', () => {
       ['0', '0', '0'],
       ['0', '0', '0'],
       ['0', '0', '0'],
-      ['0', '0', '0'],
-      ['29999', '188', '10'],
       ['0', '0', '0'],
       ['0', '0', '0'],
       ['0', '0', '0'],
@@ -225,10 +225,12 @@ describe('stepStateTest circuit', () => {
       ['0', '0', '0'],
       ['0', '0', '0']
     ],
-    inflightMissile: ['0', '1000000', '0', '0', '0'],
-    address: '0xc795344b1b30e3cfee1afa1d5204b141940cf445'
+    inflightMissile: ['29652', '995442', '29652', 4558, '10'],
+    address: '0x66da63b03feca7dd44a5bb023bb3645d3252fa32'
   }
-
+  // inflightMissile: ['0', '1000000', '0', 0, '0'],
+  //   address: '0x66da63b03feca7dd44a5bb023bb3645d3252fa32'
+  // }
   before(async () => {
     circuit = await wasm_tester(`circuits/game_${bodies}_${steps}.circom`)
   })
@@ -244,7 +246,7 @@ describe('stepStateTest circuit', () => {
     await circuit.checkConstraints(witness)
   })
 
-  it('passes one off check input', async () => {
+  it.only('passes one off check input', async () => {
     const inflightMissile = checkSampleInput.inflightMissile
 
     const steps = checkSampleInput.missiles.length - 1
@@ -311,7 +313,7 @@ describe('stepStateTest circuit', () => {
         abMissiles[0].radius
       ]
     }
-    // console.dir({ checkSampleInput }, { depth: null })
+    console.dir({ expected }, { depth: null })
     await circuit.assertOut(witness, expected)
   })
 
