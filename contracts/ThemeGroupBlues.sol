@@ -68,17 +68,16 @@ contract ThemeGroup {
         //BlueBGLight
 
         // BlueBGLight BG
-        colourThemes[ThemeName.BlueBGLight][ThemeLayer.Core] = bluesGeneric;
-        colourThemes[ThemeName.BlueBGLight][ThemeLayer.Core].hueStart = 180;
-        colourThemes[ThemeName.BlueBGLight][ThemeLayer.Core].hueEnd = 250;
-        colourThemes[ThemeName.BlueBGLight][ThemeLayer.Core]
+        colourThemes[ThemeName.BlueBGLight][ThemeLayer.BG] = bluesGeneric;
+        colourThemes[ThemeName.BlueBGLight][ThemeLayer.BG].hueStart = 180;
+        colourThemes[ThemeName.BlueBGLight][ThemeLayer.BG].hueEnd = 250;
+        colourThemes[ThemeName.BlueBGLight][ThemeLayer.BG]
             .saturationStart = 100;
-        colourThemes[ThemeName.BlueBGLight][ThemeLayer.Core]
-            .lightnessStart = 55;
-        colourThemes[ThemeName.BlueBGLight][ThemeLayer.Core].lightnessEnd = 95;
+        colourThemes[ThemeName.BlueBGLight][ThemeLayer.BG].lightnessStart = 55;
+        colourThemes[ThemeName.BlueBGLight][ThemeLayer.BG].lightnessEnd = 95;
 
         // BlueBGLight Core
-        colourThemes[ThemeName.BlueBGLight][ThemeLayer.BG] = bluesGeneric;
+        colourThemes[ThemeName.BlueBGLight][ThemeLayer.Core] = bluesGeneric;
 
         // BlueBGLight FG
         colourThemes[ThemeName.BlueBGLight][ThemeLayer.FG] = bluesGeneric;

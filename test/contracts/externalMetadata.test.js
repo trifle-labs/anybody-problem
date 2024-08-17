@@ -2,6 +2,7 @@ import { expect } from 'chai'
 import hre from 'hardhat'
 const { ethers } = hre
 import { DOMParser } from 'xmldom'
+// import { Anybody } from '../../dist/module.js'
 
 import {
   deployContracts,
@@ -136,5 +137,7 @@ describe('ExternalMetadata Tests', function () {
     const scores = Buffer.from(baseURLScores, 'base64').toString('utf-8')
     const scoresAsJson = JSON.parse(scores)
     expect(scoresAsJson.levels.length).to.equal(5)
+    // const anybody = new Anybody(null, { util: true, day })
+    // console.log(anybody.bodies[0].c)
   })
 })
