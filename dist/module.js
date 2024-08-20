@@ -1207,7 +1207,8 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
         else this.drawIntro();
         this.drawScore();
         this.drawPopup();
-        if (!this.renderingCanvasToShare) this.drawGun();
+        this.drawGun() // draw after score so cursor isnt in share img
+        ;
         this.drawGunSmoke();
         this.drawExplosionSmoke();
         if (this.frames - this.startingFrame + this.FPS < this.timer && this.bodies.reduce((a, c)=>a + c.radius, 0) != 0) this.drawMissiles();
@@ -2393,6 +2394,16 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
             column: buttonCount - 1
         });
         p.pop();
+        // save canvas for sharing later (so minting doesn't update DIFF col)
+        if (this.showShare) {
+            if (scale === 1 && !this.shareCanvasBlob) p.canvas.toBlob((blob)=>{
+                this.shareCanvasBlob = new File([
+                    blob
+                ], "MyWin.png", {
+                    type: "image/png"
+                });
+            }, "image/png");
+        } else this.shareCanvasBlob = undefined;
     },
     drawProblemRankingsScreen () {
         if (this.showProblemRankingsScreenAt === -1) return;
@@ -3346,83 +3357,70 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
         }
         return this.lastFrameRate;
     },
-    shareCanvas (showPopup = true) {
-        const canvas = this.p.canvas;
-        // draw the canvas without croshair before rendering
-        this.renderingCanvasToShare = true;
-        this.draw();
-        return new Promise((resolve, reject)=>{
-            canvas.toBlob(async (blob)=>{
-                const file = new File([
-                    blob
-                ], "p5canvas.png", {
-                    type: "image/png"
+    async shareCanvas (showPopup = true) {
+        const file = this.shareCanvasBlob;
+        if (!file) throw new Error("Nothing available to share!");
+        if (navigator.share) {
+            console.log("sharing canvas...");
+            try {
+                await navigator.share({
+                    files: [
+                        file
+                    ]
                 });
-                if (navigator.share) {
-                    console.log("sharing canvas...");
-                    await navigator.share({
-                        files: [
-                            file
-                        ]
-                    }).catch((error)=>{
-                        console.error("Error sharing:", error);
-                        reject(error);
-                    });
-                    this.renderingCanvasToShare = false;
-                    resolve();
-                } else if (navigator.clipboard && navigator.clipboard.write) try {
-                    console.log("writing canvas to clipboard...");
-                    await navigator.clipboard.write([
-                        new ClipboardItem({
-                            "image/png": blob
-                        })
-                    ]);
-                    const msg = "Copied results to your clipboard.";
-                    if (showPopup) this.popup = {
-                        header: "Go Share!",
-                        body: [
-                            msg
-                        ],
-                        fg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).pink_50,
-                        bg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).pink_75,
-                        buttons: [
-                            {
-                                text: "CLOSE",
-                                onClick: ()=>{
-                                    this.popup = null;
-                                }
-                            }
-                        ]
-                    };
-                    this.renderingCanvasToShare = false;
-                    resolve(msg);
-                } catch (error) {
-                    console.error("Error copying to clipboard:", error);
-                    this.popup = {
-                        header: "Hmmm",
-                        body: [
-                            "Couldn\u2019t copy results to your clipboard."
-                        ],
-                        buttons: [
-                            {
-                                text: "CLOSE",
-                                onClick: ()=>{
-                                    this.popup = null;
-                                }
-                            }
-                        ]
-                    };
-                    this.renderingCanvasToShare = false;
-                    reject(error);
+                return undefined;
+            } catch (e) {
+                // ignore user aborting
+                if (e?.name === "AbortError") return undefined;
+                console.error("Couldnt share via navigator", e);
+            // don't throw error, try clipboard
+            }
+        }
+        if (navigator.clipboard && navigator.clipboard.write) try {
+            console.log("trying to copy canvas to clipboard...");
+            await navigator.clipboard.write([
+                new ClipboardItem({
+                    "image/png": file
+                })
+            ]);
+            const msg = "Copied results to your clipboard.";
+            if (showPopup) this.popup = {
+                header: "Go Share!",
+                body: [
+                    "Copied results to your clipboard."
+                ],
+                fg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).pink_50,
+                bg: (0, $dfb043d8446f30b2$export$5714e40777c1bcc2).pink_75,
+                buttons: [
+                    {
+                        text: "CLOSE",
+                        onClick: ()=>{
+                            this.popup = null;
+                        }
+                    }
+                ]
+            };
+            return msg;
+        } catch (error) {
+            console.error("Error copying to clipboard:", error);
+            throw new Error("Couldn't copy to clipboard. Blocked by browser?");
+        }
+        if (!showPopup) return;
+        this.popup = {
+            header: "Hmmm",
+            body: [
+                "Couldn\u2019t share or copy to clipboard.",
+                "Try again?"
+            ],
+            buttons: [
+                {
+                    text: "CLOSE",
+                    onClick: ()=>{
+                        this.popup = null;
+                    }
                 }
-                else {
-                    const error = new Error("no options to share canvas!");
-                    console.error(error);
-                    this.renderingCanvasToShare = false;
-                    reject(error);
-                }
-            }, "image/png");
-        });
+            ]
+        };
     },
     shakeScreen () {
         this.shaking ||= this.P5_FPS / 2;
@@ -4148,7 +4146,6 @@ class $9387f34f78197904$export$52baafc80d354d7 extends (0, $f92b5472d28e57c3$exp
             test: false,
             util: false,
             paused: true,
-            renderingCanvasToShare: false,
             globalStyle: "default",
             aimHelper: false,
             target: "inside",
