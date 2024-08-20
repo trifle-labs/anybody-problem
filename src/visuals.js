@@ -232,6 +232,13 @@ export const Visuals = {
       this.missiles = results.missiles || []
     }
 
+    if (this.shootMissileNextFrame) {
+      console.log('trigger missile click from draw')
+      const { x, y } = this.shootMissileNextFrame
+      this.missileClick(x, y)
+      this.shootMissileNextFrame = null
+    }
+
     this.p.noFill()
     this.drawBg()
 
