@@ -1196,8 +1196,8 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
                 x: x,
                 y: y
             });
-            this.missileClick(x, y);
             this.shootMissileNextFrame = null;
+            this.missileClick(x, y);
         }
         this.p.noFill();
         this.drawBg();

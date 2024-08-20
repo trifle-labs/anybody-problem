@@ -235,8 +235,8 @@ export const Visuals = {
     if (this.shootMissileNextFrame) {
       const { x, y } = this.shootMissileNextFrame
       console.log('trigger missile click from draw', { x, y })
-      this.missileClick(x, y)
       this.shootMissileNextFrame = null
+      this.missileClick(x, y)
     }
 
     this.p.noFill()
