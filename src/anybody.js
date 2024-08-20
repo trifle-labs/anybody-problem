@@ -216,7 +216,7 @@ export class Anybody extends EventEmitter {
     this.vectorLimit = this.speedLimit * this.speedFactor
     this.missileVectorLimit = this.missileSpeed * this.speedFactor
     this.missileVectorLimitSum = 42426 // 30_000√2
-    this.FPS = 2
+    this.FPS = 25
     this.P5_FPS_MULTIPLIER = 3
     this.P5_FPS = this.FPS * this.P5_FPS_MULTIPLIER
     this.p?.frameRate(this.P5_FPS)

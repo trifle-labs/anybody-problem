@@ -4202,7 +4202,7 @@ class $9387f34f78197904$export$52baafc80d354d7 extends (0, $f92b5472d28e57c3$exp
         this.missileVectorLimit = this.missileSpeed * this.speedFactor;
         this.missileVectorLimitSum = 42426 // 30_000√2
         ;
-        this.FPS = 2;
+        this.FPS = 25;
         this.P5_FPS_MULTIPLIER = 3;
         this.P5_FPS = this.FPS * this.P5_FPS_MULTIPLIER;
         this.p?.frameRate(this.P5_FPS);
