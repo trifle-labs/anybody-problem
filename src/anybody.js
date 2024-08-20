@@ -216,7 +216,7 @@ export class Anybody extends EventEmitter {
     this.vectorLimit = this.speedLimit * this.speedFactor
     this.missileVectorLimit = this.missileSpeed * this.speedFactor
     this.missileVectorLimitSum = 42426 // 30_000√2
-    this.FPS = 25
+    this.FPS = 2
     this.P5_FPS_MULTIPLIER = 3
     this.P5_FPS = this.FPS * this.P5_FPS_MULTIPLIER
     this.p?.frameRate(this.P5_FPS)
@@ -1029,6 +1029,14 @@ export class Anybody extends EventEmitter {
     ) {
       return
     }
+    if (this.frames % this.stopEvery == 0) {
+      console.log('MISSILE CANT BE FIRED ON EDGE ATM')
+      this.shootMissileNextFrame = { x, y }
+      return
+    } else {
+      this.shootMissileNextFrame = null
+    }
+
     // if (this.missiles.length > 0 && !this.admin) {
     //   // this is a hack to prevent multiple missiles from being fired
     //   this.missiles = []
@@ -1066,7 +1074,7 @@ export class Anybody extends EventEmitter {
     const max = this.missileVectorLimitSum / 1000
     if (sum > max) {
       b.velocity.limit(this.missileSpeed * this.speedFactor * 0.999)
-      console.error({
+      console.log({
         x: b.velocity.x,
         y: b.velocity.y,
         max: this.missileVectorLimitSum / 1000

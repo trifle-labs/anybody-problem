@@ -1190,6 +1190,12 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
             this.bodies = results.bodies || [];
             this.missiles = results.missiles || [];
         }
+        if (this.shootMissileNextFrame) {
+            console.log("trigger missile click from draw");
+            const { x: x, y: y } = this.shootMissileNextFrame;
+            this.missileClick(x, y);
+            this.shootMissileNextFrame = null;
+        }
         this.p.noFill();
         this.drawBg();
         this.p5Frames++;
@@ -4196,7 +4202,7 @@ class $9387f34f78197904$export$52baafc80d354d7 extends (0, $f92b5472d28e57c3$exp
         this.missileVectorLimit = this.missileSpeed * this.speedFactor;
         this.missileVectorLimitSum = 42426 // 30_000√2
         ;
-        this.FPS = 25;
+        this.FPS = 2;
         this.P5_FPS_MULTIPLIER = 3;
         this.P5_FPS = this.FPS * this.P5_FPS_MULTIPLIER;
         this.p?.frameRate(this.P5_FPS);
@@ -4958,6 +4964,14 @@ class $9387f34f78197904$export$52baafc80d354d7 extends (0, $f92b5472d28e57c3$exp
             if (this.levelCounting < levelMaxTime) return;
         }
         if (this.bodies.reduce((a, c)=>a + c.radius, 0) == 0 || this.frames - this.startingFrame >= this.timer) return;
+        if (this.frames % this.stopEvery == 0) {
+            console.log("MISSILE CANT BE FIRED ON EDGE ATM");
+            this.shootMissileNextFrame = {
+                x: x,
+                y: y
+            };
+            return;
+        } else this.shootMissileNextFrame = null;
         // if (this.missiles.length > 0 && !this.admin) {
         //   // this is a hack to prevent multiple missiles from being fired
         //   this.missiles = []
@@ -4989,7 +5003,7 @@ class $9387f34f78197904$export$52baafc80d354d7 extends (0, $f92b5472d28e57c3$exp
         const max = this.missileVectorLimitSum / 1000;
         if (sum > max) {
             b.velocity.limit(this.missileSpeed * this.speedFactor * 0.999);
-            console.error({
+            console.log({
                 x: b.velocity.x,
                 y: b.velocity.y,
                 max: this.missileVectorLimitSum / 1000
