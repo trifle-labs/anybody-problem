@@ -233,8 +233,8 @@ export const Visuals = {
     }
 
     if (this.shootMissileNextFrame) {
-      console.log('trigger missile click from draw')
       const { x, y } = this.shootMissileNextFrame
+      console.log('trigger missile click from draw', { x, y })
       this.missileClick(x, y)
       this.shootMissileNextFrame = null
     }

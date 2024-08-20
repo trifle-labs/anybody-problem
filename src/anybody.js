@@ -1030,6 +1030,7 @@ export class Anybody extends EventEmitter {
       return
     }
     if (this.frames % this.stopEvery == 0) {
+      console.log({ frames: this.frames, stopEvery: this.stopEvery })
       console.log('MISSILE CANT BE FIRED ON EDGE ATM')
       this.shootMissileNextFrame = { x, y }
       return

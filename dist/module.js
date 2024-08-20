@@ -1191,8 +1191,11 @@ const $ad1b55143941bae3$export$1c8732ad58967379 = {
             this.missiles = results.missiles || [];
         }
         if (this.shootMissileNextFrame) {
-            console.log("trigger missile click from draw");
             const { x: x, y: y } = this.shootMissileNextFrame;
+            console.log("trigger missile click from draw", {
+                x: x,
+                y: y
+            });
             this.missileClick(x, y);
             this.shootMissileNextFrame = null;
         }
@@ -4965,6 +4968,10 @@ class $9387f34f78197904$export$52baafc80d354d7 extends (0, $f92b5472d28e57c3$exp
         }
         if (this.bodies.reduce((a, c)=>a + c.radius, 0) == 0 || this.frames - this.startingFrame >= this.timer) return;
         if (this.frames % this.stopEvery == 0) {
+            console.log({
+                frames: this.frames,
+                stopEvery: this.stopEvery
+            });
             console.log("MISSILE CANT BE FIRED ON EDGE ATM");
             this.shootMissileNextFrame = {
                 x: x,
