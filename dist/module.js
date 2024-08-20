@@ -4252,6 +4252,7 @@ class $9387f34f78197904$export$52baafc80d354d7 extends (0, $f92b5472d28e57c3$exp
         this.showProblemRankingsScreenAt = -1;
         this.saveStatus = "unsaved" // 'unsaved' -> 'validating' -> 'validated' -> 'saving' -> 'saved' | 'error'
         ;
+        this.shareCanvasBlob = undefined;
         delete this.validatedAt;
         delete this.validatingAt;
         delete this.savingAt;

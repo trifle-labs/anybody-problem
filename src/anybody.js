@@ -263,6 +263,7 @@ export class Anybody extends EventEmitter {
     this.framesTook = false
     this.showProblemRankingsScreenAt = -1
     this.saveStatus = 'unsaved' // 'unsaved' -> 'validating' -> 'validated' -> 'saving' -> 'saved' | 'error'
+    this.shareCanvasBlob = undefined
     delete this.validatedAt
     delete this.validatingAt
     delete this.savingAt
