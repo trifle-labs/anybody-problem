@@ -4998,8 +4998,8 @@ class $9387f34f78197904$export$52baafc80d354d7 extends (0, $f92b5472d28e57c3$exp
         };
         // b.velocity.setMag(this.missileSpeed * this.speedFactor)
         b.velocity.limit(this.missileSpeed * this.speedFactor);
-        if (b.velocity.x < 0) b.velocity.x = 0;
-        if (b.velocity.y > 0) b.velocity.y = 0;
+        if (b.velocity.x <= 0) b.velocity.x = 1;
+        if (b.velocity.y >= 0) b.velocity.y = -1;
         let sum = b.velocity.x - b.velocity.y;
         const max = this.missileVectorLimitSum / 1000;
         if (sum > max) {
