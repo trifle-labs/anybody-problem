@@ -2,10 +2,10 @@
 
 pragma solidity ^0.8.0;
 
-import {Groth16Verifier as Groth16Verifier2} from './Game_2_20Verifier.sol';
-import {Groth16Verifier as Groth16Verifier3} from './Game_3_20Verifier.sol';
+// import {Groth16Verifier as Groth16Verifier2} from './Game_2_20Verifier.sol';
+// import {Groth16Verifier as Groth16Verifier3} from './Game_3_20Verifier.sol';
 import {Groth16Verifier as Groth16Verifier4} from './Game_4_20Verifier.sol';
-import {Groth16Verifier as Groth16Verifier5} from './Game_5_20Verifier.sol';
+// import {Groth16Verifier as Groth16Verifier5} from './Game_5_20Verifier.sol';
 import {Groth16Verifier as Groth16Verifier6} from './Game_6_20Verifier.sol';
 
 import '@openzeppelin/contracts/token/common/ERC2981.sol';
@@ -13,6 +13,7 @@ import '@openzeppelin/contracts/access/Ownable.sol';
 import '@openzeppelin/contracts/token/ERC1155/ERC1155.sol';
 import './Speedruns.sol';
 import './ExternalMetadata.sol';
+import 'hardhat/console.sol';
 
 contract AnybodyProblem is Ownable, ERC2981 {
     uint256 public constant LEVELS = 5;
@@ -99,9 +100,19 @@ contract AnybodyProblem is Ownable, ERC2981 {
         updateProceedRecipient(proceedRecipient_);
         updateSpeedrunsAddress(speedruns_);
         updateExternalMetadata(externalMetadata_);
+        console.log('verifiers_.length');
+        console.log(verifiers_.length);
+        console.log('verifiersTicks.length');
+        console.log(verifiersTicks.length);
+        console.log('verifiersBodies.length');
+        console.log(verifiersBodies.length);
         for (uint256 i = 0; i < verifiers_.length; i++) {
             require(verifiersTicks[i] > 0, 'Invalid verifier');
             require(verifiers_[i] != address(0), 'Invalid verifier');
+            console.log('set verifiers[index] where index is');
+            console.log(verifiersBodies[i]);
+            console.log('and ticks is');
+            console.log(verifiersTicks[i]);
             verifiers[verifiersBodies[i]][verifiersTicks[i]] = verifiers_[i];
         }
     }
@@ -184,7 +195,7 @@ contract AnybodyProblem is Ownable, ERC2981 {
             );
         }
         // TODO: decide whether this is necessary
-        // require(runs[runId].solved, "Must solve all levels to complete run");
+        // require(runs[runId].solved, 'Must solve all levels to complete run');
     }
 
     function runCount() public view returns (uint256) {
@@ -360,6 +371,12 @@ contract AnybodyProblem is Ownable, ERC2981 {
         require(!runs[runId].levels[levelIndex].solved, 'Level already solved');
 
         uint256 bodyCount = level + 1;
+        console.log('bodyCount');
+        console.log(bodyCount);
+        console.log('dummyCount');
+        console.log(dummyCount);
+        console.log('tickCount');
+        console.log(tickCount);
         address verifier = verifiers[bodyCount + dummyCount][tickCount];
         require(verifier != address(0), 'Invalid verifier, address == 0');
         require(
@@ -608,25 +625,27 @@ contract AnybodyProblem is Ownable, ERC2981 {
         uint[] memory input
     ) public view {
         if (bodyCount == 2) {
-            require(
-                Groth16Verifier2(verifier).verifyProof(
-                    a,
-                    b,
-                    c,
-                    convertTo32(input)
-                ),
-                'Invalid 2 body proof'
-            );
+            revert('bodyCount != 2: all proofs are 4 bodies or 6 bodies');
+            // require(
+            //     Groth16Verifier2(verifier).verifyProof(
+            //         a,
+            //         b,
+            //         c,
+            //         convertTo32(input)
+            //     ),
+            //     'Invalid 2 body proof'
+            // );
         } else if (bodyCount == 3) {
-            require(
-                Groth16Verifier3(verifier).verifyProof(
-                    a,
-                    b,
-                    c,
-                    convertTo42(input)
-                ),
-                'Invalid 3 body proof'
-            );
+            revert('bodyCount != 3: all proofs are 4 bodies or 6 bodies');
+            // require(
+            //     Groth16Verifier3(verifier).verifyProof(
+            //         a,
+            //         b,
+            //         c,
+            //         convertTo42(input)
+            //     ),
+            //     'Invalid 3 body proof'
+            // );
         } else if (bodyCount == 4) {
             require(
                 Groth16Verifier4(verifier).verifyProof(
@@ -638,15 +657,16 @@ contract AnybodyProblem is Ownable, ERC2981 {
                 'Invalid 4 body proof'
             );
         } else if (bodyCount == 5) {
-            require(
-                Groth16Verifier5(verifier).verifyProof(
-                    a,
-                    b,
-                    c,
-                    convertTo62(input)
-                ),
-                'Invalid 5 body proof'
-            );
+            revert('bodyCount != 5: all proofs are 4 bodies or 6 bodies');
+            // require(
+            //     Groth16Verifier5(verifier).verifyProof(
+            //         a,
+            //         b,
+            //         c,
+            //         convertTo62(input)
+            //     ),
+            //     'Invalid 5 body proof'
+            // );
         } else if (bodyCount == 6) {
             require(
                 Groth16Verifier6(verifier).verifyProof(

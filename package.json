@@ -80,7 +80,6 @@
     "tone": "^15.0.4"
   },
   "devDependencies": {
-    "@parcel/transformer-inline-string": "2.12.0",
     "@babel/core": "^7.24.0",
     "@babel/eslint-parser": "^7.23.10",
     "@babel/preset-env": "^7.24.0",
@@ -93,6 +92,7 @@
     "@openzeppelin/contracts": "^4.6.0",
     "@parcel/optimizer-data-url": "2.12.0",
     "@parcel/transformer-inline": "^2.12.0",
+    "@parcel/transformer-inline-string": "2.12.0",
     "base64-sol": "^1.1.0",
     "circom_tester": "^0.0.20",
     "circomlib": "^2.0.3",
@@ -108,6 +108,7 @@
     "lint-staged": "^15.2.2",
     "parcel": "^2.12.0",
     "prettier": "3.2.5",
+    "sindri": "^0.0.1-alpha.55",
     "snarkjs": "0.7.3",
     "solidity-coverage": "^0.8.6",
     "xmldom": "^0.6.0"

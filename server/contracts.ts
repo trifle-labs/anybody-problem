@@ -1,6 +1,6 @@
 import AnybodyProblemABI from './contractData/ABI-84532-AnybodyProblem.json'
 import AnybodyProblemBaseSepolia from './contractData/84532-AnybodyProblem.json'
-import AnybodyProblemBase from './contractData/8453-AnybodyProblem.json'
+import AnybodyProblemBase from './contractData/8453-AnybodyProblem-v0.json'
 import AnybodyProblemLocal from './contractData/12345-AnybodyProblem.json'
 
 export const AnybodyProblem = {

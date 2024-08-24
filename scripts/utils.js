@@ -114,7 +114,7 @@ const getThemeName = (chainId) => {
   }
 }
 
-const deployMetadata = async (testing) => {
+const deployMetadata = async (verbose) => {
   let externalMetadata, assets1, assets2, assets3, assets4, assets5
   try {
     const network = await hre.ethers.provider.getNetwork()
@@ -124,61 +124,61 @@ const deployMetadata = async (testing) => {
     const theme = await Theme.deploy()
     await theme.deployed()
     var themeAddress = theme.address
-    !testing && log(themeName + ' Deployed at ' + String(themeAddress))
+    !verbose && log(themeName + ' Deployed at ' + String(themeAddress))
 
     // deploy Assets1
     const Assets1 = await hre.ethers.getContractFactory('Assets1')
     let byteSize = Buffer.from(Assets1.bytecode.slice(2), 'hex').length
-    !testing && log(`Assets1 byte size: ${byteSize} bytes`)
+    !verbose && log(`Assets1 byte size: ${byteSize} bytes`)
     assets1 = await Assets1.deploy()
     await assets1.deployed()
     var assets1Address = assets1.address
-    !testing && log('Assets1 Deployed at ' + String(assets1Address))
+    !verbose && log('Assets1 Deployed at ' + String(assets1Address))
 
     // deploy Assets2
     const Assets2 = await hre.ethers.getContractFactory('Assets2')
     byteSize = Buffer.from(Assets2.bytecode.slice(2), 'hex').length
-    !testing && log(`Assets2 byte size: ${byteSize} bytes`)
+    !verbose && log(`Assets2 byte size: ${byteSize} bytes`)
     assets2 = await Assets2.deploy()
     await assets2.deployed()
     var assets2Address = assets2.address
-    !testing && log('Assets2 Deployed at ' + String(assets2Address))
+    !verbose && log('Assets2 Deployed at ' + String(assets2Address))
 
     // deploy Assets3
     const Assets3 = await hre.ethers.getContractFactory('Assets3')
     byteSize = Buffer.from(Assets3.bytecode.slice(2), 'hex').length
-    !testing && log(`Assets3 byte size: ${byteSize} bytes`)
+    !verbose && log(`Assets3 byte size: ${byteSize} bytes`)
     assets3 = await Assets3.deploy()
     await assets3.deployed()
     var assets3Address = assets3.address
-    !testing && log('Assets3 Deployed at ' + String(assets3Address))
+    !verbose && log('Assets3 Deployed at ' + String(assets3Address))
 
     // deploy Assets4
     const Assets4 = await hre.ethers.getContractFactory('Assets4')
     byteSize = Buffer.from(Assets4.bytecode.slice(2), 'hex').length
-    !testing && log(`Assets4 byte size: ${byteSize} bytes`)
+    !verbose && log(`Assets4 byte size: ${byteSize} bytes`)
     assets4 = await Assets4.deploy()
     await assets4.deployed()
     var assets4Address = assets4.address
-    !testing && log('Assets4 Deployed at ' + String(assets4Address))
+    !verbose && log('Assets4 Deployed at ' + String(assets4Address))
 
     // deploy Assets5
     const Assets5 = await hre.ethers.getContractFactory('Assets5')
     byteSize = Buffer.from(Assets5.bytecode.slice(2), 'hex').length
-    !testing && log(`Assets5 byte size: ${byteSize} bytes`)
+    !verbose && log(`Assets5 byte size: ${byteSize} bytes`)
     assets5 = await Assets5.deploy()
     await assets5.deployed()
     var assets5Address = assets5.address
-    !testing && log('Assets5 Deployed at ' + String(assets5Address))
+    !verbose && log('Assets5 Deployed at ' + String(assets5Address))
 
     // deploy ExternalMetadata
     const ExternalMetadata =
       await hre.ethers.getContractFactory('ExternalMetadata')
     byteSize = Buffer.from(ExternalMetadata.bytecode.slice(2), 'hex').length
-    !testing && log(`ExternalMetadata byte size: ${byteSize} bytes`)
+    !verbose && log(`ExternalMetadata byte size: ${byteSize} bytes`)
     externalMetadata = await ExternalMetadata.deploy(themeAddress)
     await externalMetadata.deployed()
-    !testing &&
+    !verbose &&
       log('ExternalMetadata Deployed at ' + String(externalMetadata.address))
 
     await externalMetadata.setAssets([
@@ -188,11 +188,11 @@ const deployMetadata = async (testing) => {
       assets4Address,
       assets5Address
     ])
-    !testing && log('Assets set')
+    !verbose && log('Assets set')
 
     const tx = await externalMetadata.setupSVGPaths()
     await tx.wait()
-    !testing && log('SVG Paths setup')
+    !verbose && log('SVG Paths setup')
   } catch (e) {
     console.error(e)
   }
@@ -209,11 +209,13 @@ const deployMetadata = async (testing) => {
 }
 
 const deployContracts = async (options) => {
-  const defaultOptions = { mock: false, ignoreTesting: false }
-  const { mock, ignoreTesting } = Object.assign(defaultOptions, options)
-
+  const defaultOptions = { mock: false, verbose: false, ignoreTesting: false }
+  const { mock, ignoreTesting, verbose } = Object.assign(
+    defaultOptions,
+    options
+  )
   var networkinfo = await hre.ethers.provider.getNetwork()
-  const testing = !ignoreTesting && networkinfo['chainId'] == 12345
+  // const testing = !ignoreTesting && networkinfo['chainId'] == 12345
   const [deployer] = await hre.ethers.getSigners()
 
   // order of deployment + constructor arguments
@@ -232,17 +234,21 @@ const deployContracts = async (options) => {
   const verifiersBodies = []
 
   for (let i = 2; i <= MAX_BODY_COUNT; i++) {
-    // if (!testing && (i !== 4 || i !== 6)) continue
+    console.log({ i })
+    if (i !== 4 && i !== 6) continue
     const ticks = await getTicksRun(i, ignoreTesting)
     const name = `Game_${i}_${ticks}Verifier`
     const path = `contracts/${name}.sol:Groth16Verifier`
     const verifier = await hre.ethers.getContractFactory(path)
     const verifierContract = await verifier.deploy()
     await verifierContract.deployed()
-    !testing && log(`Verifier ${i} deployed at ${verifierContract.address}`)
+    !verbose && log(`Verifier ${i} deployed at ${verifierContract.address}`)
     verifiers.push(verifierContract.address)
+    !verbose && log(`with ${ticks} ticks`)
     verifiersTicks.push(ticks)
     verifiersBodies.push(i)
+    !verbose && log(`and ${i} bodies`)
+
     returnObject[name] = verifierContract
   }
   returnObject.verifiers = verifiers
@@ -255,7 +261,7 @@ const deployContracts = async (options) => {
   await speedruns.deployed()
   var speedrunsAddress = speedruns.address
   returnObject['Speedruns'] = speedruns
-  !testing && log('Speedruns Deployed at ' + String(speedrunsAddress))
+  !verbose && log('Speedruns Deployed at ' + String(speedrunsAddress))
 
   // deploy Metadata
   const {
@@ -266,7 +272,7 @@ const deployContracts = async (options) => {
     assets4,
     assets5,
     themeAddress
-  } = await deployMetadata(testing)
+  } = await deployMetadata(verbose)
   returnObject['ExternalMetadata'] = externalMetadata
   const externalMetadataAddress = externalMetadata.address
   returnObject['Assets1'] = assets1
@@ -291,7 +297,7 @@ const deployContracts = async (options) => {
   await anybodyProblem.deployed()
   var anybodyProblemAddress = anybodyProblem.address
   returnObject['AnybodyProblem'] = anybodyProblem
-  !testing &&
+  !verbose &&
     log(
       'AnybodyProblem Deployed at ' +
         String(anybodyProblemAddress) +
@@ -499,8 +505,8 @@ const solveLevel = async (
 }
 
 const log = (message) => {
-  const printLogs = process.env.npm_lifecycle_event !== 'test'
-  printLogs && console.log(message)
+  // const printLogs = process.env.npm_lifecycle_event !== 'test'
+  console.log(message)
 }
 
 const getParsedEventLogs = (receipt, contract, eventName) => {
@@ -580,12 +586,21 @@ const generateProof = async (
   ]
 
   const bodyFinal = results.bodyFinal
+
+  let useCircuit = bodyCount <= 4 ? 4 : 6
+  if (useCircuit !== inputData.bodies.length) {
+    const diff = useCircuit - inputData.bodies.length
+    for (let i = 0; i < diff; i++) {
+      inputData.bodies.push(['0', '0', '20000', '20000', '0'])
+    }
+  }
+
   // const outflightMissile = results.outflightMissiles
   // const startTime = Date.now()
   const dataResult = await exportCallDataGroth16(
     inputData,
-    `./public/game_${bodyCount}_${proofLength}.wasm`,
-    `./public/game_${bodyCount}_${proofLength}_final.zkey`
+    `./public/game_${useCircuit}_${proofLength}.wasm`,
+    `./public/game_${useCircuit}_${proofLength}_final.zkey`
   )
   // bodyCount = bodyCount.toNumber()
   // const endTime = Date.now()

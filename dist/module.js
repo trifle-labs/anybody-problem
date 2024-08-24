@@ -3788,6 +3788,8 @@ const $7e45a306e00e2282$export$1270c16ec3b4f45a = {
         }
         missile.position.x += missile.velocity.x;
         missile.position.y += missile.velocity.y;
+        // NOTE: Missile Limiter() circuit is lt and gt NOT lte or gte
+        // NOTE: Body is lte and gte
         if (missile.position.x > BigInt(this.windowWidth) * this.scalingFactor || missile.position.y < 0n) missile.radius = 0n;
         for(let j = 0; j < bodies.length; j++){
             const body = bodies[j];
@@ -5082,8 +5084,8 @@ var $74ac3a897fb18929$exports = {};
 $74ac3a897fb18929$exports = JSON.parse('{"address":"0x697163DcB57716DB253413B484319641b40B0649","chain":{"chainId":84532,"name":"unknown"}}');
 
 
-var $569e2b3b3a959b0f$exports = {};
-$569e2b3b3a959b0f$exports = JSON.parse('{"address":"0xf5d27243F39E8143AdcC96b9145536c24b1D9Def","chain":{"chainId":8453,"name":"unknown"}}');
+var $30d504e7d6193300$exports = {};
+$30d504e7d6193300$exports = JSON.parse('{"address":"0xf5d27243F39E8143AdcC96b9145536c24b1D9Def","chain":{"chainId":8453,"name":"unknown"}}');
 
 
 var $5931231d1de06281$exports = {};
@@ -5111,7 +5113,7 @@ const $7804ebc05fd2923d$export$3f0c1cee0e40865b = {
     networks: {
         84532: (0, (/*@__PURE__*/$parcel$interopDefault($74ac3a897fb18929$exports))),
         12345: (0, (/*@__PURE__*/$parcel$interopDefault($5931231d1de06281$exports))),
-        8453: (0, (/*@__PURE__*/$parcel$interopDefault($569e2b3b3a959b0f$exports)))
+        8453: (0, (/*@__PURE__*/$parcel$interopDefault($30d504e7d6193300$exports)))
     }
 };
 const $7804ebc05fd2923d$export$67258bae168725a6 = {
