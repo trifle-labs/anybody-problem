@@ -4,13 +4,13 @@
   "license": "CC-BY-NC-4.0",
   "targets": {
     "module": {
-      "optimize": false,
+      "optimize": true,
       "source": "src/index.js",
       "isLibrary": true
     },
     "iframe": {
       "source": "src/index.html",
-      "optimize": false
+      "optimize": true
     }
   },
   "source": "src/index.js",
