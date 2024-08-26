@@ -233,6 +233,16 @@ export async function recentSolvesToday(chain: Chain) {
   }))
 }
 
+async function getLatestBlockHeight(chain: Chain): Promise<number> {
+  const query = `
+    SELECT MAX(block_num) as latest_block
+    FROM anybody_problem_run_solved
+    WHERE src_name = $1
+  `
+  const result = await db.query(query, [chain])
+  return parseInt(result.rows[0].latest_block) || 0
+}
+
 export async function updateLeaderboard(chain: Chain) {
   const start = Date.now()
 
@@ -261,10 +271,12 @@ export async function updateLeaderboard(chain: Chain) {
   )
 
   const feed = await recentSolvesToday(chain)
+  const latestBlockHeight = await getLatestBlockHeight(chain)
 
   leaderboards[chain] = {
     daily,
-    feed
+    feed,
+    latestBlockHeight
   }
 
   console.log(
@@ -273,8 +285,14 @@ export async function updateLeaderboard(chain: Chain) {
     'leaderboard updated in',
     Date.now() - start,
     'ms with',
-    `(${doneWithDaily - start}ms for ${dailies.length} days)`
+    `(${doneWithDaily - start}ms for ${dailies.length} days)`,
+    `Latest block height: ${latestBlockHeight}`
   )
+  return {
+    daily,
+    feed,
+    latestBlockHeight
+  }
 }
 
 export async function rankToday(time) {
