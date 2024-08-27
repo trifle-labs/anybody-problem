@@ -47,12 +47,8 @@ const getPathABI = async (name) => {
 }
 
 async function readData(path) {
-  try {
-    const Newdata = await fs.readFile(path, 'utf8')
-    return Newdata
-  } catch (e) {
-    console.log('e', e)
-  }
+  const Newdata = await fs.readFile(path, 'utf8')
+  return Newdata
 }
 
 const getPathAddress = async (name) => {
@@ -124,61 +120,61 @@ const deployMetadata = async (verbose) => {
     const theme = await Theme.deploy()
     await theme.deployed()
     var themeAddress = theme.address
-    !verbose && log(themeName + ' Deployed at ' + String(themeAddress))
+    verbose && log(themeName + ' Deployed at ' + String(themeAddress))
 
     // deploy Assets1
     const Assets1 = await hre.ethers.getContractFactory('Assets1')
     let byteSize = Buffer.from(Assets1.bytecode.slice(2), 'hex').length
-    !verbose && log(`Assets1 byte size: ${byteSize} bytes`)
+    verbose && log(`Assets1 byte size: ${byteSize} bytes`)
     assets1 = await Assets1.deploy()
     await assets1.deployed()
     var assets1Address = assets1.address
-    !verbose && log('Assets1 Deployed at ' + String(assets1Address))
+    verbose && log('Assets1 Deployed at ' + String(assets1Address))
 
     // deploy Assets2
     const Assets2 = await hre.ethers.getContractFactory('Assets2')
     byteSize = Buffer.from(Assets2.bytecode.slice(2), 'hex').length
-    !verbose && log(`Assets2 byte size: ${byteSize} bytes`)
+    verbose && log(`Assets2 byte size: ${byteSize} bytes`)
     assets2 = await Assets2.deploy()
     await assets2.deployed()
     var assets2Address = assets2.address
-    !verbose && log('Assets2 Deployed at ' + String(assets2Address))
+    verbose && log('Assets2 Deployed at ' + String(assets2Address))
 
     // deploy Assets3
     const Assets3 = await hre.ethers.getContractFactory('Assets3')
     byteSize = Buffer.from(Assets3.bytecode.slice(2), 'hex').length
-    !verbose && log(`Assets3 byte size: ${byteSize} bytes`)
+    verbose && log(`Assets3 byte size: ${byteSize} bytes`)
     assets3 = await Assets3.deploy()
     await assets3.deployed()
     var assets3Address = assets3.address
-    !verbose && log('Assets3 Deployed at ' + String(assets3Address))
+    verbose && log('Assets3 Deployed at ' + String(assets3Address))
 
     // deploy Assets4
     const Assets4 = await hre.ethers.getContractFactory('Assets4')
     byteSize = Buffer.from(Assets4.bytecode.slice(2), 'hex').length
-    !verbose && log(`Assets4 byte size: ${byteSize} bytes`)
+    verbose && log(`Assets4 byte size: ${byteSize} bytes`)
     assets4 = await Assets4.deploy()
     await assets4.deployed()
     var assets4Address = assets4.address
-    !verbose && log('Assets4 Deployed at ' + String(assets4Address))
+    verbose && log('Assets4 Deployed at ' + String(assets4Address))
 
     // deploy Assets5
     const Assets5 = await hre.ethers.getContractFactory('Assets5')
     byteSize = Buffer.from(Assets5.bytecode.slice(2), 'hex').length
-    !verbose && log(`Assets5 byte size: ${byteSize} bytes`)
+    verbose && log(`Assets5 byte size: ${byteSize} bytes`)
     assets5 = await Assets5.deploy()
     await assets5.deployed()
     var assets5Address = assets5.address
-    !verbose && log('Assets5 Deployed at ' + String(assets5Address))
+    verbose && log('Assets5 Deployed at ' + String(assets5Address))
 
     // deploy ExternalMetadata
     const ExternalMetadata =
       await hre.ethers.getContractFactory('ExternalMetadata')
     byteSize = Buffer.from(ExternalMetadata.bytecode.slice(2), 'hex').length
-    !verbose && log(`ExternalMetadata byte size: ${byteSize} bytes`)
+    verbose && log(`ExternalMetadata byte size: ${byteSize} bytes`)
     externalMetadata = await ExternalMetadata.deploy(themeAddress)
     await externalMetadata.deployed()
-    !verbose &&
+    verbose &&
       log('ExternalMetadata Deployed at ' + String(externalMetadata.address))
 
     await externalMetadata.setAssets([
@@ -188,11 +184,11 @@ const deployMetadata = async (verbose) => {
       assets4Address,
       assets5Address
     ])
-    !verbose && log('Assets set')
+    verbose && log('Assets set')
 
     const tx = await externalMetadata.setupSVGPaths()
     await tx.wait()
-    !verbose && log('SVG Paths setup')
+    verbose && log('SVG Paths setup')
   } catch (e) {
     console.error(e)
   }
@@ -234,7 +230,6 @@ const deployContracts = async (options) => {
   const verifiersBodies = []
 
   for (let i = 2; i <= MAX_BODY_COUNT; i++) {
-    console.log({ i })
     if (i !== 4 && i !== 6) continue
     const ticks = await getTicksRun(i, ignoreTesting)
     const name = `Game_${i}_${ticks}Verifier`
@@ -242,12 +237,12 @@ const deployContracts = async (options) => {
     const verifier = await hre.ethers.getContractFactory(path)
     const verifierContract = await verifier.deploy()
     await verifierContract.deployed()
-    !verbose && log(`Verifier ${i} deployed at ${verifierContract.address}`)
+    verbose && log(`Verifier ${i} deployed at ${verifierContract.address}`)
     verifiers.push(verifierContract.address)
-    !verbose && log(`with ${ticks} ticks`)
+    verbose && log(`with ${ticks} ticks`)
     verifiersTicks.push(ticks)
     verifiersBodies.push(i)
-    !verbose && log(`and ${i} bodies`)
+    verbose && log(`and ${i} bodies`)
 
     returnObject[name] = verifierContract
   }
@@ -261,7 +256,7 @@ const deployContracts = async (options) => {
   await speedruns.deployed()
   var speedrunsAddress = speedruns.address
   returnObject['Speedruns'] = speedruns
-  !verbose && log('Speedruns Deployed at ' + String(speedrunsAddress))
+  verbose && log('Speedruns Deployed at ' + String(speedrunsAddress))
 
   // deploy Metadata
   const {
@@ -273,6 +268,7 @@ const deployContracts = async (options) => {
     assets5,
     themeAddress
   } = await deployMetadata(verbose)
+
   returnObject['ExternalMetadata'] = externalMetadata
   const externalMetadataAddress = externalMetadata.address
   returnObject['Assets1'] = assets1
@@ -286,22 +282,48 @@ const deployContracts = async (options) => {
   const AnybodyProblem = await hre.ethers.getContractFactory(
     mock ? 'AnybodyProblemMock' : 'AnybodyProblem'
   )
+  let anybodyProblemV0Address
+  try {
+    const pathAddress = await getPathAddress('AnybodyProblem-v0')
+    const contractData = await readData(pathAddress)
+    anybodyProblemV0Address = JSON.parse(contractData)['address']
+  } catch (e) {
+    verbose &&
+      console.log(`AnybodyProblem-v0 not found so being deployed for testing`)
+    if (networkinfo['chainId'] !== 12345) {
+      throw new Error(
+        'AnybodyProblem-v0 not found and this is not a test network'
+      )
+    }
+    const anybodyProblemv0 = await AnybodyProblem.deploy(
+      deployer.address,
+      speedrunsAddress,
+      externalMetadataAddress,
+      verifiers,
+      verifiersTicks,
+      verifiersBodies,
+      ethers.constants.AddressZero
+    )
+    anybodyProblemV0Address = anybodyProblemv0.address
+  }
+
   const anybodyProblem = await AnybodyProblem.deploy(
     deployer.address,
     speedrunsAddress,
     externalMetadataAddress,
     verifiers,
     verifiersTicks,
-    verifiersBodies
+    verifiersBodies,
+    anybodyProblemV0Address
   )
   await anybodyProblem.deployed()
   var anybodyProblemAddress = anybodyProblem.address
   returnObject['AnybodyProblem'] = anybodyProblem
-  !verbose &&
+  verbose &&
     log(
       'AnybodyProblem Deployed at ' +
         String(anybodyProblemAddress) +
-        ` with speedrunsAddress ${speedrunsAddress} and externalMetdataAddress ${externalMetadataAddress} and verifiers ${verifiers} and verifiersTicks ${verifiersTicks} and verifiersBodies ${verifiersBodies}`
+        ` with speedrunsAddress ${speedrunsAddress} and externalMetdataAddress ${externalMetadataAddress} and verifiers ${verifiers} and verifiersTicks ${verifiersTicks} and verifiersBodies ${verifiersBodies} and anybodyProblemV0Address ${anybodyProblemV0Address}`
     )
 
   // update Speedruns

@@ -18,7 +18,6 @@ import 'hardhat/console.sol';
 contract AnybodyProblem is Ownable, ERC2981 {
     uint256 public constant LEVELS = 5;
     uint256 public constant SECONDS_IN_A_DAY = 86400;
-    uint256 public constant SECONDS_IN_A_WEEK = SECONDS_IN_A_DAY * 7;
     uint256 public constant FIRST_SUNDAY_AT_6_PM_UTC = 324000;
 
     bool public paused = false;
@@ -43,6 +42,9 @@ contract AnybodyProblem is Ownable, ERC2981 {
     uint256 public constant maxVectorScaled = maxVector * scalingFactor;
     uint256 public constant windowWidth = 1000 * scalingFactor;
     uint256 public constant startingRadius = 2;
+
+    address payable public previousAB;
+    uint256 public firstDay;
 
     struct Run {
         address owner;
@@ -79,11 +81,9 @@ contract AnybodyProblem is Ownable, ERC2981 {
         uint256 streak;
     }
     mapping(address => Record) public gamesPlayed;
-    mapping(address => mapping(uint256 => uint256[7])) public weeklyRecords;
-    mapping(uint256 => address[3]) public fastestByWeek;
 
-    // NOTE: initialize with length of 1 so Runs are not 0 indexed (runId == index of the run array)
-    Run[] public runs = new Run[](1);
+    mapping(uint256 => Run) public runs; // indexed on RunId
+    uint256 public totalRuns;
 
     // mapping is body count to tickcount to address
     mapping(uint256 => mapping(uint256 => address)) public verifiers;
@@ -95,24 +95,21 @@ contract AnybodyProblem is Ownable, ERC2981 {
         address externalMetadata_,
         address[] memory verifiers_,
         uint256[] memory verifiersTicks,
-        uint256[] memory verifiersBodies
+        uint256[] memory verifiersBodies,
+        address payable previousAB_
     ) {
+        firstDay = currentDay();
+        updatePreviousAB(previousAB_);
+        if (previousAB != address(0)) {
+            totalRuns = AnybodyProblem(previousAB).runCount();
+        }
+
         updateProceedRecipient(proceedRecipient_);
         updateSpeedrunsAddress(speedruns_);
         updateExternalMetadata(externalMetadata_);
-        console.log('verifiers_.length');
-        console.log(verifiers_.length);
-        console.log('verifiersTicks.length');
-        console.log(verifiersTicks.length);
-        console.log('verifiersBodies.length');
-        console.log(verifiersBodies.length);
         for (uint256 i = 0; i < verifiers_.length; i++) {
             require(verifiersTicks[i] > 0, 'Invalid verifier');
             require(verifiers_[i] != address(0), 'Invalid verifier');
-            console.log('set verifiers[index] where index is');
-            console.log(verifiersBodies[i]);
-            console.log('and ticks is');
-            console.log(verifiersTicks[i]);
             verifiers[verifiersBodies[i]][verifiersTicks[i]] = verifiers_[i];
         }
     }
@@ -171,10 +168,10 @@ contract AnybodyProblem is Ownable, ERC2981 {
             runId = addNewRun(day);
             addNewLevelData(runId);
         }
-        require(
-            runs[runId].owner == msg.sender,
-            'Only the owner of the run can solve it'
-        );
+        // require(
+        //     runs[runId].owner == msg.sender,
+        //     'Only the owner of the run can solve it'
+        // );
         require(!runs[runId].solved, 'Run already solved');
 
         require(
@@ -195,17 +192,29 @@ contract AnybodyProblem is Ownable, ERC2981 {
             );
         }
         // TODO: decide whether this is necessary
-        // require(runs[runId].solved, 'Must solve all levels to complete run');
+        require(runs[runId].solved, 'Must solve all levels to complete run');
+    }
+
+    function nextRunId() public view returns (uint256) {
+        return runCount() + 1;
     }
 
     function runCount() public view returns (uint256) {
-        return runs.length - 1;
+        return totalRuns;
     }
 
     function getLevelsData(
         uint256 runId
     ) public view returns (Level[] memory levels) {
-        return runs[runId].levels;
+        if (!runExists(runId)) {
+            return AnybodyProblem(previousAB).getLevelsData(runId);
+        } else {
+            return runs[runId].levels;
+        }
+    }
+
+    function runExists(uint256 runId) public view returns (bool) {
+        return runs[runId].owner != address(0);
     }
 
     function generateLevelData(
@@ -301,6 +310,9 @@ contract AnybodyProblem is Ownable, ERC2981 {
     }
 
     function currentLevel(uint256 runId) public view returns (uint256) {
+        if (!runExists(runId)) {
+            return AnybodyProblem(previousAB).currentLevel(runId);
+        }
         return runs[runId].levels.length;
     }
 
@@ -310,17 +322,6 @@ contract AnybodyProblem is Ownable, ERC2981 {
     ) public view returns (bytes32) {
         return
             keccak256(abi.encodePacked(id, index, blockhash(block.number - 1)));
-    }
-
-    // TODO: fix day and week so that days and week begin at same time
-    function currentWeek() public view returns (uint256) {
-        return
-            block.timestamp -
-            ((block.timestamp - FIRST_SUNDAY_AT_6_PM_UTC) % SECONDS_IN_A_WEEK);
-    }
-
-    function timeUntilEndOfWeek() public view returns (uint256) {
-        return currentWeek() + SECONDS_IN_A_WEEK - block.timestamp;
     }
 
     function currentDay() public view returns (uint256) {
@@ -338,12 +339,16 @@ contract AnybodyProblem is Ownable, ERC2981 {
     }
 
     function addNewRun(uint256 day) internal returns (uint256 runId) {
-        runId = runs.length;
+        // new Run ID is length of run array. at start it is 1. so first run is 1, then array is 2.
+        // After new deploy, the length of the initial deploy array will be 2. The new array should be 0
+        // and then the new ID will be previous length + new length (2)
+        runId = nextRunId();
         Run memory run;
         run.owner = msg.sender;
         run.seed = generateSeed(runId, 0);
         run.day = day;
-        runs.push(run);
+        runs[runId] = run;
+        totalRuns++;
         emit RunCreated(runId, day, run.seed);
         return runId;
     }
@@ -364,19 +369,14 @@ contract AnybodyProblem is Ownable, ERC2981 {
 
         (uint256 intendedLevel, uint256 dummyCount) = getLevelFromInputs(input);
         uint256 level = currentLevel(runId);
-
+        console.log('level');
+        console.log(level);
         require(intendedLevel == level, 'Previous level not yet complete');
 
         uint256 levelIndex = level - 1;
         require(!runs[runId].levels[levelIndex].solved, 'Level already solved');
 
         uint256 bodyCount = level + 1;
-        console.log('bodyCount');
-        console.log(bodyCount);
-        console.log('dummyCount');
-        console.log(dummyCount);
-        console.log('tickCount');
-        console.log(tickCount);
         address verifier = verifiers[bodyCount + dummyCount][tickCount];
         require(verifier != address(0), 'Invalid verifier, address == 0');
         require(
@@ -443,7 +443,10 @@ contract AnybodyProblem is Ownable, ERC2981 {
 
             verifyBodyDataMatches(bodyData, input, (bodyCount + dummyCount), i);
             bodyData = extractBodyData(bodyData, input, i);
-
+            if (i == 0) {
+                console.log('new body data for body[0].px is');
+                console.log(bodyData.px);
+            }
             if (i == 0) {
                 require(
                     bodyData.radius != 0,
@@ -507,7 +510,12 @@ contract AnybodyProblem is Ownable, ERC2981 {
     }
 
     function addToLongestStreak(uint256 runId) internal {
-        uint256 day = runs[runId].day;
+        uint256 day;
+        if (runExists(runId)) {
+            day = runs[runId].day;
+        } else {
+            (, , , , day) = AnybodyProblem(previousAB).runs(runId);
+        }
         Record memory record = gamesPlayed[msg.sender];
         if (record.lastPlayed + SECONDS_IN_A_DAY != day) {
             record.streak = 1;
@@ -582,6 +590,10 @@ contract AnybodyProblem is Ownable, ERC2981 {
         // px
         // confirm previously stored values were used as input to the proof
         // uint256 pxIndex = 5 * bodyCount + i * 5 + 0 + 1 (for time);
+        console.log('bodyData.px');
+        console.log(bodyData.px);
+        console.log('input[5 + 5 * bodyCount + i * 5 + 0 + 2]');
+        console.log(input[5 + 5 * bodyCount + i * 5 + 0 + 2]);
         require(
             bodyData.px == input[5 + 5 * bodyCount + i * 5 + 0 + 2],
             'Invalid position x'
@@ -877,6 +889,10 @@ contract AnybodyProblem is Ownable, ERC2981 {
         address externalMetadata_
     ) public onlyOwner {
         externalMetadata = externalMetadata_;
+    }
+
+    function updatePreviousAB(address payable previousAB_) public onlyOwner {
+        previousAB = previousAB_;
     }
 
     function updateProceedRecipient(
