@@ -168,10 +168,10 @@ contract AnybodyProblem is Ownable, ERC2981 {
             runId = addNewRun(day);
             addNewLevelData(runId);
         }
-        // require(
-        //     runs[runId].owner == msg.sender,
-        //     'Only the owner of the run can solve it'
-        // );
+        require(
+            runs[runId].owner == msg.sender,
+            'Only the owner of the run can solve it'
+        );
         require(!runs[runId].solved, 'Run already solved');
 
         require(

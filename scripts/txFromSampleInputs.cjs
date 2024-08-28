@@ -5,7 +5,7 @@ const game_4_250_id = '01db9002-7996-4c20-9a5b-18ce6c950689' // v6
 const game_6_125_id = 'd91136ad-fe33-4ddc-bb6c-1ebb402c2f9b' // v6
 const apiKey = process.env.sindri_api_key
 
-const mint = false
+const mint = true
 let day
 
 async function main() {
@@ -20,10 +20,8 @@ async function main() {
   const { AnybodyProblem: AnybodyProblemContract } = await import(
     '../dist/module.js'
   )
-
   for (let i = 0; i < sampleInputs.length; i++) {
-    const proofDataArray = sampleInputs[i].proofData
-
+    const proofDataArray = sampleInputs[i].map((p) => p.proofData)[0]
     for (let j = 0; j < proofDataArray.length; j++) {
       day = proofDataArray[j].day
       const sampleInput = proofDataArray[j].sampleInput
@@ -38,8 +36,12 @@ async function main() {
       }
       proofData.steps = useCircuit == 4 ? 250 : 125
       const circuitId = useCircuit == 4 ? game_4_250_id : game_6_125_id
-      const proof = await sindri.proveCircuit(circuitId, sampleInput)
-      // console.log({ proof })
+      let proof
+      try {
+        proof = await sindri.proveCircuit(circuitId, sampleInput)
+      } catch (e) {
+        throw new Error(e)
+      }
       const {
         public: publicSignals,
         proof: proof_,

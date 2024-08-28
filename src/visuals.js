@@ -205,6 +205,12 @@ const replaceAttribute = (string, key, color) =>
 
 export const Visuals = {
   async draw() {
+    if (this.missileEvent) {
+      const { x, y } = this.missileEvent
+      this.missileEvent = false
+      this.processMissileClick(x, y)
+    }
+
     if (this.shaking && this.shaking > 0) {
       this.shakeScreen()
     } else {

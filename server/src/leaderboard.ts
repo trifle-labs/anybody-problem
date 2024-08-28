@@ -9,7 +9,7 @@ type LeaderboardLine = {
 type SpeedScore = LeaderboardLine & {
   player: string
   time: number
-  runId: number
+  runId: number | null
   date: string
   day: number
 }
@@ -22,6 +22,8 @@ type LevelLeaderboard = {
 type DailyLeaderboard = {
   levels: LevelLeaderboard[]
   cumulative: SpeedScore[]
+  slowest: SpeedScore[]
+  streaks: { player: string; streak: number }[]
 }
 
 type Leaderboard = {
@@ -45,7 +47,8 @@ async function calculateDailyLeaderboard(
           run_id,
           accumulative_time AS total_time,
           player,
-          ROW_NUMBER() OVER (ORDER BY accumulative_time ASC) AS rank
+          ROW_NUMBER() OVER (ORDER BY accumulative_time ASC) AS rank,
+          ROW_NUMBER() OVER (ORDER BY accumulative_time DESC) AS reverse_rank
       FROM 
         anybody_problem_run_solved
       WHERE 
@@ -57,6 +60,11 @@ async function calculateDailyLeaderboard(
     FROM ranked_cumulative_times
     WHERE rank = 1
   ),
+  slowest_runs AS (
+    SELECT run_id, player, total_time
+    FROM ranked_cumulative_times
+    WHERE reverse_rank <= 10
+  ),
   level_times AS (
     SELECT
         level,
@@ -66,6 +74,54 @@ async function calculateDailyLeaderboard(
         day
     FROM anybody_problem_level_solved
     WHERE day = ${day} AND run_id = (SELECT run_id FROM fastest_run)
+  ),
+  daily_activity AS (
+    SELECT DISTINCT player, day
+    FROM anybody_problem_run_solved
+    WHERE src_name = $1 AND day <= ${day}
+    ORDER BY player, day
+  ),
+  streak_calc AS (
+    SELECT
+        player,
+        day,
+        day - LAG(day, 1, day - 86400) OVER (PARTITION BY player ORDER BY day) AS day_diff
+    FROM daily_activity
+  ),
+  streak_groups AS (
+    SELECT
+        player,
+        day,
+        SUM(CASE WHEN day_diff > 86400 THEN 1 ELSE 0 END) OVER (PARTITION BY player ORDER BY day) AS streak_group
+    FROM streak_calc
+  ),
+  streak_lengths AS (
+    SELECT
+        player,
+        streak_group,
+        COUNT(*) AS streak_length,
+        MAX(day) AS streak_end
+    FROM streak_groups
+    GROUP BY player, streak_group
+  ),
+  player_streaks AS (
+    SELECT
+        player,
+        MAX(streak_length) AS longest_streak,
+        CASE 
+            WHEN MAX(streak_end) = ${day}
+            THEN MAX(CASE WHEN streak_end = ${day} THEN streak_length ELSE 0 END)
+            ELSE 0
+        END AS current_streak
+    FROM streak_lengths
+    GROUP BY player
+  ),
+  top_streaks AS (
+    SELECT player, current_streak
+    FROM player_streaks
+    WHERE current_streak > 0
+    ORDER BY current_streak DESC, player
+    LIMIT 10
   ),
   leaderboard AS (
       SELECT
@@ -84,19 +140,35 @@ async function calculateDailyLeaderboard(
       FROM 
           ranked_cumulative_times
       WHERE rank <= ${DAILY_CATEGORY_LIMIT}
+      UNION ALL
+      SELECT
+          -1 AS level,
+          run_id,
+          total_time AS time,
+          player
+      FROM
+          slowest_runs
+      UNION ALL
+      SELECT
+          -2 AS level,
+          NULL AS run_id,
+          current_streak AS time,
+          player
+      FROM
+          top_streaks
   )
   SELECT 
       leaderboard.level,
       leaderboard.run_id,
       leaderboard.time,
-      concat('0x', encode(player, 'hex')) as player
+      concat('0x', encode(leaderboard.player, 'hex')) as player
   FROM
       leaderboard;
   `
   const result = await db.query(q, [chain])
   function scores(rows: any[]): SpeedScore[] {
     return rows.map((r: any) => ({
-      runId: parseInt(r.run_id),
+      runId: r.run_id ? parseInt(r.run_id) : null,
       day,
       date: new Date(day * 1000).toISOString().split('T')[0],
       time: parseInt(r.time),
@@ -105,7 +177,6 @@ async function calculateDailyLeaderboard(
   }
 
   const levels: LevelLeaderboard[] = []
-  // delete the if to include level scores for every day
   const includeLevelScores = today === day
   if (includeLevelScores) {
     for (let i = 1; i <= MAX_BODY_COUNT; i++) {
@@ -118,8 +189,17 @@ async function calculateDailyLeaderboard(
     }
   }
   const cumulativeEvents = scores(result.rows.filter((r: any) => !r.level))
+  const slowestEvents = scores(result.rows.filter((r: any) => r.level === '-1'))
+  const streaks = result.rows
+    .filter((r: any) => r.level === '-2')
+    .map((r: any) => ({ player: r.player, streak: parseInt(r.time) }))
 
-  return { levels, cumulative: cumulativeEvents }
+  return {
+    levels,
+    cumulative: cumulativeEvents,
+    slowest: slowestEvents,
+    streaks
+  }
 }
 
 export async function recentSolvesToday(chain: Chain) {
