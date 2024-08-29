@@ -449,6 +449,11 @@ export class Anybody extends EventEmitter {
           this.level++
           this.restart(null, false)
         }
+        if (this.level == 0 && !this.paused) {
+          this.skipIntro()
+        } else if (this.paused) {
+          this.setPause(false)
+        }
         break
       case 'KeyR':
         if (this.level < 1) return
