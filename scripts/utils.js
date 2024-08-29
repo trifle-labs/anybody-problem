@@ -485,7 +485,9 @@ const solveLevel = async (
   // 22—26: body 2 input
   // 27—31: missile input (5 + 2 * bodyCount * 5 + 2)
 
-  const time = dataResult.Input[5 + bodyCount * 5]
+  const paddedBodyCount = bodyCount <= 4 ? 4 : 6
+
+  const time = dataResult.Input[5 + paddedBodyCount * 5]
   const mintingFee = await anybodyProblem.priceToSave()
   const discount = await anybodyProblem.discount()
   const price = (await anybodyProblem.priceToMint())
@@ -519,6 +521,10 @@ const solveLevel = async (
     tx3 = await anybodyProblem.batchSolve(...args, {
       value
     })
+    /*const receipt =*/ await tx3.wait()
+    // const logs = getParsedEventLogs(receipt, anybodyProblem, 'LevelSolved')
+    // console.dir({ logs }, { depth: null })
+    // console.log({ owner, runId, level, time, day })
     await expect(tx3)
       .to.emit(anybodyProblem, 'LevelSolved')
       .withArgs(owner, runId, level, time, day)
@@ -656,6 +662,8 @@ const generateAndSubmitProof = async (
     proofLength,
     bodyData
   )
+
+  const paddedBodyCount = bodyCount <= 4 ? 4 : 6
   // 0—4: missile output
   // 5—9: body 1 output
   // 10—14: body 2 output
@@ -667,11 +675,15 @@ const generateAndSubmitProof = async (
 
   const missileOutputIndex = 4
   const bodyOutputIndex = missileOutputIndex + bodyCount * 5
-  const timeOutputIndex = bodyOutputIndex + 1
+  const paddedBodyOutputIndex = missileOutputIndex + paddedBodyCount * 5
+  const timeOutputIndex = paddedBodyOutputIndex + 1
   const addressInputIndex = timeOutputIndex + 1
   const bodyInputIndex = addressInputIndex + bodyCount * 5
-  const missileInputIndex = bodyInputIndex + 5
-
+  const paddedBodyInputIndex = addressInputIndex + paddedBodyCount * 5
+  const missileInputIndex = paddedBodyInputIndex + 5
+  // console.dir({ bodyFinal }, { depth: null })
+  // console.dir({ inputData }, { depth: null })
+  // console.dir({ dataResult: dataResult.Input }, { depth: null })
   // console.log({
   //   missileOutputIndex,
   //   bodyOutputIndex,

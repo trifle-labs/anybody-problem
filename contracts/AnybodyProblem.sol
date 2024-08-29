@@ -2,10 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-// import {Groth16Verifier as Groth16Verifier2} from './Game_2_20Verifier.sol';
-// import {Groth16Verifier as Groth16Verifier3} from './Game_3_20Verifier.sol';
 import {Groth16Verifier as Groth16Verifier4} from './Game_4_20Verifier.sol';
-// import {Groth16Verifier as Groth16Verifier5} from './Game_5_20Verifier.sol';
 import {Groth16Verifier as Groth16Verifier6} from './Game_6_20Verifier.sol';
 
 import '@openzeppelin/contracts/token/common/ERC2981.sol';
@@ -13,7 +10,6 @@ import '@openzeppelin/contracts/access/Ownable.sol';
 import '@openzeppelin/contracts/token/ERC1155/ERC1155.sol';
 import './Speedruns.sol';
 import './ExternalMetadata.sol';
-import 'hardhat/console.sol';
 
 contract AnybodyProblem is Ownable, ERC2981 {
     uint256 public constant LEVELS = 5;
@@ -71,18 +67,83 @@ contract AnybodyProblem is Ownable, ERC2981 {
         bytes32 seed;
     }
 
-    mapping(uint256 => uint256[3]) public fastestByDay; // day => [fastest, 2nd fastest, 3rd fastest runId]
+    mapping(uint256 => uint256[3]) public fastestByDay_; // day => [fastest, 2nd fastest, 3rd fastest runId]
+
+    function fastestByDay(
+        uint256 day
+    ) public view returns (uint256[3] memory fastest) {
+        uint256[3] memory localFastest = fastestByDay_[day];
+        for (uint256 i = 0; i < 3; i++) {
+            (bool success, bytes memory data) = previousAB.staticcall(
+                abi.encodeWithSignature('fastestByDay(uint256,uint256)', day, i)
+            );
+            if (success && localFastest[i] == 0) {
+                fastest[i] = abi.decode(data, (uint256));
+            } else {
+                fastest[i] = localFastest[i];
+            }
+        }
+        return fastest;
+    }
+
+    mapping(uint256 => uint256[3]) public slowestByDay_; // day => [slowest, 2nd slowest, 3rd slowest runId]
+
+    function slowestByDay(uint256 day) public view returns (uint256[3] memory) {
+        return slowestByDay_[day];
+    }
+
     address[3] public mostGames;
     address[3] public longestStreak;
 
     struct Record {
+        bool updated;
         uint256 total;
         uint256 lastPlayed;
         uint256 streak;
     }
-    mapping(address => Record) public gamesPlayed;
+    mapping(address => Record) public gamesPlayed_;
 
-    mapping(uint256 => Run) public runs; // indexed on RunId
+    function gamesPlayed(address player) public view returns (Record memory) {
+        if (!gamesPlayed_[player].updated) {
+            Record memory previousRecord = AnybodyProblem(previousAB)
+                .gamesPlayed(player);
+            Record memory combinedRecord = Record({
+                updated: false,
+                total: gamesPlayed_[player].total + previousRecord.total,
+                lastPlayed: gamesPlayed_[player].lastPlayed,
+                streak: gamesPlayed_[player].streak
+            });
+            return combinedRecord;
+        } else {
+            return gamesPlayed_[player];
+        }
+    }
+
+    mapping(uint256 => Run) public runs_; // indexed on RunId
+
+    function runs(uint256 runId) public view returns (Run memory) {
+        if (runs_[runId].owner == address(0)) {
+            console.log('previousAB.runs(runId)');
+            console.log(previousAB);
+            console.log(runId);
+            (bool success, bytes memory data) = previousAB.staticcall(
+                abi.encodeWithSignature('runs(uint256)', runId)
+            );
+            if (success) {
+                Run memory r = abi.decode(data, (Run));
+                console.log('r');
+                console.log(r.owner);
+                console.log(r.levels.length);
+                console.log(r.levels[0].solved);
+                return r;
+            } else {
+                return runs_[runId];
+            }
+        } else {
+            return runs_[runId];
+        }
+    }
+
     uint256 public totalRuns;
 
     // mapping is body count to tickcount to address
@@ -102,6 +163,12 @@ contract AnybodyProblem is Ownable, ERC2981 {
         updatePreviousAB(previousAB_);
         if (previousAB != address(0)) {
             totalRuns = AnybodyProblem(previousAB).runCount();
+            longestStreak[0] = AnybodyProblem(previousAB).longestStreak(0);
+            longestStreak[1] = AnybodyProblem(previousAB).longestStreak(1);
+            longestStreak[2] = AnybodyProblem(previousAB).longestStreak(2);
+            mostGames[0] = AnybodyProblem(previousAB).mostGames(0);
+            mostGames[1] = AnybodyProblem(previousAB).mostGames(1);
+            mostGames[2] = AnybodyProblem(previousAB).mostGames(2);
         }
 
         updateProceedRecipient(proceedRecipient_);
@@ -169,13 +236,13 @@ contract AnybodyProblem is Ownable, ERC2981 {
             addNewLevelData(runId);
         }
         require(
-            runs[runId].owner == msg.sender,
+            runs(runId).owner == msg.sender,
             'Only the owner of the run can solve it'
         );
-        require(!runs[runId].solved, 'Run already solved');
+        require(!runs(runId).solved, 'Run already solved');
 
         require(
-            day == runs[runId].day,
+            day == runs(runId).day,
             'Can only solve runs on the current day'
         );
 
@@ -191,8 +258,8 @@ contract AnybodyProblem is Ownable, ERC2981 {
                 input[i]
             );
         }
-        // TODO: decide whether this is necessary
-        require(runs[runId].solved, 'Must solve all levels to complete run');
+        // TODO: remove for testing
+        // require(runs(runId).solved, 'Must solve all levels to complete run');
     }
 
     function nextRunId() public view returns (uint256) {
@@ -209,12 +276,12 @@ contract AnybodyProblem is Ownable, ERC2981 {
         if (!runExists(runId)) {
             return AnybodyProblem(previousAB).getLevelsData(runId);
         } else {
-            return runs[runId].levels;
+            return runs_[runId].levels;
         }
     }
 
     function runExists(uint256 runId) public view returns (bool) {
-        return runs[runId].owner != address(0);
+        return runs_[runId].owner != address(0);
     }
 
     function generateLevelData(
@@ -310,10 +377,7 @@ contract AnybodyProblem is Ownable, ERC2981 {
     }
 
     function currentLevel(uint256 runId) public view returns (uint256) {
-        if (!runExists(runId)) {
-            return AnybodyProblem(previousAB).currentLevel(runId);
-        }
-        return runs[runId].levels.length;
+        return getLevelsData(runId).length;
     }
 
     function generateSeed(
@@ -329,12 +393,12 @@ contract AnybodyProblem is Ownable, ERC2981 {
     }
 
     function addNewLevelData(uint256 runId) internal {
-        uint256 day = runs[runId].day;
+        uint256 day = runs(runId).day;
         uint256 level = currentLevel(runId) + 1;
         Level memory levelData;
         levelData.seed = generateSeed(runId, level);
         (levelData.tmpBodyData, ) = generateLevelData(day, level);
-        runs[runId].levels.push(levelData);
+        runs_[runId].levels.push(levelData);
         emit LevelCreated(runId, level, levelData.seed, day);
     }
 
@@ -347,7 +411,7 @@ contract AnybodyProblem is Ownable, ERC2981 {
         run.owner = msg.sender;
         run.seed = generateSeed(runId, 0);
         run.day = day;
-        runs[runId] = run;
+        runs_[runId] = run;
         totalRuns++;
         emit RunCreated(runId, day, run.seed);
         return runId;
@@ -369,12 +433,12 @@ contract AnybodyProblem is Ownable, ERC2981 {
 
         (uint256 intendedLevel, uint256 dummyCount) = getLevelFromInputs(input);
         uint256 level = currentLevel(runId);
-        console.log('level');
-        console.log(level);
         require(intendedLevel == level, 'Previous level not yet complete');
 
+        Level[] memory levelsData = getLevelsData(runId);
+
         uint256 levelIndex = level - 1;
-        require(!runs[runId].levels[levelIndex].solved, 'Level already solved');
+        require(!levelsData[levelIndex].solved, 'Level already solved');
 
         uint256 bodyCount = level + 1;
         address verifier = verifiers[bodyCount + dummyCount][tickCount];
@@ -387,8 +451,7 @@ contract AnybodyProblem is Ownable, ERC2981 {
 
         // confirm current inflightMissile == previous outflightMissile
         // or confirm that curren inflightMissile (x, y) == (0, windowHeight)
-        uint256[5] memory storedOutflightMissile = runs[runId]
-            .levels[levelIndex]
+        uint256[5] memory storedOutflightMissile = levelsData[levelIndex]
             .tmpInflightMissile;
         uint256[5] memory newInflightMissile = [
             input[5 + 2 * (bodyCount + dummyCount) * 5 + 2 + 0],
@@ -422,13 +485,16 @@ contract AnybodyProblem is Ownable, ERC2981 {
             input[3],
             input[4]
         ];
-        runs[runId].levels[levelIndex].tmpInflightMissile = newOutflightMissile;
+        runs_[runId]
+            .levels[levelIndex]
+            .tmpInflightMissile = newOutflightMissile;
+        levelsData[levelIndex].tmpInflightMissile = newOutflightMissile;
 
         uint256 time = input[5 + (bodyCount + dummyCount) * 5];
 
         verifyProof((bodyCount + dummyCount), verifier, a, b, c, input);
 
-        Level memory levelData = runs[runId].levels[levelIndex];
+        Level memory levelData = levelsData[levelIndex];
 
         levelData.time += time;
         require(
@@ -444,10 +510,6 @@ contract AnybodyProblem is Ownable, ERC2981 {
             verifyBodyDataMatches(bodyData, input, (bodyCount + dummyCount), i);
             bodyData = extractBodyData(bodyData, input, i);
             if (i == 0) {
-                console.log('new body data for body[0].px is');
-                console.log(bodyData.px);
-            }
-            if (i == 0) {
                 require(
                     bodyData.radius != 0,
                     'You shot the body you should protect'
@@ -458,13 +520,13 @@ contract AnybodyProblem is Ownable, ERC2981 {
             }
             levelData.tmpBodyData[i] = bodyData;
         }
-        runs[runId].levels[levelIndex] = levelData;
+        runs_[runId].levels[levelIndex] = levelData;
         if (bodiesGone == level) {
-            runs[runId].levels[levelIndex].solved = true;
+            runs_[runId].levels[levelIndex].solved = true;
             emit LevelSolved(msg.sender, runId, level, levelData.time, day);
-            runs[runId].accumulativeTime += levelData.time;
+            runs_[runId].accumulativeTime += levelData.time;
             if (level == LEVELS) {
-                runs[runId].solved = true;
+                runs_[runId].solved = true;
                 if (alsoMint) {
                     mint(priceToSave + (priceToMint / discount), day);
                 } else if (priceToSave > 0) {
@@ -473,10 +535,10 @@ contract AnybodyProblem is Ownable, ERC2981 {
                 emit RunSolved(
                     msg.sender,
                     runId,
-                    runs[runId].accumulativeTime,
+                    runs_[runId].accumulativeTime,
                     day
                 );
-                gamesPlayed[msg.sender].total++;
+                gamesPlayed_[msg.sender].total++;
                 addToLeaderboard(runId);
             } else {
                 addNewLevelData(runId);
@@ -505,28 +567,73 @@ contract AnybodyProblem is Ownable, ERC2981 {
 
     function addToLeaderboard(uint256 runId) internal {
         addToFastestByDay(runId);
+        console.log('done adding to fastest day');
         addToLongestStreak(runId);
+        console.log('done adding to longest streak');
         addToMostPlayed();
+        console.log('done adding to most played');
+    }
+
+    function addToFastestByDay(uint256 runId) internal {
+        console.log('1');
+        console.log('runId');
+        console.log(runId);
+        Run memory run = runs(runId);
+        console.log('2');
+        console.log('run.day');
+        console.log(run.day);
+        uint256[3] memory f = fastestByDay(run.day);
+        console.log(f[0]);
+        console.log(f[1]);
+        console.log(f[2]);
+        for (uint256 i = 0; i < 3; i++) {
+            console.log('3');
+
+            Run memory recordRun = runs(f[i]);
+            console.log('4');
+            // if run is faster, or if previous run is unset
+            if (
+                run.accumulativeTime < recordRun.accumulativeTime ||
+                recordRun.accumulativeTime == 0
+            ) {
+                console.log('5');
+                for (uint256 j = fastestByDay(run.day).length - 1; j > i; j--) {
+                    console.log('6');
+                    fastestByDay_[run.day][j] = fastestByDay(run.day)[j - 1];
+                }
+                console.log('7');
+                fastestByDay_[run.day][i] = runId;
+                console.log('8');
+                emitMetadataUpdate(run.day);
+                console.log('9');
+                break;
+            }
+            console.log('10');
+        }
     }
 
     function addToLongestStreak(uint256 runId) internal {
-        uint256 day;
-        if (runExists(runId)) {
-            day = runs[runId].day;
-        } else {
-            (, , , , day) = AnybodyProblem(previousAB).runs(runId);
+        uint256 day = runs(runId).day;
+        if (day != currentDay()) {
+            // TODO: confirm if we want this to be the case
+            // if the run was not completed today, don't update the streak
+            return;
         }
-        Record memory record = gamesPlayed[msg.sender];
+
+        Record memory record = gamesPlayed(msg.sender);
         if (record.lastPlayed + SECONDS_IN_A_DAY != day) {
             record.streak = 1;
         } else {
             record.streak++;
         }
         record.lastPlayed = day;
-        gamesPlayed[msg.sender] = record;
+        if (!record.updated) {
+            record.updated = true;
+        }
+        gamesPlayed_[msg.sender] = record;
 
         for (uint256 i = 0; i < longestStreak.length; i++) {
-            if (record.streak > gamesPlayed[longestStreak[i]].streak) {
+            if (record.streak > gamesPlayed(longestStreak[i]).streak) {
                 for (uint256 j = longestStreak.length - 1; j > i; j--) {
                     longestStreak[j] = longestStreak[j - 1];
                 }
@@ -537,32 +644,13 @@ contract AnybodyProblem is Ownable, ERC2981 {
     }
 
     function addToMostPlayed() internal {
-        Record memory record = gamesPlayed[msg.sender];
+        Record memory record = gamesPlayed(msg.sender);
         for (uint256 i = 0; i < mostGames.length; i++) {
-            if (record.total > gamesPlayed[mostGames[i]].total) {
+            if (record.total > gamesPlayed(mostGames[i]).total) {
                 for (uint256 j = mostGames.length - 1; j > i; j--) {
                     mostGames[j] = mostGames[j - 1];
                 }
                 mostGames[i] = msg.sender;
-                break;
-            }
-        }
-    }
-
-    function addToFastestByDay(uint256 runId) internal {
-        Run memory run = runs[runId];
-        for (uint256 i = 0; i < fastestByDay[run.day].length; i++) {
-            Run memory recordRun = runs[fastestByDay[run.day][i]];
-            // if run is faster, or if previous run is unset
-            if (
-                run.accumulativeTime < recordRun.accumulativeTime ||
-                recordRun.accumulativeTime == 0
-            ) {
-                for (uint256 j = fastestByDay[run.day].length - 1; j > i; j--) {
-                    fastestByDay[run.day][j] = fastestByDay[run.day][j - 1];
-                }
-                fastestByDay[run.day][i] = runId;
-                emitMetadataUpdate(run.day);
                 break;
             }
         }
@@ -590,10 +678,6 @@ contract AnybodyProblem is Ownable, ERC2981 {
         // px
         // confirm previously stored values were used as input to the proof
         // uint256 pxIndex = 5 * bodyCount + i * 5 + 0 + 1 (for time);
-        console.log('bodyData.px');
-        console.log(bodyData.px);
-        console.log('input[5 + 5 * bodyCount + i * 5 + 0 + 2]');
-        console.log(input[5 + 5 * bodyCount + i * 5 + 0 + 2]);
         require(
             bodyData.px == input[5 + 5 * bodyCount + i * 5 + 0 + 2],
             'Invalid position x'
@@ -636,28 +720,8 @@ contract AnybodyProblem is Ownable, ERC2981 {
         uint[2] memory c,
         uint[] memory input
     ) public view {
-        if (bodyCount == 2) {
-            revert('bodyCount != 2: all proofs are 4 bodies or 6 bodies');
-            // require(
-            //     Groth16Verifier2(verifier).verifyProof(
-            //         a,
-            //         b,
-            //         c,
-            //         convertTo32(input)
-            //     ),
-            //     'Invalid 2 body proof'
-            // );
-        } else if (bodyCount == 3) {
-            revert('bodyCount != 3: all proofs are 4 bodies or 6 bodies');
-            // require(
-            //     Groth16Verifier3(verifier).verifyProof(
-            //         a,
-            //         b,
-            //         c,
-            //         convertTo42(input)
-            //     ),
-            //     'Invalid 3 body proof'
-            // );
+        if (bodyCount == 2 || bodyCount == 3 || bodyCount == 5) {
+            revert('all proofs are 4 bodies or 6 bodies');
         } else if (bodyCount == 4) {
             require(
                 Groth16Verifier4(verifier).verifyProof(
@@ -668,17 +732,6 @@ contract AnybodyProblem is Ownable, ERC2981 {
                 ),
                 'Invalid 4 body proof'
             );
-        } else if (bodyCount == 5) {
-            revert('bodyCount != 5: all proofs are 4 bodies or 6 bodies');
-            // require(
-            //     Groth16Verifier5(verifier).verifyProof(
-            //         a,
-            //         b,
-            //         c,
-            //         convertTo62(input)
-            //     ),
-            //     'Invalid 5 body proof'
-            // );
         } else if (bodyCount == 6) {
             require(
                 Groth16Verifier6(verifier).verifyProof(
@@ -733,36 +786,6 @@ contract AnybodyProblem is Ownable, ERC2981 {
         return (bodyCount - dummyCount, dummyCount);
     }
 
-    function convertTo22(
-        uint[] memory input
-    ) public pure returns (uint[22] memory) {
-        uint[22] memory input_;
-        for (uint256 i = 0; i < 22; i++) {
-            input_[i] = input[i];
-        }
-        return input_;
-    }
-
-    function convertTo32(
-        uint[] memory input
-    ) public pure returns (uint[32] memory) {
-        uint[32] memory input_;
-        for (uint256 i = 0; i < 32; i++) {
-            input_[i] = input[i];
-        }
-        return input_;
-    }
-
-    function convertTo42(
-        uint[] memory input
-    ) public pure returns (uint[42] memory) {
-        uint[42] memory input_;
-        for (uint256 i = 0; i < 42; i++) {
-            input_[i] = input[i];
-        }
-        return input_;
-    }
-
     function convertTo52(
         uint[] memory input
     ) public pure returns (uint[52] memory) {
@@ -773,61 +796,11 @@ contract AnybodyProblem is Ownable, ERC2981 {
         return input_;
     }
 
-    function convertTo62(
-        uint[] memory input
-    ) public pure returns (uint[62] memory) {
-        uint[62] memory input_;
-        for (uint256 i = 0; i < 62; i++) {
-            input_[i] = input[i];
-        }
-        return input_;
-    }
-
     function convertTo72(
         uint[] memory input
     ) public pure returns (uint[72] memory) {
         uint[72] memory input_;
         for (uint256 i = 0; i < 72; i++) {
-            input_[i] = input[i];
-        }
-        return input_;
-    }
-
-    function convertTo82(
-        uint[] memory input
-    ) public pure returns (uint[82] memory) {
-        uint[82] memory input_;
-        for (uint256 i = 0; i < 82; i++) {
-            input_[i] = input[i];
-        }
-        return input_;
-    }
-
-    function convertTo92(
-        uint[] memory input
-    ) public pure returns (uint[92] memory) {
-        uint[92] memory input_;
-        for (uint256 i = 0; i < 92; i++) {
-            input_[i] = input[i];
-        }
-        return input_;
-    }
-
-    function convertTo102(
-        uint[] memory input
-    ) public pure returns (uint[102] memory) {
-        uint[102] memory input_;
-        for (uint256 i = 0; i < 102; i++) {
-            input_[i] = input[i];
-        }
-        return input_;
-    }
-
-    function convertTo112(
-        uint[] memory input
-    ) public pure returns (uint[112] memory) {
-        uint[112] memory input_;
-        for (uint256 i = 0; i < 112; i++) {
             input_[i] = input[i];
         }
         return input_;
@@ -867,24 +840,6 @@ contract AnybodyProblem is Ownable, ERC2981 {
         Speedruns(speedruns).emitGenericEvent(topics, data);
     }
 
-    // function emitBatchMetadataUpdate(uint256 _fromTokenId, uint256 _toTokenId) internal {
-    //   bytes32 topic = keccak256("BatchMetadataUpdate(uint256,uint256)");
-    //   bytes memory data = abi.encode(_fromTokenId, _toTokenId);
-    //     bytes32[] memory topics = new bytes32[](1);
-    //     topics[0] = topic;
-    //   Speedruns(speedruns).emitGenericEvent(topics, data);
-    // }
-    // function exampleEmitMultipleIndexEvent(uint256 _fromTokenId, uint256 _toTokenId, address who) internal {
-    //     bytes32 topic = keccak256("BatchMetadataUpdateIndexed(uint256,uint256,address)");
-    //     bytes32 topicFrom = bytes32(abi.encode(_fromTokenId));
-    //     bytes32 topicTo = bytes32(abi.encode(_toTokenId));
-    //     bytes memory data = abi.encode(who);
-    //     bytes32[] memory topics = new bytes32[](3);
-    //     topics[0] = topic;
-    //     topics[1] = topicFrom;
-    //     topics[2] = topicTo;
-    //     Speedruns(speedruns).emitGenericEvent(topics, data);
-    // }
     function updateExternalMetadata(
         address externalMetadata_
     ) public onlyOwner {

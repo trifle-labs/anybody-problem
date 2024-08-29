@@ -24,7 +24,7 @@
     "serve": "rm -rf .parcel-cache && yarn parcel src/index.html --open",
     "chain": "hardhat node",
     "circom": "./scripts/basic_circom.sh",
-    "circom:game-test": "yarn circom game_2_20 && yarn circom game_3_20 && yarn circom game_4_20 && yarn circom game_5_20 && yarn circom game_6_20",
+    "circom:game-test": "yarn circom game_4_20 && yarn circom game_6_20",
     "circom:game-prod": "yarn circom game_4_250 && yarn circom game_6_125",
     "deploy": "hardhat run scripts/deploy.cjs",
     "test:circom": "ls test/*.js | grep -v -e 'bodies' -e 'problems' -e 'solver' -e 'problemMetadata' -e 'bodyMetadata' | xargs npx hardhat test",

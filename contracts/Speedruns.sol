@@ -142,7 +142,7 @@ contract Speedruns is ERC1155, Ownable {
         uint256 amount,
         bytes memory data
     ) public override(ERC1155) {
-        (bool success, bytes memory data) = anybodyProblem.call(
+        (bool success, ) = anybodyProblem.call(
             abi.encodeWithSignature(
                 'speedrunsSafeTransferFrom(address,address,uint256,uint256,bytes)',
                 from,

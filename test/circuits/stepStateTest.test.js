@@ -244,7 +244,7 @@ describe('stepStateTest circuit', () => {
     await circuit.checkConstraints(witness)
   })
 
-  it.only('passes one off check input', async () => {
+  it('passes one off check input', async () => {
     const inflightMissile = checkSampleInput.inflightMissile
 
     const steps = checkSampleInput.missiles.length - 1
@@ -311,7 +311,7 @@ describe('stepStateTest circuit', () => {
         abMissiles[0].radius
       ]
     }
-    console.dir({ expected }, { depth: null })
+    // console.dir({ expected }, { depth: null })
     // console.dir({ checkSampleInput }, { depth: null })
     await circuit.assertOut(witness, expected)
   })

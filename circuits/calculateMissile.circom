@@ -106,19 +106,19 @@ template CalculateMissile() {
   // first confirm if the new position is 0
   component calcMissileIsZeroX = IsZero();
   calcMissileIsZeroX.in <== calcMissilePositionLimiterX.out;
-// TODO: add back
-  // // next confirm whether the original position was also 0
-  // component originalXIsZero = IsZero();
-  // originalXIsZero.in <== new_pos[0];
 
-  // // save the result as a NOT
-  // component originalXIsNotZero = NOT();
-  // originalXIsNotZero.in <== originalXIsZero.out;
+  // next confirm whether the original position was also 0
+  component originalXIsZero = IsZero();
+  originalXIsZero.in <== new_pos[0];
 
-  // // if the new position is 0 and the original position is not 0 then the radius should go to 0
-  // component makeRadiusZero = AND();
-  // makeRadiusZero.a <== originalXIsNotZero.out;
-  // makeRadiusZero.b <== calcMissileIsZeroX.out;
+  // save the result as a NOT
+  component originalXIsNotZero = NOT();
+  originalXIsNotZero.in <== originalXIsZero.out;
+
+  // if the new position is 0 and the original position is not 0 then the radius should go to 0
+  component makeRadiusZero = AND();
+  makeRadiusZero.a <== originalXIsNotZero.out;
+  makeRadiusZero.b <== calcMissileIsZeroX.out;
 
   // radius should go to 0 if new x position is 0 BUT original X is NOT 0
   // radius should go to 0 if new x position is 0 AND original X is NOT 0
@@ -128,10 +128,8 @@ template CalculateMissile() {
   component muxXDecidesRadius = Mux1();
   muxXDecidesRadius.c[0] <== in_missile[4];
   muxXDecidesRadius.c[1] <== 0;
-  // TODO: add back
-  // muxXDecidesRadius.s <== makeRadiusZero.out;
-  muxXDecidesRadius.s <== calcMissileIsZeroX.out;
-  // log("muxXDecidesRadius", muxXDecidesRadius);
+  muxXDecidesRadius.s <== makeRadiusZero.out;
+
   // Since the plane goes from 0 to windowWidthScaled on the y axis from top to bottom
   // the missile will approach 0 after starting at windowWidthScaled
   // check whether it goes below 0 by using the maxMissileVectorScaled as a buffer
@@ -142,7 +140,6 @@ template CalculateMissile() {
   // log("new_pos[1]", new_pos[1]);
   // log("positionLowerLimiterY in", new_pos[1]);
   // log("positionLowerLimiterY limit", maxMissileVectorScaled);
-  // also check the general overboard logic. Would be an edge case but possible.
   component positionLowerLimiterY = LowerLimiter(20); // TODO: confirm type matches bit limit
   positionLowerLimiterY.in <== new_pos[1] + maxMissileVectorScaled; // maxBits: 20 (maxNum: 1_030_000)
   positionLowerLimiterY.limit <== maxMissileVectorScaled; // maxBits: 15 (maxNum: 30_000)
