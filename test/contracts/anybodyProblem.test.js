@@ -4,6 +4,8 @@ const ethers = hre.ethers
 
 import {
   deployContracts,
+  // deployContractsV0,
+  // deployAnybodyProblemV1,
   /*splitterAddress,*/
   getParsedEventLogs,
   solveLevel,
@@ -239,7 +241,7 @@ describe('AnybodyProblem Tests', function () {
     ).to.be.revertedWith('Contract is paused')
   })
 
-  it.only('solves all levels async using mock', async () => {
+  it('solves all levels async using mock', async () => {
     const [owner, acct1] = await ethers.getSigners()
     const { AnybodyProblem: anybodyProblem, Speedruns: speedruns } =
       await deployContracts({ mock: true })
@@ -271,7 +273,7 @@ describe('AnybodyProblem Tests', function () {
     await expect(tx)
       .to.emit(anybodyProblem, 'RunSolved')
       .withArgs(owner.address, runId, accumulativeTime, day)
-
+    console.log('donedonedone')
     const mintingFee = await anybodyProblem.priceToSave()
     const discount = await anybodyProblem.discount()
     const price = (await anybodyProblem.priceToMint())
@@ -287,8 +289,8 @@ describe('AnybodyProblem Tests', function () {
     const speedrunBalance = await speedruns.balanceOf(owner.address, day)
     expect(speedrunBalance).to.equal(1)
 
-    const fastestRun = await anybodyProblem.fastestByDay(day, 0)
-    expect(fastestRun).to.equal(runId)
+    const fastestRuns = await anybodyProblem.fastestByDay(day)
+    expect(fastestRuns[0]).to.equal(runId)
 
     const mostGames = await anybodyProblem.mostGames(0)
     expect(mostGames).to.equal(owner.address)
@@ -352,8 +354,8 @@ describe('AnybodyProblem Tests', function () {
     const speedrunBalance = await speedruns.balanceOf(owner.address, day)
     expect(speedrunBalance).to.equal(1)
 
-    const fastestRun = await anybodyProblem.fastestByDay(day, 0)
-    expect(fastestRun).to.equal(finalRunId)
+    const fastestRuns = await anybodyProblem.fastestByDay(day)
+    expect(fastestRuns[0]).to.equal(finalRunId)
 
     const mostGames = await anybodyProblem.mostGames(0)
     expect(mostGames).to.equal(owner.address)
@@ -505,6 +507,16 @@ describe('AnybodyProblem Tests', function () {
     runId = solvedReturn.runId
     const newCurrentLevel = await anybodyProblem.currentLevel(runId)
     expect(newCurrentLevel).to.equal(2)
+  })
+
+  it.only('performs an upgrade and the records are correct', async () => {
+    // const { AnybodyProblemV0: anybodyProblemV0 } = await deployContractsV0()
+    // play a game on v0 contract
+    // check whether game is fastest, slowest and longest streak
+    // deploy upgraded contract
+    // const { AnybodyProblem: anybodyProblem } = await deployAnybodyProblemV1()
+    // play a game on upgraded contract that is faster (or same)
+    // check whether both players are included in fastest, slowest and longest streak
   })
 
   // TODO: add exhaustive tests for topic and types

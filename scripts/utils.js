@@ -18,9 +18,10 @@ const proverTickIndex = {
 }
 const MAX_BODY_COUNT = 6
 
-const getTicksRun = async (bodyCount, ignoreTesting = false) => {
+const getTicksRun = async (bodyCount) => {
+  const ignoreTesting = global.ignoreTesting
   const networkInfo = await hre.ethers.provider.getNetwork()
-  if (!ignoreTesting && networkInfo['chainId'] == 12345) {
+  if (networkInfo['chainId'] == 12345 && !ignoreTesting) {
     return 20
   } else {
     return proverTickIndex[bodyCount]
@@ -40,8 +41,9 @@ const getPathABI = async (name) => {
   var networkinfo = await hre.ethers.provider.getNetwork()
   var savePath = path.join(
     __dirname,
+    'server',
     'contractData',
-    'ABI-' + String(networkinfo['name']) + '-' + String(name) + '.json'
+    'ABI-' + String(networkinfo['chainId']) + '-' + String(name) + '.json'
   )
   return savePath
 }
@@ -55,36 +57,40 @@ const getPathAddress = async (name) => {
   var networkinfo = await hre.ethers.provider.getNetwork()
   var savePath = path.join(
     __dirname,
+    'server',
     'contractData',
-    String(networkinfo['name']) + '-' + String(name) + '.json'
+    String(networkinfo['chainId']) + '-' + String(name) + '.json'
   )
   return savePath
 }
 
-const initContracts = async (getSigners = true) => {
-  let owner
-  if (getSigners) {
-    ;[owner] = await hre.ethers.getSigners()
-  }
+const initContracts = async () => {
+  let [owner] = await hre.ethers.getSigners()
 
-  const contractNames = ['AnybodyProblem', 'Runs']
-  for (let i = 3; i <= 10; i++) {
-    contractNames.push(`Game_${i}_20Verifier.sol`)
+  const contractNames = [
+    'AnybodyProblemV0',
+    'AnybodyProblem',
+    'Speedruns',
+    'ExternalMetadata'
+  ]
+  for (let i = 3; i <= 6; i++) {
+    const ticks = await getTicksRun(i)
+    contractNames.push(`Game_${i}_${ticks}Verifier`)
   }
 
   let returnObject = {}
 
   for (let i = 0; i < contractNames.length; i++) {
-    const address = JSON.parse(
-      await readData(await getPathAddress(contractNames[i]))
-    )['address']
-    const abi = JSON.parse(await readData(await getPathABI(contractNames[i])))[
-      'abi'
-    ]
-    if (getSigners) {
+    try {
+      const address = JSON.parse(
+        await readData(await getPathAddress(contractNames[i]))
+      )['address']
+      const abi = JSON.parse(
+        await readData(await getPathABI(contractNames[i]))
+      )['abi']
       returnObject[contractNames[i]] = new ethers.Contract(address, abi, owner)
-    } else {
-      returnObject[contractNames[i]] = new ethers.Contract(address, abi)
+    } catch (e) {
+      console.log({ e })
     }
   }
 
@@ -110,7 +116,108 @@ const getThemeName = (chainId) => {
   }
 }
 
-const deployMetadata = async (verbose) => {
+const deployAnybodyProblemV1 = async (options) => {
+  const defaultOptions = { mock: false, ignoreTesting: false }
+  const { mock, ignoreTesting } = Object.assign(defaultOptions, options)
+  global.ignoreTesting = ignoreTesting
+  global.networkinfo = await hre.ethers.provider.getNetwork()
+  log('Deploying v1 contracts')
+
+  const [deployer] = await hre.ethers.getSigners()
+
+  const returnObject = {}
+  const verifiers = []
+  const verifiersTicks = []
+  const verifiersBodies = []
+
+  // redeploy the verifiers, this time only 2 of them
+  for (let i = 2; i <= MAX_BODY_COUNT; i++) {
+    if (i !== 4 && i !== 6) continue
+    const ticks = await getTicksRun(i, ignoreTesting)
+    const name = `Game_${i}_${ticks}Verifier`
+    const path = `contracts/${name}.sol:Groth16Verifier`
+    const verifier = await hre.ethers.getContractFactory(path)
+    const verifierContract = await verifier.deploy()
+    await verifierContract.deployed()
+    log(`Verifier ${i} deployed at ${verifierContract.address}`)
+    verifiers.push(verifierContract.address)
+    log(`with ${ticks} ticks`)
+    verifiersTicks.push(ticks)
+    verifiersBodies.push(i)
+    log(`and ${i} bodies`)
+
+    returnObject[name] = verifierContract
+  }
+  returnObject.verifiers = verifiers
+  returnObject.verifiersTicks = verifiersTicks
+  returnObject.verifiersBodies = verifiersBodies
+
+  // use the already deployed speedruns contract and external metadata contract
+  const {
+    Speedruns: speedruns,
+    ExternalMetadata: externalMetadata,
+    AnybodyProblemV0: anybodyProblemV0
+  } = await initContracts()
+
+  // deploy AnybodyProblem
+  const AnybodyProblem = await hre.ethers.getContractFactory(
+    mock ? 'AnybodyProblemMock' : 'AnybodyProblem'
+  )
+
+  const constructorArguments = [
+    deployer.address,
+    speedruns.address,
+    externalMetadata.address,
+    verifiers,
+    verifiersTicks,
+    verifiersBodies,
+    anybodyProblemV0.address
+  ]
+
+  const anybodyProblem = await AnybodyProblem.deploy(...constructorArguments)
+  await anybodyProblem.deployed()
+
+  returnObject['AnybodyProblem'] = anybodyProblem
+
+  log(
+    'AnybodyProblem Deployed at ' +
+      String(anybodyProblem.address) +
+      ` with speedrunsAddress ${speedruns.address} and externalMetdataAddress ${externalMetadata.address} and verifiers ${verifiers} and verifiersTicks ${verifiersTicks} and verifiersBodies ${verifiersBodies} and anybodyProblemV0Address ${anybodyProblemV0.Address}`
+  )
+
+  // update Speedruns
+  await speedruns.updateAnybodyProblemAddress(anybodyProblem.address)
+  log('AnybodyProblem address updated in Speedruns')
+
+  // update ExternalMetadata
+  await externalMetadata.updateAnybodyProblemAddress(anybodyProblem.address)
+  log('AnybodyProblem address updated in ExternalMetadata')
+
+  // // ensure v0 is properly saved before overwriting it
+  // const pathAddress = await getPathAddress('AnybodyProblem-v0')
+  // const originalAbiPath = await getPathABI('AnybodyProblem-v0')
+  // try {
+  //   JSON.parse(await readData(pathAddress))
+  //   await readData(originalAbiPath)
+  // } catch (e) {
+  //   throw new Error('Dont overwrite AnybodyProblem until v0 exists')
+  // }
+
+  await copyABI('AnybodyProblem')
+  await saveAddress(anybodyProblem, 'AnybodyProblem')
+
+  const verificationData = [
+    {
+      name: 'AnybodyProblem',
+      constructorArguments
+    }
+  ]
+  returnObject['verificationData'] = verificationData
+
+  return returnObject
+}
+
+const deployMetadata = async () => {
   let externalMetadata, assets1, assets2, assets3, assets4, assets5
   try {
     const network = await hre.ethers.provider.getNetwork()
@@ -120,62 +227,62 @@ const deployMetadata = async (verbose) => {
     const theme = await Theme.deploy()
     await theme.deployed()
     var themeAddress = theme.address
-    verbose && log(themeName + ' Deployed at ' + String(themeAddress))
+    log(themeName + ' Deployed at ' + String(themeAddress))
 
     // deploy Assets1
     const Assets1 = await hre.ethers.getContractFactory('Assets1')
     let byteSize = Buffer.from(Assets1.bytecode.slice(2), 'hex').length
-    verbose && log(`Assets1 byte size: ${byteSize} bytes`)
+    log(`Assets1 byte size: ${byteSize} bytes`)
     assets1 = await Assets1.deploy()
     await assets1.deployed()
     var assets1Address = assets1.address
-    verbose && log('Assets1 Deployed at ' + String(assets1Address))
+    log('Assets1 Deployed at ' + String(assets1Address))
 
     // deploy Assets2
     const Assets2 = await hre.ethers.getContractFactory('Assets2')
     byteSize = Buffer.from(Assets2.bytecode.slice(2), 'hex').length
-    verbose && log(`Assets2 byte size: ${byteSize} bytes`)
+    log(`Assets2 byte size: ${byteSize} bytes`)
     assets2 = await Assets2.deploy()
     await assets2.deployed()
     var assets2Address = assets2.address
-    verbose && log('Assets2 Deployed at ' + String(assets2Address))
+    log('Assets2 Deployed at ' + String(assets2Address))
 
     // deploy Assets3
     const Assets3 = await hre.ethers.getContractFactory('Assets3')
     byteSize = Buffer.from(Assets3.bytecode.slice(2), 'hex').length
-    verbose && log(`Assets3 byte size: ${byteSize} bytes`)
+    log(`Assets3 byte size: ${byteSize} bytes`)
     assets3 = await Assets3.deploy()
     await assets3.deployed()
     var assets3Address = assets3.address
-    verbose && log('Assets3 Deployed at ' + String(assets3Address))
+    log('Assets3 Deployed at ' + String(assets3Address))
 
     // deploy Assets4
     const Assets4 = await hre.ethers.getContractFactory('Assets4')
     byteSize = Buffer.from(Assets4.bytecode.slice(2), 'hex').length
-    verbose && log(`Assets4 byte size: ${byteSize} bytes`)
+    log(`Assets4 byte size: ${byteSize} bytes`)
     assets4 = await Assets4.deploy()
     await assets4.deployed()
     var assets4Address = assets4.address
-    verbose && log('Assets4 Deployed at ' + String(assets4Address))
+    log('Assets4 Deployed at ' + String(assets4Address))
 
     // deploy Assets5
     const Assets5 = await hre.ethers.getContractFactory('Assets5')
     byteSize = Buffer.from(Assets5.bytecode.slice(2), 'hex').length
-    verbose && log(`Assets5 byte size: ${byteSize} bytes`)
+    log(`Assets5 byte size: ${byteSize} bytes`)
     assets5 = await Assets5.deploy()
     await assets5.deployed()
     var assets5Address = assets5.address
-    verbose && log('Assets5 Deployed at ' + String(assets5Address))
+    log('Assets5 Deployed at ' + String(assets5Address))
 
     // deploy ExternalMetadata
     const ExternalMetadata =
       await hre.ethers.getContractFactory('ExternalMetadata')
     byteSize = Buffer.from(ExternalMetadata.bytecode.slice(2), 'hex').length
-    verbose && log(`ExternalMetadata byte size: ${byteSize} bytes`)
+    log(`ExternalMetadata byte size: ${byteSize} bytes`)
     externalMetadata = await ExternalMetadata.deploy(themeAddress)
     await externalMetadata.deployed()
-    verbose &&
-      log('ExternalMetadata Deployed at ' + String(externalMetadata.address))
+
+    log('ExternalMetadata Deployed at ' + String(externalMetadata.address))
 
     await externalMetadata.setAssets([
       assets1Address,
@@ -184,11 +291,11 @@ const deployMetadata = async (verbose) => {
       assets4Address,
       assets5Address
     ])
-    verbose && log('Assets set')
+    log('Assets set')
 
     const tx = await externalMetadata.setupSVGPaths()
     await tx.wait()
-    verbose && log('SVG Paths setup')
+    log('SVG Paths setup')
   } catch (e) {
     console.error(e)
   }
@@ -205,24 +312,52 @@ const deployMetadata = async (verbose) => {
 }
 
 const deployContracts = async (options) => {
-  const defaultOptions = { mock: false, verbose: false, ignoreTesting: false }
-  const { mock, ignoreTesting, verbose } = Object.assign(
-    defaultOptions,
-    options
-  )
-  var networkinfo = await hre.ethers.provider.getNetwork()
-  // const testing = !ignoreTesting && networkinfo['chainId'] == 12345
+  const deployedContracts0 = await deployContractsV0(options)
+  await saveAndVerifyContracts(deployedContracts0)
+  const deployedContracts1 = await deployAnybodyProblemV1(options)
+  await saveAndVerifyContracts(deployedContracts0)
+  return { ...deployedContracts0, ...deployedContracts1 }
+}
+
+const saveAndVerifyContracts = async (deployedContracts) => {
+  const networkInfo = await hre.ethers.provider.getNetwork()
+  for (const contractName in deployedContracts) {
+    if (
+      contractName == 'verificationData' ||
+      contractName == 'verifiers' ||
+      contractName == 'verifiersTicks' ||
+      contractName == 'verifiersBodies'
+    )
+      continue
+    if (contractName.indexOf('Verifier') > -1) {
+      await copyABI(contractName, 'Groth16Verifier')
+    } else if (contractName.indexOf('ThemeGroup') > -1) {
+      const theme = getThemeName(networkInfo['chainId'])
+      const genericName = theme.split(':')[1]
+      const regex = /\/(.*?)\.sol/
+      const match = theme.match(regex)
+      const themeName = match ? match[1] : ''
+      await copyABI(themeName, genericName)
+    } else {
+      await copyABI(contractName)
+    }
+    const contract = deployedContracts[contractName]
+    await saveAddress(contract, contractName)
+  }
+  if (deployedContracts.verificationData) {
+    await verifyContracts(deployedContracts)
+  }
+}
+
+const deployContractsV0 = async (options) => {
+  const defaultOptions = { mock: false, ignoreTesting: false }
+  const { mock, ignoreTesting } = Object.assign(defaultOptions, options)
+  global.ignoreTesting = ignoreTesting
+  const networkinfo = await hre.ethers.provider.getNetwork()
+  global.networkinfo = networkinfo
+  log('Deploying v0 contracts')
+
   const [deployer] = await hre.ethers.getSigners()
-
-  // order of deployment + constructor arguments
-
-  // Nft_3_20Verifier (no args)
-  // ...
-  // Nft_10_20Verifier (no args)
-  // Speedruns (no args)
-  // AnybodyProblem (recipient, speedruns.address, address[10] verifiers, uint[10] verifiersTicks, uint[10] verifiersBodies)
-
-  // Speedruns.updateAnybodyProblemAddress(anybodyProblem.address)
 
   const returnObject = {}
   const verifiers = []
@@ -230,19 +365,18 @@ const deployContracts = async (options) => {
   const verifiersBodies = []
 
   for (let i = 2; i <= MAX_BODY_COUNT; i++) {
-    if (i !== 4 && i !== 6) continue
-    const ticks = await getTicksRun(i, ignoreTesting)
+    const ticks = await getTicksRun(i)
     const name = `Game_${i}_${ticks}Verifier`
     const path = `contracts/${name}.sol:Groth16Verifier`
     const verifier = await hre.ethers.getContractFactory(path)
     const verifierContract = await verifier.deploy()
     await verifierContract.deployed()
-    verbose && log(`Verifier ${i} deployed at ${verifierContract.address}`)
+    log(`Verifier ${i} deployed at ${verifierContract.address}`)
     verifiers.push(verifierContract.address)
-    verbose && log(`with ${ticks} ticks`)
+    log(`with ${ticks} ticks`)
     verifiersTicks.push(ticks)
     verifiersBodies.push(i)
-    verbose && log(`and ${i} bodies`)
+    log(`and ${i} bodies`)
 
     returnObject[name] = verifierContract
   }
@@ -254,9 +388,8 @@ const deployContracts = async (options) => {
   const Speedruns = await hre.ethers.getContractFactory('Speedruns')
   const speedruns = await Speedruns.deploy()
   await speedruns.deployed()
-  var speedrunsAddress = speedruns.address
   returnObject['Speedruns'] = speedruns
-  verbose && log('Speedruns Deployed at ' + String(speedrunsAddress))
+  log('Speedruns Deployed at ' + String(speedruns.address))
 
   // deploy Metadata
   const {
@@ -267,10 +400,9 @@ const deployContracts = async (options) => {
     assets4,
     assets5,
     themeAddress
-  } = await deployMetadata(verbose)
+  } = await deployMetadata()
 
   returnObject['ExternalMetadata'] = externalMetadata
-  const externalMetadataAddress = externalMetadata.address
   returnObject['Assets1'] = assets1
   returnObject['Assets2'] = assets2
   returnObject['Assets3'] = assets3
@@ -278,61 +410,94 @@ const deployContracts = async (options) => {
   returnObject['Assets5'] = assets5
   returnObject['ThemeGroup'] = themeAddress
 
-  // deploy AnybodyProblem
-  const AnybodyProblem = await hre.ethers.getContractFactory(
-    mock ? 'AnybodyProblemMock' : 'AnybodyProblem'
-  )
-  let anybodyProblemV0Address
-  try {
-    const pathAddress = await getPathAddress('AnybodyProblem-v0')
-    const contractData = await readData(pathAddress)
-    anybodyProblemV0Address = JSON.parse(contractData)['address']
-  } catch (e) {
-    verbose &&
-      console.log(`AnybodyProblem-v0 not found so being deployed for testing`)
-    if (networkinfo['chainId'] !== 12345) {
-      throw new Error(
-        'AnybodyProblem-v0 not found and this is not a test network'
-      )
-    }
-    const anybodyProblemv0 = await AnybodyProblem.deploy(
-      deployer.address,
-      speedrunsAddress,
-      externalMetadataAddress,
-      verifiers,
-      verifiersTicks,
-      verifiersBodies,
-      ethers.constants.AddressZero
-    )
-    anybodyProblemV0Address = anybodyProblemv0.address
-  }
+  // const pathAddress = (await getPathAddress('AnybodyProblem-v0'))
+  //   .replace(networkinfo.name, '8453')
+  //   .replace(networkinfo.chainId, '8453')
+  // const contractData = JSON.parse(await readData(pathAddress))
+  // const creationBytecode = contractData.contractCreation
+  // const originalAbiPath = (await getPathABI('AnybodyProblem-v0'))
+  //   .replace(networkinfo.name, '8453')
+  //   .replace(networkinfo.chainId, '8453')
+  // const originalAbi = await readData(originalAbiPath)
+  // const constructorArgs = [
+  //   deployer.address,
+  //   speedrunsAddress,
+  //   externalMetadataAddress,
+  //   verifiers,
+  //   verifiersTicks,
+  //   verifiersBodies
+  // ]
+  // const iface = new ethers.utils.Interface(originalAbi)
+  // const encodedArgs = iface.encodeDeploy(constructorArgs)
+  // const deploymentBytecode = '0x' + creationBytecode + encodedArgs.slice(2) // Remove '0x' from encoded args
+  // const tx = await deployer.sendTransaction({
+  //   data: deploymentBytecode
+  // })
+  // const receipt = await tx.wait()
+  // const anybodyProblem = new ethers.Contract(
+  //   receipt.contractAddress,
+  //   originalAbi,
+  //   deployer
+  // )
 
-  const anybodyProblem = await AnybodyProblem.deploy(
+  // deploy AnybodyProblem
+  const AnybodyProblemV0 = await hre.ethers.getContractFactory(
+    mock ? 'AnybodyProblemMock' : 'AnybodyProblemV0'
+  )
+
+  const constructorArgs = [
     deployer.address,
-    speedrunsAddress,
-    externalMetadataAddress,
+    speedruns.address,
+    externalMetadata.address,
     verifiers,
     verifiersTicks,
-    verifiersBodies,
-    anybodyProblemV0Address
+    verifiersBodies
+  ]
+
+  const anybodyProblemV0 = await AnybodyProblemV0.deploy(...constructorArgs)
+  await anybodyProblemV0.deployed()
+
+  returnObject['AnybodyProblemV0'] = anybodyProblemV0
+
+  log(
+    'AnybodyProblemV0 Deployed at ' +
+      String(anybodyProblemV0.address) +
+      ` with speedrunsAddress ${speedruns.address} and externalMetdataAddress ${externalMetadata.address} and verifiers ${verifiers} and verifiersTicks ${verifiersTicks} and verifiersBodies ${verifiersBodies}`
   )
-  await anybodyProblem.deployed()
-  var anybodyProblemAddress = anybodyProblem.address
-  returnObject['AnybodyProblem'] = anybodyProblem
-  verbose &&
-    log(
-      'AnybodyProblem Deployed at ' +
-        String(anybodyProblemAddress) +
-        ` with speedrunsAddress ${speedrunsAddress} and externalMetdataAddress ${externalMetadataAddress} and verifiers ${verifiers} and verifiersTicks ${verifiersTicks} and verifiersBodies ${verifiersBodies} and anybodyProblemV0Address ${anybodyProblemV0Address}`
-    )
 
   // update Speedruns
-  await speedruns.updateAnybodyProblemAddress(anybodyProblemAddress)
+  await speedruns.updateAnybodyProblemAddress(anybodyProblemV0.address)
+  log('AnybodyProblemV0 address updated in Speedruns')
 
   // update ExternalMetadata
-  await externalMetadata.updateAnybodyProblemAddress(anybodyProblemAddress)
-  await externalMetadata.updateSpeedrunsAddress(speedrunsAddress)
+  await externalMetadata.updateAnybodyProblemAddress(anybodyProblemV0.address)
+  log('AnybodyProblemV0 address updated in ExternalMetadata')
+  await externalMetadata.updateSpeedrunsAddress(speedruns.address)
+  log('Speedruns address updated in ExternalMetadata')
 
+  const verificationData = [
+    {
+      name: 'ExternalMetadata',
+      constructorArguments: [themeAddress]
+    },
+    {
+      name: 'Speedruns',
+      constructorArguments: []
+    },
+    {
+      name: 'AnybodyProblemV0',
+      constructorArguments: constructorArgs
+    }
+  ]
+
+  returnObject.verificationData = verificationData
+
+  return returnObject
+}
+
+const verifyContracts = async (returnObject) => {
+  const networkinfo = await hre.ethers.provider.getNetwork()
+  const deployer = await hre.ethers.getSigner()
   // verify contract if network ID is mainnet goerli or sepolia
   if (
     networkinfo['chainId'] == 5 ||
@@ -342,30 +507,23 @@ const deployContracts = async (options) => {
     networkinfo['chainId'] == 84532 ||
     networkinfo['chainId'] == 8453
   ) {
-    const verificationData = [
-      {
-        name: 'ExternalMetadata',
-        constructorArguments: [themeAddress]
-      },
-      {
-        name: 'Speedruns',
-        constructorArguments: []
-      },
-      {
-        name: 'AnybodyProblem',
-        constructorArguments: [
-          deployer.address,
-          speedrunsAddress,
-          externalMetadataAddress,
-          verifiers,
-          verifiersTicks,
-          verifiersBodies
-        ]
+    const verificationData = returnObject.verificationData
+    for (let i = 0; i < verificationData.length; i++) {
+      await new Promise((r) => setTimeout(r, 1000))
+      log(`Verifying ${verificationData[i].name} Contract`)
+      try {
+        await hre.run('verify:verify', {
+          address: returnObject[verificationData[i].name].address,
+          constructorArguments: verificationData[i].constructorArguments
+        })
+      } catch (e) {
+        i--
+        await new Promise((r) => setTimeout(r, 1000))
+        log({ e, verificationData: verificationData[i] })
       }
-    ]
-
-    returnObject.verificationData = verificationData
+    }
   } else if (networkinfo['chainId'] == 12345) {
+    // This is so dev accounts have spending money on local chain
     await deployer.sendTransaction({
       to: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
       value: ethers.utils.parseEther('1.0')
@@ -374,27 +532,6 @@ const deployContracts = async (options) => {
       to: '0xc795344b1b30E3CfEE1AFA1D5204B141940CF445',
       value: ethers.utils.parseEther('1.0')
     })
-  }
-
-  return returnObject
-}
-
-const verifyContracts = async (returnObject, contractToUse) => {
-  const blocksToWaitBeforeVerify = 0
-  const verificationData = returnObject.verificationData
-  for (let i = 0; i < verificationData.length; i++) {
-    await contractToUse.deployTransaction.wait(blocksToWaitBeforeVerify)
-    log(`Verifying ${verificationData[i].name} Contract`)
-    try {
-      await hre.run('verify:verify', {
-        address: returnObject[verificationData[i].name].address,
-        constructorArguments: verificationData[i].constructorArguments
-      })
-    } catch (e) {
-      i--
-      await new Promise((r) => setTimeout(r, 1000))
-      log({ e, verificationData: verificationData[i] })
-    }
   }
 }
 
@@ -533,7 +670,10 @@ const solveLevel = async (
 }
 
 const log = (message) => {
-  // const printLogs = process.env.npm_lifecycle_event !== 'test'
+  const ignoreTesting = global.ignoreTesting
+  const networkinfo = global.networkinfo
+  if (!networkinfo || (networkinfo['chainId'] == 12345 && !ignoreTesting))
+    return
   console.log(message)
 }
 
@@ -764,7 +904,7 @@ async function copyABI(name, contractName) {
   contractName = contractName || name
 
   var networkinfo = await hre.ethers.provider.getNetwork()
-  console.log(`--copy ${name} ABI`)
+  log(`--copy ${name} ABI`)
   var pathname = path.join(
     __dirname,
     'artifacts',
@@ -788,12 +928,12 @@ async function copyABI(name, contractName) {
   await writedata(copy, JSON.stringify(newContent))
 
   // await copyContractABI(pathname, copy)
-  console.log('-- OK')
+  log('-- OK')
 }
 
 async function saveAddress(contract, name) {
-  console.log('-save json for ' + name)
   var networkinfo = await hre.ethers.provider.getNetwork()
+  log('-save json for ' + name)
   var newAddress = await contract.address
   var savePath = path.join(
     __dirname,
@@ -830,6 +970,7 @@ export {
   getParsedEventLogs,
   decodeUri,
   initContracts,
+  deployContractsV0,
   deployContracts,
   getPathABI,
   getPathAddress,
@@ -840,6 +981,7 @@ export {
   verifyContracts,
   solveLevel,
   deployMetadata,
-  getThemeName
+  getThemeName,
+  deployAnybodyProblemV1
   // splitterAddress
 }
