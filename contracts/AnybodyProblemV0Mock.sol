@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import './AnybodyProblemV0.sol';
 
-contract AnybodyProblemMock is AnybodyProblemV0 {
+contract AnybodyProblemV0Mock is AnybodyProblemV0 {
     constructor(
         address payable proceedRecipient_,
         address payable speedruns_,

@@ -17,6 +17,7 @@ contract AnybodyProblem is Ownable, ERC2981 {
     uint256 public constant FIRST_SUNDAY_AT_6_PM_UTC = 324000;
 
     bool public paused = false;
+    // bool public mustSolveAll = true;
     uint256 public priceToMint = 0.0025 ether;
     uint256 public priceToSave = 0 ether;
     uint256 public discount = 2;
@@ -42,6 +43,8 @@ contract AnybodyProblem is Ownable, ERC2981 {
     address payable public previousAB;
     uint256 public firstDay;
 
+    mapping(uint256 => mapping(address => bool)) public claimedByLeader; // day => player => claimed
+
     struct Run {
         address owner;
         bool solved; // redundant by accumulating A
@@ -49,6 +52,13 @@ contract AnybodyProblem is Ownable, ERC2981 {
         bytes32 seed;
         uint256 day;
         Level[] levels;
+    }
+    struct RunWithoutLevels {
+        address owner;
+        bool solved; // redundant by accumulating A
+        uint256 accumulativeTime; // redundant by accumulating C
+        bytes32 seed;
+        uint256 day;
     }
     struct Level {
         bool solved; // redundant A
@@ -111,27 +121,19 @@ contract AnybodyProblem is Ownable, ERC2981 {
     mapping(address => Record) public gamesPlayed_;
 
     function gamesPlayed(address player) public view returns (Record memory) {
-        console.log('gamesPlayed');
         if (!gamesPlayed_[player].updated) {
-            console.log('has been updated');
-
             (bool success, bytes memory data) = previousAB.staticcall(
                 abi.encodeWithSignature('gamesPlayed(address)', player)
             );
-            console.log('success');
-            console.log(success);
-            console.log('data');
-            console.logBytes(data);
             OldRecordType memory previousRecord;
             if (success && data.length > 0) {
                 previousRecord = abi.decode(data, (OldRecordType));
             }
-            console.log('previousRecord');
             Record memory combinedRecord = Record({
                 updated: false,
                 total: gamesPlayed_[player].total + previousRecord.total,
-                lastPlayed: gamesPlayed_[player].lastPlayed,
-                streak: gamesPlayed_[player].streak
+                lastPlayed: previousRecord.lastPlayed,
+                streak: previousRecord.streak
             });
             return combinedRecord;
         } else {
@@ -143,22 +145,23 @@ contract AnybodyProblem is Ownable, ERC2981 {
 
     function runs(uint256 runId) public view returns (Run memory) {
         if (runs_[runId].owner == address(0)) {
-            console.log('previousAB.runs(runId)');
-            console.log(previousAB);
-            console.log(runId);
             (bool success, bytes memory data) = previousAB.staticcall(
                 abi.encodeWithSignature('runs(uint256)', runId)
             );
-            console.log('success');
-            console.log(success);
-            console.log('data');
-            console.logBytes(data);
             if (success && data.length > 0) {
-                Run memory r = abi.decode(data, (Run));
-                console.log('r');
-                console.log(r.owner);
-                console.log(r.levels.length);
-                return r;
+                RunWithoutLevels memory r = abi.decode(
+                    data,
+                    (RunWithoutLevels)
+                );
+                Run memory run = Run({
+                    owner: r.owner,
+                    solved: r.solved,
+                    accumulativeTime: r.accumulativeTime,
+                    seed: r.seed,
+                    day: r.day,
+                    levels: getLevelsData(runId)
+                });
+                return run;
             } else {
                 return runs_[runId];
             }
@@ -281,7 +284,7 @@ contract AnybodyProblem is Ownable, ERC2981 {
                 input[i]
             );
         }
-        // TODO: remove for testing
+        // TODO: add and remove for testing / prod
         // require(runs(runId).solved, 'Must solve all levels to complete run');
     }
 
@@ -550,19 +553,26 @@ contract AnybodyProblem is Ownable, ERC2981 {
             runs_[runId].accumulativeTime += levelData.time;
             if (level == LEVELS) {
                 runs_[runId].solved = true;
-                if (alsoMint) {
-                    mint(priceToSave + (priceToMint / discount), day);
-                } else if (priceToSave > 0) {
-                    makePayment(priceToSave);
-                }
+                gamesPlayed_[msg.sender].total++;
+                addToLeaderboard(runId);
                 emit RunSolved(
                     msg.sender,
                     runId,
                     runs_[runId].accumulativeTime,
                     day
                 );
-                gamesPlayed_[msg.sender].total++;
-                addToLeaderboard(runId);
+                if (alsoMint) {
+                    bool playerIsLeader = isLeader(runId);
+                    uint256 priceToPay = playerIsLeader
+                        ? 0
+                        : priceToSave + (priceToMint / discount);
+                    if (playerIsLeader) {
+                        claimedByLeader[day][msg.sender] = true;
+                    }
+                    mint(priceToPay, day);
+                } else if (priceToSave > 0) {
+                    makePayment(priceToSave);
+                }
             } else {
                 addNewLevelData(runId);
             }
@@ -576,12 +586,16 @@ contract AnybodyProblem is Ownable, ERC2981 {
             ''
         );
         emit EthMoved(proceedRecipient, sent, data, payment);
+        if (msg.value > payment) {
+            (sent, data) = msg.sender.call{value: msg.value - payment}('');
+            emit EthMoved(msg.sender, sent, data, msg.value - payment);
+        }
     }
 
     function mint(uint256 payment, uint256 day) internal {
         require(day == currentDay(), 'Can only mint on the current day');
-        makePayment(payment);
         Speedruns(speedruns).__mint(msg.sender, day, 1, '');
+        makePayment(payment);
     }
 
     function mint() public payable {
@@ -590,67 +604,82 @@ contract AnybodyProblem is Ownable, ERC2981 {
 
     function addToLeaderboard(uint256 runId) internal {
         addToFastestByDay(runId);
-        console.log('done adding to fastest day');
         addToLongestStreak(runId);
-        console.log('done adding to longest streak');
         addToMostPlayed();
-        console.log('done adding to most played');
+        addToSlowestByDay(runId);
+    }
+
+    function isLeader(uint256 runId) public view returns (bool) {
+        if (claimedByLeader[runs(runId).day][msg.sender]) {
+            return false;
+        }
+        // fastest
+        uint256[3] memory f = fastestByDay(runs(runId).day);
+        if (f[0] == runId) {
+            return true;
+        }
+        // slowest
+        uint256[3] memory s = slowestByDay(runs(runId).day);
+        if (s[0] == runId) {
+            return true;
+        }
+        // TODO: decide if we want to add this?
+        // // most played
+        // if (mostGames[0] == msg.sender) {
+        //     return true;
+        // }
+        // longest streak
+        if (longestStreak[0] == msg.sender) {
+            return true;
+        }
+        return false;
+    }
+
+    function addToSlowestByDay(uint256 runId) internal {
+        Run memory run = runs(runId);
+        uint256[3] memory s = slowestByDay(run.day);
+        for (uint256 i = 0; i < 3; i++) {
+            Run memory recordRun = runs(s[i]);
+            // if run is slower, or if previous run is unset
+            if (run.accumulativeTime > recordRun.accumulativeTime) {
+                for (uint256 j = slowestByDay(run.day).length - 1; j > i; j--) {
+                    slowestByDay_[run.day][j] = slowestByDay(run.day)[j - 1];
+                }
+                slowestByDay_[run.day][i] = runId;
+                emitMetadataUpdate(run.day);
+                break;
+            }
+        }
     }
 
     function addToFastestByDay(uint256 runId) internal {
-        console.log('1');
-        console.log('runId');
-        console.log(runId);
         Run memory run = runs(runId);
-        console.log('2');
-        console.log('run.day');
-        console.log(run.day);
         uint256[3] memory f = fastestByDay(run.day);
-        console.log(f[0]);
-        console.log(f[1]);
-        console.log(f[2]);
         for (uint256 i = 0; i < 3; i++) {
-            console.log('3');
-
             Run memory recordRun = runs(f[i]);
-            console.log('4');
             // if run is faster, or if previous run is unset
             if (
                 run.accumulativeTime < recordRun.accumulativeTime ||
                 recordRun.accumulativeTime == 0
             ) {
-                console.log('5');
                 for (uint256 j = fastestByDay(run.day).length - 1; j > i; j--) {
-                    console.log('6');
                     fastestByDay_[run.day][j] = fastestByDay(run.day)[j - 1];
                 }
-                console.log('7');
                 fastestByDay_[run.day][i] = runId;
-                console.log('8');
                 emitMetadataUpdate(run.day);
-                console.log('9');
                 break;
             }
-            console.log('10');
         }
     }
 
     function addToLongestStreak(uint256 runId) internal {
-        console.log('addToLongestStreak');
         uint256 day = runs(runId).day;
-        console.log('day');
-        console.log(day);
-        console.log('currentDay()');
-        console.log(currentDay());
         if (day != currentDay()) {
-            // TODO: confirm if we want this to be the case
             // if the run was not completed today, don't update the streak
             return;
         }
 
         Record memory record = gamesPlayed(msg.sender);
-        console.log('record.lastPlayed');
-        console.log(record.lastPlayed);
         if (record.lastPlayed + SECONDS_IN_A_DAY != day) {
             record.streak = 1;
         } else {
@@ -660,14 +689,10 @@ contract AnybodyProblem is Ownable, ERC2981 {
         if (!record.updated) {
             record.updated = true;
         }
-        console.log('updateRecord');
         gamesPlayed_[msg.sender] = record;
 
         for (uint256 i = 0; i < longestStreak.length; i++) {
-            console.log('previous longest streak');
             Record memory previousLongestStreak = gamesPlayed(longestStreak[i]);
-            console.log('previousLongestStreak.streak');
-            console.log(previousLongestStreak.streak);
             if (record.streak > previousLongestStreak.streak) {
                 for (uint256 j = longestStreak.length - 1; j > i; j--) {
                     longestStreak[j] = longestStreak[j - 1];
@@ -676,13 +701,13 @@ contract AnybodyProblem is Ownable, ERC2981 {
                 break;
             }
         }
-        console.log('done with longest streak');
     }
 
     function addToMostPlayed() internal {
         Record memory record = gamesPlayed(msg.sender);
         for (uint256 i = 0; i < mostGames.length; i++) {
-            if (record.total > gamesPlayed(mostGames[i]).total) {
+            address player = mostGames[i];
+            if (record.total > gamesPlayed(player).total) {
                 for (uint256 j = mostGames.length - 1; j > i; j--) {
                     mostGames[j] = mostGames[j - 1];
                 }

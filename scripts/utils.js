@@ -117,10 +117,25 @@ const getThemeName = (chainId) => {
 }
 
 const deployAnybodyProblemV1 = async (options) => {
-  const defaultOptions = { mock: false, ignoreTesting: false }
-  const { mock, ignoreTesting } = Object.assign(defaultOptions, options)
+  const defaultOptions = {
+    mock: false,
+    ignoreTesting: false,
+    verbose: false,
+    AnybodyProblemV0: null,
+    Speedruns: null,
+    ExternalMetadata: null
+  }
+  let {
+    mock,
+    ignoreTesting,
+    verbose,
+    AnybodyProblemV0,
+    Speedruns,
+    ExternalMetadata
+  } = Object.assign(defaultOptions, options)
   global.ignoreTesting = ignoreTesting
   global.networkinfo = await hre.ethers.provider.getNetwork()
+  global.verbose = verbose
   log('Deploying v1 contracts')
 
   const [deployer] = await hre.ethers.getSigners()
@@ -154,11 +169,16 @@ const deployAnybodyProblemV1 = async (options) => {
 
   // use the already deployed speedruns contract and external metadata contract
   const {
-    Speedruns: speedruns,
-    ExternalMetadata: externalMetadata,
-    AnybodyProblemV0: anybodyProblemV0
+    Speedruns: speedrunsDeployed,
+    ExternalMetadata: externalMetadataDeployed,
+    AnybodyProblemV0: anybodyProblemV0Deployed
   } = await initContracts()
 
+  if (!Speedruns) Speedruns = speedrunsDeployed
+  if (!ExternalMetadata) ExternalMetadata = externalMetadataDeployed
+  if (!AnybodyProblemV0) AnybodyProblemV0 = anybodyProblemV0Deployed
+
+  log(mock ? 'Deploying AnybodyProblemMock' : 'Deploying AnybodyProblem')
   // deploy AnybodyProblem
   const AnybodyProblem = await hre.ethers.getContractFactory(
     mock ? 'AnybodyProblemMock' : 'AnybodyProblem'
@@ -166,12 +186,12 @@ const deployAnybodyProblemV1 = async (options) => {
 
   const constructorArguments = [
     deployer.address,
-    speedruns.address,
-    externalMetadata.address,
+    Speedruns.address,
+    ExternalMetadata.address,
     verifiers,
     verifiersTicks,
     verifiersBodies,
-    anybodyProblemV0.address
+    AnybodyProblemV0.address
   ]
 
   const anybodyProblem = await AnybodyProblem.deploy(...constructorArguments)
@@ -182,15 +202,15 @@ const deployAnybodyProblemV1 = async (options) => {
   log(
     'AnybodyProblem Deployed at ' +
       String(anybodyProblem.address) +
-      ` with speedrunsAddress ${speedruns.address} and externalMetdataAddress ${externalMetadata.address} and verifiers ${verifiers} and verifiersTicks ${verifiersTicks} and verifiersBodies ${verifiersBodies} and anybodyProblemV0Address ${anybodyProblemV0.Address}`
+      ` with speedrunsAddress ${Speedruns.address} and externalMetdataAddress ${ExternalMetadata.address} and verifiers ${verifiers} and verifiersTicks ${verifiersTicks} and verifiersBodies ${verifiersBodies} and anybodyProblemV0Address ${AnybodyProblemV0.address}`
   )
 
   // update Speedruns
-  await speedruns.updateAnybodyProblemAddress(anybodyProblem.address)
+  await Speedruns.updateAnybodyProblemAddress(anybodyProblem.address)
   log('AnybodyProblem address updated in Speedruns')
 
   // update ExternalMetadata
-  await externalMetadata.updateAnybodyProblemAddress(anybodyProblem.address)
+  await ExternalMetadata.updateAnybodyProblemAddress(anybodyProblem.address)
   log('AnybodyProblem address updated in ExternalMetadata')
 
   // // ensure v0 is properly saved before overwriting it
@@ -314,7 +334,10 @@ const deployMetadata = async () => {
 const deployContracts = async (options) => {
   const deployedContracts0 = await deployContractsV0(options)
   await saveAndVerifyContracts(deployedContracts0)
-  const deployedContracts1 = await deployAnybodyProblemV1(options)
+  const deployedContracts1 = await deployAnybodyProblemV1({
+    ...options,
+    ...deployedContracts0
+  })
   await saveAndVerifyContracts(deployedContracts0)
   return { ...deployedContracts0, ...deployedContracts1 }
 }
@@ -350,9 +373,13 @@ const saveAndVerifyContracts = async (deployedContracts) => {
 }
 
 const deployContractsV0 = async (options) => {
-  const defaultOptions = { mock: false, ignoreTesting: false }
-  const { mock, ignoreTesting } = Object.assign(defaultOptions, options)
+  const defaultOptions = { mock: false, ignoreTesting: false, verbose: false }
+  const { mock, ignoreTesting, verbose } = Object.assign(
+    defaultOptions,
+    options
+  )
   global.ignoreTesting = ignoreTesting
+  global.verbose = verbose
   const networkinfo = await hre.ethers.provider.getNetwork()
   global.networkinfo = networkinfo
   log('Deploying v0 contracts')
@@ -442,7 +469,7 @@ const deployContractsV0 = async (options) => {
 
   // deploy AnybodyProblem
   const AnybodyProblemV0 = await hre.ethers.getContractFactory(
-    mock ? 'AnybodyProblemMock' : 'AnybodyProblemV0'
+    mock ? 'AnybodyProblemV0Mock' : 'AnybodyProblemV0'
   )
 
   const constructorArgs = [
@@ -640,7 +667,8 @@ const solveLevel = async (
   const args = [runId, alsoMint, 0, tickCounts, a, b, c, Input]
 
   if (runId == 0) {
-    runId = 1
+    runId = (await anybodyProblem.runCount()).add(1).toNumber()
+    // runId = 1
   }
   let tx3
   if (execute) {
@@ -648,11 +676,12 @@ const solveLevel = async (
       await solveLevel(owner, anybodyProblem, expect, runId, level + 1, false)
     }
     if (level == 5) {
-      await expect(
-        anybodyProblem.batchSolve(...args, {
-          value: price.sub(1)
-        })
-      ).to.be.revertedWith('Incorrect payment')
+      // will not revert since this is likely the fastest run and price is waived
+      // await expect(
+      //   anybodyProblem.batchSolve(...args, {
+      //     value: price.sub(1)
+      //   })
+      // ).to.be.revertedWith('Incorrect payment')
     }
     const value = level == 5 ? price : 0
     tx3 = await anybodyProblem.batchSolve(...args, {
@@ -672,7 +701,11 @@ const solveLevel = async (
 const log = (message) => {
   const ignoreTesting = global.ignoreTesting
   const networkinfo = global.networkinfo
-  if (!networkinfo || (networkinfo['chainId'] == 12345 && !ignoreTesting))
+  const verbose = global.verbose
+  if (
+    !verbose &&
+    (!networkinfo || (networkinfo['chainId'] == 12345 && !ignoreTesting))
+  )
     return
   console.log(message)
 }
