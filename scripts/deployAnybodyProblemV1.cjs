@@ -1,6 +1,11 @@
 async function main() {
-  const { deployAnybodyProblemV1 } = await import('./utils.js')
-  await deployAnybodyProblemV1(false)
+  const { deployAnybodyProblemV1, saveAndVerifyContracts } = await import(
+    './utils.js'
+  )
+  const deployedContracts = await deployAnybodyProblemV1({
+    ignoreTesting: true
+  })
+  await saveAndVerifyContracts(deployedContracts)
 }
 main()
   .then(() => process.exit(0))

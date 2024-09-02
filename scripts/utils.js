@@ -1015,6 +1015,7 @@ export {
   solveLevel,
   deployMetadata,
   getThemeName,
-  deployAnybodyProblemV1
+  deployAnybodyProblemV1,
+  saveAndVerifyContracts
   // splitterAddress
 }
