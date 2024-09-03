@@ -213,11 +213,15 @@ const deployAnybodyProblemV1 = async (options) => {
 
   // update Speedruns
   await Speedruns.updateAnybodyProblemAddress(anybodyProblem.address)
-  log('AnybodyProblem address updated in Speedruns')
+  log(
+    `AnybodyProblem address updated in Speedruns to ${anybodyProblem.address}`
+  )
 
   // update ExternalMetadata
   await ExternalMetadata.updateAnybodyProblemAddress(anybodyProblem.address)
-  log('AnybodyProblem address updated in ExternalMetadata')
+  log(
+    `AnybodyProblem address updated in ExternalMetadata to ${anybodyProblem.address}`
+  )
 
   // // ensure v0 is properly saved before overwriting it
   // const pathAddress = await getPathAddress('AnybodyProblem-v0')
@@ -228,9 +232,6 @@ const deployAnybodyProblemV1 = async (options) => {
   // } catch (e) {
   //   throw new Error('Dont overwrite AnybodyProblem until v0 exists')
   // }
-
-  await copyABI('AnybodyProblem')
-  await saveAddress(anybodyProblem, 'AnybodyProblem')
 
   const verificationData = [
     {
@@ -247,6 +248,7 @@ const deployMetadata = async () => {
   let externalMetadata, assets1, assets2, assets3, assets4, assets5
   try {
     const network = await hre.ethers.provider.getNetwork()
+    global.networkinfo = network
     let themeName = getThemeName(network['chainId'])
 
     const Theme = await hre.ethers.getContractFactory(themeName)
