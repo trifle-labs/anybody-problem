@@ -17,13 +17,17 @@ contract AnybodyProblem is Ownable, ERC2981 {
     uint256 public constant FIRST_SUNDAY_AT_6_PM_UTC = 324000;
 
     bool public paused = false;
-    // bool public mustSolveAll = true;
     uint256 public priceToMint = 0.0025 ether;
     uint256 public priceToSave = 0 ether;
     uint256 public discount = 2;
+
+    uint256 public constant FIRST_DAY = 1723766400;
+    uint256 public deployDay;
+    address payable public previousAB;
     address payable public proceedRecipient;
     address public externalMetadata;
     address payable public speedruns;
+
     // uint256 public constant maxTick = 25 * 60; // 25 fps * 60 sec = 1,500 ticks max
     // level duration is numberOfBaddies * 10sec (multiplied by 25 because of 25 FPS)
     uint256[5] public maxTicksByLevelIndex = [
@@ -39,11 +43,6 @@ contract AnybodyProblem is Ownable, ERC2981 {
     uint256 public constant maxVectorScaled = maxVector * scalingFactor;
     uint256 public constant windowWidth = 1000 * scalingFactor;
     uint256 public constant startingRadius = 2;
-
-    address payable public previousAB;
-    uint256 public firstDay;
-
-    mapping(uint256 => mapping(address => bool)) public claimedByLeader; // day => player => claimed
 
     struct Run {
         address owner;
@@ -77,34 +76,6 @@ contract AnybodyProblem is Ownable, ERC2981 {
         bytes32 seed;
     }
 
-    mapping(uint256 => uint256[3]) public fastestByDay_; // day => [fastest, 2nd fastest, 3rd fastest runId]
-
-    function fastestByDay(
-        uint256 day
-    ) public view returns (uint256[3] memory fastest) {
-        uint256[3] memory localFastest = fastestByDay_[day];
-        for (uint256 i = 0; i < 3; i++) {
-            (bool success, bytes memory data) = previousAB.staticcall(
-                abi.encodeWithSignature('fastestByDay(uint256,uint256)', day, i)
-            );
-            if (success && localFastest[i] == 0) {
-                fastest[i] = abi.decode(data, (uint256));
-            } else {
-                fastest[i] = localFastest[i];
-            }
-        }
-        return fastest;
-    }
-
-    mapping(uint256 => uint256[3]) public slowestByDay_; // day => [slowest, 2nd slowest, 3rd slowest runId]
-
-    function slowestByDay(uint256 day) public view returns (uint256[3] memory) {
-        return slowestByDay_[day];
-    }
-
-    address[3] public mostGames;
-    address[3] public longestStreak;
-
     struct Record {
         bool updated;
         uint256 total;
@@ -118,63 +89,41 @@ contract AnybodyProblem is Ownable, ERC2981 {
         uint256 streak;
     }
 
+    mapping(uint256 => uint256[3]) public fastestByDay_; // day => [fastest, 2nd fastest, 3rd fastest runId]
+    mapping(uint256 => uint256[3]) public slowestByDay_; // day => [slowest, 2nd slowest, 3rd slowest runId]
+    address[3] public mostGames;
+    address[3] public longestStreak;
+
+    mapping(uint256 => mapping(address => bool)) public claimedByLeader; // day => player => claimed
     mapping(address => Record) public gamesPlayed_;
-
-    function gamesPlayed(address player) public view returns (Record memory) {
-        if (!gamesPlayed_[player].updated) {
-            (bool success, bytes memory data) = previousAB.staticcall(
-                abi.encodeWithSignature('gamesPlayed(address)', player)
-            );
-            OldRecordType memory previousRecord;
-            if (success && data.length > 0) {
-                previousRecord = abi.decode(data, (OldRecordType));
-            }
-            Record memory combinedRecord = Record({
-                updated: false,
-                total: gamesPlayed_[player].total + previousRecord.total,
-                lastPlayed: previousRecord.lastPlayed,
-                streak: previousRecord.streak
-            });
-            return combinedRecord;
-        } else {
-            return gamesPlayed_[player];
-        }
-    }
-
     mapping(uint256 => Run) public runs_; // indexed on RunId
-
-    function runs(uint256 runId) public view returns (Run memory) {
-        if (runs_[runId].owner == address(0)) {
-            (bool success, bytes memory data) = previousAB.staticcall(
-                abi.encodeWithSignature('runs(uint256)', runId)
-            );
-            if (success && data.length > 0) {
-                RunWithoutLevels memory r = abi.decode(
-                    data,
-                    (RunWithoutLevels)
-                );
-                Run memory run = Run({
-                    owner: r.owner,
-                    solved: r.solved,
-                    accumulativeTime: r.accumulativeTime,
-                    seed: r.seed,
-                    day: r.day,
-                    levels: getLevelsData(runId)
-                });
-                return run;
-            } else {
-                return runs_[runId];
-            }
-        } else {
-            return runs_[runId];
-        }
-    }
-
     uint256 public totalRuns;
 
     // mapping is body count to tickcount to address
     mapping(uint256 => mapping(uint256 => address)) public verifiers;
     mapping(bytes32 => bool) public usedProofs;
+
+    event RunCreated(uint256 runId, uint256 day, bytes32 seed);
+    event RunSolved(
+        address indexed player,
+        uint256 indexed runId,
+        uint256 accumulativeTime,
+        uint256 day
+    );
+    event LevelCreated(uint256 runId, uint256 level, bytes32 seed, uint256 day);
+    event LevelSolved(
+        address indexed player,
+        uint256 indexed runId,
+        uint256 indexed level,
+        uint256 time,
+        uint256 day
+    );
+    event EthMoved(
+        address indexed to,
+        bool indexed success,
+        bytes returnData,
+        uint256 amount
+    );
 
     constructor(
         address payable proceedRecipient_,
@@ -185,7 +134,7 @@ contract AnybodyProblem is Ownable, ERC2981 {
         uint256[] memory verifiersBodies,
         address payable previousAB_
     ) {
-        firstDay = currentDay();
+        deployDay = currentDay();
         updatePreviousAB(previousAB_);
         if (previousAB != address(0)) {
             totalRuns = AnybodyProblem(previousAB).runCount();
@@ -215,77 +164,80 @@ contract AnybodyProblem is Ownable, ERC2981 {
         revert('no fallback thank you');
     }
 
-    event RunCreated(uint256 runId, uint256 day, bytes32 seed);
-    event RunSolved(
-        address indexed player,
-        uint256 indexed runId,
-        uint256 accumulativeTime,
-        uint256 day
-    );
-    event LevelCreated(uint256 runId, uint256 level, bytes32 seed, uint256 day);
-    event LevelSolved(
-        address indexed player,
-        uint256 indexed runId,
-        uint256 indexed level,
-        uint256 time,
-        uint256 day
-    );
-    event EthMoved(
-        address indexed to,
-        bool indexed success,
-        bytes returnData,
-        uint256 amount
-    );
-
-    // NOTE: the only publicly available function that isn't protected by a modifier
-    function batchSolve(
-        uint256 runId,
-        bool alsoMint,
-        uint256 day,
-        uint256[] memory tickCounts,
-        uint[2][] memory a,
-        uint[2][2][] memory b,
-        uint[2][] memory c,
-        uint[][] memory input
-    ) public payable {
-        if (day == 0) {
-            day = currentDay();
-        }
-        require(
-            day % SECONDS_IN_A_DAY == 0,
-            'One problem per day, invalid day'
-        );
-        require(day <= currentDay(), 'Cannot solve future problems');
-        require(!paused, 'Contract is paused');
-        if (runId == 0) {
-            runId = addNewRun(day);
-            addNewLevelData(runId);
-        }
-        require(
-            runs(runId).owner == msg.sender,
-            'Only the owner of the run can solve it'
-        );
-        require(!runs(runId).solved, 'Run already solved');
-
-        require(
-            day == runs(runId).day,
-            'Can only solve runs on the current day'
-        );
-
-        for (uint256 i = 0; i < input.length; i++) {
-            verifyLevelChunk(
-                runId,
-                alsoMint,
-                tickCounts[i],
-                day,
-                a[i],
-                b[i],
-                c[i],
-                input[i]
+    function runs(uint256 runId) public view returns (Run memory) {
+        if (runs_[runId].owner == address(0)) {
+            (bool success, bytes memory data) = previousAB.staticcall(
+                abi.encodeWithSignature('runs(uint256)', runId)
             );
+            if (success && data.length > 0) {
+                RunWithoutLevels memory r = abi.decode(
+                    data,
+                    (RunWithoutLevels)
+                );
+                Run memory run = Run({
+                    owner: r.owner,
+                    solved: r.solved,
+                    accumulativeTime: r.accumulativeTime,
+                    seed: r.seed,
+                    day: r.day,
+                    levels: getLevelsData(runId)
+                });
+                return run;
+            } else {
+                return runs_[runId];
+            }
+        } else {
+            return runs_[runId];
         }
-        // TODO: add and remove for testing / prod
-        // require(runs(runId).solved, 'Must solve all levels to complete run');
+    }
+
+    function gamesPlayed(address player) public view returns (Record memory) {
+        Record memory record = gamesPlayed_[player];
+        if (!record.updated) {
+            (bool success, bytes memory data) = previousAB.staticcall(
+                abi.encodeWithSignature('gamesPlayed(address)', player)
+            );
+            OldRecordType memory previousRecord;
+            if (success && data.length > 0) {
+                previousRecord = abi.decode(data, (OldRecordType));
+            }
+            Record memory combinedRecord = Record({
+                updated: false,
+                total: record.total + previousRecord.total,
+                lastPlayed: previousRecord.lastPlayed,
+                streak: previousRecord.streak
+            });
+            return combinedRecord;
+        } else {
+            return record;
+        }
+    }
+
+    function fastestByDay(
+        uint256 day
+    ) public view returns (uint256[3] memory fastest) {
+        uint256[3] memory localFastest = fastestByDay_[day];
+        for (uint256 i = 0; i < 3; i++) {
+            if (localFastest[i] == 0) {
+                (bool success, bytes memory data) = previousAB.staticcall(
+                    abi.encodeWithSignature(
+                        'fastestByDay(uint256,uint256)',
+                        day,
+                        i
+                    )
+                );
+                if (success && data.length > 0) {
+                    fastest[i] = abi.decode(data, (uint256));
+                }
+            } else {
+                fastest[i] = localFastest[i];
+            }
+        }
+        return fastest;
+    }
+
+    function slowestByDay(uint256 day) public view returns (uint256[3] memory) {
+        return slowestByDay_[day];
     }
 
     function nextRunId() public view returns (uint256) {
@@ -300,7 +252,14 @@ contract AnybodyProblem is Ownable, ERC2981 {
         uint256 runId
     ) public view returns (Level[] memory levels) {
         if (!runExists(runId)) {
-            return AnybodyProblem(previousAB).getLevelsData(runId);
+            (bool success, bytes memory data) = previousAB.staticcall(
+                abi.encodeWithSignature('getLevelsData(uint256)', runId)
+            );
+            if (success && data.length > 0) {
+                return abi.decode(data, (Level[]));
+            } else {
+                return runs_[runId].levels;
+            }
         } else {
             return runs_[runId].levels;
         }
@@ -598,8 +557,63 @@ contract AnybodyProblem is Ownable, ERC2981 {
         makePayment(payment);
     }
 
+    // NOTE: mint and batchSolve are the only publicly available functions
+
     function mint() public payable {
+        require(!paused, 'Contract is paused');
         mint(priceToMint, currentDay());
+    }
+
+    function batchSolve(
+        uint256 runId,
+        bool alsoMint,
+        uint256 day,
+        uint256[] memory tickCounts,
+        uint[2][] memory a,
+        uint[2][2][] memory b,
+        uint[2][] memory c,
+        uint[][] memory input
+    ) public payable {
+        if (day == 0) {
+            day = currentDay();
+        }
+        require(
+            day % SECONDS_IN_A_DAY == 0,
+            'One problem per day, invalid day'
+        );
+        // TODO: confirm whether we want to only allow range of days
+        // require(day >= FIRST_DAY, 'Day is too early');
+        require(day <= currentDay(), 'Cannot solve future problems');
+        require(!paused, 'Contract is paused');
+        if (runId == 0) {
+            runId = addNewRun(day);
+            addNewLevelData(runId);
+        }
+        require(
+            runs(runId).owner == msg.sender,
+            'Only the owner of the run can solve it'
+        );
+        require(!runs(runId).solved, 'Run already solved');
+
+        require(
+            day == runs(runId).day,
+            'Can only solve runs on the current day'
+        );
+
+        for (uint256 i = 0; i < input.length; i++) {
+            verifyLevelChunk(
+                runId,
+                alsoMint,
+                tickCounts[i],
+                day,
+                a[i],
+                b[i],
+                c[i],
+                input[i]
+            );
+        }
+        // TODO: add and remove for testing / prod
+        // require(runs(runId).solved, 'Must solve all levels to complete run');
     }
 
     function addToLeaderboard(uint256 runId) internal {
@@ -638,23 +652,28 @@ contract AnybodyProblem is Ownable, ERC2981 {
     function addToSlowestByDay(uint256 runId) internal {
         Run memory run = runs(runId);
         uint256[3] memory s = slowestByDay(run.day);
+        bool recordBroken;
         for (uint256 i = 0; i < 3; i++) {
             Run memory recordRun = runs(s[i]);
             // if run is slower, or if previous run is unset
             if (run.accumulativeTime > recordRun.accumulativeTime) {
+                recordBroken = true;
                 for (uint256 j = slowestByDay(run.day).length - 1; j > i; j--) {
                     slowestByDay_[run.day][j] = slowestByDay(run.day)[j - 1];
                 }
                 slowestByDay_[run.day][i] = runId;
-                emitMetadataUpdate(run.day);
                 break;
             }
+        }
+        if (recordBroken) {
+            emitMetadataUpdate(run.day);
         }
     }
 
     function addToFastestByDay(uint256 runId) internal {
         Run memory run = runs(runId);
         uint256[3] memory f = fastestByDay(run.day);
+        bool recordBroken;
         for (uint256 i = 0; i < 3; i++) {
             Run memory recordRun = runs(f[i]);
             // if run is faster, or if previous run is unset
@@ -662,13 +681,16 @@ contract AnybodyProblem is Ownable, ERC2981 {
                 run.accumulativeTime < recordRun.accumulativeTime ||
                 recordRun.accumulativeTime == 0
             ) {
+                recordBroken = true;
                 for (uint256 j = fastestByDay(run.day).length - 1; j > i; j--) {
                     fastestByDay_[run.day][j] = fastestByDay(run.day)[j - 1];
                 }
                 fastestByDay_[run.day][i] = runId;
-                emitMetadataUpdate(run.day);
                 break;
             }
+        }
+        if (recordBroken) {
+            emitMetadataUpdate(run.day);
         }
     }
 
@@ -678,7 +700,6 @@ contract AnybodyProblem is Ownable, ERC2981 {
             // if the run was not completed today, don't update the streak
             return;
         }
-
         Record memory record = gamesPlayed(msg.sender);
         if (record.lastPlayed + SECONDS_IN_A_DAY != day) {
             record.streak = 1;
@@ -691,9 +712,11 @@ contract AnybodyProblem is Ownable, ERC2981 {
         }
         gamesPlayed_[msg.sender] = record;
 
+        bool recordBroken;
         for (uint256 i = 0; i < longestStreak.length; i++) {
             Record memory previousLongestStreak = gamesPlayed(longestStreak[i]);
             if (record.streak > previousLongestStreak.streak) {
+                recordBroken = true;
                 for (uint256 j = longestStreak.length - 1; j > i; j--) {
                     longestStreak[j] = longestStreak[j - 1];
                 }
@@ -701,19 +724,27 @@ contract AnybodyProblem is Ownable, ERC2981 {
                 break;
             }
         }
+        if (recordBroken) {
+            emitMetadataUpdate(day);
+        }
     }
 
     function addToMostPlayed() internal {
         Record memory record = gamesPlayed(msg.sender);
+        bool recordBroken;
         for (uint256 i = 0; i < mostGames.length; i++) {
             address player = mostGames[i];
             if (record.total > gamesPlayed(player).total) {
+                recordBroken = true;
                 for (uint256 j = mostGames.length - 1; j > i; j--) {
                     mostGames[j] = mostGames[j - 1];
                 }
                 mostGames[i] = msg.sender;
                 break;
             }
+        }
+        if (recordBroken) {
+            emitMetadataUpdate(currentDay());
         }
     }
 

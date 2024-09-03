@@ -7,7 +7,7 @@ async function main() {
   const networkInfo = await hre.ethers.provider.getNetwork()
   console.log({ networkInfo })
   const { deployContracts } = await import('./utils.js')
-  await deployContracts({ ignoreTesting: true })
+  await deployContracts({ ignoreTesting: true, saveAndVerify: true })
 }
 
 main()

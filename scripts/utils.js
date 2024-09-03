@@ -65,8 +65,7 @@ const getPathAddress = async (name) => {
 }
 
 const initContracts = async () => {
-  let [owner] = await hre.ethers.getSigners()
-
+  let [deployer] = await hre.ethers.getSigners()
   const contractNames = [
     'AnybodyProblemV0',
     'AnybodyProblem',
@@ -74,6 +73,7 @@ const initContracts = async () => {
     'ExternalMetadata'
   ]
   for (let i = 3; i <= 6; i++) {
+    if (i !== 4 && i !== 6) continue
     const ticks = await getTicksRun(i)
     contractNames.push(`Game_${i}_${ticks}Verifier`)
   }
@@ -88,7 +88,11 @@ const initContracts = async () => {
       const abi = JSON.parse(
         await readData(await getPathABI(contractNames[i]))
       )['abi']
-      returnObject[contractNames[i]] = new ethers.Contract(address, abi, owner)
+      returnObject[contractNames[i]] = new ethers.Contract(
+        address,
+        abi,
+        deployer
+      )
     } catch (e) {
       console.log({ e })
     }
@@ -148,7 +152,7 @@ const deployAnybodyProblemV1 = async (options) => {
   // redeploy the verifiers, this time only 2 of them
   for (let i = 2; i <= MAX_BODY_COUNT; i++) {
     if (i !== 4 && i !== 6) continue
-    const ticks = await getTicksRun(i, ignoreTesting)
+    const ticks = await getTicksRun(i)
     const name = `Game_${i}_${ticks}Verifier`
     const path = `contracts/${name}.sol:Groth16Verifier`
     const verifier = await hre.ethers.getContractFactory(path)
@@ -333,12 +337,16 @@ const deployMetadata = async () => {
 
 const deployContracts = async (options) => {
   const deployedContracts0 = await deployContractsV0(options)
-  await saveAndVerifyContracts(deployedContracts0)
+  if (options?.saveAndVerify) {
+    await saveAndVerifyContracts(deployedContracts0)
+  }
   const deployedContracts1 = await deployAnybodyProblemV1({
     ...options,
     ...deployedContracts0
   })
-  await saveAndVerifyContracts(deployedContracts0)
+  if (options?.saveAndVerify) {
+    await saveAndVerifyContracts(deployedContracts1)
+  }
   return { ...deployedContracts0, ...deployedContracts1 }
 }
 
@@ -854,17 +862,6 @@ const generateAndSubmitProof = async (
   const bodyInputIndex = addressInputIndex + bodyCount * 5
   const paddedBodyInputIndex = addressInputIndex + paddedBodyCount * 5
   const missileInputIndex = paddedBodyInputIndex + 5
-  // console.dir({ bodyFinal }, { depth: null })
-  // console.dir({ inputData }, { depth: null })
-  // console.dir({ dataResult: dataResult.Input }, { depth: null })
-  // console.log({
-  //   missileOutputIndex,
-  //   bodyOutputIndex,
-  //   timeOutputIndex,
-  //   addressInputIndex,
-  //   bodyInputIndex,
-  //   missileInputIndex
-  // })
 
   for (let i = 0; i < dataResult.Input.length; i++) {
     if (i <= missileOutputIndex) {

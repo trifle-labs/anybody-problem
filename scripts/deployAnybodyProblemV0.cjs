@@ -2,7 +2,9 @@ async function main() {
   const { deployContractsV0, saveAndVerifyContracts } = await import(
     './utils.js'
   )
-  const deployedContracts0 = await deployContractsV0({ ignoreTesting: true })
+  const deployedContracts0 = await deployContractsV0({
+    ignoreTesting: true
+  })
   await saveAndVerifyContracts(deployedContracts0)
 }
 main()

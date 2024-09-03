@@ -1,14 +1,10 @@
 # Anybody Problem
 
-Anybody Problem is a circom project that models the movement of any number of `n` bodies using classic newtonian-like physics over any number of `s` steps. There are two versions:
-
-## Anybody Problem NFT
-
-The Anybody Problem NFT is a simulation of the bodies moving in space over time. Proofs are generated over `s` steps with `n` bodies and verified on-chain. This version is represented in the top level `nft.circom` circuit [here](./circuits/nft.circom).
+Anybody Problem is a circom project that models the movement of any number of `n` bodies using classic newtonian-like physics over any number of `s` steps.
 
 ## Anybody Problem Game
 
-The Anybody Problem Game adds an additional `missiles` input that allows a user to fire missiles at the bodies in order to destroy them. This version is represented in the top level `stepState.circom` circuit [here](./circuits/stepState.circom). A very rough draft of the game can be played at https://okwme.github.io/anybody-problem.
+The Anybody Problem Game adds an additional `missiles` input that allows a user to fire missiles at the bodies in order to destroy them. This version is represented in the top level `stepState.circom` circuit [here](./circuits/stepState.circom). The game is live at [anybody.gg](https://anybody.gg)
 
 ## Circuits
 
@@ -98,15 +94,6 @@ This circuit limits the value of an input to a minimum value. It also accepts an
 - `input rather` - The alternative value
 - `output out` - The output value
 
-### [nft(totalBodies, steps)](./circuits/nft.circom)
-
-This circuit is the top level circuit for the NFT version of Anybody Problem. It takes in the initial state of the bodies and the number of steps to simulate and outputs the resulting bodies.
-
-- `totalBodies` - The total number of bodies in the simulation
-- `steps` - The total number of steps to simulate
-- `input bodies[totalBodies][5]` - An array of length `totalBodies` for each body. Each body has 5 inputs: `position_x`, `position_y`, `vector_x`, `vector_y` and `radius/mass`. These are all scaled up by a factor of 10\*\*8.
-- `output out_bodies[totalBodies][5]` - An array of length `totalBodies` for each body. Each body has 5 outputs: `position_x`, `position_y`, `vector_x`, `vector_y` and `radius/mass`. These are all scaled up by a factor of 10\*\*8.
-
 ### [StepState(totalBodies, steps)](./circuits/stepState.circom)
 
 This is the top level circuit for the game version of Anybody Problem. It takes in the initial state of the bodies, the number of steps to simulate and the missiles to fire and outputs the resulting bodies.
@@ -116,6 +103,46 @@ This is the top level circuit for the game version of Anybody Problem. It takes 
 - `input bodies[totalBodies][5]` - An array of length `totalBodies` for each body. Each body has 5 inputs: `position_x`, `position_y`, `vector_x`, `vector_y` and `radius/mass`. These are all scaled up by a factor of 10\*\*8.
 - `input missiles[steps + 1][5]` - An array of length `steps + 1` for each missile. Each missile has 5 inputs: `position_x`, `position_y`, `vector_x`, `vector_y` and `radius/mass`. These are all scaled up by a factor of 10\*\*8.
 - `output out_bodies[totalBodies][5]` - An array of length `totalBodies` for each body. Each body has 5 outputs: `position_x`, `position_y`, `vector_x`, `vector_y` and `radius/mass`. These are all scaled up by a factor of 10\*\*8.
+
+## Compilation
+
+### Development
+
+In order to run tests you need to have compiled circuits generated. You can do this by running:
+
+```bash
+yarn circom:game-test
+```
+
+This will generate smaller versions of the circuits, each only covering 20 frames of gameplay at a time. These should allow you to run most tests, the exception being `stepstate.test.js` where there is a test used to check proofs generated from real games called "passes one off check input".
+
+### Production
+
+To prepare for production, run the following command:
+
+```bash
+yarn circom:game-prod
+```
+
+This might take a while to generate but it will only produce proofs for 4 bodies at 250 frames of gameplay and 6 bodies at 125 frames of gameplay. All levels can be proven with these two circuits because the missing bodies are added with radius of 0 so they don't impact the simulation.
+
+### Sindri
+
+While games can be proven in browser, the variation of hardware prevents accurate prognosis of which machines are capabale of doing so in a reasonable time. As such we are using the service [Sindri](https://sindri.app) to generate proofs reliably fast. To ensure Sindri is unable to generate valid but incorrect proofs, we generate the prover files locally and then upload them to Sindri. To do this ensure the `zkey` file is named the same as the circuit file and is referenced with the same name as that used in `circuitPath` in the `sindri.json` file. For example, when uploading `game_4_250` the `sindri.json` looks like this:
+
+```json
+{
+  "$schema": "https://forge.sindri.app/api/v1/sindri-manifest-schema.json",
+  "name": "game_4_250_v7",
+  "circuitType": "circom",
+  "circuitPath": "./game_4_250.circom",
+  "curve": "bn254",
+  "provingScheme": "groth16",
+  "witnessCompiler": "c++"
+}
+```
+
+and the `zkey` is saved at `./circuits/game_4_250.zkey`.
 
 ## Tests
 
@@ -128,6 +155,37 @@ yarn test
 You should see something like:
 
 ```bash
+> yarn test
+yarn run v1.22.22
+$ hardhat test
+ ·------------------------|--------------------------------|--------------------------------·
+ |  Solc version: 0.6.11  ·  Optimizer enabled: false      ·  Runs: 200                     │
+ ·························|································|·································
+ |  Contract Name         ·  Deployed size (KiB) (change)  ·  Initcode size (KiB) (change)  │
+ ·························|································|·································
+ |  AnybodyProblem        ·                19.820 (0.000)  ·                21.935 (0.000)  │
+ ·························|································|·································
+ |  AnybodyProblemMock    ·                20.123 (0.000)  ·                22.237 (0.000)  │
+ ·························|································|·································
+ |  AnybodyProblemV0      ·                18.953 (0.000)  ·                21.295 (0.000)  │
+ ·························|································|·································
+ |  AnybodyProblemV0Mock  ·                19.200 (0.000)  ·                21.542 (0.000)  │
+ ·························|································|·································
+ |  Assets1               ·                19.754 (0.000)  ·                19.781 (0.000)  │
+ ·························|································|·································
+ |  Assets2               ·                23.139 (0.000)  ·                23.167 (0.000)  │
+ ·························|································|·································
+ |  Assets3               ·                20.617 (0.000)  ·                20.645 (0.000)  │
+ ·························|································|·································
+ |  Assets4               ·                16.870 (0.000)  ·                16.897 (0.000)  │
+ ·························|································|·································
+ |  Assets5               ·                16.719 (0.000)  ·                16.746 (0.000)  │
+ ·························|································|·································
+ |  ExternalMetadata      ·                18.384 (0.000)  ·                18.580 (0.000)  │
+ ·························|································|·································
+ |  Speedruns             ·                 7.716 (0.000)  ·                 8.009 (0.000)  │
+ ·------------------------|--------------------------------|--------------------------------·
+
   absoluteValueSubtraction circuit
     ✔ produces a witness with valid constraints
     ✔ has the correct output
@@ -136,25 +194,9 @@ You should see something like:
     ✔ produces a witness with valid constraints
     ✔ has the correct output
 
-  Bodies Tests
-    ✔ has the correct bodies, dust addresses
-    ✔ onlyOwner functions are really only Owner
-    ✔ updates dust price correctly
-    ✔ has all the correct interfaces
-    ✔ fallback and receive functions revert
-    ✔ onlyProblem functions can only be called by Problems address
-    ✔ matches seeds between Bodies and Problems contracts
-    ✔ mints a new body after receiving Dust
-    ✔ fails when you try to mint a body for a problem you do not own
-    ✔ validate second mint event
-    ✔ succeeds adding a body into a problem
-    ✔ removes a body that was added into a problem
-    ✔ mints a body, adds it to a problem, then mints another body
-    - combines two bodies correctly
-    ✔ fails to mint an 11th body
-
   calculateForceMain circuit
     ✔ produces a witness with valid constraints
+    - can check the differnce in speed calculating with witness vs anybody.js
     ✔ has the correct output
 
   detectCollisionMain circuit
@@ -162,7 +204,7 @@ You should see something like:
     ✔ has the correct output
 
   forceAccumulatorMain circuit
-    ✔ produces a witness with valid constraints
+    ✔ produces a witness with valid constraints (41ms)
     ✔ has the correct output
 
   getDistanceMain circuit
@@ -177,65 +219,163 @@ You should see something like:
     ✔ produces a witness with valid constraints
     ✔ has the correct output
 
-  ProblemMetadata Tests
-    ✔ has the correct problems address
-    ✔ onlyOwner functions are really only Owner
-    ✔ creates an SVG
-
-  BoodyMetadata Tests
-    ✔ has the correct problems address
-    ✔ onlyOwner functions are really only Owner
-    ✔ creates an SVG
-
   nft circuit
-    ✔ produces a witness with valid constraints
-    ✔ has the correct output
-    ✔ NftVerifier.sol works
-
-  Problem Tests
-    ✔ has the correct verifiers problemMetadata, bodies, dust, solver addresses
-    ✔ onlyOwner functions are really only Owner
-    ✔ onlySolver functions are really only Solver
-    ✔ has all the correct interfaces
-    ✔ emits 'EthMoved' events when eth is moved
-    ✔ fails when unitialized
-    ✔ fails to adminMint when uninitialized
-    ✔ fails to adminMint when not owner
-    - sends money to splitter correctly
-    ✔ must be unpaused
-    ✔ succeeds to mint
-    ✔ succeeds to mint with fallback method
-    ✔ succeeds to mint with explicit recipient
-    ✔ token ID is correctly correlated
-    ✔ validate second mint event
-    ✔ checks whether mint fails with wrong price and succeeds even when price = 0
-    ✔ adminMint from owner address
-    ✔ stores the verifiers in the correct order of the mapping
-    ✔ mints bodies that contain valid values
-    ✔ mints a body via mintBodyToProblem
-
-  Solver Tests
-    ✔ has the correct problems, dust addresses
-    ✔ onlyOwner functions are really only Owner
-    ✔ fallback and receive functions revert
-    ✔ creates a proof for 3 bodies
-    ✔ creates multiple proofs in a row
-    ✔ creates proofs for multiple bodies
-    ✔ has the correct body boost amount
-    ✔ adds a body, removes a body, creates a proof
-    - adds two bodies, removes first body, creates a proof
+    - produces a witness with valid constraints
+    - has the correct output
+    - NftVerifier.sol works
 
   stepStateTest circuit
-    ✔ produces a witness with valid constraints
-    ✔ has the correct output
+    ✔ produces a witness with valid constraints (277ms)
+    ✔ passes one off check input (24710ms)
+    ✔ has the correct output when one body and missile positioned to hit and it returns correct number of steps (70ms)
 
-  Utilities work as expected
-    ✔ should only allow valid seeds
+  AnybodyProblem Tests
+    ✔ has the correct verifiers, externalMetadata, speedruns addresses (397ms)
+    ✔ stores the verifiers in the correct order of the mapping (300ms)
+    - starts week correctly
+    ✔ has the correct Speedruns addresses (303ms)
+    ✔ onlyOwner functions are really only Owner (397ms)
+    ✔ fallback and receive functions revert (312ms)
+    ✔ creates a proof for level 1 (2680ms)
+    ✔ solves the first level using mock (4518ms)
+    ✔ must be unpaused (334ms)
+    ✔ solves all levels async using mock (26775ms)
+    ✔ solves all levels in a single tx (14845ms)
+    ✔ has the same results for generateLevelData as anybody.js (392ms)
+    ✔ has correct getLevelFromInputs with no dummy (312ms)
+    ✔ has correct getLevelFromInputs with dummy (309ms)
+    ✔ returns correct currentLevel (4577ms)
+    ✔ performs an upgrade and the records are correct (29157ms)
+    - emits arbitrary events within Speedruns
+    - tests an arbitrary tx
 
-  66 passing (1m)
-  3 pending
+  ExternalMetadata Tests
+    ✔ has the correct anybodyProblem and speedruns addresses (355ms)
+    ✔ onlyOwner functions are really only Owner (339ms)
+    ✔ has valid json (17636ms)
 
-✨  Done in 64.01s.
+  Speedruns Tests
+    ✔ onlyAnybodyProblem functions can only be called by AnybodyProblem address (387ms)
+    ✔ has all the correct interfaces (354ms)
+
+
+  39 passing (2m)
+  7 pending
+
+······························································································································································································
+|  Solidity and Network Configuration                                                                                                                                                        │
+·········································································································|·················|···············|·················|································
+|  Solidity: 0.6.11                                                                                      ·  Optim: false   ·  Runs: 200    ·  viaIR: false   ·     Block: 20,000,000 gas     │
+·········································································································|·················|···············|·················|································
+|  Network: ETHEREUM                                                                                     ·  L1: 0.10000 gwei               ·                 ·        2521.10 usd/eth        │
+·········································································································|·················|···············|·················|················|···············
+|  Contracts / Methods                                                                                   ·  Min            ·  Max          ·  Avg            ·  # calls       ·  usd (avg)   │
+·········································································································|·················|···············|·················|················|···············
+|  AnybodyProblem                                                                                        ·                                                                                   │
+·········································································································|·················|···············|·················|················|···············
+|      batchSolve(uint256,bool,uint256,uint256[],uint256[2][],uint256[2][2][],uint256[2][],uint256[][])  ·              -  ·            -  ·      1,263,522  ·             2  ·        0.32  │
+·········································································································|·················|···············|·················|················|···············
+|      recoverUnsuccessfulPayment(address)                                                               ·              -  ·            -  ·         30,247  ·             2  ·        0.01  │
+·········································································································|·················|···············|·················|················|···············
+|      updateDiscount(uint256)                                                                           ·              -  ·            -  ·         24,462  ·             2  ·        0.01  │
+·········································································································|·················|···············|·················|················|···············
+|      updatePaused(bool)                                                                                ·              -  ·            -  ·         45,769  ·             2  ·        0.01  │
+·········································································································|·················|···············|·················|················|···············
+|      updatePriceToMint(uint256)                                                                        ·              -  ·            -  ·         24,924  ·             2  ·        0.01  │
+·········································································································|·················|···············|·················|················|···············
+|      updatePriceToSave(uint256)                                                                        ·              -  ·            -  ·         27,232  ·             2  ·        0.01  │
+·········································································································|·················|···············|·················|················|···············
+|      updateProceedRecipient(address)                                                                   ·              -  ·            -  ·         30,194  ·             2  ·        0.01  │
+·········································································································|·················|···············|·················|················|···············
+|      updateSpeedrunsAddress(address)                                                                   ·              -  ·            -  ·         29,490  ·             2  ·        0.01  │
+·········································································································|·················|···············|·················|················|···············
+|      updateVerifier(address,uint256,uint256)                                                           ·              -  ·            -  ·         46,664  ·             2  ·        0.01  │
+·········································································································|·················|···············|·················|················|···············
+|  AnybodyProblemMock                                                                                    ·                                                                                   │
+·········································································································|·················|···············|·················|················|···············
+|      batchSolve(uint256,bool,uint256,uint256[],uint256[2][],uint256[2][2][],uint256[2][],uint256[][])  ·      1,902,008  ·    9,547,209  ·      4,452,577  ·            37  ·        1.12  │
+·········································································································|·················|···············|·················|················|···············
+|      setMockedBodyDataByLevel(uint256,(uint256,uint256,uint256,uint256,uint256,uint256,bytes32)[6])    ·        124,905  ·      942,401  ·        556,054  ·            28  ·        0.14  │
+·········································································································|·················|···············|·················|················|···············
+|      updatePaused(bool)                                                                                ·              -  ·            -  ·         45,763  ·             1  ·        0.01  │
+·········································································································|·················|···············|·················|················|···············
+|      updateProceedRecipient(address)                                                                   ·              -  ·            -  ·         30,232  ·             1  ·        0.01  │
+·········································································································|·················|···············|·················|················|···············
+|  AnybodyProblemV0Mock                                                                                  ·                                                                                   │
+·········································································································|·················|···············|·················|················|···············
+|      batchSolve(uint256,bool,uint256,uint256[],uint256[2][],uint256[2][2][],uint256[2][],uint256[][])  ·              -  ·            -  ·      8,031,319  ·             3  ·        2.02  │
+·········································································································|·················|···············|·················|················|···············
+|      setMockedBodyDataByLevel(uint256,(uint256,uint256,uint256,uint256,uint256,uint256,bytes32)[6])    ·        383,080  ·      942,416  ·        662,753  ·             5  ·        0.17  │
+·········································································································|·················|···············|·················|················|···············
+|  ExternalMetadata                                                                                      ·                                                                                   │
+·········································································································|·················|···············|·················|················|···············
+|      setAssets(address[5])                                                                             ·        137,001  ·      137,013  ·        137,011  ·            20  ·        0.03  │
+·········································································································|·················|···············|·················|················|···············
+|      setupSVGPaths()                                                                                   ·              -  ·            -  ·      1,806,648  ·            40  ·        0.46  │
+·········································································································|·················|···············|·················|················|···············
+|      updateAnybodyProblemAddress(address)                                                              ·         29,326  ·       46,438  ·         37,479  ·            42  ·        0.01  │
+·········································································································|·················|···············|·················|················|···············
+|      updateSpeedrunsAddress(address)                                                                   ·         29,008  ·       46,108  ·         44,553  ·            22  ·        0.01  │
+·········································································································|·················|···············|·················|················|···············
+|      __burn(address,uint256,uint256)                                                                   ·              -  ·            -  ·         28,073  ·             2  ·        0.01  │
+·········································································································|·················|···············|·················|················|···············
+|      __mint(address,uint256,uint256,bytes)                                                             ·              -  ·            -  ·         52,830  ·             4  ·        0.01  │
+·········································································································|·················|···············|·················|················|···············
+|      __safeTransferFrom(address,address,uint256,uint256,bytes)                                         ·              -  ·            -  ·         53,906  ·             2  ·        0.01  │
+·········································································································|·················|···············|·················|················|···············
+|      __setApprovalForAll(address,address,bool)                                                         ·              -  ·            -  ·         48,789  ·             2  ·        0.01  │
+·········································································································|·················|···············|·················|················|···············
+|  Speedruns                                                                                             ·                                                                                   │
+·········································································································|·················|···············|·················|················|···············
+|      emitGenericEvent(bytes32[],bytes)                                                                 ·              -  ·            -  ·         25,003  ·             2  ·        0.01  │
+·········································································································|·················|···············|·················|················|···············
+|      updateAnybodyProblemAddress(address)                                                              ·         29,172  ·       46,284  ·         37,524  ·            41  ·        0.01  │
+·········································································································|·················|···············|·················|················|···············
+|  Deployments                                                                                                             ·                                 ·  % of limit    ·              │
+·········································································································|·················|···············|·················|················|···············
+|  AnybodyProblem                                                                                        ·      4,863,675  ·    4,863,699  ·      4,863,698  ·        24.3 %  ·        1.23  │
+·········································································································|·················|···············|·················|················|···············
+|  AnybodyProblemMock                                                                                    ·      4,931,197  ·    4,990,909  ·      4,943,147  ·        24.7 %  ·        1.25  │
+·········································································································|·················|···············|·················|················|···············
+|  AnybodyProblemV0                                                                                      ·      4,688,531  ·    4,688,543  ·      4,688,539  ·        23.4 %  ·        1.18  │
+·········································································································|·················|···············|·················|················|···············
+|  AnybodyProblemV0Mock                                                                                  ·      4,743,168  ·    4,743,192  ·      4,743,183  ·        23.7 %  ·        1.20  │
+·········································································································|·················|···············|·················|················|···············
+|  Assets1                                                                                               ·              -  ·            -  ·      4,427,169  ·        22.1 %  ·        1.12  │
+·········································································································|·················|···············|·················|················|···············
+|  Assets2                                                                                               ·              -  ·            -  ·      5,177,023  ·        25.9 %  ·        1.31  │
+·········································································································|·················|···············|·················|················|···············
+|  Assets3                                                                                               ·              -  ·            -  ·      4,618,748  ·        23.1 %  ·        1.16  │
+·········································································································|·················|···············|·················|················|···············
+|  Assets4                                                                                               ·              -  ·            -  ·      3,788,953  ·        18.9 %  ·        0.96  │
+·········································································································|·················|···············|·················|················|···············
+|  Assets5                                                                                               ·              -  ·            -  ·      3,755,434  ·        18.8 %  ·        0.95  │
+·········································································································|·················|···············|·················|················|···············
+|  ExternalMetadata                                                                                      ·      4,170,569  ·    4,170,581  ·      4,170,580  ·        20.9 %  ·        1.05  │
+·········································································································|·················|···············|·················|················|···············
+|  Game_2_20Verifier.sol:Groth16Verifier                                                                 ·              -  ·            -  ·      1,389,269  ·         6.9 %  ·        0.35  │
+·········································································································|·················|···············|·················|················|···············
+|  Game_3_20Verifier.sol:Groth16Verifier                                                                 ·              -  ·            -  ·      1,739,395  ·         8.7 %  ·        0.44  │
+·········································································································|·················|···············|·················|················|···············
+|  Game_4_20Verifier.sol:Groth16Verifier                                                                 ·              -  ·            -  ·      2,089,585  ·        10.4 %  ·        0.53  │
+·········································································································|·················|···············|·················|················|···············
+|  Game_5_20Verifier.sol:Groth16Verifier                                                                 ·              -  ·            -  ·      2,440,280  ·        12.2 %  ·        0.62  │
+·········································································································|·················|···············|·················|················|···············
+|  Game_6_20Verifier.sol:Groth16Verifier                                                                 ·              -  ·            -  ·      2,790,971  ·          14 %  ·        0.70  │
+·········································································································|·················|···············|·················|················|···············
+|  Speedruns                                                                                             ·              -  ·            -  ·      1,790,475  ·           9 %  ·        0.45  │
+·········································································································|·················|···············|·················|················|···············
+|  ThemeGroupBlues.sol:ThemeGroup                                                                        ·              -  ·            -  ·      1,002,009  ·           5 %  ·        0.25  │
+·········································································································|·················|···············|·················|················|···············
+|  Key                                                                                                                                                                                       │
+······························································································································································································
+|  ◯  Execution gas for this method does not include intrinsic gas overhead                                                                                                                  │
+······························································································································································································
+|  △  Cost was non-zero but below the precision setting for the currency display (see options)                                                                                               │
+······························································································································································································
+|  Toolchain:  hardhat                                                                                                                                                                       │
+······························································································································································································
+✨  Done in 133.89s.
 ```
 
 ## Performance
@@ -252,120 +392,4 @@ Currently the project is targeting [powersOfTau28_hez_final_20.ptau](https://git
 | getDistance(20)               | 88                     | 454.55                                 |
 | limiter(252)                  | 254                    | 157.48                                 |
 | lowerLimiter(252)             | 254                    | 157.48                                 |
-| nft(3, 10)                    | 15_184                 | 26.34                                  |
 | stepState(3, 10)              | 19_121                 | 20.92                                  |
-| nft_3_20                      | 33_060                 |                                        |
-| nft_4_20                      | 55_480                 |                                        |
-
-### Tick to Dust Body Boost Chart
-
-```
-Generated proof in 0m 3s 121ms for 20 ticks with 3 bodies
-Tick rate: 6.41 ticks/s
-Tick rate per body: 2.14 ticks/s
-Dust rate: 6.41 dust/s
-Dust rate per body: 2.14 dust/s
-
-Generated proof in 0m 3s 894ms for 20 ticks with 4 bodies
-Tick rate: 5.14 ticks/s
-Tick rate per body: 1.28 ticks/s
-Dust rate: 10.27 dust/s
-Dust rate per body: 2.57 dust/s
-
-Generated proof in 0m 6s 701ms for 20 ticks with 5 bodies
-Tick rate: 2.98 ticks/s
-Tick rate per body: 0.60 ticks/s
-Dust rate: 11.94 dust/s
-Dust rate per body: 2.39 dust/s
-
-Generated proof in 0m 7s 910ms for 20 ticks with 6 bodies
-Tick rate: 2.53 ticks/s
-Tick rate per body: 0.42 ticks/s
-Dust rate: 20.23 dust/s
-Dust rate per body: 3.37 dust/s
-
-Generated proof in 0m 12s 961ms for 20 ticks with 7 bodies
-Tick rate: 1.54 ticks/s
-Tick rate per body: 0.22 ticks/s
-Dust rate: 24.69 dust/s
-Dust rate per body: 3.53 dust/s
-
-Generated proof in 0m 14s 497ms for 20 ticks with 8 bodies
-Tick rate: 1.38 ticks/s
-Tick rate per body: 0.17 ticks/s
-Dust rate: 44.15 dust/s
-Dust rate per body: 5.52 dust/s
-
-Generated proof in 0m 16s 339ms for 20 ticks with 9 bodies
-Tick rate: 1.22 ticks/s
-Tick rate per body: 0.14 ticks/s
-Dust rate: 78.34 dust/s
-Dust rate per body: 8.70 dust/s
-
-Generated proof in 0m 25s 522ms for 20 ticks with 10 bodies
-Tick rate: 0.78 ticks/s
-Tick rate per body: 0.08 ticks/s
-Dust rate: 100.31 dust/s
-Dust rate per body: 10.03 dust/s
-```
-
-# built using circom-starter
-
-A basic circom project using [Hardhat](https://github.com/nomiclabs/hardhat) and [hardhat-circom](https://github.com/projectsophon/hardhat-circom). This combines the multiple steps of the [Circom](https://github.com/iden3/circom) and [SnarkJS](https://github.com/iden3/snarkjs) workflow into your [Hardhat](https://hardhat.org) workflow.
-
-By providing configuration containing your Phase 1 Powers of Tau and circuits, this plugin will:
-
-1. Compile the circuits
-2. Apply the final beacon
-3. Output your `wasm` and `zkey` files
-4. Generate and output a `Verifier.sol`
-
-## Documentation
-
-See the source projects for full documentation and configuration
-
-# Circom + Contracts setup
-
-## Install
-
-`yarn` to install dependencies
-
-## Development builds
-
-`yarn circom:dev` to build deterministic development circuits.
-
-Further, for debugging purposes, you may wish to inspect the intermediate files. This is possible with the `--debug` flag which the `circom:dev` task enables by default. You'll find them (by default) in `artifacts/circom/`
-
-To build a single circuit during development, you can use the `--circuit` CLI parameter. For example, if you make a change to `hash.circom` and you want to _only_ rebuild that, you can run `yarn circom:dev --circuit hash`.
-
-## Production builds
-
-`yarn circom:prod` for production builds (using `Date.now()` as entropy)
-
-# Webapp setup
-
-```
-yarn install
-```
-
-### Compiles and hot-reloads for development
-
-```
-yarn serve
-```
-
-### Compiles and minifies for production
-
-```
-yarn build
-```
-
-### Lints and fixes files
-
-```
-yarn lint
-```
-
-### Customize configuration
-
-See [Configuration Reference](https://cli.vuejs.org/config/).

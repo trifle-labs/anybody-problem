@@ -219,6 +219,13 @@
     { "stateMutability": "nonpayable", "type": "fallback" },
     {
       "inputs": [],
+      "name": "FIRST_DAY",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
       "name": "FIRST_SUNDAY_AT_6_PM_UTC",
       "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
       "stateMutability": "view",
@@ -316,6 +323,13 @@
     },
     {
       "inputs": [],
+      "name": "deployDay",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
       "name": "discount",
       "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
       "stateMutability": "view",
@@ -403,13 +417,6 @@
         { "internalType": "uint256", "name": "", "type": "uint256" }
       ],
       "name": "fastestByDay_",
-      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "firstDay",
       "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
       "stateMutability": "view",
       "type": "function"

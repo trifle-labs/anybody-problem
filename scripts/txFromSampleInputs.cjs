@@ -1,8 +1,8 @@
 const { ethers } = require('hardhat')
 const sindri = require('sindri')
 
-const game_4_250_id = '01db9002-7996-4c20-9a5b-18ce6c950689' // v6
-const game_6_125_id = 'd91136ad-fe33-4ddc-bb6c-1ebb402c2f9b' // v6
+const game_4_250_id = 'f6a0dbe5-38b3-4211-b740-6f65ba3fdbdb' // v7
+const game_6_125_id = '2aaebd03-8979-436b-b2cd-1450619d06f4' // v7
 const apiKey = process.env.sindri_api_key
 
 const mint = true
