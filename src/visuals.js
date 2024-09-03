@@ -262,6 +262,7 @@ export const Visuals = {
       }
     }
     this.drawScore()
+    this.drawMuteButton()
     this.drawPopup()
     this.drawGun() // draw after score so cursor isnt in share img
     this.drawGunSmoke()
@@ -319,7 +320,32 @@ export const Visuals = {
 
     this.drawTips()
   },
+  skipIntro() {
+    this.introStage = 3
+    this.levelCounting = 99999
+    this.skipAhead = true
+    this.handleGameOver({ won: true })
+    this.playedIntro = true
+  },
+  drawSkipButton() {
+    this.drawButton({
+      text: 'SKIP',
+      onClick: () => {
+        this.skipIntro()
+      },
+      bg: THEME.teal_75,
+      fg: THEME.teal_50,
+      width: 200,
+      height: 58,
+      stroke: THEME.teal_50,
+      x: 10,
+      y: 10,
+      p: this.p
+    })
+  },
   drawIntro() {
+    this.drawSkipButton()
+
     switch (this.introStage) {
       case 0:
         this.drawIntroStage0()
@@ -329,9 +355,6 @@ export const Visuals = {
         break
       case 2:
         this.drawIntroStage2()
-        break
-      case 3:
-        this.drawIntroStage3()
         break
       default:
     }
@@ -1132,6 +1155,66 @@ export const Visuals = {
     }
   },
 
+  drawMuteButton() {
+    if (this.paused || this.gameOver) return
+    const { p } = this
+    // draw mute btn in bottom right corner
+    p.push()
+    p.noStroke()
+    p.fill('white')
+    const xOffset = this.windowWidth - (this.hasTouched ? 108 : 81)
+    const yOfffset = this.windowWidth - (this.hasTouched ? 116 : 87)
+    p.translate(xOffset, yOfffset) // move 0,0 to bottom right corner
+    // Scale factor based on the input width
+    const scale = this.hasTouched ? Math.floor(48 / 6) : Math.floor(36 / 6)
+    // Draw speaker body
+    this.drawMuteIconRect(0, 3, 1, 4, scale)
+    this.drawMuteIconRect(2, 3, 1, 4, scale)
+    this.drawMuteIconRect(3, 2, 1, 6, scale)
+    this.drawMuteIconRect(4, 1, 1, 8, scale)
+    this.drawMuteIconRect(5, 0, 1, 10, scale)
+    this.drawMuteIconRect(1, 3, 1, 4, scale)
+
+    if (this.mute) {
+      // NO SOUND rectangles (DISPLAY ON MUTE)
+      this.drawMuteIconRect(7, 4.5, 2.5, 1, scale)
+    } else {
+      // SOUNDWAVE rectangles (DISPLAY ON SOUND)
+      this.drawMuteIconRect(6.5, 4, 1, 2, scale)
+      this.drawMuteIconRect(8, 3, 1, 4, scale)
+    }
+
+    // button tap area a bit margin around icon
+    const muteBtnTapArea = {
+      x: this.hasTouched ? -20 : -6,
+      y: this.hasTouched ? -20 : -6,
+      w: 200
+    }
+    // p.stroke('white')
+    // p.noFill()
+    // p.rect(muteBtnTapArea.x, muteBtnTapArea.y, muteBtnTapArea.w, muteBtnTapArea.w)
+
+    let muteButton = this.buttons['mute-button']
+    if (!muteButton) {
+      this.buttons['mute-button'] = {
+        x: xOffset + muteBtnTapArea.x,
+        y: yOfffset + muteBtnTapArea.y,
+        width: muteBtnTapArea.w,
+        height: muteBtnTapArea.w,
+        onClick: () => {
+          this.mute = !this.mute
+          this.sound?.setMuted(this.mute)
+        }
+      }
+      muteButton = this.buttons['mute-button']
+      muteButton.disabled = false
+    }
+    muteButton.visible = true
+
+    // ADD BUTTON
+    p.pop()
+  },
+
   drawScore() {
     if (this.paused) return
     const { p } = this
@@ -1188,61 +1271,6 @@ export const Visuals = {
         }
         // lvl
         p.text('Lvl ' + this.level, this.windowWidth - 20, 0)
-        // draw mute btn in bottom right corner
-        p.push()
-        p.noStroke()
-        p.fill('white')
-        const xOffset = this.windowWidth - (this.hasTouched ? 108 : 81)
-        const yOfffset = this.windowWidth - (this.hasTouched ? 116 : 87)
-        p.translate(xOffset, yOfffset) // move 0,0 to bottom right corner
-        // Scale factor based on the input width
-        const scale = this.hasTouched ? Math.floor(48 / 6) : Math.floor(36 / 6)
-        // Draw speaker body
-        this.drawMuteIconRect(0, 3, 1, 4, scale)
-        this.drawMuteIconRect(2, 3, 1, 4, scale)
-        this.drawMuteIconRect(3, 2, 1, 6, scale)
-        this.drawMuteIconRect(4, 1, 1, 8, scale)
-        this.drawMuteIconRect(5, 0, 1, 10, scale)
-        this.drawMuteIconRect(1, 3, 1, 4, scale)
-
-        if (this.mute) {
-          // NO SOUND rectangles (DISPLAY ON MUTE)
-          this.drawMuteIconRect(7, 4.5, 2.5, 1, scale)
-        } else {
-          // SOUNDWAVE rectangles (DISPLAY ON SOUND)
-          this.drawMuteIconRect(6.5, 4, 1, 2, scale)
-          this.drawMuteIconRect(8, 3, 1, 4, scale)
-        }
-
-        // button tap area a bit margin around icon
-        const muteBtnTapArea = {
-          x: this.hasTouched ? -20 : -6,
-          y: this.hasTouched ? -20 : -6,
-          w: 200
-        }
-        // p.stroke('white')
-        // p.noFill()
-        // p.rect(muteBtnTapArea.x, muteBtnTapArea.y, muteBtnTapArea.w, muteBtnTapArea.w)
-
-        let muteButton = this.buttons['mute-button']
-        if (!muteButton) {
-          this.buttons['mute-button'] = {
-            x: xOffset + muteBtnTapArea.x,
-            y: yOfffset + muteBtnTapArea.y,
-            width: muteBtnTapArea.w,
-            height: muteBtnTapArea.w,
-            onClick: () => {
-              this.mute = !this.mute
-              this.sound?.setMuted(this.mute)
-            }
-          }
-          muteButton = this.buttons['mute-button']
-          muteButton.disabled = false
-        }
-        muteButton.visible = true
-
-        // ADD BUTTON
-        p.pop()
       }
     }
 
