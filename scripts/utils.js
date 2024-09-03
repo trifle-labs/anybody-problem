@@ -64,14 +64,16 @@ const getPathAddress = async (name) => {
   return savePath
 }
 
-const initContracts = async () => {
-  let [deployer] = await hre.ethers.getSigners()
-  const contractNames = [
+const initContracts = async (
+  contractNames = [
     'AnybodyProblemV0',
     'AnybodyProblem',
     'Speedruns',
     'ExternalMetadata'
   ]
+) => {
+  let [deployer] = await hre.ethers.getSigners()
+
   for (let i = 3; i <= 6; i++) {
     if (i !== 4 && i !== 6) continue
     const ticks = await getTicksRun(i)
@@ -176,7 +178,7 @@ const deployAnybodyProblemV1 = async (options) => {
     Speedruns: speedrunsDeployed,
     ExternalMetadata: externalMetadataDeployed,
     AnybodyProblemV0: anybodyProblemV0Deployed
-  } = await initContracts()
+  } = await initContracts(['AnybodyProblemV0', 'Speedruns', 'ExternalMetadata'])
 
   if (!Speedruns) Speedruns = speedrunsDeployed
   if (!ExternalMetadata) ExternalMetadata = externalMetadataDeployed

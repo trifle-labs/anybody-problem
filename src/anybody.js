@@ -86,6 +86,7 @@ const currentDay = () =>
 
 export class Anybody extends EventEmitter {
   constructor(p, options = {}) {
+    console.log('linked')
     super()
     Object.assign(this, Visuals)
     Object.assign(this, Calculations)
