@@ -1209,6 +1209,22 @@ export const Visuals = {
     p.pop()
   },
 
+  calculatePoints() {
+    return this.hits
+      .map((hit) => {
+        const { position, velocity, radius } = hit
+        const maxDist = this.p.dist(0, 0, this.windowWidth, this.windowHeight)
+        const dist = this.p.dist(position.x, position.y, 0, this.windowHeight)
+        const distPoints = this.p.map(dist, 0, maxDist, 0, 100)
+        const velocityVector = this.p.createVector(velocity.x, velocity.y)
+        const maxVector = this.missileSpeed * this.speedFactor
+        const velPoints = this.p.map(velocityVector.mag(), 0, maxVector, 0, 100)
+        const radiusPoints = this.p.map(radius, 11, 36, 0, 100)
+        return Math.floor(distPoints + velPoints + radiusPoints)
+      })
+      .reduce((acc, curr) => acc + curr, 0)
+  },
+
   drawScore() {
     if (this.paused) return
     const { p } = this
@@ -1246,6 +1262,8 @@ export const Visuals = {
         p.textSize(this.scoreSize * 2)
         p.text(seconds.toFixed(2) + 's', 20, 0)
       } else {
+        const points = this.calculatePoints()
+        p.text(points, 20, 100)
         p.text(secondsLeft.toFixed(2), 20, 0)
         p.textAlign(p.RIGHT, p.TOP)
         if (this.hasTouched) {

@@ -133,6 +133,7 @@ export class Anybody extends EventEmitter {
       todaysRecords: {},
       levelSpeeds: [],
       bodyData: null,
+      gameMode: 'score',
       // debug: false,
       // Add default properties and their initial values here
       startingBodies: 1,
@@ -282,6 +283,7 @@ export class Anybody extends EventEmitter {
 
   // run once at initilization
   init() {
+    this.hits = []
     this.skipAhead = false
     this.winScreenBaddies = undefined
     this.seed = utils.solidityKeccak256(['uint256'], [this.day])

@@ -390,13 +390,17 @@ export const Calculations = {
         this.explosions.push(
           ...this.convertBigIntsToBodies([JSON.parse(JSON.stringify(body))])
         )
+        const { position, velocity, radius } = body
+        this.hits.push(
+          JSON.parse(JSON.stringify({ position, velocity, radius }))
+        )
         if (!this.util) {
           this.makeExplosionStart(x, y)
           this.shakeScreen()
           this.sound?.playExplosion(x, y)
         }
 
-        bodies[j].radius = 0n
+        // bodies[j].radius = 0n
       }
 
       missiles[0] = missile
