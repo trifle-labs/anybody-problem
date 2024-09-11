@@ -241,6 +241,7 @@ export const Visuals = {
 
     this.p.noFill()
     this.drawBg()
+    this.drawTracers()
 
     this.p5Frames++
     this.drawExplosions()
@@ -2781,6 +2782,36 @@ export const Visuals = {
       this.drawBaddie(body)
     }
     this.p.pop()
+  },
+  async drawTracers() {
+    if (this.paused) return
+    if (!this.tracers) {
+      this.tracers = this.p.createGraphics(this.windowWidth, this.windowHeight)
+    }
+    for (let i = 0; i < this.bodies.length; i++) {
+      const { position, velocity, radius, c, bodyIndex } = this.bodies[i]
+      if (radius == 0) continue
+      console.log({ bodyIndex })
+      let color =
+        i == 0 ? c.bg : `hsl(${c.baddie[0]},${c.baddie[1]}%,${c.baddie[2]}%)`
+
+      color = color.replace(')', ',1)')
+      color = color.replace('hsl', 'hsla')
+      this.tracers.stroke(color)
+      // this.tracers.noStroke()
+      const lineLength = 2
+      const centerOfLineX = position.x
+      const centerOfLineY = position.y
+      const vectorOfLineX = velocity.x
+      const vectorOfLineY = velocity.y
+      const lineEndX = centerOfLineX + vectorOfLineX * lineLength
+      const lineEndY = centerOfLineY + vectorOfLineY * lineLength
+      const lineStartX = centerOfLineX - vectorOfLineX * lineLength
+      const lineStartY = centerOfLineY - vectorOfLineY * lineLength
+      this.tracers.line(lineStartX, lineStartY, lineEndX, lineEndY)
+      // this.tracers.circle(position.x, position.y, this.windowWidth / 10)
+    }
+    this.p.image(this.tracers, 0, 0)
   },
 
   async drawBodies() {
