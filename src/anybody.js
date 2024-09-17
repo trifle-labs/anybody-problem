@@ -6,6 +6,7 @@ import { utils } from 'ethers'
 import { bodyThemes } from './colors.js'
 import { loadFonts } from './fonts.js'
 import { Buttons } from './buttons.js'
+import { Intro } from './intro.js'
 
 const GAME_LENGTH_BY_LEVEL_INDEX = [30, 10, 20, 30, 40, 50]
 const NORMAL_GRAVITY = 100
@@ -90,6 +91,7 @@ export class Anybody extends EventEmitter {
     Object.assign(this, Visuals)
     Object.assign(this, Calculations)
     Object.assign(this, Buttons)
+    Object.assign(this, Intro)
 
     this.setOptions(options)
 
