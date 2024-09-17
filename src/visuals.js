@@ -433,13 +433,20 @@ export const Visuals = {
         y: this.windowHeight / 2
       },
       velocity: this.createVector(0, 0),
-      radius: 80,
+      radius: 110,
       backgroundOnly: true,
-      c: { baddie: [0, 0, 120, 1] }
+      c: { baddie: [0, 0, 120, 1], strokeColor: '#FFF', strokeWidth: 0 },
+      rotationSpeedOffset: 0.85
     }
+    const baddie2 = JSON.parse(JSON.stringify(baddie))
+    baddie2.radius = baddie.radius * 0.85
+
     this.p.push()
     this.p.translate(baddie.position.x, baddie.position.y)
     this.drawBaddie(baddie)
+
+    this.p.rotate(0.2554326)
+    this.drawBaddie(baddie2)
     this.p.pop()
 
     const body = this.bodies[0]
