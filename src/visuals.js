@@ -331,7 +331,7 @@ export const Visuals = {
       fg: THEME.teal_50,
       width: 200,
       height: 58,
-      stroke: THEME.teal_50,
+      stroke: THEME.teal_75,
       x: 10,
       y: 10,
       p: this.p
@@ -351,6 +351,117 @@ export const Visuals = {
         this.drawIntroStage2()
         break
       default:
+    }
+  },
+
+  drawIntroStage0() {
+    this.levelCountdown ||= 300
+    this.levelCountdown -= 1
+    if (this.levelCountdown > 250) return
+    const maxBaddieSize = 40
+    const growingSize = 84 - this.levelCountdown / 3
+    const currentSize =
+      growingSize > maxBaddieSize ? maxBaddieSize : growingSize
+    // use baddie bg graphic to draw animating star "birth" bg
+    const baddie = {
+      position: { x: this.windowWidth / 2, y: this.windowHeight / 2 },
+      velocity: this.createVector(0, 0),
+      radius: currentSize,
+      maxRadius: 40,
+      c: { baddie: [0, 0, 0, 1], strokeColor: '#FFF', strokeWidth: 1.5 },
+      backgroundOnly: true,
+      rotationSpeedOffset: 2
+    }
+    const baddie2 = JSON.parse(JSON.stringify(baddie))
+    baddie2.radius = currentSize * 0.74
+    baddie2.rotationSpeedOffset = -1
+
+    const baddie3 = JSON.parse(JSON.stringify(baddie))
+    baddie3.radius = currentSize * 0.47
+    baddie3.c.baddie = [0, 0, 120]
+    baddie3.rotationSpeedOffset = 0
+
+    this.p.push()
+    this.p.translate(baddie.position.x, baddie.position.y)
+
+    this.p.push()
+    this.p.rotate(11.92)
+    this.drawBaddie(baddie)
+    this.p.pop()
+
+    this.p.push()
+    this.p.rotate(-13.28)
+    this.drawBaddie(baddie2)
+    this.p.pop()
+
+    this.drawBaddie(baddie3)
+
+    this.p.pop()
+
+    const w = 254
+    const y = 800
+    // const rateCheck = 50
+    // const rate = this.p5Frames % rateCheck
+    // const numberOfDots =
+    // rate < rateCheck / 3 ? '.' : rate < rateCheck * (2 / 3) ? '..' : '...'
+    if (this.levelCountdown < 125) {
+      this.drawTextBubble({
+        text: 'a new day...',
+        w,
+        x: this.windowWidth / 2 - w / 2,
+        y,
+        fg: THEME.iris_30,
+        stroke: THEME.iris_60,
+        bg: 'black'
+      })
+    }
+    if (this.levelCountdown <= 0) {
+      this.introStage++
+    }
+  },
+
+  drawIntroStage1() {
+    if (!this.playedStage1Sound) {
+      this.playedStage1Sound = true
+      this.sound?.twinkle()
+    }
+    this.levelCountdown ||= 250
+    this.levelCountdown -= 1
+    const baddie = {
+      position: {
+        x: this.windowWidth / 2,
+        y: this.windowHeight / 2
+      },
+      velocity: this.createVector(0, 0),
+      radius: 80,
+      backgroundOnly: true,
+      c: { baddie: [0, 0, 120, 1] }
+    }
+    this.p.push()
+    this.p.translate(baddie.position.x, baddie.position.y)
+    this.drawBaddie(baddie)
+    this.p.pop()
+
+    const body = this.bodies[0]
+    this.drawBody(body)
+
+    const w = 268
+    const y = 800
+    // const rateCheck = 50
+    // const rate = this.p5Frames % rateCheck
+    // const numberOfDots =
+    // rate < rateCheck / 3 ? '.' : rate < rateCheck * (2 / 3) ? '..' : '...'
+    this.drawTextBubble({
+      text: 'a new BODY !',
+      w,
+      x: this.windowWidth / 2 - w / 2,
+      y,
+      fg: THEME.iris_30,
+      stroke: THEME.iris_60,
+      bg: 'black'
+    })
+    if (this.levelCountdown <= 0) {
+      this.introStage++
     }
   },
 
@@ -475,115 +586,6 @@ export const Visuals = {
         this.handleGameOver({ won: true })
         this.playedIntro = true
       }, 3000)
-    }
-  },
-
-  drawIntroStage1() {
-    if (!this.playedStage1Sound) {
-      this.playedStage1Sound = true
-      this.sound?.twinkle()
-    }
-    this.levelCountdown ||= 250
-    this.levelCountdown -= 1
-    const baddie = {
-      position: {
-        x: this.windowWidth / 2,
-        y: this.windowHeight / 2
-      },
-      velocity: this.createVector(0, 0),
-      radius: 80,
-      backgroundOnly: true,
-      c: { baddie: [0, 0, 120, 1] }
-    }
-    this.p.push()
-    this.p.translate(baddie.position.x, baddie.position.y)
-    this.drawBaddie(baddie)
-    this.p.pop()
-
-    const body = this.bodies[0]
-    this.drawBody(body)
-
-    const w = 268
-    const y = 800
-    // const rateCheck = 50
-    // const rate = this.p5Frames % rateCheck
-    // const numberOfDots =
-    // rate < rateCheck / 3 ? '.' : rate < rateCheck * (2 / 3) ? '..' : '...'
-    this.drawTextBubble({
-      text: 'a new BODY !',
-      w,
-      x: this.windowWidth / 2 - w / 2,
-      y,
-      fg: THEME.iris_30,
-      stroke: THEME.iris_60,
-      bg: 'black'
-    })
-    if (this.levelCountdown <= 0) {
-      this.introStage++
-    }
-  },
-  drawIntroStage0() {
-    this.levelCountdown ||= 300
-    this.levelCountdown -= 1
-    if (this.levelCountdown > 250) return
-    const maxBaddieSize = 40
-    const growingSize = 84 - this.levelCountdown / 3
-    const currentSize =
-      growingSize > maxBaddieSize ? maxBaddieSize : growingSize
-    const baddie = {
-      position: { x: this.windowWidth / 2, y: this.windowHeight / 2 },
-      velocity: this.createVector(0, 0),
-      radius: currentSize,
-      maxRadius: 40,
-      c: { baddie: [0, 0, 0, 0], strokeColor: '#FFF', strokeWidth: 1.5 },
-      backgroundOnly: true,
-      rotationSpeedOffset: 2
-    }
-    const baddie2 = JSON.parse(JSON.stringify(baddie))
-    baddie2.radius = currentSize * 0.74
-    baddie2.rotationSpeedOffset = -1
-
-    const baddie3 = JSON.parse(JSON.stringify(baddie))
-    baddie3.radius = currentSize * 0.47
-    baddie3.c.baddie = [0, 0, 120]
-    baddie3.rotationSpeedOffset = 0
-
-    this.p.push()
-    this.p.translate(baddie.position.x, baddie.position.y)
-
-    this.p.push()
-    this.p.rotate(11.92)
-    this.drawBaddie(baddie)
-    this.p.pop()
-
-    this.p.push()
-    this.p.rotate(-13.28)
-    this.drawBaddie(baddie2)
-    this.p.pop()
-
-    this.drawBaddie(baddie3)
-
-    this.p.pop()
-
-    const w = 254
-    const y = 800
-    // const rateCheck = 50
-    // const rate = this.p5Frames % rateCheck
-    // const numberOfDots =
-    // rate < rateCheck / 3 ? '.' : rate < rateCheck * (2 / 3) ? '..' : '...'
-    if (this.levelCountdown < 125) {
-      this.drawTextBubble({
-        text: 'a new day...',
-        w,
-        x: this.windowWidth / 2 - w / 2,
-        y,
-        fg: THEME.iris_30,
-        stroke: THEME.iris_60,
-        bg: 'black'
-      })
-    }
-    if (this.levelCountdown <= 0) {
-      this.introStage++
     }
   },
 
@@ -2877,7 +2879,7 @@ export const Visuals = {
     const colorHSL = body.c.baddie
     const coreWidth = body.radius * BODY_SCALE
     const maxWidth = (body.maxRadius || body.radius) * BODY_SCALE
-    let bgColor = this.brighten(colorHSL, -20)
+    const bgColor = this.brighten(colorHSL, -20)
     const coreColor = `hsl(${colorHSL[0]},${colorHSL[1]}%,${colorHSL[2]}%)`
     this.p.push()
     const rotationSpeedOffset = body.rotationSpeedOffset || 1
