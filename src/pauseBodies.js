@@ -6,8 +6,8 @@ export const PAUSE_BODY_DATA = [
     py: 290750,
     vx: -100000,
     vy: -1000000,
-    exitX: 100_000,
-    exitY: -600_000
+    exitX: 100,
+    exitY: -600
   },
   // upper right
   {
@@ -17,8 +17,8 @@ export const PAUSE_BODY_DATA = [
     py: 133029,
     vx: 1000000,
     vy: -10000000,
-    exitX: 300_000,
-    exitY: -50_000
+    exitX: 300,
+    exitY: -50
   },
   // mid right
   {
@@ -28,8 +28,8 @@ export const PAUSE_BODY_DATA = [
     py: 328711,
     vx: 100000,
     vy: -1000000,
-    exitX: 500_000,
-    exitY: 50_000
+    exitX: 500,
+    exitY: 50
   },
   // upper left
   {
@@ -39,8 +39,8 @@ export const PAUSE_BODY_DATA = [
     py: 234946,
     vx: -100000,
     vy: -1000000,
-    exitX: -300_000,
-    exitY: -400_000
+    exitX: -300,
+    exitY: -400
   },
   // mid left
   {
@@ -50,8 +50,8 @@ export const PAUSE_BODY_DATA = [
     py: 464946,
     vx: -100000,
     vy: -1000000,
-    exitX: -400_000,
-    exitY: -50_000
+    exitX: -400,
+    exitY: -50
   },
   // bottom right
   {
@@ -61,8 +61,8 @@ export const PAUSE_BODY_DATA = [
     py: 668946,
     vx: 100000,
     vy: -1000000,
-    exitX: 600_000,
-    exitY: 300_000
+    exitX: 600,
+    exitY: 300
   }
 ]
 
