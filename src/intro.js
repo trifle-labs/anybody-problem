@@ -79,7 +79,6 @@ export const Intro = {
         x: this.windowWidth / 2 - w / 2,
         y: msgY,
         fg: THEME.iris_30,
-        stroke: THEME.iris_60,
         bg: 'black'
       })
     }
@@ -131,7 +130,6 @@ export const Intro = {
       x: this.windowWidth / 2 - w / 2,
       y: msgY,
       fg: THEME.iris_30,
-      stroke: THEME.iris_60,
       bg: 'black'
     })
     if (this.levelCountdown <= 0) {
@@ -174,8 +172,7 @@ export const Intro = {
 
     let w,
       text,
-      fg = THEME.iris_30,
-      stroke = THEME.iris_60
+      fg = THEME.iris_30
 
     const chunk_1 = 1.5 * this.P5_FPS
     const chunk_2 = 2.5 * this.P5_FPS
@@ -192,7 +189,6 @@ export const Intro = {
       w = 268
       text = 'BLAST IT !!!'
       fg = THEME.pink_50
-      stroke = THEME.pink_60
     }
 
     // hit hero
@@ -205,7 +201,6 @@ export const Intro = {
           x: this.windowWidth / 2 - w / 2,
           y: msgY,
           fg,
-          stroke,
           bg: 'black'
         })
       }
@@ -238,7 +233,6 @@ export const Intro = {
         x: this.windowWidth / 2 - w / 2,
         y: msgY,
         fg,
-        stroke,
         bg: 'black'
       })
     } else if (this.introBodies[1].radius == 0) {
@@ -251,7 +245,6 @@ export const Intro = {
         x: this.windowWidth / 2 - w / 2,
         y: msgY,
         fg: THEME.green_50,
-        stroke: THEME.green_75,
         bg: 'black'
       })
 
@@ -275,8 +268,7 @@ export const Intro = {
         w,
         x: this.windowWidth / 2 - w / 2,
         y,
-        fg: THEME.pink_50,
-        stroke: THEME.pink_60
+        fg: THEME.pink_50
       })
     }
   },
@@ -289,20 +281,20 @@ export const Intro = {
     this.playedIntro = true
   },
   drawSkipButton() {
-    const width = 180
-    const pad = 12
+    const width = 220
     this.drawButton({
       text: 'SKIP',
       onClick: () => {
         this.skipIntro()
       },
-      bg: THEME.teal_75,
+      bg: 'black',
       fg: THEME.teal_50,
-      width,
-      height: 58,
       stroke: THEME.teal_75,
-      x: this.windowWidth - pad - width,
-      y: pad,
+      width,
+      height: 72,
+      textSize: 56,
+      x: this.windowWidth - width - 14,
+      y: 16,
       p: this.p
     })
   }

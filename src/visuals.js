@@ -323,7 +323,7 @@ export const Visuals = {
     fz = 48,
     fg,
     bg,
-    stroke,
+    stroke = 'transparent',
     align = [this.p.CENTER, this.p.TOP]
   }) {
     // return defaults for local calcs
