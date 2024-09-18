@@ -4,7 +4,9 @@ const iris_50 = 'rgba(121, 88, 255, 1)'
 const iris_75 = 'rgba(23, 12, 67, 1)'
 const iris_100 = 'rgba(25, 15, 66, 1)'
 const teal_50 = 'rgba(137, 255, 248, 1)'
-const teal_75 = 'rgba(13, 61, 58, 1)'
+const teal_60 = '#4CB1AB'
+const teal_75 = '#0A3330'
+const teal_90 = '#062927'
 const flame_50 = 'rgba(255, 88, 88, 1)'
 const flame_75 = 'rgba(70, 12, 12, 1)'
 const pink_50 = 'rgba(255, 105, 177, 1)'
@@ -36,7 +38,9 @@ export const THEME = {
   iris_60,
   iris_75,
   teal_50,
+  teal_60,
   teal_75,
+  teal_90,
   flame_50,
   flame_75,
   pink: 'rgba(236, 205, 255, 1)',

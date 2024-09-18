@@ -237,7 +237,7 @@ export const Intro = {
       })
     } else if (this.introBodies[1].radius == 0) {
       // hit baddie
-      const w = 320
+      const w = 340
       const text = "BOOM!!  let's go..."
       this.drawTextBubble({
         text,
@@ -287,9 +287,9 @@ export const Intro = {
       onClick: () => {
         this.skipIntro()
       },
-      bg: 'black',
+      bg: THEME.teal_90,
       fg: THEME.teal_50,
-      stroke: THEME.teal_75,
+      // stroke: THEME.teal_60,
       width,
       height: 72,
       textSize: 56,
