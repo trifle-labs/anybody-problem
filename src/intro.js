@@ -23,13 +23,13 @@ export const Intro = {
 
   drawIntroStage0() {
     this.missilesDisabled = true
-    this.levelCountdown ||= 300
+    const duration = 250
+    this.levelCountdown ||= duration
     this.levelCountdown -= 1
-    if (this.levelCountdown > 250) return
-    const maxBaddieSize = 40
-    const growingSize = 84 - this.levelCountdown / 3
+
+    const maxBaddieSize = 50
     const currentSize =
-      growingSize > maxBaddieSize ? maxBaddieSize : growingSize
+      0 + (maxBaddieSize / duration) * (duration - this.levelCountdown)
 
     // use baddie bg graphic to draw animating star "birth" bg
     const baddie = {

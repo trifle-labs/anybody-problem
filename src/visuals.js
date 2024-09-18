@@ -421,10 +421,13 @@ export const Visuals = {
   drawPause() {
     if (!fonts.dot || !this.paused || this.showProblemRankingsScreenAt !== -1)
       return
+    this.drawTitleScreen()
+  },
 
+  drawTitleScreen() {
     const p = this.p
 
-    const unpauseDuration = this.level == 0 ? 1 : 0
+    const unpauseDuration = this.level == 0 ? 0.7 : 0
     const unpauseFrames = unpauseDuration * this.P5_FPS
     if (this.willUnpause && !this.beganUnpauseAt) {
       this.willUnpause = true
@@ -475,7 +478,7 @@ export const Visuals = {
     drawKernedText(p, 'Anybody', 92, titleY, 0.8)
     drawKernedText(p, 'Problem', 92, titleY + 183, 2)
 
-    this.drawPauseBodies()
+    this.drawTitleScreenBodies({ fleeDuration: unpauseDuration })
 
     if (!this.willUnpause) {
       // play button
@@ -518,6 +521,7 @@ export const Visuals = {
       p.pop()
     }
   },
+
   drawBodyOutlines() {
     for (let i = 0; i < this.bodies.length; i++) {
       const body = this.bodies[i]
@@ -2489,7 +2493,7 @@ export const Visuals = {
     }
   },
 
-  drawPauseBodies() {
+  drawTitleScreenBodies({ fleeDuration = 1 }) {
     for (let i = 0; i < this.pauseBodies.length; i++) {
       const body = this.pauseBodies[i]
       // after final proof is sent, don't draw upgradable bodies
@@ -2502,8 +2506,7 @@ export const Visuals = {
         this.p.cos(this.p.frameCount / this.P5_FPS + body.bodyIndex * 3) *
         (16 + body.bodyIndex)
 
-      // if not paused, bodies should flee to the nearest side of the screen
-      const fleeDuration = 1.5 // seconds
+      // if not paused, bodies flee (using vx/vy values additively)
       const xFlee =
         this.willUnpause && this.beganUnpauseAt
           ? this.p.map(
@@ -2511,9 +2514,7 @@ export const Visuals = {
               0,
               this.P5_FPS * fleeDuration,
               0,
-              body.position.x > this.windowWidth / 2
-                ? this.windowWidth + 300
-                : -300
+              body.velocity.x
             )
           : 0
       const yFlee =
@@ -2523,9 +2524,7 @@ export const Visuals = {
               0,
               this.P5_FPS * fleeDuration,
               0,
-              body.position.y > this.windowHeight / 2
-                ? this.windowHeight + 300
-                : -300
+              body.velocity.y
             )
           : 0
 
@@ -2534,7 +2533,6 @@ export const Visuals = {
         hero: !i,
         c: body.c,
         radius: body.radius,
-        velocity: this.p.createVector(body.velocity.x, body.velocity.y),
         position: this.p.createVector(
           body.position.x + xWobble + xFlee,
           body.position.y + yWobble + yFlee

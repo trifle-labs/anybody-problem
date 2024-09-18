@@ -30,10 +30,10 @@ const PAUSE_BODY_DATA = [
   {
     bodyIndex: 0,
     radius: 51_000,
-    px: 500300,
+    px: 500000,
     py: 290750,
-    vx: 0,
-    vy: 0
+    vx: 100_000, // used as additive value to exit X
+    vy: -600_000 // used as additive value to exit Y
   },
   // upper right
   {
@@ -41,8 +41,8 @@ const PAUSE_BODY_DATA = [
     radius: 11_000,
     px: 793406,
     py: 133029,
-    vx: 0,
-    vy: 0
+    vx: 300_000,
+    vy: -50_000
   },
   // mid right
   {
@@ -50,8 +50,8 @@ const PAUSE_BODY_DATA = [
     radius: 23_000,
     px: 825620,
     py: 418711,
-    vx: -100000,
-    vy: -1111000
+    vx: 500_000,
+    vy: 50_000
   },
   // upper left
   {
@@ -59,24 +59,26 @@ const PAUSE_BODY_DATA = [
     radius: 27_000,
     px: 159878,
     py: 234946,
-    vx: 0,
-    vy: 0
+    vx: -300_000,
+    vy: -400_000
   },
+  // mid left
   {
     bodyIndex: 3,
     radius: 19_000,
     px: 229878,
     py: 464946,
-    vx: 0,
-    vy: 0
+    vx: -400_000,
+    vy: -50_000
   },
+  // bottom right
   {
     bodyIndex: 4,
     radius: 15_000,
     px: 679878,
     py: 668946,
-    vx: -100000,
-    vy: -1111000
+    vx: 600_000,
+    vy: 300_000
   }
 ]
 
