@@ -421,17 +421,14 @@ export const Visuals = {
   drawPause() {
     if (!fonts.dot || !this.paused || this.showProblemRankingsScreenAt !== -1)
       return
-    this.drawTitleScreen()
-  },
 
-  drawTitleScreen() {
     const p = this.p
 
     const unpauseDuration = this.level == 0 ? 0.7 : 0
     const unpauseFrames = unpauseDuration * this.P5_FPS
+
     if (this.willUnpause && !this.beganUnpauseAt) {
-      this.willUnpause = true
-      this.beganUnpauseAt = this.p5Frames
+      this.beganUnpauseAt = unpauseFrames ? this.p5Frames : 0
     }
 
     // pause and return when unpause finished
@@ -478,7 +475,7 @@ export const Visuals = {
     drawKernedText(p, 'Anybody', 92, titleY, 0.8)
     drawKernedText(p, 'Problem', 92, titleY + 183, 2)
 
-    this.drawTitleScreenBodies({ fleeDuration: unpauseDuration })
+    this.drawPauseBodies({ fleeDuration: unpauseDuration })
 
     if (!this.willUnpause) {
       // play button
@@ -2493,7 +2490,7 @@ export const Visuals = {
     }
   },
 
-  drawTitleScreenBodies({ fleeDuration = 1 }) {
+  drawPauseBodies({ fleeDuration = 1 }) {
     for (let i = 0; i < this.pauseBodies.length; i++) {
       const body = this.pauseBodies[i]
       // after final proof is sent, don't draw upgradable bodies
@@ -2539,6 +2536,7 @@ export const Visuals = {
           body.position.y + yWobble + yFlee
         )
       }
+
       this.drawBody(bodyCopy)
     }
   },
