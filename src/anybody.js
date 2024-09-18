@@ -451,11 +451,6 @@ export class Anybody extends EventEmitter {
           this.level++
           this.restart(null, false)
         }
-        if (this.level == 0 && !this.paused) {
-          this.skipIntro()
-        } else if (this.paused) {
-          this.setPause(false)
-        }
         break
       case 'KeyR':
         if (this.level < 1) return
@@ -1017,26 +1012,15 @@ export class Anybody extends EventEmitter {
   }
 
   missileClick(x, y) {
-    if (this.gameOver) return
-    if (
-      this.paused ||
-      (this.introStage !== this.totalIntroStages - 1 && this.level < 1)
-    )
-      return
-    if (this.introStage == this.totalIntroStages - 1 && this.level < 1) {
-      // NOTE: these values are in drawIntroStage2
-      const chunk_1 = 1.5 * this.P5_FPS
-      const chunk_2 = 2.5 * this.P5_FPS
-      const chunk_3 = 2 * this.P5_FPS
-      const levelMaxTime = chunk_1 + chunk_2 + chunk_3
-      if (this.levelCounting < levelMaxTime) return
-    }
+    if (this.gameOver || this.paused || this.missilesDisabled) return
+
     if (
       this.bodies.reduce((a, c) => a + c.radius, 0) == 0 ||
       this.frames - this.startingFrame >= this.timer
     ) {
       return
     }
+
     if (this.frames % this.stopEvery == 0) {
       console.log('MISSILE CANT BE FIRED ON EDGE ATM')
       this.shootMissileNextFrame = { x, y }

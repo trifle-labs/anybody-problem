@@ -312,31 +312,6 @@ export const Visuals = {
     //   this.drawDebugPrompt()
     // }
   },
-  skipIntro() {
-    this.introStage = 3
-    this.levelCounting = 99999
-    this.skipAhead = true
-    this.handleGameOver({ won: true })
-    this.playedIntro = true
-  },
-  drawSkipButton() {
-    const width = 180
-    const pad = 12
-    this.drawButton({
-      text: 'SKIP',
-      onClick: () => {
-        this.skipIntro()
-      },
-      bg: THEME.teal_75,
-      fg: THEME.teal_50,
-      width,
-      height: 58,
-      stroke: THEME.teal_75,
-      x: this.windowWidth - pad - width,
-      y: pad,
-      p: this.p
-    })
-  },
 
   drawTextBubble({
     text = '',

@@ -22,6 +22,7 @@ export const Intro = {
   },
 
   drawIntroStage0() {
+    this.missilesDisabled = true
     this.levelCountdown ||= 300
     this.levelCountdown -= 1
     if (this.levelCountdown > 250) return
@@ -161,9 +162,9 @@ export const Intro = {
         c: { baddie: this.bodies[0].c.baddie }
       }
     ]
-    this.introBodies.forEach((body) => {
-      this.drawBody(body)
-    })
+
+    this.introBodies.forEach((body) => this.drawBody(body))
+
     if (this.p5Frames % this.P5_FPS_MULTIPLIER == 0) {
       const results = this.step(this.introBodies, this.missiles)
 
@@ -187,13 +188,14 @@ export const Intro = {
       w = 530
       text = 'a BADDIE came into orbit !!'
     } else {
+      this.missilesDisabled = false
       w = 268
       text = 'BLAST IT !!!'
       fg = THEME.pink_50
       stroke = THEME.pink_60
     }
 
-    // hit hero...
+    // hit hero
     if (this.introBodies[0].radius == 0 && this.introBodies[1].radius !== 0) {
       const w = 532
       if (this.levelCounting > levelMaxTime) {
@@ -241,7 +243,7 @@ export const Intro = {
       })
     } else if (this.introBodies[1].radius == 0) {
       // hit baddie
-      const w = 360
+      const w = 320
       const text = "BOOM!!  let's go..."
       this.drawTextBubble({
         text,
@@ -277,5 +279,31 @@ export const Intro = {
         stroke: THEME.pink_60
       })
     }
+  },
+  skipIntro() {
+    this.missilesDisabled = false
+    this.introStage = 3
+    this.levelCounting = 99999
+    this.skipAhead = true
+    this.handleGameOver({ won: true })
+    this.playedIntro = true
+  },
+  drawSkipButton() {
+    const width = 180
+    const pad = 12
+    this.drawButton({
+      text: 'SKIP',
+      onClick: () => {
+        this.skipIntro()
+      },
+      bg: THEME.teal_75,
+      fg: THEME.teal_50,
+      width,
+      height: 58,
+      stroke: THEME.teal_75,
+      x: this.windowWidth - pad - width,
+      y: pad,
+      p: this.p
+    })
   }
 }
