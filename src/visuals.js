@@ -2533,6 +2533,7 @@ export const Visuals = {
         hero: !i,
         c: body.c,
         radius: body.radius,
+        velocity: this.p.createVector(body.velocity.x, body.velocity.y),
         position: this.p.createVector(
           body.position.x + xWobble + xFlee,
           body.position.y + yWobble + yFlee
