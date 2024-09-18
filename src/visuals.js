@@ -181,6 +181,7 @@ const CORE_SVGS = [CORE_SVG]
 import BADDIE_BG_SVG from 'bundle-text:/public/baddies/baddie-bg.svg'
 import BADDIE_CORE_SVG from 'bundle-text:/public/baddies/baddie-core.svg'
 import BADDIE_FACE_SVG from 'bundle-text:/public/baddies/baddie-face.svg'
+import PAUSE_BODY_DATA from './pauseBodies.js'
 const BADDIE_SVG = {
   bg: BADDIE_BG_SVG,
   core: BADDIE_CORE_SVG,
@@ -2511,7 +2512,7 @@ export const Visuals = {
               0,
               this.P5_FPS * fleeDuration,
               0,
-              body.velocity.x
+              PAUSE_BODY_DATA[i].exitX
             )
           : 0
       const yFlee =
@@ -2521,7 +2522,7 @@ export const Visuals = {
               0,
               this.P5_FPS * fleeDuration,
               0,
-              body.velocity.y
+              PAUSE_BODY_DATA[i].exitY
             )
           : 0
 
