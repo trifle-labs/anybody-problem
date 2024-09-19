@@ -72,7 +72,7 @@ export const Intro = {
     // const rate = this.p5Frames % rateCheck
     // const numberOfDots =
     // rate < rateCheck / 3 ? '.' : rate < rateCheck * (2 / 3) ? '..' : '...'
-    if (this.levelCountdown < 125) {
+    if (this.levelCountdown < 175) {
       this.drawTextBubble({
         text: 'a new day...',
         w,
@@ -172,7 +172,8 @@ export const Intro = {
 
     let w,
       text,
-      fg = THEME.iris_30
+      fg = THEME.iris_30,
+      stroke
 
     const chunk_1 = 1.5 * this.P5_FPS
     const chunk_2 = 2.5 * this.P5_FPS
@@ -189,6 +190,7 @@ export const Intro = {
       w = 268
       text = 'BLAST IT !!!'
       fg = THEME.pink_50
+      stroke = THEME.pink_60
     }
 
     // hit hero
@@ -233,7 +235,8 @@ export const Intro = {
         x: this.windowWidth / 2 - w / 2,
         y: msgY,
         fg,
-        bg: 'black'
+        bg: 'black',
+        stroke
       })
     } else if (this.introBodies[1].radius == 0) {
       // hit baddie
@@ -245,7 +248,8 @@ export const Intro = {
         x: this.windowWidth / 2 - w / 2,
         y: msgY,
         fg: THEME.green_50,
-        bg: 'black'
+        bg: 'black',
+        stroke: THEME.green_75
       })
 
       this.timeout ||= setTimeout(() => {
@@ -268,7 +272,8 @@ export const Intro = {
         w,
         x: this.windowWidth / 2 - w / 2,
         y,
-        fg: THEME.pink_50
+        fg: THEME.pink_50,
+        stroke: THEME.pink_60
       })
     }
   },
