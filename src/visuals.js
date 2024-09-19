@@ -181,6 +181,7 @@ const CORE_SVGS = [CORE_SVG]
 import BADDIE_BG_SVG from 'bundle-text:/public/baddies/baddie-bg.svg'
 import BADDIE_CORE_SVG from 'bundle-text:/public/baddies/baddie-core.svg'
 import BADDIE_FACE_SVG from 'bundle-text:/public/baddies/baddie-face.svg'
+import PAUSE_BODY_DATA from './pauseBodies.js'
 const BADDIE_SVG = {
   bg: BADDIE_BG_SVG,
   core: BADDIE_CORE_SVG,
@@ -311,280 +312,6 @@ export const Visuals = {
     // } else {
     //   this.drawDebugPrompt()
     // }
-
-    this.drawTips()
-  },
-  skipIntro() {
-    this.introStage = 3
-    this.levelCounting = 99999
-    this.skipAhead = true
-    this.handleGameOver({ won: true })
-    this.playedIntro = true
-  },
-  drawSkipButton() {
-    this.drawButton({
-      text: 'SKIP',
-      onClick: () => {
-        this.skipIntro()
-      },
-      bg: THEME.teal_75,
-      fg: THEME.teal_50,
-      width: 200,
-      height: 58,
-      stroke: THEME.teal_50,
-      x: 10,
-      y: 10,
-      p: this.p
-    })
-  },
-  drawIntro() {
-    this.drawSkipButton()
-
-    switch (this.introStage) {
-      case 0:
-        this.drawIntroStage0()
-        break
-      case 1:
-        this.drawIntroStage1()
-        break
-      case 2:
-        this.drawIntroStage2()
-        break
-      default:
-    }
-  },
-
-  drawIntroStage2() {
-    if (!this.playedStage2Sound) {
-      this.playedStage2Sound = true
-      this.sound?.floop()
-    }
-
-    this.levelCounting ||= 0
-    this.levelCounting += 1
-
-    this.introBodies ||= [
-      (() => {
-        const b = JSON.parse(JSON.stringify(this.bodies[0]))
-        b.velocity.x = -6.5
-        b.velocity.y = 6.5
-        return b
-      })(),
-      {
-        position: { x: this.windowWidth - 100, y: 100 },
-        velocity: { x: 0, y: 0 },
-        radius: 42,
-        c: { baddie: this.bodies[0].c.baddie }
-      }
-    ]
-    this.introBodies.forEach((body) => {
-      this.drawBody(body)
-    })
-    if (this.p5Frames % this.P5_FPS_MULTIPLIER == 0) {
-      const results = this.step(this.introBodies, this.missiles)
-
-      this.introBodies = results.bodies
-      this.missiles = results.missiles
-    }
-
-    let w,
-      text,
-      fg = THEME.iris_30,
-      stroke = THEME.iris_60
-
-    const chunk_1 = 1.5 * this.P5_FPS
-    const chunk_2 = 2.5 * this.P5_FPS
-    const chunk_3 = 2 * this.P5_FPS
-    const levelMaxTime = chunk_1 + chunk_2 + chunk_3
-    if (this.levelCounting < chunk_1) {
-      w = 180
-      text = 'oh no !!'
-    } else if (this.levelCounting < chunk_1 + chunk_2) {
-      w = 530
-      text = 'a BADDIE came into orbit !!'
-    } else {
-      w = 268
-      text = 'BLAST IT !!!'
-      fg = THEME.pink_50
-      stroke = THEME.pink_75
-    }
-
-    if (this.introBodies[0].radius == 0 && this.introBodies[1].radius !== 0) {
-      const w = 368
-      const y = 800
-      if (this.levelCounting > levelMaxTime) {
-        this.drawTextBubble({
-          text: 'oops, try again !!',
-          w,
-          x: this.windowWidth / 2 - w / 2,
-          y,
-          fg,
-          stroke,
-          bg: 'black'
-        })
-      }
-
-      this.timeout ||= setTimeout(() => {
-        const b = this.introBodies[0]
-        b.radius = 56
-        b.position = {
-          x: this.windowWidth / 2,
-          y: this.windowHeight / 2
-        }
-        b.velocity = { x: 0, y: 0 }
-        b.vx = null
-        b.vy = null
-        b.px = null
-        b.py = null
-        this.explosions = []
-        clearTimeout(this.timeout)
-        this.timeout = null
-      }, 3000)
-    }
-
-    if (this.levelCounting < levelMaxTime && this.introBodies[0].radius > 0) {
-      const y = 800
-      this.drawTextBubble({
-        text,
-        w,
-        x: this.windowWidth / 2 - w / 2,
-        y,
-        fg,
-        stroke,
-        bg: 'black'
-      })
-    } else if (this.introBodies[1].radius == 0) {
-      const w = 330
-      const y = 800
-      const text = "NICE - let's go !"
-      this.drawTextBubble({
-        text,
-        w,
-        x: this.windowWidth / 2 - w / 2,
-        y,
-        fg: THEME.iris_30,
-        stroke: THEME.iris_60,
-        bg: 'black'
-      })
-
-      this.timeout ||= setTimeout(() => {
-        this.introStage++
-        clearTimeout(this.timeout)
-        this.timeout = null
-        this.skipAhead = true
-        this.handleGameOver({ won: true })
-        this.playedIntro = true
-      }, 3000)
-    }
-  },
-
-  drawIntroStage1() {
-    if (!this.playedStage1Sound) {
-      this.playedStage1Sound = true
-      this.sound?.twinkle()
-    }
-    this.levelCountdown ||= 250
-    this.levelCountdown -= 1
-    const baddie = {
-      position: {
-        x: this.windowWidth / 2,
-        y: this.windowHeight / 2
-      },
-      velocity: this.createVector(0, 0),
-      radius: 80,
-      backgroundOnly: true,
-      c: { baddie: [0, 0, 120, 1] }
-    }
-    this.p.push()
-    this.p.translate(baddie.position.x, baddie.position.y)
-    this.drawBaddie(baddie)
-    this.p.pop()
-
-    const body = this.bodies[0]
-    this.drawBody(body)
-
-    const w = 268
-    const y = 800
-    // const rateCheck = 50
-    // const rate = this.p5Frames % rateCheck
-    // const numberOfDots =
-    // rate < rateCheck / 3 ? '.' : rate < rateCheck * (2 / 3) ? '..' : '...'
-    this.drawTextBubble({
-      text: 'a new BODY !',
-      w,
-      x: this.windowWidth / 2 - w / 2,
-      y,
-      fg: THEME.iris_30,
-      stroke: THEME.iris_60,
-      bg: 'black'
-    })
-    if (this.levelCountdown <= 0) {
-      this.introStage++
-    }
-  },
-  drawIntroStage0() {
-    this.levelCountdown ||= 300
-    this.levelCountdown -= 1
-    if (this.levelCountdown > 250) return
-    const maxBaddieSize = 40
-    const growingSize = 84 - this.levelCountdown / 3
-    const currentSize =
-      growingSize > maxBaddieSize ? maxBaddieSize : growingSize
-    const baddie = {
-      position: { x: this.windowWidth / 2, y: this.windowHeight / 2 },
-      velocity: this.createVector(0, 0),
-      radius: currentSize,
-      maxRadius: 40,
-      c: { baddie: [0, 0, 0, 0], strokeColor: '#FFF', strokeWidth: 1.5 },
-      backgroundOnly: true,
-      rotationSpeedOffset: 2
-    }
-    const baddie2 = JSON.parse(JSON.stringify(baddie))
-    baddie2.radius = currentSize * 0.74
-    baddie2.rotationSpeedOffset = -1
-
-    const baddie3 = JSON.parse(JSON.stringify(baddie))
-    baddie3.radius = currentSize * 0.47
-    baddie3.c.baddie = [0, 0, 120]
-    baddie3.rotationSpeedOffset = 0
-
-    this.p.push()
-    this.p.translate(baddie.position.x, baddie.position.y)
-
-    this.p.push()
-    this.p.rotate(11.92)
-    this.drawBaddie(baddie)
-    this.p.pop()
-
-    this.p.push()
-    this.p.rotate(-13.28)
-    this.drawBaddie(baddie2)
-    this.p.pop()
-
-    this.drawBaddie(baddie3)
-
-    this.p.pop()
-
-    const w = 254
-    const y = 800
-    // const rateCheck = 50
-    // const rate = this.p5Frames % rateCheck
-    // const numberOfDots =
-    // rate < rateCheck / 3 ? '.' : rate < rateCheck * (2 / 3) ? '..' : '...'
-    if (this.levelCountdown < 125) {
-      this.drawTextBubble({
-        text: 'a new day...',
-        w,
-        x: this.windowWidth / 2 - w / 2,
-        y,
-        fg: THEME.iris_30,
-        stroke: THEME.iris_60,
-        bg: 'black'
-      })
-    }
-    if (this.levelCountdown <= 0) {
-      this.introStage++
-    }
   },
 
   drawTextBubble({
@@ -614,43 +341,8 @@ export const Visuals = {
     p.textSize(fz)
     p.fill(fg ?? THEME.iris_30)
     p.noStroke()
-    p.text(text, x + w / 2, y + (h - fz) / 2)
+    p.text(text, x + w / 2, y + (h - fz) / 2 - 1)
     p.pop()
-  },
-
-  drawTips() {
-    if (
-      this.introStage == this.totalIntroStages - 1 &&
-      this.levelCounting >= 6 * this.P5_FPS &&
-      !(this.paused || this.won || this.gameOver)
-    ) {
-      // how to shoot
-      const { h } = this.drawTextBubble({})
-      const gttr = 24
-      let w = this.hasTouched ? 300 : 520
-      let y = this.windowHeight - h - gttr
-      this.drawTextBubble({
-        text: this.hasTouched ? 'TAP to Shoot' : 'CLICK or {SPACE} to shoot',
-        w,
-        x: this.windowWidth / 2 - w / 2,
-        y,
-        fg: THEME.pink_50,
-        stroke: 'transparent'
-      })
-
-      // how to reset
-      // w = this.hasTouched ? 700 : 570
-      // y = this.windowHeight - (h + 32)
-      // this.drawTextBubble({
-      //   text: this.hasTouched ? 'Tap the TIMER to restart the level'
-      //   : 'Press {R} to restart the level',
-      //   w,
-      //   x: this.windowWidth / 2 - w / 2,
-      //   y,
-      //   fg: THEME.teal_50,
-      //   stroke: 'transparent'
-      // })
-    }
   },
 
   // drawDebugPrompt() {
@@ -733,11 +425,11 @@ export const Visuals = {
 
     const p = this.p
 
-    const unpauseDuration = this.level == 0 ? 1 : 0
+    const unpauseDuration = this.level == 0 ? 0.7 : 0
     const unpauseFrames = unpauseDuration * this.P5_FPS
+
     if (this.willUnpause && !this.beganUnpauseAt) {
-      this.willUnpause = true
-      this.beganUnpauseAt = this.p5Frames
+      this.beganUnpauseAt = unpauseFrames ? this.p5Frames : 0
     }
 
     // pause and return when unpause finished
@@ -747,9 +439,8 @@ export const Visuals = {
       return
     } else if (this.willUnpause) {
       // fade text out
-      const fadeOutFrames = (unpauseFrames / 4) * 3
-      const fadeOutStart = this.beganUnpauseAt
-      const fadeOutProgress = this.p5Frames - fadeOutStart
+      const fadeOutFrames = unpauseFrames / 3
+      const fadeOutProgress = this.p5Frames - this.beganUnpauseAt
       const fadeOut = this.p.map(fadeOutProgress, 0, fadeOutFrames, 1, 0)
       p.fill(rgbaOpacity(THEME.pink, fadeOut))
     } else {
@@ -775,6 +466,7 @@ export const Visuals = {
 
       p.fill(THEME.pink)
     }
+
     // draw logo
     p.textFont(fonts.dot)
     p.textSize(180)
@@ -784,7 +476,7 @@ export const Visuals = {
     drawKernedText(p, 'Anybody', 92, titleY, 0.8)
     drawKernedText(p, 'Problem', 92, titleY + 183, 2)
 
-    this.drawPauseBodies()
+    this.drawPauseBodies({ fleeDuration: unpauseDuration })
 
     if (!this.willUnpause) {
       // play button
@@ -827,6 +519,7 @@ export const Visuals = {
       p.pop()
     }
   },
+
   drawBodyOutlines() {
     for (let i = 0; i < this.bodies.length; i++) {
       const body = this.bodies[i]
@@ -1150,14 +843,19 @@ export const Visuals = {
   },
 
   drawMuteButton() {
-    if (this.paused || this.gameOver) return
+    if (
+      this.paused ||
+      this.gameOver ||
+      (this.introStage === 0 && !(this.levelCountdown < 200))
+    )
+      return
     const { p } = this
     // draw mute btn in bottom right corner
     p.push()
     p.noStroke()
     p.fill('white')
-    const xOffset = this.windowWidth - (this.hasTouched ? 108 : 81)
-    const yOfffset = this.windowWidth - (this.hasTouched ? 116 : 87)
+    const xOffset = this.windowWidth - (this.hasTouched ? 108 : 80)
+    const yOfffset = this.windowHeight - (this.hasTouched ? 116 : 84)
     p.translate(xOffset, yOfffset) // move 0,0 to bottom right corner
     // Scale factor based on the input width
     const scale = this.hasTouched ? Math.floor(48 / 6) : Math.floor(36 / 6)
@@ -2793,7 +2491,7 @@ export const Visuals = {
     }
   },
 
-  drawPauseBodies() {
+  drawPauseBodies({ fleeDuration = 1 }) {
     for (let i = 0; i < this.pauseBodies.length; i++) {
       const body = this.pauseBodies[i]
       // after final proof is sent, don't draw upgradable bodies
@@ -2806,8 +2504,7 @@ export const Visuals = {
         this.p.cos(this.p.frameCount / this.P5_FPS + body.bodyIndex * 3) *
         (16 + body.bodyIndex)
 
-      // if not paused, bodies should flee to the nearest side of the screen
-      const fleeDuration = 1.5 // seconds
+      // if not paused, bodies flee (using vx/vy values additively)
       const xFlee =
         this.willUnpause && this.beganUnpauseAt
           ? this.p.map(
@@ -2815,9 +2512,7 @@ export const Visuals = {
               0,
               this.P5_FPS * fleeDuration,
               0,
-              body.position.x > this.windowWidth / 2
-                ? this.windowWidth + 300
-                : -300
+              PAUSE_BODY_DATA[i].exitX
             )
           : 0
       const yFlee =
@@ -2827,9 +2522,7 @@ export const Visuals = {
               0,
               this.P5_FPS * fleeDuration,
               0,
-              body.position.y > this.windowHeight / 2
-                ? this.windowHeight + 300
-                : -300
+              PAUSE_BODY_DATA[i].exitY
             )
           : 0
 
@@ -2844,6 +2537,7 @@ export const Visuals = {
           body.position.y + yWobble + yFlee
         )
       }
+
       this.drawBody(bodyCopy)
     }
   },
@@ -2877,7 +2571,7 @@ export const Visuals = {
     const colorHSL = body.c.baddie
     const coreWidth = body.radius * BODY_SCALE
     const maxWidth = (body.maxRadius || body.radius) * BODY_SCALE
-    let bgColor = this.brighten(colorHSL, -20)
+    const bgColor = this.brighten(colorHSL, -20)
     const coreColor = `hsl(${colorHSL[0]},${colorHSL[1]}%,${colorHSL[2]}%)`
     this.p.push()
     const rotationSpeedOffset = body.rotationSpeedOffset || 1

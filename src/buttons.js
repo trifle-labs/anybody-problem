@@ -46,7 +46,7 @@ export const Buttons = {
 
     p.push()
     p.noStroke()
-    p.strokeWeight(button.active ? 1 : 3)
+    p.strokeWeight(button.active ? 1 : 2)
     p.textSize(textSize * scale)
     p.fill(button.disabled ? rgbaOpacity(bg, 0.4) : bg)
 
