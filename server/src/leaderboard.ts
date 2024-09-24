@@ -65,15 +65,28 @@ async function calculateDailyLeaderboard(
     FROM ranked_cumulative_times
     WHERE reverse_rank <= 10
   ),
+  -- Select the fastest time for each level across all runs on the day
+  level_times_ranked AS (
+    SELECT
+        level,
+        time,
+        run_id,
+        player,
+        day,
+        ROW_NUMBER() OVER (PARTITION BY level ORDER BY time ASC) AS rn  -- Rank times for each level
+    FROM anybody_problem_level_solved
+    WHERE day = ${day}
+  ),
   level_times AS (
+    -- Select only the fastest time for each level
     SELECT
         level,
         time,
         run_id,
         player,
         day
-    FROM anybody_problem_level_solved
-    WHERE day = ${day} AND run_id = (SELECT run_id FROM fastest_run)
+    FROM level_times_ranked
+    WHERE rn = 1  -- Only the fastest time (row number 1)
   ),
   daily_activity AS (
     SELECT DISTINCT player, day
@@ -165,6 +178,7 @@ async function calculateDailyLeaderboard(
   FROM
       leaderboard;
   `
+
   const result = await db.query(q, [chain])
   function scores(rows: any[]): SpeedScore[] {
     return rows.map((r: any) => ({
