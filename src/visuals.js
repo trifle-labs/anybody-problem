@@ -261,6 +261,7 @@ export const Visuals = {
     this.drawGun() // draw after score so cursor isnt in share img
     this.drawGunSmoke()
     this.drawExplosionSmoke()
+    this.drawPoints()
 
     if (
       this.frames - this.startingFrame + this.FPS < this.timer &&
@@ -280,7 +281,7 @@ export const Visuals = {
     const hitHeroBody = this.bodies[0].radius == 0 && this.level !== 0
 
     if ((ranOutOfTime || hitHeroBody) && !this.handledGameOver) {
-      this.handleGameOver({ won: false, ranOutOfTime, hitHeroBody })
+      this.handleGameOver({ won: true, ranOutOfTime, hitHeroBody })
     }
     if (
       !this.won &&
@@ -1209,18 +1210,26 @@ export const Visuals = {
     p.pop()
   },
 
+  calculatePoint(body) {
+    const { position, velocity, radius, bodyIndex } = body
+    if (bodyIndex == 0) return -300
+    const maxDist = this.p.dist(0, 0, this.windowWidth, this.windowHeight)
+    const dist = this.p.dist(position.x, position.y, 0, this.windowHeight)
+    const distPoints = this.p.map(dist, 0, maxDist, 0, 100)
+    const velocityVector = this.p.createVector(velocity.x, velocity.y)
+    const maxVector = this.missileSpeed * this.speedFactor
+    const velPoints = this.p.map(velocityVector.mag(), 0, maxVector, 0, 100)
+    const radiusPoints = this.p.map(radius, 36, 11, 0, 100)
+    return (
+      Math.floor(distPoints + velPoints + radiusPoints) *
+      (bodyIndex == 0 ? -1 : 1)
+    )
+  },
+
   calculatePoints() {
-    return this.hits
-      .map((hit) => {
-        const { position, velocity, radius } = hit
-        const maxDist = this.p.dist(0, 0, this.windowWidth, this.windowHeight)
-        const dist = this.p.dist(position.x, position.y, 0, this.windowHeight)
-        const distPoints = this.p.map(dist, 0, maxDist, 0, 100)
-        const velocityVector = this.p.createVector(velocity.x, velocity.y)
-        const maxVector = this.missileSpeed * this.speedFactor
-        const velPoints = this.p.map(velocityVector.mag(), 0, maxVector, 0, 100)
-        const radiusPoints = this.p.map(radius, 11, 36, 0, 100)
-        return Math.floor(distPoints + velPoints + radiusPoints)
+    return this.explosions
+      .map((explosions) => {
+        return this.calculatePoint(explosions)
       })
       .reduce((acc, curr) => acc + curr, 0)
   },
@@ -1404,10 +1413,10 @@ export const Visuals = {
 
     // middle box text
     const levelTimes = this.levelSpeeds
-      .map((result) => result?.framesTook / this.FPS)
+      .map((result) => result?.points)
       .filter((l) => l !== undefined)
     const bestTimes =
-      this.todaysRecords?.levels?.map((l) => l.events[0].time / this.FPS) ?? []
+      this.todaysRecords?.levels?.map((l) => l.events[0].points) ?? []
 
     const showBestAndDiff = bestTimes.length
 
@@ -2339,9 +2348,33 @@ export const Visuals = {
       } else {
         _explosion.c.baddie = this.hslToGrayscale(explosions[i].c.baddie)
       }
-
-      this.drawBody(_explosion)
+      // this.drawPoint(_explosion)
+      // this.drawBody(_explosion, true)
     }
+  },
+
+  drawPoints() {
+    for (let i = 0; i < this.explosions.length; i++) {
+      this.drawPoint(this.explosions[i])
+    }
+  },
+
+  drawPoint(body) {
+    const timeSince = this.frames - body.frame
+    const maxFrames = 50
+    if (timeSince > maxFrames) return
+    let point = this.calculatePoint(body)
+    if (point > 0) {
+      point = '+' + point
+      this.p.fill(THEME.teal_50)
+      this.p.stroke(THEME.teal_50)
+    } else {
+      this.p.fill(THEME.flame_50)
+      this.p.stroke(THEME.flame_50)
+    }
+    this.p.strokeWeight(2)
+    this.p.textSize(100)
+    this.p.text(point, body.position.x, body.position.y)
   },
 
   star(x, y, radius1, radius2, npoints, color, rotateBy, index) {
@@ -2776,7 +2809,7 @@ export const Visuals = {
     return svg
   },
 
-  drawBody(body) {
+  drawBody(body, isGhost = false) {
     if (body.radius == 0) {
       return
     }
@@ -2796,7 +2829,7 @@ export const Visuals = {
         this.drawFaceSvg(body, size)
       }
     } else {
-      this.drawBaddie(body)
+      this.drawBaddie(body, isGhost)
     }
     this.p.pop()
   },
@@ -2868,6 +2901,13 @@ export const Visuals = {
 
   replaceOpacity(c, opacity) {
     const isHSLA = c.includes('hsla')
+    const isHSL = c.includes('hsl')
+    if (isHSL && !isHSLA) {
+      let cc = c.replace('hsl', 'hsla')
+      cc = cc.replace(')', `,${opacity})`)
+      console.log({ c, cc })
+      return cc
+    }
     const prefix = isHSLA ? 'hsla' : 'rgba'
     let cc = c
       .split(',')
@@ -2884,27 +2924,37 @@ export const Visuals = {
   },
 
   brighten(c, amount = 20) {
+    const prefix = c.length == 4 ? 'hsla' : 'hsl'
     const cc = [...c]
     cc[2] = cc[2] + amount
     cc[1] = cc[1] + '%'
     cc[2] = cc[2] + '%'
-    return `hsla(${cc.join(',')})`
+    return `${prefix}(${cc.join(',')})`
   },
 
-  drawBaddie(body) {
+  drawBaddie(body, isGhost = false) {
     const colorHSL = body.c.baddie
     const coreWidth = body.radius * BODY_SCALE
     const maxWidth = (body.maxRadius || body.radius) * BODY_SCALE
     let bgColor = this.brighten(colorHSL, -20)
-    const coreColor = `hsl(${colorHSL[0]},${colorHSL[1]}%,${colorHSL[2]}%)`
+    let coreColor = `hsl(${colorHSL[0]},${colorHSL[1]}%,${colorHSL[2]}%)`
     this.p.push()
     const rotationSpeedOffset = body.rotationSpeedOffset || 1
-    const rotate =
-      (this.p5Frames / this.P5_FPS_MULTIPLIER / (30 / rotationSpeedOffset)) %
-      360
+    const rotate = isGhost
+      ? 0
+      : (this.p5Frames / this.P5_FPS_MULTIPLIER / (30 / rotationSpeedOffset)) %
+        360
     this.p.rotate(rotate)
     let strokeColor = body.c.strokeColor
     let strokeWidth = body.c.strokeWidth
+
+    if (isGhost) {
+      bgColor = this.replaceOpacity(bgColor, 0.25)
+      coreColor = this.replaceOpacity(coreColor, 0.25)
+      strokeColor = strokeColor
+        ? this.replaceOpacity(strokeColor, 0.25)
+        : strokeColor
+    }
     this.drawImageAsset(
       'BADDIE_SVG',
       'bg',

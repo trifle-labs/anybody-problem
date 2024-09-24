@@ -361,7 +361,9 @@ export const Calculations = {
     ) {
       missile.radius = 0n
     }
-
+    // const maxVectorScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
+    const maxWidth = BigInt(this.windowWidth) * this.scalingFactor
+    const maxHeight = BigInt(this.windowHeight) * this.scalingFactor
     for (let j = 0; j < bodies.length; j++) {
       const body = bodies[j]
       const distance = _approxDist(
@@ -387,20 +389,62 @@ export const Calculations = {
         missile.radius = 0n
         const x = this.convertScaledBigIntToFloat(body.position.x)
         const y = this.convertScaledBigIntToFloat(body.position.y)
-        this.explosions.push(
-          ...this.convertBigIntsToBodies([JSON.parse(JSON.stringify(body))])
-        )
-        const { position, velocity, radius } = body
-        this.hits.push(
-          JSON.parse(JSON.stringify({ position, velocity, radius }))
-        )
+        const convertedBody = this.convertBigIntsToBodies([
+          JSON.parse(JSON.stringify(body))
+        ])[0]
+        convertedBody.frame = this.frames
+        this.explosions.push(convertedBody)
+        this.hits.push(convertedBody)
         if (!this.util) {
           this.makeExplosionStart(x, y)
           this.shakeScreen()
           this.sound?.playExplosion(x, y)
         }
+        if (convertedBody.bodyIndex == 0) {
+          // bodies[j].radius = 0n
+        }
 
-        // bodies[j].radius = 0n
+        // line of division is x = -y
+        if (body.position.x > maxHeight - body.position.y) {
+          body.position.x = 0n
+          body.position.y = 0n
+          // body.velocity.x = maxVectorScaled / 2n
+          // body.velocity.y = maxVectorScaled / 2n
+        } else {
+          body.position.x = maxWidth
+          body.position.y = maxHeight
+          // body.velocity.x = -maxVectorScaled / 2n
+          // body.velocity.y = -maxVectorScaled / 2n
+        }
+
+        // if (body.position.x > maxWidth / 2n) {
+        //   // right side of screen
+        //   if (body.position.y > maxHeight / 2n) {
+        //     // bottom right
+        //     body.position.x = 0n
+        //     body.position.y = 0n
+        //   } else {
+        //     if (body.position.x < this.body.position.y) {
+        //     }
+        //     // top right
+        //     body.position.x = maxWidth
+        //     body.position.y = maxHeight
+        //   }
+        // } else {
+        //   // left side of screen
+        //   if (body.position.y > maxHeight / 2n) {
+        //     // bottom left
+        //     body.position.x = body.position.y = maxWidth
+        //   } else {
+        //     // top left
+        //     body.position.x = 0n
+        //     body.position.y = 0n
+        //   }
+        // }
+        // body.position.x = maxWidth
+        // body.position.y = 0n
+        // body.velocity.x = -maxVectorScaled
+        // body.velocity.y = maxVectorScaled
       }
 
       missiles[0] = missile

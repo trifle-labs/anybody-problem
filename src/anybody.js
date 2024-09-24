@@ -703,9 +703,11 @@ export class Anybody extends EventEmitter {
     ]
 
     const { address, day, level, bodyInits, bodyFinal, framesTook } = this
+    const points = this.calculatePoints()
 
     const results = JSON.parse(
       JSON.stringify({
+        points,
         day,
         level,
         inflightMissile,
