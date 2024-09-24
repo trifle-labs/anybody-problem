@@ -2,10 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import {Groth16Verifier as Groth16Verifier2} from './Game_2_20Verifier.sol';
-import {Groth16Verifier as Groth16Verifier3} from './Game_3_20Verifier.sol';
 import {Groth16Verifier as Groth16Verifier4} from './Game_4_20Verifier.sol';
-import {Groth16Verifier as Groth16Verifier5} from './Game_5_20Verifier.sol';
 import {Groth16Verifier as Groth16Verifier6} from './Game_6_20Verifier.sol';
 
 import '@openzeppelin/contracts/token/common/ERC2981.sol';
@@ -17,16 +14,20 @@ import './ExternalMetadata.sol';
 contract AnybodyProblem is Ownable, ERC2981 {
     uint256 public constant LEVELS = 5;
     uint256 public constant SECONDS_IN_A_DAY = 86400;
-    uint256 public constant SECONDS_IN_A_WEEK = SECONDS_IN_A_DAY * 7;
     uint256 public constant FIRST_SUNDAY_AT_6_PM_UTC = 324000;
 
     bool public paused = false;
     uint256 public priceToMint = 0.0025 ether;
     uint256 public priceToSave = 0 ether;
     uint256 public discount = 2;
+
+    uint256 public constant FIRST_DAY = 1723766400;
+    uint256 public deployDay;
+    address payable public previousAB;
     address payable public proceedRecipient;
     address public externalMetadata;
     address payable public speedruns;
+
     // uint256 public constant maxTick = 25 * 60; // 25 fps * 60 sec = 1,500 ticks max
     // level duration is numberOfBaddies * 10sec (multiplied by 25 because of 25 FPS)
     uint256[5] public maxTicksByLevelIndex = [
@@ -51,6 +52,13 @@ contract AnybodyProblem is Ownable, ERC2981 {
         uint256 day;
         Level[] levels;
     }
+    struct RunWithoutLevels {
+        address owner;
+        bool solved; // redundant by accumulating A
+        uint256 accumulativeTime; // redundant by accumulating C
+        bytes32 seed;
+        uint256 day;
+    }
     struct Level {
         bool solved; // redundant A
         uint256 time; // redundant C
@@ -68,51 +76,32 @@ contract AnybodyProblem is Ownable, ERC2981 {
         bytes32 seed;
     }
 
-    mapping(uint256 => uint256[3]) public fastestByDay; // day => [fastest, 2nd fastest, 3rd fastest runId]
-    address[3] public mostGames;
-    address[3] public longestStreak;
-
     struct Record {
+        bool updated;
         uint256 total;
         uint256 lastPlayed;
         uint256 streak;
     }
-    mapping(address => Record) public gamesPlayed;
-    mapping(address => mapping(uint256 => uint256[7])) public weeklyRecords;
-    mapping(uint256 => address[3]) public fastestByWeek;
 
-    // NOTE: initialize with length of 1 so Runs are not 0 indexed (runId == index of the run array)
-    Run[] public runs = new Run[](1);
+    struct OldRecordType {
+        uint256 total;
+        uint256 lastPlayed;
+        uint256 streak;
+    }
+
+    mapping(uint256 => uint256[3]) public fastestByDay_; // day => [fastest, 2nd fastest, 3rd fastest runId]
+    mapping(uint256 => uint256[3]) public slowestByDay_; // day => [slowest, 2nd slowest, 3rd slowest runId]
+    address[3] public mostGames;
+    address[3] public longestStreak;
+
+    mapping(uint256 => mapping(address => bool)) public claimedByLeader; // day => player => claimed
+    mapping(address => Record) public gamesPlayed_;
+    mapping(uint256 => Run) public runs_; // indexed on RunId
+    uint256 public totalRuns;
 
     // mapping is body count to tickcount to address
     mapping(uint256 => mapping(uint256 => address)) public verifiers;
     mapping(bytes32 => bool) public usedProofs;
-
-    constructor(
-        address payable proceedRecipient_,
-        address payable speedruns_,
-        address externalMetadata_,
-        address[] memory verifiers_,
-        uint256[] memory verifiersTicks,
-        uint256[] memory verifiersBodies
-    ) {
-        updateProceedRecipient(proceedRecipient_);
-        updateSpeedrunsAddress(speedruns_);
-        updateExternalMetadata(externalMetadata_);
-        for (uint256 i = 0; i < verifiers_.length; i++) {
-            require(verifiersTicks[i] > 0, 'Invalid verifier');
-            require(verifiers_[i] != address(0), 'Invalid verifier');
-            verifiers[verifiersBodies[i]][verifiersTicks[i]] = verifiers_[i];
-        }
-    }
-
-    receive() external payable {
-        revert('no receive thank you');
-    }
-
-    fallback() external {
-        revert('no fallback thank you');
-    }
 
     event RunCreated(uint256 runId, uint256 day, bytes32 seed);
     event RunSolved(
@@ -136,65 +125,148 @@ contract AnybodyProblem is Ownable, ERC2981 {
         uint256 amount
     );
 
-    // NOTE: the only publicly available function that isn't protected by a modifier
-    function batchSolve(
-        uint256 runId,
-        bool alsoMint,
-        uint256 day,
-        uint256[] memory tickCounts,
-        uint[2][] memory a,
-        uint[2][2][] memory b,
-        uint[2][] memory c,
-        uint[][] memory input
-    ) public payable {
-        if (day == 0) {
-            day = currentDay();
+    constructor(
+        address payable proceedRecipient_,
+        address payable speedruns_,
+        address externalMetadata_,
+        address[] memory verifiers_,
+        uint256[] memory verifiersTicks,
+        uint256[] memory verifiersBodies,
+        address payable previousAB_
+    ) {
+        deployDay = currentDay();
+        updatePreviousAB(previousAB_);
+        if (previousAB != address(0)) {
+            totalRuns = AnybodyProblem(previousAB).runCount();
+            longestStreak[0] = AnybodyProblem(previousAB).longestStreak(0);
+            longestStreak[1] = AnybodyProblem(previousAB).longestStreak(1);
+            longestStreak[2] = AnybodyProblem(previousAB).longestStreak(2);
+            mostGames[0] = AnybodyProblem(previousAB).mostGames(0);
+            mostGames[1] = AnybodyProblem(previousAB).mostGames(1);
+            mostGames[2] = AnybodyProblem(previousAB).mostGames(2);
         }
-        require(
-            day % SECONDS_IN_A_DAY == 0,
-            'One problem per day, invalid day'
-        );
-        require(day <= currentDay(), 'Cannot solve future problems');
-        require(!paused, 'Contract is paused');
-        if (runId == 0) {
-            runId = addNewRun(day);
-            addNewLevelData(runId);
+
+        updateProceedRecipient(proceedRecipient_);
+        updateSpeedrunsAddress(speedruns_);
+        updateExternalMetadata(externalMetadata_);
+        for (uint256 i = 0; i < verifiers_.length; i++) {
+            require(verifiersTicks[i] > 0, 'Invalid verifier');
+            require(verifiers_[i] != address(0), 'Invalid verifier');
+            verifiers[verifiersBodies[i]][verifiersTicks[i]] = verifiers_[i];
         }
-        require(
-            runs[runId].owner == msg.sender,
-            'Only the owner of the run can solve it'
-        );
-        require(!runs[runId].solved, 'Run already solved');
+    }
 
-        require(
-            day == runs[runId].day,
-            'Can only solve runs on the current day'
-        );
+    receive() external payable {
+        revert('no receive thank you');
+    }
 
-        for (uint256 i = 0; i < input.length; i++) {
-            verifyLevelChunk(
-                runId,
-                alsoMint,
-                tickCounts[i],
-                day,
-                a[i],
-                b[i],
-                c[i],
-                input[i]
+    fallback() external {
+        revert('no fallback thank you');
+    }
+
+    function runs(uint256 runId) public view returns (Run memory) {
+        if (runs_[runId].owner == address(0)) {
+            (bool success, bytes memory data) = previousAB.staticcall(
+                abi.encodeWithSignature('runs(uint256)', runId)
             );
+            if (success && data.length > 0) {
+                RunWithoutLevels memory r = abi.decode(
+                    data,
+                    (RunWithoutLevels)
+                );
+                Run memory run = Run({
+                    owner: r.owner,
+                    solved: r.solved,
+                    accumulativeTime: r.accumulativeTime,
+                    seed: r.seed,
+                    day: r.day,
+                    levels: getLevelsData(runId)
+                });
+                return run;
+            } else {
+                return runs_[runId];
+            }
+        } else {
+            return runs_[runId];
         }
-        // TODO: decide whether this is necessary
-        // require(runs[runId].solved, "Must solve all levels to complete run");
+    }
+
+    function gamesPlayed(address player) public view returns (Record memory) {
+        Record memory record = gamesPlayed_[player];
+        if (!record.updated) {
+            (bool success, bytes memory data) = previousAB.staticcall(
+                abi.encodeWithSignature('gamesPlayed(address)', player)
+            );
+            OldRecordType memory previousRecord;
+            if (success && data.length > 0) {
+                previousRecord = abi.decode(data, (OldRecordType));
+            }
+            Record memory combinedRecord = Record({
+                updated: false,
+                total: record.total + previousRecord.total,
+                lastPlayed: previousRecord.lastPlayed,
+                streak: previousRecord.streak
+            });
+            return combinedRecord;
+        } else {
+            return record;
+        }
+    }
+
+    function fastestByDay(
+        uint256 day
+    ) public view returns (uint256[3] memory fastest) {
+        uint256[3] memory localFastest = fastestByDay_[day];
+        for (uint256 i = 0; i < 3; i++) {
+            if (localFastest[i] == 0) {
+                (bool success, bytes memory data) = previousAB.staticcall(
+                    abi.encodeWithSignature(
+                        'fastestByDay(uint256,uint256)',
+                        day,
+                        i
+                    )
+                );
+                if (success && data.length > 0) {
+                    fastest[i] = abi.decode(data, (uint256));
+                }
+            } else {
+                fastest[i] = localFastest[i];
+            }
+        }
+        return fastest;
+    }
+
+    function slowestByDay(uint256 day) public view returns (uint256[3] memory) {
+        return slowestByDay_[day];
+    }
+
+    function nextRunId() public view returns (uint256) {
+        return runCount() + 1;
     }
 
     function runCount() public view returns (uint256) {
-        return runs.length - 1;
+        return totalRuns;
     }
 
     function getLevelsData(
         uint256 runId
     ) public view returns (Level[] memory levels) {
-        return runs[runId].levels;
+        if (!runExists(runId)) {
+            (bool success, bytes memory data) = previousAB.staticcall(
+                abi.encodeWithSignature('getLevelsData(uint256)', runId)
+            );
+            if (success && data.length > 0) {
+                return abi.decode(data, (Level[]));
+            } else {
+                return runs_[runId].levels;
+            }
+        } else {
+            return runs_[runId].levels;
+        }
+    }
+
+    function runExists(uint256 runId) public view returns (bool) {
+        return runs_[runId].owner != address(0);
     }
 
     function generateLevelData(
@@ -290,7 +362,7 @@ contract AnybodyProblem is Ownable, ERC2981 {
     }
 
     function currentLevel(uint256 runId) public view returns (uint256) {
-        return runs[runId].levels.length;
+        return getLevelsData(runId).length;
     }
 
     function generateSeed(
@@ -301,38 +373,31 @@ contract AnybodyProblem is Ownable, ERC2981 {
             keccak256(abi.encodePacked(id, index, blockhash(block.number - 1)));
     }
 
-    // TODO: fix day and week so that days and week begin at same time
-    function currentWeek() public view returns (uint256) {
-        return
-            block.timestamp -
-            ((block.timestamp - FIRST_SUNDAY_AT_6_PM_UTC) % SECONDS_IN_A_WEEK);
-    }
-
-    function timeUntilEndOfWeek() public view returns (uint256) {
-        return currentWeek() + SECONDS_IN_A_WEEK - block.timestamp;
-    }
-
     function currentDay() public view returns (uint256) {
         return block.timestamp - (block.timestamp % SECONDS_IN_A_DAY);
     }
 
     function addNewLevelData(uint256 runId) internal {
-        uint256 day = runs[runId].day;
+        uint256 day = runs(runId).day;
         uint256 level = currentLevel(runId) + 1;
         Level memory levelData;
         levelData.seed = generateSeed(runId, level);
         (levelData.tmpBodyData, ) = generateLevelData(day, level);
-        runs[runId].levels.push(levelData);
+        runs_[runId].levels.push(levelData);
         emit LevelCreated(runId, level, levelData.seed, day);
     }
 
     function addNewRun(uint256 day) internal returns (uint256 runId) {
-        runId = runs.length;
+        // new Run ID is length of run array. at start it is 1. so first run is 1, then array is 2.
+        // After new deploy, the length of the initial deploy array will be 2. The new array should be 0
+        // and then the new ID will be previous length + new length (2)
+        runId = nextRunId();
         Run memory run;
         run.owner = msg.sender;
         run.seed = generateSeed(runId, 0);
         run.day = day;
-        runs.push(run);
+        runs_[runId] = run;
+        totalRuns++;
         emit RunCreated(runId, day, run.seed);
         return runId;
     }
@@ -353,11 +418,12 @@ contract AnybodyProblem is Ownable, ERC2981 {
 
         (uint256 intendedLevel, uint256 dummyCount) = getLevelFromInputs(input);
         uint256 level = currentLevel(runId);
-
         require(intendedLevel == level, 'Previous level not yet complete');
 
+        Level[] memory levelsData = getLevelsData(runId);
+
         uint256 levelIndex = level - 1;
-        require(!runs[runId].levels[levelIndex].solved, 'Level already solved');
+        require(!levelsData[levelIndex].solved, 'Level already solved');
 
         uint256 bodyCount = level + 1;
         address verifier = verifiers[bodyCount + dummyCount][tickCount];
@@ -370,8 +436,7 @@ contract AnybodyProblem is Ownable, ERC2981 {
 
         // confirm current inflightMissile == previous outflightMissile
         // or confirm that curren inflightMissile (x, y) == (0, windowHeight)
-        uint256[5] memory storedOutflightMissile = runs[runId]
-            .levels[levelIndex]
+        uint256[5] memory storedOutflightMissile = levelsData[levelIndex]
             .tmpInflightMissile;
         uint256[5] memory newInflightMissile = [
             input[5 + 2 * (bodyCount + dummyCount) * 5 + 2 + 0],
@@ -405,13 +470,16 @@ contract AnybodyProblem is Ownable, ERC2981 {
             input[3],
             input[4]
         ];
-        runs[runId].levels[levelIndex].tmpInflightMissile = newOutflightMissile;
+        runs_[runId]
+            .levels[levelIndex]
+            .tmpInflightMissile = newOutflightMissile;
+        levelsData[levelIndex].tmpInflightMissile = newOutflightMissile;
 
         uint256 time = input[5 + (bodyCount + dummyCount) * 5];
 
         verifyProof((bodyCount + dummyCount), verifier, a, b, c, input);
 
-        Level memory levelData = runs[runId].levels[levelIndex];
+        Level memory levelData = levelsData[levelIndex];
 
         levelData.time += time;
         require(
@@ -426,7 +494,6 @@ contract AnybodyProblem is Ownable, ERC2981 {
 
             verifyBodyDataMatches(bodyData, input, (bodyCount + dummyCount), i);
             bodyData = extractBodyData(bodyData, input, i);
-
             if (i == 0) {
                 require(
                     bodyData.radius != 0,
@@ -438,26 +505,33 @@ contract AnybodyProblem is Ownable, ERC2981 {
             }
             levelData.tmpBodyData[i] = bodyData;
         }
-        runs[runId].levels[levelIndex] = levelData;
+        runs_[runId].levels[levelIndex] = levelData;
         if (bodiesGone == level) {
-            runs[runId].levels[levelIndex].solved = true;
+            runs_[runId].levels[levelIndex].solved = true;
             emit LevelSolved(msg.sender, runId, level, levelData.time, day);
-            runs[runId].accumulativeTime += levelData.time;
+            runs_[runId].accumulativeTime += levelData.time;
             if (level == LEVELS) {
-                runs[runId].solved = true;
-                if (alsoMint) {
-                    mint(priceToSave + (priceToMint / discount), day);
-                } else if (priceToSave > 0) {
-                    makePayment(priceToSave);
-                }
+                runs_[runId].solved = true;
+                gamesPlayed_[msg.sender].total++;
+                addToLeaderboard(runId);
                 emit RunSolved(
                     msg.sender,
                     runId,
-                    runs[runId].accumulativeTime,
+                    runs_[runId].accumulativeTime,
                     day
                 );
-                gamesPlayed[msg.sender].total++;
-                addToLeaderboard(runId);
+                if (alsoMint) {
+                    bool playerIsLeader = isLeader(runId);
+                    uint256 priceToPay = playerIsLeader
+                        ? 0
+                        : priceToSave + (priceToMint / discount);
+                    if (playerIsLeader) {
+                        claimedByLeader[day][msg.sender] = true;
+                    }
+                    mint(priceToPay, day);
+                } else if (priceToSave > 0) {
+                    makePayment(priceToSave);
+                }
             } else {
                 addNewLevelData(runId);
             }
@@ -471,37 +545,178 @@ contract AnybodyProblem is Ownable, ERC2981 {
             ''
         );
         emit EthMoved(proceedRecipient, sent, data, payment);
+        if (msg.value > payment) {
+            (sent, data) = msg.sender.call{value: msg.value - payment}('');
+            emit EthMoved(msg.sender, sent, data, msg.value - payment);
+        }
     }
 
     function mint(uint256 payment, uint256 day) internal {
         require(day == currentDay(), 'Can only mint on the current day');
-        makePayment(payment);
         Speedruns(speedruns).__mint(msg.sender, day, 1, '');
+        makePayment(payment);
     }
 
+    // NOTE: mint and batchSolve are the only publicly available functions
+
     function mint() public payable {
+        require(!paused, 'Contract is paused');
         mint(priceToMint, currentDay());
+    }
+
+    function batchSolve(
+        uint256 runId,
+        bool alsoMint,
+        uint256 day,
+        uint256[] memory tickCounts,
+        uint[2][] memory a,
+        uint[2][2][] memory b,
+        uint[2][] memory c,
+        uint[][] memory input
+    ) public payable {
+        if (day == 0) {
+            day = currentDay();
+        }
+        require(
+            day % SECONDS_IN_A_DAY == 0,
+            'One problem per day, invalid day'
+        );
+        // TODO: confirm whether we want to only allow range of days
+        // require(day >= FIRST_DAY, 'Day is too early');
+        require(day <= currentDay(), 'Cannot solve future problems');
+        require(!paused, 'Contract is paused');
+        if (runId == 0) {
+            runId = addNewRun(day);
+            addNewLevelData(runId);
+        }
+        require(
+            runs(runId).owner == msg.sender,
+            'Only the owner of the run can solve it'
+        );
+        require(!runs(runId).solved, 'Run already solved');
+
+        require(
+            day == runs(runId).day,
+            'Can only solve runs on the current day'
+        );
+
+        for (uint256 i = 0; i < input.length; i++) {
+            verifyLevelChunk(
+                runId,
+                alsoMint,
+                tickCounts[i],
+                day,
+                a[i],
+                b[i],
+                c[i],
+                input[i]
+            );
+        }
+        // NOTE: following line should be included for prod and removed for testing
+        require(runs(runId).solved, 'Must solve all levels to complete run');
     }
 
     function addToLeaderboard(uint256 runId) internal {
         addToFastestByDay(runId);
         addToLongestStreak(runId);
         addToMostPlayed();
+        addToSlowestByDay(runId);
+    }
+
+    function isLeader(uint256 runId) public view returns (bool) {
+        if (claimedByLeader[runs(runId).day][msg.sender]) {
+            return false;
+        }
+        // fastest
+        uint256[3] memory f = fastestByDay(runs(runId).day);
+        if (f[0] == runId) {
+            return true;
+        }
+        // slowest
+        uint256[3] memory s = slowestByDay(runs(runId).day);
+        if (s[0] == runId) {
+            return true;
+        }
+        // TODO: decide if we want to add this?
+        // // most played
+        // if (mostGames[0] == msg.sender) {
+        //     return true;
+        // }
+        // longest streak
+        if (longestStreak[0] == msg.sender) {
+            return true;
+        }
+        return false;
+    }
+
+    function addToSlowestByDay(uint256 runId) internal {
+        Run memory run = runs(runId);
+        uint256[3] memory s = slowestByDay(run.day);
+        bool recordBroken;
+        for (uint256 i = 0; i < 3; i++) {
+            Run memory recordRun = runs(s[i]);
+            // if run is slower, or if previous run is unset
+            if (run.accumulativeTime > recordRun.accumulativeTime) {
+                recordBroken = true;
+                for (uint256 j = slowestByDay(run.day).length - 1; j > i; j--) {
+                    slowestByDay_[run.day][j] = slowestByDay(run.day)[j - 1];
+                }
+                slowestByDay_[run.day][i] = runId;
+                break;
+            }
+        }
+        if (recordBroken) {
+            emitMetadataUpdate(run.day);
+        }
+    }
+
+    function addToFastestByDay(uint256 runId) internal {
+        Run memory run = runs(runId);
+        uint256[3] memory f = fastestByDay(run.day);
+        bool recordBroken;
+        for (uint256 i = 0; i < 3; i++) {
+            Run memory recordRun = runs(f[i]);
+            // if run is faster, or if previous run is unset
+            if (
+                run.accumulativeTime < recordRun.accumulativeTime ||
+                recordRun.accumulativeTime == 0
+            ) {
+                recordBroken = true;
+                for (uint256 j = fastestByDay(run.day).length - 1; j > i; j--) {
+                    fastestByDay_[run.day][j] = fastestByDay(run.day)[j - 1];
+                }
+                fastestByDay_[run.day][i] = runId;
+                break;
+            }
+        }
+        if (recordBroken) {
+            emitMetadataUpdate(run.day);
+        }
     }
 
     function addToLongestStreak(uint256 runId) internal {
-        uint256 day = runs[runId].day;
-        Record memory record = gamesPlayed[msg.sender];
+        uint256 day = runs(runId).day;
+        if (day != currentDay()) {
+            // if the run was not completed today, don't update the streak
+            return;
+        }
+        Record memory record = gamesPlayed(msg.sender);
         if (record.lastPlayed + SECONDS_IN_A_DAY != day) {
             record.streak = 1;
         } else {
             record.streak++;
         }
         record.lastPlayed = day;
-        gamesPlayed[msg.sender] = record;
+        if (!record.updated) {
+            record.updated = true;
+        }
+        gamesPlayed_[msg.sender] = record;
 
+        bool recordBroken;
         for (uint256 i = 0; i < longestStreak.length; i++) {
-            if (record.streak > gamesPlayed[longestStreak[i]].streak) {
+            Record memory previousLongestStreak = gamesPlayed(longestStreak[i]);
+            if (record.streak > previousLongestStreak.streak) {
+                recordBroken = true;
                 for (uint256 j = longestStreak.length - 1; j > i; j--) {
                     longestStreak[j] = longestStreak[j - 1];
                 }
@@ -509,12 +724,18 @@ contract AnybodyProblem is Ownable, ERC2981 {
                 break;
             }
         }
+        if (recordBroken) {
+            emitMetadataUpdate(day);
+        }
     }
 
     function addToMostPlayed() internal {
-        Record memory record = gamesPlayed[msg.sender];
+        Record memory record = gamesPlayed(msg.sender);
+        bool recordBroken;
         for (uint256 i = 0; i < mostGames.length; i++) {
-            if (record.total > gamesPlayed[mostGames[i]].total) {
+            address player = mostGames[i];
+            if (record.total > gamesPlayed(player).total) {
+                recordBroken = true;
                 for (uint256 j = mostGames.length - 1; j > i; j--) {
                     mostGames[j] = mostGames[j - 1];
                 }
@@ -522,24 +743,8 @@ contract AnybodyProblem is Ownable, ERC2981 {
                 break;
             }
         }
-    }
-
-    function addToFastestByDay(uint256 runId) internal {
-        Run memory run = runs[runId];
-        for (uint256 i = 0; i < fastestByDay[run.day].length; i++) {
-            Run memory recordRun = runs[fastestByDay[run.day][i]];
-            // if run is faster, or if previous run is unset
-            if (
-                run.accumulativeTime < recordRun.accumulativeTime ||
-                recordRun.accumulativeTime == 0
-            ) {
-                for (uint256 j = fastestByDay[run.day].length - 1; j > i; j--) {
-                    fastestByDay[run.day][j] = fastestByDay[run.day][j - 1];
-                }
-                fastestByDay[run.day][i] = runId;
-                emitMetadataUpdate(run.day);
-                break;
-            }
+        if (recordBroken) {
+            emitMetadataUpdate(currentDay());
         }
     }
 
@@ -607,26 +812,8 @@ contract AnybodyProblem is Ownable, ERC2981 {
         uint[2] memory c,
         uint[] memory input
     ) public view {
-        if (bodyCount == 2) {
-            require(
-                Groth16Verifier2(verifier).verifyProof(
-                    a,
-                    b,
-                    c,
-                    convertTo32(input)
-                ),
-                'Invalid 2 body proof'
-            );
-        } else if (bodyCount == 3) {
-            require(
-                Groth16Verifier3(verifier).verifyProof(
-                    a,
-                    b,
-                    c,
-                    convertTo42(input)
-                ),
-                'Invalid 3 body proof'
-            );
+        if (bodyCount == 2 || bodyCount == 3 || bodyCount == 5) {
+            revert('all proofs are 4 bodies or 6 bodies');
         } else if (bodyCount == 4) {
             require(
                 Groth16Verifier4(verifier).verifyProof(
@@ -636,16 +823,6 @@ contract AnybodyProblem is Ownable, ERC2981 {
                     convertTo52(input)
                 ),
                 'Invalid 4 body proof'
-            );
-        } else if (bodyCount == 5) {
-            require(
-                Groth16Verifier5(verifier).verifyProof(
-                    a,
-                    b,
-                    c,
-                    convertTo62(input)
-                ),
-                'Invalid 5 body proof'
             );
         } else if (bodyCount == 6) {
             require(
@@ -701,36 +878,6 @@ contract AnybodyProblem is Ownable, ERC2981 {
         return (bodyCount - dummyCount, dummyCount);
     }
 
-    function convertTo22(
-        uint[] memory input
-    ) public pure returns (uint[22] memory) {
-        uint[22] memory input_;
-        for (uint256 i = 0; i < 22; i++) {
-            input_[i] = input[i];
-        }
-        return input_;
-    }
-
-    function convertTo32(
-        uint[] memory input
-    ) public pure returns (uint[32] memory) {
-        uint[32] memory input_;
-        for (uint256 i = 0; i < 32; i++) {
-            input_[i] = input[i];
-        }
-        return input_;
-    }
-
-    function convertTo42(
-        uint[] memory input
-    ) public pure returns (uint[42] memory) {
-        uint[42] memory input_;
-        for (uint256 i = 0; i < 42; i++) {
-            input_[i] = input[i];
-        }
-        return input_;
-    }
-
     function convertTo52(
         uint[] memory input
     ) public pure returns (uint[52] memory) {
@@ -741,61 +888,11 @@ contract AnybodyProblem is Ownable, ERC2981 {
         return input_;
     }
 
-    function convertTo62(
-        uint[] memory input
-    ) public pure returns (uint[62] memory) {
-        uint[62] memory input_;
-        for (uint256 i = 0; i < 62; i++) {
-            input_[i] = input[i];
-        }
-        return input_;
-    }
-
     function convertTo72(
         uint[] memory input
     ) public pure returns (uint[72] memory) {
         uint[72] memory input_;
         for (uint256 i = 0; i < 72; i++) {
-            input_[i] = input[i];
-        }
-        return input_;
-    }
-
-    function convertTo82(
-        uint[] memory input
-    ) public pure returns (uint[82] memory) {
-        uint[82] memory input_;
-        for (uint256 i = 0; i < 82; i++) {
-            input_[i] = input[i];
-        }
-        return input_;
-    }
-
-    function convertTo92(
-        uint[] memory input
-    ) public pure returns (uint[92] memory) {
-        uint[92] memory input_;
-        for (uint256 i = 0; i < 92; i++) {
-            input_[i] = input[i];
-        }
-        return input_;
-    }
-
-    function convertTo102(
-        uint[] memory input
-    ) public pure returns (uint[102] memory) {
-        uint[102] memory input_;
-        for (uint256 i = 0; i < 102; i++) {
-            input_[i] = input[i];
-        }
-        return input_;
-    }
-
-    function convertTo112(
-        uint[] memory input
-    ) public pure returns (uint[112] memory) {
-        uint[112] memory input_;
-        for (uint256 i = 0; i < 112; i++) {
             input_[i] = input[i];
         }
         return input_;
@@ -835,28 +932,14 @@ contract AnybodyProblem is Ownable, ERC2981 {
         Speedruns(speedruns).emitGenericEvent(topics, data);
     }
 
-    // function emitBatchMetadataUpdate(uint256 _fromTokenId, uint256 _toTokenId) internal {
-    //   bytes32 topic = keccak256("BatchMetadataUpdate(uint256,uint256)");
-    //   bytes memory data = abi.encode(_fromTokenId, _toTokenId);
-    //     bytes32[] memory topics = new bytes32[](1);
-    //     topics[0] = topic;
-    //   Speedruns(speedruns).emitGenericEvent(topics, data);
-    // }
-    // function exampleEmitMultipleIndexEvent(uint256 _fromTokenId, uint256 _toTokenId, address who) internal {
-    //     bytes32 topic = keccak256("BatchMetadataUpdateIndexed(uint256,uint256,address)");
-    //     bytes32 topicFrom = bytes32(abi.encode(_fromTokenId));
-    //     bytes32 topicTo = bytes32(abi.encode(_toTokenId));
-    //     bytes memory data = abi.encode(who);
-    //     bytes32[] memory topics = new bytes32[](3);
-    //     topics[0] = topic;
-    //     topics[1] = topicFrom;
-    //     topics[2] = topicTo;
-    //     Speedruns(speedruns).emitGenericEvent(topics, data);
-    // }
     function updateExternalMetadata(
         address externalMetadata_
     ) public onlyOwner {
         externalMetadata = externalMetadata_;
+    }
+
+    function updatePreviousAB(address payable previousAB_) public onlyOwner {
+        previousAB = previousAB_;
     }
 
     function updateProceedRecipient(

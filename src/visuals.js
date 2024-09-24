@@ -206,6 +206,12 @@ const replaceAttribute = (string, key, color) =>
 
 export const Visuals = {
   async draw() {
+    if (this.missileEvent) {
+      const { x, y } = this.missileEvent
+      this.missileEvent = false
+      this.processMissileClick(x, y)
+    }
+
     if (this.shaking && this.shaking > 0) {
       this.shakeScreen()
     } else {
@@ -234,10 +240,10 @@ export const Visuals = {
     }
 
     if (this.shootMissileNextFrame) {
-      console.log('trigger missile click from draw')
       const { x, y } = this.shootMissileNextFrame
-      this.missileClick(x, y)
+      console.log('trigger missile click from draw', { x, y })
       this.shootMissileNextFrame = null
+      this.missileClick(x, y)
     }
 
     this.p.noFill()

@@ -12,6 +12,20 @@ export const AnybodyProblem = {
   }
 }
 
+import AnybodyProblemV0Base from './contractData/8453-AnybodyProblemV0.json'
+import AnybodyProblemV0BaseSepolia from './contractData/84532-AnybodyProblemV0.json'
+import AnybodyProblemV0Local from './contractData/12345-AnybodyProblemV0.json'
+import AnybodyProblemV0ABI from './contractData/ABI-12345-AnybodyProblemV0.json'
+
+export const AnybodyProblemV0 = {
+  abi: AnybodyProblemV0ABI,
+  networks: {
+    8453: AnybodyProblemV0Base,
+    84532: AnybodyProblemV0BaseSepolia,
+    12345: AnybodyProblemV0Local
+  }
+}
+
 import SpeedrunsABI from './contractData/ABI-84532-Speedruns.json'
 import SpeedrunsBaseSepolia from './contractData/84532-Speedruns.json'
 import SpeedrunsBase from './contractData/8453-Speedruns.json'

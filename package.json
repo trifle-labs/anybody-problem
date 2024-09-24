@@ -25,7 +25,7 @@
     "chain": "hardhat node",
     "circom": "./scripts/basic_circom.sh",
     "circom:game-test": "yarn circom game_2_20 && yarn circom game_3_20 && yarn circom game_4_20 && yarn circom game_5_20 && yarn circom game_6_20",
-    "circom:game-prod": "yarn circom game_4_250 && yarn circom game_6_125",
+    "circom:game-prod": "yarn circom game_2_250 && yarn circom game_3_250 && yarn circom game_4_250 && yarn circom game_5_125 && yarn circom game_6_125",
     "deploy": "hardhat run scripts/deploy.cjs",
     "test:circom": "ls test/*.js | grep -v -e 'bodies' -e 'problems' -e 'solver' -e 'problemMetadata' -e 'bodyMetadata' | xargs npx hardhat test",
     "test:solidity": "hardhat test test/problems.test.js test/problemMetadata.test.js test/bodyMetadata.test.js test/bodies.test.js test/solver.test.js",
@@ -80,7 +80,6 @@
     "tone": "^15.0.4"
   },
   "devDependencies": {
-    "@parcel/transformer-inline-string": "2.12.0",
     "@babel/core": "^7.24.0",
     "@babel/eslint-parser": "^7.23.10",
     "@babel/preset-env": "^7.24.0",
@@ -93,6 +92,7 @@
     "@openzeppelin/contracts": "^4.6.0",
     "@parcel/optimizer-data-url": "2.12.0",
     "@parcel/transformer-inline": "^2.12.0",
+    "@parcel/transformer-inline-string": "2.12.0",
     "base64-sol": "^1.1.0",
     "circom_tester": "^0.0.20",
     "circomlib": "^2.0.3",
@@ -108,6 +108,7 @@
     "lint-staged": "^15.2.2",
     "parcel": "^2.12.0",
     "prettier": "3.2.5",
+    "sindri": "^0.0.1-alpha.55",
     "snarkjs": "0.7.3",
     "solidity-coverage": "^0.8.6",
     "xmldom": "^0.6.0"

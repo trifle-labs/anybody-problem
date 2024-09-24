@@ -32,6 +32,11 @@
           "internalType": "uint256[]",
           "name": "verifiersBodies",
           "type": "uint256[]"
+        },
+        {
+          "internalType": "address payable",
+          "name": "previousAB_",
+          "type": "address"
         }
       ],
       "stateMutability": "nonpayable",
@@ -214,6 +219,13 @@
     { "stateMutability": "nonpayable", "type": "fallback" },
     {
       "inputs": [],
+      "name": "FIRST_DAY",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
       "name": "FIRST_SUNDAY_AT_6_PM_UTC",
       "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
       "stateMutability": "view",
@@ -229,13 +241,6 @@
     {
       "inputs": [],
       "name": "SECONDS_IN_A_DAY",
-      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "SECONDS_IN_A_WEEK",
       "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
       "stateMutability": "view",
       "type": "function"
@@ -270,57 +275,12 @@
     },
     {
       "inputs": [
-        { "internalType": "uint256[]", "name": "input", "type": "uint256[]" }
+        { "internalType": "uint256", "name": "", "type": "uint256" },
+        { "internalType": "address", "name": "", "type": "address" }
       ],
-      "name": "convertTo102",
-      "outputs": [
-        { "internalType": "uint256[102]", "name": "", "type": "uint256[102]" }
-      ],
-      "stateMutability": "pure",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        { "internalType": "uint256[]", "name": "input", "type": "uint256[]" }
-      ],
-      "name": "convertTo112",
-      "outputs": [
-        { "internalType": "uint256[112]", "name": "", "type": "uint256[112]" }
-      ],
-      "stateMutability": "pure",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        { "internalType": "uint256[]", "name": "input", "type": "uint256[]" }
-      ],
-      "name": "convertTo22",
-      "outputs": [
-        { "internalType": "uint256[22]", "name": "", "type": "uint256[22]" }
-      ],
-      "stateMutability": "pure",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        { "internalType": "uint256[]", "name": "input", "type": "uint256[]" }
-      ],
-      "name": "convertTo32",
-      "outputs": [
-        { "internalType": "uint256[32]", "name": "", "type": "uint256[32]" }
-      ],
-      "stateMutability": "pure",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        { "internalType": "uint256[]", "name": "input", "type": "uint256[]" }
-      ],
-      "name": "convertTo42",
-      "outputs": [
-        { "internalType": "uint256[42]", "name": "", "type": "uint256[42]" }
-      ],
-      "stateMutability": "pure",
+      "name": "claimedByLeader",
+      "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+      "stateMutability": "view",
       "type": "function"
     },
     {
@@ -338,42 +298,9 @@
       "inputs": [
         { "internalType": "uint256[]", "name": "input", "type": "uint256[]" }
       ],
-      "name": "convertTo62",
-      "outputs": [
-        { "internalType": "uint256[62]", "name": "", "type": "uint256[62]" }
-      ],
-      "stateMutability": "pure",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        { "internalType": "uint256[]", "name": "input", "type": "uint256[]" }
-      ],
       "name": "convertTo72",
       "outputs": [
         { "internalType": "uint256[72]", "name": "", "type": "uint256[72]" }
-      ],
-      "stateMutability": "pure",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        { "internalType": "uint256[]", "name": "input", "type": "uint256[]" }
-      ],
-      "name": "convertTo82",
-      "outputs": [
-        { "internalType": "uint256[82]", "name": "", "type": "uint256[82]" }
-      ],
-      "stateMutability": "pure",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        { "internalType": "uint256[]", "name": "input", "type": "uint256[]" }
-      ],
-      "name": "convertTo92",
-      "outputs": [
-        { "internalType": "uint256[92]", "name": "", "type": "uint256[92]" }
       ],
       "stateMutability": "pure",
       "type": "function"
@@ -396,7 +323,7 @@
     },
     {
       "inputs": [],
-      "name": "currentWeek",
+      "name": "deployDay",
       "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
       "stateMutability": "view",
       "type": "function"
@@ -471,11 +398,16 @@
     },
     {
       "inputs": [
-        { "internalType": "uint256", "name": "", "type": "uint256" },
-        { "internalType": "uint256", "name": "", "type": "uint256" }
+        { "internalType": "uint256", "name": "day", "type": "uint256" }
       ],
       "name": "fastestByDay",
-      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "outputs": [
+        {
+          "internalType": "uint256[3]",
+          "name": "fastest",
+          "type": "uint256[3]"
+        }
+      ],
       "stateMutability": "view",
       "type": "function"
     },
@@ -484,15 +416,41 @@
         { "internalType": "uint256", "name": "", "type": "uint256" },
         { "internalType": "uint256", "name": "", "type": "uint256" }
       ],
-      "name": "fastestByWeek",
-      "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+      "name": "fastestByDay_",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "address", "name": "player", "type": "address" }
+      ],
+      "name": "gamesPlayed",
+      "outputs": [
+        {
+          "components": [
+            { "internalType": "bool", "name": "updated", "type": "bool" },
+            { "internalType": "uint256", "name": "total", "type": "uint256" },
+            {
+              "internalType": "uint256",
+              "name": "lastPlayed",
+              "type": "uint256"
+            },
+            { "internalType": "uint256", "name": "streak", "type": "uint256" }
+          ],
+          "internalType": "struct AnybodyProblem.Record",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
       "stateMutability": "view",
       "type": "function"
     },
     {
       "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
-      "name": "gamesPlayed",
+      "name": "gamesPlayed_",
       "outputs": [
+        { "internalType": "bool", "name": "updated", "type": "bool" },
         { "internalType": "uint256", "name": "total", "type": "uint256" },
         { "internalType": "uint256", "name": "lastPlayed", "type": "uint256" },
         { "internalType": "uint256", "name": "streak", "type": "uint256" }
@@ -654,6 +612,15 @@
       "type": "function"
     },
     {
+      "inputs": [
+        { "internalType": "uint256", "name": "runId", "type": "uint256" }
+      ],
+      "name": "isLeader",
+      "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
       "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
       "name": "longestStreak",
       "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
@@ -697,6 +664,13 @@
     },
     {
       "inputs": [],
+      "name": "nextRunId",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
       "name": "owner",
       "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
       "stateMutability": "view",
@@ -706,6 +680,15 @@
       "inputs": [],
       "name": "paused",
       "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "previousAB",
+      "outputs": [
+        { "internalType": "address payable", "name": "", "type": "address" }
+      ],
       "stateMutability": "view",
       "type": "function"
     },
@@ -781,8 +764,108 @@
       "type": "function"
     },
     {
-      "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "inputs": [
+        { "internalType": "uint256", "name": "runId", "type": "uint256" }
+      ],
+      "name": "runExists",
+      "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "runId", "type": "uint256" }
+      ],
       "name": "runs",
+      "outputs": [
+        {
+          "components": [
+            { "internalType": "address", "name": "owner", "type": "address" },
+            { "internalType": "bool", "name": "solved", "type": "bool" },
+            {
+              "internalType": "uint256",
+              "name": "accumulativeTime",
+              "type": "uint256"
+            },
+            { "internalType": "bytes32", "name": "seed", "type": "bytes32" },
+            { "internalType": "uint256", "name": "day", "type": "uint256" },
+            {
+              "components": [
+                { "internalType": "bool", "name": "solved", "type": "bool" },
+                {
+                  "internalType": "uint256",
+                  "name": "time",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "bytes32",
+                  "name": "seed",
+                  "type": "bytes32"
+                },
+                {
+                  "internalType": "uint256[5]",
+                  "name": "tmpInflightMissile",
+                  "type": "uint256[5]"
+                },
+                {
+                  "components": [
+                    {
+                      "internalType": "uint256",
+                      "name": "bodyIndex",
+                      "type": "uint256"
+                    },
+                    {
+                      "internalType": "uint256",
+                      "name": "px",
+                      "type": "uint256"
+                    },
+                    {
+                      "internalType": "uint256",
+                      "name": "py",
+                      "type": "uint256"
+                    },
+                    {
+                      "internalType": "uint256",
+                      "name": "vx",
+                      "type": "uint256"
+                    },
+                    {
+                      "internalType": "uint256",
+                      "name": "vy",
+                      "type": "uint256"
+                    },
+                    {
+                      "internalType": "uint256",
+                      "name": "radius",
+                      "type": "uint256"
+                    },
+                    {
+                      "internalType": "bytes32",
+                      "name": "seed",
+                      "type": "bytes32"
+                    }
+                  ],
+                  "internalType": "struct AnybodyProblem.Body[6]",
+                  "name": "tmpBodyData",
+                  "type": "tuple[6]"
+                }
+              ],
+              "internalType": "struct AnybodyProblem.Level[]",
+              "name": "levels",
+              "type": "tuple[]"
+            }
+          ],
+          "internalType": "struct AnybodyProblem.Run",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "name": "runs_",
       "outputs": [
         { "internalType": "address", "name": "owner", "type": "address" },
         { "internalType": "bool", "name": "solved", "type": "bool" },
@@ -800,6 +883,27 @@
     {
       "inputs": [],
       "name": "scalingFactor",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "day", "type": "uint256" }
+      ],
+      "name": "slowestByDay",
+      "outputs": [
+        { "internalType": "uint256[3]", "name": "", "type": "uint256[3]" }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "", "type": "uint256" },
+        { "internalType": "uint256", "name": "", "type": "uint256" }
+      ],
+      "name": "slowestByDay_",
       "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
       "stateMutability": "view",
       "type": "function"
@@ -856,7 +960,7 @@
     },
     {
       "inputs": [],
-      "name": "timeUntilEndOfWeek",
+      "name": "totalRuns",
       "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
       "stateMutability": "view",
       "type": "function"
@@ -895,6 +999,19 @@
     {
       "inputs": [{ "internalType": "bool", "name": "paused_", "type": "bool" }],
       "name": "updatePaused",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address payable",
+          "name": "previousAB_",
+          "type": "address"
+        }
+      ],
+      "name": "updatePreviousAB",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -1023,17 +1140,6 @@
       ],
       "name": "verifyProof",
       "outputs": [],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        { "internalType": "address", "name": "", "type": "address" },
-        { "internalType": "uint256", "name": "", "type": "uint256" },
-        { "internalType": "uint256", "name": "", "type": "uint256" }
-      ],
-      "name": "weeklyRecords",
-      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
       "stateMutability": "view",
       "type": "function"
     },

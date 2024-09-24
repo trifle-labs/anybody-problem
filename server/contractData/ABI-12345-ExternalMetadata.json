@@ -1,7 +1,13 @@
 {
   "contractName": "ExternalMetadata",
   "abi": [
-    { "inputs": [], "stateMutability": "nonpayable", "type": "constructor" },
+    {
+      "inputs": [
+        { "internalType": "address", "name": "themeGroup_", "type": "address" }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
     {
       "anonymous": false,
       "inputs": [
@@ -31,15 +37,69 @@
       "type": "function"
     },
     {
+      "inputs": [],
+      "name": "assets1",
+      "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "assets2",
+      "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "assets3",
+      "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "assets4",
+      "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "assets5",
+      "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
       "inputs": [
-        { "internalType": "uint256", "name": "day", "type": "uint256" },
-        { "internalType": "uint256", "name": "bodyIndex", "type": "uint256" }
+        { "internalType": "uint256", "name": "date", "type": "uint256" }
       ],
-      "name": "getBodyColor",
+      "name": "getAttributes",
+      "outputs": [{ "internalType": "string", "name": "", "type": "string" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "date", "type": "uint256" }
+      ],
+      "name": "getBestTimeEncoded",
+      "outputs": [{ "internalType": "string", "name": "", "type": "string" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "date", "type": "uint256" },
+        { "internalType": "uint256", "name": "placeIndex", "type": "uint256" }
+      ],
+      "name": "getFastestTime",
       "outputs": [
-        { "internalType": "uint256[3]", "name": "rgb", "type": "uint256[3]" }
+        { "internalType": "address", "name": "", "type": "address" },
+        { "internalType": "string", "name": "sec", "type": "string" }
       ],
-      "stateMutability": "pure",
+      "stateMutability": "view",
       "type": "function"
     },
     {
@@ -48,6 +108,29 @@
       ],
       "name": "getHTML",
       "outputs": [{ "internalType": "string", "name": "", "type": "string" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "bytes32", "name": "seed", "type": "bytes32" },
+        {
+          "internalType": "enum ThemeGroup.ThemeName",
+          "name": "theme",
+          "type": "uint8"
+        },
+        {
+          "internalType": "enum ThemeGroup.ThemeLayer",
+          "name": "layer",
+          "type": "uint8"
+        },
+        { "internalType": "uint256", "name": "day", "type": "uint256" }
+      ],
+      "name": "getHeroBodyLayerColor",
+      "outputs": [
+        { "internalType": "uint256[3]", "name": "", "type": "uint256[3]" },
+        { "internalType": "bytes32", "name": "", "type": "bytes32" }
+      ],
       "stateMutability": "view",
       "type": "function"
     },
@@ -73,15 +156,6 @@
       "inputs": [
         { "internalType": "uint256", "name": "date", "type": "uint256" }
       ],
-      "name": "getPath",
-      "outputs": [{ "internalType": "string", "name": "", "type": "string" }],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        { "internalType": "uint256", "name": "date", "type": "uint256" }
-      ],
       "name": "getSVG",
       "outputs": [{ "internalType": "string", "name": "", "type": "string" }],
       "stateMutability": "view",
@@ -95,6 +169,20 @@
       "type": "function"
     },
     {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "contractAddress",
+          "type": "address"
+        },
+        { "internalType": "string", "name": "functionName", "type": "string" }
+      ],
+      "name": "readValueFromContract",
+      "outputs": [{ "internalType": "string", "name": "", "type": "string" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
       "inputs": [],
       "name": "renounceOwnership",
       "outputs": [],
@@ -103,11 +191,18 @@
     },
     {
       "inputs": [
-        { "internalType": "bytes32", "name": "seed", "type": "bytes32" }
+        { "internalType": "address[5]", "name": "assets", "type": "address[5]" }
       ],
-      "name": "seedToColor",
-      "outputs": [{ "internalType": "string", "name": "", "type": "string" }],
-      "stateMutability": "pure",
+      "name": "setAssets",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "setupSVGPaths",
+      "outputs": [],
+      "stateMutability": "nonpayable",
       "type": "function"
     },
     {
@@ -120,14 +215,10 @@
       "type": "function"
     },
     {
-      "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-      "name": "themes",
+      "inputs": [],
+      "name": "themeGroup",
       "outputs": [
-        {
-          "internalType": "enum ExternalMetadata.ThemeNames",
-          "name": "name",
-          "type": "uint8"
-        }
+        { "internalType": "contract ThemeGroup", "name": "", "type": "address" }
       ],
       "stateMutability": "view",
       "type": "function"

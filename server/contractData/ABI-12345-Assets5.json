@@ -1,0 +1,54 @@
+{
+  "contractName": "Assets5",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "FACE_SHAPE_1",
+      "outputs": [{ "internalType": "string", "name": "", "type": "string" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "FACE_SHAPE_10",
+      "outputs": [{ "internalType": "string", "name": "", "type": "string" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "FACE_SHAPE_11",
+      "outputs": [{ "internalType": "string", "name": "", "type": "string" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "FACE_SHAPE_12",
+      "outputs": [{ "internalType": "string", "name": "", "type": "string" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "FACE_SHAPE_13",
+      "outputs": [{ "internalType": "string", "name": "", "type": "string" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "FACE_SHAPE_14",
+      "outputs": [{ "internalType": "string", "name": "", "type": "string" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "FACE_SHAPE_9",
+      "outputs": [{ "internalType": "string", "name": "", "type": "string" }],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ]
+}

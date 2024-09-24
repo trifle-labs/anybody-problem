@@ -6,7 +6,8 @@ import type {
   PGColumnType,
   IndexStatment
 } from '@indexsupply/shovel-config'
-import { AnybodyProblem, Speedruns } from './contracts'
+import { AnybodyProblemV0, AnybodyProblem, Speedruns } from './contracts'
+
 import { ethers } from 'ethers'
 import { camelToSnakeCase } from './src/util'
 
@@ -82,13 +83,33 @@ export const sources: KnownSource[] = [base]
 const contracts = Object.fromEntries(
   [AnybodyProblem, Speedruns].map((contract) => {
     const abi = contract.abi.abi
-    return [
-      contract.abi.contractName,
-      sources.map((s) => {
-        // console.log('base deployed at ' + contract.networks[s.chain_id].address)
-        return new ethers.Contract(contract.networks[s.chain_id].address, abi)
-      })
-    ]
+    if (contract.abi.contractName === 'AnybodyProblem') {
+      return [
+        contract.abi.contractName,
+        sources
+          .map((s) => {
+            return new ethers.Contract(
+              contract.networks[s.chain_id].address,
+              abi
+            )
+          })
+          .concat(
+            ...sources.map((s) => {
+              return new ethers.Contract(
+                AnybodyProblemV0.networks[s.chain_id].address,
+                abi
+              )
+            })
+          )
+      ]
+    } else {
+      return [
+        contract.abi.contractName,
+        sources.map((s) => {
+          return new ethers.Contract(contract.networks[s.chain_id].address, abi)
+        })
+      ]
+    }
   })
 )
 

@@ -188,6 +188,15 @@
       "type": "function"
     },
     {
+      "inputs": [],
+      "name": "anybodyProblem",
+      "outputs": [
+        { "internalType": "address payable", "name": "", "type": "address" }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
       "inputs": [
         { "internalType": "address", "name": "account", "type": "address" },
         { "internalType": "uint256", "name": "id", "type": "uint256" }

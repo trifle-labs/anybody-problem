@@ -1,15 +1,4 @@
-// to deploy local
-//npx hardhat node
-//npx hardhat run --network localhost scripts/deploy.js
 const hre = require('hardhat')
-
-// async function copyContractABI(a, b) {
-//   try {
-//     await fs.copyFile(a, b)
-//   } catch (e) {
-//     console.log('e', e)
-//   }
-// }
 
 async function main() {
   const [deployer] = await hre.ethers.getSigners()
@@ -17,41 +6,8 @@ async function main() {
   console.log('Deploy to chain:')
   const networkInfo = await hre.ethers.provider.getNetwork()
   console.log({ networkInfo })
-  const {
-    deployContracts,
-    verifyContracts,
-    copyABI,
-    saveAddress,
-    getThemeName
-  } = await import('./utils.js')
-
-  const deployedContracts = await deployContracts({ ignoreTesting: true })
-  for (const contractName in deployedContracts) {
-    if (
-      contractName == 'verificationData' ||
-      contractName == 'verifiers' ||
-      contractName == 'verifiersTicks' ||
-      contractName == 'verifiersBodies'
-    )
-      continue
-    if (contractName.indexOf('Verifier') > -1) {
-      await copyABI(contractName, 'Groth16Verifier')
-    } else if (contractName.indexOf('ThemeGroup') > -1) {
-      const theme = getThemeName(networkInfo['chainId'])
-      const genericName = theme.split(':')[1]
-      const regex = /\/(.*?)\.sol/
-      const match = theme.match(regex)
-      const themeName = match ? match[1] : ''
-      await copyABI(themeName, genericName)
-    } else {
-      await copyABI(contractName)
-    }
-    const contract = deployedContracts[contractName]
-    await saveAddress(contract, contractName)
-  }
-  if (deployedContracts.verificationData) {
-    await verifyContracts(deployedContracts, deployedContracts.AnybodyProblem)
-  }
+  const { deployContracts } = await import('./utils.js')
+  await deployContracts({ ignoreTesting: true, saveAndVerify: true })
 }
 
 main()

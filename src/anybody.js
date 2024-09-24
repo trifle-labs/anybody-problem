@@ -532,6 +532,7 @@ export class Anybody extends EventEmitter {
     //   { depth: null }
     // )
     if (missiles.length == 0 && this.lastMissileCantBeUndone) {
+      // NOTE: this maybe should be after the step logic
       console.log('LASTMISSILECANTBEUNDONE = FALSE')
       this.lastMissileCantBeUndone = false
     }
@@ -957,8 +958,10 @@ export class Anybody extends EventEmitter {
     })
     this.resizeObserver.observe(this.p.canvas)
   }
-
   missileClick(x, y) {
+    this.missileEvent = { x, y }
+  }
+  processMissileClick(x, y) {
     if (this.gameOver || this.paused || this.missilesDisabled) return
 
     if (
@@ -969,6 +972,7 @@ export class Anybody extends EventEmitter {
     }
 
     if (this.frames % this.stopEvery == 0) {
+      console.log({ frames: this.frames, stopEvery: this.stopEvery })
       console.log('MISSILE CANT BE FIRED ON EDGE ATM')
       this.shootMissileNextFrame = { x, y }
       return
