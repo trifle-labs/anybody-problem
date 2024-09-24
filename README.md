@@ -128,7 +128,7 @@ This might take a while to generate but it will only produce proofs for 4 bodies
 
 ### Sindri
 
-While games can be proven in browser, the variation of hardware prevents accurate prognosis of which machines are capabale of doing so in a reasonable time. As such we are using the service [Sindri](https://sindri.app) to generate proofs reliably fast. To ensure Sindri is unable to generate valid but incorrect proofs, we generate the prover files locally and then upload them to Sindri. To do this ensure the `zkey` file is named the same as the circuit file and is referenced with the same name as that used in `circuitPath` in the `sindri.json` file. For example, when uploading `game_4_250` the `sindri.json` looks like this:
+While games can be proven in browser, the variation of hardware prevents accurate prognosis of which machines are capabale of doing so in a reasonable time. As such we are using the service [Sindri](https://sindri.app) to generate proofs reliably fast. To ensure Sindri is unable to generate valid but incorrect proofs, we generate the prover files locally and then upload them to Sindri. To do this ensure the `zkey` file is named the same as the circuit file and is referenced with the same name as that used in `circuitPath` in the `sindri.json` file. For example, when uploading the zkey for `game_4_250.circom` that contains the `StepState` circuit, the `sindri.json` looks like this:
 
 ```json
 {

@@ -99,8 +99,10 @@ template CalculateMissile() {
   // log("calcMissilePositionLimiterX out", calcMissilePositionLimiterX.out);
 
   // This is for the radius of the missile
-  // If it went off screen in the x direction the radius should go to 0
-  // if not then we want to use the real radius until it's checked
+  // If it went off screen in the x direction (x > windowWidth) the radius should go to 0.
+  // However it is also possible the actual position of x is 0 (vertical shot)
+  // so this must first be checked.
+  // If the missile is not off screen then we want to use the real radius until it's checked
   // on the y dimension
 
   // first confirm if the new position is 0
