@@ -612,8 +612,8 @@ contract AnybodyProblem is Ownable, ERC2981 {
                 input[i]
             );
         }
-        // TODO: add and remove for testing / prod
-        // require(runs(runId).solved, 'Must solve all levels to complete run');
+        // NOTE: following line should be included for prod and removed for testing
+        require(runs(runId).solved, 'Must solve all levels to complete run');
     }
 
     function addToLeaderboard(uint256 runId) internal {
