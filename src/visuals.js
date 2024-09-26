@@ -916,7 +916,7 @@ export const Visuals = {
 
   calculatePoint(body) {
     const { position, velocity, radius, bodyIndex } = body
-    if (bodyIndex == 0) return [-300]
+    const bb = bodyIndex == 0
     const maxDist = this.p.dist(0, 0, this.windowWidth, this.windowHeight)
     const dist = this.p.dist(position.x, position.y, 0, this.windowHeight)
     const distPoints = Math.floor(this.p.map(dist, 0, maxDist, 0, 100))
@@ -928,8 +928,11 @@ export const Visuals = {
     const radiusPoints =
       this.introStage < this.totalIntroStages
         ? 50
-        : Math.floor(this.p.map(radius, 36, 11, 0, 100))
-    return [distPoints, velPoints, radiusPoints]
+        : Math.floor(this.p.map(radius, bb ? 11 : 36, bb ? 36 : 11, 0, 100))
+
+    return [distPoints, velPoints, radiusPoints].map((point) =>
+      bb ? point * -1 : point
+    )
   },
 
   calculatePoints() {
@@ -1174,7 +1177,7 @@ export const Visuals = {
     // p.translate(0, middleBoxPadding)
     // times
     for (let i = 0; i < LEVELS; i++) {
-      const time = i < levelTimes.length ? levelTimes[i].toFixed(2) : '-'
+      const time = i < levelTimes.length ? levelTimes[i] : '-'
       p.fill(THEME.iris_30)
       p.text(
         time,
@@ -1191,13 +1194,13 @@ export const Visuals = {
           if (i >= levelTimes.length) return ''
           const time = levelTimes[i]
           const diff = time - best
-          const sign = Number(diff.toFixed(2)) > 0 ? '+' : '-'
-          return sign + Math.abs(diff).toFixed(2)
+          const sign = Number(diff) > 0 ? '+' : '-'
+          return sign + Math.abs(diff)
         })
         .filter(Boolean)
       // best times
       for (let i = 0; i < LEVELS; i++) {
-        const best = i < bestTimes.length ? bestTimes[i].toFixed(2) : '-'
+        const best = i < bestTimes.length ? bestTimes[i] : '-'
         p.fill(THEME.iris_50)
         p.text(
           best,
@@ -1231,15 +1234,15 @@ export const Visuals = {
     // middle box text - sum line
     if (showCumulativeTimeRow) {
       const levelTimeSum = levelTimes.reduce((a, b) => a + b, 0)
-      const sumLine = [levelTimeSum.toFixed(2)]
+      const sumLine = [levelTimeSum]
 
       if (showBestAndDiff) {
         const bestTime = bestTimes
           .slice(0, levelTimes.length)
           .reduce((a, b) => a + b, 0)
-        let diff = Number((levelTimeSum - bestTime).toFixed(2))
-        sumLine[1] = bestTime.toFixed(2)
-        sumLine[2] = `${diff > 0 ? '+' : '-'}${Math.abs(diff).toFixed(2)}`
+        let diff = Number(levelTimeSum - bestTime)
+        sumLine[1] = bestTime
+        sumLine[2] = `${diff > 0 ? '+' : '-'}${Math.abs(diff)}`
       }
 
       const sumLineY = middleBoxY + rowHeight * Math.min(5, LEVELS)
@@ -2073,8 +2076,9 @@ export const Visuals = {
 
   drawPoint(body) {
     const timeSince = this.frames - body.frame
-    const maxFrames = 50
+    const maxFrames = 75
     if (timeSince > maxFrames) return
+    this.p.textAlign(this.p.RIGHT, this.p.CENTER)
     let points = this.calculatePoint(body)
     const textSize = 50
     const xMargin = 100
@@ -2091,9 +2095,10 @@ export const Visuals = {
     for (let i = 0; i < points.length; i++) {
       let point = points[i]
 
+      const kind = i == 0 ? 'd' : i == 1 ? 'v' : 'r'
+      point = `${point}`
       if (point > 0) {
-        const kind = i == 0 ? 'd' : i == 1 ? 'v' : 'r'
-        point = `+${point} ${kind}:pts`
+        point = `+${point}`
         this.p.fill(THEME.teal_50)
         this.p.stroke(THEME.teal_50)
       } else {
@@ -2103,8 +2108,10 @@ export const Visuals = {
       this.p.strokeWeight(2)
       this.p.textSize(textSize)
       this.p.text(point, x, y + i * textSize)
+      this.p.textAlign(this.p.LEFT, this.p.CENTER)
+      this.p.text(` ${kind}:pts`, x, y + i * textSize)
+      this.p.textAlign(this.p.RIGHT, this.p.CENTER)
     }
-    if (points.length == 1) return
     const totalPoints = `=${points.reduce((a, b) => a + b, 0)}`
     this.p.text(totalPoints, x, y + textSize * points.length)
   },
