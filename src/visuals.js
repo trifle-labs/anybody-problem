@@ -2766,20 +2766,7 @@ export const Visuals = {
   async shareCanvas(showPopup = true) {
     const file = this.shareCanvasBlob
     if (!file) throw new Error('Nothing available to share!')
-
-    if (navigator.share) {
-      console.log('sharing canvas...')
-      try {
-        await navigator.share({ files: [file] })
-        return undefined
-      } catch (e) {
-        // ignore user aborting
-        if (e?.name === 'AbortError') return undefined
-        console.error('Couldnt share via navigator', e)
-        // don't throw error, try clipboard
-      }
-    }
-
+    let copySuccess = false
     if (navigator.clipboard && navigator.clipboard.write) {
       try {
         console.log('trying to copy canvas to clipboard...')
@@ -2787,6 +2774,7 @@ export const Visuals = {
           new ClipboardItem({ 'image/png': file })
         ])
         const msg = 'Copied results to your clipboard.'
+        copySuccess = true
         if (showPopup) {
           this.popup = {
             header: 'Go Share!',
@@ -2807,6 +2795,18 @@ export const Visuals = {
       } catch (error) {
         console.error('Error copying to clipboard:', error)
         throw new Error("Couldn't copy to clipboard. Blocked by browser?")
+      }
+    }
+    if (navigator.share && !copySuccess) {
+      console.log('sharing canvas...')
+      try {
+        await navigator.share({ files: [file] })
+        return undefined
+      } catch (e) {
+        // ignore user aborting
+        if (e?.name === 'AbortError') return undefined
+        console.error('Couldnt share via navigator', e)
+        // don't throw error, try clipboard
       }
     }
 
