@@ -955,7 +955,7 @@ export const Visuals = {
 
     const runningFrames = this.frames - this.startingFrame
     const seconds = (this.framesTook || runningFrames) / this.FPS
-    const secondsLeft =
+    let secondsLeft =
       (this.level > 5 ? 60 : GAME_LENGTH_BY_LEVEL_INDEX[this.level]) - seconds
     if (this.gameOver) {
       this.scoreSize = this.initialScoreSize
@@ -976,12 +976,14 @@ export const Visuals = {
       runningFrames > 2 &&
       (!this.gameOver || (this.gameOver && this.won && !this.skipAhead))
     ) {
+      const points = this.calculatePoints() + 'pts'
       if (this.won) {
         p.textSize(this.scoreSize * 2)
-        p.text(seconds.toFixed(2) + 's', 20, 0)
+        p.text(points, 20, 0)
       } else {
-        const points = this.calculatePoints() + 'pts'
-        p.text(points, 300, 0)
+        p.textAlign(p.CENTER, p.TOP)
+        p.text(points, this.windowWidth / 2, 0)
+        p.textAlign(p.LEFT, p.TOP)
         p.text(secondsLeft.toFixed(2), 20, 0)
         p.textAlign(p.RIGHT, p.TOP)
         if (this.hasTouched) {
