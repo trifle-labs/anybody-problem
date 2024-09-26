@@ -25,7 +25,7 @@ circuits/*.r1cs
 circuits/*.vkey.json
 circuits/*.wasm
 circuits/*.zkey
-contracts/*Verifier.sol
+# contracts/*Verifier.sol
 # contractData/12345-*
 # contractData/ABI-12345*
 
@@ -47,7 +47,7 @@ public.json
 verification_key.json
 *_verification_key.json
 # !public/*_verification_key.json
-*Verifier.sol
+# *Verifier.sol
 *.sym
 
 # Ignore all .zkey files except those inside the public folder

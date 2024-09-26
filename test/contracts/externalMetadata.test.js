@@ -7,7 +7,9 @@ import { DOMParser } from 'xmldom'
 import {
   deployContracts,
   solveLevel,
-  getParsedEventLogs
+  getParsedEventLogs,
+  deployContractsV0,
+  deployAnybodyProblemV1
 } from '../../scripts/utils.js'
 import fs from 'fs'
 import prettier from 'prettier'
@@ -46,12 +48,16 @@ describe('ExternalMetadata Tests', function () {
 
   it('has valid json', async function () {
     const [owner] = await ethers.getSigners()
-    const {
-      AnybodyProblem: anybodyProblem,
-      ExternalMetadata: externalMetadata,
-      Speedruns: speedruns
-    } = await deployContracts({
-      mock: true
+
+    const { AnybodyProblemV0, ExternalMetadata, Speedruns } =
+      await deployContractsV0({ mock: true, verbose: false })
+
+    const { AnybodyProblem: anybodyProblem } = await deployAnybodyProblemV1({
+      ExternalMetadata,
+      AnybodyProblemV0,
+      Speedruns,
+      mock: true,
+      verbose: false
     })
     const finalArgs = [null, true, 0, [], [], [], [], []]
     let runId = 0
@@ -81,7 +87,9 @@ describe('ExternalMetadata Tests', function () {
     const events = getParsedEventLogs(receipt, anybodyProblem, 'RunCreated')
     const day = events[0].args.day
 
-    const base64Json = await speedruns.uri(day)
+    const anybodyProblemAddress = await ExternalMetadata.anybodyProblem()
+    expect(anybodyProblemAddress).to.equal(anybodyProblem.address)
+    const base64Json = await Speedruns.uri(day)
 
     const utf8Json = Buffer.from(
       base64Json.replace('data:application/json;base64,', ''),
@@ -119,7 +127,7 @@ describe('ExternalMetadata Tests', function () {
     const YYYY_MM = new Date().toISOString().slice(0, 7)
     expect(yearMonth).to.equal(YYYY_MM) //'1970-01'
 
-    let svg = await externalMetadata.getSVG(day)
+    let svg = await ExternalMetadata.getSVG(day)
     svg = svg.replace('data:image/svg+xml;base64,', '')
     const base64ToString = (base64) => {
       const buff = Buffer.from(base64, 'base64')

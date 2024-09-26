@@ -10,8 +10,8 @@
     "build": "rm -rf .parcel-cache && rm -rf dist && yarn parcel build",
     "chain": "hardhat node",
     "circom": "./scripts/basic_circom.sh",
-    "circom:game-prod": "yarn circom game_4_250 && yarn circom game_6_125",
     "circom:game-test": "yarn circom game_2_20 && yarn circom game_3_20 && yarn circom game_4_20 && yarn circom game_5_20 && yarn circom game_6_20",
+    "circom:game-prod": "yarn circom game_2_250 && yarn circom game_3_250 && yarn circom game_4_250 && yarn circom game_5_125 && yarn circom game_6_125",
     "deploy": "hardhat run scripts/deploy.cjs",
     "dev": "rm -rf .parcel-cache && rm -rf dist && yarn parcel watch src/index.js",
     "precommit": "echo 'husky is working : )' && lint-staged && yarn build && git add dist",
@@ -106,6 +106,7 @@
     "lint-staged": "^15.2.2",
     "parcel": "^2.12.0",
     "prettier": "3.2.5",
+    "sindri": "^0.0.1-alpha.55",
     "snarkjs": "0.7.3",
     "solidity-coverage": "^0.8.6",
     "xmldom": "^0.6.0"

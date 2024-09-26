@@ -6,6 +6,8 @@ import { utils } from 'ethers'
 import { bodyThemes } from './colors.js'
 import { loadFonts } from './fonts.js'
 import { Buttons } from './buttons.js'
+import { Intro } from './intro.js'
+import PAUSE_BODY_DATA from './pauseBodies'
 
 const GAME_LENGTH_BY_LEVEL_INDEX = [30, 10, 20, 30, 40, 50]
 const NORMAL_GRAVITY = 100
@@ -25,60 +27,6 @@ function intersectsButton(button, x, y) {
   )
 }
 
-const PAUSE_BODY_DATA = [
-  {
-    bodyIndex: 0,
-    radius: 51_000,
-    px: 500300,
-    py: 290750,
-    vx: 0,
-    vy: 0
-  },
-  // upper right
-  {
-    bodyIndex: 5,
-    radius: 11_000,
-    px: 793406,
-    py: 133029,
-    vx: 0,
-    vy: 0
-  },
-  // mid right
-  {
-    bodyIndex: 2,
-    radius: 23_000,
-    px: 825620,
-    py: 418711,
-    vx: -100000,
-    vy: -1111000
-  },
-  // upper left
-  {
-    bodyIndex: 1,
-    radius: 27_000,
-    px: 159878,
-    py: 234946,
-    vx: 0,
-    vy: 0
-  },
-  {
-    bodyIndex: 3,
-    radius: 19_000,
-    px: 229878,
-    py: 464946,
-    vx: 0,
-    vy: 0
-  },
-  {
-    bodyIndex: 4,
-    radius: 15_000,
-    px: 679878,
-    py: 668946,
-    vx: -100000,
-    vy: -1111000
-  }
-]
-
 const SECONDS_IN_A_DAY = 86400
 const currentDay = () =>
   Math.floor(Date.now() / 1000) -
@@ -90,6 +38,7 @@ export class Anybody extends EventEmitter {
     Object.assign(this, Visuals)
     Object.assign(this, Calculations)
     Object.assign(this, Buttons)
+    Object.assign(this, Intro)
 
     this.setOptions(options)
 
@@ -451,11 +400,6 @@ export class Anybody extends EventEmitter {
           this.level++
           this.restart(null, false)
         }
-        if (this.level == 0 && !this.paused) {
-          this.skipIntro()
-        } else if (this.paused) {
-          this.setPause(false)
-        }
         break
       case 'KeyR':
         if (this.level < 1) return
@@ -590,6 +534,7 @@ export class Anybody extends EventEmitter {
     //   { depth: null }
     // )
     if (missiles.length == 0 && this.lastMissileCantBeUndone) {
+      // NOTE: this maybe should be after the step logic
       console.log('LASTMISSILECANTBEUNDONE = FALSE')
       this.lastMissileCantBeUndone = false
     }
@@ -1017,29 +962,21 @@ export class Anybody extends EventEmitter {
     })
     this.resizeObserver.observe(this.p.canvas)
   }
-
   missileClick(x, y) {
-    if (this.gameOver) return
-    if (
-      this.paused ||
-      (this.introStage !== this.totalIntroStages - 1 && this.level < 1)
-    )
-      return
-    if (this.introStage == this.totalIntroStages - 1 && this.level < 1) {
-      // NOTE: these values are in drawIntroStage2
-      const chunk_1 = 1.5 * this.P5_FPS
-      const chunk_2 = 2.5 * this.P5_FPS
-      const chunk_3 = 2 * this.P5_FPS
-      const levelMaxTime = chunk_1 + chunk_2 + chunk_3
-      if (this.levelCounting < levelMaxTime) return
-    }
+    this.missileEvent = { x, y }
+  }
+  processMissileClick(x, y) {
+    if (this.gameOver || this.paused || this.missilesDisabled) return
+
     if (
       this.bodies.reduce((a, c) => a + c.radius, 0) == 0 ||
       this.frames - this.startingFrame >= this.timer
     ) {
       return
     }
+
     if (this.frames % this.stopEvery == 0) {
+      console.log({ frames: this.frames, stopEvery: this.stopEvery })
       console.log('MISSILE CANT BE FIRED ON EDGE ATM')
       this.shootMissileNextFrame = { x, y }
       return

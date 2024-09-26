@@ -211,10 +211,9 @@ contract ExternalMetadata is Ownable {
     function getBestTimeEncoded(
         uint256 date
     ) public view returns (string memory) {
-        uint256 bestRunId = AnybodyProblem(anybodyProblem).fastestByDay(
-            date,
+        uint256 bestRunId = AnybodyProblem(anybodyProblem).fastestByDay(date)[
             0
-        );
+        ];
 
         AnybodyProblem.Level[] memory levels = AnybodyProblem(anybodyProblem)
             .getLevelsData(bestRunId);
@@ -558,13 +557,14 @@ contract ExternalMetadata is Ownable {
         uint256 date,
         uint256 placeIndex
     ) public view returns (address, string memory sec) {
-        uint256 runId = AnybodyProblem(anybodyProblem).fastestByDay(
-            date,
+        uint256 runId = AnybodyProblem(anybodyProblem).fastestByDay(date)[
             placeIndex
+        ];
+        AnybodyProblem.Run memory run = AnybodyProblem(anybodyProblem).runs(
+            runId
         );
-        (address player, , uint256 timeCompleted, , ) = AnybodyProblem(
-            anybodyProblem
-        ).runs(runId);
+        address player = run.owner;
+        uint256 timeCompleted = run.accumulativeTime;
 
         uint256 precision = 1000;
         uint256 fps = 25;

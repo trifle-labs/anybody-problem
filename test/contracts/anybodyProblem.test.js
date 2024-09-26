@@ -4,12 +4,15 @@ const ethers = hre.ethers
 
 import {
   deployContracts,
+  deployContractsV0,
+  deployAnybodyProblemV1,
   /*splitterAddress,*/
   getParsedEventLogs,
   solveLevel,
   // mintProblem,
   generateAndSubmitProof,
-  getTicksRun
+  getTicksRun,
+  proceedRecipient
   // generateProof
 } from '../../scripts/utils.js'
 
@@ -20,15 +23,50 @@ describe('AnybodyProblem Tests', function () {
   this.timeout(50000000)
 
   it('has the correct verifiers, externalMetadata, speedruns addresses', async () => {
-    const deployedContracts = await deployContracts()
-
-    const { AnybodyProblem: anybodyProblem } = deployedContracts
+    const deployedContracts = await deployContractsV0({ verbose: false })
+    const { AnybodyProblemV0: anybodyProblemV0 } = deployedContracts
     for (const [name, contract] of Object.entries(deployedContracts)) {
+      if (name === 'AnybodyProblemV0') continue
+      if (name === 'ThemeGroup') continue
+      if (name === 'verifiers') continue
+      if (name === 'verifiersTicks') continue
+      if (name === 'verifiersBodies') continue
+      if (name === 'verificationData') continue
+      if (name.indexOf('Assets') > -1) continue
+      let storedAddress
+      if (name.indexOf('Verifier') > -1) {
+        const bodyCount = name.split('_')[1]
+        storedAddress = await anybodyProblemV0.verifiers(
+          bodyCount,
+          await getTicksRun(bodyCount)
+        )
+      } else {
+        const functionName = name.charAt(0).toLowerCase() + name.slice(1)
+        try {
+          storedAddress = await anybodyProblemV0[`${functionName}()`]()
+        } catch (e) {
+          console.error({ functionName, e })
+        }
+      }
+      const actualAddress = contract.address
+      expect(storedAddress).to.equal(actualAddress)
+    }
+
+    const upgradedContracts = await deployAnybodyProblemV1({
+      verbose: false,
+      AnybodyProblemV0: anybodyProblemV0,
+      Speedruns: deployedContracts.Speedruns,
+      ExternalMetadata: deployedContracts.ExternalMetadata
+    })
+
+    const { AnybodyProblem: anybodyProblem } = upgradedContracts
+    for (const [name, contract] of Object.entries(upgradedContracts)) {
       if (name === 'AnybodyProblem') continue
       if (name === 'ThemeGroup') continue
       if (name === 'verifiers') continue
       if (name === 'verifiersTicks') continue
       if (name === 'verifiersBodies') continue
+      if (name === 'verificationData') continue
       if (name.indexOf('Assets') > -1) continue
       let storedAddress
       if (name.indexOf('Verifier') > -1) {
@@ -55,7 +93,8 @@ describe('AnybodyProblem Tests', function () {
     const { AnybodyProblem: anybodyProblem } = deployedContracts
     for (const [name, contract] of Object.entries(deployedContracts)) {
       if (name.indexOf('Verifier') === -1) continue
-      const bodyCount = name.split('_')[1]
+      const bodyCount = parseInt(name.split('_')[1])
+      if (!(bodyCount == 4 || bodyCount == 6)) continue
       const tickCount = await getTicksRun(bodyCount)
       const storedAddress = await anybodyProblem.verifiers(bodyCount, tickCount)
       const actualAddress = contract.address
@@ -125,7 +164,7 @@ describe('AnybodyProblem Tests', function () {
     ).to.be.reverted
   })
 
-  it('creates a proof for 1 bodies', async () => {
+  it('creates a proof for level 1', async () => {
     const signers = await ethers.getSigners()
     const [owner] = signers
     const deployedContracts = await deployContracts()
@@ -268,24 +307,30 @@ describe('AnybodyProblem Tests', function () {
     await expect(tx)
       .to.emit(anybodyProblem, 'RunSolved')
       .withArgs(owner.address, runId, accumulativeTime, day)
-
     const mintingFee = await anybodyProblem.priceToSave()
     const discount = await anybodyProblem.discount()
     const price = (await anybodyProblem.priceToMint())
       .div(discount)
       .add(mintingFee)
+
+    // as first run it will be fastest and thus price is waived
+
     await expect(tx)
       .to.emit(anybodyProblem, 'EthMoved')
-      .withArgs(acct1.address, true, '0x', price)
+      .withArgs(proceedRecipient, true, '0x', 0)
+
+    await expect(tx)
+      .to.emit(anybodyProblem, 'EthMoved')
+      .withArgs(owner.address, true, '0x', price)
 
     const balanceAfter = await ethers.provider.getBalance(proceedRecipient)
-    expect(balanceAfter.sub(balanceBefore)).to.equal(price)
+    expect(balanceAfter.sub(balanceBefore)).to.equal(0)
 
     const speedrunBalance = await speedruns.balanceOf(owner.address, day)
     expect(speedrunBalance).to.equal(1)
 
-    const fastestRun = await anybodyProblem.fastestByDay(day, 0)
-    expect(fastestRun).to.equal(runId)
+    const fastestRuns = await anybodyProblem.fastestByDay(day)
+    expect(fastestRuns[0]).to.equal(runId)
 
     const mostGames = await anybodyProblem.mostGames(0)
     expect(mostGames).to.equal(owner.address)
@@ -298,7 +343,7 @@ describe('AnybodyProblem Tests', function () {
   it('solves all levels in a single tx', async () => {
     const [owner] = await ethers.getSigners()
     const { AnybodyProblem: anybodyProblem, Speedruns: speedruns } =
-      await deployContracts({ mock: true })
+      await deployContracts({ mock: true, verbose: false })
     let runId = 0
     const day = await anybodyProblem.currentDay()
     let accumulativeTime = 0
@@ -336,9 +381,18 @@ describe('AnybodyProblem Tests', function () {
     expect(finalArgs.length).to.equal(8)
 
     const tx = await anybodyProblem.batchSolve(...finalArgs, { value: price })
+    await tx.wait()
+
     await expect(tx)
       .to.emit(anybodyProblem, 'RunSolved')
       .withArgs(owner.address, finalRunId, accumulativeTime, day)
+
+    // as first run, it will be fastest and thus price is waived
+    // const proceedRecipient = await anybodyProblem.proceedRecipient()
+
+    await expect(tx)
+      .to.emit(anybodyProblem, 'EthMoved')
+      .withArgs(proceedRecipient, true, '0x', 0)
 
     await expect(tx)
       .to.emit(anybodyProblem, 'EthMoved')
@@ -347,8 +401,8 @@ describe('AnybodyProblem Tests', function () {
     const speedrunBalance = await speedruns.balanceOf(owner.address, day)
     expect(speedrunBalance).to.equal(1)
 
-    const fastestRun = await anybodyProblem.fastestByDay(day, 0)
-    expect(fastestRun).to.equal(finalRunId)
+    const fastestRuns = await anybodyProblem.fastestByDay(day)
+    expect(fastestRuns[0]).to.equal(finalRunId)
 
     const mostGames = await anybodyProblem.mostGames(0)
     expect(mostGames).to.equal(owner.address)
@@ -487,8 +541,7 @@ describe('AnybodyProblem Tests', function () {
     const { AnybodyProblem: anybodyProblem } = await deployContracts({
       mock: true
     })
-    const currentLevel = await anybodyProblem.currentLevel(0)
-    expect(currentLevel).to.equal(0)
+
     let runId = 0
     let level = 1
     const solvedReturn = await solveLevel(
@@ -499,9 +552,171 @@ describe('AnybodyProblem Tests', function () {
       level
     )
     runId = solvedReturn.runId
-
     const newCurrentLevel = await anybodyProblem.currentLevel(runId)
     expect(newCurrentLevel).to.equal(2)
+  })
+
+  it('performs an upgrade and the records are correct', async () => {
+    const [owner, acct2] = await ethers.getSigners()
+    // play a game on v0 contract
+    const { AnybodyProblemV0, Speedruns, ExternalMetadata } =
+      await deployContractsV0({
+        mock: true,
+        verbose: false
+      })
+
+    let runId = 0
+    const day = await AnybodyProblemV0.currentDay()
+    let accumulativeTime = 0
+    const finalArgs = [null, true, 0, [], [], [], [], []]
+    let finalRunId
+    for (let i = 0; i < 5; i++) {
+      const level = i + 1
+      const solvedReturn = await solveLevel(
+        owner.address,
+        AnybodyProblemV0,
+        expect,
+        runId,
+        level,
+        false
+      )
+      const args = solvedReturn.args
+      const time = solvedReturn.time
+      finalRunId = solvedReturn.runId
+      accumulativeTime += parseInt(time)
+      finalArgs[0] = runId
+      finalArgs[1] = true // alsoMint
+      finalArgs[2] = 0 // day
+      finalArgs[3].push(args[3][0])
+      finalArgs[4].push(args[4][0])
+      finalArgs[5].push(args[5][0])
+      finalArgs[6].push(args[6][0])
+      finalArgs[7].push(args[7][0])
+    }
+
+    const mintingFee = await AnybodyProblemV0.priceToSave()
+    const discount = await AnybodyProblemV0.discount()
+    const price = (await AnybodyProblemV0.priceToMint())
+      .div(discount)
+      .add(mintingFee)
+    expect(finalArgs.length).to.equal(8)
+
+    const tx = await AnybodyProblemV0.batchSolve(...finalArgs, { value: price })
+
+    await expect(tx)
+      .to.emit(AnybodyProblemV0, 'RunSolved')
+      .withArgs(owner.address, finalRunId, accumulativeTime, day)
+
+    const speedrunBalance = await Speedruns.balanceOf(owner.address, day)
+    expect(speedrunBalance).to.equal(1)
+
+    // const proceedRecipient = await AnybodyProblemV0.proceedRecipient()
+    // in v0, the price is NOT waived for a winning run
+    await expect(tx)
+      .to.emit(AnybodyProblemV0, 'EthMoved')
+      .withArgs(proceedRecipient, true, '0x', price)
+
+    // check whether game is fastest, slowest and longest streak
+    const fastestRuns = await AnybodyProblemV0.fastestByDay(day, 0)
+    expect(fastestRuns).to.equal(finalRunId)
+
+    const mostGames = await AnybodyProblemV0.mostGames(0)
+    expect(mostGames).to.equal(owner.address)
+
+    const gamesPlayed = await AnybodyProblemV0.gamesPlayed(owner.address)
+    expect(gamesPlayed.total).to.equal(1)
+    expect(gamesPlayed.lastPlayed).to.equal(day)
+    expect(gamesPlayed.streak).to.equal(1)
+
+    const firstRunId = finalRunId
+
+    const { AnybodyProblem: anybodyProblem } = await deployAnybodyProblemV1({
+      mock: true,
+      verbose: false,
+      AnybodyProblemV0,
+      Speedruns,
+      ExternalMetadata
+    })
+
+    // play a game on upgraded contract that is faster (or same)
+    if (anybodyProblem !== null) {
+      let runId = 0
+      const day = await anybodyProblem.currentDay()
+      let accumulativeTime = 0
+      const finalArgs = [null, true, 0, [], [], [], [], []]
+      let finalRunId
+      for (let i = 0; i < 5; i++) {
+        const level = i + 1
+        const solvedReturn = await solveLevel(
+          acct2.address,
+          anybodyProblem,
+          expect,
+          runId,
+          level,
+          false
+        )
+        const args = solvedReturn.args
+        const time = solvedReturn.time
+        finalRunId = solvedReturn.runId
+        accumulativeTime += parseInt(time)
+        finalArgs[0] = runId
+        finalArgs[1] = true // alsoMint
+        finalArgs[2] = 0 // day
+        finalArgs[3].push(args[3][0])
+        finalArgs[4].push(args[4][0])
+        finalArgs[5].push(args[5][0])
+        finalArgs[6].push(args[6][0])
+        finalArgs[7].push(args[7][0])
+      }
+      expect(firstRunId).to.not.equal(finalRunId)
+
+      const mintingFee = await anybodyProblem.priceToSave()
+      const discount = await anybodyProblem.discount()
+      const price = (await anybodyProblem.priceToMint())
+        .div(discount)
+        .add(mintingFee)
+      expect(finalArgs.length).to.equal(8)
+
+      const tx = await anybodyProblem.connect(acct2).batchSolve(...finalArgs, {
+        value: price
+      })
+      await tx.wait()
+
+      await expect(tx)
+        .to.emit(anybodyProblem, 'RunSolved')
+        .withArgs(acct2.address, finalRunId, accumulativeTime, day)
+
+      // price is 0 with winning run
+      await expect(tx)
+        .to.emit(anybodyProblem, 'EthMoved')
+        .withArgs(proceedRecipient, true, '0x', 0)
+
+      // refund is value attached to original tx
+      await expect(tx)
+        .to.emit(anybodyProblem, 'EthMoved')
+        .withArgs(acct2.address, true, '0x', price)
+
+      //check whether both players are included in fastest, slowest and longest streak
+      const fastestRuns = await anybodyProblem.fastestByDay(day)
+      expect(fastestRuns[0]).to.equal(firstRunId)
+      expect(fastestRuns[1]).to.equal(finalRunId)
+
+      const mostGames = await anybodyProblem.mostGames(0)
+      expect(mostGames).to.equal(owner.address)
+
+      const mostGames2 = await anybodyProblem.mostGames(1)
+      expect(mostGames2).to.equal(acct2.address)
+
+      const gamesPlayed = await anybodyProblem.gamesPlayed(acct2.address)
+      expect(gamesPlayed.total).to.equal(1)
+      expect(gamesPlayed.lastPlayed).to.equal(day)
+      expect(gamesPlayed.streak).to.equal(1)
+
+      const gamesPlayed2 = await anybodyProblem.gamesPlayed(owner.address)
+      expect(gamesPlayed2.total).to.equal(1)
+      expect(gamesPlayed2.lastPlayed).to.equal(day)
+      expect(gamesPlayed2.streak).to.equal(1)
+    }
   })
 
   // TODO: add exhaustive tests for topic and types

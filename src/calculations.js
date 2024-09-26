@@ -355,6 +355,8 @@ export const Calculations = {
     missile.position.x += missile.velocity.x
     missile.position.y += missile.velocity.y
 
+    // NOTE: Missile Limiter() circuit is lt and gt NOT lte or gte
+    // NOTE: Body is lte and gte
     if (
       missile.position.x > BigInt(this.windowWidth) * this.scalingFactor ||
       missile.position.y < 0n
