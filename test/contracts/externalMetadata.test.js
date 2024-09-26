@@ -50,14 +50,14 @@ describe('ExternalMetadata Tests', function () {
     const [owner] = await ethers.getSigners()
 
     const { AnybodyProblemV0, ExternalMetadata, Speedruns } =
-      await deployContractsV0({ mock: true, verbose: true })
+      await deployContractsV0({ mock: true, verbose: false })
 
     const { AnybodyProblem: anybodyProblem } = await deployAnybodyProblemV1({
       ExternalMetadata,
       AnybodyProblemV0,
       Speedruns,
       mock: true,
-      verbose: true
+      verbose: false
     })
     const finalArgs = [null, true, 0, [], [], [], [], []]
     let runId = 0

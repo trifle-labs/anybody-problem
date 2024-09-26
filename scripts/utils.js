@@ -8,7 +8,7 @@ import { exportCallDataGroth16 } from './circuits.js'
 const __dirname = path.resolve()
 
 const correctPrice = ethers.utils.parseEther('0.0025')
-const proceedsRecipient = '0x6421b5Dd0872a23f952cA43d18e79A9690B2bD53' // Safe on Base
+const proceedRecipient = '0x6421b5Dd0872a23f952cA43d18e79A9690B2bD53' // Safe on Base
 
 const proverTickIndex = {
   2: 250,
@@ -212,9 +212,9 @@ const deployAnybodyProblemV1 = async (options) => {
       ` with speedrunsAddress ${Speedruns.address} and externalMetdataAddress ${ExternalMetadata.address} and verifiers ${verifiers} and verifiersTicks ${verifiersTicks} and verifiersBodies ${verifiersBodies} and anybodyProblemV0Address ${AnybodyProblemV0.address}`
   )
 
-  // update AnybodyProblemV1 with proceedsRecipient
-  await anybodyProblem.updateProceedsRecipient(proceedsRecipient)
-  log(`AnybodyProblem ProceedsRecipient updated to ${proceedsRecipient}`)
+  // update AnybodyProblemV1 with proceedRecipient
+  await anybodyProblem.updateProceedRecipient(proceedRecipient)
+  log(`AnybodyProblem ProceedRecipient updated to ${proceedRecipient}`)
 
   // update Speedruns
   await Speedruns.updateAnybodyProblemAddress(anybodyProblem.address)
@@ -509,9 +509,9 @@ const deployContractsV0 = async (options) => {
       ` with speedrunsAddress ${speedruns.address} and externalMetdataAddress ${externalMetadata.address} and verifiers ${verifiers} and verifiersTicks ${verifiersTicks} and verifiersBodies ${verifiersBodies}`
   )
 
-  // update AnybodyProblemV1 with proceedsRecipient
-  await anybodyProblemV0.updateProceedsRecipient(proceedsRecipient)
-  log(`AnybodyProblemV0 ProceedsRecipient updated to ${proceedsRecipient}`)
+  // update AnybodyProblemV1 with proceedRecipient
+  await anybodyProblemV0.updateProceedRecipient(proceedRecipient)
+  log(`AnybodyProblemV0 ProceedRecipient updated to ${proceedRecipient}`)
 
   // update Speedruns
   await speedruns.updateAnybodyProblemAddress(anybodyProblemV0.address)
@@ -1026,6 +1026,7 @@ export {
   deployMetadata,
   getThemeName,
   deployAnybodyProblemV1,
-  saveAndVerifyContracts
+  saveAndVerifyContracts,
+  proceedRecipient
   // splitterAddress
 }

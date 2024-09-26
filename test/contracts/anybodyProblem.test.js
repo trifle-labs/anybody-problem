@@ -11,7 +11,8 @@ import {
   solveLevel,
   // mintProblem,
   generateAndSubmitProof,
-  getTicksRun
+  getTicksRun,
+  proceedRecipient
   // generateProof
 } from '../../scripts/utils.js'
 
@@ -387,7 +388,7 @@ describe('AnybodyProblem Tests', function () {
       .withArgs(owner.address, finalRunId, accumulativeTime, day)
 
     // as first run, it will be fastest and thus price is waived
-    const proceedRecipient = await anybodyProblem.proceedRecipient()
+    // const proceedRecipient = await anybodyProblem.proceedRecipient()
 
     await expect(tx)
       .to.emit(anybodyProblem, 'EthMoved')
@@ -609,7 +610,7 @@ describe('AnybodyProblem Tests', function () {
     const speedrunBalance = await Speedruns.balanceOf(owner.address, day)
     expect(speedrunBalance).to.equal(1)
 
-    const proceedRecipient = await AnybodyProblemV0.proceedRecipient()
+    // const proceedRecipient = await AnybodyProblemV0.proceedRecipient()
     // in v0, the price is NOT waived for a winning run
     await expect(tx)
       .to.emit(AnybodyProblemV0, 'EthMoved')
