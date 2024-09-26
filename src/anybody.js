@@ -526,6 +526,9 @@ export class Anybody extends EventEmitter {
   }
 
   step(bodies = this.bodies, missiles = this.missiles) {
+    if (this.gameOver && missiles.length !== 0) {
+      missiles = []
+    }
     // this.steps ||= 0
     // console.log({ steps: this.steps })
     // this.steps++

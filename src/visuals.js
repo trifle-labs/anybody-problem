@@ -916,24 +916,29 @@ export const Visuals = {
 
   calculatePoint(body) {
     const { position, velocity, radius, bodyIndex } = body
-    if (bodyIndex == 0) return -300
+    if (bodyIndex == 0) return [-300]
     const maxDist = this.p.dist(0, 0, this.windowWidth, this.windowHeight)
     const dist = this.p.dist(position.x, position.y, 0, this.windowHeight)
-    const distPoints = this.p.map(dist, 0, maxDist, 0, 100)
+    const distPoints = Math.floor(this.p.map(dist, 0, maxDist, 0, 100))
     const velocityVector = this.p.createVector(velocity.x, velocity.y)
     const maxVector = this.missileSpeed * this.speedFactor
-    const velPoints = this.p.map(velocityVector.mag(), 0, maxVector, 0, 100)
-    const radiusPoints = this.p.map(radius, 36, 11, 0, 100)
-    return (
-      Math.floor(distPoints + velPoints + radiusPoints) *
-      (bodyIndex == 0 ? -1 : 1)
+    const velPoints = Math.floor(
+      this.p.map(velocityVector.mag(), 0, maxVector, 0, 100)
     )
+    const radiusPoints =
+      this.introStage < this.totalIntroStages
+        ? 50
+        : Math.floor(this.p.map(radius, 36, 11, 0, 100))
+    return [distPoints, velPoints, radiusPoints]
   },
 
   calculatePoints() {
     return this.explosions
       .map((explosions) => {
-        return this.calculatePoint(explosions)
+        return this.calculatePoint(explosions).reduce(
+          (acc, curr) => acc + curr,
+          0
+        )
       })
       .reduce((acc, curr) => acc + curr, 0)
   },
@@ -975,8 +980,8 @@ export const Visuals = {
         p.textSize(this.scoreSize * 2)
         p.text(seconds.toFixed(2) + 's', 20, 0)
       } else {
-        const points = this.calculatePoints()
-        p.text(points, 20, 100)
+        const points = this.calculatePoints() + 'pts'
+        p.text(points, 300, 0)
         p.text(secondsLeft.toFixed(2), 20, 0)
         p.textAlign(p.RIGHT, p.TOP)
         if (this.hasTouched) {
@@ -1134,14 +1139,14 @@ export const Visuals = {
     const timeColX = showBestAndDiff ? col1X : col3X
 
     // middle box text - labels
-    p.text('time', timeColX, midHeadY)
+    p.text('score', timeColX, midHeadY)
     if (showBestAndDiff) {
       p.text('best', col2X, midHeadY)
       p.text('diff', col3X, midHeadY)
     }
 
     // middle box text - values
-    const problemComplete = levelTimes.length >= LEVELS
+    // const problemComplete = levelTimes.length >= LEVELS
     const rowHeight = 72
 
     // middle box text - highlight current row (blink via opacity)
@@ -1240,7 +1245,7 @@ export const Visuals = {
       const sumLineYText = sumLineY + sumLineHeight / 2
       p.textAlign(p.LEFT, p.CENTER)
       p.fill(THEME.iris_50)
-      p.text(problemComplete ? 'solved in' : 'total time', 44, sumLineYText)
+      p.text('total points', 44, sumLineYText)
       p.textAlign(p.RIGHT, p.CENTER)
       const columns = showBestAndDiff ? [col1X, col2X, col3X] : [timeColX]
       for (const [i, col] of columns.entries()) {
@@ -2058,6 +2063,7 @@ export const Visuals = {
   },
 
   drawPoints() {
+    if (this.paused || this.gameOver) return
     for (let i = 0; i < this.explosions.length; i++) {
       this.drawPoint(this.explosions[i])
     }
@@ -2067,18 +2073,38 @@ export const Visuals = {
     const timeSince = this.frames - body.frame
     const maxFrames = 50
     if (timeSince > maxFrames) return
-    let point = this.calculatePoint(body)
-    if (point > 0) {
-      point = '+' + point
-      this.p.fill(THEME.teal_50)
-      this.p.stroke(THEME.teal_50)
-    } else {
-      this.p.fill(THEME.flame_50)
-      this.p.stroke(THEME.flame_50)
+    let points = this.calculatePoint(body)
+    const textSize = 50
+    const xMargin = 100
+    const yMargin = (points.length + 1) * textSize
+    const x =
+      body.position.x + xMargin > this.windowWidth
+        ? this.windowWidth - xMargin
+        : body.position.x
+    const y =
+      body.position.y + yMargin > this.windowHeight
+        ? this.windowHeight - yMargin
+        : body.position.y
+
+    for (let i = 0; i < points.length; i++) {
+      let point = points[i]
+
+      if (point > 0) {
+        const kind = i == 0 ? 'd' : i == 1 ? 'v' : 'r'
+        point = `+${point} ${kind}:pts`
+        this.p.fill(THEME.teal_50)
+        this.p.stroke(THEME.teal_50)
+      } else {
+        this.p.fill(THEME.flame_50)
+        this.p.stroke(THEME.flame_50)
+      }
+      this.p.strokeWeight(2)
+      this.p.textSize(textSize)
+      this.p.text(point, x, y + i * textSize)
     }
-    this.p.strokeWeight(2)
-    this.p.textSize(100)
-    this.p.text(point, body.position.x, body.position.y)
+    if (points.length == 1) return
+    const totalPoints = `=${points.reduce((a, b) => a + b, 0)}`
+    this.p.text(totalPoints, x, y + textSize * points.length)
   },
 
   star(x, y, radius1, radius2, npoints, color, rotateBy, index) {

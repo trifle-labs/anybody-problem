@@ -1,3 +1,5 @@
+import { utils } from 'ethers'
+
 export const Calculations = {
   forceAccumulator(bodies = this.bodies) {
     bodies = this.convertBodiesToBigInts(bodies)
@@ -364,8 +366,10 @@ export const Calculations = {
       missile.radius = 0n
     }
     // const maxVectorScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
-    const maxWidth = BigInt(this.windowWidth) * this.scalingFactor
-    const maxHeight = BigInt(this.windowHeight) * this.scalingFactor
+    // const maxWidth = BigInt(this.windowWidth) * this.scalingFactor
+    // const maxHeight = BigInt(this.windowHeight) * this.scalingFactor
+    const maxVectorScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
+
     for (let j = 0; j < bodies.length; j++) {
       const body = bodies[j]
       const distance = _approxDist(
@@ -404,20 +408,77 @@ export const Calculations = {
         }
         if (convertedBody.bodyIndex == 0) {
           // bodies[j].radius = 0n
+        } else if (this.introStage < this.totalIntroStages) {
+          bodies[1].radius = 0
         }
 
+        const randXseed = utils.solidityKeccak256(
+          ['uint256'],
+          [body.position.x]
+        )
+        const randomX = BigInt(
+          this.randomRange(
+            0,
+            BigInt(this.windowWidth) * this.scalingFactor,
+            randXseed
+          )
+        )
+        const randYseed = utils.solidityKeccak256(
+          ['uint256'],
+          [body.position.y]
+        )
+        const randomY = BigInt(
+          this.randomRange(
+            0,
+            BigInt(this.windowHeight) * this.scalingFactor,
+            randYseed
+          )
+        )
+
+        const randVXseed = utils.solidityKeccak256(
+          ['uint256'],
+          [body.velocity.x]
+        )
+        const randomVX =
+          BigInt(
+            this.randomRange(
+              maxVectorScaled / 2n,
+              (maxVectorScaled * 3n) / 2n,
+              randVXseed
+            )
+          ) - maxVectorScaled
+
+        const randVYseed = utils.solidityKeccak256(
+          ['uint256'],
+          [body.velocity.y]
+        )
+        const randomVY =
+          BigInt(
+            this.randomRange(
+              maxVectorScaled / 2n,
+              (maxVectorScaled * 3n) / 2n,
+              randVYseed
+            )
+          ) - maxVectorScaled
+        console.log({ randomX, randomY, randomVX, randomVY })
+        // TODO:       newBody.velocity.y = this.convertScaledBigIntToFloat(body.velocity.y)
+        body.position.x = randomX
+        body.position.y = randomY
+        body.velocity.x = randomVX
+        body.velocity.y = randomVY
+
         // line of division is x = -y
-        if (body.position.x > maxHeight - body.position.y) {
-          body.position.x = 0n
-          body.position.y = 0n
-          // body.velocity.x = maxVectorScaled / 2n
-          // body.velocity.y = maxVectorScaled / 2n
-        } else {
-          body.position.x = maxWidth
-          body.position.y = maxHeight
-          // body.velocity.x = -maxVectorScaled / 2n
-          // body.velocity.y = -maxVectorScaled / 2n
-        }
+        // if (body.position.x > maxHeight - body.position.y) {
+        //   body.position.x = 0n
+        //   body.position.y = 0n
+        //   // body.velocity.x = maxVectorScaled / 2n
+        //   // body.velocity.y = maxVectorScaled / 2n
+        // } else {
+        //   body.position.x = maxWidth
+        //   body.position.y = maxHeight
+        //   // body.velocity.x = -maxVectorScaled / 2n
+        //   // body.velocity.y = -maxVectorScaled / 2n
+        // }
 
         // if (body.position.x > maxWidth / 2n) {
         //   // right side of screen

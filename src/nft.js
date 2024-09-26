@@ -16,7 +16,7 @@ window.anybody
 
 q5.setup = () => {
   const options = {
-    level: 1,
+    level: 0,
     opensea: true,
     todaysRecords
   }
