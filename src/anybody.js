@@ -541,6 +541,9 @@ export class Anybody extends EventEmitter {
       console.log('LASTMISSILECANTBEUNDONE = FALSE')
       this.lastMissileCantBeUndone = false
     }
+    if (this.gameOver) {
+      this.missiles = []
+    }
     bodies = this.forceAccumulator(bodies)
     var results = this.detectCollision(bodies, this.missiles)
     bodies = results.bodies

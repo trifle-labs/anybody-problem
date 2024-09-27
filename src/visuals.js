@@ -2091,29 +2091,37 @@ export const Visuals = {
       body.position.y + yMargin > this.windowHeight
         ? this.windowHeight - yMargin
         : body.position.y
+    this.p.strokeWeight(2)
+    this.p.textSize(textSize)
+    // for (let i = 0; i < points.length; i++) {
+    // let point = points[i]
 
-    for (let i = 0; i < points.length; i++) {
-      let point = points[i]
+    // const kind = i == 0 ? 'd' : i == 1 ? 'v' : 'r'
+    // point = `${point}`
+    // if (point > 0) {
+    //   point = `+${point}`
+    //   this.p.fill(THEME.teal_50)
+    //   this.p.stroke(THEME.teal_50)
+    // } else {
+    //   this.p.fill(THEME.flame_50)
+    //   this.p.stroke(THEME.flame_50)
+    // }
 
-      const kind = i == 0 ? 'd' : i == 1 ? 'v' : 'r'
-      point = `${point}`
-      if (point > 0) {
-        point = `+${point}`
-        this.p.fill(THEME.teal_50)
-        this.p.stroke(THEME.teal_50)
-      } else {
-        this.p.fill(THEME.flame_50)
-        this.p.stroke(THEME.flame_50)
-      }
-      this.p.strokeWeight(2)
-      this.p.textSize(textSize)
-      this.p.text(point, x, y + i * textSize)
-      this.p.textAlign(this.p.LEFT, this.p.CENTER)
-      this.p.text(` ${kind}:pts`, x, y + i * textSize)
-      this.p.textAlign(this.p.RIGHT, this.p.CENTER)
+    // this.p.text(point, x, y + i * textSize)
+    // this.p.textAlign(this.p.LEFT, this.p.CENTER)
+    // this.p.text(` ${kind}:pts`, x, y + i * textSize)
+    // this.p.textAlign(this.p.RIGHT, this.p.CENTER)
+    // }
+    let totalPoints = points.reduce((a, b) => a + b, 0)
+    if (totalPoints > 0) {
+      totalPoints = `+${totalPoints}`
+      this.p.fill(THEME.teal_50)
+      this.p.stroke(THEME.teal_50)
+    } else {
+      this.p.fill(THEME.flame_50)
+      this.p.stroke(THEME.flame_50)
     }
-    const totalPoints = `=${points.reduce((a, b) => a + b, 0)}`
-    this.p.text(totalPoints, x, y + textSize * points.length)
+    this.p.text(totalPoints, x, y)
   },
 
   star(x, y, radius1, radius2, npoints, color, rotateBy, index) {
@@ -2804,6 +2812,7 @@ export const Visuals = {
         throw new Error("Couldn't copy to clipboard. Blocked by browser?")
       }
     }
+
     if (navigator.share && !copySuccess) {
       console.log('sharing canvas...')
       try {
