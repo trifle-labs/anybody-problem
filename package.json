@@ -2,35 +2,24 @@
   "name": "anybody-problem",
   "version": "1.0.0",
   "license": "CC-BY-NC-4.0",
-  "targets": {
-    "module": {
-      "optimize": true,
-      "source": "src/index.js",
-      "isLibrary": true
-    },
-    "iframe": {
-      "source": "src/index.html",
-      "optimize": true
-    }
-  },
-  "source": "src/index.js",
+  "type": "module",
   "main": "dist/module.js",
   "module": "dist/module.js",
-  "iframe": "dist/index.html",
+  "source": "src/index.js",
   "scripts": {
-    "prepare": "husky",
     "build": "rm -rf .parcel-cache && rm -rf dist && yarn parcel build",
-    "dev": "rm -rf .parcel-cache && rm -rf dist && yarn parcel watch src/index.js",
-    "serve": "rm -rf .parcel-cache && yarn parcel src/index.html --open",
     "chain": "hardhat node",
     "circom": "./scripts/basic_circom.sh",
     "circom:game-test": "yarn circom game_2_20 && yarn circom game_3_20 && yarn circom game_4_20 && yarn circom game_5_20 && yarn circom game_6_20",
     "circom:game-prod": "yarn circom game_2_250 && yarn circom game_3_250 && yarn circom game_4_250 && yarn circom game_5_125 && yarn circom game_6_125",
     "deploy": "hardhat run scripts/deploy.cjs",
-    "test:circom": "ls test/*.js | grep -v -e 'bodies' -e 'problems' -e 'solver' -e 'problemMetadata' -e 'bodyMetadata' | xargs npx hardhat test",
-    "test:solidity": "hardhat test test/problems.test.js test/problemMetadata.test.js test/bodyMetadata.test.js test/bodies.test.js test/solver.test.js",
+    "dev": "rm -rf .parcel-cache && rm -rf dist && yarn parcel watch src/index.js",
+    "precommit": "echo 'husky is working : )' && lint-staged && yarn build && git add dist",
+    "prepare": "husky",
+    "serve": "rm -rf .parcel-cache && yarn parcel src/index.html --open",
     "test": "hardhat test",
-    "precommit": "echo 'husky is working : )' && lint-staged && yarn build && git add dist"
+    "test:circom": "ls test/*.js | grep -v -e 'bodies' -e 'problems' -e 'solver' -e 'problemMetadata' -e 'bodyMetadata' | xargs npx hardhat test",
+    "test:solidity": "hardhat test test/problems.test.js test/problemMetadata.test.js test/bodyMetadata.test.js test/bodies.test.js test/solver.test.js"
   },
   "lint-staged": {
     "*.{js,jsx}": [
@@ -42,6 +31,12 @@
     ],
     "**/*": "prettier --write --ignore-unknown"
   },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead",
+    "not ie 11"
+  ],
   "eslintConfig": {
     "env": {
       "amd": true,
@@ -74,6 +69,9 @@
       "/dist/*"
     ],
     "root": true
+  },
+  "resolutions": {
+    "web-worker": "1.2.0"
   },
   "dependencies": {
     "ethers": "^5.7.0",
@@ -113,16 +111,18 @@
     "solidity-coverage": "^0.8.6",
     "xmldom": "^0.6.0"
   },
-  "resolutions": {
-    "web-worker": "1.2.0"
-  },
-  "type": "module",
-  "browserslist": [
-    "> 1%",
-    "last 2 versions",
-    "not dead",
-    "not ie 11"
-  ],
+  "iframe": "dist/index.html",
   "readme": "ERROR: No README data found!",
+  "targets": {
+    "module": {
+      "optimize": true,
+      "source": "src/index.js",
+      "isLibrary": true
+    },
+    "iframe": {
+      "source": "src/index.html",
+      "optimize": true
+    }
+  },
   "_id": "anybody-problem@1.0.0"
 }

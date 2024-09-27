@@ -268,6 +268,7 @@ export const Visuals = {
     this.drawGun() // draw after score so cursor isnt in share img
     this.drawGunSmoke()
     this.drawExplosionSmoke()
+    this.drawPoints()
 
     if (
       this.frames - this.startingFrame + this.FPS < this.timer &&
@@ -287,7 +288,7 @@ export const Visuals = {
     const hitHeroBody = this.bodies[0].radius == 0 && this.level !== 0
 
     if ((ranOutOfTime || hitHeroBody) && !this.handledGameOver) {
-      this.handleGameOver({ won: false, ranOutOfTime, hitHeroBody })
+      this.handleGameOver({ won: true, ranOutOfTime, hitHeroBody })
     }
     if (
       !this.won &&
@@ -913,6 +914,38 @@ export const Visuals = {
     p.pop()
   },
 
+  calculatePoint(body) {
+    const { position, velocity, radius, bodyIndex } = body
+    const bb = bodyIndex == 0
+    const maxDist = this.p.dist(0, 0, this.windowWidth, this.windowHeight)
+    const dist = this.p.dist(position.x, position.y, 0, this.windowHeight)
+    const distPoints = Math.floor(this.p.map(dist, 0, maxDist, 0, 100))
+    const velocityVector = this.p.createVector(velocity.x, velocity.y)
+    const maxVector = this.missileSpeed * this.speedFactor
+    const velPoints = Math.floor(
+      this.p.map(velocityVector.mag(), 0, maxVector, 0, 100)
+    )
+    const radiusPoints =
+      this.introStage < this.totalIntroStages
+        ? 50
+        : Math.floor(this.p.map(radius, bb ? 11 : 36, bb ? 36 : 11, 0, 100))
+
+    return [distPoints, velPoints, radiusPoints].map((point) =>
+      bb ? point * -1 : point
+    )
+  },
+
+  calculatePoints() {
+    return this.explosions
+      .map((explosions) => {
+        return this.calculatePoint(explosions).reduce(
+          (acc, curr) => acc + curr,
+          0
+        )
+      })
+      .reduce((acc, curr) => acc + curr, 0)
+  },
+
   drawScore() {
     if (this.paused) return
     const { p } = this
@@ -925,7 +958,7 @@ export const Visuals = {
 
     const runningFrames = this.frames - this.startingFrame
     const seconds = (this.framesTook || runningFrames) / this.FPS
-    const secondsLeft =
+    let secondsLeft =
       (this.level > 5 ? 60 : GAME_LENGTH_BY_LEVEL_INDEX[this.level]) - seconds
     if (this.gameOver) {
       this.scoreSize = this.initialScoreSize
@@ -946,10 +979,14 @@ export const Visuals = {
       runningFrames > 2 &&
       (!this.gameOver || (this.gameOver && this.won && !this.skipAhead))
     ) {
+      const points = this.calculatePoints() + 'pts'
       if (this.won) {
         p.textSize(this.scoreSize * 2)
-        p.text(seconds.toFixed(2) + 's', 20, 0)
+        p.text(points, 20, 0)
       } else {
+        p.textAlign(p.CENTER, p.TOP)
+        p.text(points, this.windowWidth / 2, 0)
+        p.textAlign(p.LEFT, p.TOP)
         p.text(secondsLeft.toFixed(2), 20, 0)
         p.textAlign(p.RIGHT, p.TOP)
         if (this.hasTouched) {
@@ -1090,10 +1127,10 @@ export const Visuals = {
 
     // middle box text
     const levelTimes = this.levelSpeeds
-      .map((result) => result?.framesTook / this.FPS)
+      .map((result) => result?.points)
       .filter((l) => l !== undefined)
     const bestTimes =
-      this.todaysRecords?.levels?.map((l) => l.events[0].time / this.FPS) ?? []
+      this.todaysRecords?.levels?.map((l) => l.events[0].points) ?? []
 
     const showBestAndDiff = bestTimes.length
 
@@ -1107,14 +1144,14 @@ export const Visuals = {
     const timeColX = showBestAndDiff ? col1X : col3X
 
     // middle box text - labels
-    p.text('time', timeColX, midHeadY)
+    p.text('score', timeColX, midHeadY)
     if (showBestAndDiff) {
       p.text('best', col2X, midHeadY)
       p.text('diff', col3X, midHeadY)
     }
 
     // middle box text - values
-    const problemComplete = levelTimes.length >= LEVELS
+    // const problemComplete = levelTimes.length >= LEVELS
     const rowHeight = 72
 
     // middle box text - highlight current row (blink via opacity)
@@ -1140,7 +1177,7 @@ export const Visuals = {
     // p.translate(0, middleBoxPadding)
     // times
     for (let i = 0; i < LEVELS; i++) {
-      const time = i < levelTimes.length ? levelTimes[i].toFixed(2) : '-'
+      const time = i < levelTimes.length ? levelTimes[i] : '-'
       p.fill(THEME.iris_30)
       p.text(
         time,
@@ -1157,13 +1194,13 @@ export const Visuals = {
           if (i >= levelTimes.length) return ''
           const time = levelTimes[i]
           const diff = time - best
-          const sign = Number(diff.toFixed(2)) > 0 ? '+' : '-'
-          return sign + Math.abs(diff).toFixed(2)
+          const sign = Number(diff) > 0 ? '+' : '-'
+          return sign + Math.abs(diff)
         })
         .filter(Boolean)
       // best times
       for (let i = 0; i < LEVELS; i++) {
-        const best = i < bestTimes.length ? bestTimes[i].toFixed(2) : '-'
+        const best = i < bestTimes.length ? bestTimes[i] : '-'
         p.fill(THEME.iris_50)
         p.text(
           best,
@@ -1197,15 +1234,15 @@ export const Visuals = {
     // middle box text - sum line
     if (showCumulativeTimeRow) {
       const levelTimeSum = levelTimes.reduce((a, b) => a + b, 0)
-      const sumLine = [levelTimeSum.toFixed(2)]
+      const sumLine = [levelTimeSum]
 
       if (showBestAndDiff) {
         const bestTime = bestTimes
           .slice(0, levelTimes.length)
           .reduce((a, b) => a + b, 0)
-        let diff = Number((levelTimeSum - bestTime).toFixed(2))
-        sumLine[1] = bestTime.toFixed(2)
-        sumLine[2] = `${diff > 0 ? '+' : '-'}${Math.abs(diff).toFixed(2)}`
+        let diff = Number(levelTimeSum - bestTime)
+        sumLine[1] = bestTime
+        sumLine[2] = `${diff > 0 ? '+' : '-'}${Math.abs(diff)}`
       }
 
       const sumLineY = middleBoxY + rowHeight * Math.min(5, LEVELS)
@@ -1213,7 +1250,7 @@ export const Visuals = {
       const sumLineYText = sumLineY + sumLineHeight / 2
       p.textAlign(p.LEFT, p.CENTER)
       p.fill(THEME.iris_50)
-      p.text(problemComplete ? 'solved in' : 'total time', 44, sumLineYText)
+      p.text('total points', 44, sumLineYText)
       p.textAlign(p.RIGHT, p.CENTER)
       const columns = showBestAndDiff ? [col1X, col2X, col3X] : [timeColX]
       for (const [i, col] of columns.entries()) {
@@ -2025,9 +2062,66 @@ export const Visuals = {
       } else {
         _explosion.c.baddie = this.hslToGrayscale(explosions[i].c.baddie)
       }
-
-      this.drawBody(_explosion)
+      // this.drawPoint(_explosion)
+      // this.drawBody(_explosion, true)
     }
+  },
+
+  drawPoints() {
+    if (this.paused || this.gameOver) return
+    for (let i = 0; i < this.explosions.length; i++) {
+      this.drawPoint(this.explosions[i])
+    }
+  },
+
+  drawPoint(body) {
+    const timeSince = this.frames - body.frame
+    const maxFrames = 75
+    if (timeSince > maxFrames) return
+    this.p.textAlign(this.p.RIGHT, this.p.CENTER)
+    let points = this.calculatePoint(body)
+    const textSize = 50
+    const xMargin = 100
+    const yMargin = (points.length + 1) * textSize
+    const x =
+      body.position.x + xMargin > this.windowWidth
+        ? this.windowWidth - xMargin
+        : body.position.x
+    const y =
+      body.position.y + yMargin > this.windowHeight
+        ? this.windowHeight - yMargin
+        : body.position.y
+    this.p.strokeWeight(2)
+    this.p.textSize(textSize)
+    // for (let i = 0; i < points.length; i++) {
+    // let point = points[i]
+
+    // const kind = i == 0 ? 'd' : i == 1 ? 'v' : 'r'
+    // point = `${point}`
+    // if (point > 0) {
+    //   point = `+${point}`
+    //   this.p.fill(THEME.teal_50)
+    //   this.p.stroke(THEME.teal_50)
+    // } else {
+    //   this.p.fill(THEME.flame_50)
+    //   this.p.stroke(THEME.flame_50)
+    // }
+
+    // this.p.text(point, x, y + i * textSize)
+    // this.p.textAlign(this.p.LEFT, this.p.CENTER)
+    // this.p.text(` ${kind}:pts`, x, y + i * textSize)
+    // this.p.textAlign(this.p.RIGHT, this.p.CENTER)
+    // }
+    let totalPoints = points.reduce((a, b) => a + b, 0)
+    if (totalPoints > 0) {
+      totalPoints = `+${totalPoints}`
+      this.p.fill(THEME.teal_50)
+      this.p.stroke(THEME.teal_50)
+    } else {
+      this.p.fill(THEME.flame_50)
+      this.p.stroke(THEME.flame_50)
+    }
+    this.p.text(totalPoints, x, y)
   },
 
   star(x, y, radius1, radius2, npoints, color, rotateBy, index) {
@@ -2462,7 +2556,7 @@ export const Visuals = {
     return svg
   },
 
-  drawBody(body) {
+  drawBody(body, isGhost = false) {
     if (body.radius == 0) {
       return
     }
@@ -2482,7 +2576,7 @@ export const Visuals = {
         this.drawFaceSvg(body, size)
       }
     } else {
-      this.drawBaddie(body)
+      this.drawBaddie(body, isGhost)
     }
     this.p.pop()
   },
@@ -2550,6 +2644,13 @@ export const Visuals = {
 
   replaceOpacity(c, opacity) {
     const isHSLA = c.includes('hsla')
+    const isHSL = c.includes('hsl')
+    if (isHSL && !isHSLA) {
+      let cc = c.replace('hsl', 'hsla')
+      cc = cc.replace(')', `,${opacity})`)
+      console.log({ c, cc })
+      return cc
+    }
     const prefix = isHSLA ? 'hsla' : 'rgba'
     let cc = c
       .split(',')
@@ -2566,27 +2667,37 @@ export const Visuals = {
   },
 
   brighten(c, amount = 20) {
+    const prefix = c.length == 4 ? 'hsla' : 'hsl'
     const cc = [...c]
     cc[2] = cc[2] + amount
     cc[1] = cc[1] + '%'
     cc[2] = cc[2] + '%'
-    return `hsla(${cc.join(',')})`
+    return `${prefix}(${cc.join(',')})`
   },
 
-  drawBaddie(body) {
+  drawBaddie(body, isGhost = false) {
     const colorHSL = body.c.baddie
     const coreWidth = body.radius * BODY_SCALE
     const maxWidth = (body.maxRadius || body.radius) * BODY_SCALE
-    const bgColor = this.brighten(colorHSL, -20)
-    const coreColor = `hsl(${colorHSL[0]},${colorHSL[1]}%,${colorHSL[2]}%)`
+    let bgColor = this.brighten(colorHSL, -20)
+    let coreColor = `hsl(${colorHSL[0]},${colorHSL[1]}%,${colorHSL[2]}%)`
     this.p.push()
     const rotationSpeedOffset = body.rotationSpeedOffset || 1
-    const rotate =
-      (this.p5Frames / this.P5_FPS_MULTIPLIER / (30 / rotationSpeedOffset)) %
-      360
+    const rotate = isGhost
+      ? 0
+      : (this.p5Frames / this.P5_FPS_MULTIPLIER / (30 / rotationSpeedOffset)) %
+        360
     this.p.rotate(rotate)
     let strokeColor = body.c.strokeColor
     let strokeWidth = body.c.strokeWidth
+
+    if (isGhost) {
+      bgColor = this.replaceOpacity(bgColor, 0.25)
+      coreColor = this.replaceOpacity(coreColor, 0.25)
+      strokeColor = strokeColor
+        ? this.replaceOpacity(strokeColor, 0.25)
+        : strokeColor
+    }
     this.drawImageAsset(
       'BADDIE_SVG',
       'bg',
@@ -2701,6 +2812,7 @@ export const Visuals = {
         throw new Error("Couldn't copy to clipboard. Blocked by browser?")
       }
     }
+
     if (navigator.share && !copySuccess) {
       console.log('sharing canvas...')
       try {

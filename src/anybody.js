@@ -82,6 +82,7 @@ export class Anybody extends EventEmitter {
       todaysRecords: {},
       levelSpeeds: [],
       bodyData: null,
+      gameMode: 'score',
       // debug: false,
       // Add default properties and their initial values here
       startingBodies: 1,
@@ -231,6 +232,7 @@ export class Anybody extends EventEmitter {
 
   // run once at initilization
   init() {
+    this.hits = []
     this.skipAhead = false
     this.winScreenBaddies = undefined
     this.seed = utils.solidityKeccak256(['uint256'], [this.day])
@@ -524,6 +526,9 @@ export class Anybody extends EventEmitter {
   }
 
   step(bodies = this.bodies, missiles = this.missiles) {
+    if (this.gameOver && missiles.length !== 0) {
+      missiles = []
+    }
     // this.steps ||= 0
     // console.log({ steps: this.steps })
     // this.steps++
@@ -535,6 +540,9 @@ export class Anybody extends EventEmitter {
       // NOTE: this maybe should be after the step logic
       console.log('LASTMISSILECANTBEUNDONE = FALSE')
       this.lastMissileCantBeUndone = false
+    }
+    if (this.gameOver) {
+      this.missiles = []
     }
     bodies = this.forceAccumulator(bodies)
     var results = this.detectCollision(bodies, this.missiles)
@@ -646,9 +654,11 @@ export class Anybody extends EventEmitter {
     ]
 
     const { address, day, level, bodyInits, bodyFinal, framesTook } = this
+    const points = this.calculatePoints()
 
     const results = JSON.parse(
       JSON.stringify({
+        points,
         day,
         level,
         inflightMissile,
