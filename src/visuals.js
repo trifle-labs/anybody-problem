@@ -287,9 +287,6 @@ export const Visuals = {
     const ranOutOfTime = elapsedFrames >= this.timer
     const hitHeroBody = this.bodies[0].radius == 0 && this.level !== 0
 
-    if ((ranOutOfTime || hitHeroBody) && !this.handledGameOver) {
-      this.handleGameOver({ won: false, ranOutOfTime, hitHeroBody })
-    }
     if (
       !this.won &&
       this.mode == 'game' &&
@@ -299,6 +296,8 @@ export const Visuals = {
       !this.handledGameOver
     ) {
       this.handleGameOver({ won: true })
+    } else if ((ranOutOfTime || hitHeroBody) && !this.handledGameOver) {
+      this.handleGameOver({ won: false, ranOutOfTime, hitHeroBody })
     }
 
     if (
