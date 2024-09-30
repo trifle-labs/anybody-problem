@@ -269,8 +269,10 @@ export const Visuals = {
     this.drawGunSmoke()
     this.drawExplosionSmoke()
 
+    const elapsedFrames = this.frames - this.startingFrame
+
     if (
-      this.frames - this.startingFrame + this.FPS < this.timer &&
+      elapsedFrames < this.timer &&
       this.bodies.reduce((a, c) => a + c.radius, 0) != 0
     ) {
       this.drawMissiles()
@@ -282,13 +284,9 @@ export const Visuals = {
       this.p5Frames % this.P5_FPS_MULTIPLIER == 0
     const didNotJustPause = !this.justPaused
 
-    const ranOutOfTime =
-      this.frames - this.startingFrame + this.FPS >= this.timer
+    const ranOutOfTime = elapsedFrames >= this.timer
     const hitHeroBody = this.bodies[0].radius == 0 && this.level !== 0
 
-    if ((ranOutOfTime || hitHeroBody) && !this.handledGameOver) {
-      this.handleGameOver({ won: false, ranOutOfTime, hitHeroBody })
-    }
     if (
       !this.won &&
       this.mode == 'game' &&
@@ -298,6 +296,8 @@ export const Visuals = {
       !this.handledGameOver
     ) {
       this.handleGameOver({ won: true })
+    } else if ((ranOutOfTime || hitHeroBody) && !this.handledGameOver) {
+      this.handleGameOver({ won: false, ranOutOfTime, hitHeroBody })
     }
 
     if (
