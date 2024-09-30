@@ -54,6 +54,7 @@ export class Anybody extends EventEmitter {
     this.init()
     !this.util && this.start()
     this.checkIfDone()
+    this.saveData = {}
   }
 
   checkIfDone() {
@@ -531,13 +532,16 @@ export class Anybody extends EventEmitter {
     //   { bodies: this.bodies, missiles: this.missiles[0] },
     //   { depth: null }
     // )
+    if (this.gameOver && missiles.length !== 0) {
+      missiles = []
+    }
     if (missiles.length == 0 && this.lastMissileCantBeUndone) {
       // NOTE: this maybe should be after the step logic
       console.log('LASTMISSILECANTBEUNDONE = FALSE')
       this.lastMissileCantBeUndone = false
     }
     bodies = this.forceAccumulator(bodies)
-    var results = this.detectCollision(bodies, this.missiles)
+    var results = this.detectCollision(bodies, missiles)
     bodies = results.bodies
     missiles = results.missiles || []
     if (missiles.length > 0) {
