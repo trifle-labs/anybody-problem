@@ -239,14 +239,17 @@ contract ExternalMetadata is Ownable {
     function getName(uint256 date) public pure returns (string memory) {
         (uint year, uint month, uint day) = BokkyPooBahsDateTimeLibrary
             .timestampToDate(date);
+
+        string memory monthName = month == 1 ? "January" : month == 2 ? "February" : month == 3 ? "March" : month == 4 ? "April" : month == 5 ? "May" : month == 6 ? "June" : month == 7 ? "July" : month == 8 ? "August" : month == 9 ? "September" : month == 10 ? "October" : month == 11 ? "November" : "December";
+
         return
             string(
                 abi.encodePacked(
-                    StringsExtended.toString(year),
-                    '-',
-                    StringsExtended.toString(month),
-                    '-',
-                    StringsExtended.toString(day)
+                    monthName,
+                    " ",
+                    StringsExtended.toString(day),
+                    ", ",
+                    StringsExtended.toString(year)
                 )
             );
     }
