@@ -70,15 +70,24 @@ const initContracts = async (
     'AnybodyProblemV0',
     'AnybodyProblem',
     'Speedruns',
-    'ExternalMetadata'
+    'ExternalMetadata',
+    'ThemeGroup'
   ]
 ) => {
+  console.log({ contractNames })
   let [deployer] = await hre.ethers.getSigners()
 
   for (let i = 3; i <= 6; i++) {
     if (i !== 4 && i !== 6) continue
     const ticks = await getTicksRun(i)
     contractNames.push(`Game_${i}_${ticks}Verifier`)
+  }
+
+  if (contractNames.includes('ThemeGroup')) {
+    for (let i = 0; i < 5; i++) {
+      const asset = `Assets${i + 1}`
+      contractNames.push(asset)
+    }
   }
 
   let returnObject = {}
@@ -249,63 +258,76 @@ const deployAnybodyProblemV1 = async (options) => {
   return returnObject
 }
 
-const deployMetadata = async () => {
-  let externalMetadata, assets1, assets2, assets3, assets4, assets5
+const deployMetadata = async (skipAssets = false) => {
+  let externalMetadata,
+    themeAddress,
+    assets1,
+    assets2,
+    assets3,
+    assets4,
+    assets5
   try {
     const network = await hre.ethers.provider.getNetwork()
     global.networkinfo = network
     let themeName = getThemeName(network['chainId'])
 
-    const Theme = await hre.ethers.getContractFactory(themeName)
-    const theme = await Theme.deploy()
-    await theme.deployed()
-    var themeAddress = theme.address
-    log(themeName + ' Deployed at ' + String(themeAddress))
+    let byteSize, theme
+    if (skipAssets) {
+      const { ExternalMetadata } = await initContracts(['ExternalMetadata'])
 
-    // deploy Assets1
-    const Assets1 = await hre.ethers.getContractFactory('Assets1')
-    let byteSize = Buffer.from(Assets1.bytecode.slice(2), 'hex').length
-    log(`Assets1 byte size: ${byteSize} bytes`)
-    assets1 = await Assets1.deploy()
-    await assets1.deployed()
-    var assets1Address = assets1.address
-    log('Assets1 Deployed at ' + String(assets1Address))
+      themeAddress = await ExternalMetadata.themeGroup()
+      assets1 = { address: await ExternalMetadata.assets1() }
+      assets2 = { address: await ExternalMetadata.assets2() }
+      assets3 = { address: await ExternalMetadata.assets3() }
+      assets4 = { address: await ExternalMetadata.assets4() }
+      assets5 = { address: await ExternalMetadata.assets5() }
+    } else {
+      const Theme = await hre.ethers.getContractFactory(themeName)
+      theme = await Theme.deploy()
+      await theme.deployed()
+      themeAddress = theme.address
+      log(themeName + ' Deployed at ' + String(themeAddress))
 
-    // deploy Assets2
-    const Assets2 = await hre.ethers.getContractFactory('Assets2')
-    byteSize = Buffer.from(Assets2.bytecode.slice(2), 'hex').length
-    log(`Assets2 byte size: ${byteSize} bytes`)
-    assets2 = await Assets2.deploy()
-    await assets2.deployed()
-    var assets2Address = assets2.address
-    log('Assets2 Deployed at ' + String(assets2Address))
+      // deploy Assets1
+      const Assets1 = await hre.ethers.getContractFactory('Assets1')
+      let byteSize = Buffer.from(Assets1.bytecode.slice(2), 'hex').length
+      log(`Assets1 byte size: ${byteSize} bytes`)
+      assets1 = await Assets1.deploy()
+      await assets1.deployed()
+      log('Assets1 Deployed at ' + String(assets1.address))
 
-    // deploy Assets3
-    const Assets3 = await hre.ethers.getContractFactory('Assets3')
-    byteSize = Buffer.from(Assets3.bytecode.slice(2), 'hex').length
-    log(`Assets3 byte size: ${byteSize} bytes`)
-    assets3 = await Assets3.deploy()
-    await assets3.deployed()
-    var assets3Address = assets3.address
-    log('Assets3 Deployed at ' + String(assets3Address))
+      // deploy Assets2
+      const Assets2 = await hre.ethers.getContractFactory('Assets2')
+      byteSize = Buffer.from(Assets2.bytecode.slice(2), 'hex').length
+      log(`Assets2 byte size: ${byteSize} bytes`)
+      assets2 = await Assets2.deploy()
+      await assets2.deployed()
+      log('Assets2 Deployed at ' + String(assets2.address))
 
-    // deploy Assets4
-    const Assets4 = await hre.ethers.getContractFactory('Assets4')
-    byteSize = Buffer.from(Assets4.bytecode.slice(2), 'hex').length
-    log(`Assets4 byte size: ${byteSize} bytes`)
-    assets4 = await Assets4.deploy()
-    await assets4.deployed()
-    var assets4Address = assets4.address
-    log('Assets4 Deployed at ' + String(assets4Address))
+      // deploy Assets3
+      const Assets3 = await hre.ethers.getContractFactory('Assets3')
+      byteSize = Buffer.from(Assets3.bytecode.slice(2), 'hex').length
+      log(`Assets3 byte size: ${byteSize} bytes`)
+      assets3 = await Assets3.deploy()
+      await assets3.deployed()
+      log('Assets3 Deployed at ' + String(assets3.address))
 
-    // deploy Assets5
-    const Assets5 = await hre.ethers.getContractFactory('Assets5')
-    byteSize = Buffer.from(Assets5.bytecode.slice(2), 'hex').length
-    log(`Assets5 byte size: ${byteSize} bytes`)
-    assets5 = await Assets5.deploy()
-    await assets5.deployed()
-    var assets5Address = assets5.address
-    log('Assets5 Deployed at ' + String(assets5Address))
+      // deploy Assets4
+      const Assets4 = await hre.ethers.getContractFactory('Assets4')
+      byteSize = Buffer.from(Assets4.bytecode.slice(2), 'hex').length
+      log(`Assets4 byte size: ${byteSize} bytes`)
+      assets4 = await Assets4.deploy()
+      await assets4.deployed()
+      log('Assets4 Deployed at ' + String(assets4.address))
+
+      // deploy Assets5
+      const Assets5 = await hre.ethers.getContractFactory('Assets5')
+      byteSize = Buffer.from(Assets5.bytecode.slice(2), 'hex').length
+      log(`Assets5 byte size: ${byteSize} bytes`)
+      assets5 = await Assets5.deploy()
+      await assets5.deployed()
+      log('Assets5 Deployed at ' + String(assets5.address))
+    }
 
     // deploy ExternalMetadata
     const ExternalMetadata =
@@ -316,13 +338,12 @@ const deployMetadata = async () => {
     await externalMetadata.deployed()
 
     log('ExternalMetadata Deployed at ' + String(externalMetadata.address))
-
     await externalMetadata.setAssets([
-      assets1Address,
-      assets2Address,
-      assets3Address,
-      assets4Address,
-      assets5Address
+      assets1.address,
+      assets2.address,
+      assets3.address,
+      assets4.address,
+      assets5.address
     ])
     log('Assets set')
 
