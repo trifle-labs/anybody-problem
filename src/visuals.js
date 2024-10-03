@@ -1386,6 +1386,7 @@ export const Visuals = {
         text: 'SAVE',
         onClick: () => {
           if (this.popup) return
+          this.p5e_save()
           if (this.opensea) {
             this.popup = {
               header: 'Nice Job!',

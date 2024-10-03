@@ -77,6 +77,10 @@
   },
   "dependencies": {
     "ethers": "^5.7.0",
+    "msgpack-lite": "^0.1.26",
+    "node-base91": "^0.3.4",
+    "pako": "^2.1.0",
+    "qrcode": "^1.5.4",
     "tone": "^15.0.4"
   },
   "devDependencies": {
@@ -111,6 +115,7 @@
     "sindri": "^0.0.1-alpha.55",
     "snarkjs": "0.7.3",
     "solidity-coverage": "^0.8.6",
+    "stream-browserify": "^3.0.0",
     "xmldom": "^0.6.0"
   },
   "resolutions": {
