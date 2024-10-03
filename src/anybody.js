@@ -7,6 +7,7 @@ import { bodyThemes } from './colors.js'
 import { loadFonts } from './fonts.js'
 import { Buttons } from './buttons.js'
 import { Intro } from './intro.js'
+import { Save } from './save.js'
 import PAUSE_BODY_DATA from './pauseBodies'
 
 const GAME_LENGTH_BY_LEVEL_INDEX = [30, 10, 20, 30, 40, 50]
@@ -39,6 +40,7 @@ export class Anybody extends EventEmitter {
     Object.assign(this, Calculations)
     Object.assign(this, Buttons)
     Object.assign(this, Intro)
+    Object.assign(this, Save)
 
     this.setOptions(options)
 
@@ -451,13 +453,15 @@ export class Anybody extends EventEmitter {
     const stats = this.calculateStats()
     timeTook = stats.timeTook
     this.framesTook = stats.framesTook
-    this.emit('done', {
+    const data = {
       level: this.level,
       won,
       ticks: this.frames - this.startingFrame,
       timeTook,
       framesTook: this.framesTook
-    })
+    }
+    this.p5e_done(data)
+    this.emit('done', data)
     if (won) {
       this.finish()
     }
@@ -559,11 +563,13 @@ export class Anybody extends EventEmitter {
   }
 
   started() {
-    this.emit('started', {
+    const data = {
       day: this.day,
       level: this.level,
       bodyInits: JSON.parse(JSON.stringify(this.bodyInits))
-    })
+    }
+    this.p5e_started(data)
+    this.emit('started', data)
   }
 
   processMissileInits(missiles) {
@@ -673,6 +679,7 @@ export class Anybody extends EventEmitter {
       m.step = this.frames
       return m
     })
+    this.p5e_chunk(results)
     this.emit('chunk', results)
     this.bodyFinal = []
     // this.setPause(false)
@@ -993,6 +1000,7 @@ export class Anybody extends EventEmitter {
 
     if (this.missiles.length > 0) {
       if (this.lastMissileCantBeUndone) {
+        this.p5e_undo()
         this.emit('remove-last-missile')
         this.lastMissileCantBeUndone = false
         console.log('LASTMISSILECANTBEUNDONE = FALSE')
