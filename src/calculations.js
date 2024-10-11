@@ -484,19 +484,19 @@ export const Calculations = {
         newBody.position.y = randomY2
         newBody.velocity.x = randomVX2
         newBody.velocity.y = randomVY2
+        newBody.bodyIndex++
+        let bodyIndex = newBody.bodyIndex % 6
+        if (bodyIndex == 0) {
+          bodyIndex = 2
+          newBody.bodyIndex = bodyIndex
+        }
+
+        const levelData = this.generateLevelData(this.day, bodyIndex)
+        newBody.radius = BigInt(levelData[bodyIndex].radius)
+        newBody.c = this.getBodyColor(this.day, bodyIndex)
         if (this.bodies.length > 5) {
           bodies[j] = newBody
         } else {
-          newBody.bodyIndex++
-          let bodyIndex = newBody.bodyIndex % 6
-          if (bodyIndex == 0) {
-            bodyIndex = 2
-            newBody.bodyIndex = bodyIndex
-          }
-
-          const levelData = this.generateLevelData(this.day, bodyIndex)
-          newBody.radius = BigInt(levelData[bodyIndex].radius)
-          newBody.c = this.getBodyColor(this.day, bodyIndex)
           addAtEnd.push(newBody)
         }
 

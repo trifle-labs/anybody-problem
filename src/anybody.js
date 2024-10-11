@@ -160,7 +160,7 @@ export class Anybody extends EventEmitter {
     this.lastMissileCantBeUndone = false
     this.speedFactor = 2
     this.speedLimit = 10
-    this.missileSpeed = 18
+    this.missileSpeed = 22
     this.shownStatScreen = false
     this.G = NORMAL_GRAVITY
     this.vectorLimit = this.speedLimit * this.speedFactor
