@@ -365,6 +365,32 @@ const deployMetadata = async (skipAssets = false) => {
   }
 }
 
+const deployBuyVotes = async () => {
+  const returnObject = {}
+  const proposalId =
+    '94833500000338802010811938967752446324129796376595350905780228910037192404146'
+  const jokerace = '0x3334824856863e28a5968042341a88901a3cd430'
+  const payoutAddress = '0x567e0f790bc9e6c37c53c91cee8a0e9ff43b8ff4'
+  const BuyVotes = await hre.ethers.getContractFactory('BuyVotes')
+  const buyVotes = await BuyVotes.deploy(proposalId, jokerace, payoutAddress)
+  await buyVotes.deployed()
+  returnObject['BuyVotes'] = buyVotes
+  log('BuyVotes Deployed at ' + String(buyVotes.address))
+
+  const verificationData = [
+    {
+      name: 'BuyVotes',
+      constructorArguments: [proposalId, jokerace, payoutAddress]
+    }
+  ]
+
+  returnObject.verificationData = verificationData
+
+  await saveAndVerifyContracts(returnObject)
+
+  return returnObject
+}
+
 const deployContracts = async (options) => {
   const deployedContracts0 = await deployContractsV0(options)
   if (options?.saveAndVerify) {
@@ -1048,6 +1074,7 @@ export {
   getThemeName,
   deployAnybodyProblemV1,
   saveAndVerifyContracts,
-  proceedRecipient
+  proceedRecipient,
+  deployBuyVotes
   // splitterAddress
 }
