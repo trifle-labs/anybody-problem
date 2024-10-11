@@ -160,12 +160,16 @@ export class Anybody extends EventEmitter {
     this.lastMissileCantBeUndone = false
     this.speedFactor = 2
     this.speedLimit = 10
-    this.missileSpeed = 15
+    this.missileSpeed = 18
     this.shownStatScreen = false
     this.G = NORMAL_GRAVITY
     this.vectorLimit = this.speedLimit * this.speedFactor
     this.missileVectorLimit = this.missileSpeed * this.speedFactor
-    this.missileVectorLimitSum = 42426 // 30_000√2
+    this.missileVectorLimitSum = Math.floor(
+      this.missileSpeed * this.speedFactor * 1000 * Math.sqrt(2)
+    )
+    console.log({ missileVectorLimitSum: this.missileVectorLimitSum })
+    // this.missileVectorLimitSum = 42426 // 30_000√2
     this.FPS = 25
     this.P5_FPS_MULTIPLIER = 3
     this.P5_FPS = this.FPS * this.P5_FPS_MULTIPLIER
