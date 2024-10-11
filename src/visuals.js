@@ -3,7 +3,7 @@ import { fonts, drawKernedText } from './fonts.js'
 import { utils } from 'ethers'
 
 const BODY_SCALE = 4 // match to calculations.js !!
-const GAME_LENGTH_BY_LEVEL_INDEX = [30, 10, 20, 30, 40, 50]
+const GAME_LENGTH_BY_LEVEL_INDEX = [30, 30]
 const LEVELS = GAME_LENGTH_BY_LEVEL_INDEX.length - 1
 
 const rot = {
@@ -1323,14 +1323,14 @@ export const Visuals = {
     const blinkText =
       this.levels === LEVELS && Math.floor(p.frameCount / 25) % 2
     p.fill(blinkText ? THEME.iris_60 : THEME.iris_30)
-    p.text(
-      this.level == 5
-        ? 'YOU WON !!   save your score to the leaderboard !!'
-        : `BOOM !! ... just ${5 - this.level} more levels to solve this problem !!`,
-      gutter + boxW / 2,
-      805,
-      boxW - gutter / 2
-    )
+    // p.text(
+    //   this.level == 5
+    //     ? 'YOU WON !!   save your score to the leaderboard !!'
+    //     : `BOOM !! ... just ${5 - this.level} more levels to solve this problem !!`,
+    //   gutter + boxW / 2,
+    //   805,
+    //   boxW - gutter / 2
+    // )
 
     // bottom buttons
     this.showRestart = this.level >= 2
@@ -1403,20 +1403,20 @@ export const Visuals = {
       })
     }
     if (this.level < 5) {
-      this.drawBottomButton({
-        text: 'NEXT',
-        onClick: () => {
-          this.level++
-          if (this.level > 5) {
-            this.showProblemRankingsScreenAt = this.p5Frames
-          } else {
-            this.restart(null, false)
-          }
-        },
-        ...themes.buttons.green,
-        columns: buttonCount,
-        column: buttonCount - 1
-      })
+      // this.drawBottomButton({
+      //   text: 'NEXT',
+      //   onClick: () => {
+      //     this.level++
+      //     if (this.level > 5) {
+      //       this.showProblemRankingsScreenAt = this.p5Frames
+      //     } else {
+      //       this.restart(null, false)
+      //     }
+      //   },
+      //   ...themes.buttons.green,
+      //   columns: buttonCount,
+      //   column: buttonCount - 1
+      // })
     } else {
       // parent app should handle waiting to save
       this.drawBottomButton({

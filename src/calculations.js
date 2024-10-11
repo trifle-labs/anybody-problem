@@ -369,7 +369,7 @@ export const Calculations = {
     // const maxWidth = BigInt(this.windowWidth) * this.scalingFactor
     // const maxHeight = BigInt(this.windowHeight) * this.scalingFactor
     const maxVectorScaled = this.convertFloatToScaledBigInt(this.vectorLimit)
-
+    const addAtEnd = []
     for (let j = 0; j < bodies.length; j++) {
       const body = bodies[j]
       const distance = _approxDist(
@@ -460,12 +460,23 @@ export const Calculations = {
               randVYseed
             )
           ) - maxVectorScaled
-        console.log({ randomX, randomY, randomVX, randomVY })
+
+        const newBody = structuredClone(body)
         // TODO:       newBody.velocity.y = this.convertScaledBigIntToFloat(body.velocity.y)
-        body.position.x = randomX
-        body.position.y = randomY
-        body.velocity.x = randomVX
-        body.velocity.y = randomVY
+        newBody.position.x = randomX
+        newBody.position.y = randomY
+        newBody.velocity.x = randomVX
+        newBody.velocity.y = randomVY
+        if (this.bodies.length > 5) {
+          bodies[j] = newBody
+        } else {
+          newBody.bodyIndex = this.bodies.length
+
+          const levelData = this.generateLevelData(this.day, newBody.bodyIndex)
+          newBody.radius = BigInt(levelData[newBody.bodyIndex].radius)
+          newBody.c = this.getBodyColor(this.day, newBody.bodyIndex)
+          addAtEnd.push(newBody)
+        }
 
         // line of division is x = -y
         // if (body.position.x > maxHeight - body.position.y) {
@@ -512,6 +523,7 @@ export const Calculations = {
 
       missiles[0] = missile
     }
+    bodies = bodies.concat(addAtEnd)
     return { bodies, missiles }
   }
 }

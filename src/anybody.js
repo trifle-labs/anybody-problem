@@ -9,7 +9,7 @@ import { Buttons } from './buttons.js'
 import { Intro } from './intro.js'
 import PAUSE_BODY_DATA from './pauseBodies'
 
-const GAME_LENGTH_BY_LEVEL_INDEX = [30, 10, 20, 30, 40, 50]
+const GAME_LENGTH_BY_LEVEL_INDEX = [30, 30]
 const NORMAL_GRAVITY = 100
 const proverTickIndex = {
   2: 250,
@@ -397,7 +397,7 @@ export class Anybody extends EventEmitter {
           this.missileClick(this.mouseX, this.mouseY)
         }
         if (this.shownStatScreen && this.level < 5) {
-          this.level++
+          // this.level++
           this.restart(null, false)
         }
         break
