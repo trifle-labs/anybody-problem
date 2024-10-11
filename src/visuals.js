@@ -2117,8 +2117,11 @@ export const Visuals = {
     let totalPoints = points.reduce((a, b) => a + b, 0)
     if (totalPoints > 0) {
       totalPoints = `+${totalPoints}`
-      this.p.fill(THEME.teal_50)
-      this.p.stroke(THEME.teal_50)
+      const colorHSL = body.c.baddie
+      let coreColor = `hsl(${colorHSL[0]},${colorHSL[1]}%,${colorHSL[2]}%)`
+      const darker = `hsl(${colorHSL[0]},${colorHSL[1]}%,${colorHSL[2] - 10}%)`
+      this.p.fill(coreColor)
+      this.p.stroke(darker)
     } else {
       this.p.fill(THEME.flame_50)
       this.p.stroke(THEME.flame_50)

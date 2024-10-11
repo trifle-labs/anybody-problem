@@ -407,6 +407,7 @@ export const Calculations = {
           this.sound?.playExplosion(x, y)
         }
         if (convertedBody.bodyIndex == 0) {
+          continue
           // bodies[j].radius = 0n
         } else if (this.introStage < this.totalIntroStages) {
           bodies[1].radius = 0
@@ -467,14 +468,15 @@ export const Calculations = {
         newBody.position.y = randomY
         newBody.velocity.x = randomVX
         newBody.velocity.y = randomVY
-        if (this.bodies.length > 5) {
+        if (this.bodies.length > 8) {
           bodies[j] = newBody
         } else {
-          newBody.bodyIndex = this.bodies.length
+          newBody.bodyIndex++
+          const bodyIndex = newBody.bodyIndex % 6
 
-          const levelData = this.generateLevelData(this.day, newBody.bodyIndex)
-          newBody.radius = BigInt(levelData[newBody.bodyIndex].radius)
-          newBody.c = this.getBodyColor(this.day, newBody.bodyIndex)
+          const levelData = this.generateLevelData(this.day, bodyIndex)
+          newBody.radius = BigInt(levelData[bodyIndex].radius)
+          newBody.c = this.getBodyColor(this.day, bodyIndex)
           addAtEnd.push(newBody)
         }
 
