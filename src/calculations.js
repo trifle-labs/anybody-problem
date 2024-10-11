@@ -487,7 +487,7 @@ export const Calculations = {
         newBody.bodyIndex++
         let bodyIndex = newBody.bodyIndex % 6
         if (bodyIndex == 0) {
-          bodyIndex = 2
+          bodyIndex = 1
           newBody.bodyIndex = bodyIndex
         }
 
