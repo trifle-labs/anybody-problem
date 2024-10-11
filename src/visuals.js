@@ -2068,6 +2068,8 @@ export const Visuals = {
   },
 
   drawPoints() {
+    this.p.textFont(fonts.body)
+
     if (this.paused || this.gameOver) return
     for (let i = 0; i < this.explosions.length; i++) {
       this.drawPoint(this.explosions[i])
