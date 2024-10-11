@@ -198,11 +198,17 @@ const svgs = {
   FG_SVGS
 }
 
-const replaceAttribute = (string, key, color) =>
-  string.replaceAll(
-    new RegExp(`(?<=\\s|^)${key}="(?!none)([^"]+)"`, 'g'),
-    `${key}="${color}"`
-  )
+const replaceAttribute = (string, key, color) => {
+  try {
+    return string.replaceAll(
+      new RegExp(`(?<=\\s|^)${key}="(?!none)([^"]+)"`, 'g'),
+      `${key}="${color}"`
+    )
+  } catch (e) {
+    console.error({ string, key, color })
+    return string
+  }
+}
 
 export const Visuals = {
   async draw() {
