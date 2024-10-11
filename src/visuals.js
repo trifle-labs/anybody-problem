@@ -3,7 +3,7 @@ import { fonts, drawKernedText } from './fonts.js'
 import { utils } from 'ethers'
 
 const BODY_SCALE = 4 // match to calculations.js !!
-const GAME_LENGTH_BY_LEVEL_INDEX = [30, 30]
+const GAME_LENGTH_BY_LEVEL_INDEX = [30, 60]
 const LEVELS = GAME_LENGTH_BY_LEVEL_INDEX.length - 1
 
 const rot = {
