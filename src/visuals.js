@@ -916,6 +916,20 @@ export const Visuals = {
 
   calculatePoint(body) {
     const { position, velocity, radius, bodyIndex } = body
+    switch (bodyIndex) {
+      case 0:
+        return [-100, -100, -100]
+      case 1:
+        return [100, 0, 0]
+      case 2:
+        return [200, 0, 0]
+      case 3:
+        return [300, 0, 0]
+      case 4:
+        return [400, 0, 0]
+      case 5:
+        return [500, 0, 0]
+    }
     const bb = bodyIndex == 0
     const maxDist = this.p.dist(0, 0, this.windowWidth, this.windowHeight)
     const dist = this.p.dist(position.x, position.y, 0, this.windowHeight)
