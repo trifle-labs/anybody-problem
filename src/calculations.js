@@ -413,66 +413,86 @@ export const Calculations = {
           bodies[1].radius = 0
         }
 
-        const randXseed = utils.solidityKeccak256(
-          ['uint256'],
-          [body.position.x]
-        )
-        const randomX = BigInt(
-          this.randomRange(
-            0,
-            BigInt(this.windowWidth) * this.scalingFactor,
-            randXseed
+        const getNewXY = (body, offset = 0n) => {
+          const randXseed = utils.solidityKeccak256(
+            ['uint256'],
+            [body.position.x + offset]
           )
-        )
-        const randYseed = utils.solidityKeccak256(
-          ['uint256'],
-          [body.position.y]
-        )
-        const randomY = BigInt(
-          this.randomRange(
-            0,
-            BigInt(this.windowHeight) * this.scalingFactor,
-            randYseed
+          const randomX = BigInt(
+            this.randomRange(
+              0,
+              BigInt(this.windowWidth) * this.scalingFactor,
+              randXseed
+            )
           )
-        )
-
-        const randVXseed = utils.solidityKeccak256(
-          ['uint256'],
-          [body.velocity.x]
-        )
-        const randomVX =
-          BigInt(
+          const randYseed = utils.solidityKeccak256(
+            ['uint256'],
+            [body.position.y + offset]
+          )
+          const randomY = BigInt(
             this.randomRange(
-              maxVectorScaled / 2n,
-              (maxVectorScaled * 3n) / 2n,
-              randVXseed
+              0,
+              BigInt(this.windowHeight) * this.scalingFactor,
+              randYseed
             )
-          ) - maxVectorScaled
+          )
 
-        const randVYseed = utils.solidityKeccak256(
-          ['uint256'],
-          [body.velocity.y]
-        )
-        const randomVY =
-          BigInt(
-            this.randomRange(
-              maxVectorScaled / 2n,
-              (maxVectorScaled * 3n) / 2n,
-              randVYseed
-            )
-          ) - maxVectorScaled
+          const randVXseed = utils.solidityKeccak256(
+            ['uint256'],
+            [body.velocity.x + offset]
+          )
+          const randomVX =
+            BigInt(
+              this.randomRange(
+                maxVectorScaled / 2n,
+                (maxVectorScaled * 3n) / 2n,
+                randVXseed
+              )
+            ) - maxVectorScaled
+
+          const randVYseed = utils.solidityKeccak256(
+            ['uint256'],
+            [body.velocity.y + offset]
+          )
+          const randomVY =
+            BigInt(
+              this.randomRange(
+                maxVectorScaled / 2n,
+                (maxVectorScaled * 3n) / 2n,
+                randVYseed
+              )
+            ) - maxVectorScaled
+          return { randomX, randomY, randomVX, randomVY }
+        }
+
+        const { randomX, randomY, randomVX, randomVY } = getNewXY(body)
+        const {
+          randomX: randomX2,
+          randomY: randomY2,
+          randomVX: randomVX2,
+          randomVY: randomVY2
+        } = getNewXY(body, 1n)
+
+        body.position.x = randomX
+        body.position.y = randomY
+        body.velocity.x = randomVX
+        body.velocity.y = randomVY
 
         const newBody = structuredClone(body)
         // TODO:       newBody.velocity.y = this.convertScaledBigIntToFloat(body.velocity.y)
-        newBody.position.x = randomX
-        newBody.position.y = randomY
-        newBody.velocity.x = randomVX
-        newBody.velocity.y = randomVY
-        if (this.bodies.length > 8) {
+        newBody.position.x = randomX2
+        newBody.position.y = randomY2
+        newBody.velocity.x = randomVX2
+        newBody.velocity.y = randomVY2
+        if (this.bodies.length > 5) {
           bodies[j] = newBody
         } else {
           newBody.bodyIndex++
-          const bodyIndex = newBody.bodyIndex % 6
+          let bodyIndex = newBody.bodyIndex % 6
+          if (bodyIndex == 0) {
+            bodyIndex = 2
+            newBody.bodyIndex = bodyIndex
+          }
 
           const levelData = this.generateLevelData(this.day, bodyIndex)
           newBody.radius = BigInt(levelData[bodyIndex].radius)
