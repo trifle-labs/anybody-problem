@@ -262,6 +262,7 @@ export const Visuals = {
         this.drawIntro()
       }
     }
+    this.drawPoints()
     this.drawScore()
     this.drawMuteButton()
     this.drawPopup()
@@ -1092,6 +1093,9 @@ export const Visuals = {
     const levelTimes = this.levelSpeeds
       .map((result) => result?.framesTook / this.FPS)
       .filter((l) => l !== undefined)
+    const levelPoints = this.levelSpeeds
+      .map((result) => result?.points)
+      .filter((l) => l !== undefined)
     const bestTimes =
       this.todaysRecords?.levels?.map((l) => l.events[0].time / this.FPS) ?? []
 
@@ -1104,13 +1108,16 @@ export const Visuals = {
     const col1X = 580
     const col2X = 780
     const col3X = 964
-    const timeColX = showBestAndDiff ? col1X : col3X
+    const timeColX = col1X
 
     // middle box text - labels
     p.text('time', timeColX, midHeadY)
     if (showBestAndDiff) {
       p.text('best', col2X, midHeadY)
       p.text('diff', col3X, midHeadY)
+    } else {
+      p.text('points', col2X, midHeadY)
+      p.text('total', col3X, midHeadY)
     }
 
     // middle box text - values
@@ -1191,6 +1198,49 @@ export const Visuals = {
           rowHeight
         )
       }
+    } else {
+      p.fill(THEME.iris_30)
+
+      // time score
+      for (let i = 0; i < LEVELS; i++) {
+        const time = i < levelTimes.length ? levelTimes[i].toFixed(2) : '-'
+        let points
+        if (!isNaN(time)) {
+          const actualPoints = levelPoints[i]
+          points =
+            actualPoints + '+' + this.calculatePointsFromTime(time, i + 1)
+        } else {
+          points = time
+        }
+        // const points = Math.floor(p.map(time, 0, maxTime, 100, 0))
+        p.text(
+          points,
+          col2X,
+          middleBoxY + rowHeight * i + rowHeight / 2,
+          150,
+          rowHeight
+        )
+      }
+
+      // point score
+      for (let i = 0; i < LEVELS; i++) {
+        const best = i < levelPoints.length ? levelPoints[i] : '-'
+        const time = i < levelTimes.length ? levelTimes[i].toFixed(2) : '-'
+        let points
+        if (!isNaN(time)) {
+          points = best + this.calculatePointsFromTime(time, i + 1)
+        } else {
+          points = best
+        }
+
+        p.text(
+          points,
+          col3X,
+          middleBoxY + rowHeight * i + rowHeight / 2,
+          150,
+          rowHeight
+        )
+      }
     }
     p.textSize(64)
 
@@ -1206,6 +1256,15 @@ export const Visuals = {
         let diff = Number((levelTimeSum - bestTime).toFixed(2))
         sumLine[1] = bestTime.toFixed(2)
         sumLine[2] = `${diff > 0 ? '+' : '-'}${Math.abs(diff).toFixed(2)}`
+      } else {
+        sumLine.push('')
+        const timeBonusPointSum = levelTimes.reduce(
+          (a, b, i) => a + this.calculatePointsFromTime(b, i + 1),
+          0
+        )
+
+        const levelPointSum = levelPoints.reduce((a, b) => a + b, 0)
+        sumLine.push(levelPointSum + timeBonusPointSum)
       }
 
       const sumLineY = middleBoxY + rowHeight * Math.min(5, LEVELS)
@@ -1213,9 +1272,11 @@ export const Visuals = {
       const sumLineYText = sumLineY + sumLineHeight / 2
       p.textAlign(p.LEFT, p.CENTER)
       p.fill(THEME.iris_50)
-      p.text(problemComplete ? 'solved in' : 'total time', 44, sumLineYText)
+      p.text(problemComplete ? 'totals' : 'totals', 44, sumLineYText)
       p.textAlign(p.RIGHT, p.CENTER)
-      const columns = showBestAndDiff ? [col1X, col2X, col3X] : [timeColX]
+      const columns = showBestAndDiff
+        ? [col1X, col2X, col3X]
+        : [col1X, col2X, col3X]
       for (const [i, col] of columns.entries()) {
         if (i == 0) p.fill(THEME.iris_30)
         else if (i == 1) p.fill(THEME.iris_60)
@@ -1439,6 +1500,11 @@ export const Visuals = {
     } else {
       this.shareCanvasBlob = undefined
     }
+  },
+
+  calculatePointsFromTime(time, level) {
+    const maxTime = level * 10
+    return Math.floor(this.p.map(time, 0, maxTime, 100, 0))
   },
 
   drawProblemRankingsScreen() {
@@ -2052,6 +2118,110 @@ export const Visuals = {
     }
     p.endShape(p.CLOSE)
     return p
+  },
+
+  calculatePoint(body) {
+    const { position, velocity, radius, bodyIndex } = body
+    const bb = bodyIndex == 0
+    const maxDist = this.p.dist(0, 0, this.windowWidth, this.windowHeight)
+    const dist = this.p.dist(position.x, position.y, 0, this.windowHeight)
+    const distPoints = Math.floor(this.p.map(dist, 0, maxDist, 0, 100))
+    const velocityVector = this.p.createVector(velocity.x, velocity.y)
+    const maxVector = this.missileSpeed * this.speedFactor
+    const velPoints = Math.floor(
+      this.p.map(velocityVector.mag(), 0, maxVector, 0, 100)
+    )
+    const radiusPoints =
+      this.introStage < this.totalIntroStages
+        ? 50
+        : Math.floor(this.p.map(radius, bb ? 11 : 36, bb ? 36 : 11, 0, 100))
+
+    return [distPoints, velPoints, radiusPoints].map((point) =>
+      bb ? point * -1 : point
+    )
+  },
+
+  calculatePoints() {
+    return this.explosions
+      .map((explosions) => {
+        return this.calculatePoint(explosions).reduce(
+          (acc, curr) => acc + curr,
+          0
+        )
+      })
+      .reduce((acc, curr) => acc + curr, 0)
+  },
+
+  drawPoints() {
+    this.p.textFont(fonts.body)
+    if (this.paused || this.shownStatScreen) return
+    for (let i = 0; i < this.explosions.length; i++) {
+      this.drawPoint(this.explosions[i])
+    }
+  },
+
+  drawPoint(body) {
+    const timeSince = this.frames - body.frame
+    const maxFrames = 75
+    if (timeSince > maxFrames) return
+    this.p.textAlign(this.p.RIGHT, this.p.CENTER)
+    let points = this.calculatePoint(body)
+    const textSize = 50
+    const xMargin = 115
+    // const yMargin = (points.length + 1) * textSize
+    const yMargin = textSize
+    const xOffset = body.radius * 4
+    const maybeX = body.position.x + xOffset
+    const x =
+      maybeX + xMargin > this.windowWidth
+        ? this.windowWidth - xMargin
+        : maybeX < xMargin
+          ? xMargin
+          : maybeX
+
+    const yOffset = body.radius * 2
+    const maybeY = body.position.y + yOffset
+    const y =
+      maybeY + yMargin > this.windowHeight
+        ? this.windowHeight - yMargin
+        : maybeY < yMargin
+          ? yMargin
+          : maybeY
+    this.p.strokeWeight(2)
+    this.p.textSize(textSize)
+    // for (let i = 0; i < points.length; i++) {
+    // let point = points[i]
+
+    // const kind = i == 0 ? 'd' : i == 1 ? 'v' : 'r'
+    // point = `${point}`
+    // if (point > 0) {
+    //   point = `+${point}`
+    //   this.p.fill(THEME.teal_50)
+    //   this.p.stroke(THEME.teal_50)
+    // } else {
+    //   this.p.fill(THEME.flame_50)
+    //   this.p.stroke(THEME.flame_50)
+    // }
+
+    // this.p.text(point, x, y + i * textSize)
+    // this.p.textAlign(this.p.LEFT, this.p.CENTER)
+    // this.p.text(` ${kind}:pts`, x, y + i * textSize)
+    // this.p.textAlign(this.p.RIGHT, this.p.CENTER)
+    // }
+    let totalPoints = points.reduce((a, b) => a + b, 0)
+    if (totalPoints > 0) {
+      totalPoints = `+${totalPoints}`
+      const colorHSL = body.c.baddie
+      const coreColor = `hsl(${colorHSL[0]},${colorHSL[1]}%,${colorHSL[2]}%)`
+      this.p.noStroke()
+      this.p.fill(coreColor)
+      this.p.stroke(coreColor)
+      // this.p.stroke(THEME.teal_50)
+    } else {
+      this.p.fill(THEME.flame_50)
+      this.p.stroke(THEME.flame_50)
+    }
+    this.p.text(totalPoints, x, y)
   },
 
   drawMissiles() {
