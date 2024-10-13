@@ -38,7 +38,7 @@ const config = {
         version: '0.6.11'
       },
       {
-        version: '0.8.15',
+        version: '0.8.28',
         settings: {
           viaIR: true,
           optimizer: { enabled: true, runs: 200 }
@@ -136,6 +136,7 @@ const config = {
     strict: false,
     only: [
       'AnybodyProblem',
+      'Tournament',
       'Speedruns',
       'ExternalMetadata',
       'Assets1',

@@ -314,38 +314,30 @@ contract ExternalMetadata is Ownable {
         uint256 day
     ) internal view returns (string memory) {
         //FACE SHAPE
-        uint256 extraSeed = day == 1723766400 ? 19 : 0;
 
-        bytes32 rand = keccak256(abi.encodePacked(day, extraSeed));
-        uint256 pathIdxFace = randomRange(
+        AssetData[4] memory pathDatas;
+
+        // extra seed used for special random offset 
+        bytes32 rand = keccak256(abi.encodePacked(day, day == 1723766400 ? 19 : 0));
+        pathDatas[0] = /*AssetData memory pathFaceData =*/ svgShapes[ThemeGroup.ThemeLayer.Face][
+            randomRange(
             0,
             svgShapeCategorySizes[ThemeGroup.ThemeLayer.Face] - 1,
             rand,
             day
-        );
-        AssetData memory pathFaceData = svgShapes[ThemeGroup.ThemeLayer.Face][
-            pathIdxFace
+          )
         ];
-        string memory pathFace = readValueFromContract(
-            pathFaceData.assetAddress,
-            pathFaceData.functionName
-        );
 
         //BACKGROUND SHAPE
         rand = keccak256(abi.encodePacked(rand));
-        uint256 pathIdxBG = randomRange(
+        pathDatas[1] = /*AssetData memory pathBGData =*/ svgShapes[ThemeGroup.ThemeLayer.BG][
+            randomRange(
             0,
             svgShapeCategorySizes[ThemeGroup.ThemeLayer.BG] - 1,
             rand,
             day
-        );
-        AssetData memory pathBGData = svgShapes[ThemeGroup.ThemeLayer.BG][
-            pathIdxBG
+          )
         ];
-        string memory pathBG = readValueFromContract(
-            pathBGData.assetAddress,
-            pathBGData.functionName
-        );
 
         //FOREGROUND SHAPE
         rand = keccak256(abi.encodePacked(rand));
@@ -355,35 +347,40 @@ contract ExternalMetadata is Ownable {
             rand,
             day
         );
-        AssetData memory pathFGData = svgShapes[ThemeGroup.ThemeLayer.FG][
+        pathDatas[2] = /*AssetData memory pathFGData =*/ svgShapes[ThemeGroup.ThemeLayer.FG][
             pathIdxFG
         ];
-        string memory pathFG = readValueFromContract(
-            pathFGData.assetAddress,
-            pathFGData.functionName
-        );
 
         //CORE SHAPE
         rand = keccak256(abi.encodePacked(rand));
-        uint256 pathIdxCore = randomRange(
+        pathDatas[3] = /*AssetData memory pathCoreData =*/ svgShapes[ThemeGroup.ThemeLayer.Core][
+            randomRange(
             0,
             svgShapeCategorySizes[ThemeGroup.ThemeLayer.Core] - 1,
             rand,
             day
-        );
-        AssetData memory pathCoreData = svgShapes[ThemeGroup.ThemeLayer.Core][
-            pathIdxCore
+          )
         ];
-        string memory pathCore = readValueFromContract(
-            pathCoreData.assetAddress,
-            pathCoreData.functionName
-        );
 
+        uint256[3][3] memory colors = getColors(rand, day);
+
+        return combineItAll(
+            colors, //[0], //colorsBGValues,
+            pathDatas, //[1], //pathBGData,
+            // colors[1], //colorsCoreValues,
+            // pathDatas[3], //pathCoreData,
+            pathIdxFG
+            // colors[2], //colorsFGValues,
+            // pathDatas[2], //pathFGData,
+            // pathDatas[0] //pathFaceData
+        );
+    }
+
+    function getColors(bytes32 rand, uint256 day) view internal returns (uint256[3][3] memory colors){
         //DAILY COLOR THEME
         rand = keccak256(abi.encodePacked(rand));
-        uint8 themegroupsAmount = themeGroup.themeCount();
         ThemeGroup.ThemeName currentDayTheme = ThemeGroup.ThemeName(
-            randomRange(0, themegroupsAmount - 1, rand, day)
+            randomRange(0, themeGroup.themeCount() - 1, rand, day)
         );
 
         //BACKGROUND COLOR (Hue, Saturation, Lightness)
@@ -394,17 +391,6 @@ contract ExternalMetadata is Ownable {
             ThemeGroup.ThemeLayer.BG,
             day
         );
-        string memory colorsBG = string(
-            abi.encodePacked(
-                'hsl(',
-                StringsExtended.toString(colorsBGValues[0]),
-                ',',
-                StringsExtended.toString(colorsBGValues[1]),
-                '%,',
-                StringsExtended.toString(colorsBGValues[2]),
-                '%)'
-            )
-        );
 
         //CORE COLOR
         uint256[3] memory colorsCoreValues;
@@ -413,17 +399,6 @@ contract ExternalMetadata is Ownable {
             currentDayTheme,
             ThemeGroup.ThemeLayer.Core,
             day
-        );
-        string memory colorsCore = string(
-            abi.encodePacked(
-                'hsl(',
-                StringsExtended.toString(colorsCoreValues[0]),
-                ',',
-                StringsExtended.toString(colorsCoreValues[1]),
-                '%,',
-                StringsExtended.toString(colorsCoreValues[2]),
-                '%)'
-            )
         );
 
         //FOREGROUND COLOR
@@ -434,19 +409,22 @@ contract ExternalMetadata is Ownable {
             ThemeGroup.ThemeLayer.FG,
             day
         );
-        string memory colorsFG = string(
-            abi.encodePacked(
-                'hsl(',
-                StringsExtended.toString(colorsFGValues[0]),
-                ',',
-                StringsExtended.toString(colorsFGValues[1]),
-                '%,',
-                StringsExtended.toString(colorsFGValues[2]),
-                '%)'
-            )
-        );
 
-        string memory path = string(
+        return [colorsBGValues, colorsCoreValues, colorsFGValues];
+    }
+
+    function combineItAll(
+      uint256[3][3] memory colors,
+      // uint256[3] memory colorsBGValues,
+      AssetData[4] memory pathDatas, //pathBGData,
+      // uint256[3] memory colorsCoreValues,
+      // AssetData memory pathCoreData, 
+      uint256 pathIdxFG
+      // uint256[3] memory colorsFGValues, 
+      // AssetData memory pathFGData, 
+      // AssetData memory pathFaceData
+    ) internal view returns (string memory) {
+        return string(
             abi.encodePacked(
                 getRotationAnimation(
                     'BG',
@@ -457,9 +435,22 @@ contract ExternalMetadata is Ownable {
                     'reverse'
                 ),
                 '<g id="id-BG" fill="',
-                colorsBG,
+                string(
+                    abi.encodePacked(
+                        'hsl(',
+                        StringsExtended.toString(colors[0][0]), // colorsBGValues
+                        ',',
+                        StringsExtended.toString(colors[0][1]),
+                        '%,',
+                        StringsExtended.toString(colors[0][2]),
+                        '%)'
+                    )
+                ),
                 '" >',
-                pathBG,
+                readValueFromContract(
+                    pathDatas[1]/*pathBGData*/.assetAddress,
+                    pathDatas[1]/*pathBGData*/.functionName
+                ),
                 '</g>',
                 getRotationAnimation(
                     'Core',
@@ -470,9 +461,22 @@ contract ExternalMetadata is Ownable {
                     'normal'
                 ),
                 '<g id="id-Core" fill="',
-                colorsCore,
+                string(
+                    abi.encodePacked(
+                        'hsl(',
+                        StringsExtended.toString(colors[1][0]), // colorsCoreValues
+                        ',',
+                        StringsExtended.toString(colors[1][1]),
+                        '%,',
+                        StringsExtended.toString(colors[1][2]),
+                        '%)'
+                    )
+                ),
                 '" >',
-                pathCore,
+                readValueFromContract(
+                    pathDatas[3]/*pathCoreData*/.assetAddress,
+                    pathDatas[3]/*pathCoreData*/.functionName
+                ),
                 '</g>',
                 getRotationAnimation(
                     'FG',
@@ -480,24 +484,46 @@ contract ExternalMetadata is Ownable {
                     '0px,0px',
                     '8',
                     '0',
-                    pathIdxFG == 9
-                        ? 'reverse'
-                        : pathIdxFG == 1 || pathIdxFG == 8
-                        ? 'none'
-                        : 'normal'
+                    getReverseNoneNormal(pathIdxFG)
                 ),
                 '<g id="id-FG" fill="',
-                colorsFG,
+                string(
+                    abi.encodePacked(
+                        'hsl(',
+                        StringsExtended.toString(colors[2][0]), // colorsFGValues
+                        ',',
+                        StringsExtended.toString(colors[2][1]),
+                        '%,',
+                        StringsExtended.toString(colors[2][2]),
+                        '%)'
+                    )
+                ),
                 '" >',
-                pathFG,
+                readValueFromContract(
+                    pathDatas[2]/*pathFGData*/.assetAddress,
+                    pathDatas[2]/*pathFGData*/.functionName
+                ),
                 '</g>',
                 '<g id="id-Face">',
-                pathFace,
+                readValueFromContract(
+                    pathDatas[0]/*pathFaceData*/.assetAddress,
+                    pathDatas[0]/*pathFaceData*/.functionName
+                ),
                 '</g>'
             )
         );
+    }
 
-        return path;
+    function getReverseNoneNormal(uint256 pathIdxFG)
+        internal
+        pure
+        returns (string memory)
+    {
+      return pathIdxFG == 9
+      ? 'reverse'
+      : pathIdxFG == 1 || pathIdxFG == 8
+      ? 'none'
+      : 'normal';
     }
 
     function getRotationAnimation(

@@ -10,6 +10,7 @@ import '@openzeppelin/contracts/access/Ownable.sol';
 import '@openzeppelin/contracts/token/ERC1155/ERC1155.sol';
 import './Speedruns.sol';
 import './ExternalMetadata.sol';
+import './Tournament.sol';
 
 contract AnybodyProblem is Ownable, ERC2981 {
     uint256 public constant LEVELS = 5;
@@ -27,6 +28,9 @@ contract AnybodyProblem is Ownable, ERC2981 {
     address payable public proceedRecipient;
     address public externalMetadata;
     address payable public speedruns;
+    address payable public tournament;
+
+    uint256 public counterForOrdering;
 
     // uint256 public constant maxTick = 25 * 60; // 25 fps * 60 sec = 1,500 ticks max
     // level duration is numberOfBaddies * 10sec (multiplied by 25 because of 25 FPS)
@@ -129,6 +133,7 @@ contract AnybodyProblem is Ownable, ERC2981 {
         address payable proceedRecipient_,
         address payable speedruns_,
         address externalMetadata_,
+        address payable tournament_,
         address[] memory verifiers_,
         uint256[] memory verifiersTicks,
         uint256[] memory verifiersBodies,
@@ -149,6 +154,7 @@ contract AnybodyProblem is Ownable, ERC2981 {
         updateProceedRecipient(proceedRecipient_);
         updateSpeedrunsAddress(speedruns_);
         updateExternalMetadata(externalMetadata_);
+        updateTournamentAddress(tournament_);
         for (uint256 i = 0; i < verifiers_.length; i++) {
             require(verifiersTicks[i] > 0, 'Invalid verifier');
             require(verifiers_[i] != address(0), 'Invalid verifier');
@@ -402,34 +408,38 @@ contract AnybodyProblem is Ownable, ERC2981 {
         return runId;
     }
 
-    function verifyLevelChunk(
-        uint256 runId,
-        bool alsoMint,
-        uint256 tickCount,
-        uint256 day,
-        uint[2] memory a,
-        uint[2][2] memory b,
-        uint[2] memory c,
-        uint[] memory input
-    ) internal {
-        bytes32 proofHash = keccak256(abi.encodePacked(a, b, c, input));
+    struct VerifyLevelChunk {
+        uint256 runId;
+        bool alsoMint;
+        uint256 tickCount;
+        uint256 day;
+        uint[2] a;
+        uint[2][2] b;
+        uint[2] c;
+        uint[] input;
+    }
+
+    function verifyLevelChunk(VerifyLevelChunk memory v) internal {
+        bytes32 proofHash = keccak256(abi.encodePacked(v.a, v.b, v.c, v.input));
         require(!usedProofs[proofHash], 'Proof already used');
         usedProofs[proofHash] = true;
 
-        (uint256 intendedLevel, uint256 dummyCount) = getLevelFromInputs(input);
-        uint256 level = currentLevel(runId);
+        (uint256 intendedLevel, uint256 dummyCount) = getLevelFromInputs(
+            v.input
+        );
+        uint256 level = currentLevel(v.runId);
         require(intendedLevel == level, 'Previous level not yet complete');
 
-        Level[] memory levelsData = getLevelsData(runId);
+        Level[] memory levelsData = getLevelsData(v.runId);
 
         uint256 levelIndex = level - 1;
         require(!levelsData[levelIndex].solved, 'Level already solved');
 
         uint256 bodyCount = level + 1;
-        address verifier = verifiers[bodyCount + dummyCount][tickCount];
+        address verifier = verifiers[bodyCount + dummyCount][v.tickCount];
         require(verifier != address(0), 'Invalid verifier, address == 0');
         require(
-            address(uint160(input[5 + (bodyCount + dummyCount) * 5 + 1])) ==
+            address(uint160(v.input[5 + (bodyCount + dummyCount) * 5 + 1])) ==
                 msg.sender,
             'Owner of this proof is not the sender'
         );
@@ -439,11 +449,11 @@ contract AnybodyProblem is Ownable, ERC2981 {
         uint256[5] memory storedOutflightMissile = levelsData[levelIndex]
             .tmpInflightMissile;
         uint256[5] memory newInflightMissile = [
-            input[5 + 2 * (bodyCount + dummyCount) * 5 + 2 + 0],
-            input[5 + 2 * (bodyCount + dummyCount) * 5 + 2 + 1],
-            input[5 + 2 * (bodyCount + dummyCount) * 5 + 2 + 2],
-            input[5 + 2 * (bodyCount + dummyCount) * 5 + 2 + 3],
-            input[5 + 2 * (bodyCount + dummyCount) * 5 + 2 + 4]
+            v.input[5 + 2 * (bodyCount + dummyCount) * 5 + 2 + 0],
+            v.input[5 + 2 * (bodyCount + dummyCount) * 5 + 2 + 1],
+            v.input[5 + 2 * (bodyCount + dummyCount) * 5 + 2 + 2],
+            v.input[5 + 2 * (bodyCount + dummyCount) * 5 + 2 + 3],
+            v.input[5 + 2 * (bodyCount + dummyCount) * 5 + 2 + 4]
         ];
         // if there is an inflight missile, it either needs to match the outflight or start
         // from the corner
@@ -464,24 +474,24 @@ contract AnybodyProblem is Ownable, ERC2981 {
         }
         // update inflightMissile with new outflight missile
         uint256[5] memory newOutflightMissile = [
-            input[0],
-            input[1],
-            input[2],
-            input[3],
-            input[4]
+            v.input[0],
+            v.input[1],
+            v.input[2],
+            v.input[3],
+            v.input[4]
         ];
-        runs_[runId]
+        runs_[v.runId]
             .levels[levelIndex]
             .tmpInflightMissile = newOutflightMissile;
         levelsData[levelIndex].tmpInflightMissile = newOutflightMissile;
 
-        uint256 time = input[5 + (bodyCount + dummyCount) * 5];
+        // uint256 time = v.input[5 + (bodyCount + dummyCount) * 5];
 
-        verifyProof((bodyCount + dummyCount), verifier, a, b, c, input);
+        verifyProof((bodyCount + dummyCount), verifier, v.a, v.b, v.c, v.input);
 
         Level memory levelData = levelsData[levelIndex];
 
-        levelData.time += time;
+        levelData.time += v.input[5 + (bodyCount + dummyCount) * 5];
         require(
             levelData.time <= maxTicksByLevelIndex[levelIndex],
             'Time limit exceeded'
@@ -492,8 +502,13 @@ contract AnybodyProblem is Ownable, ERC2981 {
         for (uint256 i = 0; i < bodyCount; i++) {
             bodyData = levelData.tmpBodyData[i];
 
-            verifyBodyDataMatches(bodyData, input, (bodyCount + dummyCount), i);
-            bodyData = extractBodyData(bodyData, input, i);
+            verifyBodyDataMatches(
+                bodyData,
+                v.input,
+                (bodyCount + dummyCount),
+                i
+            );
+            bodyData = extractBodyData(bodyData, v.input, i);
             if (i == 0) {
                 require(
                     bodyData.radius != 0,
@@ -505,35 +520,35 @@ contract AnybodyProblem is Ownable, ERC2981 {
             }
             levelData.tmpBodyData[i] = bodyData;
         }
-        runs_[runId].levels[levelIndex] = levelData;
+        runs_[v.runId].levels[levelIndex] = levelData;
         if (bodiesGone == level) {
-            runs_[runId].levels[levelIndex].solved = true;
-            emit LevelSolved(msg.sender, runId, level, levelData.time, day);
-            runs_[runId].accumulativeTime += levelData.time;
+            runs_[v.runId].levels[levelIndex].solved = true;
+            emit LevelSolved(msg.sender, v.runId, level, levelData.time, v.day);
+            runs_[v.runId].accumulativeTime += levelData.time;
             if (level == LEVELS) {
-                runs_[runId].solved = true;
+                runs_[v.runId].solved = true;
                 gamesPlayed_[msg.sender].total++;
-                addToLeaderboard(runId);
+                addToLeaderboard(v.runId);
                 emit RunSolved(
                     msg.sender,
-                    runId,
-                    runs_[runId].accumulativeTime,
-                    day
+                    v.runId,
+                    runs_[v.runId].accumulativeTime,
+                    v.day
                 );
-                if (alsoMint) {
-                    bool playerIsLeader = isLeader(runId);
+                if (v.alsoMint) {
+                    bool playerIsLeader = isLeader(v.runId);
                     uint256 priceToPay = playerIsLeader
                         ? 0
                         : priceToSave + (priceToMint / discount);
                     if (playerIsLeader) {
-                        claimedByLeader[day][msg.sender] = true;
+                        claimedByLeader[v.day][msg.sender] = true;
                     }
-                    mint(priceToPay, day);
+                    mint(priceToPay, v.day);
                 } else if (priceToSave > 0) {
                     makePayment(priceToSave);
                 }
             } else {
-                addNewLevelData(runId);
+                addNewLevelData(v.runId);
             }
         }
     }
@@ -602,14 +617,16 @@ contract AnybodyProblem is Ownable, ERC2981 {
 
         for (uint256 i = 0; i < input.length; i++) {
             verifyLevelChunk(
-                runId,
-                alsoMint,
-                tickCounts[i],
-                day,
-                a[i],
-                b[i],
-                c[i],
-                input[i]
+                VerifyLevelChunk({
+                    runId: runId,
+                    alsoMint: alsoMint,
+                    tickCount: tickCounts[i],
+                    day: day,
+                    a: a[i],
+                    b: b[i],
+                    c: c[i],
+                    input: input[i]
+                })
             );
         }
         // NOTE: following line should be included for prod and removed for testing
@@ -617,10 +634,12 @@ contract AnybodyProblem is Ownable, ERC2981 {
     }
 
     function addToLeaderboard(uint256 runId) internal {
+        counterForOrdering++;
         addToFastestByDay(runId);
         addToLongestStreak(runId);
         addToMostPlayed();
         addToSlowestByDay(runId);
+        Tournament(tournament).addToLeaderboard(runId);
     }
 
     function isLeader(uint256 runId) public view returns (bool) {
@@ -952,6 +971,12 @@ contract AnybodyProblem is Ownable, ERC2981 {
         address payable speedruns_
     ) public onlyOwner {
         speedruns = speedruns_;
+    }
+
+    function updateTournamentAddress(
+        address payable tournament_
+    ) public onlyOwner {
+        tournament = tournament_;
     }
 
     function updateVerifier(

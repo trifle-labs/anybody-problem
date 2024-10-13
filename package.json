@@ -76,6 +76,7 @@
     "root": true
   },
   "dependencies": {
+    "OrderStatisticsTree": "https://github.com/rob-Hitchens/OrderStatisticsTree.git",
     "ethers": "^5.7.0",
     "tone": "^15.0.4"
   },
