@@ -11,8 +11,9 @@ import '@openzeppelin/contracts/token/ERC1155/ERC1155.sol';
 import './Speedruns.sol';
 import './ExternalMetadata.sol';
 import './Tournament.sol';
+import './AnybodyProblemV1.sol';
 
-contract AnybodyProblem is Ownable, ERC2981 {
+contract AnybodyProblemV2 is Ownable, ERC2981 {
     uint256 public constant LEVELS = 5;
     uint256 public constant SECONDS_IN_A_DAY = 86400;
     uint256 public constant FIRST_SUNDAY_AT_6_PM_UTC = 324000;
@@ -142,13 +143,13 @@ contract AnybodyProblem is Ownable, ERC2981 {
         deployDay = currentDay();
         updatePreviousAB(previousAB_);
         if (previousAB != address(0)) {
-            totalRuns = AnybodyProblem(previousAB).runCount();
-            longestStreak[0] = AnybodyProblem(previousAB).longestStreak(0);
-            longestStreak[1] = AnybodyProblem(previousAB).longestStreak(1);
-            longestStreak[2] = AnybodyProblem(previousAB).longestStreak(2);
-            mostGames[0] = AnybodyProblem(previousAB).mostGames(0);
-            mostGames[1] = AnybodyProblem(previousAB).mostGames(1);
-            mostGames[2] = AnybodyProblem(previousAB).mostGames(2);
+            totalRuns = AnybodyProblemV1(previousAB).runCount();
+            longestStreak[0] = AnybodyProblemV1(previousAB).longestStreak(0);
+            longestStreak[1] = AnybodyProblemV1(previousAB).longestStreak(1);
+            longestStreak[2] = AnybodyProblemV1(previousAB).longestStreak(2);
+            mostGames[0] = AnybodyProblemV1(previousAB).mostGames(0);
+            mostGames[1] = AnybodyProblemV1(previousAB).mostGames(1);
+            mostGames[2] = AnybodyProblemV1(previousAB).mostGames(2);
         }
 
         updateProceedRecipient(proceedRecipient_);

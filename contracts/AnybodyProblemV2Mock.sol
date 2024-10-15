@@ -2,9 +2,11 @@
 
 pragma solidity ^0.8.0;
 
-import './AnybodyProblem.sol';
+import './AnybodyProblemV2.sol';
 
-contract AnybodyProblemMock is AnybodyProblem {
+contract AnybodyProblemV2Mock is AnybodyProblemV2 {
+    bool public foo = true;
+
     constructor(
         address payable proceedRecipient_,
         address payable speedruns_,
@@ -15,7 +17,7 @@ contract AnybodyProblemMock is AnybodyProblem {
         uint256[] memory verifiersBodies,
         address payable previousAB_
     )
-        AnybodyProblem(
+        AnybodyProblemV2(
             proceedRecipient_,
             speedruns_,
             externalMetadata_,
@@ -28,6 +30,18 @@ contract AnybodyProblemMock is AnybodyProblem {
     {}
 
     Body[6][5] public mockedBodyDataByLevel;
+
+    function setRunData(
+        uint256 runId,
+        uint256 day,
+        uint256 accumulativeTime,
+        address owner
+    ) public {
+        runs_[runId].day = day;
+        runs_[runId].accumulativeTime = accumulativeTime;
+        runs_[runId].owner = owner;
+        counterForOrdering++;
+    }
 
     function setMockedBodyDataByLevel(
         uint256 level,
@@ -42,8 +56,8 @@ contract AnybodyProblemMock is AnybodyProblem {
     )
         public
         view
-        override(AnybodyProblem)
-        returns (AnybodyProblem.Body[6] memory bodyData, uint256 bodyCount)
+        override(AnybodyProblemV2)
+        returns (AnybodyProblemV2.Body[6] memory bodyData, uint256 bodyCount)
     {
         if (mockedBodyDataByLevel[level - 1][0].seed == bytes32(0)) {
             return super.generateLevelData(day, level);

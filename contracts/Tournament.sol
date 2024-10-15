@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 
 import '@openzeppelin/contracts/access/Ownable.sol';
-import './AnybodyProblem.sol';
+import './AnybodyProblemV2.sol';
 import './HitchensOrderStatisticsTreeLib.sol';
+import 'hardhat/console.sol';
 
 pragma solidity ^0.8.0;
 
@@ -10,7 +11,7 @@ contract Tournament is Ownable {
     using HitchensOrderStatisticsTreeLib for HitchensOrderStatisticsTreeLib.Tree;
     uint256 public FIRST_DAY;
     uint256 public SECONDS_IN_A_DAY;
-    address payable anybodyProblem;
+    address payable public anybodyProblem;
     event RecordBroken(
         string recordType,
         uint256 week,
@@ -24,6 +25,20 @@ contract Tournament is Ownable {
         uint256 lastUpdated;
         uint256[3] fastest;
         uint256[3] slowest;
+    }
+
+    function getWeeklyFastestSlowestByPlayer(
+        uint256 week,
+        address player
+    )
+        public
+        view
+        returns (uint256[3] memory fastest, uint256[3] memory slowest)
+    {
+        return (
+            weeklyStatsByPlayer[week][player].fastest,
+            weeklyStatsByPlayer[week][player].slowest
+        );
     }
 
     mapping(uint256 => Week) public weeklyStats;
@@ -42,10 +57,12 @@ contract Tournament is Ownable {
     mapping(uint256 => Paidout) public paidOutByWeek;
     mapping(uint256 => uint256) public prizes;
 
+    bool disableForTesting = false;
+
     modifier onlyAnybodyProblem() {
         require(
-            msg.sender == anybodyProblem,
-            'Only the AnybodyProblem contract can call this function'
+            msg.sender == anybodyProblem || disableForTesting,
+            'Only the AnybodyProblemV2 contract can call this function'
         );
         _;
     }
@@ -53,17 +70,21 @@ contract Tournament is Ownable {
     constructor() {}
 
     function setVars() public onlyOwner {
-        FIRST_DAY = AnybodyProblem(anybodyProblem).FIRST_DAY();
-        SECONDS_IN_A_DAY = AnybodyProblem(anybodyProblem).SECONDS_IN_A_DAY();
+        FIRST_DAY = AnybodyProblemV2(anybodyProblem).FIRST_DAY();
+        SECONDS_IN_A_DAY = AnybodyProblemV2(anybodyProblem).SECONDS_IN_A_DAY();
+    }
+
+    function setDisableForTesting(bool _disableForTesting) public onlyOwner {
+        disableForTesting = _disableForTesting;
     }
 
     function addToLeaderboard(uint256 runId) public onlyAnybodyProblem {
         uint256 currentWeek = dayToWeek(
-            AnybodyProblem(anybodyProblem).runs(runId).day
+            AnybodyProblemV2(anybodyProblem).runs(runId).day
         );
         addRunToWeeklyUserAverage(runId, currentWeek);
-        addToFastestByWeekByPlayer(runId, currentWeek);
-        addToSlowestByWeekByPlayer(runId, currentWeek);
+        // addToFastestByWeekByPlayer(runId, currentWeek);
+        // addToSlowestByWeekByPlayer(runId, currentWeek);
     }
 
     function payoutAverage(uint256 week) public {
@@ -111,53 +132,8 @@ contract Tournament is Ownable {
     ) public view returns (address closestAddress) {
         HitchensOrderStatisticsTreeLib.Tree
             storage tree = weeklyStatsSortedTree[week];
-        if (tree.exists(requestedValue)) {
-            // If the value exists in the tree, return the first key associated with it
-            return keyToAddress(tree.valueKeyAtIndex(requestedValue, 0)); // oldest entry wins
-        } else {
-            // If the value doesn't exist, find the next and previous values
-            uint prevValue = tree.prev(requestedValue);
-            uint nextValue = tree.next(requestedValue);
-            address prevAddr = keyToAddress(tree.valueKeyAtIndex(prevValue, 0)); // oldest entry wins
-            address nextAddr = keyToAddress(tree.valueKeyAtIndex(nextValue, 0)); // oldest entry wins
-
-            // Edge cases where requestedValue is outside the range of values in the tree
-            if (prevValue == 0) {
-                // No previous value, so return the key for the next value
-                return nextAddr;
-            }
-            if (nextValue == 0) {
-                // No next value, so return the key for the previous value
-                return prevAddr;
-            }
-
-            // Now, compare which of prevValue or nextValue is closer to requestedValue
-            uint diffPrev = requestedValue > prevValue
-                ? requestedValue - prevValue
-                : prevValue - requestedValue;
-            uint diffNext = requestedValue > nextValue
-                ? requestedValue - nextValue
-                : nextValue - requestedValue;
-
-            if (diffPrev < diffNext) {
-                // prevValue is closer or equal, return the key associated with prevValue
-                return prevAddr;
-            } else if (diffNext < diffPrev) {
-                // nextValue is closer, return the key associated with nextValue
-                return nextAddr;
-            } else {
-                // return the older of the two
-                uint256 prevLastUpdated = weeklyStatsByPlayer[week][prevAddr]
-                    .lastUpdated;
-                uint256 nextLastUpdated = weeklyStatsByPlayer[week][nextAddr]
-                    .lastUpdated;
-                if (prevLastUpdated < nextLastUpdated) {
-                    return prevAddr;
-                } else {
-                    return nextAddr;
-                }
-            }
-        }
+        uint256 closest = tree.atRank(tree.rank(requestedValue));
+        return keyToAddress(tree.valueKeyAtIndex(closest, 0));
     }
 
     function dayToWeek(uint256 day) public view returns (uint256) {
@@ -166,27 +142,33 @@ contract Tournament is Ownable {
 
     function runs(
         uint256 runId
-    ) public view returns (AnybodyProblem.Run memory) {
-        return AnybodyProblem(anybodyProblem).runs(runId);
+    ) public view returns (AnybodyProblemV2.Run memory) {
+        return AnybodyProblemV2(anybodyProblem).runs(runId);
     }
 
     function addRunToWeeklyUserAverage(uint256 runId, uint256 week) internal {
-        Week memory weekStats = weeklyStatsByPlayer[week][msg.sender];
-        uint256 oldAverage = weekStats.totalTime / weekStats.totalPlays;
+        address player = runs(runId).owner;
+        Week memory weekStatsByPlayer = weeklyStatsByPlayer[week][player];
+        uint256 oldAverage = weekStatsByPlayer.totalPlays > 0
+            ? weekStatsByPlayer.totalTime / weekStatsByPlayer.totalPlays
+            : 0;
 
-        weekStats.totalPlays++;
-        weekStats.totalTime += runs(runId).accumulativeTime;
-        weekStats.lastUpdated = AnybodyProblem(anybodyProblem)
+        weekStatsByPlayer.totalPlays++;
+        uint256 accumulativeTime = runs(runId).accumulativeTime;
+        weekStatsByPlayer.totalTime += accumulativeTime;
+        uint256 counterForOrdering = AnybodyProblemV2(anybodyProblem)
             .counterForOrdering();
-        weeklyStatsByPlayer[week][msg.sender] = weekStats;
+        weekStatsByPlayer.lastUpdated = counterForOrdering;
+        weeklyStatsByPlayer[week][player] = weekStatsByPlayer;
 
-        uint256 newAverage = weekStats.totalTime / weekStats.totalPlays;
+        uint256 newAverage = weekStatsByPlayer.totalTime /
+            weekStatsByPlayer.totalPlays;
 
         // if key exists, remove it
         HitchensOrderStatisticsTreeLib.Tree
             storage tree = weeklyStatsSortedTree[week];
 
-        bytes32 userAsKey = addressToKey(msg.sender);
+        bytes32 userAsKey = addressToKey(player);
         if (oldAverage != 0) {
             tree.remove(userAsKey, oldAverage);
         }
@@ -194,6 +176,10 @@ contract Tournament is Ownable {
         tree.insert(userAsKey, newAverage);
         // TODO: confirm that this is updated since it's storage instead of memory now
         // weeklyStatsSortedTree[week] = HitchensOrderStatisticsTreeLib.Tree();
+
+        weeklyStats[week].totalPlays++;
+        weeklyStats[week].totalTime += accumulativeTime;
+        weeklyStats[week].lastUpdated = counterForOrdering;
     }
 
     function addressToKey(address addr) public pure returns (bytes32) {
@@ -218,7 +204,7 @@ contract Tournament is Ownable {
     mapping(uint256 => WeeklyRecord) public weeklySlowest;
 
     function addToSlowestByWeekByPlayer(uint256 runId, uint256 week) internal {
-        AnybodyProblem.Run memory run = runs(runId);
+        AnybodyProblemV2.Run memory run = runs(runId);
         uint256 dayOfTheWeek = (run.day - week) / SECONDS_IN_A_DAY;
         uint256 dayOfTheWeekSpeed = slowestByWeekByPlayer[week][run.owner][
             dayOfTheWeek
@@ -274,7 +260,7 @@ contract Tournament is Ownable {
     }
 
     function addToFastestByWeekByPlayer(uint256 runId, uint256 week) internal {
-        AnybodyProblem.Run memory run = runs(runId);
+        AnybodyProblemV2.Run memory run = runs(runId);
         uint256 dayOfTheWeek = (run.day - week) / SECONDS_IN_A_DAY;
         uint256 dayOfTheWeekSpeed = fastestByWeekByPlayer[week][run.owner][
             dayOfTheWeek
@@ -333,5 +319,106 @@ contract Tournament is Ownable {
         address payable _anybodyProblem
     ) public onlyOwner {
         anybodyProblem = _anybodyProblem;
+    }
+
+    function first(uint256 week) public view returns (uint) {
+        return weeklyStatsSortedTree[week].first();
+    }
+
+    function last(uint256 week) public view returns (uint) {
+        return weeklyStatsSortedTree[week].last();
+    }
+
+    function next(uint256 week, uint value) public view returns (uint) {
+        return weeklyStatsSortedTree[week].next(value);
+    }
+
+    function prev(uint256 week, uint value) public view returns (uint) {
+        return weeklyStatsSortedTree[week].prev(value);
+    }
+
+    function exists(uint256 week, uint value) public view returns (bool) {
+        return weeklyStatsSortedTree[week].exists(value);
+    }
+
+    function keyExists(
+        uint256 week,
+        bytes32 key,
+        uint value
+    ) public view returns (bool) {
+        return weeklyStatsSortedTree[week].keyExists(key, value);
+    }
+
+    function getNode(
+        uint256 week,
+        uint value
+    )
+        public
+        view
+        returns (
+            uint _parent,
+            uint _left,
+            uint _right,
+            bool _red,
+            uint keyCount,
+            uint _count
+        )
+    {
+        return weeklyStatsSortedTree[week].getNode(value);
+    }
+
+    function getNodeCount(uint256 week, uint value) public view returns (uint) {
+        return weeklyStatsSortedTree[week].getNodeCount(value);
+    }
+
+    function valueKeyAtIndex(
+        uint256 week,
+        uint value,
+        uint index
+    ) public view returns (bytes32) {
+        return weeklyStatsSortedTree[week].valueKeyAtIndex(value, index);
+    }
+
+    function count(uint256 week) public view returns (uint) {
+        return weeklyStatsSortedTree[week].count();
+    }
+
+    function percentile(uint256 week, uint value) public view returns (uint) {
+        return weeklyStatsSortedTree[week].percentile(value);
+    }
+
+    function permil(uint256 week, uint value) public view returns (uint) {
+        return weeklyStatsSortedTree[week].permil(value);
+    }
+
+    function atPercentile(
+        uint256 week,
+        uint _percentile
+    ) public view returns (uint) {
+        return weeklyStatsSortedTree[week].atPercentile(_percentile);
+    }
+
+    function atPermil(uint256 week, uint _permil) public view returns (uint) {
+        return weeklyStatsSortedTree[week].atPermil(_permil);
+    }
+
+    function median(uint256 week) public view returns (uint) {
+        return weeklyStatsSortedTree[week].median();
+    }
+
+    function below(uint256 week, uint value) public view returns (uint) {
+        return weeklyStatsSortedTree[week].below(value);
+    }
+
+    function above(uint256 week, uint value) public view returns (uint) {
+        return weeklyStatsSortedTree[week].above(value);
+    }
+
+    function rank(uint256 week, uint value) public view returns (uint) {
+        return weeklyStatsSortedTree[week].rank(value);
+    }
+
+    function atRank(uint256 week, uint _rank) public view returns (uint) {
+        return weeklyStatsSortedTree[week].atRank(_rank);
     }
 }
