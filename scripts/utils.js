@@ -191,8 +191,11 @@ const deployAnybodyProblemV1 = async (options) => {
   } = await initContracts(['AnybodyProblemV0', 'Speedruns', 'ExternalMetadata'])
 
   if (!Speedruns) Speedruns = speedrunsDeployed
+  returnObject['Speedruns'] = Speedruns
   if (!ExternalMetadata) ExternalMetadata = externalMetadataDeployed
+  returnObject['ExternalMetadata'] = ExternalMetadata
   if (!AnybodyProblemV0) AnybodyProblemV0 = anybodyProblemV0Deployed
+  returnObject['AnybodyProblemV0'] = AnybodyProblemV0
 
   log(mock ? 'Deploying AnybodyProblemV1Mock' : 'Deploying AnybodyProblemV1')
   // deploy AnybodyProblem
@@ -273,6 +276,7 @@ const deployAnybodyProblemV2 = async (options) => {
     mock,
     ignoreTesting,
     verbose,
+    AnybodyProblemV0,
     AnybodyProblemV1,
     Speedruns,
     ExternalMetadata
@@ -313,10 +317,24 @@ const deployAnybodyProblemV2 = async (options) => {
 
   // use the already deployed speedruns contract and external metadata contract
   const {
+    AnybodyProblemV0: anybodyProblemV0Deployed,
     Speedruns: speedrunsDeployed,
     ExternalMetadata: externalMetadataDeployed,
     AnybodyProblemV1: anybodyProblemV1Deployed
-  } = await initContracts(['AnybodyProblemV1', 'Speedruns', 'ExternalMetadata'])
+  } = await initContracts([
+    'AnybodyProblemV0',
+    'AnybodyProblemV1',
+    'Speedruns',
+    'ExternalMetadata'
+  ])
+  if (!AnybodyProblemV0) AnybodyProblemV0 = anybodyProblemV0Deployed
+  returnObject['AnybodyProblemV0'] = AnybodyProblemV0
+  if (!Speedruns) Speedruns = speedrunsDeployed
+  returnObject['Speedruns'] = Speedruns
+  if (!ExternalMetadata) ExternalMetadata = externalMetadataDeployed
+  returnObject['ExternalMetadata'] = ExternalMetadata
+  if (!AnybodyProblemV1) AnybodyProblemV1 = anybodyProblemV1Deployed
+  returnObject['AnybodyProblemV1'] = AnybodyProblemV1
 
   const HitchensOrderStatisticsTreeLib = await hre.ethers.getContractFactory(
     'HitchensOrderStatisticsTreeLib'
@@ -327,17 +345,14 @@ const deployAnybodyProblemV2 = async (options) => {
     hitchensOrderStatisticsTreeLib
 
   const Tournament = await hre.ethers.getContractFactory('Tournament', {
-    libraries: {
-      HitchensOrderStatisticsTreeLib: hitchensOrderStatisticsTreeLib.address
-    }
+    // TODO: why did i need to do this at one point and not now?
+    // libraries: {
+    //   HitchensOrderStatisticsTreeLib: hitchensOrderStatisticsTreeLib.address
+    // }
   })
   const tournament = await Tournament.deploy()
 
   returnObject['Tournament'] = tournament
-
-  if (!Speedruns) Speedruns = speedrunsDeployed
-  if (!ExternalMetadata) ExternalMetadata = externalMetadataDeployed
-  if (!AnybodyProblemV1) AnybodyProblemV1 = anybodyProblemV1Deployed
 
   log(mock ? 'Deploying AnybodyProblemV2Mock' : 'Deploying AnybodyProblemV2')
   // deploy AnybodyProblem
@@ -390,9 +405,6 @@ const deployAnybodyProblemV2 = async (options) => {
   log(
     `AnybodyProblemV2 address updated in Tournament to ${anybodyProblemV2.address}`
   )
-
-  await tournament.setVars()
-  log('Tournament vars set')
 
   // // ensure v0 is properly saved before overwriting it
   // const pathAddress = await getPathAddress('AnybodyProblem-v0')

@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
-
 pragma solidity ^0.8.0;
 
 /* 
+Order Statistics Tree by Envelop 
+Based on
 Hitchens Order Statistics Tree v0.99
 
 A Solidity Red-Black Tree library to store and maintain a sorted data
@@ -52,22 +53,31 @@ library HitchensOrderStatisticsTreeLib {
         uint root;
         mapping(uint => Node) nodes;
     }
+
     function first(Tree storage self) internal view returns (uint _value) {
         _value = self.root;
-        if(_value == EMPTY) return 0;
+        if (_value == EMPTY) return 0;
         while (self.nodes[_value].left != EMPTY) {
             _value = self.nodes[_value].left;
         }
     }
+
     function last(Tree storage self) internal view returns (uint _value) {
         _value = self.root;
-        if(_value == EMPTY) return 0;
+        if (_value == EMPTY) return 0;
         while (self.nodes[_value].right != EMPTY) {
             _value = self.nodes[_value].right;
         }
     }
-    function next(Tree storage self, uint value) internal view returns (uint _cursor) {
-        require(value != EMPTY, "OrderStatisticsTree(401) - Starting value cannot be zero");
+
+    function next(
+        Tree storage self,
+        uint value
+    ) internal view returns (uint _cursor) {
+        require(
+            value != EMPTY,
+            'OrderStatisticsTree(401) - Starting value cannot be zero'
+        );
         if (self.nodes[value].right != EMPTY) {
             _cursor = treeMinimum(self, self.nodes[value].right);
         } else {
@@ -78,8 +88,15 @@ library HitchensOrderStatisticsTreeLib {
             }
         }
     }
-    function prev(Tree storage self, uint value) internal view returns (uint _cursor) {
-        require(value != EMPTY, "OrderStatisticsTree(402) - Starting value cannot be zero");
+
+    function prev(
+        Tree storage self,
+        uint value
+    ) internal view returns (uint _cursor) {
+        require(
+            value != EMPTY,
+            'OrderStatisticsTree(402) - Starting value cannot be zero'
+        );
         if (self.nodes[value].left != EMPTY) {
             _cursor = treeMaximum(self, self.nodes[value].left);
         } else {
@@ -90,118 +107,247 @@ library HitchensOrderStatisticsTreeLib {
             }
         }
     }
-    function exists(Tree storage self, uint value) internal view returns (bool _exists) {
-        if(value == EMPTY) return false;
-        if(value == self.root) return true;
-        if(self.nodes[value].parent != EMPTY) return true;
-        return false;       
+
+    function exists(
+        Tree storage self,
+        uint value
+    ) internal view returns (bool _exists) {
+        if (value == EMPTY) return false;
+        if (value == self.root) return true;
+        if (self.nodes[value].parent != EMPTY) return true;
+        return false;
     }
-    function keyExists(Tree storage self, bytes32 key, uint value) internal view returns (bool _exists) {
-        if(!exists(self, value)) return false;
+
+    function keyExists(
+        Tree storage self,
+        bytes32 key,
+        uint value
+    ) internal view returns (bool _exists) {
+        if (!exists(self, value)) return false;
         return self.nodes[value].keys[self.nodes[value].keyMap[key]] == key;
-    } 
-    function getNode(Tree storage self, uint value) internal view returns (uint _parent, uint _left, uint _right, bool _red, uint keyCount, uint _count) {
-        require(exists(self,value), "OrderStatisticsTree(403) - Value does not exist.");
-        Node storage gn = self.nodes[value];
-        return(gn.parent, gn.left, gn.right, gn.red, gn.keys.length, gn.keys.length+gn.count);
     }
-    function getNodeCount(Tree storage self, uint value) internal view returns(uint _count) {
+
+    function getNode(
+        Tree storage self,
+        uint value
+    )
+        internal
+        view
+        returns (
+            uint _parent,
+            uint _left,
+            uint _right,
+            bool _red,
+            uint keyCount,
+            uint _count
+        )
+    {
+        require(
+            exists(self, value),
+            'OrderStatisticsTree(403) - Value does not exist.'
+        );
         Node storage gn = self.nodes[value];
-        return gn.keys.length+gn.count;
+        return (
+            gn.parent,
+            gn.left,
+            gn.right,
+            gn.red,
+            gn.keys.length,
+            gn.keys.length + gn.count
+        );
     }
-    function valueKeyAtIndex(Tree storage self, uint value, uint index) internal view returns(bytes32 _key) {
-        require(exists(self,value), "OrderStatisticsTree(404) - Value does not exist.");
+
+    function getNode2(
+        Tree storage self,
+        uint value
+    ) internal view returns (Node storage node) {
+        require(
+            exists(self, value),
+            'OrderStatisticsTree(403) - Value does not exist.'
+        );
+        node = self.nodes[value];
+    }
+
+    function getNodeCount(
+        Tree storage self,
+        uint value
+    ) internal view returns (uint _count) {
+        Node storage gn = self.nodes[value];
+        return gn.keys.length + gn.count;
+    }
+
+    function getNodeKeysLength(
+        Tree storage self,
+        uint value
+    ) internal view returns (uint _count) {
+        self.nodes[value];
+        return self.nodes[value].keys.length;
+    }
+
+    function valueKeyAtIndex(
+        Tree storage self,
+        uint value,
+        uint index
+    ) internal view returns (bytes32 _key) {
+        require(
+            exists(self, value),
+            'OrderStatisticsTree(404) - Value does not exist.'
+        );
         return self.nodes[value].keys[index];
     }
-    function count(Tree storage self) internal view returns(uint _count) {
-        return getNodeCount(self,self.root);
+
+    function count(Tree storage self) internal view returns (uint _count) {
+        return getNodeCount(self, self.root);
     }
-    function percentile(Tree storage self, uint value) internal view returns(uint _percentile) {
+
+    function percentile(
+        Tree storage self,
+        uint value
+    ) internal view returns (uint _percentile) {
         uint denominator = count(self);
         uint numerator = rank(self, value);
-        _percentile = ((uint(1000) * numerator)/denominator+(uint(5)))/uint(10);
+        _percentile =
+            ((uint(1000) * numerator) / denominator + (uint(5))) /
+            uint(10);
     }
-    function permil(Tree storage self, uint value) internal view returns(uint _permil) {
+
+    function permil(
+        Tree storage self,
+        uint value
+    ) internal view returns (uint _permil) {
         uint denominator = count(self);
         uint numerator = rank(self, value);
-        _permil = ((uint(10000) * numerator)/denominator+(uint(5)))/uint(10);
+        _permil =
+            ((uint(10000) * numerator) / denominator + (uint(5))) /
+            uint(10);
     }
-    function atPercentile(Tree storage self, uint _percentile) internal view returns(uint _value) {
-        uint findRank = (((_percentile * count(self))/uint(10)) + uint(5)) / uint(10);
-        return atRank(self,findRank);
+
+    function atPercentile(
+        Tree storage self,
+        uint _percentile
+    ) internal view returns (uint _value) {
+        uint findRank = (((_percentile * count(self)) / uint(10)) + uint(5)) /
+            uint(10);
+        return atRank(self, findRank);
     }
-    function atPermil(Tree storage self, uint _permil) internal view returns(uint _value) {
-        uint findRank = (((_permil * count(self))/uint(100)) + uint(5)) / uint(10);
-        return atRank(self,findRank);
-    }    
-    function median(Tree storage self) internal view returns(uint value) {
-        return atPercentile(self,50);
+
+    function atPermil(
+        Tree storage self,
+        uint _permil
+    ) internal view returns (uint _value) {
+        uint findRank = (((_permil * count(self)) / uint(100)) + uint(5)) /
+            uint(10);
+        return atRank(self, findRank);
     }
-    function below(Tree storage self, uint value) public view returns(uint _below) {
-        if(count(self) > 0 && value > 0) _below = rank(self,value)-uint(1);
+
+    function median(Tree storage self) internal view returns (uint value) {
+        return atPercentile(self, 50);
     }
-    function above(Tree storage self, uint value) public view returns(uint _above) {
-        if(count(self) > 0) _above = count(self)-rank(self,value);
-    } 
-    function rank(Tree storage self, uint value) internal view returns(uint _rank) {
-        if(count(self) > 0) {
+
+    function below(
+        Tree storage self,
+        uint value
+    ) internal view returns (uint _below) {
+        if (count(self) > 0 && value > 0) _below = rank(self, value) - uint(1);
+    }
+
+    function above(
+        Tree storage self,
+        uint value
+    ) internal view returns (uint _above) {
+        if (count(self) > 0) _above = count(self) - rank(self, value);
+    }
+
+    function rank(
+        Tree storage self,
+        uint value
+    ) internal view returns (uint _rank) {
+        if (count(self) > 0) {
             bool finished;
             uint cursor = self.root;
             Node storage c = self.nodes[cursor];
-            uint smaller = getNodeCount(self,c.left);
+            uint smaller = getNodeCount(self, c.left);
             while (!finished) {
                 uint keyCount = c.keys.length;
-                if(cursor == value) {
+                if (cursor == value) {
                     finished = true;
                 } else {
-                    if(cursor < value) {
+                    if (cursor < value) {
                         cursor = c.right;
                         c = self.nodes[cursor];
-                        smaller += keyCount + getNodeCount(self,c.left);
+                        smaller += keyCount + getNodeCount(self, c.left);
                     } else {
                         cursor = c.left;
                         c = self.nodes[cursor];
-                        smaller -= (keyCount + getNodeCount(self,c.right));
+                        if (
+                            smaller >= (keyCount + getNodeCount(self, c.right))
+                        ) {
+                            smaller -= (keyCount + getNodeCount(self, c.right));
+                        } else {
+                            smaller = 0;
+                            finished = true;
+                        }
                     }
                 }
-                if (!exists(self,cursor)) {
+                if (!exists(self, cursor)) {
                     finished = true;
                 }
             }
             return smaller + 1;
         }
     }
-    function atRank(Tree storage self, uint _rank) internal view returns(uint _value) {
+
+    function atRank(
+        Tree storage self,
+        uint _rank
+    ) internal view returns (uint _value) {
         bool finished;
         uint cursor = self.root;
         Node storage c = self.nodes[cursor];
-        uint smaller = getNodeCount(self,c.left);
+        // Case when only one node exist
+        if (c.parent == 0 && c.left == 0 && c.right == 0) {
+            _value = cursor;
+            return _value;
+        }
+        uint smaller = getNodeCount(self, c.left);
         while (!finished) {
             _value = cursor;
             c = self.nodes[cursor];
             uint keyCount = c.keys.length;
-            if(smaller + 1 >= _rank && smaller + keyCount <= _rank) {
+            if (smaller + 1 >= _rank && smaller + keyCount <= _rank) {
                 _value = cursor;
                 finished = true;
             } else {
-                if(smaller + keyCount <= _rank) {
+                if (smaller + keyCount <= _rank) {
                     cursor = c.right;
                     c = self.nodes[cursor];
-                    smaller += keyCount + getNodeCount(self,c.left);
+                    smaller += keyCount + getNodeCount(self, c.left);
                 } else {
                     cursor = c.left;
                     c = self.nodes[cursor];
-                    smaller -= (keyCount + getNodeCount(self,c.right));
+                    if (smaller >= (keyCount + getNodeCount(self, c.right))) {
+                        smaller -= (keyCount + getNodeCount(self, c.right));
+                    } else {
+                        smaller = 0;
+                        finished = true;
+                    }
                 }
             }
-            if (!exists(self,cursor)) {
+            if (!exists(self, cursor)) {
                 finished = true;
             }
         }
     }
+
     function insert(Tree storage self, bytes32 key, uint value) internal {
-        require(value != EMPTY, "OrderStatisticsTree(405) - Value to insert cannot be zero");
-        require(!keyExists(self,key,value), "OrderStatisticsTree(406) - Value and Key pair exists. Cannot be inserted again.");
+        require(
+            value != EMPTY,
+            'OrderStatisticsTree(405) - Value to insert cannot be zero'
+        );
+        require(
+            !keyExists(self, key, value),
+            'OrderStatisticsTree(406) - Value and Key pair exists. Cannot be inserted again.'
+        );
         uint cursor;
         uint probe = self.root;
         while (probe != EMPTY) {
@@ -212,7 +358,9 @@ library HitchensOrderStatisticsTreeLib {
                 probe = self.nodes[probe].right;
             } else if (value == probe) {
                 self.nodes[probe].keys.push(key);
-                self.nodes[probe].keyMap[key] = self.nodes[probe].keys.length - 1;
+                self.nodes[probe].keyMap[key] =
+                    self.nodes[probe].keys.length -
+                    uint256(1);
                 return;
             }
             self.nodes[cursor].count++;
@@ -223,7 +371,7 @@ library HitchensOrderStatisticsTreeLib {
         nValue.right = EMPTY;
         nValue.red = true;
         nValue.keys.push(key);
-        nValue.keyMap[key] = nValue.keys.length - 1;
+        nValue.keyMap[key] = nValue.keys.length - uint256(1);
         if (cursor == EMPTY) {
             self.root = value;
         } else if (value < cursor) {
@@ -233,33 +381,55 @@ library HitchensOrderStatisticsTreeLib {
         }
         insertFixup(self, value);
     }
+
     function remove(Tree storage self, bytes32 key, uint value) internal {
-        require(value != EMPTY, "OrderStatisticsTree(407) - Value to delete cannot be zero");
-        require(keyExists(self,key,value), "OrderStatisticsTree(408) - Value to delete does not exist.");
+        require(
+            value != EMPTY,
+            'OrderStatisticsTree(407) - Value to delete cannot be zero'
+        );
+        require(
+            keyExists(self, key, value),
+            'OrderStatisticsTree(408) - Value to delete does not exist.'
+        );
         Node storage nValue = self.nodes[value];
         uint rowToDelete = nValue.keyMap[key];
-        nValue.keys[rowToDelete] = nValue.keys[nValue.keys.length - uint(1)];
-        nValue.keyMap[key]=rowToDelete;
-        // Current update copied from: https://github.com/BlockInfinity/OrderStatisticsTree/commit/e01f279038d44754e0799f110b3953149bfccfa0
-        // Alternative solution is from: https://github.com/maxsiz/OrderStatisticsTree/commit/680d9aa9f1aae1bf8c7a2f80257e7e512b3ecfc5#diff-1843daa017a38b6e44e96992f061e28306aa3c8a4fb8081aec9713938953d582R293
-        // nValue.keys.length--;
+
+        // Remove key from array. In Solidity only last array member
+        // can be delete. So we need some replace logic.
+        // But if there is only one array member we dont need any replacing
+        // and can safe some gas
+        if (nValue.keys.length > 1) {
+            // 1. First just replace key at delete index with last array key
+            nValue.keys[rowToDelete] = nValue.keys[
+                nValue.keys.length - uint256(1)
+            ];
+            // 2. Save new array index for just replaced key in mapping
+            //nValue.keyMap[nValue.keys[nValue.keys.length - uint256(1)]]=rowToDelete;
+            nValue.keyMap[nValue.keys[rowToDelete]] = rowToDelete;
+        }
+        // 3. Remove last array key
         nValue.keys.pop();
+        // 4. Clean mapping for deleted key
+        delete nValue.keyMap[key];
 
         uint probe;
         uint cursor;
-        if(nValue.keys.length == 0) {
-            if (self.nodes[value].left == EMPTY || self.nodes[value].right == EMPTY) {
+        if (nValue.keys.length == 0) {
+            if (
+                self.nodes[value].left == EMPTY ||
+                self.nodes[value].right == EMPTY
+            ) {
                 cursor = value;
             } else {
                 cursor = self.nodes[value].right;
-                while (self.nodes[cursor].left != EMPTY) { 
+                while (self.nodes[cursor].left != EMPTY) {
                     cursor = self.nodes[cursor].left;
                 }
-            } 
+            }
             if (self.nodes[cursor].left != EMPTY) {
-                probe = self.nodes[cursor].left; 
+                probe = self.nodes[cursor].left;
             } else {
-                probe = self.nodes[cursor].right; 
+                probe = self.nodes[cursor].right;
             }
             uint cursorParent = self.nodes[cursor].parent;
             self.nodes[probe].parent = cursorParent;
@@ -274,7 +444,7 @@ library HitchensOrderStatisticsTreeLib {
             }
             bool doFixup = !self.nodes[cursor].red;
             if (cursor != value) {
-                replaceParent(self, cursor, value); 
+                replaceParent(self, cursor, value);
                 self.nodes[cursor].left = self.nodes[value].left;
                 self.nodes[self.nodes[cursor].left].parent = cursor;
                 self.nodes[cursor].right = self.nodes[value].right;
@@ -290,24 +460,36 @@ library HitchensOrderStatisticsTreeLib {
             delete self.nodes[cursor];
         }
     }
+
     function fixCountRecurse(Tree storage self, uint value) private {
         while (value != EMPTY) {
-           self.nodes[value].count = getNodeCount(self,self.nodes[value].left) + getNodeCount(self,self.nodes[value].right);
-           value = self.nodes[value].parent;
+            self.nodes[value].count =
+                getNodeCount(self, self.nodes[value].left) +
+                getNodeCount(self, self.nodes[value].right);
+            value = self.nodes[value].parent;
         }
     }
-    function treeMinimum(Tree storage self, uint value) private view returns (uint) {
+
+    function treeMinimum(
+        Tree storage self,
+        uint value
+    ) private view returns (uint) {
         while (self.nodes[value].left != EMPTY) {
             value = self.nodes[value].left;
         }
         return value;
     }
-    function treeMaximum(Tree storage self, uint value) private view returns (uint) {
+
+    function treeMaximum(
+        Tree storage self,
+        uint value
+    ) private view returns (uint) {
         while (self.nodes[value].right != EMPTY) {
             value = self.nodes[value].right;
         }
         return value;
     }
+
     function rotateLeft(Tree storage self, uint value) private {
         uint cursor = self.nodes[value].right;
         uint parent = self.nodes[value].parent;
@@ -326,9 +508,14 @@ library HitchensOrderStatisticsTreeLib {
         }
         self.nodes[cursor].left = value;
         self.nodes[value].parent = cursor;
-        self.nodes[value].count = getNodeCount(self,self.nodes[value].left) + getNodeCount(self,self.nodes[value].right);
-        self.nodes[cursor].count = getNodeCount(self,self.nodes[cursor].left) + getNodeCount(self,self.nodes[cursor].right);
+        self.nodes[value].count =
+            getNodeCount(self, self.nodes[value].left) +
+            getNodeCount(self, self.nodes[value].right);
+        self.nodes[cursor].count =
+            getNodeCount(self, self.nodes[cursor].left) +
+            getNodeCount(self, self.nodes[cursor].right);
     }
+
     function rotateRight(Tree storage self, uint value) private {
         uint cursor = self.nodes[value].left;
         uint parent = self.nodes[value].parent;
@@ -347,14 +534,21 @@ library HitchensOrderStatisticsTreeLib {
         }
         self.nodes[cursor].right = value;
         self.nodes[value].parent = cursor;
-        self.nodes[value].count = getNodeCount(self,self.nodes[value].left) + getNodeCount(self,self.nodes[value].right);
-        self.nodes[cursor].count = getNodeCount(self,self.nodes[cursor].left) + getNodeCount(self,self.nodes[cursor].right);
+        self.nodes[value].count =
+            getNodeCount(self, self.nodes[value].left) +
+            getNodeCount(self, self.nodes[value].right);
+        self.nodes[cursor].count =
+            getNodeCount(self, self.nodes[cursor].left) +
+            getNodeCount(self, self.nodes[cursor].right);
     }
+
     function insertFixup(Tree storage self, uint value) private {
         uint cursor;
         while (value != self.root && self.nodes[self.nodes[value].parent].red) {
             uint valueParent = self.nodes[value].parent;
-            if (valueParent == self.nodes[self.nodes[valueParent].parent].left) {
+            if (
+                valueParent == self.nodes[self.nodes[valueParent].parent].left
+            ) {
                 cursor = self.nodes[self.nodes[valueParent].parent].right;
                 if (self.nodes[cursor].red) {
                     self.nodes[valueParent].red = false;
@@ -363,8 +557,8 @@ library HitchensOrderStatisticsTreeLib {
                     value = self.nodes[valueParent].parent;
                 } else {
                     if (value == self.nodes[valueParent].right) {
-                      value = valueParent;
-                      rotateLeft(self, value);
+                        value = valueParent;
+                        rotateLeft(self, value);
                     }
                     valueParent = self.nodes[value].parent;
                     self.nodes[valueParent].red = false;
@@ -380,8 +574,8 @@ library HitchensOrderStatisticsTreeLib {
                     value = self.nodes[valueParent].parent;
                 } else {
                     if (value == self.nodes[valueParent].left) {
-                      value = valueParent;
-                      rotateRight(self, value);
+                        value = valueParent;
+                        rotateRight(self, value);
                     }
                     valueParent = self.nodes[value].parent;
                     self.nodes[valueParent].red = false;
@@ -392,6 +586,7 @@ library HitchensOrderStatisticsTreeLib {
         }
         self.nodes[self.root].red = false;
     }
+
     function replaceParent(Tree storage self, uint a, uint b) private {
         uint bParent = self.nodes[b].parent;
         self.nodes[a].parent = bParent;
@@ -405,6 +600,7 @@ library HitchensOrderStatisticsTreeLib {
             }
         }
     }
+
     function removeFixup(Tree storage self, uint value) private {
         uint cursor;
         while (value != self.root && !self.nodes[value].red) {
@@ -417,7 +613,10 @@ library HitchensOrderStatisticsTreeLib {
                     rotateLeft(self, valueParent);
                     cursor = self.nodes[valueParent].right;
                 }
-                if (!self.nodes[self.nodes[cursor].left].red && !self.nodes[self.nodes[cursor].right].red) {
+                if (
+                    !self.nodes[self.nodes[cursor].left].red &&
+                    !self.nodes[self.nodes[cursor].right].red
+                ) {
                     self.nodes[cursor].red = true;
                     value = valueParent;
                 } else {
@@ -441,7 +640,10 @@ library HitchensOrderStatisticsTreeLib {
                     rotateRight(self, valueParent);
                     cursor = self.nodes[valueParent].left;
                 }
-                if (!self.nodes[self.nodes[cursor].right].red && !self.nodes[self.nodes[cursor].left].red) {
+                if (
+                    !self.nodes[self.nodes[cursor].right].red &&
+                    !self.nodes[self.nodes[cursor].left].red
+                ) {
                     self.nodes[cursor].red = true;
                     value = valueParent;
                 } else {

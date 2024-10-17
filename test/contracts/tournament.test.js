@@ -7,6 +7,9 @@ import {
   // generateProof
 } from '../../scripts/utils.js'
 
+const earlyMonday = 1728864000 // Mon Oct 14 2024 00:00:00 GMT+0000
+const actualMonday = 1730678400 // Mon Nov 04 2024 00:00:00 GMT+0000
+
 // let tx
 describe('AnybodyProblem Tests', function () {
   this.timeout(50000000)
@@ -42,22 +45,22 @@ describe('AnybodyProblem Tests', function () {
   })
 
   it('sets tournament Vars from AnybodyProblem', async () => {
-    const { Tournament, AnybodyProblemV2 } = await deployContracts({
+    const { Tournament } = await deployContracts({
       mock: true
     })
-    const FIRST_DAY = await Tournament.FIRST_DAY()
-    const FIRST_DAY_ = await AnybodyProblemV2.FIRST_DAY()
-    expect(FIRST_DAY).to.equal(FIRST_DAY_)
+    const firstMonday = await Tournament.firstMonday()
+    expect(firstMonday).to.equal(actualMonday)
 
-    const SECONDS_IN_A_DAY = await Tournament.SECONDS_IN_A_DAY()
-    const SECONDS_IN_A_DAY_ = await AnybodyProblemV2.SECONDS_IN_A_DAY()
-    expect(SECONDS_IN_A_DAY).to.equal(SECONDS_IN_A_DAY_)
+    await Tournament.setVars(earlyMonday)
+    const firstMonday_ = await Tournament.firstMonday()
+    expect(firstMonday_).to.equal(earlyMonday)
   })
 
   it('only allows AnybodyProblem to execute the onlyAnybodyProblem methods', async () => {
     const { Tournament, AnybodyProblemV2 } = await deployContracts({
       mock: true
     })
+    await Tournament.setVars(earlyMonday)
 
     const [owner] = await ethers.getSigners()
 
@@ -78,6 +81,7 @@ describe('AnybodyProblem Tests', function () {
     const { Tournament, AnybodyProblemV2 } = await deployContracts({
       mock: true
     })
+    await Tournament.setVars(earlyMonday)
     const [owner] = await ethers.getSigners()
     const runId = 1
     const speed = 50
@@ -94,7 +98,6 @@ describe('AnybodyProblem Tests', function () {
       week,
       player
     )
-    console.log({ weeklyStatsByPlayer })
     expect(weeklyStatsByPlayer.totalPlays).to.equal(1)
     expect(weeklyStatsByPlayer.totalTime).to.equal(speed)
 
@@ -121,21 +124,16 @@ describe('AnybodyProblem Tests', function () {
     )
     expect(keyExists).to.equal(true)
 
-    const getNodeCount = await Tournament.getNodeCount(week, average)
-    expect(getNodeCount).to.equal(1)
-
-    const valueKeyAtIndex = await Tournament.valueKeyAtIndex(week, average, 0)
-    expect(valueKeyAtIndex).to.equal(ownerAddressAsKey)
-
     const currentWinner = await Tournament.mostAverageByWeek(week)
     expect(currentWinner).to.equal(owner.address)
   })
 
-  it.only('adds 3 runs to the leaderboards, confirms average values', async () => {
+  it('adds and updates averages, confirms closest search and tree index works', async () => {
     const { Tournament, AnybodyProblemV2 } = await deployContracts({
       mock: true
     })
-    const [acct1, acct2, acct3] = await ethers.getSigners()
+    await Tournament.setVars(earlyMonday)
+    const [acct1, acct2, acct3, acct4] = await ethers.getSigners()
     const day = await AnybodyProblemV2.currentDay()
     const runs = [
       { runId: 1, accumulativeTime: 100, day, player: acct1.address },
@@ -143,10 +141,9 @@ describe('AnybodyProblem Tests', function () {
       { runId: 3, accumulativeTime: 268, day, player: acct2.address }, // player 2 will win
       { runId: 4, accumulativeTime: 400, day, player: acct3.address }
     ]
-    const average = Math.floor(
+    const average = Math.round(
       runs.reduce((acc, run) => acc + run.accumulativeTime, 0) / runs.length
     )
-    console.log({ average })
     expect(average).to.equal(267)
     await Tournament.setDisableForTesting(true)
     for (const run of runs) {
@@ -166,7 +163,6 @@ describe('AnybodyProblem Tests', function () {
       week,
       acct1.address
     )
-    console.log({ weeklyStatsByPlayer })
     const player1Plays = runs.filter(
       (run) => run.player === acct1.address
     ).length
@@ -178,51 +174,97 @@ describe('AnybodyProblem Tests', function () {
     expect(weeklyStatsByPlayer.lastUpdated).to.equal(player1Plays)
 
     // then check average of all players
-
     const weeklyStats = await Tournament.weeklyStats(week)
     expect(weeklyStats.totalPlays).to.equal(runs.length)
     const totalTime = runs.reduce((acc, run) => acc + run.accumulativeTime, 0)
     expect(weeklyStats.totalTime).to.equal(totalTime)
     expect(weeklyStats.lastUpdated).to.equal(runs.length)
 
-    // const globalAverage = Math.floor(totalTime / runs.length)
-    // const exists = await Tournament.exists(week, globalAverage)
-    // expect(exists).to.equal(false)
-
-    // const existingAverage = runs[runs.length - 1].accumulativeTime
-    // console.log({ existingAverage })
-
-    // const doesExist = await Tournament.exists(week, existingAverage)
-    // expect(doesExist).to.equal(true)
-
-    // const node = await Tournament.getNode(week, existingAverage)
-    // console.log({ node })
-
-    // const rank = await Tournament.rank(week, globalAverage)
-    // console.log({ rank })
-
-    // const rankAt = await Tournament.atRank(week, rank)
-    // console.log({ rankAt })
-
-    // const above = await Tournament.atRank(week, rank + 1)
-    // console.log({ above })
-
-    // const below = await Tournament.atRank(week, rank - 1)
-    // console.log({ below })
-
-    // const prevValue = await Tournament.prev(week, existingAverage)
-    // console.log({ prevValue })
-
-    // const nextValue = await Tournament.next(week, existingAverage)
-    // console.log({ nextValue })
-
-    // const belowValue = await Tournament.below(week, existingAverage)
-    // console.log({ belowValue })
-
-    // const aboveValue = await Tournament.above(week, existingAverage)
-    // console.log({ aboveValue })
-
     const mostAverageByWeek = await Tournament.mostAverageByWeek(week)
     expect(mostAverageByWeek).to.equal(acct2.address)
+    const globalAverage = Math.round(
+      runs.reduce((acc, run) => acc + run.accumulativeTime, 0) / runs.length
+    )
+
+    // now add someone who is same distance from average as current winner
+    // and in the same direction. However the new person should not be the new winner
+    // because the original winner was first (has lower index)
+
+    const newest = {
+      runId: 5,
+      accumulativeTime: globalAverage + 1, // this makes the average 268m like current winner average
+      day,
+      player: acct4.address
+    }
+    expect(newest.accumulativeTime).to.equal(268)
+
+    await AnybodyProblemV2.setRunData(
+      newest.runId,
+      newest.day,
+      newest.accumulativeTime,
+      newest.player
+    )
+    await Tournament.addToLeaderboard(newest.runId)
+    const mostAverageByWeek_ = await Tournament.mostAverageByWeek(week)
+    expect(mostAverageByWeek_).to.equal(acct2.address)
+
+    // now add that same person enough times to tip the average into their favor
+
+    const enoughRunsToTipTheAverage = [
+      {
+        runId: 6,
+        accumulativeTime: globalAverage - 3, // should equal 264, this brings local average down to 266
+        day,
+        player: acct4.address
+      },
+      {
+        runId: 7,
+        accumulativeTime: globalAverage - 1, // the rest of these bring global average down to 266.4, rounded to 266
+        day,
+        player: acct4.address
+      },
+      {
+        runId: 8,
+        accumulativeTime: globalAverage - 1,
+        day,
+        player: acct4.address
+      },
+      {
+        runId: 9,
+        accumulativeTime: globalAverage - 1,
+        day,
+        player: acct4.address
+      }
+    ]
+    expect(enoughRunsToTipTheAverage[0].accumulativeTime).to.equal(264)
+
+    for (const run of enoughRunsToTipTheAverage) {
+      await AnybodyProblemV2.setRunData(
+        run.runId,
+        run.day,
+        run.accumulativeTime,
+        run.player
+      )
+      await Tournament.addToLeaderboard(run.runId)
+    }
+
+    const newAverageShouldBe = Math.round(
+      runs
+        .concat(...enoughRunsToTipTheAverage)
+        .concat(newest)
+        .reduce((acc, run) => acc + run.accumulativeTime, 0) /
+        (runs.length + enoughRunsToTipTheAverage.length + 1)
+    )
+
+    const mostAverageByWeek__ = await Tournament.weeklyAverage(week)
+    expect(mostAverageByWeek__).to.equal(globalAverage - 1)
+    expect(newAverageShouldBe).to.equal(mostAverageByWeek__)
+    const newestWeeklyAverage = await Tournament.mostAverageByWeek(week)
+    expect(newestWeeklyAverage).to.equal(acct4.address)
   })
+
+  // it('waits until week is over to pay, doesnt allow paying twice')
+  // it('confirms all functions of tree')
+  // it('adds and updates fastest')
+  // it('adds and updates slowest')
 })

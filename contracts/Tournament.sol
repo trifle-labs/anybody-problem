@@ -9,14 +9,20 @@ pragma solidity ^0.8.0;
 
 contract Tournament is Ownable {
     using HitchensOrderStatisticsTreeLib for HitchensOrderStatisticsTreeLib.Tree;
-    uint256 public FIRST_DAY;
-    uint256 public SECONDS_IN_A_DAY;
+    uint256 public firstMonday = 1730678400; // Mon Nov 04 2024 00:00:00 GMT+0000
     address payable public anybodyProblem;
     event RecordBroken(
         string recordType,
         uint256 week,
         address player,
         uint256 value
+    );
+
+    event EthMoved(
+        address indexed to,
+        bool indexed success,
+        bytes returnData,
+        uint256 amount
     );
 
     struct Week {
@@ -69,9 +75,8 @@ contract Tournament is Ownable {
 
     constructor() {}
 
-    function setVars() public onlyOwner {
-        FIRST_DAY = AnybodyProblemV2(anybodyProblem).FIRST_DAY();
-        SECONDS_IN_A_DAY = AnybodyProblemV2(anybodyProblem).SECONDS_IN_A_DAY();
+    function setVars(uint256 firstMonday_) public onlyOwner {
+        firstMonday = firstMonday_;
     }
 
     function setDisableForTesting(bool _disableForTesting) public onlyOwner {
@@ -91,7 +96,7 @@ contract Tournament is Ownable {
         require(paidOutByWeek[week].average == address(0), 'Already paid out');
         address winner = mostAverageByWeek(week);
         paidOutByWeek[week].average = winner;
-        uint256 prizeAmount = prizes[week] / 3;
+        uint256 prizeAmount = prizes[week] / 3; // round down is what we want, dust will be minimal
         (bool sent, ) = winner.call{value: prizeAmount}('');
         require(sent, 'Failed to send Ether');
     }
@@ -100,7 +105,7 @@ contract Tournament is Ownable {
         require(paidOutByWeek[week].fastest == address(0), 'Already paid out');
         address winner = fastestByWeek(week);
         paidOutByWeek[week].fastest = winner;
-        uint256 prizeAmount = prizes[week] / 3;
+        uint256 prizeAmount = prizes[week] / 3; // round down is what we want, dust will be minimal
         (bool sent, ) = winner.call{value: prizeAmount}('');
         require(sent, 'Failed to send Ether');
     }
@@ -109,7 +114,7 @@ contract Tournament is Ownable {
         require(paidOutByWeek[week].slowest == address(0), 'Already paid out');
         address winner = slowestByWeek(week);
         paidOutByWeek[week].slowest = winner;
-        uint256 prizeAmount = prizes[week] / 3;
+        uint256 prizeAmount = prizes[week] / 3; // round down is what we want, dust will be minimal
         (bool sent, ) = winner.call{value: prizeAmount}('');
         require(sent, 'Failed to send Ether');
     }
@@ -118,12 +123,31 @@ contract Tournament is Ownable {
 
     function slowestByWeek(uint256 week) public view returns (address winner) {}
 
+    function weeklyAverage(uint256 week) public view returns (uint256) {
+        return
+            divRound(weeklyStats[week].totalTime, weeklyStats[week].totalPlays);
+    }
+
     function mostAverageByWeek(
         uint256 week
     ) public view returns (address winner) {
-        uint256 globalAverage = weeklyStats[week].totalTime /
-            weeklyStats[week].totalPlays;
-        return findClosestKey(globalAverage, week);
+        return findClosestKey(weeklyAverage(week), week);
+    }
+
+    function divRound(
+        uint256 numerator,
+        uint256 denominator
+    ) public pure returns (uint256) {
+        // Perform the division and check for rounding
+        uint256 result = numerator / denominator;
+
+        // Check if there is a remainder and if the fractional part is >= 0.5
+        // If true, add 1 to the result to round up
+        if ((numerator % denominator) * 2 >= denominator) {
+            result += 1;
+        }
+
+        return result;
     }
 
     function findClosestKey(
@@ -133,11 +157,18 @@ contract Tournament is Ownable {
         HitchensOrderStatisticsTreeLib.Tree
             storage tree = weeklyStatsSortedTree[week];
         uint256 closest = tree.atRank(tree.rank(requestedValue));
+        uint256 closest2 = tree.atPercentile(tree.percentile(requestedValue));
+        require(closest == closest2, 'Rank and Percentile do not match');
         return keyToAddress(tree.valueKeyAtIndex(closest, 0));
     }
 
     function dayToWeek(uint256 day) public view returns (uint256) {
-        return (day - FIRST_DAY) / 7;
+        require(day >= firstMonday, 'Day is before firstMonday');
+        return (day - firstMonday) / 7; // rounding down is important here
+    }
+
+    function dayOfTheWeek_(uint256 day) public view returns (uint256) {
+        return (day - firstMonday) % 7; // Monday = 0, Sunday = 6
     }
 
     function runs(
@@ -148,9 +179,12 @@ contract Tournament is Ownable {
 
     function addRunToWeeklyUserAverage(uint256 runId, uint256 week) internal {
         address player = runs(runId).owner;
-        Week memory weekStatsByPlayer = weeklyStatsByPlayer[week][player];
+        Week storage weekStatsByPlayer = weeklyStatsByPlayer[week][player];
         uint256 oldAverage = weekStatsByPlayer.totalPlays > 0
-            ? weekStatsByPlayer.totalTime / weekStatsByPlayer.totalPlays
+            ? divRound(
+                weekStatsByPlayer.totalTime,
+                weekStatsByPlayer.totalPlays
+            )
             : 0;
 
         weekStatsByPlayer.totalPlays++;
@@ -174,8 +208,6 @@ contract Tournament is Ownable {
         }
         // add key with new value
         tree.insert(userAsKey, newAverage);
-        // TODO: confirm that this is updated since it's storage instead of memory now
-        // weeklyStatsSortedTree[week] = HitchensOrderStatisticsTreeLib.Tree();
 
         weeklyStats[week].totalPlays++;
         weeklyStats[week].totalTime += accumulativeTime;
@@ -205,7 +237,7 @@ contract Tournament is Ownable {
 
     function addToSlowestByWeekByPlayer(uint256 runId, uint256 week) internal {
         AnybodyProblemV2.Run memory run = runs(runId);
-        uint256 dayOfTheWeek = (run.day - week) / SECONDS_IN_A_DAY;
+        uint256 dayOfTheWeek = dayOfTheWeek_(run.day);
         uint256 dayOfTheWeekSpeed = slowestByWeekByPlayer[week][run.owner][
             dayOfTheWeek
         ];
@@ -261,7 +293,7 @@ contract Tournament is Ownable {
 
     function addToFastestByWeekByPlayer(uint256 runId, uint256 week) internal {
         AnybodyProblemV2.Run memory run = runs(runId);
-        uint256 dayOfTheWeek = (run.day - week) / SECONDS_IN_A_DAY;
+        uint256 dayOfTheWeek = dayOfTheWeek_(run.day);
         uint256 dayOfTheWeekSpeed = fastestByWeekByPlayer[week][run.owner][
             dayOfTheWeek
         ];
@@ -420,5 +452,18 @@ contract Tournament is Ownable {
 
     function atRank(uint256 week, uint _rank) public view returns (uint) {
         return weeklyStatsSortedTree[week].atRank(_rank);
+    }
+
+    function root(uint256 week) public view returns (uint) {
+        return weeklyStatsSortedTree[week].root;
+    }
+
+    /// @dev if mint fails to send eth to splitter, admin can recover
+    // This should not be necessary but Berlin hardfork broke split before so this
+    // is extra precaution.
+    function recoverUnsuccessfulPayment(address payable _to) public onlyOwner {
+        uint256 amount = address(this).balance;
+        (bool sent, bytes memory data) = _to.call{value: amount}('');
+        emit EthMoved(_to, sent, data, amount);
     }
 }
