@@ -10,6 +10,7 @@ pragma solidity ^0.8.0;
 contract Tournament is Ownable {
     using HitchensOrderStatisticsTreeLib for HitchensOrderStatisticsTreeLib.Tree;
     uint256 public firstMonday = 1730678400; // Mon Nov 04 2024 00:00:00 GMT+0000
+    uint256 public constant SECONDS_IN_A_DAY = 86400;
     address payable public anybodyProblem;
     event RecordBroken(
         string recordType,
@@ -61,7 +62,19 @@ contract Tournament is Ownable {
         address average;
     }
     mapping(uint256 => Paidout) public paidOutByWeek;
-    mapping(uint256 => uint256) public prizes;
+    mapping(uint256 => uint256) public prizes; // week
+
+    function currentWeek() public view returns (uint256) {
+        uint256 currentDay = AnybodyProblemV2(anybodyProblem).currentDay();
+        return dayToWeek(currentDay);
+    }
+
+    function fillPrize(uint256 week) public payable {
+        uint256 currentWeek_ = currentWeek();
+        require(week >= currentWeek_, 'Cannot fill prize for past week');
+        prizes[week] += msg.value;
+        emit EthMoved(address(this), true, '', msg.value);
+    }
 
     bool disableForTesting = false;
 
@@ -75,6 +88,10 @@ contract Tournament is Ownable {
 
     constructor() {}
 
+    receive() external payable {
+        fillPrize(currentWeek());
+    }
+
     function setVars(uint256 firstMonday_) public onlyOwner {
         firstMonday = firstMonday_;
     }
@@ -84,38 +101,54 @@ contract Tournament is Ownable {
     }
 
     function addToLeaderboard(uint256 runId) public onlyAnybodyProblem {
-        uint256 currentWeek = dayToWeek(
-            AnybodyProblemV2(anybodyProblem).runs(runId).day
-        );
-        addRunToWeeklyUserAverage(runId, currentWeek);
-        // addToFastestByWeekByPlayer(runId, currentWeek);
-        // addToSlowestByWeekByPlayer(runId, currentWeek);
+        uint256 currentWeek_ = currentWeek();
+        addRunToWeeklyUserAverage(runId, currentWeek_);
+        // addToFastestByWeekByPlayer(runId, currentWeek_);
+        // addToSlowestByWeekByPlayer(runId, currentWeek_);
     }
 
     function payoutAverage(uint256 week) public {
-        require(paidOutByWeek[week].average == address(0), 'Already paid out');
+        require(week < currentWeek(), 'Contest is not over');
+        require(
+            paidOutByWeek[week].average == address(0),
+            'Already paid out average'
+        );
         address winner = mostAverageByWeek(week);
         paidOutByWeek[week].average = winner;
         uint256 prizeAmount = prizes[week] / 3; // round down is what we want, dust will be minimal
+        require(prizeAmount > 0, 'No prize to pay out');
         (bool sent, ) = winner.call{value: prizeAmount}('');
+        emit EthMoved(winner, sent, '', prizeAmount);
         require(sent, 'Failed to send Ether');
     }
 
     function payoutFastest(uint256 week) public {
-        require(paidOutByWeek[week].fastest == address(0), 'Already paid out');
+        require(week < currentWeek(), 'Contest is not over');
+        require(
+            paidOutByWeek[week].fastest == address(0),
+            'Already paid out fastest'
+        );
         address winner = fastestByWeek(week);
         paidOutByWeek[week].fastest = winner;
         uint256 prizeAmount = prizes[week] / 3; // round down is what we want, dust will be minimal
+        require(prizeAmount > 0, 'No prize to pay out');
         (bool sent, ) = winner.call{value: prizeAmount}('');
+        emit EthMoved(winner, sent, '', prizeAmount);
         require(sent, 'Failed to send Ether');
     }
 
     function payoutSlowest(uint256 week) public {
-        require(paidOutByWeek[week].slowest == address(0), 'Already paid out');
+        require(week < currentWeek(), 'Contest is not over');
+        require(
+            paidOutByWeek[week].slowest == address(0),
+            'Already paid out slowest'
+        );
         address winner = slowestByWeek(week);
         paidOutByWeek[week].slowest = winner;
         uint256 prizeAmount = prizes[week] / 3; // round down is what we want, dust will be minimal
+        require(prizeAmount > 0, 'No prize to pay out');
         (bool sent, ) = winner.call{value: prizeAmount}('');
+        emit EthMoved(winner, sent, '', prizeAmount);
         require(sent, 'Failed to send Ether');
     }
 
@@ -164,11 +197,11 @@ contract Tournament is Ownable {
 
     function dayToWeek(uint256 day) public view returns (uint256) {
         require(day >= firstMonday, 'Day is before firstMonday');
-        return (day - firstMonday) / 7; // rounding down is important here
+        return ((day - firstMonday) / SECONDS_IN_A_DAY) / 7; // rounding down is important here
     }
 
-    function dayOfTheWeek_(uint256 day) public view returns (uint256) {
-        return (day - firstMonday) % 7; // Monday = 0, Sunday = 6
+    function dayOfTheWeek(uint256 day) public view returns (uint256) {
+        return ((day - firstMonday) / SECONDS_IN_A_DAY) % 7; // Monday = 0, Sunday = 6
     }
 
     function runs(
@@ -237,15 +270,15 @@ contract Tournament is Ownable {
 
     function addToSlowestByWeekByPlayer(uint256 runId, uint256 week) internal {
         AnybodyProblemV2.Run memory run = runs(runId);
-        uint256 dayOfTheWeek = dayOfTheWeek_(run.day);
+        uint256 dayOfTheWeek_ = dayOfTheWeek(run.day);
         uint256 dayOfTheWeekSpeed = slowestByWeekByPlayer[week][run.owner][
-            dayOfTheWeek
+            dayOfTheWeek_
         ];
 
         if (
             dayOfTheWeekSpeed == 0 || run.accumulativeTime > dayOfTheWeekSpeed
         ) {
-            slowestByWeekByPlayer[week][run.owner][dayOfTheWeek] = run
+            slowestByWeekByPlayer[week][run.owner][dayOfTheWeek_] = run
                 .accumulativeTime;
 
             // if record is broken, ensure weekly best is checked
@@ -293,15 +326,15 @@ contract Tournament is Ownable {
 
     function addToFastestByWeekByPlayer(uint256 runId, uint256 week) internal {
         AnybodyProblemV2.Run memory run = runs(runId);
-        uint256 dayOfTheWeek = dayOfTheWeek_(run.day);
+        uint256 dayOfTheWeek_ = dayOfTheWeek(run.day);
         uint256 dayOfTheWeekSpeed = fastestByWeekByPlayer[week][run.owner][
-            dayOfTheWeek
+            dayOfTheWeek_
         ];
 
         if (
             dayOfTheWeekSpeed == 0 || run.accumulativeTime < dayOfTheWeekSpeed
         ) {
-            fastestByWeekByPlayer[week][run.owner][dayOfTheWeek] = run
+            fastestByWeekByPlayer[week][run.owner][dayOfTheWeek_] = run
                 .accumulativeTime;
 
             // if record is broken, ensure weekly best is checked
