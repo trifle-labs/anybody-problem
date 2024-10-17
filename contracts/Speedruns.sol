@@ -5,7 +5,7 @@ import '@openzeppelin/contracts/token/ERC1155/ERC1155.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
 import 'hardhat/console.sol';
 
-import './AnybodyProblem.sol';
+import './AnybodyProblemV2.sol';
 
 contract Speedruns is ERC1155, Ownable {
     address payable public anybodyProblem;
@@ -58,9 +58,9 @@ contract Speedruns is ERC1155, Ownable {
         anybodyProblem = anybodyProblem_;
     }
 
-    // fallback and receive both forward undefined methods to the AnybodyProblem contract
-    // this allows future functionality to be added to the NFT by augmenting AnybodyProblem
-    // caveat: you lose the original msg.sender when calling the AnybodyProblem contract
+    // fallback and receive both forward undefined methods to the AnybodyProblemV2 contract
+    // this allows future functionality to be added to the NFT by augmenting AnybodyProblemV2
+    // caveat: you lose the original msg.sender when calling the AnybodyProblemV2 contract
     receive() external payable {
         (bool success, ) = anybodyProblem.call{value: msg.value}('');
         require(success, 'Call to anybodyProblem failed');
@@ -71,7 +71,7 @@ contract Speedruns is ERC1155, Ownable {
         require(success, 'Call to anybodyProblem failed');
     }
 
-    // override all ERC1155 functions to call the AnybodyProblem contract first
+    // override all ERC1155 functions to call the AnybodyProblemV2 contract first
     function uri(
         uint256 tokenId
     ) public view override(ERC1155) returns (string memory) {
