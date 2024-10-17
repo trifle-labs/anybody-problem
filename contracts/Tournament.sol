@@ -16,7 +16,8 @@ contract Tournament is Ownable {
         string recordType,
         uint256 week,
         address player,
-        uint256 value
+        uint256 value,
+        uint256 extraValue
     );
 
     event EthMoved(
@@ -26,35 +27,30 @@ contract Tournament is Ownable {
         uint256 amount
     );
 
-    struct Week {
+    struct WeekTotal {
         uint256 totalPlays;
         uint256 totalTime;
         uint256 lastUpdated;
-        uint256[3] fastest;
-        uint256[3] slowest;
     }
 
-    function getWeeklyFastestSlowestByPlayer(
-        uint256 week,
-        address player
-    )
-        public
-        view
-        returns (uint256[3] memory fastest, uint256[3] memory slowest)
-    {
-        return (
-            weeklyStatsByPlayer[week][player].fastest,
-            weeklyStatsByPlayer[week][player].slowest
-        );
-    }
-
-    mapping(uint256 => Week) public weeklyStats;
-    mapping(uint256 => mapping(address => Week)) public weeklyStatsByPlayer;
+    mapping(uint256 => WeekTotal) public weeklyStats;
+    mapping(uint256 => mapping(address => WeekTotal))
+        public weeklyStatsByPlayer;
     mapping(uint256 => HitchensOrderStatisticsTreeLib.Tree)
         public weeklyStatsSortedTree;
-    mapping(uint256 => mapping(address => uint256)) public fastestByDayByPlayer; // day => player => runId
-    mapping(uint256 => mapping(address => uint256[3]))
-        public fastestByDayByPlayerIndex; // day => player => [fastest, 2nd fastest, 3rd fastest runId]
+
+    struct WeekSpeed {
+        address player;
+        uint256 accumulativeTime;
+    }
+
+    mapping(uint256 => mapping(address => uint256[7]))
+        public fastestByWeekByPlayer; // week => player => [mon, tue, wed, thu, fri, sat, sun]
+    mapping(uint256 => WeekSpeed) public weeklyFastest; // week => WeekSpeed
+
+    mapping(uint256 => mapping(address => uint256[7]))
+        public slowestByWeekByPlayer;
+    mapping(uint256 => WeekSpeed) public weeklySlowest;
 
     struct Paidout {
         address fastest;
@@ -103,8 +99,8 @@ contract Tournament is Ownable {
     function addToLeaderboard(uint256 runId) public onlyAnybodyProblem {
         uint256 currentWeek_ = currentWeek();
         addRunToWeeklyUserAverage(runId, currentWeek_);
-        // addToFastestByWeekByPlayer(runId, currentWeek_);
-        // addToSlowestByWeekByPlayer(runId, currentWeek_);
+        addToFastestByWeekByPlayer(runId, currentWeek_);
+        addToSlowestByWeekByPlayer(runId, currentWeek_);
     }
 
     function payoutAverage(uint256 week) public {
@@ -113,7 +109,7 @@ contract Tournament is Ownable {
             paidOutByWeek[week].average == address(0),
             'Already paid out average'
         );
-        address winner = mostAverageByWeek(week);
+        (address winner, ) = mostAverageByWeek(week);
         paidOutByWeek[week].average = winner;
         uint256 prizeAmount = prizes[week] / 3; // round down is what we want, dust will be minimal
         require(prizeAmount > 0, 'No prize to pay out');
@@ -152,9 +148,13 @@ contract Tournament is Ownable {
         require(sent, 'Failed to send Ether');
     }
 
-    function fastestByWeek(uint256 week) public view returns (address winner) {}
+    function fastestByWeek(uint256 week) public view returns (address winner) {
+        return weeklyFastest[week].player;
+    }
 
-    function slowestByWeek(uint256 week) public view returns (address winner) {}
+    function slowestByWeek(uint256 week) public view returns (address winner) {
+        return weeklySlowest[week].player;
+    }
 
     function weeklyAverage(uint256 week) public view returns (uint256) {
         return
@@ -163,8 +163,8 @@ contract Tournament is Ownable {
 
     function mostAverageByWeek(
         uint256 week
-    ) public view returns (address winner) {
-        return findClosestKey(weeklyAverage(week), week);
+    ) public view returns (address winner, uint256 average) {
+        (winner, average) = findClosestKey(weeklyAverage(week), week);
     }
 
     function divRound(
@@ -186,13 +186,13 @@ contract Tournament is Ownable {
     function findClosestKey(
         uint requestedValue,
         uint256 week
-    ) public view returns (address closestAddress) {
+    ) public view returns (address closestAddress, uint256 closest) {
         HitchensOrderStatisticsTreeLib.Tree
             storage tree = weeklyStatsSortedTree[week];
-        uint256 closest = tree.atRank(tree.rank(requestedValue));
+        closest = tree.atRank(tree.rank(requestedValue));
         uint256 closest2 = tree.atPercentile(tree.percentile(requestedValue));
         require(closest == closest2, 'Rank and Percentile do not match');
-        return keyToAddress(tree.valueKeyAtIndex(closest, 0));
+        return (keyToAddress(tree.valueKeyAtIndex(closest, 0)), closest);
     }
 
     function dayToWeek(uint256 day) public view returns (uint256) {
@@ -212,7 +212,7 @@ contract Tournament is Ownable {
 
     function addRunToWeeklyUserAverage(uint256 runId, uint256 week) internal {
         address player = runs(runId).owner;
-        Week storage weekStatsByPlayer = weeklyStatsByPlayer[week][player];
+        WeekTotal storage weekStatsByPlayer = weeklyStatsByPlayer[week][player];
         uint256 oldAverage = weekStatsByPlayer.totalPlays > 0
             ? divRound(
                 weekStatsByPlayer.totalTime,
@@ -245,6 +245,17 @@ contract Tournament is Ownable {
         weeklyStats[week].totalPlays++;
         weeklyStats[week].totalTime += accumulativeTime;
         weeklyStats[week].lastUpdated = counterForOrdering;
+
+        // TODO: this could be improved so it only triggers when it actually changes
+        uint256 newGlobalAverage = weeklyAverage(week);
+        (address currentWinner, uint closestAverage) = mostAverageByWeek(week);
+        emit RecordBroken(
+            'average',
+            week,
+            currentWinner,
+            newGlobalAverage,
+            closestAverage
+        );
     }
 
     function addressToKey(address addr) public pure returns (bytes32) {
@@ -255,22 +266,13 @@ contract Tournament is Ownable {
         return address(uint160(uint256(key)));
     }
 
-    struct WeeklyRecord {
-        address player;
-        uint256 accumulativeTime;
-    }
-
-    mapping(uint256 => mapping(address => uint256[7]))
-        public fastestByWeekByPlayer;
-    mapping(uint256 => WeeklyRecord) public weeklyFastest;
-
-    mapping(uint256 => mapping(address => uint256[7]))
-        public slowestByWeekByPlayer;
-    mapping(uint256 => WeeklyRecord) public weeklySlowest;
-
     function addToSlowestByWeekByPlayer(uint256 runId, uint256 week) internal {
         AnybodyProblemV2.Run memory run = runs(runId);
         uint256 dayOfTheWeek_ = dayOfTheWeek(run.day);
+
+        // First it's important to track whether this is the slowest speed for the day
+        // for the specific player. All of the player's slowest times for each day are
+        // what are eventually compared for weekly best.
         uint256 dayOfTheWeekSpeed = slowestByWeekByPlayer[week][run.owner][
             dayOfTheWeek_
         ];
@@ -307,10 +309,11 @@ contract Tournament is Ownable {
             uint256 two = best3ThisWeek[1];
             uint256 three = best3ThisWeek[2];
             if (one == 0 || two == 0 || three == 0) {
+                // player hasn't completed minimum of 3 days
                 return;
             }
-            if (one + two + three > weeklySlowest[week].accumulativeTime) {
-                weeklySlowest[week] = WeeklyRecord({
+            if ((one + two + three) > weeklySlowest[week].accumulativeTime) {
+                weeklySlowest[week] = WeekSpeed({
                     player: run.owner,
                     accumulativeTime: one + two + three
                 });
@@ -318,7 +321,8 @@ contract Tournament is Ownable {
                     'slowest',
                     week,
                     run.owner,
-                    one + two + three
+                    one + two + three,
+                    0
                 );
             }
         }
@@ -327,17 +331,19 @@ contract Tournament is Ownable {
     function addToFastestByWeekByPlayer(uint256 runId, uint256 week) internal {
         AnybodyProblemV2.Run memory run = runs(runId);
         uint256 dayOfTheWeek_ = dayOfTheWeek(run.day);
-        uint256 dayOfTheWeekSpeed = fastestByWeekByPlayer[week][run.owner][
+
+        // First it's important to track whether this is the fastest speed for the day
+        // for the specific player. All of the player's fastest times for each day are
+        // what are eventually compared for weekly best.
+        uint256 previousBest = fastestByWeekByPlayer[week][run.owner][
             dayOfTheWeek_
         ];
 
-        if (
-            dayOfTheWeekSpeed == 0 || run.accumulativeTime < dayOfTheWeekSpeed
-        ) {
+        if (previousBest == 0 || run.accumulativeTime < previousBest) {
             fastestByWeekByPlayer[week][run.owner][dayOfTheWeek_] = run
                 .accumulativeTime;
 
-            // if record is broken, ensure weekly best is checked
+            // if record is broken, ensure player's weekly best is checked
             uint256[3] memory best3ThisWeek;
             for (uint256 i = 0; i < 7; i++) {
                 uint256 speed = fastestByWeekByPlayer[week][run.owner][i];
@@ -363,10 +369,14 @@ contract Tournament is Ownable {
             uint256 two = best3ThisWeek[1];
             uint256 three = best3ThisWeek[2];
             if (one == 0 || two == 0 || three == 0) {
+                // player hasn't completed minimum of 3 days
                 return;
             }
-            if (one + two + three < weeklyFastest[week].accumulativeTime) {
-                weeklyFastest[week] = WeeklyRecord({
+            if (
+                (one + two + three) < weeklyFastest[week].accumulativeTime ||
+                weeklyFastest[week].accumulativeTime == 0
+            ) {
+                weeklyFastest[week] = WeekSpeed({
                     player: run.owner,
                     accumulativeTime: one + two + three
                 });
@@ -374,7 +384,8 @@ contract Tournament is Ownable {
                     'fastest',
                     week,
                     run.owner,
-                    one + two + three
+                    one + two + three,
+                    0
                 );
             }
         }
