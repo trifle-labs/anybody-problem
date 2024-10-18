@@ -1,13 +1,27 @@
-import AnybodyProblemV2ABI from './contractData/ABI-12345-AnybodyProblemV2.json'
+import TournamentABI from './contractData/ABI-84532-Tournament.json'
+import TournamentBaseSepolia from './contractData/84532-Tournament.json'
+// import TournamentBase from './contractData/8453-Tournament.json'
+import TournamentLocal from './contractData/12345-Tournament.json'
+
+export const Tournament = {
+  abi: TournamentABI,
+  networks: {
+    84532: TournamentBaseSepolia,
+    12345: TournamentLocal
+    // 8453: TournamentBase
+  }
+}
+
+import AnybodyProblemV2ABI from './contractData/ABI-84532-AnybodyProblemV2.json'
 // import AnybodyProblemV2ABI from './contractData/ABI-84532-AnybodyProblemV2.json'
-// import AnybodyProblemV2BaseSepolia from './contractData/84532-AnybodyProblemV2.json'
+import AnybodyProblemV2BaseSepolia from './contractData/84532-AnybodyProblemV2.json'
 // import AnybodyProblemV2Base from './contractData/8453-AnybodyProblemV2.json'
 import AnybodyProblemV2Local from './contractData/12345-AnybodyProblemV2.json'
 
 export const AnybodyProblemV2 = {
   abi: AnybodyProblemV2ABI,
   networks: {
-    // 84532: AnybodyProblemV2BaseSepolia,
+    84532: AnybodyProblemV2BaseSepolia,
     12345: AnybodyProblemV2Local
     // 8453: AnybodyProblemV2Base
   }
