@@ -1,5 +1,5 @@
 {
-  "contractName": "AnybodyProblemV1",
+  "contractName": "AnybodyProblemV2",
   "abi": [
     {
       "inputs": [
@@ -16,6 +16,11 @@
         {
           "internalType": "address",
           "name": "externalMetadata_",
+          "type": "address"
+        },
+        {
+          "internalType": "address payable",
+          "name": "tournament_",
           "type": "address"
         },
         {
@@ -307,6 +312,13 @@
     },
     {
       "inputs": [],
+      "name": "counterForOrdering",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
       "name": "currentDay",
       "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
       "stateMutability": "view",
@@ -365,7 +377,7 @@
             { "internalType": "uint256", "name": "radius", "type": "uint256" },
             { "internalType": "bytes32", "name": "seed", "type": "bytes32" }
           ],
-          "internalType": "struct AnybodyProblemV1.Body",
+          "internalType": "struct AnybodyProblemV2.Body",
           "name": "bodyData",
           "type": "tuple"
         },
@@ -388,7 +400,7 @@
             { "internalType": "uint256", "name": "radius", "type": "uint256" },
             { "internalType": "bytes32", "name": "seed", "type": "bytes32" }
           ],
-          "internalType": "struct AnybodyProblemV1.Body",
+          "internalType": "struct AnybodyProblemV2.Body",
           "name": "",
           "type": "tuple"
         }
@@ -438,7 +450,7 @@
             },
             { "internalType": "uint256", "name": "streak", "type": "uint256" }
           ],
-          "internalType": "struct AnybodyProblemV1.Record",
+          "internalType": "struct AnybodyProblemV2.Record",
           "name": "",
           "type": "tuple"
         }
@@ -488,7 +500,7 @@
             { "internalType": "uint256", "name": "radius", "type": "uint256" },
             { "internalType": "bytes32", "name": "seed", "type": "bytes32" }
           ],
-          "internalType": "struct AnybodyProblemV1.Body[6]",
+          "internalType": "struct AnybodyProblemV2.Body[6]",
           "name": "bodyData",
           "type": "tuple[6]"
         },
@@ -564,12 +576,12 @@
                 },
                 { "internalType": "bytes32", "name": "seed", "type": "bytes32" }
               ],
-              "internalType": "struct AnybodyProblemV1.Body[6]",
+              "internalType": "struct AnybodyProblemV2.Body[6]",
               "name": "tmpBodyData",
               "type": "tuple[6]"
             }
           ],
-          "internalType": "struct AnybodyProblemV1.Level[]",
+          "internalType": "struct AnybodyProblemV2.Level[]",
           "name": "levels",
           "type": "tuple[]"
         }
@@ -603,7 +615,7 @@
             { "internalType": "uint256", "name": "radius", "type": "uint256" },
             { "internalType": "bytes32", "name": "seed", "type": "bytes32" }
           ],
-          "internalType": "struct AnybodyProblemV1.Body",
+          "internalType": "struct AnybodyProblemV2.Body",
           "name": "",
           "type": "tuple"
         }
@@ -845,17 +857,17 @@
                       "type": "bytes32"
                     }
                   ],
-                  "internalType": "struct AnybodyProblemV1.Body[6]",
+                  "internalType": "struct AnybodyProblemV2.Body[6]",
                   "name": "tmpBodyData",
                   "type": "tuple[6]"
                 }
               ],
-              "internalType": "struct AnybodyProblemV1.Level[]",
+              "internalType": "struct AnybodyProblemV2.Level[]",
               "name": "levels",
               "type": "tuple[]"
             }
           ],
-          "internalType": "struct AnybodyProblemV1.Run",
+          "internalType": "struct AnybodyProblemV2.Run",
           "name": "",
           "type": "tuple"
         }
@@ -966,6 +978,15 @@
       "type": "function"
     },
     {
+      "inputs": [],
+      "name": "tournament",
+      "outputs": [
+        { "internalType": "address payable", "name": "", "type": "address" }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
       "inputs": [
         { "internalType": "address", "name": "newOwner", "type": "address" }
       ],
@@ -1062,6 +1083,19 @@
     },
     {
       "inputs": [
+        {
+          "internalType": "address payable",
+          "name": "tournament_",
+          "type": "address"
+        }
+      ],
+      "name": "updateTournamentAddress",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
         { "internalType": "address", "name": "verifier_", "type": "address" },
         {
           "internalType": "uint256",
@@ -1112,7 +1146,7 @@
             { "internalType": "uint256", "name": "radius", "type": "uint256" },
             { "internalType": "bytes32", "name": "seed", "type": "bytes32" }
           ],
-          "internalType": "struct AnybodyProblemV1.Body",
+          "internalType": "struct AnybodyProblemV2.Body",
           "name": "bodyData",
           "type": "tuple"
         },

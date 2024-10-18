@@ -267,6 +267,7 @@ const deployAnybodyProblemV2 = async (options) => {
   const defaultOptions = {
     mock: false,
     ignoreTesting: false,
+    skipVerifiers: false,
     verbose: false,
     AnybodyProblemV1: null,
     Speedruns: null,
@@ -275,6 +276,7 @@ const deployAnybodyProblemV2 = async (options) => {
   let {
     mock,
     ignoreTesting,
+    skipVerifiers,
     verbose,
     AnybodyProblemV0,
     AnybodyProblemV1,
@@ -288,6 +290,14 @@ const deployAnybodyProblemV2 = async (options) => {
 
   const [deployer] = await hre.ethers.getSigners()
 
+  // use the already deployed speedruns contract and external metadata contract
+  const deployedContracts = await initContracts([
+    'AnybodyProblemV0',
+    'AnybodyProblemV1',
+    'Speedruns',
+    'ExternalMetadata'
+  ])
+
   const returnObject = {}
   const verifiers = []
   const verifiersTicks = []
@@ -299,10 +309,15 @@ const deployAnybodyProblemV2 = async (options) => {
     const ticks = await getTicksRun(i)
     const name = `Game_${i}_${ticks}Verifier`
     const path = `contracts/${name}.sol:Groth16Verifier`
-    const verifier = await hre.ethers.getContractFactory(path)
-    const verifierContract = await verifier.deploy()
-    await verifierContract.deployed()
-    log(`Verifier ${i} deployed at ${verifierContract.address}`)
+    let verifier, verifierContract
+    if (skipVerifiers) {
+      verifierContract = deployedContracts[name]
+    } else {
+      verifier = await hre.ethers.getContractFactory(path)
+      verifierContract = await verifier.deploy()
+      await verifierContract.deployed()
+      log(`Verifier ${i} deployed at ${verifierContract.address}`)
+    }
     verifiers.push(verifierContract.address)
     log(`with ${ticks} ticks`)
     verifiersTicks.push(ticks)
@@ -315,25 +330,16 @@ const deployAnybodyProblemV2 = async (options) => {
   returnObject.verifiersTicks = verifiersTicks
   returnObject.verifiersBodies = verifiersBodies
 
-  // use the already deployed speedruns contract and external metadata contract
-  const {
-    AnybodyProblemV0: anybodyProblemV0Deployed,
-    Speedruns: speedrunsDeployed,
-    ExternalMetadata: externalMetadataDeployed,
-    AnybodyProblemV1: anybodyProblemV1Deployed
-  } = await initContracts([
-    'AnybodyProblemV0',
-    'AnybodyProblemV1',
-    'Speedruns',
-    'ExternalMetadata'
-  ])
-  if (!AnybodyProblemV0) AnybodyProblemV0 = anybodyProblemV0Deployed
+  if (!AnybodyProblemV0) AnybodyProblemV0 = deployedContracts.AnybodyProblemV0
   returnObject['AnybodyProblemV0'] = AnybodyProblemV0
-  if (!Speedruns) Speedruns = speedrunsDeployed
+
+  if (!Speedruns) Speedruns = deployedContracts.Speedruns
   returnObject['Speedruns'] = Speedruns
-  if (!ExternalMetadata) ExternalMetadata = externalMetadataDeployed
+
+  if (!ExternalMetadata) ExternalMetadata = deployedContracts.ExternalMetadata
   returnObject['ExternalMetadata'] = ExternalMetadata
-  if (!AnybodyProblemV1) AnybodyProblemV1 = anybodyProblemV1Deployed
+
+  if (!AnybodyProblemV1) AnybodyProblemV1 = deployedContracts.AnybodyProblemV1
   returnObject['AnybodyProblemV1'] = AnybodyProblemV1
 
   const HitchensOrderStatisticsTreeLib = await hre.ethers.getContractFactory(
@@ -1223,6 +1229,7 @@ export {
   deployMetadata,
   getThemeName,
   deployAnybodyProblemV1,
+  deployAnybodyProblemV2,
   saveAndVerifyContracts,
   proceedRecipient
   // splitterAddress
