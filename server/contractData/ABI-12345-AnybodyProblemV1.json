@@ -1,5 +1,5 @@
 {
-  "contractName": "AnybodyProblem",
+  "contractName": "AnybodyProblemV1",
   "abi": [
     {
       "inputs": [
@@ -365,7 +365,7 @@
             { "internalType": "uint256", "name": "radius", "type": "uint256" },
             { "internalType": "bytes32", "name": "seed", "type": "bytes32" }
           ],
-          "internalType": "struct AnybodyProblem.Body",
+          "internalType": "struct AnybodyProblemV1.Body",
           "name": "bodyData",
           "type": "tuple"
         },
@@ -388,7 +388,7 @@
             { "internalType": "uint256", "name": "radius", "type": "uint256" },
             { "internalType": "bytes32", "name": "seed", "type": "bytes32" }
           ],
-          "internalType": "struct AnybodyProblem.Body",
+          "internalType": "struct AnybodyProblemV1.Body",
           "name": "",
           "type": "tuple"
         }
@@ -438,7 +438,7 @@
             },
             { "internalType": "uint256", "name": "streak", "type": "uint256" }
           ],
-          "internalType": "struct AnybodyProblem.Record",
+          "internalType": "struct AnybodyProblemV1.Record",
           "name": "",
           "type": "tuple"
         }
@@ -488,7 +488,7 @@
             { "internalType": "uint256", "name": "radius", "type": "uint256" },
             { "internalType": "bytes32", "name": "seed", "type": "bytes32" }
           ],
-          "internalType": "struct AnybodyProblem.Body[6]",
+          "internalType": "struct AnybodyProblemV1.Body[6]",
           "name": "bodyData",
           "type": "tuple[6]"
         },
@@ -564,12 +564,12 @@
                 },
                 { "internalType": "bytes32", "name": "seed", "type": "bytes32" }
               ],
-              "internalType": "struct AnybodyProblem.Body[6]",
+              "internalType": "struct AnybodyProblemV1.Body[6]",
               "name": "tmpBodyData",
               "type": "tuple[6]"
             }
           ],
-          "internalType": "struct AnybodyProblem.Level[]",
+          "internalType": "struct AnybodyProblemV1.Level[]",
           "name": "levels",
           "type": "tuple[]"
         }
@@ -603,7 +603,7 @@
             { "internalType": "uint256", "name": "radius", "type": "uint256" },
             { "internalType": "bytes32", "name": "seed", "type": "bytes32" }
           ],
-          "internalType": "struct AnybodyProblem.Body",
+          "internalType": "struct AnybodyProblemV1.Body",
           "name": "",
           "type": "tuple"
         }
@@ -845,17 +845,17 @@
                       "type": "bytes32"
                     }
                   ],
-                  "internalType": "struct AnybodyProblem.Body[6]",
+                  "internalType": "struct AnybodyProblemV1.Body[6]",
                   "name": "tmpBodyData",
                   "type": "tuple[6]"
                 }
               ],
-              "internalType": "struct AnybodyProblem.Level[]",
+              "internalType": "struct AnybodyProblemV1.Level[]",
               "name": "levels",
               "type": "tuple[]"
             }
           ],
-          "internalType": "struct AnybodyProblem.Run",
+          "internalType": "struct AnybodyProblemV1.Run",
           "name": "",
           "type": "tuple"
         }
@@ -1112,7 +1112,7 @@
             { "internalType": "uint256", "name": "radius", "type": "uint256" },
             { "internalType": "bytes32", "name": "seed", "type": "bytes32" }
           ],
-          "internalType": "struct AnybodyProblem.Body",
+          "internalType": "struct AnybodyProblemV1.Body",
           "name": "bodyData",
           "type": "tuple"
         },
