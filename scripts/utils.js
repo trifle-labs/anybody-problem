@@ -357,7 +357,7 @@ const deployAnybodyProblemV2 = async (options) => {
     // }
   })
   const tournament = await Tournament.deploy()
-
+  log('Tournament Deployed at ' + String(tournament.address))
   returnObject['Tournament'] = tournament
 
   log(mock ? 'Deploying AnybodyProblemV2Mock' : 'Deploying AnybodyProblemV2')
@@ -426,6 +426,10 @@ const deployAnybodyProblemV2 = async (options) => {
     {
       name: 'AnybodyProblemV2',
       constructorArguments
+    },
+    {
+      name: 'Tournament',
+      constructorArguments: []
     }
   ]
   returnObject['verificationData'] = verificationData
@@ -768,9 +772,9 @@ const verifyContracts = async (returnObject) => {
           constructorArguments: verificationData[i].constructorArguments
         })
       } catch (e) {
-        i--
         await new Promise((r) => setTimeout(r, 1000))
         log({ e, verificationData: verificationData[i] })
+        i--
       }
     }
   } else if (networkinfo['chainId'] == 12345) {

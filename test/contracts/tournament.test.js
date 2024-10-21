@@ -13,8 +13,12 @@ import {
 const SECONDS_IN_DAY = 86400
 const earlyMonday = 1728259200 // Mon Oct 7 2024 00:00:00 GMT+0000
 const actualMonday = 1730678400 // Mon Nov 04 2024 00:00:00 GMT+0000
+
+const daysInContest = 7
+// const minimumDaysPlayed = 3
+
 const dayOfTheWeek = (day) => {
-  return ((day - earlyMonday) / SECONDS_IN_DAY) % 7
+  return ((day - earlyMonday) / SECONDS_IN_DAY) % daysInContest
 }
 const dayFromTime = (time) => {
   return time - (time % SECONDS_IN_DAY)
@@ -25,7 +29,7 @@ const incrementTilMonday = async () => {
   let dayOfWeek = dayOfTheWeek(day)
 
   // make sure test starts on a Monday
-  const forward = SECONDS_IN_DAY * (7 - dayOfWeek)
+  const forward = SECONDS_IN_DAY * (daysInContest - dayOfWeek)
   await time.increase(forward)
 
   const newNow = await time.latest()
@@ -396,7 +400,7 @@ describe('AnybodyProblem Tests', function () {
     const prizePortion = prizeAmount.div(3)
 
     // fast forward to last day and ensure contest isn't over
-    await time.increase(6 * SECONDS_IN_DAY)
+    await time.increase((daysInContest - 1) * SECONDS_IN_DAY)
     // check that contest payout fails
     const currentWeekNow = await Tournament.currentWeek()
     expect(currentWeekNow).to.equal(week)
@@ -488,7 +492,7 @@ describe('AnybodyProblem Tests', function () {
     const prizePortion = prizeAmount.div(3)
 
     // fast forward to last day and ensure contest isn't over
-    await time.increase(6 * SECONDS_IN_DAY)
+    await time.increase((daysInContest - 1) * SECONDS_IN_DAY)
     // check that contest payout fails
     const currentWeekNow = await Tournament.currentWeek()
     expect(currentWeekNow).to.equal(week)

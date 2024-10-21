@@ -12,6 +12,8 @@ contract Tournament is Ownable {
     uint256 public firstMonday = 1730678400; // Mon Nov 04 2024 00:00:00 GMT+0000
     uint256 public constant SECONDS_IN_A_DAY = 86400;
     address payable public anybodyProblem;
+    uint256 public daysInTournament = 2;
+    uint256 public minimumDaysPlayed = 1;
     event RecordBroken(
         string recordType,
         uint256 week,
@@ -44,11 +46,11 @@ contract Tournament is Ownable {
         uint256 accumulativeTime;
     }
 
-    mapping(uint256 => mapping(address => uint256[7]))
+    mapping(uint256 => mapping(address => uint256[])) // array length not enforced so tournament can be variable number of days
         public fastestByWeekByPlayer; // week => player => [mon, tue, wed, thu, fri, sat, sun]
     mapping(uint256 => WeekSpeed) public weeklyFastest; // week => WeekSpeed
 
-    mapping(uint256 => mapping(address => uint256[7]))
+    mapping(uint256 => mapping(address => uint256[])) // array length not enforced so tournament can be variable number of days
         public slowestByWeekByPlayer;
     mapping(uint256 => WeekSpeed) public weeklySlowest;
 
@@ -197,11 +199,11 @@ contract Tournament is Ownable {
 
     function dayToWeek(uint256 day) public view returns (uint256) {
         require(day >= firstMonday, 'Day is before firstMonday');
-        return ((day - firstMonday) / SECONDS_IN_A_DAY) / 7; // rounding down is important here
+        return ((day - firstMonday) / SECONDS_IN_A_DAY) / daysInTournament; // rounding down is important here
     }
 
     function dayOfTheWeek(uint256 day) public view returns (uint256) {
-        return ((day - firstMonday) / SECONDS_IN_A_DAY) % 7; // Monday = 0, Sunday = 6
+        return ((day - firstMonday) / SECONDS_IN_A_DAY) % daysInTournament; // Monday = 0, Sunday = 6
     }
 
     function runs(
@@ -273,57 +275,54 @@ contract Tournament is Ownable {
         // First it's important to track whether this is the slowest speed for the day
         // for the specific player. All of the player's slowest times for each day are
         // what are eventually compared for weekly best.
-        uint256 dayOfTheWeekSpeed = slowestByWeekByPlayer[week][run.owner][
+        if (slowestByWeekByPlayer[week][run.owner].length == 0) {
+            for (uint256 i = 0; i < daysInTournament; i++) {
+                slowestByWeekByPlayer[week][run.owner].push(0);
+            }
+        }
+        uint256 previousBest = slowestByWeekByPlayer[week][run.owner][
             dayOfTheWeek_
         ];
 
-        if (
-            dayOfTheWeekSpeed == 0 || run.accumulativeTime > dayOfTheWeekSpeed
-        ) {
+        if (run.accumulativeTime > previousBest) {
             slowestByWeekByPlayer[week][run.owner][dayOfTheWeek_] = run
                 .accumulativeTime;
-
-            // if record is broken, ensure weekly best is checked
-            uint256[3] memory best3ThisWeek;
-            for (uint256 i = 0; i < 7; i++) {
+            // if record is broken, ensure player's weekly best is checked
+            uint256[] memory bestTimes = new uint256[](minimumDaysPlayed);
+            uint256 daysRecorded = 0;
+            for (uint256 i = 0; i < daysInTournament; i++) {
                 uint256 speed = slowestByWeekByPlayer[week][run.owner][i];
                 if (speed == 0) {
                     continue;
                 }
-                if (best3ThisWeek[0] == 0) {
-                    best3ThisWeek[0] = speed;
-                } else if (speed > best3ThisWeek[0]) {
-                    best3ThisWeek[2] = best3ThisWeek[1];
-                    best3ThisWeek[1] = best3ThisWeek[0];
-                    best3ThisWeek[0] = speed;
-                } else if (best3ThisWeek[1] == 0) {
-                    best3ThisWeek[1] = speed;
-                } else if (speed > best3ThisWeek[1]) {
-                    best3ThisWeek[2] = best3ThisWeek[1];
-                    best3ThisWeek[1] = speed;
-                } else if (speed > best3ThisWeek[2] || best3ThisWeek[2] == 0) {
-                    best3ThisWeek[2] = speed;
+                daysRecorded++;
+                for (uint256 j = 0; j < minimumDaysPlayed; j++) {
+                    if (bestTimes[j] == 0) {
+                        bestTimes[j] = speed;
+                        break;
+                    } else if (speed > bestTimes[j]) {
+                        for (uint256 k = minimumDaysPlayed - 1; k > j; k--) {
+                            bestTimes[k] = bestTimes[k - 1];
+                        }
+                        bestTimes[j] = speed;
+                        break;
+                    }
                 }
             }
-            uint256 one = best3ThisWeek[0];
-            uint256 two = best3ThisWeek[1];
-            uint256 three = best3ThisWeek[2];
-            if (one == 0 || two == 0 || three == 0) {
-                // player hasn't completed minimum of 3 days
+            if (daysRecorded < minimumDaysPlayed) {
+                // player hasn't completed minimum number of days
                 return;
             }
-            if ((one + two + three) > weeklySlowest[week].accumulativeTime) {
+            uint256 totalTime = 0;
+            for (uint256 i = 0; i < bestTimes.length; i++) {
+                totalTime += bestTimes[i];
+            }
+            if (totalTime > weeklySlowest[week].accumulativeTime) {
                 weeklySlowest[week] = WeekSpeed({
                     player: run.owner,
-                    accumulativeTime: one + two + three
+                    accumulativeTime: totalTime
                 });
-                emit RecordBroken(
-                    'slowest',
-                    week,
-                    run.owner,
-                    one + two + three,
-                    0
-                );
+                emit RecordBroken('slowest', week, run.owner, totalTime, 0);
             }
         }
     }
@@ -335,6 +334,12 @@ contract Tournament is Ownable {
         // First it's important to track whether this is the fastest speed for the day
         // for the specific player. All of the player's fastest times for each day are
         // what are eventually compared for weekly best.
+        if (fastestByWeekByPlayer[week][run.owner].length == 0) {
+            for (uint256 i = 0; i < daysInTournament; i++) {
+                fastestByWeekByPlayer[week][run.owner].push(0);
+            }
+        }
+
         uint256 previousBest = fastestByWeekByPlayer[week][run.owner][
             dayOfTheWeek_
         ];
@@ -344,49 +349,44 @@ contract Tournament is Ownable {
                 .accumulativeTime;
 
             // if record is broken, ensure player's weekly best is checked
-            uint256[3] memory best3ThisWeek;
-            for (uint256 i = 0; i < 7; i++) {
+            uint256[] memory bestTimes = new uint256[](minimumDaysPlayed);
+            uint256 daysRecorded = 0;
+            for (uint256 i = 0; i < daysInTournament; i++) {
                 uint256 speed = fastestByWeekByPlayer[week][run.owner][i];
                 if (speed == 0) {
                     continue;
                 }
-                if (best3ThisWeek[0] == 0) {
-                    best3ThisWeek[0] = speed;
-                } else if (speed < best3ThisWeek[0]) {
-                    best3ThisWeek[2] = best3ThisWeek[1];
-                    best3ThisWeek[1] = best3ThisWeek[0];
-                    best3ThisWeek[0] = speed;
-                } else if (best3ThisWeek[1] == 0) {
-                    best3ThisWeek[1] = speed;
-                } else if (speed < best3ThisWeek[1]) {
-                    best3ThisWeek[2] = best3ThisWeek[1];
-                    best3ThisWeek[1] = speed;
-                } else if (speed < best3ThisWeek[2] || best3ThisWeek[2] == 0) {
-                    best3ThisWeek[2] = speed;
+                daysRecorded++;
+                for (uint256 j = 0; j < minimumDaysPlayed; j++) {
+                    if (bestTimes[j] == 0) {
+                        bestTimes[j] = speed;
+                        break;
+                    } else if (speed < bestTimes[j]) {
+                        for (uint256 k = minimumDaysPlayed - 1; k > j; k--) {
+                            bestTimes[k] = bestTimes[k - 1];
+                        }
+                        bestTimes[j] = speed;
+                        break;
+                    }
                 }
             }
-            uint256 one = best3ThisWeek[0];
-            uint256 two = best3ThisWeek[1];
-            uint256 three = best3ThisWeek[2];
-            if (one == 0 || two == 0 || three == 0) {
-                // player hasn't completed minimum of 3 days
+            if (daysRecorded < minimumDaysPlayed) {
+                // player hasn't completed minimum number of days
                 return;
             }
+            uint256 totalTime = 0;
+            for (uint256 i = 0; i < bestTimes.length; i++) {
+                totalTime += bestTimes[i];
+            }
             if (
-                (one + two + three) < weeklyFastest[week].accumulativeTime ||
+                totalTime < weeklyFastest[week].accumulativeTime ||
                 weeklyFastest[week].accumulativeTime == 0
             ) {
                 weeklyFastest[week] = WeekSpeed({
                     player: run.owner,
-                    accumulativeTime: one + two + three
+                    accumulativeTime: totalTime
                 });
-                emit RecordBroken(
-                    'fastest',
-                    week,
-                    run.owner,
-                    one + two + three,
-                    0
-                );
+                emit RecordBroken('fastest', week, run.owner, totalTime, 0);
             }
         }
     }
