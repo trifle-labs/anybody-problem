@@ -113,7 +113,8 @@ contract AnybodyProblemV2 is Ownable, ERC2981 {
         address indexed player,
         uint256 indexed runId,
         uint256 accumulativeTime,
-        uint256 day
+        uint256 day,
+        uint256 streak
     );
     event LevelCreated(uint256 runId, uint256 level, bytes32 seed, uint256 day);
     event LevelSolved(
@@ -534,7 +535,8 @@ contract AnybodyProblemV2 is Ownable, ERC2981 {
                     msg.sender,
                     v.runId,
                     runs_[v.runId].accumulativeTime,
-                    v.day
+                    v.day,
+                    gamesPlayed(msg.sender).streak
                 );
                 if (v.alsoMint) {
                     bool playerIsLeader = isLeader(v.runId);
