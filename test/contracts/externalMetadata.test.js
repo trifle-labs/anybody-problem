@@ -1,5 +1,6 @@
 import { expect } from 'chai'
 import hre from 'hardhat'
+import { describe, it } from 'mocha'
 const { ethers } = hre
 import { DOMParser } from 'xmldom'
 // import { Anybody } from '../../dist/module.js'
@@ -46,13 +47,13 @@ describe('ExternalMetadata Tests', function () {
       .be.reverted
   })
 
-  it.only('has valid json', async function () {
+  it('has valid json', async function () {
     const [owner] = await ethers.getSigners()
 
     const { AnybodyProblemV0, ExternalMetadata, Speedruns } =
       await deployContractsV0({ mock: true, verbose: false })
 
-    const { AnybodyProblem: anybodyProblem } = await deployAnybodyProblemV1({
+    const { AnybodyProblemV1: anybodyProblem } = await deployAnybodyProblemV1({
       ExternalMetadata,
       AnybodyProblemV0,
       Speedruns,
@@ -97,7 +98,7 @@ describe('ExternalMetadata Tests', function () {
     ).toString('utf-8')
     // console.dir({ utf8Json }, { depth: null })
     const json = JSON.parse(utf8Json)
-    console.dir({ json }, { depth: null })
+    // console.dir({ json }, { depth: null })
     const base64SVG = json.image
 
     // console.log('-----base64 image-----')
@@ -124,7 +125,8 @@ describe('ExternalMetadata Tests', function () {
     const isSVGValid = isValidSVG(SVG)
     expect(isSVGValid).to.be.true
     const yearMonth = json.attributes[2].value
-    const YYYY_MM = new Date().toISOString().slice(0, 7)
+    const d = new Date().toISOString()
+    const YYYY_MM = d.slice(0, 7)
     expect(yearMonth).to.equal(YYYY_MM) //'1970-01'
 
     let svg = await ExternalMetadata.getSVG(day)

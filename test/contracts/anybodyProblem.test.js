@@ -1,4 +1,6 @@
 import { expect } from 'chai'
+import { describe, it } from 'mocha'
+
 import hre from 'hardhat'
 const ethers = hre.ethers
 
@@ -15,7 +17,7 @@ import {
   proceedRecipient
   // generateProof
 } from '../../scripts/utils.js'
-
+import { earlyMonday } from './tournament.test.js'
 import { Anybody } from '../../dist/module.js'
 
 // let tx
@@ -26,7 +28,10 @@ describe('AnybodyProblem Tests', function () {
     const deployedContracts = await deployContractsV0({ verbose: false })
     const { AnybodyProblemV0: anybodyProblemV0 } = deployedContracts
     for (const [name, contract] of Object.entries(deployedContracts)) {
+      if (name === 'AnybodyProblem') continue
       if (name === 'AnybodyProblemV0') continue
+      if (name === 'AnybodyProblemV1') continue
+      if (name === 'AnybodyProblemV2') continue
       if (name === 'ThemeGroup') continue
       if (name === 'verifiers') continue
       if (name === 'verifiersTicks') continue
@@ -62,6 +67,9 @@ describe('AnybodyProblem Tests', function () {
     const { AnybodyProblem: anybodyProblem } = upgradedContracts
     for (const [name, contract] of Object.entries(upgradedContracts)) {
       if (name === 'AnybodyProblem') continue
+      if (name === 'AnybodyProblemV0') continue
+      if (name === 'AnybodyProblemV1') continue
+      if (name === 'AnybodyProblemV2') continue
       if (name === 'ThemeGroup') continue
       if (name === 'verifiers') continue
       if (name === 'verifiersTicks') continue
@@ -169,6 +177,7 @@ describe('AnybodyProblem Tests', function () {
     const [owner] = signers
     const deployedContracts = await deployContracts()
     const { AnybodyProblem: anybodyProblem } = deployedContracts
+    await anybodyProblem.setTest(true)
 
     const day = await anybodyProblem.currentDay()
     let { bodyData, bodyCount } = await anybodyProblem.generateLevelData(day, 1)
@@ -247,6 +256,8 @@ describe('AnybodyProblem Tests', function () {
     const { AnybodyProblem: anybodyProblem } = await deployContracts({
       mock: true
     })
+    await anybodyProblem.setTest(true)
+
     let runId = 0
     const day = await anybodyProblem.currentDay()
     const level = 1
@@ -278,8 +289,13 @@ describe('AnybodyProblem Tests', function () {
 
   it('solves all levels async using mock', async () => {
     const [owner, acct1] = await ethers.getSigners()
-    const { AnybodyProblem: anybodyProblem, Speedruns: speedruns } =
-      await deployContracts({ mock: true })
+    const {
+      AnybodyProblem: anybodyProblem,
+      Speedruns: speedruns,
+      Tournament
+    } = await deployContracts({ mock: true })
+    await Tournament.setVars(earlyMonday)
+    await anybodyProblem.setTest(true)
     await anybodyProblem.updateProceedRecipient(acct1.address)
 
     const proceedRecipient = await anybodyProblem.proceedRecipient()
@@ -303,10 +319,11 @@ describe('AnybodyProblem Tests', function () {
       tx = solvedReturn.tx
       accumulativeTime += parseInt(solvedReturn.time)
     }
+    const streak = 1
 
     await expect(tx)
       .to.emit(anybodyProblem, 'RunSolved')
-      .withArgs(owner.address, runId, accumulativeTime, day)
+      .withArgs(owner.address, runId, accumulativeTime, day, streak)
     const mintingFee = await anybodyProblem.priceToSave()
     const discount = await anybodyProblem.discount()
     const price = (await anybodyProblem.priceToMint())
@@ -342,8 +359,15 @@ describe('AnybodyProblem Tests', function () {
 
   it('solves all levels in a single tx', async () => {
     const [owner] = await ethers.getSigners()
-    const { AnybodyProblem: anybodyProblem, Speedruns: speedruns } =
-      await deployContracts({ mock: true, verbose: false })
+    const {
+      AnybodyProblem: anybodyProblem,
+      Speedruns: speedruns,
+      Tournament
+    } = await deployContracts({ mock: true, verbose: false })
+    await Tournament.setVars(earlyMonday)
+
+    await anybodyProblem.setTest(true)
+
     let runId = 0
     const day = await anybodyProblem.currentDay()
     let accumulativeTime = 0
@@ -383,9 +407,11 @@ describe('AnybodyProblem Tests', function () {
     const tx = await anybodyProblem.batchSolve(...finalArgs, { value: price })
     await tx.wait()
 
+    const streak = 1
+
     await expect(tx)
       .to.emit(anybodyProblem, 'RunSolved')
-      .withArgs(owner.address, finalRunId, accumulativeTime, day)
+      .withArgs(owner.address, finalRunId, accumulativeTime, day, streak)
 
     // as first run, it will be fastest and thus price is waived
     // const proceedRecipient = await anybodyProblem.proceedRecipient()
@@ -541,6 +567,7 @@ describe('AnybodyProblem Tests', function () {
     const { AnybodyProblem: anybodyProblem } = await deployContracts({
       mock: true
     })
+    await anybodyProblem.setTest(true)
 
     let runId = 0
     let level = 1
@@ -602,7 +629,7 @@ describe('AnybodyProblem Tests', function () {
     expect(finalArgs.length).to.equal(8)
 
     const tx = await AnybodyProblemV0.batchSolve(...finalArgs, { value: price })
-
+    const streak = 1
     await expect(tx)
       .to.emit(AnybodyProblemV0, 'RunSolved')
       .withArgs(owner.address, finalRunId, accumulativeTime, day)
@@ -626,7 +653,7 @@ describe('AnybodyProblem Tests', function () {
     const gamesPlayed = await AnybodyProblemV0.gamesPlayed(owner.address)
     expect(gamesPlayed.total).to.equal(1)
     expect(gamesPlayed.lastPlayed).to.equal(day)
-    expect(gamesPlayed.streak).to.equal(1)
+    expect(gamesPlayed.streak).to.equal(streak)
 
     const firstRunId = finalRunId
 

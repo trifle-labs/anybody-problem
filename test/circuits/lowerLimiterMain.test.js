@@ -1,6 +1,7 @@
 // import hre from 'hardhat'
-// const { describe, it, before } = require('mocha')
+
 import { wasm as wasm_tester } from 'circom_tester'
+import { describe, it, before } from 'mocha'
 
 describe('lowerLimiterMain circuit', () => {
   let circuit

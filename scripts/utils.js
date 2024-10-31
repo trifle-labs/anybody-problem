@@ -260,6 +260,14 @@ const deployAnybodyProblemV1 = async (options) => {
   ]
   returnObject['verificationData'] = verificationData
 
+  if (returnObject['AnybodyProblemV3']) {
+    returnObject['AnybodyProblem'] = returnObject['AnybodyProblemV3']
+  } else if (returnObject['AnybodyProblemV2']) {
+    returnObject['AnybodyProblem'] = returnObject['AnybodyProblemV2']
+  } else if (returnObject['AnybodyProblemV1']) {
+    returnObject['AnybodyProblem'] = returnObject['AnybodyProblemV1']
+  }
+
   return returnObject
 }
 
@@ -433,7 +441,13 @@ const deployAnybodyProblemV2 = async (options) => {
     }
   ]
   returnObject['verificationData'] = verificationData
-
+  if (returnObject['AnybodyProblemV3']) {
+    returnObject['AnybodyProblem'] = returnObject['AnybodyProblemV3']
+  } else if (returnObject['AnybodyProblemV2']) {
+    returnObject['AnybodyProblem'] = returnObject['AnybodyProblemV2']
+  } else if (returnObject['AnybodyProblemV1']) {
+    returnObject['AnybodyProblem'] = returnObject['AnybodyProblemV1']
+  }
   return returnObject
 }
 
@@ -563,7 +577,13 @@ const deployContracts = async (options) => {
   if (options?.saveAndVerify) {
     await saveAndVerifyContracts(deployedContracts2)
   }
-  return { ...deployedContracts0, ...deployedContracts1, ...deployedContracts2 }
+  const returnValue = {
+    ...deployedContracts0,
+    ...deployedContracts1,
+    ...deployedContracts2
+  }
+  returnValue.AnybodyProblem = returnValue.AnybodyProblemV2
+  return returnValue
 }
 
 const saveAndVerifyContracts = async (deployedContracts) => {

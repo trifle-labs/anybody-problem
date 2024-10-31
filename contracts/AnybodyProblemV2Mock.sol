@@ -37,10 +37,12 @@ contract AnybodyProblemV2Mock is AnybodyProblemV2 {
         uint256 accumulativeTime,
         address owner
     ) public {
+        if (runs_[runId].day == 0) {
+            counterForOrdering++;
+        }
         runs_[runId].day = day;
         runs_[runId].accumulativeTime = accumulativeTime;
         runs_[runId].owner = owner;
-        counterForOrdering++;
     }
 
     function setMockedBodyDataByLevel(

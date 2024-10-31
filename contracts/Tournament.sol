@@ -12,8 +12,12 @@ contract Tournament is Ownable {
     uint256 public firstMonday = 1730678400; // Mon Nov 04 2024 00:00:00 GMT+0000
     uint256 public constant SECONDS_IN_A_DAY = 86400;
     address payable public anybodyProblem;
-    uint256 public daysInTournament = 2;
+    uint256 public daysInContest = 3;
     uint256 public minimumDaysPlayed = 1;
+    uint256 public entryPrice = 0; // 0.005 ether; // ~$10
+    uint256 public entryPercent = 0; // 0 / 1000 = 0%
+    uint256 public constant FACTOR = 1000;
+
     event RecordBroken(
         string recordType,
         uint256 week,
@@ -34,7 +38,7 @@ contract Tournament is Ownable {
         uint256 totalTime;
         uint256 lastUpdated;
     }
-
+    mapping(uint256 => mapping(address => bool)) public tickets;
     mapping(uint256 => WeekTotal) public weeklyStats;
     mapping(uint256 => mapping(address => WeekTotal))
         public weeklyStatsByPlayer;
@@ -67,11 +71,15 @@ contract Tournament is Ownable {
         return dayToWeek(currentDay);
     }
 
-    function fillPrize(uint256 week) public payable {
+    function fillPrize_(uint256 week, uint256 amount) internal {
         uint256 currentWeek_ = currentWeek();
         require(week >= currentWeek_, 'Cannot fill prize for past week');
-        prizes[week] += msg.value;
-        emit EthMoved(address(this), true, '', msg.value);
+        prizes[week] += amount;
+        emit EthMoved(address(this), true, '', amount);
+    }
+
+    function fillPrize(uint256 week) public payable {
+        fillPrize_(week, msg.value);
     }
 
     bool disableForTesting = false;
@@ -87,7 +95,7 @@ contract Tournament is Ownable {
     constructor() {}
 
     receive() external payable {
-        fillPrize(currentWeek());
+        fillPrize_(currentWeek(), msg.value);
     }
 
     function setVars(uint256 firstMonday_) public onlyOwner {
@@ -100,12 +108,40 @@ contract Tournament is Ownable {
 
     function addToLeaderboard(uint256 runId) public onlyAnybodyProblem {
         uint256 currentWeek_ = currentWeek();
+        // score isn't saved unless you have a ticket
+        if (!tickets[currentWeek_][msg.sender] && entryPrice != 0) {
+            return;
+        }
         addRunToWeeklyUserAverage(runId, currentWeek_);
         addToFastestByWeekByPlayer(runId, currentWeek_);
         addToSlowestByWeekByPlayer(runId, currentWeek_);
     }
 
+    function buyTicket() public payable {
+        require(msg.value == entryPrice, 'Incorrect entry price');
+        uint256 currentWeek_ = currentWeek();
+        require(
+            !tickets[currentWeek_][msg.sender],
+            'You already have a ticket for this week'
+        );
+        tickets[currentWeek_][msg.sender] = true;
+        uint256 percentageKept = (entryPrice * entryPercent) / FACTOR;
+        uint256 amountToSplit = entryPrice - percentageKept;
+        fillPrize_(currentWeek_, amountToSplit);
+        prizes[currentWeek_] += amountToSplit;
+        if (percentageKept > 0) {
+            address payable proceedRecipient = AnybodyProblemV2(anybodyProblem)
+                .proceedRecipient();
+            (bool sent, bytes memory data) = proceedRecipient.call{
+                value: percentageKept
+            }('');
+            require(sent, 'Failed to send Ether');
+            emit EthMoved(proceedRecipient, sent, data, percentageKept);
+        }
+    }
+
     function payoutAverage(uint256 week) public {
+        // TODO: ensure the user has played at least the minimum number of days
         require(week < currentWeek(), 'Contest is not over');
         require(
             paidOutByWeek[week].average == address(0),
@@ -173,6 +209,7 @@ contract Tournament is Ownable {
         uint256 numerator,
         uint256 denominator
     ) public pure returns (uint256) {
+        if (numerator == 0 || denominator == 0) return 0;
         // Perform the division and check for rounding
         uint256 result = numerator / denominator;
 
@@ -191,6 +228,9 @@ contract Tournament is Ownable {
     ) public view returns (address closestAddress, uint256 closest) {
         HitchensOrderStatisticsTreeLib.Tree
             storage tree = weeklyStatsSortedTree[week];
+        if (tree.count() == 0) {
+            return (address(0), 0);
+        }
         closest = tree.atRank(tree.rank(requestedValue));
         uint256 closest2 = tree.atPercentile(tree.percentile(requestedValue));
         require(closest == closest2, 'Rank and Percentile do not match');
@@ -199,11 +239,11 @@ contract Tournament is Ownable {
 
     function dayToWeek(uint256 day) public view returns (uint256) {
         require(day >= firstMonday, 'Day is before firstMonday');
-        return ((day - firstMonday) / SECONDS_IN_A_DAY) / daysInTournament; // rounding down is important here
+        return ((day - firstMonday) / SECONDS_IN_A_DAY) / daysInContest; // rounding down is important here
     }
 
     function dayOfTheWeek(uint256 day) public view returns (uint256) {
-        return ((day - firstMonday) / SECONDS_IN_A_DAY) % daysInTournament; // Monday = 0, Sunday = 6
+        return ((day - firstMonday) / SECONDS_IN_A_DAY) % daysInContest; // Monday = 0, Sunday = 6
     }
 
     function runs(
@@ -276,7 +316,7 @@ contract Tournament is Ownable {
         // for the specific player. All of the player's slowest times for each day are
         // what are eventually compared for weekly best.
         if (slowestByWeekByPlayer[week][run.owner].length == 0) {
-            for (uint256 i = 0; i < daysInTournament; i++) {
+            for (uint256 i = 0; i < daysInContest; i++) {
                 slowestByWeekByPlayer[week][run.owner].push(0);
             }
         }
@@ -290,7 +330,7 @@ contract Tournament is Ownable {
             // if record is broken, ensure player's weekly best is checked
             uint256[] memory bestTimes = new uint256[](minimumDaysPlayed);
             uint256 daysRecorded = 0;
-            for (uint256 i = 0; i < daysInTournament; i++) {
+            for (uint256 i = 0; i < daysInContest; i++) {
                 uint256 speed = slowestByWeekByPlayer[week][run.owner][i];
                 if (speed == 0) {
                     continue;
@@ -335,7 +375,7 @@ contract Tournament is Ownable {
         // for the specific player. All of the player's fastest times for each day are
         // what are eventually compared for weekly best.
         if (fastestByWeekByPlayer[week][run.owner].length == 0) {
-            for (uint256 i = 0; i < daysInTournament; i++) {
+            for (uint256 i = 0; i < daysInContest; i++) {
                 fastestByWeekByPlayer[week][run.owner].push(0);
             }
         }
@@ -351,7 +391,7 @@ contract Tournament is Ownable {
             // if record is broken, ensure player's weekly best is checked
             uint256[] memory bestTimes = new uint256[](minimumDaysPlayed);
             uint256 daysRecorded = 0;
-            for (uint256 i = 0; i < daysInTournament; i++) {
+            for (uint256 i = 0; i < daysInContest; i++) {
                 uint256 speed = fastestByWeekByPlayer[week][run.owner][i];
                 if (speed == 0) {
                     continue;
@@ -389,6 +429,24 @@ contract Tournament is Ownable {
                 emit RecordBroken('fastest', week, run.owner, totalTime, 0);
             }
         }
+    }
+
+    function updateMinimumNumberOfDays(
+        uint256 _minimumDaysPlayed
+    ) public onlyOwner {
+        minimumDaysPlayed = _minimumDaysPlayed;
+    }
+
+    function updateDaysInContest(uint256 _daysInContest) public onlyOwner {
+        daysInContest = _daysInContest;
+    }
+
+    function updateEntryPrice(uint256 _entryPrice) public onlyOwner {
+        entryPrice = _entryPrice;
+    }
+
+    function updateEntryPercent(uint256 _entryPercent) public onlyOwner {
+        entryPercent = _entryPercent;
     }
 
     function updateAnybodyProblemAddress(

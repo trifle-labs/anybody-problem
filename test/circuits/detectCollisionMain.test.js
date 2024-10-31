@@ -1,6 +1,6 @@
 // import hre from 'hardhat'
 // import { assert } from 'chai';
-// import { describe, it, before } from 'mocha';
+import { describe, it, before } from 'mocha'
 import { wasm as wasm_tester } from 'circom_tester'
 import { Anybody } from '../../dist/module.js'
 // const modp = 21888242871839275222246405745257275088548364400416034343698204186575808495617n

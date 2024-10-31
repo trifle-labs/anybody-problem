@@ -4,6 +4,7 @@ import { Anybody } from '../../dist/module.js'
 // const p = 21888242871839275222246405745257275088548364400416034343698204186575808495617n
 
 import { expect } from 'chai'
+import { describe, it, before } from 'mocha'
 
 describe('stepStateTest circuit', () => {
   let circuit

@@ -61,12 +61,7 @@
       "eslint:recommended",
       "prettier"
     ],
-    "globals": {
-      "assert": "readonly",
-      "before": "readonly",
-      "describe": "readonly",
-      "it": "readonly"
-    },
+    "globals": {},
     "ignorePatterns": [
       "/docs/index.js",
       "**/*.min.js",

@@ -632,8 +632,18 @@ contract AnybodyProblemV2 is Ownable, ERC2981 {
                 })
             );
         }
-        // NOTE: following line should be included for prod and removed for testing
-        require(runs(runId).solved, 'Must solve all levels to complete run');
+        if (!isTest) {
+            require(
+                runs(runId).solved,
+                'Must solve all levels to complete run'
+            );
+        }
+    }
+
+    bool isTest = false;
+
+    function setTest(bool test) public onlyOwner {
+        isTest = test;
     }
 
     function addToLeaderboard(uint256 runId) internal {

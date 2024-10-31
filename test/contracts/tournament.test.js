@@ -1,6 +1,7 @@
 import { expect } from 'chai'
+import { beforeEach, afterEach, describe, it } from 'mocha'
 import hre from 'hardhat'
-import { time } from '@nomicfoundation/hardhat-network-helpers'
+import { time, takeSnapshot } from '@nomicfoundation/hardhat-network-helpers'
 
 const ethers = hre.ethers
 
@@ -11,22 +12,22 @@ import {
 } from '../../scripts/utils.js'
 
 const SECONDS_IN_DAY = 86400
-const earlyMonday = 1728259200 // Mon Oct 7 2024 00:00:00 GMT+0000
+export const earlyMonday = 1728259200 // Mon Oct 7 2024 00:00:00 GMT+0000
 const actualMonday = 1730678400 // Mon Nov 04 2024 00:00:00 GMT+0000
 
-const daysInContest = 7
+// const daysInContest = 7
 // const minimumDaysPlayed = 3
 
-const dayOfTheWeek = (day) => {
+const dayOfTheWeek = (day, daysInContest) => {
   return ((day - earlyMonday) / SECONDS_IN_DAY) % daysInContest
 }
 const dayFromTime = (time) => {
   return time - (time % SECONDS_IN_DAY)
 }
-const incrementTilMonday = async () => {
+const incrementTilMonday = async (daysInContest) => {
   const now = await time.latest()
   const day = dayFromTime(now)
-  let dayOfWeek = dayOfTheWeek(day)
+  let dayOfWeek = dayOfTheWeek(day, daysInContest)
 
   // make sure test starts on a Monday
   const forward = SECONDS_IN_DAY * (daysInContest - dayOfWeek)
@@ -34,13 +35,20 @@ const incrementTilMonday = async () => {
 
   const newNow = await time.latest()
   const newDay = dayFromTime(newNow)
-  const newDayOfWeek = dayOfTheWeek(newDay)
+  const newDayOfWeek = dayOfTheWeek(newDay, daysInContest)
   expect(newDayOfWeek).to.equal(0) // Monday
 }
 
 // let tx
-describe('AnybodyProblem Tests', function () {
+describe('Tournament Tests', function () {
   this.timeout(50000000)
+  let lastSnapshot
+  beforeEach(async () => {
+    lastSnapshot = await takeSnapshot()
+  })
+  afterEach(async () => {
+    await lastSnapshot.restore()
+  })
 
   it('uses the mock correctly', async () => {
     const [owner] = await ethers.getSigners()
@@ -317,17 +325,9 @@ describe('AnybodyProblem Tests', function () {
     await Tournament.setDisableForTesting(true)
     await Tournament.setVars(earlyMonday)
 
-    // let day = await AnybodyProblemV2.currentDay()
-    // let dayOfWeek = await Tournament.dayOfTheWeek(day)
+    const daysInContest = await Tournament.daysInContest()
 
-    // // make sure test starts on a Monday
-    // const forward = SECONDS_IN_DAY * (7 - dayOfWeek.toNumber())
-    // await time.increase(forward)
-
-    // day = await AnybodyProblemV2.currentDay()
-    // dayOfWeek = await Tournament.dayOfTheWeek(day)
-    // expect(dayOfWeek).to.equal(0) // Monday
-    await incrementTilMonday()
+    await incrementTilMonday(daysInContest)
     const day = await AnybodyProblemV2.currentDay()
     const week = await Tournament.currentWeek()
 
@@ -436,8 +436,9 @@ describe('AnybodyProblem Tests', function () {
     })
     await Tournament.setDisableForTesting(true)
     await Tournament.setVars(earlyMonday)
+    const daysInContest = await Tournament.daysInContest()
     const [, acct1, acct2, acct3] = await ethers.getSigners()
-    await incrementTilMonday()
+    await incrementTilMonday(daysInContest)
 
     const day = await AnybodyProblemV2.currentDay()
     const week = await Tournament.currentWeek()
@@ -525,6 +526,139 @@ describe('AnybodyProblem Tests', function () {
       .withArgs(slowest.address, true, '0x', prizePortion)
     const slowestBalanceAfter = await slowest.getBalance()
     expect(slowestBalanceAfter.sub(slowestBalanceBefore)).to.equal(prizePortion)
+  })
+  it('doesnt save your score if you dont buy a ticket', async () => {
+    const [, acct1] = await ethers.getSigners()
+
+    const { Tournament, AnybodyProblemV2 } = await deployContracts({
+      mock: true
+    })
+    await Tournament.setDisableForTesting(true)
+    await AnybodyProblemV2.setTest(true)
+    await Tournament.setVars(earlyMonday)
+    const daysInContest = await Tournament.daysInContest()
+    const newPrice = ethers.utils.parseEther('0.01')
+    const newPercent = 0.5 // 500 / 1000 = 50%
+    const FACTOR = await Tournament.FACTOR()
+    const newPercentInt = FACTOR.toNumber() * newPercent
+    await Tournament.updateEntryPrice(newPrice)
+    await Tournament.updateEntryPercent(newPercentInt)
+
+    await incrementTilMonday(daysInContest)
+
+    let day = await AnybodyProblemV2.currentDay()
+    let week = await Tournament.currentWeek()
+
+    const minimumDaysPlayed = await Tournament.minimumDaysPlayed()
+    // starting on first day of the contest
+
+    let runId = 0
+    for (let i = 0; i < minimumDaysPlayed.toNumber(); i++) {
+      runId++
+      const runFail = {
+        runId,
+        day: day.add(i * SECONDS_IN_DAY),
+        speed: Math.floor(Math.random() * 1000) + 1,
+        player: acct1.address
+      }
+      await AnybodyProblemV2.setRunData(
+        runFail.runId,
+        runFail.day,
+        runFail.speed,
+        runFail.player
+      )
+      await Tournament.addToLeaderboard(runFail.runId)
+    }
+
+    // even though they played the minimum number of days, they didn't buy a ticket
+    // so they aren't recorded as the fastest
+    const fastest = await Tournament.fastestByWeek(week)
+    expect(fastest).to.equal(ethers.constants.AddressZero)
+
+    const slowest = await Tournament.slowestByWeek(week)
+    expect(slowest).to.equal(ethers.constants.AddressZero)
+
+    const [mostAverage] = await Tournament.mostAverageByWeek(week)
+    expect(mostAverage).to.equal(ethers.constants.AddressZero)
+  })
+
+  it.only('doesnt save your score if you dont do minimum number of days', async () => {
+    const [, acct1] = await ethers.getSigners()
+
+    const { Tournament, AnybodyProblemV2 } = await deployContracts({
+      mock: true
+    })
+    await Tournament.setDisableForTesting(true)
+    await AnybodyProblemV2.setTest(true)
+    await Tournament.setVars(earlyMonday)
+    const daysInContest = await Tournament.daysInContest()
+    const newPrice = ethers.utils.parseEther('0.01')
+    const newPercent = 0.5 // 500 / 1000 = 50%
+    const FACTOR = await Tournament.FACTOR()
+    const newPercentInt = FACTOR.toNumber() * newPercent
+    await Tournament.updateEntryPrice(newPrice)
+    await Tournament.updateEntryPercent(newPercentInt)
+
+    await incrementTilMonday(daysInContest)
+
+    let day = await AnybodyProblemV2.currentDay()
+    let week = await Tournament.currentWeek()
+
+    const minimumDaysPlayedInt = 2
+    await Tournament.updateMinimumNumberOfDays(minimumDaysPlayedInt)
+
+    const minimumDaysPlayed = await Tournament.minimumDaysPlayed()
+    expect(minimumDaysPlayed).eq(minimumDaysPlayedInt)
+
+    let runId = 0
+    for (let i = 0; i < minimumDaysPlayed.sub(1).toNumber(); i++) {
+      runId++
+      const runFail = {
+        runId,
+        day: day.add(i * SECONDS_IN_DAY),
+        speed: Math.floor(Math.random() * 1000) + 1,
+        player: acct1.address
+      }
+      await AnybodyProblemV2.setRunData(
+        runFail.runId,
+        runFail.day,
+        runFail.speed,
+        runFail.player
+      )
+      await Tournament.addToLeaderboard(runFail.runId)
+    }
+
+    // even though they played the minimum number of days, they didn't buy a ticket
+    // so they aren't recorded as the fastest
+    const fastest = await Tournament.fastestByWeek(week)
+    expect(fastest).to.equal(ethers.constants.AddressZero)
+
+    const slowest = await Tournament.slowestByWeek(week)
+    expect(slowest).to.equal(ethers.constants.AddressZero)
+
+    const [mostAverage] = await Tournament.mostAverageByWeek(week)
+    expect(mostAverage).to.equal(ethers.constants.AddressZero)
+
+    // const runs = []
+    // const players = [acct1, acct2, acct3]
+    // for (let i = 0; i < players.length; i++) {
+    //   for (let j = 0; j < daysInContest.toNumber(); j++) {
+    //     const player = players[i].address
+    //     const day = day.add(j * SECONDS_IN_DAY)
+    //     const runId = i * daysInContest.toNumber() + j + 1
+    //     const speed = Math.floor(Math.random() * 1000) + 1
+    //     const run = {
+    //       runId,
+    //       day,
+    //       speed,
+    //       player
+    //     }
+    //     runs.push(run)
+    //     await AnybodyProblemV2.setRunData(runId, day, speed, player)
+    //     await Tournament.addToLeaderboard(runId)
+    //   }
+    // }
+    // await time.increase(daysInContest * SECONDS_IN_DAY)
   })
   // it('confirms all functions of tree')
 })
