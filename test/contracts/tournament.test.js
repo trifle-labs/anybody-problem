@@ -582,9 +582,9 @@ describe('Tournament Tests', function () {
     expect(mostAverage).to.equal(ethers.constants.AddressZero)
   })
 
-  it.only('doesnt save your score if you dont do minimum number of days', async () => {
+  it('doesnt save your score if you dont do minimum number of days', async () => {
     const [, acct1] = await ethers.getSigners()
-
+    console.log('player is ' + acct1.address)
     const { Tournament, AnybodyProblemV2 } = await deployContracts({
       mock: true
     })
@@ -592,11 +592,11 @@ describe('Tournament Tests', function () {
     await AnybodyProblemV2.setTest(true)
     await Tournament.setVars(earlyMonday)
     const daysInContest = await Tournament.daysInContest()
-    const newPrice = ethers.utils.parseEther('0.01')
+    // const newPrice = ethers.utils.parseEther('0.01')
     const newPercent = 0.5 // 500 / 1000 = 50%
     const FACTOR = await Tournament.FACTOR()
     const newPercentInt = FACTOR.toNumber() * newPercent
-    await Tournament.updateEntryPrice(newPrice)
+    // await Tournament.updateEntryPrice(newPrice)
     await Tournament.updateEntryPercent(newPercentInt)
 
     await incrementTilMonday(daysInContest)
@@ -611,12 +611,13 @@ describe('Tournament Tests', function () {
     expect(minimumDaysPlayed).eq(minimumDaysPlayedInt)
 
     let runId = 0
-    for (let i = 0; i < minimumDaysPlayed.sub(1).toNumber(); i++) {
+    const missingDays = 1
+    for (let i = 0; i < minimumDaysPlayed.sub(missingDays).toNumber(); i++) {
       runId++
       const runFail = {
         runId,
-        day: day.add(i * SECONDS_IN_DAY),
-        speed: Math.floor(Math.random() * 1000) + 1,
+        day,
+        speed: 100,
         player: acct1.address
       }
       await AnybodyProblemV2.setRunData(
@@ -626,6 +627,7 @@ describe('Tournament Tests', function () {
         runFail.player
       )
       await Tournament.addToLeaderboard(runFail.runId)
+      day = day.add(SECONDS_IN_DAY)
     }
 
     // even though they played the minimum number of days, they didn't buy a ticket
@@ -638,6 +640,34 @@ describe('Tournament Tests', function () {
 
     const [mostAverage] = await Tournament.mostAverageByWeek(week)
     expect(mostAverage).to.equal(ethers.constants.AddressZero)
+
+    // now add the missing days
+    for (let i = 0; i < missingDays; i++) {
+      runId++
+      const runFail = {
+        runId,
+        day,
+        speed: 50,
+        player: acct1.address
+      }
+      await AnybodyProblemV2.setRunData(
+        runFail.runId,
+        runFail.day,
+        runFail.speed,
+        runFail.player
+      )
+      await Tournament.addToLeaderboard(runFail.runId)
+      day = day.add(SECONDS_IN_DAY)
+    }
+
+    const fastest2 = await Tournament.fastestByWeek(week)
+    expect(fastest2).to.equal(acct1.address)
+
+    const slowest2 = await Tournament.slowestByWeek(week)
+    expect(slowest2).to.equal(acct1.address)
+
+    const [mostAverage2] = await Tournament.mostAverageByWeek(week)
+    expect(mostAverage2).to.equal(acct1.address)
 
     // const runs = []
     // const players = [acct1, acct2, acct3]

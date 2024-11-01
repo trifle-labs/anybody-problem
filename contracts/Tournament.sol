@@ -231,10 +231,49 @@ contract Tournament is Ownable {
         if (tree.count() == 0) {
             return (address(0), 0);
         }
-        closest = tree.atRank(tree.rank(requestedValue));
-        uint256 closest2 = tree.atPercentile(tree.percentile(requestedValue));
-        require(closest == closest2, 'Rank and Percentile do not match');
-        return (keyToAddress(tree.valueKeyAtIndex(closest, 0)), closest);
+        bool closestFound = false;
+        uint256 indexOffset = 0;
+        uint256 rankOffset = 0;
+        uint256 rank = tree.rank(requestedValue);
+        uint256 count = tree.count();
+        for (uint256 i = 0; i < count; i++) {
+            closest = tree.atRank(rank + rankOffset);
+            // uint256 closest2 = tree.atPercentile(tree.percentile(requestedValue));
+            // require(closest == closest2, 'Rank and Percentile do not match');
+            address player = keyToAddress(
+                tree.valueKeyAtIndex(closest, indexOffset)
+            );
+            bool enoughDays = false;
+            uint256 totalDays = 0;
+            for (
+                uint256 j = 0;
+                j < fastestByWeekByPlayer[week][player].length;
+                j++
+            ) {
+                if (fastestByWeekByPlayer[week][player][j] != 0) {
+                    totalDays++;
+                    if (totalDays >= minimumDaysPlayed) {
+                        enoughDays = true;
+                        break;
+                    }
+                }
+            }
+            if (!enoughDays) {
+                if (tree.getNodeKeysLength(closest) > indexOffset) {
+                    indexOffset++;
+                } else {
+                    rankOffset++;
+                    indexOffset = 0;
+                }
+            } else {
+                return (
+                    keyToAddress(tree.valueKeyAtIndex(closest, 0)),
+                    closest
+                );
+                closestFound = true;
+            }
+        }
+        return (address(0), 0);
     }
 
     function dayToWeek(uint256 day) public view returns (uint256) {
