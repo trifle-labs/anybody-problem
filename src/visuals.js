@@ -490,8 +490,6 @@ export const Visuals = {
         text: 'PLAY',
         onClick: () => {
           if (this.popup) return
-          // start play
-          this.sound?.playStart()
           this.setPause(false)
         },
         fg: THEME.violet_50,
@@ -852,9 +850,10 @@ export const Visuals = {
     if (
       this.paused ||
       this.gameOver ||
-      (this.introStage === 0 && !(this.levelCountdown < 200))
-    )
+      (this.level < 1 && this.introStage === 0 && !(this.levelCountdown < 200))
+    ) {
       return
+    }
     const { p } = this
     // draw mute btn in bottom right corner
     p.push()
