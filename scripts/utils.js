@@ -593,7 +593,8 @@ const saveAndVerifyContracts = async (deployedContracts) => {
       contractName == 'verificationData' ||
       contractName == 'verifiers' ||
       contractName == 'verifiersTicks' ||
-      contractName == 'verifiersBodies'
+      contractName == 'verifiersBodies' ||
+      contractName == 'AnybodyProblem' // this is just an alias for most recent version
     )
       continue
     if (contractName.indexOf('Verifier') > -1) {
@@ -1182,23 +1183,27 @@ async function copyABI(name, contractName) {
     `${name}.sol`,
     `${contractName}.json`
   )
-  const readABI = await fs.readFile(pathname)
-  const parsedABI = JSON.parse(readABI)
-  const abi = parsedABI['abi']
+  try {
+    const readABI = await fs.readFile(pathname)
+    const parsedABI = JSON.parse(readABI)
+    const abi = parsedABI['abi']
 
-  const newContent = { contractName, abi }
+    const newContent = { contractName, abi }
 
-  var copy = path.join(
-    __dirname,
-    'server',
-    'contractData',
-    'ABI-' + String(networkinfo['chainId']) + `-${name}.json`
-  )
-  // write the new content to the new file
-  await writedata(copy, JSON.stringify(newContent))
+    var copy = path.join(
+      __dirname,
+      'server',
+      'contractData',
+      'ABI-' + String(networkinfo['chainId']) + `-${name}.json`
+    )
+    // write the new content to the new file
+    await writedata(copy, JSON.stringify(newContent))
 
-  // await copyContractABI(pathname, copy)
-  log('-- OK')
+    // await copyContractABI(pathname, copy)
+    log('-- OK')
+  } catch (e) {
+    console.error('Failed to copy ABI' + name, { e })
+  }
 }
 
 async function saveAddress(contract, name) {
@@ -1225,7 +1230,7 @@ async function writedata(path, data) {
   try {
     await fs.writeFile(path, data)
   } catch (e) {
-    console.log('e', e)
+    console.error('Failed to write file' + path, { e })
   }
 }
 

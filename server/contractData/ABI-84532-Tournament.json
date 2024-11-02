@@ -91,6 +91,13 @@
     },
     {
       "inputs": [],
+      "name": "FACTOR",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
       "name": "SECONDS_IN_A_DAY",
       "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
       "stateMutability": "view",
@@ -174,6 +181,13 @@
       "type": "function"
     },
     {
+      "inputs": [],
+      "name": "buyTicket",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
       "inputs": [
         { "internalType": "uint256", "name": "week", "type": "uint256" }
       ],
@@ -209,7 +223,7 @@
     },
     {
       "inputs": [],
-      "name": "daysInTournament",
+      "name": "daysInContest",
       "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
       "stateMutability": "view",
       "type": "function"
@@ -222,6 +236,20 @@
       "name": "divRound",
       "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
       "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "entryPercent",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "entryPrice",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
       "type": "function"
     },
     {
@@ -646,6 +674,16 @@
     },
     {
       "inputs": [
+        { "internalType": "uint256", "name": "", "type": "uint256" },
+        { "internalType": "address", "name": "", "type": "address" }
+      ],
+      "name": "tickets",
+      "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
         { "internalType": "address", "name": "newOwner", "type": "address" }
       ],
       "name": "transferOwnership",
@@ -662,6 +700,54 @@
         }
       ],
       "name": "updateAnybodyProblemAddress",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_daysInContest",
+          "type": "uint256"
+        }
+      ],
+      "name": "updateDaysInContest",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_entryPercent",
+          "type": "uint256"
+        }
+      ],
+      "name": "updateEntryPercent",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "_entryPrice", "type": "uint256" }
+      ],
+      "name": "updateEntryPrice",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_minimumDaysPlayed",
+          "type": "uint256"
+        }
+      ],
+      "name": "updateMinimumNumberOfDays",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"

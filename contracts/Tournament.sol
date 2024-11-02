@@ -12,7 +12,7 @@ contract Tournament is Ownable {
     uint256 public firstMonday = 1730678400; // Mon Nov 04 2024 00:00:00 GMT+0000
     uint256 public constant SECONDS_IN_A_DAY = 86400;
     address payable public anybodyProblem;
-    uint256 public daysInContest = 3;
+    uint256 public daysInContest = 2;
     uint256 public minimumDaysPlayed = 1;
     uint256 public entryPrice = 0; // 0.005 ether; // ~$10
     uint256 public entryPercent = 0; // 0 / 1000 = 0%

@@ -216,6 +216,12 @@
           "internalType": "uint256",
           "name": "day",
           "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "streak",
+          "type": "uint256"
         }
       ],
       "name": "RunSolved",
@@ -897,6 +903,13 @@
       "name": "scalingFactor",
       "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
       "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [{ "internalType": "bool", "name": "test", "type": "bool" }],
+      "name": "setTest",
+      "outputs": [],
+      "stateMutability": "nonpayable",
       "type": "function"
     },
     {

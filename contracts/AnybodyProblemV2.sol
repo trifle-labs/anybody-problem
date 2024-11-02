@@ -21,7 +21,7 @@ contract AnybodyProblemV2 is Ownable, ERC2981 {
     bool public paused = false;
     uint256 public priceToMint = 0.0025 ether;
     uint256 public priceToSave = 0 ether;
-    uint256 public discount = 2;
+    uint256 public discount = 9999999999999999; // should result in price of 0
 
     uint256 public constant FIRST_DAY = 1723766400; // Fri Aug 16 2024 00:00:00 GMT+0000
     uint256 public deployDay;
