@@ -108,13 +108,17 @@ contract Tournament is Ownable {
 
     function addToLeaderboard(uint256 runId) public onlyAnybodyProblem {
         uint256 currentWeek_ = currentWeek();
+        AnybodyProblemV2.Run memory run = runs(runId);
+
         // score isn't saved unless you have a ticket
-        if (!tickets[currentWeek_][msg.sender] && entryPrice != 0) {
+        if (!tickets[currentWeek_][run.owner] && entryPrice != 0) {
             return;
         }
-        addRunToWeeklyUserAverage(runId, currentWeek_);
-        addToFastestByWeekByPlayer(runId, currentWeek_);
-        addToSlowestByWeekByPlayer(runId, currentWeek_);
+        // NOTE: not necessary to check since addToLeaderboard is only called on currentDay
+        // require(currentWeek_ == dayToWeek(runs(runId).day), 'Run is not in current week');
+        addToAverageByWeekByPlayer(runId, currentWeek_, run);
+        addToFastestByWeekByPlayer(runId, currentWeek_, run);
+        addToSlowestByWeekByPlayer(runId, currentWeek_, run);
     }
 
     function buyTicket() public payable {
@@ -128,7 +132,6 @@ contract Tournament is Ownable {
         uint256 percentageKept = (entryPrice * entryPercent) / FACTOR;
         uint256 amountToSplit = entryPrice - percentageKept;
         fillPrize_(currentWeek_, amountToSplit);
-        prizes[currentWeek_] += amountToSplit;
         if (percentageKept > 0) {
             address payable proceedRecipient = AnybodyProblemV2(anybodyProblem)
                 .proceedRecipient();
@@ -141,7 +144,6 @@ contract Tournament is Ownable {
     }
 
     function payoutAverage(uint256 week) public {
-        // TODO: ensure the user has played at least the minimum number of days
         require(week < currentWeek(), 'Contest is not over');
         require(
             paidOutByWeek[week].average == address(0),
@@ -149,7 +151,7 @@ contract Tournament is Ownable {
         );
         (address winner, ) = mostAverageByWeek(week);
         paidOutByWeek[week].average = winner;
-        uint256 prizeAmount = prizes[week] / 3; // round down is what we want, dust will be minimal
+        uint256 prizeAmount = divRound(prizes[week], 3); // round down is what we want, dust will be minimal
         require(prizeAmount > 0, 'No prize to pay out');
         (bool sent, ) = winner.call{value: prizeAmount}('');
         emit EthMoved(winner, sent, '', prizeAmount);
@@ -164,7 +166,7 @@ contract Tournament is Ownable {
         );
         address winner = fastestByWeek(week);
         paidOutByWeek[week].fastest = winner;
-        uint256 prizeAmount = prizes[week] / 3; // round down is what we want, dust will be minimal
+        uint256 prizeAmount = divRound(prizes[week], 3); // round down is what we want, dust will be minimal
         require(prizeAmount > 0, 'No prize to pay out');
         (bool sent, ) = winner.call{value: prizeAmount}('');
         emit EthMoved(winner, sent, '', prizeAmount);
@@ -179,7 +181,7 @@ contract Tournament is Ownable {
         );
         address winner = slowestByWeek(week);
         paidOutByWeek[week].slowest = winner;
-        uint256 prizeAmount = prizes[week] / 3; // round down is what we want, dust will be minimal
+        uint256 prizeAmount = divRound(prizes[week], 3); // round down is what we want, dust will be minimal
         require(prizeAmount > 0, 'No prize to pay out');
         (bool sent, ) = winner.call{value: prizeAmount}('');
         emit EthMoved(winner, sent, '', prizeAmount);
@@ -259,7 +261,7 @@ contract Tournament is Ownable {
                 }
             }
             if (!enoughDays) {
-                if (tree.getNodeKeysLength(closest) > indexOffset) {
+                if (tree.getNodeKeysLength(closest) > indexOffset + 1) {
                     indexOffset++;
                 } else {
                     rankOffset++;
@@ -291,8 +293,12 @@ contract Tournament is Ownable {
         return AnybodyProblemV2(anybodyProblem).runs(runId);
     }
 
-    function addRunToWeeklyUserAverage(uint256 runId, uint256 week) internal {
-        address player = runs(runId).owner;
+    function addToAverageByWeekByPlayer(
+        uint256 runId,
+        uint256 week,
+        AnybodyProblemV2.Run memory run
+    ) internal {
+        address player = run.owner;
         WeekTotal storage weekStatsByPlayer = weeklyStatsByPlayer[week][player];
         uint256 oldAverage = weekStatsByPlayer.totalPlays > 0
             ? divRound(
@@ -302,15 +308,17 @@ contract Tournament is Ownable {
             : 0;
 
         weekStatsByPlayer.totalPlays++;
-        uint256 accumulativeTime = runs(runId).accumulativeTime;
+        uint256 accumulativeTime = run.accumulativeTime;
         weekStatsByPlayer.totalTime += accumulativeTime;
         uint256 counterForOrdering = AnybodyProblemV2(anybodyProblem)
             .counterForOrdering();
         weekStatsByPlayer.lastUpdated = counterForOrdering;
         weeklyStatsByPlayer[week][player] = weekStatsByPlayer;
 
-        uint256 newAverage = weekStatsByPlayer.totalTime /
-            weekStatsByPlayer.totalPlays;
+        uint256 newAverage = divRound(
+            weekStatsByPlayer.totalTime,
+            weekStatsByPlayer.totalPlays
+        );
 
         // if key exists, remove it
         HitchensOrderStatisticsTreeLib.Tree
@@ -327,7 +335,6 @@ contract Tournament is Ownable {
         weeklyStats[week].totalTime += accumulativeTime;
         weeklyStats[week].lastUpdated = counterForOrdering;
 
-        // TODO: this could be improved so it only triggers when it actually changes
         uint256 newGlobalAverage = weeklyAverage(week);
         (address currentWinner, uint closestAverage) = mostAverageByWeek(week);
         emit RecordBroken(
@@ -347,8 +354,11 @@ contract Tournament is Ownable {
         return address(uint160(uint256(key)));
     }
 
-    function addToSlowestByWeekByPlayer(uint256 runId, uint256 week) internal {
-        AnybodyProblemV2.Run memory run = runs(runId);
+    function addToSlowestByWeekByPlayer(
+        uint256 runId,
+        uint256 week,
+        AnybodyProblemV2.Run memory run
+    ) internal {
         uint256 dayOfTheWeek_ = dayOfTheWeek(run.day);
 
         // First it's important to track whether this is the slowest speed for the day
@@ -406,8 +416,11 @@ contract Tournament is Ownable {
         }
     }
 
-    function addToFastestByWeekByPlayer(uint256 runId, uint256 week) internal {
-        AnybodyProblemV2.Run memory run = runs(runId);
+    function addToFastestByWeekByPlayer(
+        uint256 runId,
+        uint256 week,
+        AnybodyProblemV2.Run memory run
+    ) internal {
         uint256 dayOfTheWeek_ = dayOfTheWeek(run.day);
 
         // First it's important to track whether this is the fastest speed for the day

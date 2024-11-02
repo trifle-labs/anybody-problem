@@ -2,8 +2,13 @@ import { expect } from 'chai'
 import { beforeEach, afterEach, describe, it } from 'mocha'
 import hre from 'hardhat'
 import { time, takeSnapshot } from '@nomicfoundation/hardhat-network-helpers'
+// import withArgs from '@nomicfoundation/hardhat-chai-matchers'
+// console.log({ withArgs })
+// const { anyValue } = withArgs
 
 const ethers = hre.ethers
+// import ethers from '@nomicfoundation/hardhat-ignition-ethers'
+// console.log({ ethers })
 
 import {
   deployContracts,
@@ -17,6 +22,33 @@ const actualMonday = 1730678400 // Mon Nov 04 2024 00:00:00 GMT+0000
 
 // const daysInContest = 7
 // const minimumDaysPlayed = 3
+
+const divRound = (a, b) => {
+  if (typeof a !== 'bigint') a = BigInt(a)
+  if (typeof b !== 'bigint') b = BigInt(b)
+  if (a == 0n || b == 0n) return 0
+  let result = a / b // integer division is same as Math.floor
+  if ((a % b) * 2n >= b) result++
+  if (result > BigInt(Number.MAX_SAFE_INTEGER)) {
+    return ethers.BigNumber.from(result)
+  }
+  return parseInt(result)
+}
+
+function seededRandom(seed) {
+  let m = 0x80000000 // 2^31
+  let a = 1103515245
+  let c = 12345
+
+  // Use the seed to initialize the state
+  let state = seed ? seed : Math.floor(Math.random() * (m - 1))
+
+  // Generate the next random number
+  return function () {
+    state = (a * state + c) % m
+    return state / (m - 1)
+  }
+}
 
 const dayOfTheWeek = (day, daysInContest) => {
   return ((day - earlyMonday) / SECONDS_IN_DAY) % daysInContest
@@ -146,7 +178,7 @@ describe('Tournament Tests', function () {
     expect(weeklyStats.lastUpdated).to.equal(lastUpdated)
 
     // const tree = await Tournament.weeklyStatsSortedTree(week)
-    const average = speed / 1
+    const average = divRound(speed, 1)
     const exists = await Tournament.exists(week, average)
     expect(exists).to.equal(true)
 
@@ -177,8 +209,9 @@ describe('Tournament Tests', function () {
       { runId: 3, accumulativeTime: 268, day, player: acct2.address }, // player 2 will win
       { runId: 4, accumulativeTime: 400, day, player: acct3.address }
     ]
-    const average = Math.round(
-      runs.reduce((acc, run) => acc + run.accumulativeTime, 0) / runs.length
+    const average = divRound(
+      runs.reduce((acc, run) => acc + run.accumulativeTime, 0),
+      runs.length
     )
     expect(average).to.equal(267)
     await Tournament.setDisableForTesting(true)
@@ -218,8 +251,9 @@ describe('Tournament Tests', function () {
 
     const [mostAverageByWeek] = await Tournament.mostAverageByWeek(week)
     expect(mostAverageByWeek).to.equal(acct2.address)
-    const globalAverage = Math.round(
-      runs.reduce((acc, run) => acc + run.accumulativeTime, 0) / runs.length
+    const globalAverage = divRound(
+      runs.reduce((acc, run) => acc + run.accumulativeTime, 0),
+      runs.length
     )
 
     // now add someone who is same distance from average as current winner
@@ -371,7 +405,7 @@ describe('Tournament Tests', function () {
 
     const winner = acct2.address
 
-    const winnersAverage = Math.round(
+    const winnersAverage = divRound(
       days.reduce(
         (acc, day) =>
           acc +
@@ -379,14 +413,16 @@ describe('Tournament Tests', function () {
             .filter((run) => run.player == winner)
             .reduce((acc, run) => acc + run.accumulativeTime, 0),
         0
-      ) / 3
+      ),
+      3
     )
-    const globalAverage = Math.round(
+    const globalAverage = divRound(
       days.reduce(
         (acc, day) =>
           acc + day.reduce((acc, run) => acc + run.accumulativeTime, 0),
         0
-      ) / 9
+      ),
+      9
     )
 
     await expect(tx)
@@ -583,8 +619,8 @@ describe('Tournament Tests', function () {
   })
 
   it('doesnt save your score if you dont do minimum number of days', async () => {
-    const [, acct1] = await ethers.getSigners()
-    console.log('player is ' + acct1.address)
+    const [, acct1, acct2] = await ethers.getSigners()
+    // console.log({ acct1: acct1.address, acct2: acct2.address })
     const { Tournament, AnybodyProblemV2 } = await deployContracts({
       mock: true
     })
@@ -617,7 +653,7 @@ describe('Tournament Tests', function () {
       const runFail = {
         runId,
         day,
-        speed: 100,
+        speed: 50,
         player: acct1.address
       }
       await AnybodyProblemV2.setRunData(
@@ -641,13 +677,52 @@ describe('Tournament Tests', function () {
     const [mostAverage] = await Tournament.mostAverageByWeek(week)
     expect(mostAverage).to.equal(ethers.constants.AddressZero)
 
+    // add someone in between with worse scores
+    // this is to ensure that even though they completed the minimum number of days
+    // they aren't kept as the winner. Important to note that the original player
+    // had a winning score before they reached minimum number of days, the one they
+    // add at the end is not a winner compared to this middle player.
+
+    let day2 = await AnybodyProblemV2.currentDay()
+    for (let i = 0; i < minimumDaysPlayed.toNumber(); i++) {
+      runId++
+      const run = {
+        runId,
+        day: day2,
+        speed: 75,
+        player: acct2.address
+      }
+      await AnybodyProblemV2.setRunData(
+        run.runId,
+        run.day,
+        run.speed,
+        run.player
+      )
+      await Tournament.addToLeaderboard(run.runId)
+      day2 = day2.add(SECONDS_IN_DAY)
+    }
+
+    const fastest2 = await Tournament.fastestByWeek(week)
+    expect(fastest2).to.equal(acct2.address)
+
+    const slowest2 = await Tournament.slowestByWeek(week)
+    expect(slowest2).to.equal(acct2.address)
+
+    const [mostAverage2] = await Tournament.mostAverageByWeek(week)
+    expect(mostAverage2).to.equal(acct2.address)
+
+    // now finally add the missing days for the player that has ties the fastest,
+    // slowest and most average (total is 150 over 2 runs for each of them).
+    // All categories are tied, player 1 began first, but player 2
+    // finalized their weekly tallied scores first.
+
     // now add the missing days
     for (let i = 0; i < missingDays; i++) {
       runId++
       const runFail = {
         runId,
         day,
-        speed: 50,
+        speed: 100,
         player: acct1.address
       }
       await AnybodyProblemV2.setRunData(
@@ -660,35 +735,266 @@ describe('Tournament Tests', function () {
       day = day.add(SECONDS_IN_DAY)
     }
 
-    const fastest2 = await Tournament.fastestByWeek(week)
-    expect(fastest2).to.equal(acct1.address)
+    const fastest3 = await Tournament.fastestByWeek(week)
+    expect(fastest3).to.equal(acct2.address)
 
-    const slowest2 = await Tournament.slowestByWeek(week)
-    expect(slowest2).to.equal(acct1.address)
+    const slowest3 = await Tournament.slowestByWeek(week)
+    expect(slowest3).to.equal(acct2.address)
 
-    const [mostAverage2] = await Tournament.mostAverageByWeek(week)
-    expect(mostAverage2).to.equal(acct1.address)
+    const [mostAverage3] = await Tournament.mostAverageByWeek(week)
+    expect(mostAverage3).to.equal(acct2.address)
+  })
+  it('pays out prize + tickets to winners', async () => {
+    const [, acct1, acct2, acct3] = await ethers.getSigners()
+    const accounts = [acct1, acct2, acct3]
 
-    // const runs = []
-    // const players = [acct1, acct2, acct3]
-    // for (let i = 0; i < players.length; i++) {
+    const { Tournament, AnybodyProblem } = await deployContracts({
+      mock: true
+    })
+    await Tournament.setDisableForTesting(true)
+    await AnybodyProblem.setTest(true)
+    await Tournament.setVars(earlyMonday)
+
+    const enforceDaysInContest = 7
+    const enforceMinimumDaysPlayed = 3
+    await Tournament.updateMinimumNumberOfDays(enforceMinimumDaysPlayed)
+    await Tournament.updateDaysInContest(enforceDaysInContest)
+
+    const newPrice = ethers.utils.parseEther('0.01')
+    const newPercent = 0.1 // 500 / 1000 = 50%
+    const FACTOR = await Tournament.FACTOR()
+    const newPercentInt = FACTOR.toNumber() * newPercent
+    await Tournament.updateEntryPrice(newPrice)
+    await Tournament.updateEntryPercent(newPercentInt)
+
+    // ff the clock to the first day of the contest
+    const daysInContest = await Tournament.daysInContest()
+    const minimumDaysPlayed = await Tournament.minimumDaysPlayed()
+
+    await incrementTilMonday(daysInContest)
+
+    const proceedRecipient = await AnybodyProblem.proceedRecipient()
+    const proceedPortion = newPrice.mul(newPercentInt).div(FACTOR)
+
+    for (let i = 0; i < accounts.length; i++) {
+      await expect(
+        Tournament.connect(accounts[i]).buyTicket({ value: newPrice })
+      )
+        .to.emit(Tournament, 'EthMoved')
+        .withNamedArgs({
+          success: true,
+          to: Tournament.address,
+          amount: newPrice.sub(proceedPortion)
+        })
+        .withNamedArgs({
+          success: true,
+          to: proceedRecipient,
+          amount: proceedPortion
+        })
+    }
+
+    let day = await AnybodyProblem.currentDay()
+    let week = await Tournament.currentWeek()
+    const random = seededRandom(week.toNumber())
+    let runId = 0
+    let records = {}
+    for (let i = 0; i < daysInContest.toNumber(); i++) {
+      // const unixTimeToText = new Date(day.toNumber() * 1000)
+      //   .toString()
+      //   .substring(0, 15)
+      // console.log('day is ', unixTimeToText)
+      // console.log('week is ', week.toString())
+      for (let j = 0; j < accounts.length; j++) {
+        runId++
+        const run = {
+          runId,
+          day,
+          speed: Math.floor(random() * 1000) + 1,
+          player: accounts[j].address
+        }
+        if (!records[run.player]) records[run.player] = []
+        records[run.player].push(run)
+        await AnybodyProblem.setRunData(
+          run.runId,
+          run.day,
+          run.speed,
+          run.player
+        )
+        await Tournament.addToLeaderboard(run.runId)
+      }
+      if (i < daysInContest.toNumber() - 1) {
+        await time.increase(SECONDS_IN_DAY)
+      }
+      day = await AnybodyProblem.currentDay()
+      week = await Tournament.currentWeek()
+    }
+
+    const { fastest, slowest, mostAverage } = (() => {
+      const sortedRecords = Object.entries(records).map(([player, runs]) => {
+        runs.sort((a, b) => a.speed - b.speed)
+        const fastestTotal = runs
+          .slice(minimumDaysPlayed.toNumber())
+          .reduce((acc, run) => {
+            return acc + run.speed
+          }, 0)
+        const slowestTotal = runs
+          .slice(0, runs.length - minimumDaysPlayed.toNumber())
+          .reduce((acc, run) => {
+            return acc + run.speed
+          }, 0)
+        const average = divRound(
+          runs.reduce((acc, run) => {
+            return acc + run.speed
+          }, 0),
+          runs.length
+        )
+        return {
+          player,
+          fastestTotal,
+          slowestTotal,
+          average
+        }
+      })
+      sortedRecords.sort((a, b) => a.fastestTotal - b.fastestTotal)
+      const fastest = sortedRecords[0]
+      const slowest = sortedRecords[sortedRecords.length - 1]
+      const globalAverage = divRound(
+        Object.entries(records)
+          .map(([, runs]) => {
+            return runs.reduce((acc, run) => acc + run.speed, 0)
+          })
+          .reduce((acc, speed) => acc + speed, 0),
+        daysInContest.toNumber() * accounts.length
+      )
+      const mostAverage = sortedRecords.reduce((acc, record) => {
+        return Math.abs(record.average - globalAverage) <
+          Math.abs(acc.average - globalAverage)
+          ? record
+          : acc
+      }, sortedRecords[0])
+      return { fastest, slowest, mostAverage }
+    })()
+
+    // console.dir({ records }, { depth: null })
+    // console.dir({ fastest, slowest, mostAverage }, { depth: null })
+    // console.log('-------------------')
+    // for (let i = 0; i < accounts.length; i++) {
+    //   const account = accounts[i]
+    //   console.log({ account: account.address })
+    //   const weekAverageStats = await Tournament.weeklyStatsByPlayer(
+    //     week,
+    //     account.address
+    //   )
+    //   console.log({ weekAverageStats })
     //   for (let j = 0; j < daysInContest.toNumber(); j++) {
-    //     const player = players[i].address
-    //     const day = day.add(j * SECONDS_IN_DAY)
-    //     const runId = i * daysInContest.toNumber() + j + 1
-    //     const speed = Math.floor(Math.random() * 1000) + 1
-    //     const run = {
-    //       runId,
-    //       day,
-    //       speed,
-    //       player
-    //     }
-    //     runs.push(run)
-    //     await AnybodyProblemV2.setRunData(runId, day, speed, player)
-    //     await Tournament.addToLeaderboard(runId)
+    //     const weekFastestStats = await Tournament.fastestByWeekByPlayer(
+    //       week,
+    //       account.address,
+    //       j
+    //     )
+    //     console.log({ weekFastestStats })
+    //     const weekSlowestStats = await Tournament.slowestByWeekByPlayer(
+    //       week,
+    //       account.address,
+    //       j
+    //     )
+    //     console.log({ weekSlowestStats })
     //   }
     // }
-    // await time.increase(daysInContest * SECONDS_IN_DAY)
+
+    const fastest_ = await Tournament.fastestByWeek(week)
+    const slowest_ = await Tournament.slowestByWeek(week)
+    const [mostAverage_] = await Tournament.mostAverageByWeek(week)
+    // console.log({ fastest_, slowest_, mostAverage_ })
+    expect(fastest_.toString()).to.equal(fastest.player)
+
+    expect(slowest_.toString()).to.equal(slowest.player)
+
+    expect(mostAverage_.toString()).to.equal(mostAverage.player)
+
+    await expect(Tournament.payoutFastest(week)).to.be.revertedWith(
+      'Contest is not over'
+    )
+    await expect(Tournament.payoutSlowest(week)).to.be.revertedWith(
+      'Contest is not over'
+    )
+    await expect(Tournament.payoutAverage(week)).to.be.revertedWith(
+      'Contest is not over'
+    )
+
+    // fast forward to first day of next week, contest is over
+    await time.increase(SECONDS_IN_DAY)
+
+    const prizeTotal = newPrice.sub(proceedPortion).mul(accounts.length)
+
+    const contractBalanceBefore = await ethers.provider.getBalance(
+      Tournament.address
+    )
+    expect(contractBalanceBefore).to.equal(prizeTotal)
+
+    const prizeStored = await Tournament.prizes(week)
+    expect(prizeStored).to.equal(prizeTotal)
+
+    const prizePortion = divRound(prizeTotal.toBigInt(), 3)
+
+    const fastestAccount = accounts.find(
+      (account) => account.address === fastest.player
+    )
+    const slowestAccount = accounts.find(
+      (account) => account.address === slowest.player
+    )
+    const mostAverageAccount = accounts.find(
+      (account) => account.address === mostAverage.player
+    )
+
+    const fastestBalanceBefore = await fastestAccount.getBalance()
+    expect(await Tournament.payoutFastest(week))
+      .to.emit(Tournament, 'EthMoved')
+      .withNamedArgs({
+        to: fastestAccount.address,
+        success: true,
+        amount: prizePortion
+      })
+    const fastestBalanceAfter = await fastestAccount.getBalance()
+    expect(fastestBalanceAfter.sub(fastestBalanceBefore)).to.equal(prizePortion)
+
+    const slowestBalanceBefore = await slowestAccount.getBalance()
+    expect(await Tournament.payoutSlowest(week))
+      .to.emit(Tournament, 'EthMoved')
+      .withNamedArgs({
+        to: slowestAccount.address,
+        success: true,
+        amount: prizePortion
+      })
+    const slowestBalanceAfter = await slowestAccount.getBalance()
+    expect(slowestBalanceAfter.sub(slowestBalanceBefore)).to.equal(prizePortion)
+
+    const mostAverageBalanceBefore = await mostAverageAccount.getBalance()
+    expect(await Tournament.payoutAverage(week))
+      .to.emit(Tournament, 'EthMoved')
+      .withNamedArgs({
+        to: mostAverageAccount.address,
+        success: true,
+        amount: prizePortion
+      })
+    const mostAverageBalanceAfter = await mostAverageAccount.getBalance()
+    expect(mostAverageBalanceAfter.sub(mostAverageBalanceBefore)).to.equal(
+      prizePortion
+    )
+    const contractBalanceAfter = await ethers.provider.getBalance(
+      Tournament.address
+    )
+    expect(contractBalanceAfter).to.equal(0)
+
+    await expect(Tournament.payoutFastest(week)).to.be.revertedWith(
+      'Already paid out fastest'
+    )
+    await expect(Tournament.payoutSlowest(week)).to.be.revertedWith(
+      'Already paid out slowest'
+    )
+    await expect(Tournament.payoutAverage(week)).to.be.revertedWith(
+      'Already paid out average'
+    )
   })
   // it('confirms all functions of tree')
 })
