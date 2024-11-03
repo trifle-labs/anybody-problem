@@ -119,7 +119,7 @@ describe('Tournament Tests', function () {
     const firstMonday = await Tournament.firstMonday()
     expect(firstMonday).to.equal(actualMonday)
 
-    await Tournament.setVars(earlyMonday)
+    await Tournament.setFirstMonday(earlyMonday)
     const firstMonday_ = await Tournament.firstMonday()
     expect(firstMonday_).to.equal(earlyMonday)
   })
@@ -128,7 +128,7 @@ describe('Tournament Tests', function () {
     const { Tournament, AnybodyProblemV2 } = await deployContracts({
       mock: true
     })
-    await Tournament.setVars(earlyMonday)
+    await Tournament.setFirstMonday(earlyMonday)
 
     const [owner] = await ethers.getSigners()
 
@@ -149,7 +149,7 @@ describe('Tournament Tests', function () {
     const { Tournament, AnybodyProblemV2 } = await deployContracts({
       mock: true
     })
-    await Tournament.setVars(earlyMonday)
+    await Tournament.setFirstMonday(earlyMonday)
     const [owner] = await ethers.getSigners()
     const runId = 1
     const speed = 50
@@ -200,7 +200,7 @@ describe('Tournament Tests', function () {
     const { Tournament, AnybodyProblemV2 } = await deployContracts({
       mock: true
     })
-    await Tournament.setVars(earlyMonday)
+    await Tournament.setFirstMonday(earlyMonday)
     const [acct1, acct2, acct3, acct4] = await ethers.getSigners()
     const day = await AnybodyProblemV2.currentDay()
     const runs = [
@@ -338,7 +338,7 @@ describe('Tournament Tests', function () {
       mock: true
     })
     const day = await AnybodyProblemV2.currentDay()
-    await Tournament.setVars(earlyMonday)
+    await Tournament.setFirstMonday(earlyMonday)
 
     const prize = ethers.utils.parseEther('0.1')
     const week = await Tournament.dayToWeek(day)
@@ -357,7 +357,7 @@ describe('Tournament Tests', function () {
       mock: true
     })
     await Tournament.setDisableForTesting(true)
-    await Tournament.setVars(earlyMonday)
+    await Tournament.setFirstMonday(earlyMonday)
 
     const daysInContest = await Tournament.daysInContest()
 
@@ -367,7 +367,7 @@ describe('Tournament Tests', function () {
 
     const [acct1, acct2, acct3] = await ethers.getSigners()
 
-    await Tournament.setVars(earlyMonday)
+    await Tournament.setFirstMonday(earlyMonday)
     const days = [
       [
         { accumulativeTime: 100, player: acct1.address },
@@ -471,7 +471,7 @@ describe('Tournament Tests', function () {
       mock: true
     })
     await Tournament.setDisableForTesting(true)
-    await Tournament.setVars(earlyMonday)
+    await Tournament.setFirstMonday(earlyMonday)
     const daysInContest = await Tournament.daysInContest()
     const [, acct1, acct2, acct3] = await ethers.getSigners()
     await incrementTilMonday(daysInContest)
@@ -571,7 +571,7 @@ describe('Tournament Tests', function () {
     })
     await Tournament.setDisableForTesting(true)
     await AnybodyProblemV2.setTest(true)
-    await Tournament.setVars(earlyMonday)
+    await Tournament.setFirstMonday(earlyMonday)
     const daysInContest = await Tournament.daysInContest()
     const newPrice = ethers.utils.parseEther('0.01')
     const newPercent = 0.5 // 500 / 1000 = 50%
@@ -626,7 +626,7 @@ describe('Tournament Tests', function () {
     })
     await Tournament.setDisableForTesting(true)
     await AnybodyProblemV2.setTest(true)
-    await Tournament.setVars(earlyMonday)
+    await Tournament.setFirstMonday(earlyMonday)
     const daysInContest = await Tournament.daysInContest()
     // const newPrice = ethers.utils.parseEther('0.01')
     const newPercent = 0.5 // 500 / 1000 = 50%
@@ -753,7 +753,7 @@ describe('Tournament Tests', function () {
     })
     await Tournament.setDisableForTesting(true)
     await AnybodyProblem.setTest(true)
-    await Tournament.setVars(earlyMonday)
+    await Tournament.setFirstMonday(earlyMonday)
 
     const enforceDaysInContest = 7
     const enforceMinimumDaysPlayed = 3

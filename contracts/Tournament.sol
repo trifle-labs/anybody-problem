@@ -98,7 +98,7 @@ contract Tournament is Ownable {
         fillPrize_(currentWeek(), msg.value);
     }
 
-    function setVars(uint256 firstMonday_) public onlyOwner {
+    function setFirstMonday(uint256 firstMonday_) public onlyOwner {
         firstMonday = firstMonday_;
     }
 
