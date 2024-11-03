@@ -46,7 +46,7 @@ describe('ExternalMetadata Tests', function () {
       .be.reverted
   })
 
-  it.only('has valid json', async function () {
+  it('has valid json', async function () {
     const [owner] = await ethers.getSigners()
 
     const { AnybodyProblemV0, ExternalMetadata, Speedruns } =
@@ -97,7 +97,7 @@ describe('ExternalMetadata Tests', function () {
     ).toString('utf-8')
     // console.dir({ utf8Json }, { depth: null })
     const json = JSON.parse(utf8Json)
-    console.dir({ json }, { depth: null })
+    // console.dir({ json }, { depth: null })
     const base64SVG = json.image
 
     // console.log('-----base64 image-----')

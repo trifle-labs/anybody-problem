@@ -74,7 +74,6 @@ const initContracts = async (
     'ThemeGroup'
   ]
 ) => {
-  console.log({ contractNames })
   let [deployer] = await hre.ethers.getSigners()
 
   for (let i = 3; i <= 6; i++) {

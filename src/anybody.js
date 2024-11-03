@@ -768,7 +768,7 @@ export class Anybody extends EventEmitter {
   }
 
   genRadius(index) {
-    const radii = [36n, 27n, 23n, 19n, 15n, 11n] // n * 4 + 2
+    const radii = [36n, 27n, 24n, 21n, 18n, 15n]
     let size = radii[index % radii.length]
     return parseInt(size * BigInt(this.scalingFactor))
   }

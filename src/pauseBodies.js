@@ -12,7 +12,7 @@ export const PAUSE_BODY_DATA = [
   // upper right
   {
     bodyIndex: 5,
-    radius: 11_000,
+    radius: 15_000,
     px: 793406,
     py: 133029,
     vx: 1000000,
@@ -23,7 +23,7 @@ export const PAUSE_BODY_DATA = [
   // mid right
   {
     bodyIndex: 2,
-    radius: 23_000,
+    radius: 24_000,
     px: 825620,
     py: 328711,
     vx: 100000,
@@ -45,7 +45,7 @@ export const PAUSE_BODY_DATA = [
   // mid left
   {
     bodyIndex: 3,
-    radius: 19_000,
+    radius: 21_000,
     px: 229878,
     py: 464946,
     vx: -100000,
@@ -56,7 +56,7 @@ export const PAUSE_BODY_DATA = [
   // bottom right
   {
     bodyIndex: 4,
-    radius: 15_000,
+    radius: 18_000,
     px: 679878,
     py: 668946,
     vx: 100000,
