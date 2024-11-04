@@ -829,16 +829,16 @@ describe('Tournament Tests', function () {
       week = await Tournament.currentWeek()
     }
 
-    const { fastest, slowest, mostAverage } = (() => {
+    const { fastest, slowest, mostAverage } = ((records) => {
       const sortedRecords = Object.entries(records).map(([player, runs]) => {
         runs.sort((a, b) => a.speed - b.speed)
         const fastestTotal = runs
-          .slice(minimumDaysPlayed.toNumber())
+          .slice(0, minimumDaysPlayed.toNumber())
           .reduce((acc, run) => {
             return acc + run.speed
           }, 0)
         const slowestTotal = runs
-          .slice(0, runs.length - minimumDaysPlayed.toNumber())
+          .slice(runs.length - minimumDaysPlayed.toNumber())
           .reduce((acc, run) => {
             return acc + run.speed
           }, 0)
@@ -873,7 +873,7 @@ describe('Tournament Tests', function () {
           : acc
       }, sortedRecords[0])
       return { fastest, slowest, mostAverage }
-    })()
+    })(records)
 
     // console.dir({ records }, { depth: null })
     // console.dir({ fastest, slowest, mostAverage }, { depth: null })

@@ -26,6 +26,8 @@ contract Tournament is Ownable {
         uint256 extraValue
     );
 
+    event boughtTicket(address indexed player, uint256 week, uint256 amount);
+
     event EthMoved(
         address indexed to,
         bool indexed success,
@@ -132,6 +134,7 @@ contract Tournament is Ownable {
         uint256 percentageKept = (entryPrice * entryPercent) / FACTOR;
         uint256 amountToSplit = entryPrice - percentageKept;
         fillPrize_(currentWeek_, amountToSplit);
+        emit boughtTicket(msg.sender, currentWeek_, msg.value);
         if (percentageKept > 0) {
             address payable proceedRecipient = AnybodyProblemV2(anybodyProblem)
                 .proceedRecipient();
