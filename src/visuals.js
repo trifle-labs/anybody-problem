@@ -1089,7 +1089,10 @@ export const Visuals = {
 
     // middle box text
     const levelTimes = this.levelSpeeds
-      .map((result) => result?.framesTook / this.FPS)
+      .map((result) => {
+        // console.log({ result, lastResult: result[result.length - 1] })
+        return result[result.length - 1]?.framesTook / this.FPS
+      })
       .filter((l) => l !== undefined)
     const bestTimes =
       this.todaysRecords?.levels?.map((l) => l.events[0].time / this.FPS) ?? []
@@ -1415,7 +1418,7 @@ export const Visuals = {
             }
             return
           }
-          //
+          this.emitLevel(5)
           this.emit('save')
         },
         ...themes.buttons.green,
