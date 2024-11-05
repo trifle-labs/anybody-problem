@@ -1219,8 +1219,9 @@ export class Anybody extends EventEmitter {
         this.undoMissile()
         this.lastMissileCantBeUndone = false
         console.log('LASTMISSILECANTBEUNDONE = FALSE')
+      } else {
+        this.missileInits.pop()
       }
-      this.missileInits.pop()
       this.missileCount--
     }
 
