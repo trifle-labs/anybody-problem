@@ -546,122 +546,103 @@ export class Anybody extends EventEmitter {
       }
       const isFinalChunk = i === this.levelSpeeds[levelIndex].length - 1
       const uid = Math.floor(Math.random() * 1000000)
-      console.log({ uid })
       const frameLength = proverTickIndex[level + 1]
-      console.log({ frameLength, proverTickIndex, level })
-      // genwit(sampleInput).then((witnessResults) => {
-      const witnessResults = await genwit(sampleInput)
-      console.log({ uid })
-      // console.log({ witnessResults })
-      const bodies = level + 1 <= 4 ? 4 : 6
-      console.log(
-        { uid },
-        'inflightMissileLengtl' + levelData.inflightMissile.length
-      )
-      console.log(
-        { uid },
-        'outflightMissileLengtl' + levelData.outflightMissile.length
-      )
-      const totalsignals =
-        5 +
-        bodies * 5 +
-        1 + // timeTook
-        1 + // address
-        bodies * 5 +
-        5
-      console.log({ uid }, { totalsignals })
-      console.log({ uid }, { sampleInput, levelData })
-      for (let i = 0; i < totalsignals; i++) {
-        const signal = witnessResults[i]
-        console.log({ uid }, { i, signal })
-        if (i < 1) {
-          console.log({ uid }, 'dont know what this signal is: ', signal)
-        } else if (i < 1 + 5) {
-          const offset = 1
-          // outflight missile
-          if (signal !== BigInt(levelData.outflightMissile[i - offset])) {
-            console.log(
-              { uid },
-              {
-                signal,
-                outflightMissile: levelData.outflightMissile[i - offset]
-              }
-            )
-            throw new Error(
-              'outflightMissile mismatch at index i:' + i + ' uid:' + uid
-            )
-          }
-        } else if (i < 1 + 5 + bodies * 5) {
-          if (isFinalChunk) continue
-          const offset = 1 + 5
-          // body outputs
-          const bodyIndex = Math.floor((i - offset) / 5)
-          const attrIndex = (i - offset) % 5
-          console.log({ levelData })
-          console.log({ uid }, { i, offset, bodyIndex, attrIndex })
-          console.log({ uid }, { body: levelData.bodyFinal[bodyIndex] })
-          if (bodyIndex > levelData.bodyFinal.length - 1) continue
-          if (BigInt(levelData.bodyFinal[bodyIndex][attrIndex]) !== signal)
-            throw new Error('bodyFinal mismatch i:' + i + ' uid:' + uid)
-        } else if (i < 1 + 5 + bodies * 5 + 1) {
-          console.log(
-            { uid },
-            {
-              isFinalChunk,
-              frameLength,
-              i,
-              levelData
-            }
-          )
-          const framesTook =
-            (levelData.framesTook && levelData.framesTook % frameLength) ||
-            frameLength
-          console.log({ framesTook })
-          if (BigInt(framesTook) !== signal) {
-            console.log({ uid }, { framesTook, signal })
-            throw new Error('framesTook mismatch i:' + i + ' uid:' + uid)
-          }
-        } else if (i < 1 + 5 + bodies * 5 + 1 + 1) {
-          if (BigInt(address) !== signal) {
-            console.log({ uid }, { address, signal })
-            throw new Error('address mismatch i:' + i + ' uid:' + uid)
-          }
-        } else if (i < 1 + 5 + bodies * 5 + 1 + 1 + bodies * 5) {
-          const offset = 5 + bodies * 5 + 1 + 1 + 1
-          console.log({ uid }, { offset, i })
-          const bodyIndex = Math.floor((i - offset) / 5)
-          if (bodyIndex > levelData.bodyInits.length - 1) {
-            console.log({ uid }, 'skipping i:' + i + ' uid:' + uid)
-            continue
-          }
-          const attrIndex = (i - offset) % 5
-          console.log({ uid }, { bodyIndex, attrIndex })
-          console.log({ uid }, { body: levelData.bodyInits[bodyIndex] })
-          if (BigInt(levelData.bodyInits[bodyIndex][attrIndex]) !== signal) {
-            console.log(
-              { uid },
-              {
-                signal,
-                body: levelData.bodyInits[bodyIndex][attrIndex]
-              }
-            )
-            throw new Error('bodyInits mismatch i:' + i + ' uid:' + uid)
-          }
-        } else if (i < totalsignals) {
-          const offset = 5 + bodies * 5 + 1 + 1 + 1 + bodies * 5
-          const missileIndex = i - offset
-          if (BigInt(levelData.inflightMissile[missileIndex]) !== signal) {
-            throw new Error('inflightMissile mismatch i:' + i + ' uid:' + uid)
-          }
-        } else {
-          throw new Error('shouldnt be here i:' + i + ' uid:' + uid)
-        }
-      }
-      // })
-    }
 
-    console.log('passed check before emitting level')
-    console.log('level has ' + this.levelSpeeds[levelIndex].length + ' chunks')
+      if (process.env.force_circuit_check == 'true') {
+        const witnessResults = await genwit(sampleInput)
+        // console.log({ witnessResults })
+        const bodies = level + 1 <= 4 ? 4 : 6
+        const totalsignals =
+          5 +
+          bodies * 5 +
+          1 + // timeTook
+          1 + // address
+          bodies * 5 +
+          5
+        console.log({ uid }, { sampleInput, levelData })
+        for (let i = 0; i < totalsignals; i++) {
+          const signal = witnessResults[i]
+          if (i < 1) {
+            // console.log({ uid }, 'dont know what this signal is: ', signal)
+          } else if (i < 1 + 5) {
+            const offset = 1
+            // outflight missile
+            if (signal !== BigInt(levelData.outflightMissile[i - offset])) {
+              console.log(
+                { uid },
+                {
+                  i,
+                  signal,
+                  outflightMissile: levelData.outflightMissile[i - offset]
+                }
+              )
+              throw new Error(
+                'outflightMissile mismatch at index i:' + i + ' uid:' + uid
+              )
+            }
+          } else if (i < 1 + 5 + bodies * 5) {
+            if (isFinalChunk) continue
+            const offset = 1 + 5
+            // body outputs
+            const bodyIndex = Math.floor((i - offset) / 5)
+            const attrIndex = (i - offset) % 5
+            if (bodyIndex > levelData.bodyFinal.length - 1) continue
+            if (BigInt(levelData.bodyFinal[bodyIndex][attrIndex]) !== signal) {
+              console.log({
+                i,
+                uid,
+                signal,
+                body: levelData.bodyFinal[bodyIndex][attrIndex]
+              })
+              throw new Error('bodyFinal mismatch i:' + i + ' uid:' + uid)
+            }
+          } else if (i < 1 + 5 + bodies * 5 + 1) {
+            const framesTook =
+              (levelData.framesTook && levelData.framesTook % frameLength) ||
+              frameLength
+            if (BigInt(framesTook) !== signal) {
+              console.log({ uid }, { framesTook, signal })
+              throw new Error('framesTook mismatch i:' + i + ' uid:' + uid)
+            }
+          } else if (i < 1 + 5 + bodies * 5 + 1 + 1) {
+            if (BigInt(address) !== signal) {
+              console.log({ uid }, { address, signal })
+              throw new Error('address mismatch i:' + i + ' uid:' + uid)
+            }
+          } else if (i < 1 + 5 + bodies * 5 + 1 + 1 + bodies * 5) {
+            const offset = 5 + bodies * 5 + 1 + 1 + 1
+            const bodyIndex = Math.floor((i - offset) / 5)
+            if (bodyIndex > levelData.bodyInits.length - 1) {
+              // console.log({ uid }, 'skipping i:' + i + ' uid:' + uid)
+              continue
+            }
+            const attrIndex = (i - offset) % 5
+            if (BigInt(levelData.bodyInits[bodyIndex][attrIndex]) !== signal) {
+              console.log(
+                { uid },
+                {
+                  bodyIndex,
+                  attrIndex,
+                  signal,
+                  body: levelData.bodyInits[bodyIndex][attrIndex]
+                }
+              )
+              throw new Error('bodyInits mismatch i:' + i + ' uid:' + uid)
+            }
+          } else if (i < totalsignals) {
+            const offset = 5 + bodies * 5 + 1 + 1 + 1 + bodies * 5
+            const missileIndex = i - offset
+            if (BigInt(levelData.inflightMissile[missileIndex]) !== signal) {
+              console.lot({ signal, missileIndex, offset })
+              throw new Error('inflightMissile mismatch i:' + i + ' uid:' + uid)
+            }
+          } else {
+            throw new Error('shouldnt be here i:' + i + ' uid:' + uid)
+          }
+        }
+        // })
+      }
+    }
     if (this.levelSpeeds.length < level - 1)
       throw new Error('cant submit unplayed level')
     const levelData = this.levelSpeeds[levelIndex]
@@ -916,6 +897,12 @@ export class Anybody extends EventEmitter {
       return acc
     }, -1)
 
+    console.log({
+      step: this.frames,
+      lastMissileIndex,
+      lastchunk_missiles: JSON.parse(JSON.stringify(lastChunk.missiles))
+    })
+
     lastChunk.missiles[lastMissileIndex] = ['0', '0', '0']
     lastChunk.outflightMissile = ['0', '1000000', '0', '0', '0']
 
@@ -990,7 +977,7 @@ export class Anybody extends EventEmitter {
   }
 
   genRadius(index) {
-    const radii = [36n, 27n, 23n, 19n, 15n, 11n] // n * 4 + 2
+    const radii = [36n, 27n, 24n, 21n, 18n, 15n] // n * 4 + 2
     let size = radii[index % radii.length]
     return parseInt(size * BigInt(this.scalingFactor))
   }
@@ -1219,10 +1206,19 @@ export class Anybody extends EventEmitter {
         this.undoMissile()
         this.lastMissileCantBeUndone = false
         console.log('LASTMISSILECANTBEUNDONE = FALSE')
-      } else {
-        this.missileInits.pop()
       }
+      console.log({
+        missileInitsBeforePop: JSON.parse(JSON.stringify(this.missileInits))
+      })
+      this.missileInits.pop()
+      console.log({
+        missileInitsAfterPop: JSON.parse(JSON.stringify(this.missileInits))
+      })
+      console.log({ levelSpeeds: JSON.parse(JSON.stringify(this.levelSpeeds)) })
       this.missileCount--
+    } else if (this.lastMissileCantBeUndone) {
+      alert('didnt think this would happen')
+      this.lastMissileCantBeUndone = false
     }
 
     this.missileCount++
@@ -1256,13 +1252,7 @@ export class Anybody extends EventEmitter {
         return
       }
     }
-    // const bodyCount = this.bodies.filter((b) => b.radius !== 0).length - 1
-    // this.missiles = this.missiles.slice(0, bodyCount)
-    // this.missiles = this.missiles.slice(-bodyCount)
-
-    // NOTE: this is stupid
-    this.missiles.push(b)
-    this.missiles = this.missiles.slice(-1)
+    this.missiles = [b]
 
     const missileVectorMagnitude = x ** 2 + (y - this.windowWidth) ** 2
     this.sound?.playMissile(missileVectorMagnitude)

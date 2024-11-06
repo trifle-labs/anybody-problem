@@ -73,6 +73,15 @@ contract Tournament is Ownable {
         return dayToWeek(currentDay);
     }
 
+    function removePrize(uint256 week, uint256 amount) public onlyOwner {
+        require(prizes[week] >= amount, 'Not enough prize to remove');
+        prizes[week] -= amount;
+        (bool sent, bytes memory data) = payable(msg.sender).call{
+            value: amount
+        }('');
+        emit EthMoved(msg.sender, sent, data, amount);
+    }
+
     function fillPrize_(uint256 week, uint256 amount) internal {
         uint256 currentWeek_ = currentWeek();
         require(week >= currentWeek_, 'Cannot fill prize for past week');
@@ -144,6 +153,30 @@ contract Tournament is Ownable {
             require(sent, 'Failed to send Ether');
             emit EthMoved(proceedRecipient, sent, data, percentageKept);
         }
+    }
+
+    function recoverUnclaimed(uint256 week) public onlyOnwer {
+        require(week < currentWeek(), 'Contest is not over');
+        uint256 unclaimedPrizes = 0;
+        uint256 prizeAmount = divRound(prizes[week], 3); // round down is what we want, dust will be minimal
+        if (paidOutByWeek[week].average == address(0)) {
+            unclaimedPrizes += prizeAmount;
+            paidOutByWeek[week].average = msg.sender;
+        }
+        if (paidOutByWeek[week].fastest == address(0)) {
+            unclaimedPrizes += prizeAmount;
+            paidOutByWeek[week].fastest = msg.sender;
+        }
+
+        if (paidOutByWeek[week].slowest == address(0)) {
+            unclaimedPrizes += prizeAmount;
+            paidOutByWeek[week].slowest = msg.sender;
+        }
+        (bool sent, bytes memory data) = payable(msg.sender).call{
+            value: unclaimedPrizes
+        }('');
+        require(sent, 'Failed to send Ether');
+        emit EthMoved(msg.sender, sent, data, unclaimedPrizes);
     }
 
     function payoutAverage(uint256 week) public {

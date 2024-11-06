@@ -27,6 +27,8 @@ export const AnybodyProblemV2 = {
   }
 }
 
+export const AnybodyProblem = AnybodyProblemV2
+
 import AnybodyProblemV1ABI from './contractData/ABI-84532-AnybodyProblemV1.json'
 import AnybodyProblemV1BaseSepolia from './contractData/84532-AnybodyProblemV1.json'
 import AnybodyProblemV1Base from './contractData/8453-AnybodyProblemV1.json'
