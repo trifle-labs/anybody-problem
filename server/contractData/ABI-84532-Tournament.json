@@ -90,6 +90,31 @@
       "type": "event"
     },
     {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "player",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "week",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "boughtTicket",
+      "type": "event"
+    },
+    {
       "inputs": [],
       "name": "FACTOR",
       "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
@@ -518,9 +543,28 @@
     },
     {
       "inputs": [
+        { "internalType": "uint256", "name": "week", "type": "uint256" }
+      ],
+      "name": "recoverUnclaimed",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
         { "internalType": "address payable", "name": "_to", "type": "address" }
       ],
       "name": "recoverUnsuccessfulPayment",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "week", "type": "uint256" },
+        { "internalType": "uint256", "name": "amount", "type": "uint256" }
+      ],
+      "name": "removePrize",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -645,7 +689,7 @@
       "inputs": [
         { "internalType": "uint256", "name": "firstMonday_", "type": "uint256" }
       ],
-      "name": "setVars",
+      "name": "setFirstMonday",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
