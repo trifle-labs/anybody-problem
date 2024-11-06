@@ -17,13 +17,15 @@ import {
 } from '../../scripts/utils.js'
 
 const SECONDS_IN_DAY = 86400
-export const earlyMonday = 1728259200 // Mon Oct 7 2024 00:00:00 GMT+0000
-const actualMonday = 1730678400 // Mon Nov 04 2024 00:00:00 GMT+0000
+export const earlyMonday = 1704067200 // Mon Jan 01 2024 00:00:00 GMT+0000
+const actualMonday = 1704067200 // Mon Jan 01 2024 00:00:00 GMT+0000
 
 // const daysInContest = 7
 // const minimumDaysPlayed = 3
 
 const divRound = (a, b) => {
+  if (a.isBigNumber) a = a.toBigInt()
+  if (b.isBigNumber) b = b.toBigInt()
   if (typeof a !== 'bigint') a = BigInt(a)
   if (typeof b !== 'bigint') b = BigInt(b)
   if (a == 0n || b == 0n) return 0
@@ -809,7 +811,7 @@ describe('Tournament Tests', function () {
         const run = {
           runId,
           day,
-          speed: Math.floor(random() * 1000) + 1,
+          time: Math.floor(random() * 1000) + 1,
           player: accounts[j].address
         }
         if (!records[run.player]) records[run.player] = []
@@ -817,7 +819,7 @@ describe('Tournament Tests', function () {
         await AnybodyProblem.setRunData(
           run.runId,
           run.day,
-          run.speed,
+          run.time,
           run.player
         )
         await Tournament.addToLeaderboard(run.runId)
@@ -831,20 +833,22 @@ describe('Tournament Tests', function () {
 
     const { fastest, slowest, mostAverage } = ((records) => {
       const sortedRecords = Object.entries(records).map(([player, runs]) => {
-        runs.sort((a, b) => a.speed - b.speed)
+        runs.sort((a, b) => parseInt(a.time) - parseInt(b.time))
         const fastestTotal = runs
-          .slice(0, minimumDaysPlayed.toNumber())
+          .slice(0, minimumDaysPlayed)
           .reduce((acc, run) => {
-            return acc + run.speed
+            return acc + parseInt(run.time)
           }, 0)
         const slowestTotal = runs
-          .slice(runs.length - minimumDaysPlayed.toNumber())
+          .slice()
+          .reverse()
+          .slice(0, minimumDaysPlayed)
           .reduce((acc, run) => {
-            return acc + run.speed
+            return acc + parseInt(run.time)
           }, 0)
         const average = divRound(
           runs.reduce((acc, run) => {
-            return acc + run.speed
+            return acc + parseInt(run.time)
           }, 0),
           runs.length
         )
@@ -852,27 +856,34 @@ describe('Tournament Tests', function () {
           player,
           fastestTotal,
           slowestTotal,
-          average
+          average,
+          minimumDaysMet: runs.length >= minimumDaysPlayed
         }
       })
-      sortedRecords.sort((a, b) => a.fastestTotal - b.fastestTotal)
-      const fastest = sortedRecords[0]
-      const slowest = sortedRecords[sortedRecords.length - 1]
+      sortedRecords.sort(
+        (a, b) => parseInt(a.fastestTotal) - parseInt(b.fastestTotal)
+      )
+      const fastest = sortedRecords.slice()
+      sortedRecords.sort(
+        (a, b) => parseInt(b.slowestTotal) - parseInt(a.slowestTotal)
+      )
+      const slowest = sortedRecords.slice()
+      let totalRuns = 0
       const globalAverage = divRound(
         Object.entries(records)
           .map(([, runs]) => {
-            return runs.reduce((acc, run) => acc + run.speed, 0)
+            totalRuns += runs.length
+            return runs.reduce((acc, run) => acc + run.time, 0)
           })
-          .reduce((acc, speed) => acc + speed, 0),
-        daysInContest.toNumber() * accounts.length
+          .reduce((acc, time) => acc + time, 0),
+        totalRuns
       )
-      const mostAverage = sortedRecords.reduce((acc, record) => {
-        return Math.abs(record.average - globalAverage) <
-          Math.abs(acc.average - globalAverage)
-          ? record
-          : acc
-      }, sortedRecords[0])
-      return { fastest, slowest, mostAverage }
+      const mostAverage = sortedRecords.sort(
+        (a, b) =>
+          Math.abs(a.average - globalAverage) -
+          Math.abs(b.average - globalAverage)
+      )
+      return { fastest, slowest, mostAverage, globalAverage }
     })(records)
 
     // console.dir({ records }, { depth: null })
@@ -906,11 +917,11 @@ describe('Tournament Tests', function () {
     const slowest_ = await Tournament.slowestByWeek(week)
     const [mostAverage_] = await Tournament.mostAverageByWeek(week)
     // console.log({ fastest_, slowest_, mostAverage_ })
-    expect(fastest_.toString()).to.equal(fastest.player)
+    expect(fastest_.toString()).to.equal(fastest[0].player)
 
-    expect(slowest_.toString()).to.equal(slowest.player)
+    expect(slowest_.toString()).to.equal(slowest[0].player)
 
-    expect(mostAverage_.toString()).to.equal(mostAverage.player)
+    expect(mostAverage_.toString()).to.equal(mostAverage[0].player)
 
     await expect(Tournament.payoutFastest(week)).to.be.revertedWith(
       'Contest is not over'
@@ -938,13 +949,13 @@ describe('Tournament Tests', function () {
     const prizePortion = divRound(prizeTotal.toBigInt(), 3)
 
     const fastestAccount = accounts.find(
-      (account) => account.address === fastest.player
+      (account) => account.address === fastest[0].player
     )
     const slowestAccount = accounts.find(
-      (account) => account.address === slowest.player
+      (account) => account.address === slowest[0].player
     )
     const mostAverageAccount = accounts.find(
-      (account) => account.address === mostAverage.player
+      (account) => account.address === mostAverage[0].player
     )
 
     const fastestBalanceBefore = await fastestAccount.getBalance()
@@ -996,5 +1007,7 @@ describe('Tournament Tests', function () {
       'Already paid out average'
     )
   })
-  // it('confirms all functions of tree')
+  it.skip('revokes mistaken prize')
+  it.skip('refund unclaimed prize')
+  it.skip('confirms all functions of tree')
 })

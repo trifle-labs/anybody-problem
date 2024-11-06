@@ -739,7 +739,6 @@ export class Anybody extends EventEmitter {
   }
 
   finish() {
-    console.log('finish')
     if (this.finalBatchSent) return
     // this.finished = true
     // this.setPause(true)

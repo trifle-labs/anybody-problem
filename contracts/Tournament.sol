@@ -9,7 +9,7 @@ pragma solidity ^0.8.0;
 
 contract Tournament is Ownable {
     using HitchensOrderStatisticsTreeLib for HitchensOrderStatisticsTreeLib.Tree;
-    uint256 public firstMonday = 1730678400; // Mon Nov 04 2024 00:00:00 GMT+0000
+    uint256 public firstMonday = 1704067200; // Mon Jan 01 2024 00:00:00 GMT+0000
     uint256 public constant SECONDS_IN_A_DAY = 86400;
     address payable public anybodyProblem;
     uint256 public daysInContest = 2;
@@ -155,7 +155,7 @@ contract Tournament is Ownable {
         }
     }
 
-    function recoverUnclaimed(uint256 week) public onlyOnwer {
+    function recoverUnclaimed(uint256 week) public onlyOwner {
         require(week < currentWeek(), 'Contest is not over');
         uint256 unclaimedPrizes = 0;
         uint256 prizeAmount = divRound(prizes[week], 3); // round down is what we want, dust will be minimal
