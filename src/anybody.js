@@ -8,7 +8,7 @@ import { loadFonts } from './fonts.js'
 import { Buttons } from './buttons.js'
 import { Intro } from './intro.js'
 import PAUSE_BODY_DATA from './pauseBodies'
-
+import { genwit } from '../scripts/genwit.js'
 const GAME_LENGTH_BY_LEVEL_INDEX = [30, 10, 20, 30, 40, 50]
 const NORMAL_GRAVITY = 100
 const proverTickIndex = {
@@ -446,24 +446,27 @@ export class Anybody extends EventEmitter {
     }
     this.P5_FPS *= 2
     this.p.frameRate(this.P5_FPS)
-    var timeTook = 0
 
     const stats = this.calculateStats()
-    timeTook = stats.timeTook
     this.framesTook = stats.framesTook
-    this.emit('done', {
-      level: this.level,
-      won,
-      ticks: this.frames - this.startingFrame,
-      timeTook,
-      framesTook: this.framesTook
-    })
     if (won) {
       this.finish()
     }
   }
 
   restart = (options, beginPaused = true) => {
+    const lastLevel = this.level - 1
+    if (this.levelSpeeds.length >= lastLevel && this.level > 1) {
+      this.emitLevel(lastLevel)
+    } else {
+      console.log(this.levelSpeeds.length)
+      console.log(this.level)
+      console.log('no level data to emit')
+    }
+
+    const levelIndex = this.level - 1
+    this.levelSpeeds[levelIndex] = []
+
     if (options) {
       this.setOptions(options)
     }
@@ -483,6 +486,158 @@ export class Anybody extends EventEmitter {
       this.setPause(true)
     }
     this.addCSS()
+  }
+
+  async emitLevel(level) {
+    console.log('emitLevel', { level })
+
+    // check first
+    const levelIndex = level - 1
+    let lastChunk = null
+    for (let i = 0; i < this.levelSpeeds[levelIndex].length; i++) {
+      const levelData = this.levelSpeeds[levelIndex][i]
+      if (lastChunk) {
+        const outflightMissile = lastChunk.outflightMissile
+        const inflightMissile = levelData.inflightMissile
+        for (let j = 0; j < 5; j++) {
+          if (outflightMissile[j] !== inflightMissile[j]) {
+            console.log({ levelData, lastChunk })
+            console.log({ outflightMissile, inflightMissile })
+            throw new Error(
+              'Missile radius mismatch between inflight and outflight missiles on index ' +
+                j
+            )
+          }
+        }
+        for (let j = 0; j < lastChunk.bodyFinal.length; j++) {
+          const lastBody = lastChunk.bodyFinal[j]
+          const currentBody = levelData.bodyInits[j]
+          for (let k = 0; k < 4; k++) {
+            if (lastBody[k] !== currentBody[k]) {
+              console.log({ levelData, lastChunk })
+              throw new Error(
+                'Body mismatch between last chunk and current chunk on index ' +
+                  j +
+                  ' at ' +
+                  k
+              )
+            }
+          }
+        }
+      }
+      lastChunk =
+        this.levelSpeeds[levelIndex][i][
+          this.levelSpeeds[levelIndex][i].length - 1
+        ]
+      if (process.env.force_circuit_check == 'true') {
+        const sampleInput = {
+          bodies: levelData.bodyInits,
+          missiles: levelData.missiles,
+          inflightMissile: levelData.inflightMissile,
+          address
+        }
+        const isFinalChunk = i === this.levelSpeeds[levelIndex].length - 1
+        const uid = Math.floor(Math.random() * 1000000)
+        const frameLength = proverTickIndex[level + 1]
+        const address =
+          '0x123412341234123412341234123412341234123412341234123412341234'
+        const witnessResults = await genwit(sampleInput)
+        const bodies = level + 1 <= 4 ? 4 : 6
+        const totalsignals =
+          5 +
+          bodies * 5 +
+          1 + // timeTook
+          1 + // address
+          bodies * 5 +
+          5
+        console.log({ uid }, { sampleInput, levelData })
+        for (let i = 0; i < totalsignals; i++) {
+          const signal = witnessResults[i]
+          if (i < 1) {
+            // console.log({ uid }, 'dont know what this signal is: ', signal)
+          } else if (i < 1 + 5) {
+            const offset = 1
+            // outflight missile
+            if (signal !== BigInt(levelData.outflightMissile[i - offset])) {
+              console.log(
+                { uid },
+                {
+                  i,
+                  signal,
+                  outflightMissile: levelData.outflightMissile[i - offset]
+                }
+              )
+              throw new Error(
+                'outflightMissile mismatch at index i:' + i + ' uid:' + uid
+              )
+            }
+          } else if (i < 1 + 5 + bodies * 5) {
+            if (isFinalChunk) continue
+            const offset = 1 + 5
+            // body outputs
+            const bodyIndex = Math.floor((i - offset) / 5)
+            const attrIndex = (i - offset) % 5
+            if (bodyIndex > levelData.bodyFinal.length - 1) continue
+            if (BigInt(levelData.bodyFinal[bodyIndex][attrIndex]) !== signal) {
+              console.log({
+                i,
+                uid,
+                signal,
+                body: levelData.bodyFinal[bodyIndex][attrIndex]
+              })
+              throw new Error('bodyFinal mismatch i:' + i + ' uid:' + uid)
+            }
+          } else if (i < 1 + 5 + bodies * 5 + 1) {
+            const framesTook =
+              (levelData.framesTook && levelData.framesTook % frameLength) ||
+              frameLength
+            if (BigInt(framesTook) !== signal) {
+              console.log({ uid }, { framesTook, signal })
+              throw new Error('framesTook mismatch i:' + i + ' uid:' + uid)
+            }
+          } else if (i < 1 + 5 + bodies * 5 + 1 + 1) {
+            if (BigInt(address) !== signal) {
+              console.log({ uid }, { address, signal })
+              throw new Error('address mismatch i:' + i + ' uid:' + uid)
+            }
+          } else if (i < 1 + 5 + bodies * 5 + 1 + 1 + bodies * 5) {
+            const offset = 5 + bodies * 5 + 1 + 1 + 1
+            const bodyIndex = Math.floor((i - offset) / 5)
+            if (bodyIndex > levelData.bodyInits.length - 1) {
+              // console.log({ uid }, 'skipping i:' + i + ' uid:' + uid)
+              continue
+            }
+            const attrIndex = (i - offset) % 5
+            if (BigInt(levelData.bodyInits[bodyIndex][attrIndex]) !== signal) {
+              console.log(
+                { uid },
+                {
+                  bodyIndex,
+                  attrIndex,
+                  signal,
+                  body: levelData.bodyInits[bodyIndex][attrIndex]
+                }
+              )
+              throw new Error('bodyInits mismatch i:' + i + ' uid:' + uid)
+            }
+          } else if (i < totalsignals) {
+            const offset = 5 + bodies * 5 + 1 + 1 + 1 + bodies * 5
+            const missileIndex = i - offset
+            if (BigInt(levelData.inflightMissile[missileIndex]) !== signal) {
+              console.lot({ signal, missileIndex, offset })
+              throw new Error('inflightMissile mismatch i:' + i + ' uid:' + uid)
+            }
+          } else {
+            throw new Error('shouldnt be here i:' + i + ' uid:' + uid)
+          }
+        }
+      }
+    }
+
+    if (this.levelSpeeds.length < level - 1)
+      throw new Error('cant submit unplayed level')
+    const levelData = this.levelSpeeds[levelIndex]
+    this.emit('chunk', levelData)
   }
 
   doubleTextInverted(text) {
@@ -584,6 +739,7 @@ export class Anybody extends EventEmitter {
   }
 
   finish() {
+    console.log('finish')
     if (this.finalBatchSent) return
     // this.finished = true
     // this.setPause(true)
@@ -593,23 +749,21 @@ export class Anybody extends EventEmitter {
 
     this.calculateBodyFinal()
     const missileInputs = []
-    if (this.mode == 'game') {
-      let missileIndex = 0
-      // loop through all the steps that were just played since the last chunk
-      for (let i = this.alreadyRun; i < this.alreadyRun + this.stopEvery; i++) {
-        // if the step index matches the step where a missile was shot, add the missile to the missileInputs
-        // otherwise fill the missileInit array with an empty missile
-        if (this.missileInits[missileIndex]?.step == i) {
-          const missile = this.missileInits[missileIndex]
-          missileInputs.push([missile.vx, -missile.vy, missile.radius])
-          missileIndex++
-        } else {
-          missileInputs.push(['0', '0', '0'])
-        }
+    let missileIndex = 0
+    // loop through all the steps that were just played since the last chunk
+    for (let i = this.alreadyRun; i < this.alreadyRun + this.stopEvery; i++) {
+      // if the step index matches the step where a missile was shot, add the missile to the missileInputs
+      // otherwise fill the missileInit array with an empty missile
+      if (this.missileInits[missileIndex]?.step == i) {
+        const missile = this.missileInits[missileIndex]
+        missileInputs.push([missile.vx, -missile.vy, missile.radius])
+        missileIndex++
+      } else {
+        missileInputs.push(['0', '0', '0'])
       }
-      // add one more because missileInits contains one extra for circuit
-      missileInputs.push(['0', '0', '0'])
     }
+    // add one more because missileInits contains one extra for circuit
+    missileInputs.push(['0', '0', '0'])
 
     // define the inflightMissile for the proof from the first missile shot during this chunk
     // if the first missile shot was shot at step == alreadyRun (start of this chunk)
@@ -673,9 +827,7 @@ export class Anybody extends EventEmitter {
       m.step = this.frames
       return m
     })
-    this.emit('chunk', results)
     this.bodyFinal = []
-    // this.setPause(false)
     if (
       this.mode == 'game' &&
       this.bodies
@@ -697,12 +849,48 @@ export class Anybody extends EventEmitter {
     }
     if (level !== 0) {
       if (this.levelSpeeds.length < level) {
-        this.levelSpeeds.push(results)
+        console.log('create new level')
+        this.levelSpeeds.push([results])
       } else {
-        this.levelSpeeds[level - 1] = results
+        console.log('add to levelSpeeds')
+        this.levelSpeeds[level - 1].push(results)
       }
     }
     return results
+  }
+
+  undoMissile() {
+    const lastChunk =
+      this.levelSpeeds[this.level - 1][
+        this.levelSpeeds[this.level - 1].length - 1
+      ]
+    const outflightMissile = lastChunk.outflightMissile
+    if (outflightMissile[4] == 0) {
+      console.error(
+        'removeLasstMissileOfLastChunk called when there is no outgoing missile'
+      )
+      return
+    }
+    const lastMissileIndex = lastChunk.missiles.reduceRight((acc, curr, i) => {
+      if (acc < 0 && curr[2] != '0') return i
+      return acc
+    }, -1)
+
+    console.log({
+      step: this.frames,
+      lastMissileIndex,
+      lastchunk_missiles: JSON.parse(JSON.stringify(lastChunk.missiles))
+    })
+
+    lastChunk.missiles[lastMissileIndex] = ['0', '0', '0']
+    lastChunk.outflightMissile = ['0', '1000000', '0', '0', '0']
+
+    console.log('removeLastMissileOfLastChunk')
+    console.log({
+      missiles: lastChunk.missiles,
+      lastMissileIndex
+    })
+    console.log({ outflightMissile: lastChunk.outflightMissile })
   }
 
   generateLevelData(day, level) {
@@ -768,7 +956,7 @@ export class Anybody extends EventEmitter {
   }
 
   genRadius(index) {
-    const radii = [36n, 27n, 23n, 19n, 15n, 11n] // n * 4 + 2
+    const radii = [36n, 27n, 24n, 21n, 18n, 15n] // n * 4 + 2
     let size = radii[index % radii.length]
     return parseInt(size * BigInt(this.scalingFactor))
   }
@@ -993,12 +1181,24 @@ export class Anybody extends EventEmitter {
 
     if (this.missiles.length > 0) {
       if (this.lastMissileCantBeUndone) {
-        this.emit('remove-last-missile')
+        this.undoMissile()
         this.lastMissileCantBeUndone = false
         console.log('LASTMISSILECANTBEUNDONE = FALSE')
       }
+      console.log({
+        missileInitsBeforePop: JSON.parse(JSON.stringify(this.missileInits))
+      })
       this.missileInits.pop()
+      console.log({
+        missileInitsAfterPop: JSON.parse(JSON.stringify(this.missileInits))
+      })
+      console.log({ levelSpeeds: JSON.parse(JSON.stringify(this.levelSpeeds)) })
       this.missileCount--
+    } else if (this.lastMissileCantBeUndone) {
+      console.error(
+        'lastMissileCantBeUndone should have been modified in step() alredy'
+      )
+      this.lastMissileCantBeUndone = false
     }
 
     this.missileCount++
@@ -1032,13 +1232,7 @@ export class Anybody extends EventEmitter {
         return
       }
     }
-    // const bodyCount = this.bodies.filter((b) => b.radius !== 0).length - 1
-    // this.missiles = this.missiles.slice(0, bodyCount)
-    // this.missiles = this.missiles.slice(-bodyCount)
-
-    // NOTE: this is stupid
-    this.missiles.push(b)
-    this.missiles = this.missiles.slice(-1)
+    this.missiles = [b]
 
     const missileVectorMagnitude = x ** 2 + (y - this.windowWidth) ** 2
     this.sound?.playMissile(missileVectorMagnitude)
