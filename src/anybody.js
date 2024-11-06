@@ -827,10 +827,7 @@ export class Anybody extends EventEmitter {
       m.step = this.frames
       return m
     })
-    // this.emit('chunk', results)
-    // this.addChunk(results)
     this.bodyFinal = []
-    // this.setPause(false)
     if (
       this.mode == 'game' &&
       this.bodies
@@ -1184,7 +1181,6 @@ export class Anybody extends EventEmitter {
 
     if (this.missiles.length > 0) {
       if (this.lastMissileCantBeUndone) {
-        // this.emit('remove-last-missile')
         this.undoMissile()
         this.lastMissileCantBeUndone = false
         console.log('LASTMISSILECANTBEUNDONE = FALSE')
@@ -1199,7 +1195,9 @@ export class Anybody extends EventEmitter {
       console.log({ levelSpeeds: JSON.parse(JSON.stringify(this.levelSpeeds)) })
       this.missileCount--
     } else if (this.lastMissileCantBeUndone) {
-      alert('didnt think this would happen')
+      console.error(
+        'lastMissileCantBeUndone should have been modified in step() alredy'
+      )
       this.lastMissileCantBeUndone = false
     }
 

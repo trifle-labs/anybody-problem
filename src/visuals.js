@@ -1418,7 +1418,7 @@ export const Visuals = {
             }
             return
           }
-          this.emitLevel(5)
+          this.emitLevel(LEVELS)
           this.emit('save')
         },
         ...themes.buttons.green,
