@@ -186,7 +186,6 @@ export class Anybody extends EventEmitter {
     this.witheringBodies = []
     this.bodyInits = []
     this.bodyFinal = []
-    this.chunks = {}
     this.missileCount = 0
     this.frames = 0
     this.p5Frames = 0
@@ -871,16 +870,7 @@ export class Anybody extends EventEmitter {
     return results
   }
 
-  // addChunk(results) {
-  //   const { level } = results
-  //   if (level == 0) return
-  //   console.log('addChunk', { level, results })
-  //   if (!this.chunks[level]) this.chunks[level] = []
-  //   this.chunks[level].push(results)
-  // }
-
   undoMissile() {
-    console.log({ chunks: this.chunks, level: this.level })
     const lastChunk =
       this.levelSpeeds[this.level - 1][
         this.levelSpeeds[this.level - 1].length - 1
