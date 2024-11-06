@@ -446,33 +446,26 @@ export class Anybody extends EventEmitter {
     }
     this.P5_FPS *= 2
     this.p.frameRate(this.P5_FPS)
-    // var timeTook = 0
 
     const stats = this.calculateStats()
-    // timeTook = stats.timeTook
     this.framesTook = stats.framesTook
-    // this.emit('done', {
-    //   level: this.level,
-    //   won,
-    //   ticks: this.frames - this.startingFrame,
-    //   timeTook,
-    //   framesTook: this.framesTook
-    // })
     if (won) {
       this.finish()
     }
   }
 
   restart = (options, beginPaused = true) => {
-    if (this.levelSpeeds.length >= this.level - 1 && this.level > 1) {
-      this.emitLevel(this.level - 1)
+    const lastLevel = this.level - 1
+    if (this.levelSpeeds.length >= lastLevel && this.level > 1) {
+      this.emitLevel(lastLevel)
     } else {
       console.log(this.levelSpeeds.length)
       console.log(this.level)
       console.log('no level data to emit')
     }
 
-    this.levelSpeeds[this.level - 1] = []
+    const levelIndex = this.level - 1
+    this.levelSpeeds[levelIndex] = []
 
     if (options) {
       this.setOptions(options)
@@ -496,22 +489,20 @@ export class Anybody extends EventEmitter {
   }
 
   async emitLevel(level) {
-    console.log({ level })
+    console.log('emitLevel', { level })
+
+    // check first
     const levelIndex = level - 1
     let lastChunk = null
-    const address =
-      '0x123412341234123412341234123412341234123412341234123412341234'
-    const numberOfChunks = this.levelSpeeds[levelIndex]
-    console.log({ numberOfChunks })
     for (let i = 0; i < this.levelSpeeds[levelIndex].length; i++) {
       const levelData = this.levelSpeeds[levelIndex][i]
       if (lastChunk) {
-        console.log({ levelData })
         const outflightMissile = lastChunk.outflightMissile
         const inflightMissile = levelData.inflightMissile
-        console.log({ outflightMissile, inflightMissile })
         for (let j = 0; j < 5; j++) {
           if (outflightMissile[j] !== inflightMissile[j]) {
+            console.log({ levelData, lastChunk })
+            console.log({ outflightMissile, inflightMissile })
             throw new Error(
               'Missile radius mismatch between inflight and outflight missiles on index ' +
                 j
@@ -523,6 +514,7 @@ export class Anybody extends EventEmitter {
           const currentBody = levelData.bodyInits[j]
           for (let k = 0; k < 4; k++) {
             if (lastBody[k] !== currentBody[k]) {
+              console.log({ levelData, lastChunk })
               throw new Error(
                 'Body mismatch between last chunk and current chunk on index ' +
                   j +
@@ -537,19 +529,19 @@ export class Anybody extends EventEmitter {
         this.levelSpeeds[levelIndex][i][
           this.levelSpeeds[levelIndex][i].length - 1
         ]
-      const sampleInput = {
-        bodies: levelData.bodyInits,
-        missiles: levelData.missiles,
-        inflightMissile: levelData.inflightMissile,
-        address
-      }
-      const isFinalChunk = i === this.levelSpeeds[levelIndex].length - 1
-      const uid = Math.floor(Math.random() * 1000000)
-      const frameLength = proverTickIndex[level + 1]
-
       if (process.env.force_circuit_check == 'true') {
+        const sampleInput = {
+          bodies: levelData.bodyInits,
+          missiles: levelData.missiles,
+          inflightMissile: levelData.inflightMissile,
+          address
+        }
+        const isFinalChunk = i === this.levelSpeeds[levelIndex].length - 1
+        const uid = Math.floor(Math.random() * 1000000)
+        const frameLength = proverTickIndex[level + 1]
+        const address =
+          '0x123412341234123412341234123412341234123412341234123412341234'
         const witnessResults = await genwit(sampleInput)
-        // console.log({ witnessResults })
         const bodies = level + 1 <= 4 ? 4 : 6
         const totalsignals =
           5 +
@@ -639,9 +631,9 @@ export class Anybody extends EventEmitter {
             throw new Error('shouldnt be here i:' + i + ' uid:' + uid)
           }
         }
-        // })
       }
     }
+
     if (this.levelSpeeds.length < level - 1)
       throw new Error('cant submit unplayed level')
     const levelData = this.levelSpeeds[levelIndex]
