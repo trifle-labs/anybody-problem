@@ -924,7 +924,7 @@ export const Visuals = {
     this.drawProblemRankingsScreen()
 
     const runningFrames = this.frames - this.startingFrame
-    const seconds = (this.frameCount || runningFrames) / this.FPS
+    const seconds = (this.framesTook || runningFrames) / this.FPS
     const secondsLeft =
       (this.level > 5 ? 60 : GAME_LENGTH_BY_LEVEL_INDEX[this.level]) - seconds
     if (this.gameOver) {
@@ -1388,6 +1388,7 @@ export const Visuals = {
         text: 'SAVE',
         onClick: () => {
           if (this.popup) return
+          this.emitLevel(LEVELS)
           if (this.opensea) {
             this.popup = {
               header: 'Nice Job!',
@@ -1418,7 +1419,6 @@ export const Visuals = {
             }
             return
           }
-          this.emitLevel(LEVELS)
           this.emit('save')
         },
         ...themes.buttons.green,

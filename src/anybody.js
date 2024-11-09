@@ -160,7 +160,7 @@ export class Anybody extends EventEmitter {
     this.bridgeMissile = false
     this.speedFactor = 2
     this.speedLimit = 10
-    this.frameCount = 0
+    this.framesTook = 0
     this.missileSpeed = 15
     this.shownStatScreen = false
     this.G = NORMAL_GRAVITY
@@ -209,7 +209,7 @@ export class Anybody extends EventEmitter {
       month: 'long',
       day: 'numeric'
     })
-    this.framesCount = false
+    this.framesTook = false
     this.showProblemRankingsScreenAt = -1
     this.saveStatus = 'unsaved' // 'unsaved' -> 'validating' -> 'validated' -> 'saving' -> 'saved' | 'error'
     this.shareCanvasBlob = undefined
@@ -446,7 +446,7 @@ export class Anybody extends EventEmitter {
     this.p.frameRate(this.P5_FPS)
 
     const stats = this.calculateStats()
-    this.frameCount = stats.frameCount
+    this.framesTook = stats.framesTook
     if (won) {
       this.finish()
     }
@@ -635,7 +635,7 @@ export class Anybody extends EventEmitter {
   }
 
   finish() {
-    const { day, level, frameCount } = this
+    const { day, level, framesTook } = this
     if (level == 0) return
     if (this.finalBatchSent) return
 
@@ -643,7 +643,7 @@ export class Anybody extends EventEmitter {
     const m = _copy(this.missile)
     const sampleOutput = {
       bodyFinal: this.calculateBodyFinal(this.bodies),
-      time: frameCount,
+      time: framesTook,
       outflightMissile: m
         ? [m.px, m.py, m.vx, -m.vy, m.radius]
         : ['0', maxY, '0', '0', '0']
@@ -1118,8 +1118,8 @@ export class Anybody extends EventEmitter {
   calculateStats = () => {
     const bodiesIncluded = this.bodies.length
     const { startingFrame, frames } = this
-    const frameCount = frames - startingFrame - 1 // -1 because the first frame is the starting frame
-    const timeTook = frameCount / this.FPS
+    const framesTook = frames - startingFrame - 1 // -1 because the first frame is the starting frame
+    const timeTook = framesTook / this.FPS
 
     const missilesShot = this.missileInits.reduce(
       (p, c) => (c[0] == 0 ? p : p + 1),
@@ -1130,7 +1130,7 @@ export class Anybody extends EventEmitter {
       missilesShot,
       bodiesIncluded,
       timeTook,
-      frameCount
+      framesTook
     }
   }
 
