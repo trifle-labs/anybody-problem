@@ -434,20 +434,27 @@ contract Tournament is Ownable {
                     }
                 }
             }
-            if (daysRecorded < minimumDaysPlayed) {
-                // player hasn't completed minimum number of days
-                return;
-            }
             uint256 totalTime = 0;
             for (uint256 i = 0; i < bestTimes.length; i++) {
                 totalTime += bestTimes[i];
             }
+            bool minimumReached = daysRecorded >= minimumDaysPlayed;
             if (totalTime > weeklySlowest[week].accumulativeTime) {
-                weeklySlowest[week] = WeekSpeed({
-                    player: run.owner,
-                    accumulativeTime: totalTime
-                });
-                emit RecordBroken('slowest', week, run.owner, totalTime, 0);
+                // player has completed minimum number of days
+                if (minimumReached) {
+                    weeklySlowest[week] = WeekSpeed({
+                        player: run.owner,
+                        accumulativeTime: totalTime
+                    });
+                }
+                // emit event regardless to help front-end
+                emit RecordBroken(
+                    'slowest',
+                    week,
+                    run.owner,
+                    totalTime,
+                    uint256(minimumReached)
+                );
             }
         }
     }
@@ -498,10 +505,7 @@ contract Tournament is Ownable {
                     }
                 }
             }
-            if (daysRecorded < minimumDaysPlayed) {
-                // player hasn't completed minimum number of days
-                return;
-            }
+            bool minimumReached = daysRecorded >= minimumDaysPlayed;
             uint256 totalTime = 0;
             for (uint256 i = 0; i < bestTimes.length; i++) {
                 totalTime += bestTimes[i];
@@ -510,11 +514,21 @@ contract Tournament is Ownable {
                 totalTime < weeklyFastest[week].accumulativeTime ||
                 weeklyFastest[week].accumulativeTime == 0
             ) {
-                weeklyFastest[week] = WeekSpeed({
-                    player: run.owner,
-                    accumulativeTime: totalTime
-                });
-                emit RecordBroken('fastest', week, run.owner, totalTime, 0);
+                // player has completed minimum number of days
+                if (minimumReached) {
+                    weeklyFastest[week] = WeekSpeed({
+                        player: run.owner,
+                        accumulativeTime: totalTime
+                    });
+                }
+                // emit event regardless to help front-end
+                emit RecordBroken(
+                    'fastest',
+                    week,
+                    run.owner,
+                    totalTime,
+                    uint256(minimumReached)
+                );
             }
         }
     }

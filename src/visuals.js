@@ -1,6 +1,7 @@
 import { hslToRgb, rgbaOpacity, THEME, themes, randHSL } from './colors.js'
 import { fonts, drawKernedText } from './fonts.js'
 import { utils } from 'ethers'
+import { _copy } from './calculations.js'
 
 const BODY_SCALE = 4 // match to calculations.js !!
 const GAME_LENGTH_BY_LEVEL_INDEX = [30, 10, 20, 30, 40, 50]
@@ -234,9 +235,9 @@ export const Visuals = {
     ) {
       this.firstFrame = false
       this.frames++
-      const results = this.step(this.bodies, this.missiles)
+      const results = this.step(this.bodies, this.missile)
       this.bodies = results.bodies || []
-      this.missiles = results.missiles || []
+      this.missile = results.missile
     }
 
     if (this.shootMissileNextFrame) {
@@ -923,7 +924,7 @@ export const Visuals = {
     this.drawProblemRankingsScreen()
 
     const runningFrames = this.frames - this.startingFrame
-    const seconds = (this.framesTook || runningFrames) / this.FPS
+    const seconds = (this.frameCount || runningFrames) / this.FPS
     const secondsLeft =
       (this.level > 5 ? 60 : GAME_LENGTH_BY_LEVEL_INDEX[this.level]) - seconds
     if (this.gameOver) {
@@ -1090,8 +1091,7 @@ export const Visuals = {
     // middle box text
     const levelTimes = this.levelSpeeds
       .map((result) => {
-        // console.log({ result, lastResult: result[result.length - 1] })
-        return result[result.length - 1]?.framesTook / this.FPS
+        return result[result.length - 1]?.sampleOutput.time / this.FPS
       })
       .filter((l) => l !== undefined)
     const bestTimes =
@@ -1790,11 +1790,9 @@ export const Visuals = {
 
   getDisplayHero({ radius } = { radius: 33 }) {
     const body = this.bodies[0]
-    const bodyCopy = JSON.parse(
-      JSON.stringify(
-        body,
-        (key, value) => (typeof value === 'bigint' ? value.toString() : value) // return everything else unchanged
-      )
+    const bodyCopy = _copy(
+      body,
+      (key, value) => (typeof value === 'bigint' ? value.toString() : value) // return everything else unchanged
     )
     bodyCopy.position = this.p.createVector(body.position.x, body.position.y)
     bodyCopy.velocity = this.p.createVector(body.velocity.x, body.velocity.y)
@@ -1815,7 +1813,7 @@ export const Visuals = {
     for (let i = 0; i < LEVELS; i++) {
       baddies.push([])
       for (let j = 0; j < i + 1; j++) {
-        baddies[i].push(JSON.parse(JSON.stringify(bodies[j + 1])))
+        baddies[i].push(_copy(bodies[j + 1]))
       }
     }
     return baddies
@@ -2017,7 +2015,7 @@ export const Visuals = {
 
     for (let i = 0; i < explosions.length; i++) {
       const v = explosions[i].velocity
-      const _explosion = JSON.parse(JSON.stringify(explosions[i]))
+      const _explosion = _copy(explosions[i])
       _explosion.velocity = v
       if (_explosion.bodyIndex == 0) {
         _explosion.cry = true
@@ -2114,21 +2112,14 @@ export const Visuals = {
 
   isMissileClose(body) {
     const minDistance = 300
-    let closeEnough = false
-    for (let i = 0; i < this.missiles.length; i++) {
-      const missile = this.missiles[i]
-      const distance = this.p.dist(
-        body.position.x,
-        body.position.y,
-        missile.position.x,
-        missile.position.y
-      )
-      if (distance < minDistance) {
-        closeEnough = true
-        break
-      }
-    }
-    return closeEnough
+    const missile = this.missile
+    const distance = this.p.dist(
+      body.position.x,
+      body.position.y,
+      missile.position.x,
+      missile.position.y
+    )
+    return distance < minDistance
   },
 
   drawImageAsset(
@@ -2607,10 +2598,10 @@ export const Visuals = {
       this.drawImageAsset('BADDIE_SVG', 'core', coreWidth, { fill: coreColor })
 
       // pupils always looking at missile, if no missile, look at mouse
-      const target =
-        this.missiles.length > 0
-          ? this.missiles[0].position
-          : { x: this.scaleX(this.p.mouseX), y: this.scaleY(this.p.mouseY) }
+      const target = this.missile?.position || {
+        x: this.scaleX(this.p.mouseX),
+        y: this.scaleY(this.p.mouseY)
+      }
 
       const bx = body.position.x
       const by = body.position.y
@@ -2787,7 +2778,7 @@ export const Visuals = {
     const particles = this.makeParticles(x, y)
     this.explosionSmoke.push(...particles)
   },
-  makeMissileStart() {
+  drawMissileStart() {
     this.gunSmoke ||= []
     const particles = this.makeParticles(0, this.windowHeight)
     this.gunSmoke.push(...particles)

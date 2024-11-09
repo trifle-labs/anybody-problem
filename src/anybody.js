@@ -1,7 +1,7 @@
 import EventEmitter from './events'
 import Sound from './sound.js'
 import { Visuals } from './visuals.js'
-import { Calculations } from './calculations.js'
+import { Calculations, _copy } from './calculations.js'
 import { utils } from 'ethers'
 import { bodyThemes } from './colors.js'
 import { loadFonts } from './fonts.js'
@@ -157,9 +157,10 @@ export class Anybody extends EventEmitter {
       this.level = 1
     }
     this.totalIntroStages = 3
-    this.lastMissileCantBeUndone = false
+    this.bridgeMissile = false
     this.speedFactor = 2
     this.speedLimit = 10
+    this.frameCount = 0
     this.missileSpeed = 15
     this.shownStatScreen = false
     this.G = NORMAL_GRAVITY
@@ -179,14 +180,12 @@ export class Anybody extends EventEmitter {
     this.tailLength = 1
     this.tailMod = this.globalStyle == 'psycho' ? 2 : 1
     this.explosions = []
-    this.missiles = []
+    this.missile = null
     this.stillVisibleMissiles = []
     this.missileInits = []
     this.bodies = []
     this.witheringBodies = []
     this.bodyInits = []
-    this.bodyFinal = []
-    this.missileCount = 0
     this.frames = 0
     this.p5Frames = 0
     this.showIt = true
@@ -210,7 +209,7 @@ export class Anybody extends EventEmitter {
       month: 'long',
       day: 'numeric'
     })
-    this.framesTook = false
+    this.framesCount = false
     this.showProblemRankingsScreenAt = -1
     this.saveStatus = 'unsaved' // 'unsaved' -> 'validating' -> 'validated' -> 'saving' -> 'saved' | 'error'
     this.shareCanvasBlob = undefined
@@ -298,12 +297,11 @@ export class Anybody extends EventEmitter {
       if (runIndex > n) {
         keepSimulating = false
         this.showIt = true
-        // n > 0 && console.log(`${n.toLocaleString()} runs`)
       } else {
-        const results = this.step(this.bodies, this.missiles)
+        const results = this.step(this.bodies, this.missile)
         this.frames++
         this.bodies = results.bodies
-        this.missiles = results.missiles || []
+        this.missile = results.missile
       }
     }
   }
@@ -448,7 +446,7 @@ export class Anybody extends EventEmitter {
     this.p.frameRate(this.P5_FPS)
 
     const stats = this.calculateStats()
-    this.framesTook = stats.framesTook
+    this.frameCount = stats.frameCount
     if (won) {
       this.finish()
     }
@@ -458,10 +456,6 @@ export class Anybody extends EventEmitter {
     const lastLevel = this.level - 1
     if (this.levelSpeeds.length >= lastLevel && this.level > 1) {
       this.emitLevel(lastLevel)
-    } else {
-      console.log(this.levelSpeeds.length)
-      console.log(this.level)
-      console.log('no level data to emit')
     }
 
     const levelIndex = this.level - 1
@@ -496,140 +490,49 @@ export class Anybody extends EventEmitter {
     let lastChunk = null
     for (let i = 0; i < this.levelSpeeds[levelIndex].length; i++) {
       const levelData = this.levelSpeeds[levelIndex][i]
-      if (lastChunk) {
-        const outflightMissile = lastChunk.outflightMissile
-        const inflightMissile = levelData.inflightMissile
-        for (let j = 0; j < 5; j++) {
-          if (outflightMissile[j] !== inflightMissile[j]) {
-            console.log({ levelData, lastChunk })
-            console.log({ outflightMissile, inflightMissile })
-            throw new Error(
-              'Missile radius mismatch between inflight and outflight missiles on index ' +
-                j
-            )
-          }
-        }
-        for (let j = 0; j < lastChunk.bodyFinal.length; j++) {
-          const lastBody = lastChunk.bodyFinal[j]
-          const currentBody = levelData.bodyInits[j]
-          for (let k = 0; k < 4; k++) {
-            if (lastBody[k] !== currentBody[k]) {
-              console.log({ levelData, lastChunk })
-              throw new Error(
-                'Body mismatch between last chunk and current chunk on index ' +
-                  j +
-                  ' at ' +
-                  k
-              )
-            }
-          }
-        }
+      const { uid, sampleInput, sampleOutput } = levelData
+      try {
+        compareData(
+          uid,
+          level,
+          null,
+          sampleInput,
+          sampleOutput,
+          lastChunk?.sampleOutput
+        )
+      } catch (error) {
+        console.error({ uid, levelData, levelIndex, i })
+        console.error(error)
       }
       lastChunk =
         this.levelSpeeds[levelIndex][i][
           this.levelSpeeds[levelIndex][i].length - 1
         ]
-      if (process.env.force_circuit_check == 'true') {
-        const sampleInput = {
-          bodies: levelData.bodyInits,
-          missiles: levelData.missiles,
-          inflightMissile: levelData.inflightMissile,
-          address
+      if (process.env.force_circuit_check == 'true' && level > 0) {
+        if (sampleInput.address == 0 || !sampleInput.address) {
+          sampleInput.address =
+            '0x1000000000000000000000000000000000000000000001'
         }
-        const isFinalChunk = i === this.levelSpeeds[levelIndex].length - 1
-        const uid = Math.floor(Math.random() * 1000000)
-        const frameLength = proverTickIndex[level + 1]
-        const address =
-          '0x123412341234123412341234123412341234123412341234123412341234'
+
         const witnessResults = await genwit(sampleInput)
         const bodies = level + 1 <= 4 ? 4 : 6
-        const totalsignals =
+        const totalSignals =
+          1 + // idk why but circom puts an empoty signal here
           5 +
           bodies * 5 +
           1 + // timeTook
           1 + // address
           bodies * 5 +
           5
-        console.log({ uid }, { sampleInput, levelData })
-        for (let i = 0; i < totalsignals; i++) {
-          const signal = witnessResults[i]
-          if (i < 1) {
-            // console.log({ uid }, 'dont know what this signal is: ', signal)
-          } else if (i < 1 + 5) {
-            const offset = 1
-            // outflight missile
-            if (signal !== BigInt(levelData.outflightMissile[i - offset])) {
-              console.log(
-                { uid },
-                {
-                  i,
-                  signal,
-                  outflightMissile: levelData.outflightMissile[i - offset]
-                }
-              )
-              throw new Error(
-                'outflightMissile mismatch at index i:' + i + ' uid:' + uid
-              )
-            }
-          } else if (i < 1 + 5 + bodies * 5) {
-            if (isFinalChunk) continue
-            const offset = 1 + 5
-            // body outputs
-            const bodyIndex = Math.floor((i - offset) / 5)
-            const attrIndex = (i - offset) % 5
-            if (bodyIndex > levelData.bodyFinal.length - 1) continue
-            if (BigInt(levelData.bodyFinal[bodyIndex][attrIndex]) !== signal) {
-              console.log({
-                i,
-                uid,
-                signal,
-                body: levelData.bodyFinal[bodyIndex][attrIndex]
-              })
-              throw new Error('bodyFinal mismatch i:' + i + ' uid:' + uid)
-            }
-          } else if (i < 1 + 5 + bodies * 5 + 1) {
-            const framesTook =
-              (levelData.framesTook && levelData.framesTook % frameLength) ||
-              frameLength
-            if (BigInt(framesTook) !== signal) {
-              console.log({ uid }, { framesTook, signal })
-              throw new Error('framesTook mismatch i:' + i + ' uid:' + uid)
-            }
-          } else if (i < 1 + 5 + bodies * 5 + 1 + 1) {
-            if (BigInt(address) !== signal) {
-              console.log({ uid }, { address, signal })
-              throw new Error('address mismatch i:' + i + ' uid:' + uid)
-            }
-          } else if (i < 1 + 5 + bodies * 5 + 1 + 1 + bodies * 5) {
-            const offset = 5 + bodies * 5 + 1 + 1 + 1
-            const bodyIndex = Math.floor((i - offset) / 5)
-            if (bodyIndex > levelData.bodyInits.length - 1) {
-              // console.log({ uid }, 'skipping i:' + i + ' uid:' + uid)
-              continue
-            }
-            const attrIndex = (i - offset) % 5
-            if (BigInt(levelData.bodyInits[bodyIndex][attrIndex]) !== signal) {
-              console.log(
-                { uid },
-                {
-                  bodyIndex,
-                  attrIndex,
-                  signal,
-                  body: levelData.bodyInits[bodyIndex][attrIndex]
-                }
-              )
-              throw new Error('bodyInits mismatch i:' + i + ' uid:' + uid)
-            }
-          } else if (i < totalsignals) {
-            const offset = 5 + bodies * 5 + 1 + 1 + 1 + bodies * 5
-            const missileIndex = i - offset
-            if (BigInt(levelData.inflightMissile[missileIndex]) !== signal) {
-              console.lot({ signal, missileIndex, offset })
-              throw new Error('inflightMissile mismatch i:' + i + ' uid:' + uid)
-            }
-          } else {
-            throw new Error('shouldnt be here i:' + i + ' uid:' + uid)
-          }
+        // console.log({ witnessResults })
+        console.log({ witnessResults })
+        const signals = witnessResults.slice(0, totalSignals)
+        console.log({ signals })
+        try {
+          compareData(uid, level, signals, sampleInput, sampleOutput)
+        } catch (error) {
+          console.error({ uid, levelData, levelIndex, i })
+          console.error(error)
         }
       }
     }
@@ -679,217 +582,195 @@ export class Anybody extends EventEmitter {
     }
   }
 
-  step(bodies = this.bodies, missiles = this.missiles) {
+  step(bodies = this.bodies, missile = this.missile) {
     // this.steps ||= 0
     // console.log({ steps: this.steps })
     // this.steps++
     // console.dir(
-    //   { bodies: this.bodies, missiles: this.missiles[0] },
+    //   { bodies: this.bodies, missile: this.missile },
     //   { depth: null }
     // )
-    if (this.gameOver && missiles.length !== 0) {
-      missiles = []
+    if (this.gameOver && missile) {
+      missile = null
     }
-    if (missiles.length == 0 && this.lastMissileCantBeUndone) {
+    if (!missile && this.bridgeMissile) {
       // NOTE: this maybe should be after the step logic
-      console.log('LASTMISSILECANTBEUNDONE = FALSE')
-      this.lastMissileCantBeUndone = false
+      console.log('BRIDGEMISSILE = FALSE')
+      this.bridgeMissile = false
     }
     bodies = this.forceAccumulator(bodies)
-    var results = this.detectCollision(bodies, missiles)
+    var results = this.detectCollision(bodies, missile)
     bodies = results.bodies
-    missiles = results.missiles || []
-    if (missiles.length > 0) {
-      const missileCopy = JSON.parse(JSON.stringify(missiles[0]))
+    missile = results.missile
+    if (missile) {
+      const missileCopy = _copy(missile)
       this.stillVisibleMissiles.push(missileCopy)
     }
-    if (missiles.length > 0 && missiles[0].radius == 0) {
-      missiles.splice(0, 1)
-    } else if (missiles.length > 1 && missiles[0].radius !== 0) {
-      // NOTE: follows logic of circuit
-      const newMissile = missiles.splice(0, 1)
-      missiles.splice(0, 1, newMissile[0])
+    if (missile && missile.radius == 0) {
+      missile = null
     }
-    return { bodies, missiles }
+    return { bodies, missile }
   }
 
   started() {
     this.emit('started', {
       day: this.day,
       level: this.level,
-      bodyInits: JSON.parse(JSON.stringify(this.bodyInits))
+      bodyInits: _copy(this.bodyInits)
     })
   }
 
-  processMissileInits(missiles) {
+  processMissileInit(b_) {
+    const b = _copy(b_)
     const radius = 10
-    return missiles.map((b) => {
-      // const maxMissileVectorScaled = this.convertFloatToScaledBigInt(
-      //   this.missileVectorLimit
-      // )
-      return {
-        step: b.step,
-        x: this.convertFloatToScaledBigInt(b.position.x).toString(),
-        y: this.convertFloatToScaledBigInt(b.position.y).toString(),
-        vx: this.convertFloatToScaledBigInt(b.velocity.x).toString(),
-        vy: this.convertFloatToScaledBigInt(b.velocity.y).toString(),
-        radius: radius.toString()
-      }
-    })
+    const processedMissileInit = {
+      step: b.step,
+      x: this.convertFloatToScaledBigInt(b.position.x).toString(),
+      y: this.convertFloatToScaledBigInt(b.position.y).toString(),
+      vx: this.convertFloatToScaledBigInt(b.velocity.x).toString(),
+      vy: this.convertFloatToScaledBigInt(b.velocity.y).toString(),
+      radius: radius.toString()
+    }
+    return processedMissileInit
   }
 
   finish() {
+    const { day, level, frameCount } = this
+    if (level == 0) return
     if (this.finalBatchSent) return
-    // this.finished = true
-    // this.setPause(true)
-    // const maxMissileVectorScaled = parseInt(
-    //   this.convertFloatToScaledBigInt(this.missileVectorLimit)
-    // ).toString()
 
-    this.calculateBodyFinal()
-    const missileInputs = []
-    let missileIndex = 0
-    // loop through all the steps that were just played since the last chunk
-    for (let i = this.alreadyRun; i < this.alreadyRun + this.stopEvery; i++) {
-      // if the step index matches the step where a missile was shot, add the missile to the missileInputs
-      // otherwise fill the missileInit array with an empty missile
-      if (this.missileInits[missileIndex]?.step == i) {
-        const missile = this.missileInits[missileIndex]
-        missileInputs.push([missile.vx, -missile.vy, missile.radius])
-        missileIndex++
+    const maxY = (this.windowWidth * parseInt(this.scalingFactor)).toString()
+    const m = _copy(this.missile)
+    const sampleOutput = {
+      bodyFinal: this.calculateBodyFinal(this.bodies),
+      time: frameCount,
+      outflightMissile: m
+        ? [m.px, m.py, m.vx, -m.vy, m.radius]
+        : ['0', maxY, '0', '0', '0']
+    }
+    const sampleInput = {
+      bodies: _copy(this.bodyInits),
+      // add one more because missileInits contains one extra for circuit
+      missiles: new Array(this.stopEvery + 1).fill(['0', '0', '0']),
+      inflightMissile: ['0', maxY, '0', '0', '0'],
+      address: this.address
+    }
+    for (const missileInit of this.missileInits) {
+      const index = (missileInit.step - this.startingFrame) % this.stopEvery
+      sampleInput.missiles[index] = [
+        missileInit.vx,
+        -missileInit.vy,
+        missileInit.radius
+      ]
+    }
+
+    // inflightMissile is empty unless the first frame contains a missile
+    if (sampleInput.missiles[0][2] !== '0') {
+      const m = this.missileInits[0]
+      if (m.step !== this.alreadyRun)
+        throw new Error('first frame missile error')
+      sampleInput.inflightMissile = [m.x, m.y, m.vx, -m.vy, m.radius]
+    }
+    const uid = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)
+    const results = {
+      uid,
+      sampleInput,
+      sampleOutput,
+      day,
+      level
+    }
+
+    if (level !== 0) {
+      if (this.levelSpeeds.length < level) {
+        this.levelSpeeds.push([results])
       } else {
-        missileInputs.push(['0', '0', '0'])
+        this.levelSpeeds[level - 1].push(results)
       }
     }
-    // add one more because missileInits contains one extra for circuit
-    missileInputs.push(['0', '0', '0'])
 
-    // define the inflightMissile for the proof from the first missile shot during this chunk
-    // if the first missile shot was shot at step == alreadyRun (start of this chunk)
-    // add it as an inflightMissile otherwise add a dummy missile
-    let inflightMissile =
-      this.missileInits[0]?.step == this.alreadyRun
-        ? this.missileInits[0]
-        : {
-            x: '0',
-            y: (this.windowWidth * parseInt(this.scalingFactor)).toString(),
-            vx: '0',
-            vy: '0',
-            radius: '0'
-          }
-    inflightMissile = [
-      inflightMissile.x,
-      inflightMissile.y,
-      inflightMissile.vx,
-      -inflightMissile.vy,
-      inflightMissile.radius
-    ]
-
-    // defind outflightMissile for the proof from the currently flying missiles
-    // if there is no missile flying, add a dummy missile
-    const outflightMissileTmp = this.missiles[0] || {
-      px: '0',
-      py: (this.windowWidth * parseInt(this.scalingFactor)).toString(),
-      vx: '0',
-      vy: '0',
-      radius: '0'
-    }
-    const outflightMissile = [
-      outflightMissileTmp.px,
-      outflightMissileTmp.py,
-      outflightMissileTmp.vx,
-      -outflightMissileTmp.vy,
-      outflightMissileTmp.radius
-    ]
-
-    const { address, day, level, bodyInits, bodyFinal, framesTook } = this
-
-    const results = JSON.parse(
-      JSON.stringify({
-        day,
-        level,
-        inflightMissile,
-        missiles: missileInputs,
-        bodyInits,
-        bodyFinal,
-        framesTook,
-        outflightMissile,
-        address
-      })
-    )
-
-    this.bodyInits = JSON.parse(JSON.stringify(this.bodyFinal))
-    this.alreadyRun = this.frames
-
-    // this.missileInits is initialized with the currently in flight missiles
-    this.missileInits = this.processMissileInits(this.missiles).map((m) => {
-      m.step = this.frames
-      return m
-    })
-    this.bodyFinal = []
     if (
-      this.mode == 'game' &&
       this.bodies
         .slice(this.level == 0 ? 0 : 1)
         .reduce((a, c) => a + c.radius, 0) == 0
     ) {
+      console.log('level completed')
       this.finalBatchSent = true
+      return results
     }
-    // if missiles.length > 0 that means that there is currently a missile in flight
-    // and so you can't add a new missile until the current missile has been finished.
-    // it is finished when this.missiles.length == 0, as checked in step() and missileClick()
-    // If a missile is shot while lastMissileCantBeUndone is true, then an event is emittied
-    // to notify the proving system to remove the last shot from the last chunk and the missile
-    // is removed from the missileInits array to prevent it from being used as incoming missile
-    // during the next chunk.
-    if (this.missiles.length > 0) {
-      console.log('LASTMISSILECANTBEUNDONE = TRUE')
-      this.lastMissileCantBeUndone = true
+
+    // prepare for next level
+    this.bodyInits = _copy(sampleOutput.bodyFinal)
+    this.alreadyRun = this.frames
+    this.missileInits = []
+
+    // this.missileInits is initialized with the currently in flight missile
+    if (this.missile) {
+      console.log('finish, convert missile to missileInit')
+      const missileInit = this.processMissileInit(this.missile)
+      missileInit.step = this.frames
+      this.missileInits.push(missileInit)
+
+      console.log('BRIDGEMISSILE = TRUE')
+      this.bridgeMissile = true
     }
-    if (level !== 0) {
-      if (this.levelSpeeds.length < level) {
-        console.log('create new level')
-        this.levelSpeeds.push([results])
-      } else {
-        console.log('add to levelSpeeds')
-        this.levelSpeeds[level - 1].push(results)
-      }
-    }
+
     return results
   }
 
-  undoMissile() {
+  removeBridgeMissile() {
     const lastChunk =
       this.levelSpeeds[this.level - 1][
         this.levelSpeeds[this.level - 1].length - 1
       ]
-    const outflightMissile = lastChunk.outflightMissile
+    const outflightMissile = lastChunk.sampleOutput.outflightMissile
     if (outflightMissile[4] == 0) {
-      console.error(
-        'removeLasstMissileOfLastChunk called when there is no outgoing missile'
-      )
-      return
+      console.error({ outflightMissile })
+      throw new Error('removeBridgeMissile called, no outgoing missile')
     }
-    const lastMissileIndex = lastChunk.missiles.reduceRight((acc, curr, i) => {
-      if (acc < 0 && curr[2] != '0') return i
-      return acc
-    }, -1)
+    if (outflightMissile[2] !== this.missile.vx) {
+      console.error({ outflightMissile, missile: this.missile })
+      throw new Error(
+        'removeBridgeMissile called, outgoing missile velocity x mismatch'
+      )
+    }
+    if (-outflightMissile[3] !== this.missile.vy) {
+      console.error({ outflightMissile, missile: this.missile })
+      throw new Error(
+        'removeBridgeMissile called, outgoing missile velocity y mismatch'
+      )
+    }
+    lastChunk.sampleOutput.outflightMissile = ['0', '1000000', '0', '0', '0']
+    if (
+      this.levelSpeeds[this.level - 1][
+        this.levelSpeeds[this.level - 1].length - 1
+      ].sampleOutput.outflightMissile.join() !==
+      lastChunk.sampleOutput.outflightMissile.join()
+    ) {
+      throw new Error('referenced array not updated, modify code')
+    }
 
-    console.log({
-      step: this.frames,
-      lastMissileIndex,
-      lastchunk_missiles: JSON.parse(JSON.stringify(lastChunk.missiles))
-    })
+    const lastMissileIndex = lastChunk.sampleInput.missiles.reduceRight(
+      (acc, curr, i) => {
+        if (acc < 0 && curr[2] != '0') return i
+        return acc
+      },
+      -1
+    )
+    const lastMissile = lastChunk.sampleInput.missiles[lastMissileIndex]
+    if (BigInt(lastMissile[0]) !== this.missile.vx) {
+      console.error({ lastMissile, missile: this.missile })
+      throw new Error(
+        'removeBridgeMissile called, last missile velocity x mismatch'
+      )
+    }
+    if (BigInt(-lastMissile[1]) !== this.missile.vy) {
+      console.error({ lastMissile, missile: _copy(this.missile) })
+      throw new Error(
+        'removeBridgeMissile called, last missile velocity y mismatch'
+      )
+    }
 
-    lastChunk.missiles[lastMissileIndex] = ['0', '0', '0']
-    lastChunk.outflightMissile = ['0', '1000000', '0', '0', '0']
-
-    console.log('removeLastMissileOfLastChunk')
-    console.log({
-      missiles: lastChunk.missiles,
-      lastMissileIndex
-    })
-    console.log({ outflightMissile: lastChunk.outflightMissile })
+    lastChunk.sampleInput.missiles[lastMissileIndex] = ['0', '0', '0']
   }
 
   generateLevelData(day, level) {
@@ -1154,13 +1035,13 @@ export class Anybody extends EventEmitter {
   }
   processMissileClick(x, y) {
     if (this.gameOver || this.paused || this.missilesDisabled) return
-
     if (
       this.bodies.reduce((a, c) => a + c.radius, 0) == 0 ||
       this.frames - this.startingFrame >= this.timer
     ) {
       return
     }
+    console.log('processMissileClick', { x, y })
 
     if (this.frames % this.stopEvery == 0) {
       console.log({ frames: this.frames, stopEvery: this.stopEvery })
@@ -1171,36 +1052,31 @@ export class Anybody extends EventEmitter {
       this.shootMissileNextFrame = null
     }
 
-    // if (this.missiles.length > 0 && !this.admin) {
-    //   // this is a hack to prevent multiple missiles from being fired
-    //   this.missiles = []
-    //   // remove latest missile from missileInits
-    //   this.missileInits.pop()
-    // }
-
-    if (this.missiles.length > 0) {
-      if (this.lastMissileCantBeUndone) {
-        this.undoMissile()
-        this.lastMissileCantBeUndone = false
-        console.log('LASTMISSILECANTBEUNDONE = FALSE')
+    // already a missile in flight, needs to be removed from current and previous chunk
+    if (this.missile) {
+      const missileCopy = this.processMissileInit(this.missile)
+      const abortedMissile = this.missileInits.pop()
+      if (abortedMissile.vx !== missileCopy.vx) {
+        console.error({ abortedMissile, missileCopy })
+        throw new Error('aborted missile velocity mismatch')
       }
-      console.log({
-        missileInitsBeforePop: JSON.parse(JSON.stringify(this.missileInits))
-      })
-      this.missileInits.pop()
-      console.log({
-        missileInitsAfterPop: JSON.parse(JSON.stringify(this.missileInits))
-      })
-      console.log({ levelSpeeds: JSON.parse(JSON.stringify(this.levelSpeeds)) })
-      this.missileCount--
-    } else if (this.lastMissileCantBeUndone) {
-      console.error(
-        'lastMissileCantBeUndone should have been modified in step() alredy'
-      )
-      this.lastMissileCantBeUndone = false
+      if (abortedMissile.vy !== missileCopy.vy) {
+        console.error({ abortedMissile, missileCopy })
+        throw new Error('aborted missile velocity mismatch')
+      }
+      if (this.bridgeMissile) {
+        this.removeBridgeMissile()
+        this.bridgeMissile = false
+        console.log('BRIDGEMISSILE = FALSE')
+        if (this.missileInits.length !== 0) {
+          throw new Error('missileInits should be empty')
+        }
+      }
+    } else if (this.bridgeMissile) {
+      console.error('bridgeMissile should have been modified in step() alredy')
+      this.bridgeMissile = false
     }
 
-    this.missileCount++
     const radius = 10
     const b = {
       step: this.frames,
@@ -1220,30 +1096,30 @@ export class Anybody extends EventEmitter {
     const max = this.missileVectorLimitSum / 1000
     if (sum > max) {
       b.velocity.limit(this.missileSpeed * this.speedFactor * 0.999)
-      console.log({
-        x: b.velocity.x,
-        y: b.velocity.y,
-        max: this.missileVectorLimitSum / 1000
-      })
       sum = b.velocity.x - b.velocity.y
       if (sum > max) {
+        console.error({
+          x: b.velocity.x,
+          y: b.velocity.y,
+          max: this.missileVectorLimitSum / 1000
+        })
         console.error('still too fast')
         return
       }
     }
-    this.missiles = [b]
+    this.missile = b
 
     const missileVectorMagnitude = x ** 2 + (y - this.windowWidth) ** 2
     this.sound?.playMissile(missileVectorMagnitude)
-    this.missileInits.push(...this.processMissileInits([b]))
-    this.makeMissileStart()
+    this.missileInits.push(this.processMissileInit(b))
+    this.drawMissileStart()
   }
 
   calculateStats = () => {
     const bodiesIncluded = this.bodies.length
     const { startingFrame, frames } = this
-    const framesTook = frames - startingFrame - 1 // -1 because the first frame is the starting frame
-    const timeTook = framesTook / this.FPS
+    const frameCount = frames - startingFrame - 1 // -1 because the first frame is the starting frame
+    const timeTook = frameCount / this.FPS
 
     const missilesShot = this.missileInits.reduce(
       (p, c) => (c[0] == 0 ? p : p + 1),
@@ -1254,7 +1130,7 @@ export class Anybody extends EventEmitter {
       missilesShot,
       bodiesIncluded,
       timeTook,
-      framesTook
+      frameCount
     }
   }
 
@@ -1279,6 +1155,164 @@ if (typeof window !== 'undefined') {
   window.Anybody = Anybody
 }
 
-BigInt.prototype.toJSON = function () {
-  return this.toString()
+// BigInt.prototype.toJSON = function () {
+//   return this.toString() + 'n'
+// }
+export const compareData = (
+  uid,
+  level,
+  signals,
+  sampleInput,
+  sampleOutput,
+  prevSampleOutput
+) => {
+  console.log('compareData func', {
+    uid,
+    level,
+    signals,
+    sampleInput,
+    sampleOutput,
+    prevSampleOutput
+  })
+  // confirm this chunk has inputs that match the previous chunk's outputs
+  if (prevSampleOutput) {
+    // emsure inflight missile == outflight missile
+    const outflightMissile = prevSampleOutput.outflightMissile?.map((v) =>
+      parseInt(v)
+    )
+    const inflightMissile = sampleInput.inflightMissile?.map((v) => parseInt(v))
+    if (!outflightMissile || !inflightMissile) {
+      console.error({ sampleInput, prevSampleOutput })
+      throw new Error('inflight or outflight not set')
+    }
+    for (let i = 0; i < 5; i++) {
+      if (outflightMissile[i] !== inflightMissile[i]) {
+        console.error({
+          i,
+          sampleInput,
+          prevSampleOutput,
+          outflightMissile,
+          inflightMissile
+        })
+        throw new Error('Missile mismatch on index ' + i)
+      }
+    }
+    // ensure bodyFinal == bodies
+    for (let i = 0; i < prevSampleOutput.bodyFinal.length; i++) {
+      const lastBody = prevSampleOutput.bodyFinal[i]
+      const currentBody = sampleInput.bodies[i]
+      if (lastBody.length !== currentBody.length || lastBody.length == 0) {
+        console.error({ prevSampleOutput, sampleInput })
+        console.error({ lastBody, currentBody })
+        throw new Error('body count doesnt match')
+      }
+      for (let j = 0; j < 4; j++) {
+        if (lastBody[j] !== currentBody[j]) {
+          console.error({ prevSampleOutput, sampleInput })
+          console.error({ lastBody, currentBody })
+          throw new Error(`Body mismatch at index i:${i} j:${j}`)
+        }
+      }
+    }
+  }
+
+  if (signals) {
+    signals = signals.map((v) => BigInt(v))
+    const bodies = level + 1 <= 4 ? 4 : 6
+    const frameLength = proverTickIndex[level + 1]
+
+    for (let i = 0; i < signals.length; i++) {
+      const signal = signals[i]
+      const isLevelCleared =
+        sampleOutput.bodyFinal.slice(1).reduce((pv, cv) => {
+          return pv + parseInt(cv[4])
+        }, 0) == 0
+      const isLevelLost = sampleOutput.bodyFinal[0][4] == '0'
+      if (isLevelLost) {
+        throw new Error('why is compareData being run on a lost game?')
+      }
+
+      const isFinalChunk = isLevelCleared || isLevelLost
+      if (i < 1) {
+        // dont know what this signal is
+      } else if (i < 1 + 5) {
+        const offset = 1
+        // outflight missile
+        if (signal !== BigInt(sampleOutput.outflightMissile[i - offset])) {
+          console.error({
+            uid,
+            i,
+            offset,
+            signal,
+            outflightMissile: sampleOutput.outflightMissile[i - offset]
+          })
+          throw new Error(
+            'outflightMissile mismatch at index i:' + i + ' uid:' + uid
+          )
+        }
+      } else if (i < 1 + 5 + bodies * 5) {
+        // body outputs don't matter in final chunk
+        if (isFinalChunk) continue
+        const offset = 1 + 5
+        const bodyIndex = Math.floor((i - offset) / 5)
+        const attrIndex = (i - offset) % 5
+        // bodyIndex may be more because bodyFinal isn't padded to 4 or 6
+        if (bodyIndex > sampleOutput.bodyFinal.length - 1) continue
+        if (BigInt(sampleOutput.bodyFinal[bodyIndex][attrIndex]) !== signal) {
+          console.error({
+            i,
+            bodyIndex,
+            attrIndex,
+            uid,
+            signal,
+            body: sampleOutput.bodyFinal[bodyIndex][attrIndex]
+          })
+          throw new Error('bodyFinal mismatch i:' + i + ' uid:' + uid)
+        }
+      } else if (i < 1 + 5 + bodies * 5 + 1) {
+        const time =
+          (sampleOutput.time && sampleOutput.time % frameLength) || frameLength
+        if (BigInt(time) !== signal) {
+          console.error({ uid, time, signal })
+          throw new Error('time mismatch i:' + i + ' uid:' + uid)
+        }
+      } else if (i < 1 + 5 + bodies * 5 + 1 + 1) {
+        if (BigInt(sampleInput.address) !== signal) {
+          console.error({
+            uid,
+            address: sampleInput.address,
+            signal
+          })
+          throw new Error('address mismatch i:' + i + ' uid:' + uid)
+        }
+      } else if (i < 1 + 5 + bodies * 5 + 1 + 1 + bodies * 5) {
+        const offset = 5 + bodies * 5 + 1 + 1 + 1
+        const bodyIndex = Math.floor((i - offset) / 5)
+        if (bodyIndex > sampleInput.bodies.length - 1) {
+          continue
+        }
+        const attrIndex = (i - offset) % 5
+        if (BigInt(sampleInput.bodies[bodyIndex][attrIndex]) !== signal) {
+          console.error({
+            uid,
+            bodyIndex,
+            attrIndex,
+            signal,
+            body: sampleInput.bodies[bodyIndex][attrIndex]
+          })
+          throw new Error('bodies mismatch i:' + i + ' uid:' + uid)
+        }
+      } else if (i < signals.length) {
+        const offset = 5 + bodies * 5 + 1 + 1 + 1 + bodies * 5
+        const missileIndex = i - offset
+        if (BigInt(sampleInput.inflightMissile[missileIndex]) !== signal) {
+          console.error({ signal, missileIndex, offset })
+          throw new Error('inflightMissile mismatch i:' + i + ' uid:' + uid)
+        }
+      } else {
+        console.error({ uid, i, signal })
+        throw new Error('shouldnt be here i:' + i + ' uid:' + uid)
+      }
+    }
+  }
 }
