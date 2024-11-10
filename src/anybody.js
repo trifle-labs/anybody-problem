@@ -636,7 +636,7 @@ export class Anybody extends EventEmitter {
 
   finish() {
     const { day, level, framesTook } = this
-    if (level == 0) return
+    if (level == 0 && !this.util) return
     if (this.finalBatchSent) return
 
     const maxY = (this.windowWidth * parseInt(this.scalingFactor)).toString()
@@ -713,7 +713,6 @@ export class Anybody extends EventEmitter {
       console.log('BRIDGEMISSILE = TRUE')
       this.bridgeMissile = true
     }
-
     return results
   }
 

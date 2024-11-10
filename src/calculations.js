@@ -1,3 +1,5 @@
+import { BigNumber } from 'ethers'
+
 export const Calculations = {
   forceAccumulator(bodies_ = this.bodies) {
     let bodies = _copy(bodies_)
@@ -271,6 +273,9 @@ export const Calculations = {
   },
 
   convertFloatToScaledBigInt(value) {
+    if (value.type == 'BigNumber') {
+      value = BigNumber.from(value.hex).toNumber()
+    }
     // changed from Math.floor to Math.round, TODO: look here in case there's rounding error
     return BigInt(Math.round(value * parseInt(this.scalingFactor)))
     // let maybeNegative = BigInt(Math.floor(value * parseInt(scalingFactor))) % p
@@ -547,6 +552,9 @@ function _customParse(json) {
 
 function _copy(obj) {
   return _customParse(_customStringify(obj))
+}
+BigInt.prototype.toJSON = function () {
+  return this.toString() + 'n'
 }
 
 // function _validateSeed(seed) {

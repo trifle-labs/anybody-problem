@@ -50,27 +50,26 @@ describe('detectCollisionMain circuit', () => {
         )
       )
     }
-    const missiles = [
-      anybody.convertScaledStringArrayToMissile.call(
-        anybody,
-        jsSampleInput.missile
-      )
-    ]
+    const missile = anybody.convertScaledStringArrayToMissile.call(
+      anybody,
+      jsSampleInput.missile
+    )
 
     // console.dir({ bodiesBefore, missiles }, { depth: null })
     const results = anybody.detectCollisionBigInt.call(
       anybody,
       bodiesBefore,
-      missiles
+      missile
     )
     // console.dir({ results }, { depth: null })
     let out_bodies = results.bodies.map((body) =>
       anybody.convertScaledBigIntBodyToArray.call(anybody, body)
     )
     out_bodies.forEach((b) => b.splice(2, 2))
-    let out_missile = results.missiles.map((missile) =>
-      anybody.convertScaledBigIntMissileToArray.call(anybody, missile)
-    )[0]
+    let out_missile = anybody.convertScaledBigIntMissileToArray.call(
+      anybody,
+      results.missile
+    )
     out_missile.splice(2, 2)
     // console.log({ out_bodies })
     // console.log({ out_missile })

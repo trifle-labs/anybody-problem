@@ -9,7 +9,7 @@ pragma solidity ^0.8.0;
 
 contract Tournament is Ownable {
     using HitchensOrderStatisticsTreeLib for HitchensOrderStatisticsTreeLib.Tree;
-    uint256 public firstMonday = 1704067200; // Mon Jan 01 2024 00:00:00 GMT+0000
+    uint256 public firstMonday = 1731283200; // Mon Nov 11 2024 00:00:00 GMT+0000
     uint256 public constant SECONDS_IN_A_DAY = 86400;
     address payable public anybodyProblem;
     uint256 public daysInContest = 2;
@@ -17,6 +17,13 @@ contract Tournament is Ownable {
     uint256 public entryPrice = 0; // 0.005 ether; // ~$10
     uint256 public entryPercent = 0; // 0 / 1000 = 0%
     uint256 public constant FACTOR = 1000;
+
+    event ClaimedPrize(
+        uint256 week,
+        address player,
+        uint256 prizeAmount,
+        string category
+    );
 
     event RecordBroken(
         string recordType,
@@ -186,12 +193,14 @@ contract Tournament is Ownable {
             'Already paid out average'
         );
         (address winner, ) = mostAverageByWeek(week);
+        require(winner == msg.sender, 'Only winner can withdraw');
         paidOutByWeek[week].average = winner;
         uint256 prizeAmount = divRound(prizes[week], 3); // round down is what we want, dust will be minimal
         require(prizeAmount > 0, 'No prize to pay out');
         (bool sent, ) = winner.call{value: prizeAmount}('');
         emit EthMoved(winner, sent, '', prizeAmount);
         require(sent, 'Failed to send Ether');
+        emit ClaimedPrize(week, winner, prizeAmount, 'average');
     }
 
     function payoutFastest(uint256 week) public {
@@ -201,12 +210,14 @@ contract Tournament is Ownable {
             'Already paid out fastest'
         );
         address winner = fastestByWeek(week);
+        require(winner == msg.sender, 'Only winner can withdraw');
         paidOutByWeek[week].fastest = winner;
         uint256 prizeAmount = divRound(prizes[week], 3); // round down is what we want, dust will be minimal
         require(prizeAmount > 0, 'No prize to pay out');
         (bool sent, ) = winner.call{value: prizeAmount}('');
         emit EthMoved(winner, sent, '', prizeAmount);
         require(sent, 'Failed to send Ether');
+        emit ClaimedPrize(week, winner, prizeAmount, 'fastest');
     }
 
     function payoutSlowest(uint256 week) public {
@@ -216,12 +227,14 @@ contract Tournament is Ownable {
             'Already paid out slowest'
         );
         address winner = slowestByWeek(week);
+        require(winner == msg.sender, 'Only winner can withdraw');
         paidOutByWeek[week].slowest = winner;
         uint256 prizeAmount = divRound(prizes[week], 3); // round down is what we want, dust will be minimal
         require(prizeAmount > 0, 'No prize to pay out');
         (bool sent, ) = winner.call{value: prizeAmount}('');
         emit EthMoved(winner, sent, '', prizeAmount);
         require(sent, 'Failed to send Ether');
+        emit ClaimedPrize(week, winner, prizeAmount, 'slowest');
     }
 
     function fastestByWeek(uint256 week) public view returns (address winner) {
@@ -272,10 +285,10 @@ contract Tournament is Ownable {
         bool closestFound = false;
         uint256 indexOffset = 0;
         uint256 rankOffset = 0;
-        uint256 rank = tree.rank(requestedValue);
-        uint256 count = tree.count();
-        for (uint256 i = 0; i < count; i++) {
-            closest = tree.atRank(rank + rankOffset);
+        uint256 rank_ = tree.rank(requestedValue);
+        uint256 count_ = tree.count();
+        for (uint256 i = 0; i < count_; i++) {
+            closest = tree.atRank(rank_ + rankOffset);
             // uint256 closest2 = tree.atPercentile(tree.percentile(requestedValue));
             // require(closest == closest2, 'Rank and Percentile do not match');
             address player = keyToAddress(
@@ -453,7 +466,7 @@ contract Tournament is Ownable {
                     week,
                     run.owner,
                     totalTime,
-                    uint256(minimumReached)
+                    minimumReached ? 1 : 0
                 );
             }
         }
@@ -527,7 +540,7 @@ contract Tournament is Ownable {
                     week,
                     run.owner,
                     totalTime,
-                    uint256(minimumReached)
+                    minimumReached ? 1 : 0
                 );
             }
         }

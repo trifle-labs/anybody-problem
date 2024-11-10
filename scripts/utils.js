@@ -866,12 +866,13 @@ const solveLevel = async (
       velocity: anybody.createVector(ethers.BigNumber.from(10), 0),
       radius: newRadius
     }
-    missileInits.push(missile)
+    const missileInit = anybody.processMissileInit(missile)
+    missileInits.push(missileInit)
   }
 
-  missileInits = anybody.processMissileInits(missileInits)
   anybody.missileInits = missileInits
-  const { missiles, inflightMissile } = anybody.finish()
+  const { sampleInput } = anybody.finish()
+  const { inflightMissile, missiles } = sampleInput
   const { dataResult } = await generateProof(
     owner,
     '0x' + '0'.repeat(64), // seed doesn't matter
@@ -1026,8 +1027,8 @@ const generateProof = async (
   const results = anybody.finish()
   const inputData = {
     address,
-    bodies: results.bodyInits,
-    missiles: missiles || results.missiles
+    bodies: results.sampleInput.bodies,
+    missiles: missiles || results.sampleInput.missiles
   }
   inputData.inflightMissile = inflightMissile || [
     '0',
@@ -1035,7 +1036,7 @@ const generateProof = async (
     ...(inputData.missiles.length > 0 ? inputData.missiles[0] : [0, 0, 0])
   ]
 
-  const bodyFinal = results.bodyFinal
+  const bodyFinal = results.sampleOutput.bodyFinal
 
   let useCircuit = bodyCount <= 4 ? 4 : 6
   if (useCircuit !== inputData.bodies.length) {

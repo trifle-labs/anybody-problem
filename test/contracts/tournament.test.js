@@ -18,7 +18,7 @@ import {
 
 const SECONDS_IN_DAY = 86400
 export const earlyMonday = 1704067200 // Mon Jan 01 2024 00:00:00 GMT+0000
-const actualMonday = 1704067200 // Mon Jan 01 2024 00:00:00 GMT+0000
+const actualMonday = 1731283200 // Mon Nov 11 2024 00:00:00 GMT+0000
 
 // const daysInContest = 7
 // const minimumDaysPlayed = 3
@@ -404,8 +404,8 @@ describe('Tournament Tests', function () {
         tx = await Tournament.addToLeaderboard(runId)
       }
     }
-
-    const winner = acct2.address
+    const winnerAcct = acct2
+    const winner = winnerAcct.address
 
     const winnersAverage = divRound(
       days.reduce(
@@ -443,9 +443,9 @@ describe('Tournament Tests', function () {
     const currentWeekNow = await Tournament.currentWeek()
     expect(currentWeekNow).to.equal(week)
 
-    await expect(Tournament.payoutAverage(week)).to.be.revertedWith(
-      'Contest is not over'
-    )
+    await expect(
+      Tournament.connect(winnerAcct).payoutAverage(week)
+    ).to.be.revertedWith('Contest is not over')
 
     // final day fast forward
     await time.increase(SECONDS_IN_DAY)
@@ -453,20 +453,31 @@ describe('Tournament Tests', function () {
     const [mostAverageByWeek] = await Tournament.mostAverageByWeek(week)
     expect(mostAverageByWeek).to.equal(winner)
     const winnerBalanceBefore = await acct2.getBalance()
-    const tx2 = await Tournament.payoutAverage(week)
+
+    await expect(Tournament.payoutAverage(week)).to.be.revertedWith(
+      'Only winner can withdraw'
+    )
+
+    const tx2 = await Tournament.connect(winnerAcct).payoutAverage(week)
     await expect(tx2)
       .to.emit(Tournament, 'EthMoved')
       .withArgs(winner, true, '0x', prizePortion)
+      .to.emit(Tournament, 'ClaimedPrize')
+      .withArgs(week, winner, prizePortion, 'average')
 
     const receipt = await tx2.wait()
     /*const events =*/ getParsedEventLogs(receipt, Tournament, 'RecordBroken')
     // console.dir({ events }, { depth: null })
-    const winnerBalanceAfter = await acct2.getBalance()
-    expect(winnerBalanceAfter.sub(winnerBalanceBefore)).to.equal(prizePortion)
 
-    await expect(Tournament.payoutAverage(week)).to.be.revertedWith(
-      'Already paid out average'
+    const winnerBalanceAfter = await acct2.getBalance()
+    const gasUsed = receipt.gasUsed.mul(receipt.effectiveGasPrice)
+    expect(winnerBalanceAfter.sub(winnerBalanceBefore)).to.equal(
+      prizePortion.sub(gasUsed)
     )
+
+    await expect(
+      Tournament.connect(winnerAcct).payoutAverage(week)
+    ).to.be.revertedWith('Already paid out average')
   })
   it('adds and updates fastest and slowest', async () => {
     const { Tournament, AnybodyProblemV2 } = await deployContracts({
@@ -536,34 +547,44 @@ describe('Tournament Tests', function () {
     const currentWeekNow = await Tournament.currentWeek()
     expect(currentWeekNow).to.equal(week)
 
-    await expect(Tournament.payoutFastest(week)).to.be.revertedWith(
-      'Contest is not over'
-    )
-    await expect(Tournament.payoutSlowest(week)).to.be.revertedWith(
-      'Contest is not over'
-    )
+    await expect(
+      Tournament.connect(fastest).payoutFastest(week)
+    ).to.be.revertedWith('Contest is not over')
+    await expect(
+      Tournament.connect(slowest).payoutSlowest(week)
+    ).to.be.revertedWith('Contest is not over')
 
     // final day fast forward
     await time.increase(SECONDS_IN_DAY)
 
     const fastestBalanceBefore = await fastest.getBalance()
-    await expect(Tournament.payoutFastest(week))
+    let tx = await Tournament.connect(fastest).payoutFastest(week)
+    let receipt = await tx.wait()
+    await expect(tx)
       .to.emit(Tournament, 'EthMoved')
       .withArgs(fastest.address, true, '0x', prizePortion)
 
     const fastestBalanceAfter = await fastest.getBalance()
-    expect(fastestBalanceAfter.sub(fastestBalanceBefore)).to.equal(prizePortion)
-
-    await expect(Tournament.payoutFastest(week)).to.be.revertedWith(
-      'Already paid out fastest'
+    let gasUsed = receipt.gasUsed.mul(receipt.effectiveGasPrice)
+    expect(fastestBalanceAfter.sub(fastestBalanceBefore)).to.equal(
+      prizePortion.sub(gasUsed)
     )
 
+    await expect(
+      Tournament.connect(fastest).payoutFastest(week)
+    ).to.be.revertedWith('Already paid out fastest')
+
     const slowestBalanceBefore = await slowest.getBalance()
-    await expect(Tournament.payoutSlowest(week))
+    tx = await Tournament.connect(slowest).payoutSlowest(week)
+    receipt = await tx.wait()
+    await expect(tx)
       .to.emit(Tournament, 'EthMoved')
       .withArgs(slowest.address, true, '0x', prizePortion)
     const slowestBalanceAfter = await slowest.getBalance()
-    expect(slowestBalanceAfter.sub(slowestBalanceBefore)).to.equal(prizePortion)
+    gasUsed = receipt.gasUsed.mul(receipt.effectiveGasPrice)
+    expect(slowestBalanceAfter.sub(slowestBalanceBefore)).to.equal(
+      prizePortion.sub(gasUsed)
+    )
   })
   it('doesnt save your score if you dont buy a ticket', async () => {
     const [, acct1] = await ethers.getSigners()
@@ -946,7 +967,9 @@ describe('Tournament Tests', function () {
     const prizeStored = await Tournament.prizes(week)
     expect(prizeStored).to.equal(prizeTotal)
 
-    const prizePortion = divRound(prizeTotal.toBigInt(), 3)
+    const prizePortion = ethers.BigNumber.from(
+      divRound(prizeTotal.toBigInt(), 3)
+    )
 
     const fastestAccount = accounts.find(
       (account) => account.address === fastest[0].player
@@ -958,54 +981,99 @@ describe('Tournament Tests', function () {
       (account) => account.address === mostAverage[0].player
     )
 
+    await expect(Tournament.payoutFastest(week)).to.be.revertedWith(
+      'Only winner can withdraw'
+    )
+    await expect(Tournament.payoutSlowest(week)).to.be.revertedWith(
+      'Only winner can withdraw'
+    )
+    await expect(Tournament.payoutAverage(week)).to.be.revertedWith(
+      'Only winner can withdraw'
+    )
+
     const fastestBalanceBefore = await fastestAccount.getBalance()
-    expect(await Tournament.payoutFastest(week))
+    let tx = await Tournament.connect(fastestAccount).payoutFastest(week)
+    let receipt = await tx.wait()
+    let gasUsed = receipt.gasUsed.mul(receipt.effectiveGasPrice)
+    expect(tx)
       .to.emit(Tournament, 'EthMoved')
       .withNamedArgs({
         to: fastestAccount.address,
         success: true,
         amount: prizePortion
       })
+      .to.emit(Tournament, 'ClaimedPrize')
+      .withNamedArgs({
+        week,
+        player: fastestAccount.address,
+        prizeAmount: prizePortion,
+        category: 'fastest'
+      })
     const fastestBalanceAfter = await fastestAccount.getBalance()
-    expect(fastestBalanceAfter.sub(fastestBalanceBefore)).to.equal(prizePortion)
+    expect(fastestBalanceAfter.sub(fastestBalanceBefore)).to.equal(
+      prizePortion.sub(gasUsed)
+    )
 
     const slowestBalanceBefore = await slowestAccount.getBalance()
-    expect(await Tournament.payoutSlowest(week))
+    tx = await Tournament.connect(slowestAccount).payoutSlowest(week)
+    receipt = await tx.wait()
+    gasUsed = receipt.gasUsed.mul(receipt.effectiveGasPrice)
+    expect(tx)
       .to.emit(Tournament, 'EthMoved')
       .withNamedArgs({
         to: slowestAccount.address,
         success: true,
         amount: prizePortion
       })
+      .to.emit(Tournament, 'ClaimedPrize')
+      .withNamedArgs({
+        week,
+        player: slowestAccount.address,
+        prizeAmount: prizePortion,
+        category: 'slowest'
+      })
     const slowestBalanceAfter = await slowestAccount.getBalance()
-    expect(slowestBalanceAfter.sub(slowestBalanceBefore)).to.equal(prizePortion)
+    expect(slowestBalanceAfter.sub(slowestBalanceBefore)).to.equal(
+      prizePortion.sub(gasUsed)
+    )
 
     const mostAverageBalanceBefore = await mostAverageAccount.getBalance()
-    expect(await Tournament.payoutAverage(week))
+
+    tx = await Tournament.connect(mostAverageAccount).payoutAverage(week)
+    receipt = await tx.wait()
+    gasUsed = receipt.gasUsed.mul(receipt.effectiveGasPrice)
+    expect(tx)
       .to.emit(Tournament, 'EthMoved')
       .withNamedArgs({
         to: mostAverageAccount.address,
         success: true,
         amount: prizePortion
       })
+      .to.emit(Tournament, 'ClaimedPrize')
+      .withNamedArgs({
+        week,
+        player: mostAverageAccount.address,
+        prizeAmount: prizePortion,
+        category: 'average'
+      })
     const mostAverageBalanceAfter = await mostAverageAccount.getBalance()
     expect(mostAverageBalanceAfter.sub(mostAverageBalanceBefore)).to.equal(
-      prizePortion
+      prizePortion.sub(gasUsed)
     )
     const contractBalanceAfter = await ethers.provider.getBalance(
       Tournament.address
     )
     expect(contractBalanceAfter).to.equal(0)
 
-    await expect(Tournament.payoutFastest(week)).to.be.revertedWith(
-      'Already paid out fastest'
-    )
-    await expect(Tournament.payoutSlowest(week)).to.be.revertedWith(
-      'Already paid out slowest'
-    )
-    await expect(Tournament.payoutAverage(week)).to.be.revertedWith(
-      'Already paid out average'
-    )
+    await expect(
+      Tournament.connect(fastestAccount).payoutFastest(week)
+    ).to.be.revertedWith('Already paid out fastest')
+    await expect(
+      Tournament.connect(slowestAccount).payoutSlowest(week)
+    ).to.be.revertedWith('Already paid out slowest')
+    await expect(
+      Tournament.connect(mostAverageAccount).payoutAverage(week)
+    ).to.be.revertedWith('Already paid out average')
   })
   it.skip('revokes mistaken prize')
   it.skip('refund unclaimed prize')
