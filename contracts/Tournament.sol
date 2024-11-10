@@ -12,8 +12,8 @@ contract Tournament is Ownable {
     uint256 public firstMonday = 1731283200; // Mon Nov 11 2024 00:00:00 GMT+0000
     uint256 public constant SECONDS_IN_A_DAY = 86400;
     address payable public anybodyProblem;
-    uint256 public daysInContest = 2;
-    uint256 public minimumDaysPlayed = 1;
+    uint256 public daysInContest = 7;
+    uint256 public minimumDaysPlayed = 3;
     uint256 public entryPrice = 0; // 0.005 ether; // ~$10
     uint256 public entryPercent = 0; // 0 / 1000 = 0%
     uint256 public constant FACTOR = 1000;
@@ -125,6 +125,10 @@ contract Tournament is Ownable {
     }
 
     function addToLeaderboard(uint256 runId) public onlyAnybodyProblem {
+        uint256 day = AnybodyProblemV2(anybodyProblem).currentDay();
+        if (day < firstMonday) {
+            return;
+        }
         uint256 currentWeek_ = currentWeek();
         AnybodyProblemV2.Run memory run = runs(runId);
 
@@ -134,9 +138,9 @@ contract Tournament is Ownable {
         }
         // NOTE: not necessary to check since addToLeaderboard is only called on currentDay
         // require(currentWeek_ == dayToWeek(runs(runId).day), 'Run is not in current week');
-        addToAverageByWeekByPlayer(runId, currentWeek_, run);
-        addToFastestByWeekByPlayer(runId, currentWeek_, run);
-        addToSlowestByWeekByPlayer(runId, currentWeek_, run);
+        addToAverageByWeekByPlayer(currentWeek_, run);
+        addToFastestByWeekByPlayer(currentWeek_, run);
+        addToSlowestByWeekByPlayer(currentWeek_, run);
     }
 
     function buyTicket() public payable {
@@ -328,7 +332,6 @@ contract Tournament is Ownable {
     }
 
     function dayToWeek(uint256 day) public view returns (uint256) {
-        require(day >= firstMonday, 'Day is before firstMonday');
         return ((day - firstMonday) / SECONDS_IN_A_DAY) / daysInContest; // rounding down is important here
     }
 
@@ -343,7 +346,6 @@ contract Tournament is Ownable {
     }
 
     function addToAverageByWeekByPlayer(
-        uint256 runId,
         uint256 week,
         AnybodyProblemV2.Run memory run
     ) internal {
@@ -404,7 +406,6 @@ contract Tournament is Ownable {
     }
 
     function addToSlowestByWeekByPlayer(
-        uint256 runId,
         uint256 week,
         AnybodyProblemV2.Run memory run
     ) internal {
@@ -473,7 +474,6 @@ contract Tournament is Ownable {
     }
 
     function addToFastestByWeekByPlayer(
-        uint256 runId,
         uint256 week,
         AnybodyProblemV2.Run memory run
     ) internal {
