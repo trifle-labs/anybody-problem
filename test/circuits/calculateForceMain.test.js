@@ -1,7 +1,6 @@
 // import hre from 'hardhat'
 // import { assert } from 'chai';
-// import { describe, it, before } from 'mocha';
-
+import { describe, it, before } from 'mocha'
 import { Anybody } from '../../dist/module.js'
 import { wasm as wasm_tester } from 'circom_tester'
 import fs from 'fs'

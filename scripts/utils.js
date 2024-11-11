@@ -71,10 +71,10 @@ const initContracts = async (
     'AnybodyProblem',
     'Speedruns',
     'ExternalMetadata',
-    'ThemeGroup'
+    'ThemeGroup',
+    'Tournament'
   ]
 ) => {
-  console.log({ contractNames })
   let [deployer] = await hre.ethers.getSigners()
 
   for (let i = 3; i <= 6; i++) {
@@ -191,13 +191,16 @@ const deployAnybodyProblemV1 = async (options) => {
   } = await initContracts(['AnybodyProblemV0', 'Speedruns', 'ExternalMetadata'])
 
   if (!Speedruns) Speedruns = speedrunsDeployed
+  returnObject['Speedruns'] = Speedruns
   if (!ExternalMetadata) ExternalMetadata = externalMetadataDeployed
+  returnObject['ExternalMetadata'] = ExternalMetadata
   if (!AnybodyProblemV0) AnybodyProblemV0 = anybodyProblemV0Deployed
+  returnObject['AnybodyProblemV0'] = AnybodyProblemV0
 
-  log(mock ? 'Deploying AnybodyProblemMock' : 'Deploying AnybodyProblem')
+  log(mock ? 'Deploying AnybodyProblemV1Mock' : 'Deploying AnybodyProblemV1')
   // deploy AnybodyProblem
-  const AnybodyProblem = await hre.ethers.getContractFactory(
-    mock ? 'AnybodyProblemMock' : 'AnybodyProblem'
+  const AnybodyProblemV1 = await hre.ethers.getContractFactory(
+    mock ? 'AnybodyProblemV1Mock' : 'AnybodyProblemV1'
   )
 
   const constructorArguments = [
@@ -210,31 +213,33 @@ const deployAnybodyProblemV1 = async (options) => {
     AnybodyProblemV0.address
   ]
 
-  const anybodyProblem = await AnybodyProblem.deploy(...constructorArguments)
-  await anybodyProblem.deployed()
+  const anybodyProblemV1 = await AnybodyProblemV1.deploy(
+    ...constructorArguments
+  )
+  await anybodyProblemV1.deployed()
 
-  returnObject['AnybodyProblem'] = anybodyProblem
+  returnObject['AnybodyProblemV1'] = anybodyProblemV1
 
   log(
-    'AnybodyProblem Deployed at ' +
-      String(anybodyProblem.address) +
+    'AnybodyProblemV1 Deployed at ' +
+      String(anybodyProblemV1.address) +
       ` with speedrunsAddress ${Speedruns.address} and externalMetdataAddress ${ExternalMetadata.address} and verifiers ${verifiers} and verifiersTicks ${verifiersTicks} and verifiersBodies ${verifiersBodies} and anybodyProblemV0Address ${AnybodyProblemV0.address}`
   )
 
   // update AnybodyProblemV1 with proceedRecipient
-  await anybodyProblem.updateProceedRecipient(proceedRecipient)
-  log(`AnybodyProblem ProceedRecipient updated to ${proceedRecipient}`)
+  await anybodyProblemV1.updateProceedRecipient(proceedRecipient)
+  log(`AnybodyProblemV1 ProceedRecipient updated to ${proceedRecipient}`)
 
   // update Speedruns
-  await Speedruns.updateAnybodyProblemAddress(anybodyProblem.address)
+  await Speedruns.updateAnybodyProblemAddress(anybodyProblemV1.address)
   log(
-    `AnybodyProblem address updated in Speedruns to ${anybodyProblem.address}`
+    `AnybodyProblemV1 address updated in Speedruns to ${anybodyProblemV1.address}`
   )
 
   // update ExternalMetadata
-  await ExternalMetadata.updateAnybodyProblemAddress(anybodyProblem.address)
+  await ExternalMetadata.updateAnybodyProblemAddress(anybodyProblemV1.address)
   log(
-    `AnybodyProblem address updated in ExternalMetadata to ${anybodyProblem.address}`
+    `AnybodyProblemV1 address updated in ExternalMetadata to ${anybodyProblemV1.address}`
   )
 
   // // ensure v0 is properly saved before overwriting it
@@ -249,12 +254,200 @@ const deployAnybodyProblemV1 = async (options) => {
 
   const verificationData = [
     {
-      name: 'AnybodyProblem',
+      name: 'AnybodyProblemV1',
       constructorArguments
     }
   ]
   returnObject['verificationData'] = verificationData
 
+  if (returnObject['AnybodyProblemV3']) {
+    returnObject['AnybodyProblem'] = returnObject['AnybodyProblemV3']
+  } else if (returnObject['AnybodyProblemV2']) {
+    returnObject['AnybodyProblem'] = returnObject['AnybodyProblemV2']
+  } else if (returnObject['AnybodyProblemV1']) {
+    returnObject['AnybodyProblem'] = returnObject['AnybodyProblemV1']
+  }
+
+  return returnObject
+}
+
+const deployAnybodyProblemV2 = async (options) => {
+  const defaultOptions = {
+    mock: false,
+    ignoreTesting: false,
+    skipVerifiers: false,
+    verbose: false,
+    AnybodyProblemV1: null,
+    Speedruns: null,
+    ExternalMetadata: null
+  }
+  let {
+    mock,
+    ignoreTesting,
+    skipVerifiers,
+    verbose,
+    AnybodyProblemV0,
+    AnybodyProblemV1,
+    Speedruns,
+    ExternalMetadata
+  } = Object.assign(defaultOptions, options)
+  global.ignoreTesting = ignoreTesting
+  global.networkinfo = await hre.ethers.provider.getNetwork()
+  global.verbose = verbose
+  log('Deploying v2 contracts')
+
+  const [deployer] = await hre.ethers.getSigners()
+
+  // use the already deployed speedruns contract and external metadata contract
+  const deployedContracts = await initContracts([
+    'AnybodyProblemV0',
+    'AnybodyProblemV1',
+    'Speedruns',
+    'ExternalMetadata'
+  ])
+
+  const returnObject = {}
+  const verifiers = []
+  const verifiersTicks = []
+  const verifiersBodies = []
+
+  // redeploy the verifiers, this time only 2 of them
+  for (let i = 2; i <= MAX_BODY_COUNT; i++) {
+    if (i !== 4 && i !== 6) continue
+    const ticks = await getTicksRun(i)
+    const name = `Game_${i}_${ticks}Verifier`
+    const path = `contracts/${name}.sol:Groth16Verifier`
+    let verifier, verifierContract
+    if (skipVerifiers) {
+      verifierContract = deployedContracts[name]
+    } else {
+      verifier = await hre.ethers.getContractFactory(path)
+      verifierContract = await verifier.deploy()
+      await verifierContract.deployed()
+      log(`Verifier ${i} deployed at ${verifierContract.address}`)
+    }
+    verifiers.push(verifierContract.address)
+    log(`with ${ticks} ticks`)
+    verifiersTicks.push(ticks)
+    verifiersBodies.push(i)
+    log(`and ${i} bodies`)
+
+    returnObject[name] = verifierContract
+  }
+  returnObject.verifiers = verifiers
+  returnObject.verifiersTicks = verifiersTicks
+  returnObject.verifiersBodies = verifiersBodies
+
+  if (!AnybodyProblemV0) AnybodyProblemV0 = deployedContracts.AnybodyProblemV0
+  returnObject['AnybodyProblemV0'] = AnybodyProblemV0
+
+  if (!Speedruns) Speedruns = deployedContracts.Speedruns
+  returnObject['Speedruns'] = Speedruns
+
+  if (!ExternalMetadata) ExternalMetadata = deployedContracts.ExternalMetadata
+  returnObject['ExternalMetadata'] = ExternalMetadata
+
+  if (!AnybodyProblemV1) AnybodyProblemV1 = deployedContracts.AnybodyProblemV1
+  returnObject['AnybodyProblemV1'] = AnybodyProblemV1
+
+  const HitchensOrderStatisticsTreeLib = await hre.ethers.getContractFactory(
+    'HitchensOrderStatisticsTreeLib'
+  )
+  const hitchensOrderStatisticsTreeLib =
+    await HitchensOrderStatisticsTreeLib.deploy()
+  returnObject['HitchensOrderStatisticsTreeLib'] =
+    hitchensOrderStatisticsTreeLib
+
+  const Tournament = await hre.ethers.getContractFactory('Tournament', {
+    // TODO: why did i need to do this at one point and not now?
+    // libraries: {
+    //   HitchensOrderStatisticsTreeLib: hitchensOrderStatisticsTreeLib.address
+    // }
+  })
+  const tournament = await Tournament.deploy()
+  log('Tournament Deployed at ' + String(tournament.address))
+  returnObject['Tournament'] = tournament
+
+  log(mock ? 'Deploying AnybodyProblemV2Mock' : 'Deploying AnybodyProblemV2')
+  // deploy AnybodyProblem
+  const AnybodyProblemV2 = await hre.ethers.getContractFactory(
+    mock ? 'AnybodyProblemV2Mock' : 'AnybodyProblemV2'
+  )
+
+  const constructorArguments = [
+    deployer.address,
+    Speedruns.address,
+    ExternalMetadata.address,
+    tournament.address,
+    verifiers,
+    verifiersTicks,
+    verifiersBodies,
+    AnybodyProblemV1.address
+  ]
+
+  const anybodyProblemV2 = await AnybodyProblemV2.deploy(
+    ...constructorArguments
+  )
+  await anybodyProblemV2.deployed()
+
+  returnObject['AnybodyProblemV2'] = anybodyProblemV2
+
+  log(
+    'AnybodyProblemV2 Deployed at ' +
+      String(anybodyProblemV2.address) +
+      ` with speedrunsAddress ${Speedruns.address} and externalMetdataAddress ${ExternalMetadata.address} and tournamentAddress ${tournament.address} and verifiers ${verifiers} and verifiersTicks ${verifiersTicks} and verifiersBodies ${verifiersBodies} and anybodyProblemV0Address ${AnybodyProblemV1.address}`
+  )
+
+  // update AnybodyProblemV2 with proceedRecipient
+  await anybodyProblemV2.updateProceedRecipient(proceedRecipient)
+  log(`AnybodyProblemV2 ProceedRecipient updated to ${proceedRecipient}`)
+
+  // update Speedruns
+  await Speedruns.updateAnybodyProblemAddress(anybodyProblemV2.address)
+  log(
+    `AnybodyProblemV2 address updated in Speedruns to ${anybodyProblemV2.address}`
+  )
+
+  // update ExternalMetadata
+  await ExternalMetadata.updateAnybodyProblemAddress(anybodyProblemV2.address)
+  log(
+    `AnybodyProblemV2 address updated in ExternalMetadata to ${anybodyProblemV2.address}`
+  )
+
+  // update Tournament
+  await tournament.updateAnybodyProblemAddress(anybodyProblemV2.address)
+  log(
+    `AnybodyProblemV2 address updated in Tournament to ${anybodyProblemV2.address}`
+  )
+
+  // // ensure v0 is properly saved before overwriting it
+  // const pathAddress = await getPathAddress('AnybodyProblem-v0')
+  // const originalAbiPath = await getPathABI('AnybodyProblem-v0')
+  // try {
+  //   JSON.parse(await readData(pathAddress))
+  //   await readData(originalAbiPath)
+  // } catch (e) {
+  //   throw new Error('Dont overwrite AnybodyProblem until v0 exists')
+  // }
+
+  const verificationData = [
+    {
+      name: 'AnybodyProblemV2',
+      constructorArguments
+    },
+    {
+      name: 'Tournament',
+      constructorArguments: []
+    }
+  ]
+  returnObject['verificationData'] = verificationData
+  if (returnObject['AnybodyProblemV3']) {
+    returnObject['AnybodyProblem'] = returnObject['AnybodyProblemV3']
+  } else if (returnObject['AnybodyProblemV2']) {
+    returnObject['AnybodyProblem'] = returnObject['AnybodyProblemV2']
+  } else if (returnObject['AnybodyProblemV1']) {
+    returnObject['AnybodyProblem'] = returnObject['AnybodyProblemV1']
+  }
   return returnObject
 }
 
@@ -377,7 +570,20 @@ const deployContracts = async (options) => {
   if (options?.saveAndVerify) {
     await saveAndVerifyContracts(deployedContracts1)
   }
-  return { ...deployedContracts0, ...deployedContracts1 }
+  const deployedContracts2 = await deployAnybodyProblemV2({
+    ...options,
+    ...deployedContracts1
+  })
+  if (options?.saveAndVerify) {
+    await saveAndVerifyContracts(deployedContracts2)
+  }
+  const returnValue = {
+    ...deployedContracts0,
+    ...deployedContracts1,
+    ...deployedContracts2
+  }
+  returnValue.AnybodyProblem = returnValue.AnybodyProblemV2
+  return returnValue
 }
 
 const saveAndVerifyContracts = async (deployedContracts) => {
@@ -387,7 +593,8 @@ const saveAndVerifyContracts = async (deployedContracts) => {
       contractName == 'verificationData' ||
       contractName == 'verifiers' ||
       contractName == 'verifiersTicks' ||
-      contractName == 'verifiersBodies'
+      contractName == 'verifiersBodies' ||
+      contractName == 'AnybodyProblem' // this is just an alias for most recent version
     )
       continue
     if (contractName.indexOf('Verifier') > -1) {
@@ -586,9 +793,9 @@ const verifyContracts = async (returnObject) => {
           constructorArguments: verificationData[i].constructorArguments
         })
       } catch (e) {
-        i--
         await new Promise((r) => setTimeout(r, 1000))
         log({ e, verificationData: verificationData[i] })
+        i--
       }
     }
   } else if (networkinfo['chainId'] == 12345) {
@@ -659,12 +866,13 @@ const solveLevel = async (
       velocity: anybody.createVector(ethers.BigNumber.from(10), 0),
       radius: newRadius
     }
-    missileInits.push(missile)
+    const missileInit = anybody.processMissileInit(missile)
+    missileInits.push(missileInit)
   }
 
-  missileInits = anybody.processMissileInits(missileInits)
   anybody.missileInits = missileInits
-  const { missiles, inflightMissile } = anybody.finish()
+  const { sampleInput } = anybody.finish()
+  const { inflightMissile, missiles } = sampleInput
   const { dataResult } = await generateProof(
     owner,
     '0x' + '0'.repeat(64), // seed doesn't matter
@@ -819,8 +1027,8 @@ const generateProof = async (
   const results = anybody.finish()
   const inputData = {
     address,
-    bodies: results.bodyInits,
-    missiles: missiles || results.missiles
+    bodies: results.sampleInput.bodies,
+    missiles: missiles || results.sampleInput.missiles
   }
   inputData.inflightMissile = inflightMissile || [
     '0',
@@ -828,7 +1036,7 @@ const generateProof = async (
     ...(inputData.missiles.length > 0 ? inputData.missiles[0] : [0, 0, 0])
   ]
 
-  const bodyFinal = results.bodyFinal
+  const bodyFinal = results.sampleOutput.bodyFinal
 
   let useCircuit = bodyCount <= 4 ? 4 : 6
   if (useCircuit !== inputData.bodies.length) {
@@ -976,23 +1184,27 @@ async function copyABI(name, contractName) {
     `${name}.sol`,
     `${contractName}.json`
   )
-  const readABI = await fs.readFile(pathname)
-  const parsedABI = JSON.parse(readABI)
-  const abi = parsedABI['abi']
+  try {
+    const readABI = await fs.readFile(pathname)
+    const parsedABI = JSON.parse(readABI)
+    const abi = parsedABI['abi']
 
-  const newContent = { contractName, abi }
+    const newContent = { contractName, abi }
 
-  var copy = path.join(
-    __dirname,
-    'server',
-    'contractData',
-    'ABI-' + String(networkinfo['chainId']) + `-${name}.json`
-  )
-  // write the new content to the new file
-  await writedata(copy, JSON.stringify(newContent))
+    var copy = path.join(
+      __dirname,
+      'server',
+      'contractData',
+      'ABI-' + String(networkinfo['chainId']) + `-${name}.json`
+    )
+    // write the new content to the new file
+    await writedata(copy, JSON.stringify(newContent))
 
-  // await copyContractABI(pathname, copy)
-  log('-- OK')
+    // await copyContractABI(pathname, copy)
+    log('-- OK')
+  } catch (e) {
+    console.error('Failed to copy ABI' + name, { e })
+  }
 }
 
 async function saveAddress(contract, name) {
@@ -1019,7 +1231,7 @@ async function writedata(path, data) {
   try {
     await fs.writeFile(path, data)
   } catch (e) {
-    console.log('e', e)
+    console.error('Failed to write file' + path, { e })
   }
 }
 
@@ -1047,6 +1259,7 @@ export {
   deployMetadata,
   getThemeName,
   deployAnybodyProblemV1,
+  deployAnybodyProblemV2,
   saveAndVerifyContracts,
   proceedRecipient
   // splitterAddress

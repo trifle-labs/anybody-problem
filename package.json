@@ -61,12 +61,7 @@
       "eslint:recommended",
       "prettier"
     ],
-    "globals": {
-      "assert": "readonly",
-      "before": "readonly",
-      "describe": "readonly",
-      "it": "readonly"
-    },
+    "globals": {},
     "ignorePatterns": [
       "/docs/index.js",
       "**/*.min.js",
@@ -76,6 +71,7 @@
     "root": true
   },
   "dependencies": {
+    "OrderStatisticsTree": "https://github.com/rob-Hitchens/OrderStatisticsTree.git",
     "ethers": "^5.7.0",
     "tone": "^15.0.4"
   },

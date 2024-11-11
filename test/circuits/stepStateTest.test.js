@@ -4,6 +4,7 @@ import { Anybody } from '../../dist/module.js'
 // const p = 21888242871839275222246405745257275088548364400416034343698204186575808495617n
 
 import { expect } from 'chai'
+import { describe, it, before } from 'mocha'
 
 describe('stepStateTest circuit', () => {
   let circuit
@@ -278,16 +279,17 @@ describe('stepStateTest circuit', () => {
     }
     // console.dir({ abMissiles_0: abMissiles[0] }, { depth: null })
     let stepsSinceWin = 0
+    let abMissile = abMissiles[0]
     for (let i = 0; i < steps; i++) {
       // console.dir(
       //   { step: i, bodies_in: abBodies, missile_in: abMissiles[0] },
       //   { depth: null }
       // )
       anybody.bodies = abBodies
-      anybody.missiles = abMissiles
+      anybody.missile = abMissile || abMissiles[i]
       const results = anybody.step()
       abBodies = results.bodies
-      abMissiles = results.missiles
+      abMissile = results.missile
       const nonZeroBodies = abBodies.filter((b) => b.radius !== 0).length
       if (nonZeroBodies == 1) {
         stepsSinceWin += 1
@@ -300,18 +302,21 @@ describe('stepStateTest circuit', () => {
     const out_bodies = abBodies.map((body) =>
       anybody.convertScaledBigIntBodyToArray.call(anybody, body)
     )
+    //TODO: this doesn't really make sense, shouldn't it be the position of the currnetly
+    // in flight missile? and if not exists then the default position?
     const expected = {
       out_bodies,
       time,
-      outflightMissile: [
-        abMissiles[0].px,
-        abMissiles[0].py,
-        parseInt(abMissiles[0].vx),
-        -parseInt(abMissiles[0].vy),
-        abMissiles[0].radius
-      ]
+      outflightMissile: abMissile
+        ? [
+            abMissile.px,
+            abMissile.py,
+            parseInt(abMissile.vx),
+            -parseInt(abMissile.vy),
+            abMissile.radius
+          ]
+        : ['0', '1000000', '0', '0', '0']
     }
-    // console.dir({ expected }, { depth: null })
     // console.dir({ checkSampleInput }, { depth: null })
     await circuit.assertOut(witness, expected)
   })
@@ -339,13 +344,13 @@ describe('stepStateTest circuit', () => {
     abMissiles[0].radius = anybody.convertScaledBigIntToFloat(
       inflightMissile[4]
     )
-
+    let abMissile = abMissiles[0]
     for (let i = 0; i < steps; i++) {
       anybody.bodies = bodies
-      anybody.missiles = abMissiles
+      anybody.missile = abMissile || abMissiles[i]
       const results = anybody.step()
       bodies = results.bodies
-      abMissiles = results.missiles
+      abMissile = results.missile
     }
 
     // missile should have hit body
@@ -359,13 +364,15 @@ describe('stepStateTest circuit', () => {
     const expected = {
       out_bodies,
       time: missileStep,
-      outflightMissile: [
-        abMissiles[0].px,
-        abMissiles[0].py,
-        parseInt(abMissiles[0].vx),
-        -parseInt(abMissiles[0].vy),
-        abMissiles[0].radius
-      ]
+      outflightMissile: abMissile
+        ? [
+            abMissile.px,
+            abMissile.py,
+            parseInt(abMissile.vx),
+            -parseInt(abMissile.vy),
+            abMissile.radius
+          ]
+        : ['0', '1000000', '0', '0', '0']
     }
     const witness = await circuit.calculateWitness(sampleInput, sanityCheck)
     await circuit.assertOut(witness, expected)
