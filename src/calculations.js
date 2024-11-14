@@ -326,21 +326,21 @@ export const Calculations = {
     const scaledMissileVectorLimit = this.convertFloatToScaledBigInt(
       this.missileVectorLimit
     )
-    if (missile.velocity.y > 0n) {
-      throw new Error(
-        `Missile velocity.y ${missile.velocity.y} should be negative`
-      )
-    }
+    // if (missile.velocity.y > 0n) {
+    //   throw new Error(
+    //     `Missile velocity.y ${missile.velocity.y} should be negative`
+    //   )
+    // }
     if (missile.velocity.y < -scaledMissileVectorLimit) {
       throw new Error(
         `Missile velocity.y ${missile.velocity.y} should be greater than ${-scaledMissileVectorLimit}`
       )
     }
-    if (missile.velocity.x < 0n) {
-      throw new Error(
-        `Missile velocity.x ${missile.velocity.x} should be positive`
-      )
-    }
+    // if (missile.velocity.x < 0n) {
+    //   throw new Error(
+    //     `Missile velocity.x ${missile.velocity.x} should be positive`
+    //   )
+    // }
     if (missile.velocity.x > scaledMissileVectorLimit) {
       throw new Error(
         `Missile velocity.x ${missile.velocity.x} should be less than ${scaledMissileVectorLimit}`
@@ -354,6 +354,21 @@ export const Calculations = {
       console.log({ missileAbsSum })
       throw new Error('Missile is too fast')
     }
+
+    const newPos = {
+      x: missile.position.x + missile.velocity.x,
+      y: missile.position.y + missile.velocity.y
+    }
+
+    const bWindowWidth = BigInt(this.windowWidth) * this.scalingFactor
+
+    if (newPos.x > bWindowWidth || newPos.x < 0n) {
+      missile.velocity.x *= -1n
+    }
+    if (newPos.y > bWindowWidth || newPos.y < 0n) {
+      missile.velocity.y *= -1n
+    }
+
     missile.position.x += missile.velocity.x
     missile.position.y += missile.velocity.y
 
