@@ -268,7 +268,6 @@ export const Visuals = {
     this.drawGun() // draw after score so cursor isnt in share img
     this.drawGunSmoke()
     this.drawExplosionSmoke()
-    this.drawPoints()
 
     if (
       this.frames - this.startingFrame + this.FPS < this.timer &&
@@ -276,6 +275,7 @@ export const Visuals = {
     ) {
       this.drawMissiles()
     }
+    this.drawPoints()
 
     const notPaused = !this.paused
     const framesIsAtStopEveryInterval =
@@ -1982,18 +1982,33 @@ export const Visuals = {
     return (val / canvas.offsetHeight) * this.windowHeight
   },
 
+  getGunPoint() {
+    return { startX: 0, startY: this.windowHeight }
+    // const rotationOffset = this.frames / 400
+    // const rotation = rotationOffset % 360
+    // const distanceFromCenter = this.windowWidth * 0.4
+    // const startX =
+    //   this.windowWidth / 2 + this.p.cos(rotation) * distanceFromCenter
+    // const startY =
+    //   this.windowWidth / 2 + this.p.sin(rotation) * distanceFromCenter
+    // return { startX, startY }
+  },
+
   drawGun() {
     this.p.stroke('rgba(200,200,200,1)')
     this.p.strokeCap(this.p.SQUARE)
 
-    if (this.p.mouseX <= 0 && this.p.mouseY <= 0) return
-
+    const { startX, startY } = this.getGunPoint()
+    this.p.strokeWeight(50)
+    this.p.stroke('#ccc')
+    this.p.point(startX, startY)
     // Bottom left corner coordinates
-    let startX = 0
-    let startY = this.windowHeight
+    // let startX = 0
+    // let startY = this.windowHeight
     this.p.strokeWeight(THEME.borderWt)
 
     const crossHairSize = 25
+    if (this.p.mouseX <= 0 && this.p.mouseY <= 0) return
 
     // Calculate direction from bottom left to mouse
     let dirX = this.scaleX(this.p.mouseX) - startX
@@ -2022,16 +2037,23 @@ export const Visuals = {
       return
 
     // Draw the line
-    const drawingContext = this.p.canvas.getContext('2d')
-    const chunk = this.windowWidth / 100
-    drawingContext.setLineDash([chunk])
-    if (this.aimHelper) {
-      drawingContext.lineDashOffset = -(this.frames * 10)
-    }
+    // const drawingContext = this.p.canvas.getContext('2d')
+    // const chunk = this.windowWidth / 100
+    // drawingContext.setLineDash([chunk])
+    // if (this.aimHelper) {
+    //   drawingContext.lineDashOffset = -(this.frames * 10)
+    // }
 
+    const maxLength = 100
+    const length = Math.sqrt(dirX * dirX + dirY * dirY)
+    if (length > maxLength) {
+      dirX = (dirX / length) * maxLength
+      dirY = (dirY / length) * maxLength
+    }
+    this.p.strokeWeight(10)
     this.p.line(startX, startY, startX + dirX, startY + dirY)
-    drawingContext.setLineDash([])
-    drawingContext.lineDashOffset = 0
+    // drawingContext.setLineDash([])
+    // drawingContext.lineDashOffset = 0
     this.p.strokeWeight(0)
   },
 
@@ -2143,27 +2165,29 @@ export const Visuals = {
     this.p.text(totalPoints, x, y)
   },
 
-  star(x, y, radius1, radius2, npoints, color, rotateBy, index) {
+  star(x, y, radius1, radius2, npoints, color, rotateBy) {
     const { p } = this
     let angle = p.TWO_PI / npoints
     let halfAngle = angle / 2.0
-    p.beginShape()
-    if (index == 0) {
-      p.fill(color)
-    } else {
-      p.noFill()
-      p.strokeWeight(THEME.borderWt)
-      p.stroke(color)
+    this.p.fill(color)
+    this.p.stroke(color)
+    this.p.strokeWeight(0)
+    this.p.beginShape()
+    // if (index == 0) {
+    // } else {
+    // this.p.noFill()
+    // this.p.strokeWeight(THEME.borderWt)
+    this.p.stroke(color)
+    // }
+    for (let a = rotateBy; a < this.p.TWO_PI + rotateBy; a += angle) {
+      let sx = x + this.p.cos(a) * radius2
+      let sy = y + this.p.sin(a) * radius2
+      this.p.vertex(sx, sy)
+      sx = x + this.p.cos(a + halfAngle) * radius1
+      sy = y + this.p.sin(a + halfAngle) * radius1
+      this.p.vertex(sx, sy)
     }
-    for (let a = rotateBy; a < p.TWO_PI + rotateBy; a += angle) {
-      let sx = x + p.cos(a) * radius2
-      let sy = y + p.sin(a) * radius2
-      p.vertex(sx, sy)
-      sx = x + p.cos(a + halfAngle) * radius1
-      sy = y + p.sin(a + halfAngle) * radius1
-      p.vertex(sx, sy)
-    }
-    p.endShape(p.CLOSE)
+    this.p.endShape(this.p.CLOSE)
     return p
   },
 
@@ -2175,8 +2199,8 @@ export const Visuals = {
       return
     this.p.noStroke()
     this.p.strokeWeight(0)
-    const starRadius = 10
-    const maxLife = 60
+    // const starRadius = 20
+    const maxLife = 0
     for (let i = 0; i < this.stillVisibleMissiles.length; i++) {
       const body = this.stillVisibleMissiles[i]
       if (!body.phase) {
@@ -2200,27 +2224,54 @@ export const Visuals = {
         }
       }
       this.stillVisibleMissiles[i] = body
-      const rainbowColor =
-        i == this.stillVisibleMissiles.length - 1 ? 'white' : body.phase.color //`rgba(${body.phase.color},${alpha})`
-      const thisRadius =
-        starRadius / 1.5 +
-        starRadius * (((body.phase.life / 25) * body.phase.life) / 25)
+      // const rainbowColor =
+      //   i == this.stillVisibleMissiles.length - 1 ? 'white' : body.phase.color //`rgba(${body.phase.color},${alpha})`
+      // const thisRadius =
+      //   starRadius +
+      //   starRadius * (((body.phase.life / 25) * body.phase.life) / 25)
 
-      this.p.push()
-      this.p.translate(body.position.x, body.position.y)
+      // this.p.push()
+      // this.p.translate(body.position.x, body.position.y)
+      // console.log({ rainbowColor })
+      // this.star(
+      //   0,
+      //   0,
+      //   thisRadius,
+      //   thisRadius / 2,
+      //   5,
+      //   rainbowColor,
+      //   body.phase.rotateBy,
+      //   body.phase.life
+      // )
+
+      // this.p.pop()
+    }
+    if (this.missiles.length == 0) return
+    const thisRadius = 1
+    const rotateBy = (this.frames / 10) % 360
+    this.p.push()
+    this.p.translate(this.missiles[0].position.x, this.missiles[0].position.y)
+    this.p.push()
+    const tracerLength = 4
+    for (let i = 0; i < tracerLength; i++) {
+      this.p.translate(
+        -this.missiles[0].velocity.x / tracerLength,
+        -this.missiles[0].velocity.y / tracerLength
+      )
       this.star(
         0,
         0,
         thisRadius,
         thisRadius / 2,
         5,
-        rainbowColor,
-        body.phase.rotateBy,
-        body.phase.life
+        'rgba(255,0,0,0.5)',
+        rotateBy
       )
-
-      this.p.pop()
     }
+    this.p.pop()
+    let rainbowColor = this.p.color('rgb(0,0,0)')
+    this.star(0, 0, thisRadius, thisRadius / 2, 5, rainbowColor, rotateBy)
+    this.p.pop()
   },
 
   isMissileClose(body) {
@@ -2585,7 +2636,7 @@ export const Visuals = {
       // draw hero
       const size = Math.floor(body.radius * BODY_SCALE * 2.66)
 
-      this.drawStarBackgroundSvg(size, body)
+      // this.drawStarBackgroundSvg(size, body)
       if (!body.backgroundOnly) {
         this.drawCoreSvg(body.radius * BODY_SCALE, body)
       }
@@ -2704,19 +2755,15 @@ export const Visuals = {
     const rotationSpeedOffset = body.rotationSpeedOffset || 1
     const rotate = isGhost
       ? 0
-      : (this.p5Frames / this.P5_FPS_MULTIPLIER / (30 / rotationSpeedOffset)) %
+      : (this.p5Frames / this.P5_FPS_MULTIPLIER / (20 / rotationSpeedOffset)) %
         360
     this.p.rotate(rotate)
     let strokeColor = body.c.strokeColor
     let strokeWidth = body.c.strokeWidth
 
-    if (isGhost) {
-      bgColor = this.replaceOpacity(bgColor, 0.25)
-      coreColor = this.replaceOpacity(coreColor, 0.25)
-      strokeColor = strokeColor
-        ? this.replaceOpacity(strokeColor, 0.25)
-        : strokeColor
-    }
+    const invisible = 'rgba(0,0,0,0)'
+    bgColor = invisible
+    strokeColor = invisible
     this.drawImageAsset(
       'BADDIE_SVG',
       'bg',
@@ -2730,9 +2777,10 @@ export const Visuals = {
     )
     this.p.push()
     const heading = this.level == 0 ? -this.p.PI / 2 : body.velocity.heading()
-    this.p.rotate(-rotate + heading + this.p.PI / 2)
+    // this.p.rotate(-rotate + heading + this.p.PI / 2)
     if (!body.backgroundOnly) {
       this.drawImageAsset('BADDIE_SVG', 'core', coreWidth, { fill: coreColor })
+      this.p.rotate(-rotate)
 
       // pupils always looking at missile, if no missile, look at mouse
       const target =
@@ -2871,18 +2919,21 @@ export const Visuals = {
       this.p.translate(shakeX, shakeY)
     }
   },
-  makeParticles(x, y) {
+  makeParticles() {
     const array = []
     const maxSpeed = 10
 
     const life = 25
+    const { startX, startY } = this.getGunPoint()
+    const rotationOffset = this.missiles[0].velocity.heading() + this.p.PI / 4
     for (let i = 0; i < 100; i++) {
-      const angle = this.p.random(0, this.p.PI / 2) - this.p.PI / 2
+      const angle =
+        rotationOffset + this.p.random(0, this.p.PI / 2) - this.p.PI / 2
       const radius = this.p.random(0, maxSpeed)
       const vx = radius * this.p.cos(angle)
       const vy = radius * this.p.sin(angle)
-      const px = this.p.random(-1, maxSpeed) + x
-      const py = this.p.random(-maxSpeed, 1) + y
+      const px = this.p.random(-1, maxSpeed) + startX
+      const py = this.p.random(-maxSpeed, 1) + startY
       const color = randHSL(
         themes.bodies.default['pastel_highlighter_marker'].cr
       )
@@ -2890,26 +2941,27 @@ export const Visuals = {
     }
     return array
   },
-  drawParticles(particles) {
-    for (let i = 0; i < particles.length; i++) {
-      const particle = particles[i]
-      if (particle.life <= 0) {
-        particles.splice(i, 1)
-        continue
-      }
-      particle.x += particle.vx
-      particle.vx *= this.p.random(1, 1.01)
-      particle.y += particle.vy
-      particle.vy *= this.p.random(1, 1.01)
-      particle.life--
-      this.p.noStroke()
-      const color = particle.color.replace(
-        ')',
-        `, ${(particle.life / 50) * 2})`
-      )
-      this.star(particle.x, particle.y, 6, 4, 5, color, 0, 0)
-    }
-    return particles
+  drawParticles() {
+    return []
+    // for (let i = 0; i < particles.length; i++) {
+    //   const particle = particles[i]
+    //   if (particle.life <= 0) {
+    //     particles.splice(i, 1)
+    //     continue
+    //   }
+    //   particle.x += particle.vx
+    //   particle.vx *= this.p.random(1, 1.01)
+    //   particle.y += particle.vy
+    //   particle.vy *= this.p.random(1, 1.01)
+    //   particle.life--
+    //   this.p.noStroke()
+    //   const color = particle.color.replace(
+    //     ')',
+    //     `, ${(particle.life / 50) * 2})`
+    //   )
+    //   this.star(particle.x, particle.y, 6, 4, 5, color, 0, 0)
+    // }
+    // return particles
   },
   makeExplosionStart(x, y) {
     this.explosionSmoke ||= []
@@ -2917,9 +2969,11 @@ export const Visuals = {
     this.explosionSmoke.push(...particles)
   },
   makeMissileStart() {
-    this.gunSmoke ||= []
-    const particles = this.makeParticles(0, this.windowHeight)
-    this.gunSmoke.push(...particles)
+    return
+    // this.gunSmoke ||= []
+    // const { startX, startY } = this.getGunPoint()
+    // const particles = this.makeParticles(startX, startY)
+    // this.gunSmoke.push(...particles)
   },
   drawGunSmoke() {
     if (!this.gunSmoke) return

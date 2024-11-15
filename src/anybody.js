@@ -10,7 +10,7 @@ import { Intro } from './intro.js'
 import PAUSE_BODY_DATA from './pauseBodies'
 
 const GAME_LENGTH_BY_LEVEL_INDEX = [30, 60]
-const NORMAL_GRAVITY = 100
+const NORMAL_GRAVITY = 60
 const proverTickIndex = {
   2: 250,
   3: 250,
@@ -160,7 +160,7 @@ export class Anybody extends EventEmitter {
     this.lastMissileCantBeUndone = false
     this.speedFactor = 2
     this.speedLimit = 10
-    this.missileSpeed = 22
+    this.missileSpeed = 18
     this.shownStatScreen = false
     this.G = NORMAL_GRAVITY
     this.vectorLimit = this.speedLimit * this.speedFactor
@@ -778,7 +778,7 @@ export class Anybody extends EventEmitter {
   }
 
   genRadius(index) {
-    const radii = [38n, 33n, 28n, 23n, 18n, 13n] // n * 5 + 3
+    const radii = [40n, 34n, 31n, 28n, 25n, 22n]
     let size = radii[index % radii.length]
     return parseInt(size * BigInt(this.scalingFactor))
   }
@@ -1010,24 +1010,24 @@ export class Anybody extends EventEmitter {
       this.missileInits.pop()
       this.missileCount--
     }
-
+    const { startX, startY } = this.getGunPoint()
     this.missileCount++
     const radius = 10
     const b = {
       step: this.frames,
-      position: this.p.createVector(0, this.windowWidth),
-      velocity: this.p.createVector(x, y - this.windowWidth),
+      position: this.p.createVector(startX, startY),
+      velocity: this.p.createVector(x - startX, y - startY),
       radius
     }
     // b.velocity.setMag(this.missileSpeed * this.speedFactor)
     b.velocity.limit(this.missileSpeed * this.speedFactor)
-    if (b.velocity.x <= 0) {
-      b.velocity.x = 1
-    }
-    if (b.velocity.y >= 0) {
-      b.velocity.y = -1
-    }
-    let sum = b.velocity.x - b.velocity.y
+    // if (b.velocity.x <= 0) {
+    //   b.velocity.x = 1
+    // }
+    // if (b.velocity.y >= 0) {
+    //   b.velocity.y = -1
+    // }
+    let sum = Math.abs(b.velocity.x - b.velocity.y)
     const max = this.missileVectorLimitSum / 1000
     if (sum > max) {
       b.velocity.limit(this.missileSpeed * this.speedFactor * 0.999)
