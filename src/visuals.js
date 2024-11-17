@@ -1834,7 +1834,7 @@ export const Visuals = {
     p.text(
       doubleText,
       this.gameoverTickerX,
-      bottom ? this.windowHeight - 80 - 120 : 80
+      bottom ? this.windowHeight - 80 - 120 : 150
     )
   },
 
@@ -1850,67 +1850,117 @@ export const Visuals = {
       text: '                 ' + text,
       fg: THEME.red
     })
-    const buttonWidth = 200
+    // const buttonWidth = 200
 
-    if (this.level > 1) {
-      const x = this.windowWidth / 2 - (4 * buttonWidth) / 2 + 20
-      this.drawFatButton({
-        text: 'REDO',
-        onClick: () => {
-          this.handleRedoButtonClick()
-        },
-        x,
-        bg: THEME.teal_75,
-        fg: THEME.teal_50
-      })
+    // if (this.level > 1) {
+    //   // const x = this.windowWidth / 2 - (4 * buttonWidth) / 2 + 20
+    //   // this.drawFatButton({
+    //   //   text: 'REDO',
+    //   //   onClick: () => {
+    //   //     this.handleRedoButtonClick()
+    //   //   },
+    //   //   x,
+    //   //   bg: THEME.teal_75,
+    //   //   fg: THEME.teal_50
+    //   // })
 
-      this.drawFatButton({
-        text: 'EXIT',
-        x: this.windowWidth / 2 + buttonWidth / 2 - 20,
-        bg: THEME.flame_75,
-        fg: THEME.flame_50,
-        onClick: () => {
-          // confirm in popup
-          if (this.popup) return
-          this.popup = {
-            bg: THEME.flame_75,
-            fg: THEME.flame_50,
-            stroke: THEME.flame_50,
-            header: 'Leave game?',
-            body: ['Any progress will be lost!'],
-            buttons: [
-              {
-                text: 'CLOSE',
-                fg: THEME.flame_50,
-                bg: THEME.flame_75,
-                stroke: THEME.flame_50,
-                onClick: () => {
-                  this.popup = null
-                }
-              },
-              {
-                text: 'EXIT',
-                fg: THEME.flame_75,
-                bg: THEME.flame_50,
-                stroke: THEME.flame_50,
-                onClick: () => {
-                  this.popup = null
-                  this.level = 1
-                  this.restart(undefined, true)
-                }
+    //   this.drawFatButton({
+    //     text: 'EXIT',
+    //     x: this.windowWidth / 2 + buttonWidth / 2 - 20,
+    //     bg: THEME.flame_75,
+    //     fg: THEME.flame_50,
+    //     onClick: () => {
+    //       // confirm in popup
+    //       if (this.popup) return
+    //       this.popup = {
+    //         bg: THEME.flame_75,
+    //         fg: THEME.flame_50,
+    //         stroke: THEME.flame_50,
+    //         header: 'Leave game?',
+    //         body: ['Any progress will be lost!'],
+    //         buttons: [
+    //           {
+    //             text: 'CLOSE',
+    //             fg: THEME.flame_50,
+    //             bg: THEME.flame_75,
+    //             stroke: THEME.flame_50,
+    //             onClick: () => {
+    //               this.popup = null
+    //             }
+    //           },
+    //           {
+    //             text: 'EXIT',
+    //             fg: THEME.flame_75,
+    //             bg: THEME.flame_50,
+    //             stroke: THEME.flame_50,
+    //             onClick: () => {
+    //               this.popup = null
+    //               this.level = 1
+    //               this.restart(undefined, true)
+    //             }
+    //           }
+    //         ]
+    //       }
+    //     }
+    //   })
+    // } else {
+    // }
+
+    this.drawFatButton({
+      text: 'REDO',
+      onClick: () => this.handleRedoButtonClick(false),
+      bg: THEME.teal_50,
+      fg: THEME.teal_75,
+      bottom: 150
+    })
+
+    // draw tiny exit button top right
+    const width = 200
+    this.drawButton({
+      text: 'EXIT',
+      bg: 'black', // THEME.flame_75,
+      fg: THEME.flame_50,
+      // stroke: THEME.teal_60,
+      width,
+      height: 72,
+      textSize: 56,
+      x: this.windowWidth - width - 14,
+      y: 16,
+      p: this.p,
+      onClick: () => {
+        // confirm in popup
+        if (this.popup) return
+        this.popup = {
+          bg: THEME.flame_75,
+          fg: THEME.flame_50,
+          stroke: THEME.flame_50,
+          header: 'Leave game?',
+          body: ['Any progress will be lost!'],
+          buttons: [
+            {
+              text: 'CLOSE',
+              fg: THEME.flame_50,
+              bg: THEME.flame_75,
+              stroke: THEME.flame_50,
+              onClick: () => {
+                this.popup = null
               }
-            ]
-          }
+            },
+            {
+              text: 'EXIT',
+              fg: THEME.flame_75,
+              bg: THEME.flame_50,
+              stroke: THEME.flame_50,
+              onClick: () => {
+                this.popup = null
+                this.level = 1
+                this.restart(undefined, true)
+              }
+            }
+          ]
         }
-      })
-    } else {
-      this.drawFatButton({
-        text: 'REDO',
-        onClick: () => this.handleRedoButtonClick(false),
-        bg: THEME.teal_75,
-        fg: THEME.teal_50
-      })
-    }
+      }
+    })
 
     p.pop()
   },
