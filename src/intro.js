@@ -286,13 +286,13 @@ export const Intro = {
     this.playedIntro = true
   },
   drawSkipButton() {
-    const width = 220
+    const width = 200
     this.drawButton({
       text: 'SKIP',
       onClick: () => {
         this.skipIntro()
       },
-      bg: THEME.teal_90,
+      bg: 'black', // THEME.teal_90,
       fg: THEME.teal_50,
       // stroke: THEME.teal_60,
       width,

@@ -790,46 +790,6 @@ export const Visuals = {
     p.pop()
   },
 
-  handleRedoButtonClick(showCloseButton = true) {
-    if (!this.skipRedoPopupTip) {
-      this.popup = {
-        bg: THEME.teal_75,
-        fg: THEME.teal_50,
-        stroke: THEME.teal_50,
-        header: 'Tip',
-        body: [
-          this.hasTouched
-            ? 'Tap the TIMER to restart levels'
-            : 'Press {R} to restart levels'
-        ],
-        buttons: [
-          ...(showCloseButton
-            ? [
-                {
-                  text: 'CLOSE',
-                  onClick: () => {
-                    this.popup = null
-                  }
-                }
-              ]
-            : []),
-          {
-            text: 'REDO',
-            bg: THEME.teal_50,
-            fg: THEME.teal_75,
-            stroke: THEME.teal_50,
-            onClick: () => {
-              this.popup = null
-              this.restart(null, false)
-            }
-          }
-        ]
-      }
-    } else {
-      this.restart(null, false)
-    }
-  },
-
   getColorDir(chunk) {
     return Math.floor(this.frames / (255 * chunk)) % 2 == 0
   },
@@ -956,7 +916,7 @@ export const Visuals = {
             disabled: false,
             visible: true,
             onClick: () => {
-              this.skipRedoPopupTip = true
+              this.hasUsedRedoShortcut = true
               this.restart(null, false)
             }
           }
@@ -1297,7 +1257,7 @@ export const Visuals = {
       text: 'REDO',
       onClick: () => {
         if (this.popup) return
-        this.handleRedoButtonClick()
+        this.restart(null, false)
       },
       ...themes.buttons.teal,
       columns: buttonCount,
@@ -1834,7 +1794,7 @@ export const Visuals = {
     p.text(
       doubleText,
       this.gameoverTickerX,
-      bottom ? this.windowHeight - 80 - 120 : 150
+      bottom ? this.windowHeight - 80 - 120 : 120
     )
   },
 
@@ -1906,60 +1866,116 @@ export const Visuals = {
     // } else {
     // }
 
+    // const showRedoTip = !this.hasUsedRedoShortcut
+
+    const tips = [
+      {
+        text: `TIP: ${
+          this.hasTouched
+            ? 'tap the TIMER to restart it!'
+            : 'press {R} to restart a level!'
+        }`,
+        w: this.hasTouched ? 510 : 490
+      },
+      {
+        text: 'TIP: to CANCEL a shot, shoot again!',
+        w: 510
+      }
+    ]
+
     this.drawFatButton({
       text: 'REDO',
-      onClick: () => this.handleRedoButtonClick(false),
+      onClick: () => {
+        // advance to next tip
+        const i = this.loseScreenTipIndex
+        this.loseScreenTipIndex = tips[i + 1] ? i + 1 : 0
+        this.restart(null, false)
+      },
       bg: THEME.teal_50,
-      fg: THEME.teal_75,
-      bottom: 150
+      fg: THEME.teal_90,
+      bottom: 200
     })
 
     // draw tiny exit button top right
-    const width = 200
-    this.drawButton({
-      text: 'EXIT',
-      bg: 'black', // THEME.flame_75,
-      fg: THEME.flame_50,
-      // stroke: THEME.teal_60,
-      width,
-      height: 72,
-      textSize: 56,
-      x: this.windowWidth - width - 14,
-      y: 16,
-      p: this.p,
-      onClick: () => {
-        // confirm in popup
-        if (this.popup) return
-        this.popup = {
-          bg: THEME.flame_75,
-          fg: THEME.flame_50,
-          stroke: THEME.flame_50,
-          header: 'Leave game?',
-          body: ['Any progress will be lost!'],
-          buttons: [
-            {
-              text: 'CLOSE',
-              fg: THEME.flame_50,
-              bg: THEME.flame_75,
-              stroke: THEME.flame_50,
-              onClick: () => {
-                this.popup = null
-              }
-            },
-            {
-              text: 'EXIT',
-              fg: THEME.flame_75,
-              bg: THEME.flame_50,
-              stroke: THEME.flame_50,
-              onClick: () => {
-                this.popup = null
-                this.level = 1
-                this.restart(undefined, true)
-              }
-            }
-          ]
-        }
-      }
+    // const width = 200
+    // this.drawButton({
+    //   text: 'EXIT',
+    //   bg: 'black', // THEME.flame_75,
+    //   fg: THEME.flame_50,
+    //   // stroke: THEME.teal_60,
+    //   width,
+    //   height: 72,
+    //   textSize: 56,
+    //   x: this.windowWidth - width - 14,
+    //   y: 16,
+    //   p: this.p,
+    //   onClick: () => {
+    //     // confirm in popup
+    //     if (this.popup) return
+    //     this.popup = {
+    //       bg: THEME.flame_75,
+    //       fg: THEME.flame_50,
+    //       stroke: THEME.flame_50,
+    //       header: 'Leave game?',
+    //       body: ['Any progress will be lost!'],
+    //       buttons: [
+    //         {
+    //           text: 'CLOSE',
+    //           fg: THEME.flame_50,
+    //           bg: THEME.flame_75,
+    //           stroke: THEME.flame_50,
+    //           onClick: () => {
+    //             this.popup = null
+    //           }
+    //         },
+    //         {
+    //           text: 'EXIT',
+    //           fg: THEME.flame_75,
+    //           bg: THEME.flame_50,
+    //           stroke: THEME.flame_50,
+    //           onClick: () => {
+    //             this.popup = null
+    //             this.level = 1
+    //             this.restart(undefined, true)
+    //           }
+    //         }
+    //       ]
+    //     }
+    //   }
+    // })
+
+    // redo tip
+    // const fz = 48
+    // p.textAlign(p.CENTER, p.TOP)
+    // p.textSize(fz)
+    // p.fill(THEME.teal_50)
+    // p.text(
+    //   'TIP: tap the TIMER',
+    //   `TIP: ${
+    //     this.hasTouched
+    //       ? 'tap the TIMER to restart levels'
+    //       : 'press {R} to restart levels'
+    //   }`,
+    //   this.windowWidth / 2,
+    //   this.windowHeight - 48 - 20
+    // )
+
+    // tip
+    // const { h } = this.drawTextBubble({})
+
+    // draw tip (initial is random)
+    this.loseScreenTipIndex =
+      this.loseScreenTipIndex ?? Math.floor(Math.random() * tips.length)
+    const tip = tips[this.loseScreenTipIndex]
+    this.drawTextBubble({
+      text: tip.text,
+      fz: 36,
+      h: 48,
+      w: tip.w,
+      x: this.windowWidth / 2 - tip.w / 2,
+      y: this.windowHeight - 48 - 16,
+      fg: THEME.teal_60,
+      stroke: 'transparent' // THEME.teal_75
     })
 
     p.pop()
