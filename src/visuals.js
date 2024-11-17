@@ -1250,9 +1250,9 @@ export const Visuals = {
     )
 
     // bottom buttons
-    this.showRestart = this.level >= 2
+    this.showExit = this.level >= 1
     this.showShare = this.level >= 5
-    let buttonCount = 2 + Number(this.showRestart) + Number(this.showShare)
+    let buttonCount = 2 + Number(this.showExit) + Number(this.showShare)
     this.drawBottomButton({
       text: 'REDO',
       onClick: () => {
@@ -1263,7 +1263,7 @@ export const Visuals = {
       columns: buttonCount,
       column: 0
     })
-    if (this.showRestart) {
+    if (this.showExit) {
       this.drawBottomButton({
         text: 'EXIT',
         onClick: () => {

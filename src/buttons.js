@@ -105,17 +105,17 @@ export const Buttons = {
   // buttons that are drawn at the bottom of the screen (win screen)
   drawBottomButton(buttonOptions) {
     const { columns, column } = buttonOptions
-    const gutter = 16
-    const interButtonGutter = 4
-    const frameWidth = this.windowWidth - 2 * gutter
-    const width = (frameWidth - (columns - 1) * interButtonGutter) / columns
-    const height = 84
+    const padX = 8
+    const gutter = 4
+    const frameWidth = this.windowWidth - 2 * padX
+    const width = (frameWidth - (columns - 1) * gutter) / columns
+    const height = 88
     this.drawButton({
       height,
       textSize: 56,
       width,
-      y: this.windowHeight - 24 - height,
-      x: gutter + column * (width + interButtonGutter),
+      y: this.windowHeight - 20 - height,
+      x: padX + column * (width + gutter),
       ...buttonOptions
     })
   }
