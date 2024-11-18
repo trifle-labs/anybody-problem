@@ -67,7 +67,6 @@ export const Intro = {
 
     this.p.pop()
 
-    const w = 254
     // const rateCheck = 50
     // const rate = this.p5Frames % rateCheck
     // const numberOfDots =
@@ -75,8 +74,7 @@ export const Intro = {
     if (this.levelCountdown < 175) {
       this.drawTextBubble({
         text: 'a new day...',
-        w,
-        x: this.windowWidth / 2 - w / 2,
+        x: 'CENTER',
         y: msgY,
         fg: THEME.iris_30,
         bg: 'black'
@@ -119,15 +117,13 @@ export const Intro = {
     const body = this.bodies[0]
     this.drawBody(body)
 
-    const w = 275
     // const rateCheck = 50
     // const rate = this.p5Frames % rateCheck
     // const numberOfDots =
     // rate < rateCheck / 3 ? '.' : rate < rateCheck * (2 / 3) ? '..' : '...'
     this.drawTextBubble({
       text: 'a new BODY !',
-      w,
-      x: this.windowWidth / 2 - w / 2,
+      x: 'CENTER',
       y: msgY,
       fg: THEME.iris_30,
       bg: 'black'
@@ -170,8 +166,7 @@ export const Intro = {
       this.missiles = results.missiles
     }
 
-    let w,
-      text,
+    let text,
       fg = THEME.iris_30,
       stroke
 
@@ -180,14 +175,11 @@ export const Intro = {
     const chunk_3 = 2 * this.P5_FPS
     const levelMaxTime = chunk_1 + chunk_2 + chunk_3
     if (this.levelCounting < chunk_1) {
-      w = 180
       text = 'oh no !!'
     } else if (this.levelCounting < chunk_1 + chunk_2) {
-      w = 530
       text = 'a BADDIE came into orbit !!'
     } else {
       this.missilesDisabled = false
-      w = 268
       text = 'BLAST IT !!!'
       fg = THEME.pink_50
       stroke = THEME.pink_60
@@ -195,12 +187,10 @@ export const Intro = {
 
     // hit hero
     if (this.introBodies[0].radius == 0 && this.introBodies[1].radius !== 0) {
-      const w = 532
       if (this.levelCounting > levelMaxTime) {
         this.drawTextBubble({
           text: 'NOOO blast the other one !!',
-          w,
-          x: this.windowWidth / 2 - w / 2,
+          x: 'CENTER',
           y: msgY,
           fg,
           bg: 'black'
@@ -231,8 +221,7 @@ export const Intro = {
       // chunk msgs...
       this.drawTextBubble({
         text,
-        w,
-        x: this.windowWidth / 2 - w / 2,
+        x: 'CENTER',
         y: msgY,
         fg,
         bg: 'black',
@@ -240,12 +229,10 @@ export const Intro = {
       })
     } else if (this.introBodies[1].radius == 0) {
       // hit baddie
-      const w = 340
       const text = "BOOM!!  let's go..."
       this.drawTextBubble({
         text,
-        w,
-        x: this.windowWidth / 2 - w / 2,
+        x: 'CENTER',
         y: msgY,
         fg: THEME.green_50,
         bg: 'black',
@@ -263,14 +250,11 @@ export const Intro = {
     } else {
       // tip
       const { h } = this.drawTextBubble({})
-      const gttr = 24
-      const w = this.hasTouched ? 300 : 520
-      const y = this.windowHeight - h - gttr
+      const y = this.windowHeight - h - 24
 
       this.drawTextBubble({
         text: this.hasTouched ? 'TAP to Shoot' : 'CLICK or {SPACE} to shoot',
-        w,
-        x: this.windowWidth / 2 - w / 2,
+        x: 'CENTER',
         y,
         fg: THEME.pink_50,
         stroke: THEME.pink_60
@@ -292,9 +276,8 @@ export const Intro = {
       onClick: () => {
         this.skipIntro()
       },
-      bg: 'black', // THEME.teal_90,
+      bg: 'black',
       fg: THEME.teal_50,
-      // stroke: THEME.teal_60,
       width,
       height: 72,
       textSize: 56,

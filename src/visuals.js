@@ -318,30 +318,34 @@ export const Visuals = {
     text = '',
     x = 0,
     y = 0,
-    w = 240,
-    h = 56,
-    fz = 48,
+    fz = 56,
     fg,
     bg,
     stroke,
     align = [this.p.CENTER, this.p.TOP]
   }) {
-    // return defaults for local calcs
-    if (!text) return { x, y, h, w, fz }
     const { p } = this
+    p.textFont(fonts.body)
+    p.textAlign(...align)
+    p.textSize(fz)
+    const h = fz * 1.25
+    const w = p.textWidth(text) + fz
+    // return calculated values for local use
+    if (!text) return { w, h, fz }
+
     p.fill(bg ?? 'black')
     p.stroke(stroke ?? THEME.iris_60)
-    p.rect(x, y, w, h, 16, 16, 16, 16)
+
+    x = x === 'CENTER' ? this.windowWidth / 2 : x
+
+    p.rect(x - w / 2, y, w, h, 16, 16, 16, 16)
 
     if (align[0] === p.LEFT) {
       x -= w / 2
     }
-    p.textFont(fonts.body)
-    p.textAlign(...align)
-    p.textSize(fz)
     p.fill(fg ?? THEME.iris_30)
     p.noStroke()
-    p.text(text, x + w / 2, y + (h - fz) / 2 - 1)
+    p.text(text, x, y + (h - fz) / 2 - 1)
     p.pop()
   },
 
@@ -1810,78 +1814,68 @@ export const Visuals = {
       text: '                 ' + text,
       fg: THEME.red
     })
-    // const buttonWidth = 200
-
-    // if (this.level > 1) {
-    //   // const x = this.windowWidth / 2 - (4 * buttonWidth) / 2 + 20
-    //   // this.drawFatButton({
-    //   //   text: 'REDO',
-    //   //   onClick: () => {
-    //   //     this.handleRedoButtonClick()
-    //   //   },
-    //   //   x,
-    //   //   bg: THEME.teal_75,
-    //   //   fg: THEME.teal_50
-    //   // })
-
-    //   this.drawFatButton({
-    //     text: 'EXIT',
-    //     x: this.windowWidth / 2 + buttonWidth / 2 - 20,
-    //     bg: THEME.flame_75,
-    //     fg: THEME.flame_50,
-    //     onClick: () => {
-    //       // confirm in popup
-    //       if (this.popup) return
-    //       this.popup = {
-    //         bg: THEME.flame_75,
-    //         fg: THEME.flame_50,
-    //         stroke: THEME.flame_50,
-    //         header: 'Leave game?',
-    //         body: ['Any progress will be lost!'],
-    //         buttons: [
-    //           {
-    //             text: 'CLOSE',
-    //             fg: THEME.flame_50,
-    //             bg: THEME.flame_75,
-    //             stroke: THEME.flame_50,
-    //             onClick: () => {
-    //               this.popup = null
-    //             }
-    //           },
-    //           {
-    //             text: 'EXIT',
-    //             fg: THEME.flame_75,
-    //             bg: THEME.flame_50,
-    //             stroke: THEME.flame_50,
-    //             onClick: () => {
-    //               this.popup = null
-    //               this.level = 1
-    //               this.restart(undefined, true)
-    //             }
-    //           }
-    //         ]
-    //       }
-    //     }
-    //   })
-    // } else {
-    // }
-
-    // const showRedoTip = !this.hasUsedRedoShortcut
 
     const tips = [
       {
         text: `TIP: ${
           this.hasTouched
-            ? 'tap the TIMER to restart it!'
-            : 'press {R} to restart a level!'
+            ? 'RESTART a level by tapping the timer!'
+            : 'Press {R} to RESTART a level!'
         }`,
-        w: this.hasTouched ? 510 : 490
+        w: this.hasTouched ? 640 : 490
       },
       {
-        text: 'TIP: to CANCEL a shot, shoot again!',
-        w: 510
+        text: 'TIP: CANCEL a shot by shooting again!',
+        w: 550
       }
     ]
+
+    // draw tiny exit button top right
+    const width = 200
+    this.drawButton({
+      text: 'EXIT',
+      bg: 'black',
+      fg: THEME.flame_50,
+      width,
+      height: 72,
+      textSize: 56,
+      x: this.windowWidth - width - 12,
+      y: 16,
+      p: this.p,
+      onClick: () => {
+        // confirm in popup
+        if (this.popup) return
+        this.popup = {
+          bg: THEME.flame_75,
+          fg: THEME.flame_50,
+          stroke: THEME.flame_50,
+          header: 'Leave game?',
+          body: ['Any progress will be lost!'],
+          buttons: [
+            {
+              text: 'CLOSE',
+              fg: THEME.flame_50,
+              bg: THEME.flame_75,
+              stroke: THEME.flame_50,
+              onClick: () => {
+                this.popup = null
+              }
+            },
+            {
+              text: 'EXIT',
+              fg: THEME.flame_75,
+              bg: THEME.flame_50,
+              stroke: THEME.flame_50,
+              onClick: () => {
+                this.popup = null
+                this.level = 1
+                this.restart(undefined, true)
+              }
+            }
+          ]
+        }
+      }
+    })
 
     this.drawFatButton({
       text: 'REDO',
@@ -1896,86 +1890,18 @@ export const Visuals = {
       bottom: 200
     })
 
-    // draw tiny exit button top right
-    // const width = 200
-    // this.drawButton({
-    //   text: 'EXIT',
-    //   bg: 'black', // THEME.flame_75,
-    //   fg: THEME.flame_50,
-    //   // stroke: THEME.teal_60,
-    //   width,
-    //   height: 72,
-    //   textSize: 56,
-    //   x: this.windowWidth - width - 14,
-    //   y: 16,
-    //   p: this.p,
-    //   onClick: () => {
-    //     // confirm in popup
-    //     if (this.popup) return
-    //     this.popup = {
-    //       bg: THEME.flame_75,
-    //       fg: THEME.flame_50,
-    //       stroke: THEME.flame_50,
-    //       header: 'Leave game?',
-    //       body: ['Any progress will be lost!'],
-    //       buttons: [
-    //         {
-    //           text: 'CLOSE',
-    //           fg: THEME.flame_50,
-    //           bg: THEME.flame_75,
-    //           stroke: THEME.flame_50,
-    //           onClick: () => {
-    //             this.popup = null
-    //           }
-    //         },
-    //         {
-    //           text: 'EXIT',
-    //           fg: THEME.flame_75,
-    //           bg: THEME.flame_50,
-    //           stroke: THEME.flame_50,
-    //           onClick: () => {
-    //             this.popup = null
-    //             this.level = 1
-    //             this.restart(undefined, true)
-    //           }
-    //         }
-    //       ]
-    //     }
-    //   }
-    // })
-
-    // redo tip
-    // const fz = 48
-    // p.textAlign(p.CENTER, p.TOP)
-    // p.textSize(fz)
-    // p.fill(THEME.teal_50)
-    // p.text(
-    //   'TIP: tap the TIMER',
-    //   `TIP: ${
-    //     this.hasTouched
-    //       ? 'tap the TIMER to restart levels'
-    //       : 'press {R} to restart levels'
-    //   }`,
-    //   this.windowWidth / 2,
-    //   this.windowHeight - 48 - 20
-    // )
-
-    // tip
-    // const { h } = this.drawTextBubble({})
-
     // draw tip (initial is random)
     this.loseScreenTipIndex =
       this.loseScreenTipIndex ?? Math.floor(Math.random() * tips.length)
     const tip = tips[this.loseScreenTipIndex]
+    const { h, fz } = this.drawTextBubble({ fz: 48 })
     this.drawTextBubble({
       text: tip.text,
-      fz: 36,
-      h: 48,
-      w: tip.w,
-      x: this.windowWidth / 2 - tip.w / 2,
-      y: this.windowHeight - 48 - 16,
+      x: 'CENTER',
+      fz,
+      y: this.windowHeight - h - 16,
       fg: THEME.teal_60,
-      stroke: 'transparent' // THEME.teal_75
+      stroke: 'transparent'
     })
 
     p.pop()
