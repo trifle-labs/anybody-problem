@@ -625,7 +625,423 @@ BigInt.prototype.toJSON = function () {
 //   }
 // }
 
+const calculateRecords = (days, chains, appChainId) => {
+  const daysInContest = chains[appChainId].data.tournament.daysInWeek
+  const minimumDaysPlayed = chains[appChainId].data.tournament.minDays
+  const SECONDS_IN_DAY = 86400
+  const earlyMonday = chains[appChainId].data.tournament.startDate
+
+  const weekNumber = (day) => {
+    return Math.floor((day - earlyMonday) / SECONDS_IN_DAY / daysInContest)
+  }
+  // const dayOfTheWeek = (day, daysInContest) => {
+  //   return ((day - earlyMonday) / SECONDS_IN_DAY) % daysInContest
+  // }
+  const divRound = (a, b) => {
+    if (typeof a !== 'bigint') a = BigInt(a)
+    if (typeof b !== 'bigint') b = BigInt(b)
+    if (a == 0n || b == 0n) return 0
+    let result = a / b // integer division is same as Math.floor
+    if ((a % b) * 2n >= b) result++
+    if (result > BigInt(Number.MAX_SAFE_INTEGER)) {
+      return BigNumber.from(result)
+    }
+    return parseInt(result)
+  }
+  const recordsByWeek = {}
+
+  const currentFastest = {}
+  const currentSlowest = {}
+  const currentAverage = {}
+  const recordsBroken = {}
+
+  const players = {}
+
+  for (const day in days) {
+    const runs = days[day].runs
+    for (const run of runs) {
+      const week = weekNumber(day, daysInContest)
+      if (!recordsByWeek[week]) {
+        recordsByWeek[week] = {}
+      }
+      if (!recordsByWeek[week][run.day]) {
+        recordsByWeek[week][run.day] = {}
+      }
+      if (!recordsByWeek[week][run.day][run.player]) {
+        recordsByWeek[week][run.day][run.player] = []
+      }
+      recordsByWeek[week][run.day][run.player].push(run)
+
+      if (!players[week]) {
+        players[week] = {}
+      }
+
+      if (!players[week][run.player]) {
+        players[week][run.player] = {
+          fastestDays: {},
+          slowestDays: {},
+          average: null
+        }
+      }
+
+      if (!players[week][run.player].average) {
+        players[week][run.player].average = {
+          totalTime: run.time,
+          totalRuns: 0,
+          average: run.time
+        }
+      } else {
+        players[week][run.player].average.totalTime += run.time
+        players[week][run.player].average.totalRuns += 1
+        players[week][run.player].average.average = divRound(
+          players[week][run.player].average.totalTime,
+          players[week][run.player].average.totalRuns
+        )
+      }
+
+      if (!currentAverage[week]) {
+        currentAverage[week] = {
+          player: null,
+          totalTime: 0,
+          totalRuns: 0,
+          average: 0
+        }
+      }
+
+      currentAverage[week].totalTime += run.time
+      currentAverage[week].totalRuns += 1
+      currentAverage[week].average = divRound(
+        currentAverage[week].totalTime,
+        currentAverage[week].totalRuns
+      )
+
+      const weekSortedByAverage = Object.entries(players[week]).sort((a, b) => {
+        const distanceFromGlobalAverageA = Math.abs(
+          a[1].average.average - currentAverage[week].average
+        )
+        const distanceFromGlobalAverageB = Math.abs(
+          b[1].average.average - currentAverage[week].average
+        )
+        return distanceFromGlobalAverageA - distanceFromGlobalAverageB
+      })
+      if (currentAverage[week].player !== weekSortedByAverage[0][0]) {
+        currentAverage[week].player = weekSortedByAverage[0][0]
+        if (!recordsBroken[week]) {
+          recordsBroken[week] = []
+        }
+        recordsBroken[week].push({
+          week,
+          day: run.day,
+          block_num: run.block_num,
+          player: run.player,
+          globalAverage: currentAverage[week].average,
+          time: weekSortedByAverage[0][1].average.average,
+          recordType: 'average'
+        })
+      }
+
+      if (
+        !players[week][run.player].slowestDays[run.day] ||
+        players[week][run.player].slowestDays[run.day] < run.time
+      ) {
+        players[week][run.player].slowestDays[run.day] = run.time
+      }
+      const slowestDaysSortedSliced = Object.entries(
+        players[week][run.player].slowestDays
+      )
+        .sort((a, b) => b[1].time - a[1].time)
+        .slice(0, minimumDaysPlayed)
+      const currentTimeSlow = slowestDaysSortedSliced.reduce(
+        (acc, [, time]) => {
+          return acc + time
+        },
+        0
+      )
+      if (
+        !currentSlowest[week] ||
+        currentTimeSlow > currentSlowest[week].time
+      ) {
+        currentSlowest[week] = {
+          player: run.player,
+          time: currentTimeSlow
+        }
+        if (!recordsBroken[week]) {
+          recordsBroken[week] = []
+        }
+        const difference = Math.abs(currentTimeSlow - currentSlowest[week].time)
+        recordsBroken[week].push({
+          week,
+          day: run.day,
+          block_num: run.block_num,
+          player: run.player,
+          time: currentTimeSlow,
+          difference,
+          recordType: 'slowest'
+        })
+      }
+
+      if (
+        !players[week][run.player].fastestDays[run.day] ||
+        players[week][run.player].fastestDays[run.day] > run.time
+      ) {
+        players[week][run.player].fastestDays[run.day] = run.time
+      }
+      const fastestDaysSortedSliced = Object.entries(
+        players[week][run.player].fastestDays
+      )
+        .sort((a, b) => a[1].time - b[1].time)
+        .slice(0, minimumDaysPlayed)
+      const currentTimeFast = fastestDaysSortedSliced.reduce(
+        (acc, [, time]) => {
+          return acc + time
+        },
+        0
+      )
+
+      if (
+        !currentFastest[week] ||
+        currentTimeFast < currentFastest[week].time
+      ) {
+        currentFastest[week] = {
+          player: run.player,
+          time: currentTimeFast
+        }
+        if (!recordsBroken[week]) {
+          recordsBroken[week] = []
+        }
+        const difference = Math.abs(currentTimeFast - currentFastest[week].time)
+        recordsBroken[week].push({
+          week,
+          day: run.day,
+          block_num: run.block_num,
+          player: run.player,
+          time: currentTimeFast,
+          difference,
+          recordType: 'fastest'
+        })
+      }
+    }
+  }
+  for (const week in recordsByWeek) {
+    if (week < 0) {
+      delete recordsByWeek[week]
+      continue
+    }
+    const weeklyRecords = recordsByWeek[week]
+    const { fastest, slowest, mostAverage, globalAverage } = ((
+      weeklyRecord
+    ) => {
+      const playerWeekly = {}
+      for (const day in weeklyRecord) {
+        for (const player in weeklyRecord[day]) {
+          if (!playerWeekly[player]) {
+            playerWeekly[player] = {
+              fastestDays: [],
+              slowestDays: [],
+              allDays: [],
+              totalDays: 0,
+              average: null,
+              minimumDaysReached: false
+            }
+          }
+          playerWeekly[player].totalDays += 1
+          playerWeekly[player].allDays.push(...weeklyRecord[day][player])
+          playerWeekly[player].fastestDays.push(
+            weeklyRecord[day][player]
+              .sort((a, b) => parseInt(a.time) - parseInt(b.time))
+              .slice(0, 1)[0]
+          )
+          playerWeekly[player].slowestDays.push(
+            weeklyRecord[day][player]
+              .sort((a, b) => parseInt(b.time) - parseInt(a.time))
+              .slice(0, 1)[0]
+          )
+        }
+      }
+      let totalTime = 0
+      let totalRuns = 0
+      for (const player in playerWeekly) {
+        playerWeekly[player].minimumDaysReached =
+          playerWeekly[player].fastestDays.length >= minimumDaysPlayed
+        playerWeekly[player].fastestDays = playerWeekly[player].fastestDays
+          .sort((a, b) => parseInt(a.time) - parseInt(b.time))
+          .slice(0, minimumDaysPlayed)
+        playerWeekly[player].slowestDays = playerWeekly[player].slowestDays
+          .sort((a, b) => parseInt(b.time) - parseInt(a.time))
+          .slice(0, minimumDaysPlayed)
+        const userTotalTime = playerWeekly[player].allDays.reduce(
+          (acc, run) => acc + parseInt(run.time),
+          0
+        )
+        playerWeekly[player].average = divRound(
+          userTotalTime,
+          playerWeekly[player].allDays.length
+        )
+        totalTime += userTotalTime
+        totalRuns += playerWeekly[player].allDays.length
+      }
+
+      const globalAverage = divRound(totalTime, totalRuns)
+      const mostAverage = Object.entries(playerWeekly)
+        .map((p) => {
+          return {
+            player: p[0],
+            average: p[1].average,
+            totalDays: p[1].totalDays,
+            minimumDaysMet: p[1].minimumDaysReached
+          }
+        })
+        .sort(
+          (a, b) =>
+            Math.abs(a.average - globalAverage) -
+            Math.abs(b.average - globalAverage)
+        )
+
+      const fastest = Object.entries(playerWeekly)
+        .map((p) => {
+          return {
+            player: p[0],
+            fastestDays: p[1].fastestDays,
+            fastTime: divRound(
+              p[1].fastestDays.reduce(
+                (acc, run) => acc + parseInt(run.time),
+                0
+              ),
+              p[1].fastestDays.length
+            ),
+            minimumDaysMet: p[1].minimumDaysReached
+          }
+        })
+        .sort((a, b) => {
+          // if (a.fastestDays.length !== b.fastestDays.length) {
+          //   return b.fastestDays.length - a.fastestDays.length
+          // }
+          return a.fastTime - b.fastTime
+        })
+
+      const slowest = Object.entries(playerWeekly)
+        .map((p) => {
+          return {
+            player: p[0],
+            slowestDays: p[1].slowestDays,
+            slowTime: divRound(
+              p[1].slowestDays.reduce(
+                (acc, run) => acc + parseInt(run.time),
+                0
+              ),
+              p[1].slowestDays.length
+            ),
+            minimumDaysMet: p[1].minimumDaysReached
+          }
+        })
+        .sort((a, b) => {
+          // if (a.slowestDays.length !== b.slowestDays.length) {
+          //   return b.slowestDays.length - a.slowestDays.length
+          // }
+          return b.slowTime - a.slowTime
+        })
+      return { fastest, slowest, mostAverage, globalAverage }
+    })(weeklyRecords)
+
+    recordsByWeek[week] = {
+      currentFastest: currentFastest[week],
+      recordsBroken: recordsBroken[week].sort(
+        (a, b) => a.block_num - b.block_num
+      ),
+      fastest,
+      slowest,
+      mostAverage,
+      globalAverage
+    }
+  }
+  // const userSorted = {}
+  // for (const week in recordsByWeek) {
+  //   for (const record of recordsByWeek[week].fastest) {
+  //     if (!userSorted[record.player]) {
+  //       userSorted[record.player] = {}
+  //     }
+  //     if (!userSorted[record.player][week]) {
+  //       userSorted[record.player][week] = { all: [], fastestMin: [], slowestMin: [] }
+  //     }
+  //     userSorted[record.player][week].all.push(record)
+  //   }
+  // }
+  // for (const userWeek in userSorted) {
+  //   for (const week in userSorted[userWeek]) {
+  //     userSorted[userWeek][week].all.sort((a, b) => parseInt(a.fastTime) - parseInt(b.fastTime))
+  //     if (userSorted[userWeek][week].fastestMin.length < minimumDaysPlayed) {
+  //       userSorted[userWeek][week].fastestMin.push
+  //     }
+  //   }
+  // }
+  return recordsByWeek
+}
+
+const convertData_LevelsToRuns = (data) => {
+  if (!data) return { runs: [], levels: [] }
+  // const data = [
+  //   ['player', 'day', 'runid', 'level', 'time', 'accumulativetime'],
+  //   ['0x12e57746915157cdac8e5948caef9bc032fef10b', '1729296000', '964', '2', '51', '359']
+  // ]
+  const columns = data[0]
+  const records = data.slice(1)
+
+  const days = records.reduce((pV, cV) => {
+    const levelObj = {}
+    columns.forEach((col, index) => {
+      levelObj[col] =
+        index !== 0 ? parseInt(cV[index]) : cV[index]?.toLowerCase()
+    })
+    levelObj.date = new Date(levelObj.day * 1000).toISOString().split('T')[0]
+    const { runid, day, player, date, level, time, block_num } = levelObj
+
+    if (!pV[day]) {
+      pV[day] = {
+        levels: [],
+        runs: {}
+      }
+    }
+
+    pV[day].levels.push(levelObj)
+
+    if (!pV[day].runs[runid]) {
+      pV[day].runs[runid] = {
+        player,
+        day,
+        runid,
+        date,
+        time,
+        block_num,
+        levels: []
+      }
+    } else {
+      pV[day].runs[runid].time += time
+    }
+    pV[day].runs[runid].levels.push({
+      level,
+      time
+    })
+    return pV
+  }, {})
+  Object.keys(days).forEach((day) => {
+    days[day].runs = Object.values(days[day].runs)
+  })
+  return days
+
+  // const formattedData = records.map((record) => {
+  //   let obj = {}
+  //   columns.forEach((col, index) => {
+  //     obj[col] = record[index]
+  //   })
+  //   return obj
+  // })
+
+  // console.log(formattedData)
+}
+
 export {
+  convertData_LevelsToRuns,
+  calculateRecords,
   _convertBigIntToModP,
   _approxDist,
   _approxSqrt,
