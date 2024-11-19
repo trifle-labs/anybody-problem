@@ -697,6 +697,13 @@ const calculateRecords = (days, chains, appChainId) => {
           players[week][run.player].average.totalTime,
           players[week][run.player].average.totalRuns
         )
+        if (run.player == '0xc795344b1b30e3cfee1afa1d5204b141940cf445') {
+          console.log({
+            average: players[week][run.player].average.average,
+            totalTime: players[week][run.player].average.totalTime,
+            totalRuns: players[week][run.player].average.totalRuns
+          })
+        }
       }
 
       if (!currentAverage[week]) {
@@ -751,11 +758,11 @@ const calculateRecords = (days, chains, appChainId) => {
       )
         .sort((a, b) => b[1].time - a[1].time)
         .slice(0, minimumDaysPlayed)
-      const currentTimeSlow = slowestDaysSortedSliced.reduce(
-        (acc, [, time]) => {
+      const currentTimeSlow = divRound(
+        slowestDaysSortedSliced.reduce((acc, [, time]) => {
           return acc + time
-        },
-        0
+        }, 0),
+        slowestDaysSortedSliced.length
       )
       if (
         !currentSlowest[week] ||
@@ -791,11 +798,11 @@ const calculateRecords = (days, chains, appChainId) => {
       )
         .sort((a, b) => a[1].time - b[1].time)
         .slice(0, minimumDaysPlayed)
-      const currentTimeFast = fastestDaysSortedSliced.reduce(
-        (acc, [, time]) => {
+      const currentTimeFast = divRound(
+        fastestDaysSortedSliced.reduce((acc, [, time]) => {
           return acc + time
-        },
-        0
+        }, 0),
+        fastestDaysSortedSliced.length
       )
 
       if (
@@ -1039,7 +1046,11 @@ const convertData_LevelsToRuns = (data) => {
   // console.log(formattedData)
 }
 
+const foo = () => {
+  console.log('foo')
+}
 export {
+  foo,
   convertData_LevelsToRuns,
   calculateRecords,
   _convertBigIntToModP,
