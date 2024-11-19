@@ -697,13 +697,6 @@ const calculateRecords = (days, chains, appChainId) => {
           players[week][run.player].average.totalTime,
           players[week][run.player].average.totalRuns
         )
-        if (run.player == '0xc795344b1b30e3cfee1afa1d5204b141940cf445') {
-          console.log({
-            average: players[week][run.player].average.average,
-            totalTime: players[week][run.player].average.totalTime,
-            totalRuns: players[week][run.player].average.totalRuns
-          })
-        }
       }
 
       if (!currentAverage[week]) {
