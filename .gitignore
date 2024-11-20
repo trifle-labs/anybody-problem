@@ -60,7 +60,8 @@ verification_key.json
 !game_6_125_js
 
 
-# !public/*.wasm
+!public/game_4_250.wasm
+!public/game_6_125.wasm
 parameters.txt
 
 
