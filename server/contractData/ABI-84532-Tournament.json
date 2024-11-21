@@ -1,0 +1,883 @@
+{
+  "contractName": "Tournament",
+  "abi": [
+    { "inputs": [], "stateMutability": "nonpayable", "type": "constructor" },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "bool",
+          "name": "success",
+          "type": "bool"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes",
+          "name": "returnData",
+          "type": "bytes"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "EthMoved",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "previousOwner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnershipTransferred",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "recordType",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "week",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "player",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "value",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "extraValue",
+          "type": "uint256"
+        }
+      ],
+      "name": "RecordBroken",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "player",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "week",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "boughtTicket",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "FACTOR",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "SECONDS_IN_A_DAY",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "week", "type": "uint256" },
+        { "internalType": "uint256", "name": "value", "type": "uint256" }
+      ],
+      "name": "above",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "runId", "type": "uint256" }
+      ],
+      "name": "addToLeaderboard",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "address", "name": "addr", "type": "address" }
+      ],
+      "name": "addressToKey",
+      "outputs": [{ "internalType": "bytes32", "name": "", "type": "bytes32" }],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "anybodyProblem",
+      "outputs": [
+        { "internalType": "address payable", "name": "", "type": "address" }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "week", "type": "uint256" },
+        { "internalType": "uint256", "name": "_percentile", "type": "uint256" }
+      ],
+      "name": "atPercentile",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "week", "type": "uint256" },
+        { "internalType": "uint256", "name": "_permil", "type": "uint256" }
+      ],
+      "name": "atPermil",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "week", "type": "uint256" },
+        { "internalType": "uint256", "name": "_rank", "type": "uint256" }
+      ],
+      "name": "atRank",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "week", "type": "uint256" },
+        { "internalType": "uint256", "name": "value", "type": "uint256" }
+      ],
+      "name": "below",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "buyTicket",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "week", "type": "uint256" }
+      ],
+      "name": "count",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "currentWeek",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "day", "type": "uint256" }
+      ],
+      "name": "dayOfTheWeek",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "day", "type": "uint256" }
+      ],
+      "name": "dayToWeek",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "daysInContest",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "numerator", "type": "uint256" },
+        { "internalType": "uint256", "name": "denominator", "type": "uint256" }
+      ],
+      "name": "divRound",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "entryPercent",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "entryPrice",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "week", "type": "uint256" },
+        { "internalType": "uint256", "name": "value", "type": "uint256" }
+      ],
+      "name": "exists",
+      "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "week", "type": "uint256" }
+      ],
+      "name": "fastestByWeek",
+      "outputs": [
+        { "internalType": "address", "name": "winner", "type": "address" }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "", "type": "uint256" },
+        { "internalType": "address", "name": "", "type": "address" },
+        { "internalType": "uint256", "name": "", "type": "uint256" }
+      ],
+      "name": "fastestByWeekByPlayer",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "week", "type": "uint256" }
+      ],
+      "name": "fillPrize",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "requestedValue",
+          "type": "uint256"
+        },
+        { "internalType": "uint256", "name": "week", "type": "uint256" }
+      ],
+      "name": "findClosestKey",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "closestAddress",
+          "type": "address"
+        },
+        { "internalType": "uint256", "name": "closest", "type": "uint256" }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "week", "type": "uint256" }
+      ],
+      "name": "first",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "firstMonday",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "week", "type": "uint256" },
+        { "internalType": "uint256", "name": "value", "type": "uint256" }
+      ],
+      "name": "getNode",
+      "outputs": [
+        { "internalType": "uint256", "name": "_parent", "type": "uint256" },
+        { "internalType": "uint256", "name": "_left", "type": "uint256" },
+        { "internalType": "uint256", "name": "_right", "type": "uint256" },
+        { "internalType": "bool", "name": "_red", "type": "bool" },
+        { "internalType": "uint256", "name": "keyCount", "type": "uint256" },
+        { "internalType": "uint256", "name": "_count", "type": "uint256" }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "week", "type": "uint256" },
+        { "internalType": "uint256", "name": "value", "type": "uint256" }
+      ],
+      "name": "getNodeCount",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "week", "type": "uint256" },
+        { "internalType": "bytes32", "name": "key", "type": "bytes32" },
+        { "internalType": "uint256", "name": "value", "type": "uint256" }
+      ],
+      "name": "keyExists",
+      "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "bytes32", "name": "key", "type": "bytes32" }
+      ],
+      "name": "keyToAddress",
+      "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "week", "type": "uint256" }
+      ],
+      "name": "last",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "week", "type": "uint256" }
+      ],
+      "name": "median",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "minimumDaysPlayed",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "week", "type": "uint256" }
+      ],
+      "name": "mostAverageByWeek",
+      "outputs": [
+        { "internalType": "address", "name": "winner", "type": "address" },
+        { "internalType": "uint256", "name": "average", "type": "uint256" }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "week", "type": "uint256" },
+        { "internalType": "uint256", "name": "value", "type": "uint256" }
+      ],
+      "name": "next",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "owner",
+      "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "name": "paidOutByWeek",
+      "outputs": [
+        { "internalType": "address", "name": "fastest", "type": "address" },
+        { "internalType": "address", "name": "slowest", "type": "address" },
+        { "internalType": "address", "name": "average", "type": "address" }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "week", "type": "uint256" }
+      ],
+      "name": "payoutAverage",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "week", "type": "uint256" }
+      ],
+      "name": "payoutFastest",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "week", "type": "uint256" }
+      ],
+      "name": "payoutSlowest",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "week", "type": "uint256" },
+        { "internalType": "uint256", "name": "value", "type": "uint256" }
+      ],
+      "name": "percentile",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "week", "type": "uint256" },
+        { "internalType": "uint256", "name": "value", "type": "uint256" }
+      ],
+      "name": "permil",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "week", "type": "uint256" },
+        { "internalType": "uint256", "name": "value", "type": "uint256" }
+      ],
+      "name": "prev",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "name": "prizes",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "week", "type": "uint256" },
+        { "internalType": "uint256", "name": "value", "type": "uint256" }
+      ],
+      "name": "rank",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "week", "type": "uint256" }
+      ],
+      "name": "recoverUnclaimed",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "address payable", "name": "_to", "type": "address" }
+      ],
+      "name": "recoverUnsuccessfulPayment",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "week", "type": "uint256" },
+        { "internalType": "uint256", "name": "amount", "type": "uint256" }
+      ],
+      "name": "removePrize",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "renounceOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "week", "type": "uint256" }
+      ],
+      "name": "root",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "runId", "type": "uint256" }
+      ],
+      "name": "runs",
+      "outputs": [
+        {
+          "components": [
+            { "internalType": "address", "name": "owner", "type": "address" },
+            { "internalType": "bool", "name": "solved", "type": "bool" },
+            {
+              "internalType": "uint256",
+              "name": "accumulativeTime",
+              "type": "uint256"
+            },
+            { "internalType": "bytes32", "name": "seed", "type": "bytes32" },
+            { "internalType": "uint256", "name": "day", "type": "uint256" },
+            {
+              "components": [
+                { "internalType": "bool", "name": "solved", "type": "bool" },
+                {
+                  "internalType": "uint256",
+                  "name": "time",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "bytes32",
+                  "name": "seed",
+                  "type": "bytes32"
+                },
+                {
+                  "internalType": "uint256[5]",
+                  "name": "tmpInflightMissile",
+                  "type": "uint256[5]"
+                },
+                {
+                  "components": [
+                    {
+                      "internalType": "uint256",
+                      "name": "bodyIndex",
+                      "type": "uint256"
+                    },
+                    {
+                      "internalType": "uint256",
+                      "name": "px",
+                      "type": "uint256"
+                    },
+                    {
+                      "internalType": "uint256",
+                      "name": "py",
+                      "type": "uint256"
+                    },
+                    {
+                      "internalType": "uint256",
+                      "name": "vx",
+                      "type": "uint256"
+                    },
+                    {
+                      "internalType": "uint256",
+                      "name": "vy",
+                      "type": "uint256"
+                    },
+                    {
+                      "internalType": "uint256",
+                      "name": "radius",
+                      "type": "uint256"
+                    },
+                    {
+                      "internalType": "bytes32",
+                      "name": "seed",
+                      "type": "bytes32"
+                    }
+                  ],
+                  "internalType": "struct AnybodyProblemV2.Body[6]",
+                  "name": "tmpBodyData",
+                  "type": "tuple[6]"
+                }
+              ],
+              "internalType": "struct AnybodyProblemV2.Level[]",
+              "name": "levels",
+              "type": "tuple[]"
+            }
+          ],
+          "internalType": "struct AnybodyProblemV2.Run",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "bool", "name": "_disableForTesting", "type": "bool" }
+      ],
+      "name": "setDisableForTesting",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "firstMonday_", "type": "uint256" }
+      ],
+      "name": "setFirstMonday",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "week", "type": "uint256" }
+      ],
+      "name": "slowestByWeek",
+      "outputs": [
+        { "internalType": "address", "name": "winner", "type": "address" }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "", "type": "uint256" },
+        { "internalType": "address", "name": "", "type": "address" },
+        { "internalType": "uint256", "name": "", "type": "uint256" }
+      ],
+      "name": "slowestByWeekByPlayer",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "", "type": "uint256" },
+        { "internalType": "address", "name": "", "type": "address" }
+      ],
+      "name": "tickets",
+      "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "address", "name": "newOwner", "type": "address" }
+      ],
+      "name": "transferOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address payable",
+          "name": "_anybodyProblem",
+          "type": "address"
+        }
+      ],
+      "name": "updateAnybodyProblemAddress",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_daysInContest",
+          "type": "uint256"
+        }
+      ],
+      "name": "updateDaysInContest",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_entryPercent",
+          "type": "uint256"
+        }
+      ],
+      "name": "updateEntryPercent",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "_entryPrice", "type": "uint256" }
+      ],
+      "name": "updateEntryPrice",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_minimumDaysPlayed",
+          "type": "uint256"
+        }
+      ],
+      "name": "updateMinimumNumberOfDays",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "week", "type": "uint256" },
+        { "internalType": "uint256", "name": "value", "type": "uint256" },
+        { "internalType": "uint256", "name": "index", "type": "uint256" }
+      ],
+      "name": "valueKeyAtIndex",
+      "outputs": [{ "internalType": "bytes32", "name": "", "type": "bytes32" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "week", "type": "uint256" }
+      ],
+      "name": "weeklyAverage",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "name": "weeklyFastest",
+      "outputs": [
+        { "internalType": "address", "name": "player", "type": "address" },
+        {
+          "internalType": "uint256",
+          "name": "accumulativeTime",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "name": "weeklySlowest",
+      "outputs": [
+        { "internalType": "address", "name": "player", "type": "address" },
+        {
+          "internalType": "uint256",
+          "name": "accumulativeTime",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "name": "weeklyStats",
+      "outputs": [
+        { "internalType": "uint256", "name": "totalPlays", "type": "uint256" },
+        { "internalType": "uint256", "name": "totalTime", "type": "uint256" },
+        { "internalType": "uint256", "name": "lastUpdated", "type": "uint256" }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "", "type": "uint256" },
+        { "internalType": "address", "name": "", "type": "address" }
+      ],
+      "name": "weeklyStatsByPlayer",
+      "outputs": [
+        { "internalType": "uint256", "name": "totalPlays", "type": "uint256" },
+        { "internalType": "uint256", "name": "totalTime", "type": "uint256" },
+        { "internalType": "uint256", "name": "lastUpdated", "type": "uint256" }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "name": "weeklyStatsSortedTree",
+      "outputs": [
+        { "internalType": "uint256", "name": "root", "type": "uint256" }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    { "stateMutability": "payable", "type": "receive" }
+  ]
+}

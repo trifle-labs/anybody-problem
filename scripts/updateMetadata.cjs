@@ -16,7 +16,7 @@ async function main() {
     assets4,
     assets5,
     themeAddress
-  } = await deployMetadata(false)
+  } = await deployMetadata(false) // skip asset re-deploy
   const returnObject = {
     ExternalMetadata: externalMetadata,
     Assets1: assets1,

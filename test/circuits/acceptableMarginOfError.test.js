@@ -2,6 +2,7 @@
 // import { assert } from 'chai'
 // import { _calculateTime } from '../src/calculations.js'
 import { wasm as wasm_tester } from 'circom_tester'
+import { describe, it, before } from 'mocha'
 
 describe('acceptableMarginOfError circuit', () => {
   let circuit

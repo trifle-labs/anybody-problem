@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import '@openzeppelin/contracts/access/Ownable.sol';
 import 'base64-sol/base64.sol';
-import './AnybodyProblem.sol';
+import './AnybodyProblemV2.sol';
 import './BokkyPooBahsDateTimeLibrary.sol';
 import './StringsExtended.sol';
 import './ThemeGroupBlues.sol';
@@ -211,18 +211,18 @@ contract ExternalMetadata is Ownable {
     function getBestTimeEncoded(
         uint256 date
     ) public view returns (string memory) {
-        uint256 bestRunId = AnybodyProblem(anybodyProblem).fastestByDay(
-            date,
+        uint256 bestRunId = AnybodyProblemV2(anybodyProblem).fastestByDay(date)[
             0
-        );
+        ];
 
-        AnybodyProblem.Level[] memory levels = AnybodyProblem(anybodyProblem)
-            .getLevelsData(bestRunId);
+        AnybodyProblemV2.Level[] memory levels = AnybodyProblemV2(
+            anybodyProblem
+        ).getLevelsData(bestRunId);
 
         string memory encoded = '{"levels":[';
 
         for (uint256 i = 0; i < levels.length; i++) {
-            AnybodyProblem.Level memory level = levels[i];
+            AnybodyProblemV2.Level memory level = levels[i];
             encoded = string(
                 abi.encodePacked(
                     encoded,
@@ -240,14 +240,37 @@ contract ExternalMetadata is Ownable {
     function getName(uint256 date) public pure returns (string memory) {
         (uint year, uint month, uint day) = BokkyPooBahsDateTimeLibrary
             .timestampToDate(date);
+
+        string memory monthName = month == 1 ? 'January' : month == 2
+            ? 'February'
+            : month == 3
+            ? 'March'
+            : month == 4
+            ? 'April'
+            : month == 5
+            ? 'May'
+            : month == 6
+            ? 'June'
+            : month == 7
+            ? 'July'
+            : month == 8
+            ? 'August'
+            : month == 9
+            ? 'September'
+            : month == 10
+            ? 'October'
+            : month == 11
+            ? 'November'
+            : 'December';
+
         return
             string(
                 abi.encodePacked(
-                    StringsExtended.toString(year),
-                    '-',
-                    StringsExtended.toString(month),
-                    '-',
-                    StringsExtended.toString(day)
+                    monthName,
+                    ' ',
+                    StringsExtended.toString(day),
+                    ', ',
+                    StringsExtended.toString(year)
                 )
             );
     }
@@ -312,38 +335,36 @@ contract ExternalMetadata is Ownable {
         uint256 day
     ) internal view returns (string memory) {
         //FACE SHAPE
-        uint256 extraSeed = day == 1723766400 ? 19 : 0;
 
-        bytes32 rand = keccak256(abi.encodePacked(day, extraSeed));
-        uint256 pathIdxFace = randomRange(
-            0,
-            svgShapeCategorySizes[ThemeGroup.ThemeLayer.Face] - 1,
-            rand,
-            day
+        AssetData[4] memory pathDatas;
+
+        // extra seed used for special random offset
+        bytes32 rand = keccak256(
+            abi.encodePacked(day, day == 1723766400 ? 19 : 0)
         );
-        AssetData memory pathFaceData = svgShapes[ThemeGroup.ThemeLayer.Face][
-            pathIdxFace
+        pathDatas[0] = /*AssetData memory pathFaceData =*/ svgShapes[
+            ThemeGroup.ThemeLayer.Face
+        ][
+            randomRange(
+                0,
+                svgShapeCategorySizes[ThemeGroup.ThemeLayer.Face] - 1,
+                rand,
+                day
+            )
         ];
-        string memory pathFace = readValueFromContract(
-            pathFaceData.assetAddress,
-            pathFaceData.functionName
-        );
 
         //BACKGROUND SHAPE
         rand = keccak256(abi.encodePacked(rand));
-        uint256 pathIdxBG = randomRange(
-            0,
-            svgShapeCategorySizes[ThemeGroup.ThemeLayer.BG] - 1,
-            rand,
-            day
-        );
-        AssetData memory pathBGData = svgShapes[ThemeGroup.ThemeLayer.BG][
-            pathIdxBG
+        pathDatas[1] = /*AssetData memory pathBGData =*/ svgShapes[
+            ThemeGroup.ThemeLayer.BG
+        ][
+            randomRange(
+                0,
+                svgShapeCategorySizes[ThemeGroup.ThemeLayer.BG] - 1,
+                rand,
+                day
+            )
         ];
-        string memory pathBG = readValueFromContract(
-            pathBGData.assetAddress,
-            pathBGData.functionName
-        );
 
         //FOREGROUND SHAPE
         rand = keccak256(abi.encodePacked(rand));
@@ -353,35 +374,46 @@ contract ExternalMetadata is Ownable {
             rand,
             day
         );
-        AssetData memory pathFGData = svgShapes[ThemeGroup.ThemeLayer.FG][
-            pathIdxFG
-        ];
-        string memory pathFG = readValueFromContract(
-            pathFGData.assetAddress,
-            pathFGData.functionName
-        );
+        pathDatas[2] = /*AssetData memory pathFGData =*/ svgShapes[
+            ThemeGroup.ThemeLayer.FG
+        ][pathIdxFG];
 
         //CORE SHAPE
         rand = keccak256(abi.encodePacked(rand));
-        uint256 pathIdxCore = randomRange(
-            0,
-            svgShapeCategorySizes[ThemeGroup.ThemeLayer.Core] - 1,
-            rand,
-            day
-        );
-        AssetData memory pathCoreData = svgShapes[ThemeGroup.ThemeLayer.Core][
-            pathIdxCore
+        pathDatas[3] = /*AssetData memory pathCoreData =*/ svgShapes[
+            ThemeGroup.ThemeLayer.Core
+        ][
+            randomRange(
+                0,
+                svgShapeCategorySizes[ThemeGroup.ThemeLayer.Core] - 1,
+                rand,
+                day
+            )
         ];
-        string memory pathCore = readValueFromContract(
-            pathCoreData.assetAddress,
-            pathCoreData.functionName
-        );
 
+        uint256[3][3] memory colors = getColors(rand, day);
+
+        return
+            combineItAll(
+                colors, //[0], //colorsBGValues,
+                pathDatas, //[1], //pathBGData,
+                // colors[1], //colorsCoreValues,
+                // pathDatas[3], //pathCoreData,
+                pathIdxFG
+                // colors[2], //colorsFGValues,
+                // pathDatas[2], //pathFGData,
+                // pathDatas[0] //pathFaceData
+            );
+    }
+
+    function getColors(
+        bytes32 rand,
+        uint256 day
+    ) internal view returns (uint256[3][3] memory colors) {
         //DAILY COLOR THEME
         rand = keccak256(abi.encodePacked(rand));
-        uint8 themegroupsAmount = themeGroup.themeCount();
         ThemeGroup.ThemeName currentDayTheme = ThemeGroup.ThemeName(
-            randomRange(0, themegroupsAmount - 1, rand, day)
+            randomRange(0, themeGroup.themeCount() - 1, rand, day)
         );
 
         //BACKGROUND COLOR (Hue, Saturation, Lightness)
@@ -392,17 +424,6 @@ contract ExternalMetadata is Ownable {
             ThemeGroup.ThemeLayer.BG,
             day
         );
-        string memory colorsBG = string(
-            abi.encodePacked(
-                'hsl(',
-                StringsExtended.toString(colorsBGValues[0]),
-                ',',
-                StringsExtended.toString(colorsBGValues[1]),
-                '%,',
-                StringsExtended.toString(colorsBGValues[2]),
-                '%)'
-            )
-        );
 
         //CORE COLOR
         uint256[3] memory colorsCoreValues;
@@ -411,17 +432,6 @@ contract ExternalMetadata is Ownable {
             currentDayTheme,
             ThemeGroup.ThemeLayer.Core,
             day
-        );
-        string memory colorsCore = string(
-            abi.encodePacked(
-                'hsl(',
-                StringsExtended.toString(colorsCoreValues[0]),
-                ',',
-                StringsExtended.toString(colorsCoreValues[1]),
-                '%,',
-                StringsExtended.toString(colorsCoreValues[2]),
-                '%)'
-            )
         );
 
         //FOREGROUND COLOR
@@ -432,70 +442,125 @@ contract ExternalMetadata is Ownable {
             ThemeGroup.ThemeLayer.FG,
             day
         );
-        string memory colorsFG = string(
-            abi.encodePacked(
-                'hsl(',
-                StringsExtended.toString(colorsFGValues[0]),
-                ',',
-                StringsExtended.toString(colorsFGValues[1]),
-                '%,',
-                StringsExtended.toString(colorsFGValues[2]),
-                '%)'
-            )
-        );
 
-        string memory path = string(
-            abi.encodePacked(
-                getRotationAnimation(
-                    'BG',
-                    '300px 300px',
-                    '0px, 0px',
-                    '12',
-                    '0',
-                    'reverse'
-                ),
-                '<g id="id-BG" fill="',
-                colorsBG,
-                '" >',
-                pathBG,
-                '</g>',
-                getRotationAnimation(
-                    'Core',
-                    '113px 113px',
-                    '187px, 187px',
-                    '34',
-                    '0',
-                    'normal'
-                ),
-                '<g id="id-Core" fill="',
-                colorsCore,
-                '" >',
-                pathCore,
-                '</g>',
-                getRotationAnimation(
-                    'FG',
-                    '300px 300px',
-                    '0px,0px',
-                    '8',
-                    '0',
-                    pathIdxFG == 9
-                        ? 'reverse'
-                        : pathIdxFG == 1 || pathIdxFG == 8
-                        ? 'none'
-                        : 'normal'
-                ),
-                '<g id="id-FG" fill="',
-                colorsFG,
-                '" >',
-                pathFG,
-                '</g>',
-                '<g id="id-Face">',
-                pathFace,
-                '</g>'
-            )
-        );
+        return [colorsBGValues, colorsCoreValues, colorsFGValues];
+    }
 
-        return path;
+    function combineItAll(
+        uint256[3][3] memory colors,
+        // uint256[3] memory colorsBGValues,
+        AssetData[4] memory pathDatas, //pathBGData,
+        // uint256[3] memory colorsCoreValues,
+        // AssetData memory pathCoreData,
+        uint256 pathIdxFG
+    )
+        internal
+        view
+        returns (
+            // uint256[3] memory colorsFGValues,
+            // AssetData memory pathFGData,
+            // AssetData memory pathFaceData
+            string memory
+        )
+    {
+        return
+            string(
+                abi.encodePacked(
+                    getRotationAnimation(
+                        'BG',
+                        '300px 300px',
+                        '0px, 0px',
+                        '12',
+                        '0',
+                        'reverse'
+                    ),
+                    '<g id="id-BG" fill="',
+                    string(
+                        abi.encodePacked(
+                            'hsl(',
+                            StringsExtended.toString(colors[0][0]), // colorsBGValues
+                            ',',
+                            StringsExtended.toString(colors[0][1]),
+                            '%,',
+                            StringsExtended.toString(colors[0][2]),
+                            '%)'
+                        )
+                    ),
+                    '" >',
+                    readValueFromContract(
+                        pathDatas[1] /*pathBGData*/.assetAddress,
+                        pathDatas[1] /*pathBGData*/.functionName
+                    ),
+                    '</g>',
+                    getRotationAnimation(
+                        'Core',
+                        '113px 113px',
+                        '187px, 187px',
+                        '34',
+                        '0',
+                        'normal'
+                    ),
+                    '<g id="id-Core" fill="',
+                    string(
+                        abi.encodePacked(
+                            'hsl(',
+                            StringsExtended.toString(colors[1][0]), // colorsCoreValues
+                            ',',
+                            StringsExtended.toString(colors[1][1]),
+                            '%,',
+                            StringsExtended.toString(colors[1][2]),
+                            '%)'
+                        )
+                    ),
+                    '" >',
+                    readValueFromContract(
+                        pathDatas[3] /*pathCoreData*/.assetAddress,
+                        pathDatas[3] /*pathCoreData*/.functionName
+                    ),
+                    '</g>',
+                    getRotationAnimation(
+                        'FG',
+                        '300px 300px',
+                        '0px,0px',
+                        '8',
+                        '0',
+                        getReverseNoneNormal(pathIdxFG)
+                    ),
+                    '<g id="id-FG" fill="',
+                    string(
+                        abi.encodePacked(
+                            'hsl(',
+                            StringsExtended.toString(colors[2][0]), // colorsFGValues
+                            ',',
+                            StringsExtended.toString(colors[2][1]),
+                            '%,',
+                            StringsExtended.toString(colors[2][2]),
+                            '%)'
+                        )
+                    ),
+                    '" >',
+                    readValueFromContract(
+                        pathDatas[2] /*pathFGData*/.assetAddress,
+                        pathDatas[2] /*pathFGData*/.functionName
+                    ),
+                    '</g>',
+                    '<g id="id-Face">',
+                    readValueFromContract(
+                        pathDatas[0] /*pathFaceData*/.assetAddress,
+                        pathDatas[0] /*pathFaceData*/.functionName
+                    ),
+                    '</g>'
+                )
+            );
+    }
+
+    function getReverseNoneNormal(
+        uint256 pathIdxFG
+    ) internal pure returns (string memory) {
+        return
+            pathIdxFG == 9 ? 'reverse' : pathIdxFG == 1 || pathIdxFG == 8
+                ? 'none'
+                : 'normal';
     }
 
     function getRotationAnimation(
@@ -558,13 +623,14 @@ contract ExternalMetadata is Ownable {
         uint256 date,
         uint256 placeIndex
     ) public view returns (address, string memory sec) {
-        uint256 runId = AnybodyProblem(anybodyProblem).fastestByDay(
-            date,
+        uint256 runId = AnybodyProblemV2(anybodyProblem).fastestByDay(date)[
             placeIndex
+        ];
+        AnybodyProblemV2.Run memory run = AnybodyProblemV2(anybodyProblem).runs(
+            runId
         );
-        (address player, , uint256 timeCompleted, , ) = AnybodyProblem(
-            anybodyProblem
-        ).runs(runId);
+        address player = run.owner;
+        uint256 timeCompleted = run.accumulativeTime;
 
         uint256 precision = 1000;
         uint256 fps = 25;
@@ -691,7 +757,8 @@ contract ExternalMetadata is Ownable {
         bytes32 seed,
         uint256 day
     ) internal view returns (uint256) {
-        return AnybodyProblem(anybodyProblem).randomRange(min, max, seed, day);
+        return
+            AnybodyProblemV2(anybodyProblem).randomRange(min, max, seed, day);
     }
 
     function updateAnybodyProblemAddress(

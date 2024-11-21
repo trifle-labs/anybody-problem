@@ -35,10 +35,13 @@ const config = {
   solidity: {
     compilers: [
       {
+        version: '0.5.1'
+      },
+      {
         version: '0.6.11'
       },
       {
-        version: '0.8.15',
+        version: '0.8.28',
         settings: {
           viaIR: true,
           optimizer: { enabled: true, runs: 200 }
@@ -74,7 +77,7 @@ const config = {
       url: process.env.baseRPC,
       accounts: { mnemonic: process.env.deploymentKey, initialIndex: 0 },
       // gas: 5_000_000,
-      gasPrice: 10_000_000 // 0.01 GWEI
+      gasPrice: 50_000_000 // 0.05 GWEI
     },
     sepolia: {
       // url: 'https://sepolia.infura.io/v3/' + process.env.INFURA_API_KEY,
@@ -136,6 +139,7 @@ const config = {
     strict: false,
     only: [
       'AnybodyProblem',
+      'Tournament',
       'Speedruns',
       'ExternalMetadata',
       'Assets1',

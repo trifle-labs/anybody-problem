@@ -6,7 +6,13 @@ import type {
   PGColumnType,
   IndexStatment
 } from '@indexsupply/shovel-config'
-import { AnybodyProblem, Speedruns } from './contracts'
+import {
+  AnybodyProblemV0,
+  AnybodyProblemV1,
+  AnybodyProblemV2,
+  Speedruns
+} from './contracts'
+
 import { ethers } from 'ethers'
 import { camelToSnakeCase } from './src/util'
 
@@ -80,15 +86,44 @@ const STARTING_BLOCK = {
 export const sources: KnownSource[] = [base]
 
 const contracts = Object.fromEntries(
-  [AnybodyProblem, Speedruns].map((contract) => {
+  [AnybodyProblemV2, Speedruns].map((contract) => {
     const abi = contract.abi.abi
-    return [
-      contract.abi.contractName,
-      sources.map((s) => {
-        // console.log('base deployed at ' + contract.networks[s.chain_id].address)
-        return new ethers.Contract(contract.networks[s.chain_id].address, abi)
-      })
-    ]
+    if (contract.abi.contractName == 'AnybodyProblemV2') {
+      return [
+        'AnybodyProblem',
+        sources
+          .map((s) => {
+            return new ethers.Contract(
+              contract.networks[s.chain_id].address,
+              abi
+            )
+          })
+          .concat(
+            ...sources.map((s) => {
+              return new ethers.Contract(
+                AnybodyProblemV0.networks[s.chain_id].address,
+                abi
+              )
+            })
+          )
+          .concat(
+            ...sources.map((s) => {
+              return new ethers.Contract(
+                AnybodyProblemV1.networks[s.chain_id].address,
+                abi
+              )
+            })
+          )
+      ]
+    } else if (contract.abi.contractName.indexOf('AnybodyProblem') > 0) {
+    } else {
+      return [
+        contract.abi.contractName,
+        sources.map((s) => {
+          return new ethers.Contract(contract.networks[s.chain_id].address, abi)
+        })
+      ]
+    }
   })
 )
 
@@ -98,7 +133,8 @@ async function integrationFor(
   index: IndexStatment[] = []
 ): Promise<Integration> {
   const tableName = camelToSnakeCase(`${contractName}_${eventName}`)
-
+  contractName =
+    contractName.indexOf('AnybodyProblem') > 0 ? 'AnybodyProblem' : contractName
   const contract = contracts[contractName]
   console.assert(contract, `Contract ${contractName} not found`)
   const event = contract[0].interface.getEvent(eventName)

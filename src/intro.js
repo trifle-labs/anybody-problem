@@ -1,5 +1,5 @@
 import { THEME } from './colors.js'
-
+import { _copy } from './calculations.js'
 const msgY = 824
 
 export const Intro = {
@@ -41,11 +41,11 @@ export const Intro = {
       backgroundOnly: true,
       rotationSpeedOffset: 2
     }
-    const baddie2 = JSON.parse(JSON.stringify(baddie))
+    const baddie2 = _copy(baddie)
     baddie2.radius = currentSize * 0.74
     baddie2.rotationSpeedOffset = -1
 
-    const baddie3 = JSON.parse(JSON.stringify(baddie))
+    const baddie3 = _copy(baddie)
     baddie3.radius = currentSize * 0.47
     baddie3.c.baddie = [0, 0, 120]
     baddie3.rotationSpeedOffset = 0
@@ -103,7 +103,7 @@ export const Intro = {
       c: { baddie: [0, 0, 120, 1], strokeColor: '#FFF', strokeWidth: 0 },
       rotationSpeedOffset: 0.85
     }
-    const baddie2 = JSON.parse(JSON.stringify(baddie))
+    const baddie2 = _copy(baddie)
     baddie2.radius = baddie.radius * 0.85
 
     this.p.push()
@@ -144,7 +144,7 @@ export const Intro = {
 
     this.introBodies ||= [
       (() => {
-        const b = JSON.parse(JSON.stringify(this.bodies[0]))
+        const b = _copy(this.bodies[0])
         b.velocity.x = 6.5
         b.velocity.y = 4
         return b
@@ -160,10 +160,10 @@ export const Intro = {
     this.introBodies.forEach((body) => this.drawBody(body))
 
     if (this.p5Frames % this.P5_FPS_MULTIPLIER == 0) {
-      const results = this.step(this.introBodies, this.missiles)
+      const results = this.step(this.introBodies, this.missile)
 
       this.introBodies = results.bodies
-      this.missiles = results.missiles
+      this.missile = results.missile
     }
 
     let text,

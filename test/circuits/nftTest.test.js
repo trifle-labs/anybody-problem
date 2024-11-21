@@ -1,6 +1,7 @@
 import hre from 'hardhat'
 const { ethers } = hre
 import { expect } from 'chai'
+import { describe, it, before } from 'mocha'
 import { exportCallDataGroth16 } from '../../scripts/circuits.js'
 // import { mine } from '@nomicfoundation/hardhat-network-helpers'
 import { wasm as wasm_tester } from 'circom_tester'

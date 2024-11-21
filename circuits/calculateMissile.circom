@@ -96,18 +96,41 @@ template CalculateMissile() {
   calcMissilePositionLimiterX.in <== new_pos[0]; // maxBits: 20 (maxNum: 1_030_000)
   calcMissilePositionLimiterX.limit <== windowWidthScaled; // maxBits: 20 (maxNum: 1_030_000)
   calcMissilePositionLimiterX.rather <== 0;
-  // log("positionLimiterX out", calcMissilePositionLimiterX.out);
+  // log("calcMissilePositionLimiterX out", calcMissilePositionLimiterX.out);
 
   // This is for the radius of the missile
-  // If it went off screen in the x direction the radius should go to 0
-  // if not then we want to use the real radius until it's checked
+  // If it went off screen in the x direction (x > windowWidth) the radius should go to 0.
+  // However it is also possible the actual position of x is 0 (vertical shot)
+  // so this must first be checked.
+  // If the missile is not off screen then we want to use the real radius until it's checked
   // on the y dimension
+
+  // first confirm if the new position is 0
   component calcMissileIsZeroX = IsZero();
   calcMissileIsZeroX.in <== calcMissilePositionLimiterX.out;
+
+  // next confirm whether the original position was also 0
+  component originalXIsZero = IsZero();
+  originalXIsZero.in <== new_pos[0];
+
+  // save the result as a NOT
+  component originalXIsNotZero = NOT();
+  originalXIsNotZero.in <== originalXIsZero.out;
+
+  // if the new position is 0 and the original position is not 0 then the radius should go to 0
+  component makeRadiusZero = AND();
+  makeRadiusZero.a <== originalXIsNotZero.out;
+  makeRadiusZero.b <== calcMissileIsZeroX.out;
+
+  // radius should go to 0 if new x position is 0 BUT original X is NOT 0
+  // radius should go to 0 if new x position is 0 AND original X is NOT 0
+  // radius should NOT go to 0 if new x position is 0 AND original X is 0
+  // radius should go to 0 if new x posisiton is 0 AND new x position is 0
+
   component muxXDecidesRadius = Mux1();
   muxXDecidesRadius.c[0] <== in_missile[4];
   muxXDecidesRadius.c[1] <== 0;
-  muxXDecidesRadius.s <== calcMissileIsZeroX.out;
+  muxXDecidesRadius.s <== makeRadiusZero.out;
 
   // Since the plane goes from 0 to windowWidthScaled on the y axis from top to bottom
   // the missile will approach 0 after starting at windowWidthScaled
@@ -119,7 +142,6 @@ template CalculateMissile() {
   // log("new_pos[1]", new_pos[1]);
   // log("positionLowerLimiterY in", new_pos[1]);
   // log("positionLowerLimiterY limit", maxMissileVectorScaled);
-  // also check the general overboard logic. Would be an edge case but possible.
   component positionLowerLimiterY = LowerLimiter(20); // TODO: confirm type matches bit limit
   positionLowerLimiterY.in <== new_pos[1] + maxMissileVectorScaled; // maxBits: 20 (maxNum: 1_030_000)
   positionLowerLimiterY.limit <== maxMissileVectorScaled; // maxBits: 15 (maxNum: 30_000)

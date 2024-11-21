@@ -1,6 +1,7 @@
 import { hslToRgb, rgbaOpacity, THEME, themes, randHSL } from './colors.js'
 import { fonts, drawKernedText } from './fonts.js'
 import { utils } from 'ethers'
+import { _copy } from './calculations.js'
 
 const BODY_SCALE = 4 // match to calculations.js !!
 const GAME_LENGTH_BY_LEVEL_INDEX = [30, 10, 20, 30, 40, 50]
@@ -206,6 +207,12 @@ const replaceAttribute = (string, key, color) =>
 
 export const Visuals = {
   async draw() {
+    if (this.missileEvent) {
+      const { x, y } = this.missileEvent
+      this.missileEvent = false
+      this.processMissileClick(x, y)
+    }
+
     if (this.shaking && this.shaking > 0) {
       this.shakeScreen()
     } else {
@@ -228,16 +235,16 @@ export const Visuals = {
     ) {
       this.firstFrame = false
       this.frames++
-      const results = this.step(this.bodies, this.missiles)
+      const results = this.step(this.bodies, this.missile)
       this.bodies = results.bodies || []
-      this.missiles = results.missiles || []
+      this.missile = results.missile
     }
 
     if (this.shootMissileNextFrame) {
-      console.log('trigger missile click from draw')
       const { x, y } = this.shootMissileNextFrame
-      this.missileClick(x, y)
+      console.log('trigger missile click from draw', { x, y })
       this.shootMissileNextFrame = null
+      this.missileClick(x, y)
     }
 
     this.p.noFill()
@@ -263,8 +270,10 @@ export const Visuals = {
     this.drawGunSmoke()
     this.drawExplosionSmoke()
 
+    const elapsedFrames = this.frames - this.startingFrame
+
     if (
-      this.frames - this.startingFrame + this.FPS < this.timer &&
+      elapsedFrames < this.timer &&
       this.bodies.reduce((a, c) => a + c.radius, 0) != 0
     ) {
       this.drawMissiles()
@@ -276,13 +285,9 @@ export const Visuals = {
       this.p5Frames % this.P5_FPS_MULTIPLIER == 0
     const didNotJustPause = !this.justPaused
 
-    const ranOutOfTime =
-      this.frames - this.startingFrame + this.FPS >= this.timer
+    const ranOutOfTime = elapsedFrames >= this.timer
     const hitHeroBody = this.bodies[0].radius == 0 && this.level !== 0
 
-    if ((ranOutOfTime || hitHeroBody) && !this.handledGameOver) {
-      this.handleGameOver({ won: false, ranOutOfTime, hitHeroBody })
-    }
     if (
       !this.won &&
       this.mode == 'game' &&
@@ -292,6 +297,8 @@ export const Visuals = {
       !this.handledGameOver
     ) {
       this.handleGameOver({ won: true })
+    } else if ((ranOutOfTime || hitHeroBody) && !this.handledGameOver) {
+      this.handleGameOver({ won: false, ranOutOfTime, hitHeroBody })
     }
 
     if (
@@ -488,8 +495,6 @@ export const Visuals = {
         text: 'PLAY',
         onClick: () => {
           if (this.popup) return
-          // start play
-          this.sound?.playStart()
           this.setPause(false)
         },
         fg: THEME.violet_50,
@@ -810,9 +815,10 @@ export const Visuals = {
     if (
       this.paused ||
       this.gameOver ||
-      (this.introStage === 0 && !(this.levelCountdown < 200))
-    )
+      (this.level < 1 && this.introStage === 0 && !(this.levelCountdown < 200))
+    ) {
       return
+    }
     const { p } = this
     // draw mute btn in bottom right corner
     p.push()
@@ -1048,7 +1054,9 @@ export const Visuals = {
 
     // middle box text
     const levelTimes = this.levelSpeeds
-      .map((result) => result?.framesTook / this.FPS)
+      .map((result) => {
+        return result[result.length - 1]?.sampleOutput.time / this.FPS
+      })
       .filter((l) => l !== undefined)
     const bestTimes =
       this.todaysRecords?.levels?.map((l) => l.events[0].time / this.FPS) ?? []
@@ -1344,6 +1352,7 @@ export const Visuals = {
         text: 'SAVE',
         onClick: () => {
           if (this.popup) return
+          this.emitLevel(LEVELS)
           if (this.opensea) {
             this.popup = {
               header: 'Nice Job!',
@@ -1374,7 +1383,6 @@ export const Visuals = {
             }
             return
           }
-          //
           this.emit('save')
         },
         ...themes.buttons.green,
@@ -1746,11 +1754,9 @@ export const Visuals = {
 
   getDisplayHero({ radius } = { radius: 33 }) {
     const body = this.bodies[0]
-    const bodyCopy = JSON.parse(
-      JSON.stringify(
-        body,
-        (key, value) => (typeof value === 'bigint' ? value.toString() : value) // return everything else unchanged
-      )
+    const bodyCopy = _copy(
+      body,
+      (key, value) => (typeof value === 'bigint' ? value.toString() : value) // return everything else unchanged
     )
     bodyCopy.position = this.p.createVector(body.position.x, body.position.y)
     bodyCopy.velocity = this.p.createVector(body.velocity.x, body.velocity.y)
@@ -1771,7 +1777,7 @@ export const Visuals = {
     for (let i = 0; i < LEVELS; i++) {
       baddies.push([])
       for (let j = 0; j < i + 1; j++) {
-        baddies[i].push(JSON.parse(JSON.stringify(bodies[j + 1])))
+        baddies[i].push(_copy(bodies[j + 1]))
       }
     }
     return baddies
@@ -2001,7 +2007,7 @@ export const Visuals = {
 
     for (let i = 0; i < explosions.length; i++) {
       const v = explosions[i].velocity
-      const _explosion = JSON.parse(JSON.stringify(explosions[i]))
+      const _explosion = _copy(explosions[i])
       _explosion.velocity = v
       if (_explosion.bodyIndex == 0) {
         _explosion.cry = true
@@ -2098,21 +2104,14 @@ export const Visuals = {
 
   isMissileClose(body) {
     const minDistance = 300
-    let closeEnough = false
-    for (let i = 0; i < this.missiles.length; i++) {
-      const missile = this.missiles[i]
-      const distance = this.p.dist(
-        body.position.x,
-        body.position.y,
-        missile.position.x,
-        missile.position.y
-      )
-      if (distance < minDistance) {
-        closeEnough = true
-        break
-      }
-    }
-    return closeEnough
+    const missile = this.missile
+    const distance = this.p.dist(
+      body.position.x,
+      body.position.y,
+      missile.position.x,
+      missile.position.y
+    )
+    return distance < minDistance
   },
 
   drawImageAsset(
@@ -2591,10 +2590,10 @@ export const Visuals = {
       this.drawImageAsset('BADDIE_SVG', 'core', coreWidth, { fill: coreColor })
 
       // pupils always looking at missile, if no missile, look at mouse
-      const target =
-        this.missiles.length > 0
-          ? this.missiles[0].position
-          : { x: this.scaleX(this.p.mouseX), y: this.scaleY(this.p.mouseY) }
+      const target = this.missile?.position || {
+        x: this.scaleX(this.p.mouseX),
+        y: this.scaleY(this.p.mouseY)
+      }
 
       const bx = body.position.x
       const by = body.position.y
@@ -2656,20 +2655,7 @@ export const Visuals = {
   async shareCanvas(showPopup = true) {
     const file = this.shareCanvasBlob
     if (!file) throw new Error('Nothing available to share!')
-
-    if (navigator.share) {
-      console.log('sharing canvas...')
-      try {
-        await navigator.share({ files: [file] })
-        return undefined
-      } catch (e) {
-        // ignore user aborting
-        if (e?.name === 'AbortError') return undefined
-        console.error('Couldnt share via navigator', e)
-        // don't throw error, try clipboard
-      }
-    }
-
+    let copySuccess = false
     if (navigator.clipboard && navigator.clipboard.write) {
       try {
         console.log('trying to copy canvas to clipboard...')
@@ -2677,6 +2663,7 @@ export const Visuals = {
           new ClipboardItem({ 'image/png': file })
         ])
         const msg = 'Copied results to your clipboard.'
+        copySuccess = true
         if (showPopup) {
           this.popup = {
             header: 'Go Share!',
@@ -2697,6 +2684,18 @@ export const Visuals = {
       } catch (error) {
         console.error('Error copying to clipboard:', error)
         throw new Error("Couldn't copy to clipboard. Blocked by browser?")
+      }
+    }
+    if (navigator.share && !copySuccess) {
+      console.log('sharing canvas...')
+      try {
+        await navigator.share({ files: [file] })
+        return undefined
+      } catch (e) {
+        // ignore user aborting
+        if (e?.name === 'AbortError') return undefined
+        console.error('Couldnt share via navigator', e)
+        // don't throw error, try clipboard
       }
     }
 
@@ -2771,7 +2770,7 @@ export const Visuals = {
     const particles = this.makeParticles(x, y)
     this.explosionSmoke.push(...particles)
   },
-  makeMissileStart() {
+  drawMissileStart() {
     this.gunSmoke ||= []
     const particles = this.makeParticles(0, this.windowHeight)
     this.gunSmoke.push(...particles)

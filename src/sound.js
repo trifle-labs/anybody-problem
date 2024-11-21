@@ -9,11 +9,12 @@ import wii_A from 'data-url:/public/sound/tracks/wii_A.mp3'
 import coinBox from 'data-url:/public/sound/fx/coin-box.mp3'
 import bongoHard from 'data-url:/public/sound/fx/SC_CP_perc_bongo_loud_tap.mp3'
 import bubble from 'data-url:/public/sound/fx/DSC_GST_one_shot_perc_water.mp3'
+import hubble from 'data-url:/public/sound/fx/ESM_Positive_Bling_Bubble_Match_9_Sound_FX_Arcade_Casino_Kids_Mobile_App.mp3'
 import coin from 'data-url:/public/sound/fx/ESM_Game_Notification_83_Coin_Blip_Select_Tap_Button.mp3'
 import bottlerocket2 from 'data-url:/public/sound/fx/space/BottleRocket_S011FI.5.mp3'
 import ipod_hiss from 'data-url:/public/sound/ipod/ipod_hiss.mp3'
 import affirmative from 'data-url:/public/sound/fx/space/ESM_Digital_Game_Affirmation_Sound_Sci_fi_Military_Robotic_Robot_Cyber_Futuristic_Transition.mp3'
-
+// import explode from 'data-url:/public/sound/fx/space/ESM_Builder_Game_Fireworks_Bomb_Explosion_2_Fire_Bomb_Explosive_War_Battle_Rocket_Mortar_Tank_Cannon_2.mp3'
 const hash = (str) => {
   let hash = 0
   for (let i = 0; i < str.length; i++) {
@@ -141,7 +142,7 @@ export default class Sound {
     let player
     if (this.anybody.sfx === 'space') {
       const playbackRate =
-        vectorMagnitude < 100_000 ? 3 : vectorMagnitude < 500_000 ? 2 : 1
+        vectorMagnitude < 400_000 ? 3 : vectorMagnitude < 900_000 ? 2 : 1
       player = await this.playOneShot(bottlerocket2, -10, {
         playbackRate
       })
@@ -160,8 +161,8 @@ export default class Sound {
 
   async playExplosion(x) {
     if (this.anybody.sfx === 'space') {
-      const player = await this.playOneShot(coin, -20, {
-        playbackRate: random([1, 1.4, 0.8])
+      const player = await this.playOneShot(hubble, 0, {
+        playbackRate: random([1.5, 2, 2.5])
       })
       if (!player) return
       const panner = new Panner().connect(this.master)
@@ -183,7 +184,7 @@ export default class Sound {
 
   async playOneShot(url, volume, opts = false) {
     // prepare playback
-    this.prepareForPlayback()
+    await this.prepareForPlayback()
 
     this.oneShots = this.oneShots || {}
     const key = `${hash(url)}-${volume}-${opts && JSON.stringify(opts)}`
@@ -252,10 +253,16 @@ export default class Sound {
 
     // reset audio player
     this.stop()
+    if (!this.player.loaded) {
+      await this.player.load(this.currentSong.audio)
+    }
 
     // set game over playback speed
     this.setPlaybackRate('gameover')
 
+    if (this.loop) {
+      this.loop.stop()
+    }
     // start song immediately and schedule to replay in a loop
     this.loop = new Loop((time) => {
       this.player.start(time)
@@ -309,8 +316,9 @@ export default class Sound {
   }
 
   async playSong(song) {
+    this.setPlaybackRate('normal')
     // prepare playback
-    this.prepareForPlayback()
+    await this.prepareForPlayback()
 
     // set current song
     this.currentSong = song
@@ -318,12 +326,13 @@ export default class Sound {
     // reset audio player
     this.stop()
 
-    // set game over playback speed
-    this.setPlaybackRate('normal')
-
     // load the current song
     await this.player.load(this.currentSong.audio)
 
+    // set game over playback speed
+    if (this.loop) {
+      this.loop.stop()
+    }
     // start song and schedule to replay in a loop
     this.loop = new Loop((time) => {
       this.player.start(time)
