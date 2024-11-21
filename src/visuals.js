@@ -1887,8 +1887,7 @@ export const Visuals = {
       text: 'REDO',
       onClick: () => {
         // advance to next tip
-        const i = this.loseScreenTipIndex
-        this.loseScreenTipIndex = tips[i + 1] ? i + 1 : 0
+        this.loseScreenTipIndex++
         this.restart(null, false)
       },
       bg: THEME.teal_50,
@@ -1899,7 +1898,7 @@ export const Visuals = {
     // draw tip (initial is random)
     this.loseScreenTipIndex =
       this.loseScreenTipIndex ?? Math.floor(Math.random() * tips.length)
-    const tip = tips[this.loseScreenTipIndex]
+    const tip = tips[this.loseScreenTipIndex % tips.length]
     const { h, fz } = this.drawTextBubble({ fz: 48 })
     this.drawTextBubble({
       text: tip.text,
