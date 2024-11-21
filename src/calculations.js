@@ -687,7 +687,7 @@ const calculateRecords = (days, chains, appChainId) => {
       if (!players[week][run.player].average) {
         players[week][run.player].average = {
           totalTime: run.time,
-          totalRuns: 0,
+          totalRuns: 1,
           average: run.time
         }
       } else {
@@ -733,7 +733,7 @@ const calculateRecords = (days, chains, appChainId) => {
           week,
           day: run.day,
           block_num: run.block_num,
-          player: run.player,
+          player: weekSortedByAverage[0][0],
           globalAverage: currentAverage[week].average,
           time: weekSortedByAverage[0][1].average.average,
           recordType: 'average'
