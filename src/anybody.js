@@ -401,7 +401,7 @@ export class Anybody extends EventEmitter {
       case 'KeyR':
         if (this.level < 1) return
         this.hasUsedRedoShortcut = true
-        if (this.loseScreenTipIndex) {
+        if (this.loseScreenTipIndex && this.gameOver) {
           this.loseScreenTipIndex++
         }
         this.restart(null, false)
