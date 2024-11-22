@@ -686,18 +686,17 @@ const calculateRecords = (days, chains, appChainId) => {
 
       if (!players[week][run.player].average) {
         players[week][run.player].average = {
-          totalTime: run.time,
-          totalRuns: 1,
-          average: run.time
+          totalTime: 0,
+          totalRuns: 0,
+          average: 0
         }
-      } else {
-        players[week][run.player].average.totalTime += run.time
-        players[week][run.player].average.totalRuns += 1
-        players[week][run.player].average.average = divRound(
-          players[week][run.player].average.totalTime,
-          players[week][run.player].average.totalRuns
-        )
       }
+      players[week][run.player].average.totalTime += run.time
+      players[week][run.player].average.totalRuns += 1
+      players[week][run.player].average.average = divRound(
+        players[week][run.player].average.totalTime,
+        players[week][run.player].average.totalRuns
+      )
 
       if (!currentAverage[week]) {
         currentAverage[week] = {
@@ -749,7 +748,7 @@ const calculateRecords = (days, chains, appChainId) => {
       const slowestDaysSortedSliced = Object.entries(
         players[week][run.player].slowestDays
       )
-        .sort((a, b) => b[1].time - a[1].time)
+        .sort((a, b) => b[1] - a[1])
         .slice(0, minimumDaysPlayed)
       const currentTimeSlow = divRound(
         slowestDaysSortedSliced.reduce((acc, [, time]) => {
@@ -757,6 +756,10 @@ const calculateRecords = (days, chains, appChainId) => {
         }, 0),
         slowestDaysSortedSliced.length
       )
+      let difference
+      if (currentSlowest[week]) {
+        difference = Math.abs(currentTimeSlow - currentSlowest[week].time)
+      }
       if (
         !currentSlowest[week] ||
         currentTimeSlow > currentSlowest[week].time
@@ -768,7 +771,6 @@ const calculateRecords = (days, chains, appChainId) => {
         if (!recordsBroken[week]) {
           recordsBroken[week] = []
         }
-        const difference = Math.abs(currentTimeSlow - currentSlowest[week].time)
         recordsBroken[week].push({
           week,
           day: run.day,
@@ -789,7 +791,7 @@ const calculateRecords = (days, chains, appChainId) => {
       const fastestDaysSortedSliced = Object.entries(
         players[week][run.player].fastestDays
       )
-        .sort((a, b) => a[1].time - b[1].time)
+        .sort((a, b) => a[1] - b[1])
         .slice(0, minimumDaysPlayed)
       const currentTimeFast = divRound(
         fastestDaysSortedSliced.reduce((acc, [, time]) => {
@@ -797,6 +799,12 @@ const calculateRecords = (days, chains, appChainId) => {
         }, 0),
         fastestDaysSortedSliced.length
       )
+
+      if (currentFastest[week]) {
+        difference = Math.abs(currentTimeFast - currentFastest[week].time)
+      } else {
+        difference = null
+      }
 
       if (
         !currentFastest[week] ||
@@ -809,7 +817,6 @@ const calculateRecords = (days, chains, appChainId) => {
         if (!recordsBroken[week]) {
           recordsBroken[week] = []
         }
-        const difference = Math.abs(currentTimeFast - currentFastest[week].time)
         recordsBroken[week].push({
           week,
           day: run.day,
