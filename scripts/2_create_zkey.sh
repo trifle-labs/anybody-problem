@@ -10,7 +10,7 @@ if [ -z "$CIRCUIT" ]; then
 fi
 
 # Variable to store the number of the ptau file
-PTAU=20
+PTAU=25
 
 # In case there is a ptau file number as an input
 if [ "$2" ]; then

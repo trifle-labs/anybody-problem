@@ -15,8 +15,8 @@ const proverTickIndex = {
   2: 250,
   3: 250,
   4: 250,
-  5: 125,
-  6: 125
+  5: 250,
+  6: 250
 }
 function intersectsButton(button, x, y) {
   return (

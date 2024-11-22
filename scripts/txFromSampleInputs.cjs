@@ -2,7 +2,7 @@ const { ethers } = require('hardhat')
 const sindri = require('sindri')
 
 const game_4_250_id = 'f6a0dbe5-38b3-4211-b740-6f65ba3fdbdb' // v7
-const game_6_125_id = '2aaebd03-8979-436b-b2cd-1450619d06f4' // v7
+const game_6_250_id = '833ae0aa-c0b7-4abb-83a5-8d0233c71304' // v1
 const apiKey = process.env.sindri_api_key
 
 const mint = true
@@ -34,8 +34,8 @@ async function main() {
           sampleInput.bodies.push(['0', '0', '20000', '20000', '0'])
         }
       }
-      proofData.steps = useCircuit == 4 ? 250 : 125
-      const circuitId = useCircuit == 4 ? game_4_250_id : game_6_125_id
+      proofData.steps = 250
+      const circuitId = useCircuit == 4 ? game_4_250_id : game_6_250_id
       let proof
       try {
         proof = await sindri.proveCircuit(circuitId, sampleInput)

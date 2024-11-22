@@ -33,7 +33,7 @@ circuits/*.zkey
 /*_cpp/
 
 # !game_4_250_cpp
-# !game_6_125_cpp
+# !game_6_250_cpp
 
 */tmp/*
 
@@ -57,11 +57,11 @@ verification_key.json
 
 
 !game_4_250_js
-!game_6_125_js
+!game_6_250_js
 
 
 !public/game_4_250.wasm
-!public/game_6_125.wasm
+!public/game_6_250.wasm
 parameters.txt
 
 

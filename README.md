@@ -124,7 +124,7 @@ To prepare for production, run the following command:
 yarn circom:game-prod
 ```
 
-This might take a while to generate but it will only produce proofs for 4 bodies at 250 frames of gameplay and 6 bodies at 125 frames of gameplay. All levels can be proven with these two circuits because the missing bodies are added with radius of 0 so they don't impact the simulation.
+This might take a while to generate but it will only produce proofs for 4 bodies at 250 frames of gameplay and 6 bodies at 250 frames of gameplay. All levels can be proven with these two circuits because the missing bodies are added with radius of 0 so they don't impact the simulation.
 
 ### Sindri
 

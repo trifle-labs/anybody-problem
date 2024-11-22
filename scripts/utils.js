@@ -14,8 +14,8 @@ const proverTickIndex = {
   2: 250,
   3: 250,
   4: 250,
-  5: 125,
-  6: 125
+  5: 250,
+  6: 250
 }
 const MAX_BODY_COUNT = 6
 
@@ -63,6 +63,60 @@ const getPathAddress = async (name) => {
     String(networkinfo['chainId']) + '-' + String(name) + '.json'
   )
   return savePath
+}
+
+const deployVerifiers = async ({
+  skipVerifiers,
+  deployedContracts,
+  returnObject,
+  ignoreTesting,
+  verbose
+}) => {
+  ignoreTesting = ignoreTesting ?? false
+  global.ignoreTesting = ignoreTesting
+  verbose = verbose ?? false
+  global.verbose = verbose
+  skipVerifiers = skipVerifiers ?? false
+  deployedContracts = deployedContracts ?? {}
+  returnObject = returnObject ?? {}
+
+  const verifiers = []
+  const verifiersTicks = []
+  const verifiersBodies = []
+
+  // redeploy the verifiers, this time only 2 of them
+  for (let i = 2; i <= MAX_BODY_COUNT; i++) {
+    if (i !== 4 && i !== 6) continue
+    const ticks = await getTicksRun(i)
+    const name = `Game_${i}_${ticks}Verifier`
+    const path = `contracts/${name}.sol:Groth16Verifier`
+    let verifier, verifierContract
+    if (skipVerifiers) {
+      verifierContract = deployedContracts[name]
+    } else {
+      verifier = await hre.ethers.getContractFactory(path)
+      verifierContract = await verifier.deploy()
+      await verifierContract.deployed()
+      log(`Verifier ${i} deployed at ${verifierContract.address}`)
+    }
+    verifiers.push(verifierContract.address)
+    log(`with ${ticks} ticks`)
+    verifiersTicks.push(ticks)
+    verifiersBodies.push(i)
+    log(`and ${i} bodies`)
+
+    returnObject[name] = verifierContract
+  }
+  returnObject.verifiers = verifiers
+  returnObject.verifiersTicks = verifiersTicks
+  returnObject.verifiersBodies = verifiersBodies
+
+  return {
+    verifiers,
+    verifiersTicks,
+    verifiersBodies,
+    returnObject
+  }
 }
 
 const initContracts = async (
@@ -306,37 +360,13 @@ const deployAnybodyProblemV2 = async (options) => {
     'ExternalMetadata'
   ])
 
-  const returnObject = {}
-  const verifiers = []
-  const verifiersTicks = []
-  const verifiersBodies = []
-
-  // redeploy the verifiers, this time only 2 of them
-  for (let i = 2; i <= MAX_BODY_COUNT; i++) {
-    if (i !== 4 && i !== 6) continue
-    const ticks = await getTicksRun(i)
-    const name = `Game_${i}_${ticks}Verifier`
-    const path = `contracts/${name}.sol:Groth16Verifier`
-    let verifier, verifierContract
-    if (skipVerifiers) {
-      verifierContract = deployedContracts[name]
-    } else {
-      verifier = await hre.ethers.getContractFactory(path)
-      verifierContract = await verifier.deploy()
-      await verifierContract.deployed()
-      log(`Verifier ${i} deployed at ${verifierContract.address}`)
-    }
-    verifiers.push(verifierContract.address)
-    log(`with ${ticks} ticks`)
-    verifiersTicks.push(ticks)
-    verifiersBodies.push(i)
-    log(`and ${i} bodies`)
-
-    returnObject[name] = verifierContract
-  }
-  returnObject.verifiers = verifiers
-  returnObject.verifiersTicks = verifiersTicks
-  returnObject.verifiersBodies = verifiersBodies
+  const { verifiers, verifiersTicks, verifiersBodies, returnObject } =
+    deployVerifiers({
+      skipVerifiers,
+      deployedContracts,
+      ignoreTesting,
+      verbose
+    })
 
   if (!AnybodyProblemV0) AnybodyProblemV0 = deployedContracts.AnybodyProblemV0
   returnObject['AnybodyProblemV0'] = AnybodyProblemV0
@@ -1261,6 +1291,7 @@ export {
   deployAnybodyProblemV1,
   deployAnybodyProblemV2,
   saveAndVerifyContracts,
-  proceedRecipient
+  proceedRecipient,
+  deployVerifiers
   // splitterAddress
 }
