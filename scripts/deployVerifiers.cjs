@@ -23,7 +23,7 @@ async function main() {
     console.log({ verifierAddress, verifierBody, verifierTick })
     await AnybodyProblemV2.updateVerifier(
       verifierAddress,
-      verifiersBodies,
+      verifierBody,
       verifierTick
     )
   }
