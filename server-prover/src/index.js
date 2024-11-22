@@ -7,7 +7,7 @@ const { exec } = require('child_process')
 const util = require('util')
 const execPromise = util.promisify(exec)
 
-const bigFiles = ['game_4_250', 'game_6_125']
+const bigFiles = ['game_4_250', 'game_6_250']
 bigFiles.forEach((baseName) => {
   const path = `../../${baseName}_final.zkey`
   const fileExists = existsSync(path)
@@ -41,7 +41,7 @@ app.post('/prove', async (c) => {
     if (len !== 4 && len !== 6) {
       return c.json({ error: 'input must have 4 or 6 bodies' })
     }
-    const baseName = `game_${len == 4 ? '4_250' : '6_125'}`
+    const baseName = `game_${len == 4 ? '4_250' : '6_250'}`
     const wasmPath = `../${baseName}_js/${baseName}.wasm`
 
     const buffer = readFileSync(wasmPath)

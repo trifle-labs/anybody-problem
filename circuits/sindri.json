@@ -1,8 +1,8 @@
 {
   "$schema": "https://forge.sindri.app/api/v1/sindri-manifest-schema.json",
-  "name": "game_6_1250_v1",
+  "name": "game_6_250_v1",
   "circuitType": "circom",
-  "circuitPath": "./game_6_1250.circom",
+  "circuitPath": "./game_6_250.circom",
   "curve": "bn254",
   "provingScheme": "groth16",
   "witnessCompiler": "c++"

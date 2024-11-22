@@ -3,7 +3,7 @@ const wc = require('../game_4_250_js/witness_calculator.js')
 // import snarkjs from '../public/snarkjs.min.js'
 
 import wasm_4_250 from 'data-url:/public/game_4_250.wasm'
-import wasm_6_125 from 'data-url:/public/game_6_125.wasm'
+import wasm_6_250 from 'data-url:/public/game_6_250.wasm'
 
 export async function genwit(input) {
   console.log({ input })
@@ -19,7 +19,7 @@ export async function genwit(input) {
     }
   }
   console.log({ bodies: input.bodies })
-  const url = useCircuit == 4 ? wasm_4_250 : wasm_6_125
+  const url = useCircuit == 4 ? wasm_4_250 : wasm_6_250
 
   const res = await fetch(url)
   const buffer = new Uint8Array(await res.arrayBuffer())
