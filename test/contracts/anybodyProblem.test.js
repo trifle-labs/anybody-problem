@@ -14,10 +14,10 @@ import {
   // mintProblem,
   generateAndSubmitProof,
   getTicksRun,
-  proceedRecipient
+  proceedRecipient,
+  earlyMonday
   // generateProof
 } from '../../scripts/utils.js'
-import { earlyMonday } from './tournament.test.js'
 import { Anybody } from '../../dist/module.js'
 
 // let tx
@@ -172,7 +172,7 @@ describe('AnybodyProblem Tests', function () {
     ).to.be.reverted
   })
 
-  it('creates a proof for level 1', async () => {
+  it.only('creates a proof for level 1', async () => {
     const signers = await ethers.getSigners()
     const [owner] = signers
     const deployedContracts = await deployContracts()

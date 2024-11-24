@@ -4,7 +4,7 @@ import { utils } from 'ethers'
 import { _copy } from './calculations.js'
 
 const BODY_SCALE = 4 // match to calculations.js !!
-const GAME_LENGTH_BY_LEVEL_INDEX = [30, 10, 20, 30, 40, 50]
+const GAME_LENGTH_BY_LEVEL_INDEX = [30, 10, 20, 30, 40]
 const LEVELS = GAME_LENGTH_BY_LEVEL_INDEX.length - 1
 
 const rot = {

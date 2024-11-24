@@ -14,7 +14,7 @@ import './Tournament.sol';
 import './AnybodyProblemV1.sol';
 
 contract AnybodyProblemV2 is Ownable, ERC2981 {
-    uint256 public constant LEVELS = 5;
+    uint256 public constant LEVELS = 4;
     uint256 public constant SECONDS_IN_A_DAY = 86400;
     uint256 public constant FIRST_SUNDAY_AT_6_PM_UTC = 324000;
 
@@ -35,12 +35,11 @@ contract AnybodyProblemV2 is Ownable, ERC2981 {
 
     // uint256 public constant maxTick = 25 * 60; // 25 fps * 60 sec = 1,500 ticks max
     // level duration is numberOfBaddies * 10sec (multiplied by 25 because of 25 FPS)
-    uint256[5] public maxTicksByLevelIndex = [
+    uint256[4] public maxTicksByLevelIndex = [
         1 * 10 * 25,
         2 * 10 * 25,
         3 * 10 * 25,
-        4 * 10 * 25,
-        5 * 10 * 25
+        4 * 10 * 25
     ];
     uint256 public constant speedFactor = 2;
     uint256 public constant scalingFactor = 10 ** 3;
@@ -282,11 +281,11 @@ contract AnybodyProblemV2 is Ownable, ERC2981 {
         uint256 level
     ) public view virtual returns (Body[6] memory bodyData, uint256 bodyCount) {
         // NOTE: <= becuase level 5 has 6 bodies
-        for (uint256 i = 0; i <= level; i++) {
+        for (uint256 i = 0; i <= level + 1; i++) {
             bytes32 dayLevelIndexSeed = getLevelSeed(day, level, i);
             bodyData[i] = getRandomValues(dayLevelIndexSeed, i, day);
         }
-        bodyCount = level + 1;
+        bodyCount = level + 2;
     }
 
     function getLevelSeed(
