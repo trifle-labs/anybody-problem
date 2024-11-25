@@ -1,7 +1,12 @@
 import EventEmitter from './events'
 import Sound from './sound.js'
 import { Visuals } from './visuals.js'
-import { Calculations, _copy } from './calculations.js'
+import {
+  Calculations,
+  _copy,
+  currentDay,
+  SECONDS_IN_A_DAY
+} from './calculations.js'
 import { utils } from 'ethers'
 import { bodyThemes } from './colors.js'
 import { loadFonts } from './fonts.js'
@@ -26,11 +31,6 @@ function intersectsButton(button, x, y) {
     y < button.y + button.height
   )
 }
-
-const SECONDS_IN_A_DAY = 86400
-const currentDay = () =>
-  Math.floor(Date.now() / 1000) -
-  (Math.floor(Date.now() / 1000) % SECONDS_IN_A_DAY)
 
 export class Anybody extends EventEmitter {
   constructor(p, options = {}) {

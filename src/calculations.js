@@ -631,12 +631,24 @@ const calculateRecords = (days, chains, appChainId) => {
   const SECONDS_IN_DAY = 86400
   const earlyMonday = chains[appChainId].data.tournament.startDate
 
+  const today = currentDay()
+
   const weekNumber = (day) => {
     return Math.floor((day - earlyMonday) / SECONDS_IN_DAY / daysInContest)
   }
-  // const dayOfTheWeek = (day, daysInContest) => {
-  //   return ((day - earlyMonday) / SECONDS_IN_DAY) % daysInContest
-  // }
+  const dayOfTheWeek = (earlyMonday, day, daysInContest) => {
+    return ((day - earlyMonday) / SECONDS_IN_DAY) % daysInContest
+  }
+
+  const dow = dayOfTheWeek(earlyMonday, today, daysInContest)
+  const daysLeft = daysInContest - dow
+  let mustHavePlayedByNow
+  if (daysLeft > minimumDaysPlayed) {
+    mustHavePlayedByNow = 0
+  } else {
+    mustHavePlayedByNow = minimumDaysPlayed - daysLeft
+  }
+
   const divRound = (a, b) => {
     if (typeof a !== 'bigint') a = BigInt(a)
     if (typeof b !== 'bigint') b = BigInt(b)
@@ -698,6 +710,11 @@ const calculateRecords = (days, chains, appChainId) => {
         players[week][run.player].average.totalRuns
       )
 
+      let doNotRecord = false
+      if (players[week][run.player].average.totalRuns < mustHavePlayedByNow) {
+        doNotRecord = true
+      }
+
       if (!currentAverage[week]) {
         currentAverage[week] = {
           player: null,
@@ -728,15 +745,21 @@ const calculateRecords = (days, chains, appChainId) => {
         if (!recordsBroken[week]) {
           recordsBroken[week] = []
         }
-        recordsBroken[week].push({
-          week,
-          day: run.day,
-          block_num: run.block_num,
-          player: weekSortedByAverage[0][0],
-          globalAverage: currentAverage[week].average,
-          time: weekSortedByAverage[0][1].average.average,
-          recordType: 'average'
-        })
+        // TODO: make a better fix for this
+        if (
+          players[week][weekSortedByAverage[0][0]].average.totalRuns >=
+          mustHavePlayedByNow
+        ) {
+          recordsBroken[week].push({
+            week,
+            day: run.day,
+            block_num: run.block_num,
+            player: weekSortedByAverage[0][0],
+            globalAverage: currentAverage[week].average,
+            time: weekSortedByAverage[0][1].average.average,
+            recordType: 'average'
+          })
+        }
       }
 
       if (
@@ -771,15 +794,17 @@ const calculateRecords = (days, chains, appChainId) => {
         if (!recordsBroken[week]) {
           recordsBroken[week] = []
         }
-        recordsBroken[week].push({
-          week,
-          day: run.day,
-          block_num: run.block_num,
-          player: run.player,
-          time: currentTimeSlow,
-          difference,
-          recordType: 'slowest'
-        })
+        if (!doNotRecord) {
+          recordsBroken[week].push({
+            week,
+            day: run.day,
+            block_num: run.block_num,
+            player: run.player,
+            time: currentTimeSlow,
+            difference,
+            recordType: 'slowest'
+          })
+        }
       }
 
       if (
@@ -817,15 +842,17 @@ const calculateRecords = (days, chains, appChainId) => {
         if (!recordsBroken[week]) {
           recordsBroken[week] = []
         }
-        recordsBroken[week].push({
-          week,
-          day: run.day,
-          block_num: run.block_num,
-          player: run.player,
-          time: currentTimeFast,
-          difference,
-          recordType: 'fastest'
-        })
+        if (!doNotRecord) {
+          recordsBroken[week].push({
+            week,
+            day: run.day,
+            block_num: run.block_num,
+            player: run.player,
+            time: currentTimeFast,
+            difference,
+            recordType: 'fastest'
+          })
+        }
       }
     }
   }
@@ -1049,7 +1076,14 @@ const convertData_LevelsToRuns = (data) => {
 const foo = () => {
   console.log('foo')
 }
+
+const SECONDS_IN_A_DAY = 86400
+const currentDay = () =>
+  Math.floor(Date.now() / 1000) -
+  (Math.floor(Date.now() / 1000) % SECONDS_IN_A_DAY)
 export {
+  SECONDS_IN_A_DAY,
+  currentDay,
   foo,
   convertData_LevelsToRuns,
   calculateRecords,
