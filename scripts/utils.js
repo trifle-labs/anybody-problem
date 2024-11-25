@@ -471,12 +471,166 @@ const deployAnybodyProblemV2 = async (options) => {
     }
   ]
   returnObject['verificationData'] = verificationData
+  if (returnObject['AnybodyProblemV2']) {
+    returnObject['AnybodyProblem'] = returnObject['AnybodyProblemV2']
+  } else if (returnObject['AnybodyProblemV1']) {
+    returnObject['AnybodyProblem'] = returnObject['AnybodyProblemV1']
+  } else if (returnObject['AnybodyProblemV0']) {
+    returnObject['AnybodyProblem'] = returnObject['AnybodyProblemV0']
+  }
+  return returnObject
+}
+
+const deployAnybodyProblemV3 = async (options) => {
+  const defaultOptions = {
+    mock: false,
+    ignoreTesting: false,
+    skipVerifiers: false,
+    verbose: false,
+    AnybodyProblemV1: null,
+    AnybodyProblemV2: null,
+    Speedruns: null,
+    ExternalMetadata: null
+  }
+  let {
+    mock,
+    ignoreTesting,
+    skipVerifiers,
+    verbose,
+    AnybodyProblemV0,
+    AnybodyProblemV1,
+    AnybodyProblemV2,
+    Speedruns,
+    ExternalMetadata
+  } = Object.assign(defaultOptions, options)
+  global.ignoreTesting = ignoreTesting
+  global.networkinfo = await hre.ethers.provider.getNetwork()
+  global.verbose = verbose
+  log('Deploying v3 contracts')
+
+  const [deployer] = await hre.ethers.getSigners()
+
+  // use the already deployed speedruns contract and external metadata contract
+  const deployedContracts = await initContracts([
+    'AnybodyProblemV0',
+    'AnybodyProblemV1',
+    'AnybodyProblemV2',
+    'Speedruns',
+    'ExternalMetadata'
+  ])
+
+  const { verifiers, verifiersTicks, verifiersBodies, returnObject } =
+    await deployVerifiers({
+      skipVerifiers,
+      deployedContracts,
+      ignoreTesting,
+      verbose
+    })
+
+  if (!AnybodyProblemV0) AnybodyProblemV0 = deployedContracts.AnybodyProblemV0
+  returnObject['AnybodyProblemV0'] = AnybodyProblemV0
+
+  if (!Speedruns) Speedruns = deployedContracts.Speedruns
+  returnObject['Speedruns'] = Speedruns
+
+  if (!ExternalMetadata) ExternalMetadata = deployedContracts.ExternalMetadata
+  returnObject['ExternalMetadata'] = ExternalMetadata
+
+  if (!AnybodyProblemV1) AnybodyProblemV1 = deployedContracts.AnybodyProblemV1
+  returnObject['AnybodyProblemV1'] = AnybodyProblemV1
+
+  if (!AnybodyProblemV2) AnybodyProblemV2 = deployedContracts.AnybodyProblemV2
+  returnObject['AnybodyProblemV2'] = AnybodyProblemV2
+
+  const HitchensOrderStatisticsTreeLib = await hre.ethers.getContractFactory(
+    'HitchensOrderStatisticsTreeLib'
+  )
+  const hitchensOrderStatisticsTreeLib =
+    await HitchensOrderStatisticsTreeLib.deploy()
+  returnObject['HitchensOrderStatisticsTreeLib'] =
+    hitchensOrderStatisticsTreeLib
+
+  const Tournament = await hre.ethers.getContractFactory('Tournament', {
+    // TODO: why did i need to do this at one point and not now?
+    // libraries: {
+    //   HitchensOrderStatisticsTreeLib: hitchensOrderStatisticsTreeLib.address
+    // }
+  })
+  const tournament = await Tournament.deploy()
+  log('Tournament Deployed at ' + String(tournament.address))
+  returnObject['Tournament'] = tournament
+
+  log(mock ? 'Deploying AnybodyProblemV3Mock' : 'Deploying AnybodyProblemV3')
+  // deploy AnybodyProblem
+  const AnybodyProblemV3 = await hre.ethers.getContractFactory(
+    mock ? 'AnybodyProblemV3Mock' : 'AnybodyProblemV3'
+  )
+
+  const constructorArguments = [
+    deployer.address,
+    Speedruns.address,
+    ExternalMetadata.address,
+    tournament.address,
+    verifiers,
+    verifiersTicks,
+    verifiersBodies,
+    AnybodyProblemV2.address
+  ]
+
+  const anybodyProblemV3 = await AnybodyProblemV3.deploy(
+    ...constructorArguments
+  )
+  await anybodyProblemV3.deployed()
+
+  returnObject['AnybodyProblemV3'] = anybodyProblemV3
+
+  log(
+    'AnybodyProblemV3 Deployed at ' +
+      String(anybodyProblemV3.address) +
+      ` with speedrunsAddress ${Speedruns.address} and externalMetdataAddress ${ExternalMetadata.address} and tournamentAddress ${tournament.address} and verifiers ${verifiers} and verifiersTicks ${verifiersTicks} and verifiersBodies ${verifiersBodies} and anybodyProblemV2Address ${AnybodyProblemV2.address}`
+  )
+
+  // update AnybodyProblemV2 with proceedRecipient
+  await anybodyProblemV3.updateProceedRecipient(proceedRecipient)
+  log(`AnybodyProblemV3 ProceedRecipient updated to ${proceedRecipient}`)
+
+  // update Speedruns
+  await Speedruns.updateAnybodyProblemAddress(anybodyProblemV3.address)
+  log(
+    `AnybodyProblemV3 address updated in Speedruns to ${anybodyProblemV3.address}`
+  )
+
+  // update ExternalMetadata
+  await ExternalMetadata.updateAnybodyProblemAddress(anybodyProblemV3.address)
+  log(
+    `AnybodyProblemV3 address updated in ExternalMetadata to ${anybodyProblemV3.address}`
+  )
+
+  // update Tournament
+  await tournament.updateAnybodyProblemAddress(anybodyProblemV3.address)
+  log(
+    `AnybodyProblemV3 address updated in Tournament to ${anybodyProblemV3.address}`
+  )
+
+  const verificationData = [
+    {
+      name: 'AnybodyProblemV3',
+      constructorArguments
+    },
+    {
+      name: 'Tournament',
+      constructorArguments: []
+    }
+  ]
+  returnObject['verificationData'] = verificationData
   if (returnObject['AnybodyProblemV3']) {
     returnObject['AnybodyProblem'] = returnObject['AnybodyProblemV3']
   } else if (returnObject['AnybodyProblemV2']) {
     returnObject['AnybodyProblem'] = returnObject['AnybodyProblemV2']
   } else if (returnObject['AnybodyProblemV1']) {
     returnObject['AnybodyProblem'] = returnObject['AnybodyProblemV1']
+  } else if (returnObject['AnybodyProblemV0']) {
+    returnObject['AnybodyProblem'] = returnObject['AnybodyProblemV0']
   }
   return returnObject
 }
@@ -607,12 +761,20 @@ const deployContracts = async (options) => {
   if (options?.saveAndVerify) {
     await saveAndVerifyContracts(deployedContracts2)
   }
+  const deployedContracts3 = await deployAnybodyProblemV3({
+    ...options,
+    ...deployedContracts2
+  })
+  if (options?.saveAndVerify) {
+    await saveAndVerifyContracts(deployedContracts3)
+  }
   const returnValue = {
     ...deployedContracts0,
     ...deployedContracts1,
-    ...deployedContracts2
+    ...deployedContracts2,
+    ...deployedContracts3
   }
-  returnValue.AnybodyProblem = returnValue.AnybodyProblemV2
+  returnValue.AnybodyProblem = returnValue.AnybodyProblemV3
   return returnValue
 }
 

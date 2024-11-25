@@ -11,9 +11,9 @@ import '@openzeppelin/contracts/token/ERC1155/ERC1155.sol';
 import './Speedruns.sol';
 import './ExternalMetadata.sol';
 import './Tournament.sol';
-import './AnybodyProblemV1.sol';
+import './AnybodyProblemV2.sol';
 
-contract AnybodyProblemV2 is Ownable, ERC2981 {
+contract AnybodyProblemV3 is Ownable, ERC2981 {
     uint256 public constant LEVELS = 5;
     uint256 public constant SECONDS_IN_A_DAY = 86400;
     uint256 public constant FIRST_SUNDAY_AT_6_PM_UTC = 324000;
@@ -37,10 +37,10 @@ contract AnybodyProblemV2 is Ownable, ERC2981 {
     // level duration is numberOfBaddies * 10sec (multiplied by 25 because of 25 FPS)
     uint256[5] public maxTicksByLevelIndex = [
         1 * 10 * 25,
+        1 * 10 * 25,
         2 * 10 * 25,
         3 * 10 * 25,
-        4 * 10 * 25,
-        5 * 10 * 25
+        4 * 10 * 25
     ];
     uint256 public constant speedFactor = 2;
     uint256 public constant scalingFactor = 10 ** 3;
@@ -144,13 +144,13 @@ contract AnybodyProblemV2 is Ownable, ERC2981 {
         deployDay = currentDay();
         updatePreviousAB(previousAB_);
         if (previousAB != address(0)) {
-            totalRuns = AnybodyProblemV1(previousAB).runCount();
-            longestStreak[0] = AnybodyProblemV1(previousAB).longestStreak(0);
-            longestStreak[1] = AnybodyProblemV1(previousAB).longestStreak(1);
-            longestStreak[2] = AnybodyProblemV1(previousAB).longestStreak(2);
-            mostGames[0] = AnybodyProblemV1(previousAB).mostGames(0);
-            mostGames[1] = AnybodyProblemV1(previousAB).mostGames(1);
-            mostGames[2] = AnybodyProblemV1(previousAB).mostGames(2);
+            totalRuns = AnybodyProblemV2(previousAB).runCount();
+            longestStreak[0] = AnybodyProblemV2(previousAB).longestStreak(0);
+            longestStreak[1] = AnybodyProblemV2(previousAB).longestStreak(1);
+            longestStreak[2] = AnybodyProblemV2(previousAB).longestStreak(2);
+            mostGames[0] = AnybodyProblemV2(previousAB).mostGames(0);
+            mostGames[1] = AnybodyProblemV2(previousAB).mostGames(1);
+            mostGames[2] = AnybodyProblemV2(previousAB).mostGames(2);
         }
 
         updateProceedRecipient(proceedRecipient_);
