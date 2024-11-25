@@ -25,7 +25,20 @@ export const AnybodyProblemV2 = {
     8453: AnybodyProblemV2Base
   }
 }
-export const AnybodyProblem = AnybodyProblemV2
+import AnybodyProblemV3ABI from './contractData/ABI-8453-AnybodyProblemV3.json'
+import AnybodyProblemV3BaseSepolia from './contractData/84532-AnybodyProblemV3.json'
+import AnybodyProblemV3Base from './contractData/8453-AnybodyProblemV3.json'
+// import AnybodyProblemV3Local from './contractData/12345-AnybodyProblemV3.json'
+
+export const AnybodyProblemV3 = {
+  abi: AnybodyProblemV3ABI,
+  networks: {
+    84532: AnybodyProblemV3BaseSepolia,
+    // 12345: AnybodyProblemV3Local,
+    8453: AnybodyProblemV3Base
+  }
+}
+export const AnybodyProblem = AnybodyProblemV3
 
 import AnybodyProblemV1ABI from './contractData/ABI-84532-AnybodyProblemV1.json'
 import AnybodyProblemV1BaseSepolia from './contractData/84532-AnybodyProblemV1.json'

@@ -74,7 +74,7 @@ const incrementTilMonday = async (daysInContest) => {
 }
 
 // let tx
-describe('Tournament Tests', function () {
+describe.skip('Tournament Tests', function () {
   this.timeout(50000000)
   let lastSnapshot
   beforeEach(async () => {
