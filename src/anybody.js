@@ -14,7 +14,7 @@ import { Buttons } from './buttons.js'
 import { Intro } from './intro.js'
 import PAUSE_BODY_DATA from './pauseBodies'
 import { genwit } from '../scripts/genwit.js'
-const GAME_LENGTH_BY_LEVEL_INDEX = [30, 10, 20, 30, 40]
+const GAME_LENGTH_BY_LEVEL_INDEX = [30, 10, 20, 20, 30, 30]
 const NORMAL_GRAVITY = 100
 const proverTickIndex = {
   2: 250,
@@ -779,7 +779,7 @@ export class Anybody extends EventEmitter {
     if (!day) throw new Error('day is undefined')
     if (typeof level == 'undefined') throw new Error('level is undefined')
     const bodyData = []
-    for (let i = 0; i <= level + 1; i++) {
+    for (let i = 0; i <= level; i++) {
       const dayLevelIndexSeed = utils.solidityKeccak256(
         ['uint256', 'uint256', 'uint256'],
         [day, level, i]

@@ -172,7 +172,7 @@ describe('AnybodyProblem Tests', function () {
     ).to.be.reverted
   })
 
-  it.only('creates a proof for level 1', async () => {
+  it('creates a proof for level 1', async () => {
     const signers = await ethers.getSigners()
     const [owner] = signers
     const deployedContracts = await deployContracts()
