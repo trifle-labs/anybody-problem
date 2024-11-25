@@ -110,7 +110,6 @@ const deployVerifiers = async ({
   returnObject.verifiers = verifiers
   returnObject.verifiersTicks = verifiersTicks
   returnObject.verifiersBodies = verifiersBodies
-
   return {
     verifiers,
     verifiersTicks,
@@ -361,7 +360,7 @@ const deployAnybodyProblemV2 = async (options) => {
   ])
 
   const { verifiers, verifiersTicks, verifiersBodies, returnObject } =
-    deployVerifiers({
+    await deployVerifiers({
       skipVerifiers,
       deployedContracts,
       ignoreTesting,
@@ -1265,7 +1264,10 @@ async function writedata(path, data) {
   }
 }
 
+const earlyMonday = 1704067200 // Mon Jan 01 2024 00:00:00 GMT+0000
+
 export {
+  earlyMonday,
   saveAddress,
   copyABI,
   getTicksRun,

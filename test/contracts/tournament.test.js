@@ -12,12 +12,12 @@ const ethers = hre.ethers
 
 import {
   deployContracts,
-  getParsedEventLogs
+  getParsedEventLogs,
+  earlyMonday
   // generateProof
 } from '../../scripts/utils.js'
 
 const SECONDS_IN_DAY = 86400
-export const earlyMonday = 1704067200 // Mon Jan 01 2024 00:00:00 GMT+0000
 const actualMonday = 1731283200 // Mon Nov 11 2024 00:00:00 GMT+0000
 
 // const daysInContest = 7

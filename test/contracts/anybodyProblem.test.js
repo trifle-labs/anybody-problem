@@ -14,10 +14,11 @@ import {
   // mintProblem,
   generateAndSubmitProof,
   getTicksRun,
-  proceedRecipient
+  proceedRecipient,
+  earlyMonday
   // generateProof
 } from '../../scripts/utils.js'
-import { earlyMonday } from './tournament.test.js'
+
 import { Anybody } from '../../dist/module.js'
 
 // let tx
