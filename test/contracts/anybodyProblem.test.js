@@ -18,6 +18,7 @@ import {
   earlyMonday
   // generateProof
 } from '../../scripts/utils.js'
+
 import { Anybody } from '../../dist/module.js'
 
 // let tx

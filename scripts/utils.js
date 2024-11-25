@@ -110,7 +110,6 @@ const deployVerifiers = async ({
   returnObject.verifiers = verifiers
   returnObject.verifiersTicks = verifiersTicks
   returnObject.verifiersBodies = verifiersBodies
-
   return {
     verifiers,
     verifiersTicks,
@@ -1426,9 +1425,11 @@ async function writedata(path, data) {
     console.error('Failed to write file' + path, { e })
   }
 }
-export const earlyMonday = 1704067200 // Mon Jan 01 2024 00:00:00 GMT+0000
+
+const earlyMonday = 1704067200 // Mon Jan 01 2024 00:00:00 GMT+0000
 
 export {
+  earlyMonday,
   saveAddress,
   copyABI,
   getTicksRun,
