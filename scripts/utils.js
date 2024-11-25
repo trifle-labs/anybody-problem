@@ -1454,6 +1454,7 @@ export {
   getThemeName,
   deployAnybodyProblemV1,
   deployAnybodyProblemV2,
+  deployAnybodyProblemV3,
   saveAndVerifyContracts,
   proceedRecipient,
   deployVerifiers

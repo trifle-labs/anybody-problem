@@ -37,10 +37,10 @@ contract AnybodyProblemV3 is Ownable, ERC2981 {
     // level duration is numberOfBaddies * 10sec (multiplied by 25 because of 25 FPS)
     uint256[5] public maxTicksByLevelIndex = [
         1 * 10 * 25,
-        1 * 10 * 25,
+        2 * 10 * 25,
         2 * 10 * 25,
         3 * 10 * 25,
-        4 * 10 * 25
+        3 * 10 * 25
     ];
     uint256 public constant speedFactor = 2;
     uint256 public constant scalingFactor = 10 ** 3;
@@ -178,10 +178,7 @@ contract AnybodyProblemV3 is Ownable, ERC2981 {
                 abi.encodeWithSignature('runs(uint256)', runId)
             );
             if (success && data.length > 0) {
-                RunWithoutLevels memory r = abi.decode(
-                    data,
-                    (RunWithoutLevels)
-                );
+                Run memory r = abi.decode(data, (Run));
                 Run memory run = Run({
                     owner: r.owner,
                     solved: r.solved,
@@ -652,7 +649,7 @@ contract AnybodyProblemV3 is Ownable, ERC2981 {
         addToLongestStreak(runId);
         addToMostPlayed();
         addToSlowestByDay(runId);
-        Tournament(tournament).addToLeaderboard(runId);
+        // Tournament(tournament).addToLeaderboard(runId);
     }
 
     function isLeader(uint256 runId) public view returns (bool) {
@@ -957,11 +954,11 @@ contract AnybodyProblemV3 is Ownable, ERC2981 {
     }
 
     function emitMetadataUpdate(uint256 tokenId) internal {
-        bytes32 topic = keccak256('MetadataUpdate(uint256)');
-        bytes memory data = abi.encode(tokenId);
-        bytes32[] memory topics = new bytes32[](1);
-        topics[0] = topic;
-        Speedruns(speedruns).emitGenericEvent(topics, data);
+        // bytes32 topic = keccak256('MetadataUpdate(uint256)');
+        // bytes memory data = abi.encode(tokenId);
+        // bytes32[] memory topics = new bytes32[](1);
+        // topics[0] = topic;
+        // Speedruns(speedruns).emitGenericEvent(topics, data);
     }
 
     function updateExternalMetadata(

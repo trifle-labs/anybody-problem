@@ -292,12 +292,27 @@ describe('AnybodyProblem Tests', function () {
     const [owner, acct1] = await ethers.getSigners()
     const {
       AnybodyProblem: anybodyProblem,
+      AnybodyProblemV0: anybodyProblemV0,
+      AnybodyProblemV1: anybodyProblemV1,
+      AnybodyProblemV2: anybodyProblemV2,
+      AnybodyProblemV3: anybodyProblemV3,
       Speedruns: speedruns,
       Tournament
-    } = await deployContracts({ mock: true })
+    } = await deployContracts({ mock: true, verbose: true })
     await Tournament.setFirstMonday(earlyMonday)
     await anybodyProblem.setTest(true)
     await anybodyProblem.updateProceedRecipient(acct1.address)
+
+    const anybodyProblemV1Prev = await anybodyProblemV1.previousAB()
+    expect(anybodyProblemV1Prev).to.equal(anybodyProblemV0.address)
+
+    const anybodyProblemV2Prev = await anybodyProblemV2.previousAB()
+    expect(anybodyProblemV2Prev).to.equal(anybodyProblemV1.address)
+
+    const anybodyProblemV3Prev = await anybodyProblem.previousAB()
+    expect(anybodyProblemV3Prev).to.equal(anybodyProblemV2.address)
+
+    expect(anybodyProblemV3.address).to.equal(anybodyProblem.address)
 
     const proceedRecipient = await anybodyProblem.proceedRecipient()
     const balanceBefore = await ethers.provider.getBalance(proceedRecipient)
@@ -305,6 +320,11 @@ describe('AnybodyProblem Tests', function () {
     let runId = 0,
       tx
     const day = await anybodyProblem.currentDay()
+    const speedrunsAddress = await anybodyProblem.speedruns()
+    expect(speedrunsAddress).to.equal(speedruns.address)
+
+    const anybodyAddressInSpeedruns = await speedruns.anybodyProblem()
+    expect(anybodyAddressInSpeedruns).to.equal(anybodyProblem.address)
 
     let accumulativeTime = 0
     for (let i = 0; i < 5; i++) {
