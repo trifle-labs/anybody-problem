@@ -5,7 +5,9 @@ import {
   Calculations,
   _copy,
   currentDay,
-  SECONDS_IN_A_DAY
+  SECONDS_IN_A_DAY,
+  GAME_LENGTH_BY_LEVEL_INDEX,
+  LEVELS
 } from './calculations.js'
 import { utils } from 'ethers'
 import { bodyThemes } from './colors.js'
@@ -14,7 +16,6 @@ import { Buttons } from './buttons.js'
 import { Intro } from './intro.js'
 import PAUSE_BODY_DATA from './pauseBodies'
 import { genwit } from '../scripts/genwit.js'
-const GAME_LENGTH_BY_LEVEL_INDEX = [30, 10, 20, 20, 30, 30]
 const NORMAL_GRAVITY = 100
 const proverTickIndex = {
   2: 250,
@@ -58,7 +59,11 @@ export class Anybody extends EventEmitter {
   }
 
   checkIfDone() {
-    if (this.level == 5 && this.levelSpeeds.length == 5 && !this.opensea) {
+    if (
+      this.level == LEVELS &&
+      this.levelSpeeds.length == LEVELS &&
+      !this.opensea
+    ) {
       this.bodies?.map((b, i) => {
         return (b.radius = i == 0 ? b.radius : 0)
       })
@@ -172,7 +177,8 @@ export class Anybody extends EventEmitter {
     this.P5_FPS = this.FPS * this.P5_FPS_MULTIPLIER
     this.p?.frameRate(this.P5_FPS)
     this.timer =
-      (this.level > 5 ? 60 : GAME_LENGTH_BY_LEVEL_INDEX[this.level]) * this.FPS
+      (this.level > LEVELS ? 60 : GAME_LENGTH_BY_LEVEL_INDEX[this.level]) *
+      this.FPS
     this.deadOpacity = '0.9'
     this.initialScoreSize = 120
     this.scoreSize = this.initialScoreSize
@@ -393,7 +399,7 @@ export class Anybody extends EventEmitter {
           e.preventDefault()
           this.missileClick(this.mouseX, this.mouseY)
         }
-        if (this.shownStatScreen && this.level < 5) {
+        if (this.shownStatScreen && this.level < LEVELS) {
           this.level++
           this.restart(null, false)
         }
@@ -518,7 +524,7 @@ export class Anybody extends EventEmitter {
         }
 
         const witnessResults = await genwit(sampleInput)
-        const bodies = level + 1 <= 4 ? 4 : 6
+        const bodies = level <= 2 ? 4 : 6
         const totalSignals =
           1 + // idk why but circom puts an empoty signal here
           5 +
@@ -779,7 +785,7 @@ export class Anybody extends EventEmitter {
     if (!day) throw new Error('day is undefined')
     if (typeof level == 'undefined') throw new Error('level is undefined')
     const bodyData = []
-    for (let i = 0; i <= level; i++) {
+    for (let i = 0; i <= level + 1; i++) {
       const dayLevelIndexSeed = utils.solidityKeccak256(
         ['uint256', 'uint256', 'uint256'],
         [day, level, i]
@@ -1220,8 +1226,8 @@ export const compareData = (
 
   if (signals) {
     signals = signals.map((v) => BigInt(v))
-    const bodies = level + 1 <= 4 ? 4 : 6
-    const frameLength = proverTickIndex[level + 1]
+    const bodies = level + 2 <= 4 ? 4 : 6
+    const frameLength = proverTickIndex[level + 2]
 
     for (let i = 0; i < signals.length; i++) {
       const signal = signals[i]

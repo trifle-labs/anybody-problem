@@ -19,7 +19,7 @@ import {
   // generateProof
 } from '../../scripts/utils.js'
 
-import { Anybody } from '../../dist/module.js'
+import { Anybody, LEVELS } from '../../dist/module.js'
 
 // let tx
 describe('AnybodyProblem Tests', function () {
@@ -67,16 +67,13 @@ describe('AnybodyProblem Tests', function () {
 
     const { AnybodyProblem: anybodyProblem } = upgradedContracts
     for (const [name, contract] of Object.entries(upgradedContracts)) {
-      if (name === 'AnybodyProblem') continue
-      if (name === 'AnybodyProblemV0') continue
-      if (name === 'AnybodyProblemV1') continue
-      if (name === 'AnybodyProblemV2') continue
       if (name === 'ThemeGroup') continue
       if (name === 'verifiers') continue
       if (name === 'verifiersTicks') continue
       if (name === 'verifiersBodies') continue
       if (name === 'verificationData') continue
       if (name.indexOf('Assets') > -1) continue
+      if (name.indexOf('AnybodyProblem') > -1) continue
       let storedAddress
       if (name.indexOf('Verifier') > -1) {
         const bodyCount = name.split('_')[1]
@@ -99,7 +96,9 @@ describe('AnybodyProblem Tests', function () {
 
   it('stores the verifiers in the correct order of the mapping', async () => {
     const deployedContracts = await deployContracts()
-    const { AnybodyProblem: anybodyProblem } = deployedContracts
+    const { AnybodyProblem: anybodyProblem, AnybodyProblemV4 } =
+      deployedContracts
+    expect(AnybodyProblemV4.address).to.equal(anybodyProblem.address)
     for (const [name, contract] of Object.entries(deployedContracts)) {
       if (name.indexOf('Verifier') === -1) continue
       const bodyCount = parseInt(name.split('_')[1])
@@ -257,6 +256,7 @@ describe('AnybodyProblem Tests', function () {
     const { AnybodyProblem: anybodyProblem } = await deployContracts({
       mock: true
     })
+
     await anybodyProblem.setTest(true)
 
     let runId = 0
@@ -274,7 +274,7 @@ describe('AnybodyProblem Tests', function () {
     const time = solvedReturn.time
     await expect(tx)
       .to.emit(anybodyProblem, 'LevelSolved')
-      .withArgs(owner.address, runId, 1, time, day)
+      .withArgs(owner.address, runId, level, time, day)
   })
 
   it('must be unpaused', async function () {
@@ -296,11 +296,19 @@ describe('AnybodyProblem Tests', function () {
       AnybodyProblemV1: anybodyProblemV1,
       AnybodyProblemV2: anybodyProblemV2,
       AnybodyProblemV3: anybodyProblemV3,
+      AnybodyProblemV4: anybodyProblemV4,
       Speedruns: speedruns,
       Tournament
-    } = await deployContracts({ mock: true, verbose: true })
+    } = await deployContracts({ mock: true, verbose: false })
     await Tournament.setFirstMonday(earlyMonday)
     await anybodyProblem.setTest(true)
+
+    await anybodyProblem.setTest(true)
+
+    const levelTest = 2
+    const [, bodyCount] = await anybodyProblem.generateLevelData(0, levelTest)
+    expect(bodyCount).to.equal(levelTest + 2)
+
     await anybodyProblem.updateProceedRecipient(acct1.address)
 
     const anybodyProblemV1Prev = await anybodyProblemV1.previousAB()
@@ -309,10 +317,13 @@ describe('AnybodyProblem Tests', function () {
     const anybodyProblemV2Prev = await anybodyProblemV2.previousAB()
     expect(anybodyProblemV2Prev).to.equal(anybodyProblemV1.address)
 
-    const anybodyProblemV3Prev = await anybodyProblem.previousAB()
+    const anybodyProblemV3Prev = await anybodyProblemV3.previousAB()
     expect(anybodyProblemV3Prev).to.equal(anybodyProblemV2.address)
 
-    expect(anybodyProblemV3.address).to.equal(anybodyProblem.address)
+    const anybodyProblemV4Prev = await anybodyProblemV4.previousAB()
+    expect(anybodyProblemV4Prev).to.equal(anybodyProblemV3.address)
+
+    expect(anybodyProblemV4.address).to.equal(anybodyProblem.address)
 
     const proceedRecipient = await anybodyProblem.proceedRecipient()
     const balanceBefore = await ethers.provider.getBalance(proceedRecipient)
@@ -327,7 +338,7 @@ describe('AnybodyProblem Tests', function () {
     expect(anybodyAddressInSpeedruns).to.equal(anybodyProblem.address)
 
     let accumulativeTime = 0
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < LEVELS; i++) {
       const level = i + 1
       const solvedReturn = await solveLevel(
         owner.address,
@@ -398,7 +409,7 @@ describe('AnybodyProblem Tests', function () {
     let accumulativeTime = 0
     const finalArgs = [null, true, 0, [], [], [], [], []]
     let finalRunId
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < LEVELS; i++) {
       const level = i + 1
       const solvedReturn = await solveLevel(
         owner.address,
@@ -475,8 +486,9 @@ describe('AnybodyProblem Tests', function () {
     const level = 1
     const { AnybodyProblem: anybodyProblem } = await deployContracts()
     const contractLevelData = await anybodyProblem.generateLevelData(day, level)
+    const bodyCount = contractLevelData.bodyCount
     const contractBodyData = contractLevelData.bodyData
-      .slice(0, level + 1)
+      .slice(0, bodyCount.toNumber())
       .map((body) => {
         const newBody = {}
         newBody.bodyIndex = body.bodyIndex.toNumber()
@@ -533,9 +545,10 @@ describe('AnybodyProblem Tests', function () {
     ]
 
     const { AnybodyProblem: anybodyProblem } = await deployContracts()
-    const level = await anybodyProblem.getLevelFromInputs(Input)
-    expect(level[0]).to.equal(1)
-    expect(level[1]).to.equal(0)
+    const [intendedLevel, dummyCount] =
+      await anybodyProblem.getLevelFromInputs(Input)
+    expect(intendedLevel).to.equal(0) // would be level 0 since there are only 2 bodies
+    expect(dummyCount).to.equal(0)
   })
 
   it('has correct getLevelFromInputs with dummy', async () => {
@@ -585,9 +598,11 @@ describe('AnybodyProblem Tests', function () {
     ]
 
     const { AnybodyProblem: anybodyProblem } = await deployContracts()
-    const level = await anybodyProblem.getLevelFromInputs(Input)
-    expect(level[0]).to.equal(1)
-    expect(level[1]).to.equal(1)
+
+    const [intendedLevel, dummyCount] =
+      await anybodyProblem.getLevelFromInputs(Input)
+    expect(intendedLevel).to.equal(0)
+    expect(dummyCount).to.equal(1)
   })
 
   it('returns correct currentLevel', async () => {
@@ -611,7 +626,8 @@ describe('AnybodyProblem Tests', function () {
     expect(newCurrentLevel).to.equal(2)
   })
 
-  it('performs an upgrade and the records are correct', async () => {
+  // this test doesn't make sense when migrating from 5 levels to 4
+  it.skip('performs an upgrade and the records are correct', async () => {
     const [owner, acct2] = await ethers.getSigners()
     // play a game on v0 contract
     const { AnybodyProblemV0, Speedruns, ExternalMetadata } =
@@ -625,7 +641,7 @@ describe('AnybodyProblem Tests', function () {
     let accumulativeTime = 0
     const finalArgs = [null, true, 0, [], [], [], [], []]
     let finalRunId
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < LEVELS; i++) {
       const level = i + 1
       const solvedReturn = await solveLevel(
         owner.address,
@@ -633,7 +649,8 @@ describe('AnybodyProblem Tests', function () {
         expect,
         runId,
         level,
-        false
+        false,
+        true
       )
       const args = solvedReturn.args
       const time = solvedReturn.time
@@ -700,7 +717,7 @@ describe('AnybodyProblem Tests', function () {
       let accumulativeTime = 0
       const finalArgs = [null, true, 0, [], [], [], [], []]
       let finalRunId
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < LEVELS; i++) {
         const level = i + 1
         const solvedReturn = await solveLevel(
           acct2.address,

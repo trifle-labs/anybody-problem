@@ -1,11 +1,9 @@
 import { hslToRgb, rgbaOpacity, THEME, themes, randHSL } from './colors.js'
 import { fonts, drawKernedText } from './fonts.js'
 import { utils } from 'ethers'
-import { _copy } from './calculations.js'
+import { _copy, GAME_LENGTH_BY_LEVEL_INDEX, LEVELS } from './calculations.js'
 
 const BODY_SCALE = 4 // match to calculations.js !!
-const GAME_LENGTH_BY_LEVEL_INDEX = [30, 10, 20, 20, 30, 30]
-const LEVELS = GAME_LENGTH_BY_LEVEL_INDEX.length - 1
 
 const rot = {
   fg: {
@@ -1022,7 +1020,10 @@ export const Visuals = {
     const gutter = 20
     const boxW = this.windowWidth - gutter * 2
     const middleBoxY = 320
-    const middleBoxH = showCumulativeTimeRow ? 444 : 364
+    const rowHeight = 72
+    const middleBoxH = showCumulativeTimeRow
+      ? rowHeight * (LEVELS + 1)
+      : rowHeight * LEVELS
     p.rect(gutter, 104, boxW, 144, 24)
     p.rect(gutter, middleBoxY, boxW, middleBoxH, 24)
     p.rect(gutter, 796, boxW, 64, 24)
@@ -1081,7 +1082,6 @@ export const Visuals = {
 
     // middle box text - values
     const problemComplete = levelTimes.length >= LEVELS
-    const rowHeight = 72
 
     // middle box text - highlight current row (blink via opacity)
     p.fill(
@@ -1253,9 +1253,9 @@ export const Visuals = {
       this.levels === LEVELS && Math.floor(p.frameCount / 25) % 2
     p.fill(blinkText ? THEME.iris_60 : THEME.iris_30)
     p.text(
-      this.level == 5
+      this.level == LEVELS
         ? 'YOU WON !!   save your score to the leaderboard !!'
-        : `BOOM !! ... just ${5 - this.level} more levels to solve this problem !!`,
+        : `BOOM !! ... just ${LEVELS - this.level} more levels to solve this problem !!`,
       gutter + boxW / 2,
       805,
       boxW - gutter / 2
@@ -1263,7 +1263,7 @@ export const Visuals = {
 
     // bottom buttons
     this.showExit = this.level >= 1
-    this.showShare = this.level >= 5
+    this.showShare = this.level >= LEVELS
     let buttonCount = 2 + Number(this.showExit) + Number(this.showShare)
     this.drawBottomButton({
       text: 'REDO',
@@ -1331,12 +1331,12 @@ export const Visuals = {
         column: 2
       })
     }
-    if (this.level < 5) {
+    if (this.level < LEVELS) {
       this.drawBottomButton({
         text: 'NEXT',
         onClick: () => {
           this.level++
-          if (this.level > 5) {
+          if (this.level > LEVELS) {
             this.showProblemRankingsScreenAt = this.p5Frames
           } else {
             this.restart(null, false)
@@ -1776,7 +1776,7 @@ export const Visuals = {
     // const str = JSON.stringify(fallbackBody)
     for (let i = 0; i < LEVELS; i++) {
       baddies.push([])
-      for (let j = 0; j < i + 1; j++) {
+      for (let j = 0; j < i + 2; j++) {
         baddies[i].push(_copy(bodies[j + 1]))
       }
     }
