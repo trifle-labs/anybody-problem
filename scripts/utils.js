@@ -4,6 +4,7 @@ import path from 'node:path'
 import { promises as fs } from 'fs'
 import { Anybody } from '../dist/module.js'
 import { exportCallDataGroth16 } from './circuits.js'
+import { LEVELS } from '../src/calculations.js'
 
 const __dirname = path.resolve()
 
@@ -126,7 +127,8 @@ const initContracts = async (
     'ExternalMetadata',
     'ThemeGroup',
     'Tournament'
-  ]
+  ],
+  skipErrors = false // skipErrors
 ) => {
   let [deployer] = await hre.ethers.getSigners()
 
@@ -159,7 +161,9 @@ const initContracts = async (
         deployer
       )
     } catch (e) {
-      console.log({ e })
+      if (!skipErrors) {
+        console.log({ e })
+      }
     }
   }
 
@@ -481,43 +485,50 @@ const deployAnybodyProblemV2 = async (options) => {
 }
 
 const deployAnybodyProblemV3 = async (options) => {
+  options.version = 3
+  return await deployAnybodyProblemV3_4(options)
+}
+
+const deployAnybodyProblemV4 = async (options) => {
+  options.version = 4
+  return await deployAnybodyProblemV3_4(options)
+}
+
+const deployAnybodyProblemV3_4 = async (options) => {
   const defaultOptions = {
+    version: 4,
     mock: false,
     ignoreTesting: false,
     skipVerifiers: false,
     verbose: false,
-    AnybodyProblemV1: null,
-    AnybodyProblemV2: null,
+    AnybodyProblems: [],
     Speedruns: null,
     ExternalMetadata: null
   }
   let {
+    version,
     mock,
     ignoreTesting,
     skipVerifiers,
     verbose,
-    AnybodyProblemV0,
-    AnybodyProblemV1,
-    AnybodyProblemV2,
+    AnybodyProblems,
     Speedruns,
     ExternalMetadata
   } = Object.assign(defaultOptions, options)
   global.ignoreTesting = ignoreTesting
   global.networkinfo = await hre.ethers.provider.getNetwork()
   global.verbose = verbose
-  log('Deploying v3 contracts')
+  log(`Deploying v${version} contracts`)
 
   const [deployer] = await hre.ethers.getSigners()
 
+  const initContractsNames = ['Speedruns', 'ExternalMetadata']
+  for (let i = 0; i < version; i++) {
+    const name = `AnybodyProblemV${i}`
+    initContractsNames.push(name)
+  }
   // use the already deployed speedruns contract and external metadata contract
-  const deployedContracts = await initContracts([
-    'AnybodyProblemV0',
-    'AnybodyProblemV1',
-    'AnybodyProblemV2',
-    'Speedruns',
-    'ExternalMetadata'
-  ])
-
+  let deployedContracts = await initContracts(initContractsNames, true)
   const { verifiers, verifiersTicks, verifiersBodies, returnObject } =
     await deployVerifiers({
       skipVerifiers,
@@ -526,20 +537,26 @@ const deployAnybodyProblemV3 = async (options) => {
       verbose
     })
 
-  if (!AnybodyProblemV0) AnybodyProblemV0 = deployedContracts.AnybodyProblemV0
-  returnObject['AnybodyProblemV0'] = AnybodyProblemV0
-
   if (!Speedruns) Speedruns = deployedContracts.Speedruns
   returnObject['Speedruns'] = Speedruns
 
   if (!ExternalMetadata) ExternalMetadata = deployedContracts.ExternalMetadata
   returnObject['ExternalMetadata'] = ExternalMetadata
 
-  if (!AnybodyProblemV1) AnybodyProblemV1 = deployedContracts.AnybodyProblemV1
-  returnObject['AnybodyProblemV1'] = AnybodyProblemV1
-
-  if (!AnybodyProblemV2) AnybodyProblemV2 = deployedContracts.AnybodyProblemV2
-  returnObject['AnybodyProblemV2'] = AnybodyProblemV2
+  for (let i = 0; i < version; i++) {
+    const targetName = `AnybodyProblemV${i}`
+    let found = false
+    for (let j = 0; j < AnybodyProblems.length; j++) {
+      const name = AnybodyProblems[j].name
+      if (name === targetName) {
+        found = true
+        returnObject[targetName] = AnybodyProblems[j].contract
+      }
+    }
+    if (!found) {
+      returnObject[targetName] = deployedContracts[targetName]
+    }
+  }
 
   const HitchensOrderStatisticsTreeLib = await hre.ethers.getContractFactory(
     'HitchensOrderStatisticsTreeLib'
@@ -559,11 +576,26 @@ const deployAnybodyProblemV3 = async (options) => {
   log('Tournament Deployed at ' + String(tournament.address))
   returnObject['Tournament'] = tournament
 
-  log(mock ? 'Deploying AnybodyProblemV3Mock' : 'Deploying AnybodyProblemV3')
-  // deploy AnybodyProblem
-  const AnybodyProblemV3 = await hre.ethers.getContractFactory(
-    mock ? 'AnybodyProblemV3Mock' : 'AnybodyProblemV3'
+  log(
+    mock
+      ? `Deploying AnybodyProblemV${version}Mock`
+      : `Deploying AnybodyProblemV${version}`
   )
+  // deploy AnybodyProblem
+  const AnybodyProblem = await hre.ethers.getContractFactory(
+    mock ? `AnybodyProblemV${version}Mock` : 'AnybodyProblemV' + version
+  )
+  let previousVersion = AnybodyProblems.find(
+    (p) => p.name == `AnybodyProblemV${version - 1}`
+  )
+  if (!previousVersion) {
+    previousVersion = deployedContracts[`AnybodyProblemV${version - 1}`]
+    if (!previousVersion) {
+      throw new Error(`previous version (v${version - 1})  not found`)
+    }
+  } else {
+    previousVersion = previousVersion.contract
+  }
 
   const constructorArguments = [
     deployer.address,
@@ -573,47 +605,47 @@ const deployAnybodyProblemV3 = async (options) => {
     verifiers,
     verifiersTicks,
     verifiersBodies,
-    AnybodyProblemV2.address
+    previousVersion.address
   ]
 
-  const anybodyProblemV3 = await AnybodyProblemV3.deploy(
-    ...constructorArguments
-  )
-  await anybodyProblemV3.deployed()
+  const anybodyProblem = await AnybodyProblem.deploy(...constructorArguments)
+  await anybodyProblem.deployed()
 
-  returnObject['AnybodyProblemV3'] = anybodyProblemV3
+  returnObject['AnybodyProblemV' + version] = anybodyProblem
 
   log(
-    'AnybodyProblemV3 Deployed at ' +
-      String(anybodyProblemV3.address) +
-      ` with speedrunsAddress ${Speedruns.address} and externalMetdataAddress ${ExternalMetadata.address} and tournamentAddress ${tournament.address} and verifiers ${verifiers} and verifiersTicks ${verifiersTicks} and verifiersBodies ${verifiersBodies} and anybodyProblemV2Address ${AnybodyProblemV2.address}`
+    `AnybodyProblemV${version} Deployed at ` +
+      String(anybodyProblem.address) +
+      ` with speedrunsAddress ${Speedruns.address} and externalMetdataAddress ${ExternalMetadata.address} and tournamentAddress ${tournament.address} and verifiers ${verifiers} and verifiersTicks ${verifiersTicks} and verifiersBodies ${verifiersBodies} and anybodyProblemV${version - 1}Address ${previousVersion.address}`
   )
 
-  // update AnybodyProblemV2 with proceedRecipient
-  await anybodyProblemV3.updateProceedRecipient(proceedRecipient)
-  log(`AnybodyProblemV3 ProceedRecipient updated to ${proceedRecipient}`)
+  // update anybodyProblem with proceedRecipient
+  await anybodyProblem.updateProceedRecipient(proceedRecipient)
+  log(
+    `AnybodyProblemV${version} ProceedRecipient updated to ${proceedRecipient}`
+  )
 
   // update Speedruns
-  await Speedruns.updateAnybodyProblemAddress(anybodyProblemV3.address)
+  await Speedruns.updateAnybodyProblemAddress(anybodyProblem.address)
   log(
-    `AnybodyProblemV3 address updated in Speedruns to ${anybodyProblemV3.address}`
+    `AnybodyProblemV${version} address updated in Speedruns to ${anybodyProblem.address}`
   )
 
   // update ExternalMetadata
-  await ExternalMetadata.updateAnybodyProblemAddress(anybodyProblemV3.address)
+  await ExternalMetadata.updateAnybodyProblemAddress(anybodyProblem.address)
   log(
-    `AnybodyProblemV3 address updated in ExternalMetadata to ${anybodyProblemV3.address}`
+    `AnybodyProblemV${version} address updated in ExternalMetadata to ${anybodyProblem.address}`
   )
 
   // update Tournament
-  await tournament.updateAnybodyProblemAddress(anybodyProblemV3.address)
+  await tournament.updateAnybodyProblemAddress(anybodyProblem.address)
   log(
-    `AnybodyProblemV3 address updated in Tournament to ${anybodyProblemV3.address}`
+    `AnybodyProblemV${version} address updated in Tournament to ${anybodyProblem.address}`
   )
 
   const verificationData = [
     {
-      name: 'AnybodyProblemV3',
+      name: 'AnybodyProblemV' + version,
       constructorArguments
     },
     {
@@ -622,14 +654,14 @@ const deployAnybodyProblemV3 = async (options) => {
     }
   ]
   returnObject['verificationData'] = verificationData
-  if (returnObject['AnybodyProblemV3']) {
-    returnObject['AnybodyProblem'] = returnObject['AnybodyProblemV3']
-  } else if (returnObject['AnybodyProblemV2']) {
-    returnObject['AnybodyProblem'] = returnObject['AnybodyProblemV2']
-  } else if (returnObject['AnybodyProblemV1']) {
-    returnObject['AnybodyProblem'] = returnObject['AnybodyProblemV1']
-  } else if (returnObject['AnybodyProblemV0']) {
-    returnObject['AnybodyProblem'] = returnObject['AnybodyProblemV0']
+  returnObject['AnybodyProblem'] = anybodyProblem
+  AnybodyProblems.push({
+    name: `AnybodyProblemV${version}`,
+    contract: anybodyProblem
+  })
+  returnObject['AnybodyProblems'] = AnybodyProblems
+  for (let i = 0; i < AnybodyProblems.length; i++) {
+    returnObject[AnybodyProblems[i].name] = AnybodyProblems[i].contract
   }
   return returnObject
 }
@@ -760,6 +792,12 @@ const deployContracts = async (options) => {
   if (options?.saveAndVerify) {
     await saveAndVerifyContracts(deployedContracts2)
   }
+  const AnybodyProblems = [
+    { name: 'AnybodyProblemV0', contract: deployedContracts0.AnybodyProblemV0 },
+    { name: 'AnybodyProblemV1', contract: deployedContracts1.AnybodyProblemV1 },
+    { name: 'AnybodyProblemV2', contract: deployedContracts2.AnybodyProblemV2 }
+  ]
+  deployedContracts2.AnybodyProblems = AnybodyProblems
   const deployedContracts3 = await deployAnybodyProblemV3({
     ...options,
     ...deployedContracts2
@@ -767,13 +805,20 @@ const deployContracts = async (options) => {
   if (options?.saveAndVerify) {
     await saveAndVerifyContracts(deployedContracts3)
   }
+  const deployedContracts4 = await deployAnybodyProblemV4({
+    ...options,
+    ...deployedContracts3
+  })
+  if (options?.saveAndVerify) {
+    await saveAndVerifyContracts(deployedContracts4)
+  }
   const returnValue = {
     ...deployedContracts0,
     ...deployedContracts1,
     ...deployedContracts2,
-    ...deployedContracts3
+    ...deployedContracts3,
+    ...deployedContracts4
   }
-  returnValue.AnybodyProblem = returnValue.AnybodyProblemV3
   return returnValue
 }
 
@@ -1008,12 +1053,13 @@ const solveLevel = async (
   expect,
   runId,
   level,
-  execute = true
+  execute = true,
+  skipAssert = false
 ) => {
   const day = await anybodyProblem.currentDay()
   const levelData = await anybodyProblem.generateLevelData(day, level)
   const { bodyCount, bodyData } = levelData
-
+  if (!skipAssert) expect(bodyCount).to.equal(level + 2)
   const ticksRun = await getTicksRun(bodyCount)
   let missileInits = []
   const anybody = new Anybody(null, {
@@ -1075,10 +1121,10 @@ const solveLevel = async (
   )
   for (let i = 1; i < bodyCount; i++) {
     const radiusIndex = 5 + i * 5 + 4
-    expect(dataResult.publicSignals[radiusIndex]).to.equal('0')
+    if (!skipAssert) expect(dataResult.publicSignals[radiusIndex]).to.equal('0')
   }
 
-  const newBodyDataLength6 = newBodyData.concat(bodyData.slice(level + 1, 6))
+  const newBodyDataLength6 = newBodyData.concat(bodyData.slice(level + 2, 6))
   await anybodyProblem.setMockedBodyDataByLevel(level, newBodyDataLength6)
 
   // 0—4: missile output
@@ -1113,10 +1159,18 @@ const solveLevel = async (
   }
   let tx3
   if (execute) {
-    if (level !== 5) {
-      await solveLevel(owner, anybodyProblem, expect, runId, level + 1, false)
+    if (level !== LEVELS) {
+      await solveLevel(
+        owner,
+        anybodyProblem,
+        expect,
+        runId,
+        level + 1,
+        false,
+        skipAssert
+      )
     }
-    if (level == 5) {
+    if (level == LEVELS) {
       // will not revert since this is likely the fastest run and price is waived
       // await expect(
       //   anybodyProblem.batchSolve(...args, {
@@ -1124,7 +1178,7 @@ const solveLevel = async (
       //   })
       // ).to.be.revertedWith('Incorrect payment')
     }
-    const value = level == 5 ? price : 0
+    const value = level == LEVELS ? price : 0
     tx3 = await anybodyProblem.batchSolve(...args, {
       value
     })
@@ -1132,9 +1186,13 @@ const solveLevel = async (
     // const logs = getParsedEventLogs(receipt, anybodyProblem, 'LevelSolved')
     // console.dir({ logs }, { depth: null })
     // console.log({ owner, runId, level, time, day })
-    await expect(tx3)
-      .to.emit(anybodyProblem, 'LevelSolved')
-      .withArgs(owner, runId, level, time, day)
+    if (!skipAssert) {
+      await expect(tx3)
+        .to.emit(anybodyProblem, 'LevelSolved')
+        .withArgs(owner, runId, level, time, day)
+    } else {
+      await tx3.wait()
+    }
   }
   return { runId, tx: tx3, time, args }
 }
@@ -1455,6 +1513,7 @@ export {
   deployAnybodyProblemV1,
   deployAnybodyProblemV2,
   deployAnybodyProblemV3,
+  deployAnybodyProblemV4,
   saveAndVerifyContracts,
   proceedRecipient,
   deployVerifiers

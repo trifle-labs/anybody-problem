@@ -1081,7 +1081,13 @@ const SECONDS_IN_A_DAY = 86400
 const currentDay = () =>
   Math.floor(Date.now() / 1000) -
   (Math.floor(Date.now() / 1000) % SECONDS_IN_A_DAY)
+
+const GAME_LENGTH_BY_LEVEL_INDEX = [30, 10, 20, 30, 40]
+const LEVELS = GAME_LENGTH_BY_LEVEL_INDEX.length - 1
+
 export {
+  LEVELS,
+  GAME_LENGTH_BY_LEVEL_INDEX,
   SECONDS_IN_A_DAY,
   currentDay,
   foo,

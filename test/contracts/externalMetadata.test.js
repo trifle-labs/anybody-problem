@@ -4,13 +4,11 @@ import { describe, it } from 'mocha'
 const { ethers } = hre
 import { DOMParser } from 'xmldom'
 // import { Anybody } from '../../dist/module.js'
-
+import { LEVELS } from '../../src/calculations.js'
 import {
   deployContracts,
   solveLevel,
-  getParsedEventLogs,
-  deployContractsV0,
-  deployAnybodyProblemV1
+  getParsedEventLogs
 } from '../../scripts/utils.js'
 import fs from 'fs'
 import prettier from 'prettier'
@@ -50,23 +48,16 @@ describe('ExternalMetadata Tests', function () {
   it('has valid json', async function () {
     const [owner] = await ethers.getSigners()
 
-    const { AnybodyProblemV0, ExternalMetadata, Speedruns } =
-      await deployContractsV0({ mock: true, verbose: false })
+    const { AnybodyProblem, ExternalMetadata, Speedruns } =
+      await deployContracts({ mock: true, verbose: false })
 
-    const { AnybodyProblemV1: anybodyProblem } = await deployAnybodyProblemV1({
-      ExternalMetadata,
-      AnybodyProblemV0,
-      Speedruns,
-      mock: true,
-      verbose: false
-    })
     const finalArgs = [null, true, 0, [], [], [], [], []]
     let runId = 0
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < LEVELS; i++) {
       const level = i + 1
       const solvedReturn = await solveLevel(
         owner.address,
-        anybodyProblem,
+        AnybodyProblem,
         expect,
         runId,
         level,
@@ -82,14 +73,14 @@ describe('ExternalMetadata Tests', function () {
       finalArgs[6].push(args[6][0])
       finalArgs[7].push(args[7][0])
     }
-    const price = await anybodyProblem.priceToMint()
-    const tx = await anybodyProblem.batchSolve(...finalArgs, { value: price })
+    const price = await AnybodyProblem.priceToMint()
+    const tx = await AnybodyProblem.batchSolve(...finalArgs, { value: price })
     const receipt = await tx.wait()
-    const events = getParsedEventLogs(receipt, anybodyProblem, 'RunCreated')
+    const events = getParsedEventLogs(receipt, AnybodyProblem, 'RunCreated')
     const day = events[0].args.day
 
     const anybodyProblemAddress = await ExternalMetadata.anybodyProblem()
-    expect(anybodyProblemAddress).to.equal(anybodyProblem.address)
+    expect(anybodyProblemAddress).to.equal(AnybodyProblem.address)
     const base64Json = await Speedruns.uri(day)
 
     const utf8Json = Buffer.from(
@@ -146,7 +137,7 @@ describe('ExternalMetadata Tests', function () {
     const baseURLScores = animation_url.split('-').pop()
     const scores = Buffer.from(baseURLScores, 'base64').toString('utf-8')
     const scoresAsJson = JSON.parse(scores)
-    expect(scoresAsJson.levels.length).to.equal(5)
+    expect(scoresAsJson.levels.length).to.equal(LEVELS)
     // const anybody = new Anybody(null, { util: true, day })
     // console.log(anybody.bodies[0].c)
   })
