@@ -12,17 +12,17 @@ export const Tournament = {
   }
 }
 
-import AnybodyProblemV4ABI from './contractData/ABI-84532-AnybodyProblemV4.json'
+import AnybodyProblemV4ABI from './contractData/ABI-8453-AnybodyProblemV4.json'
 import AnybodyProblemV4BaseSepolia from './contractData/84532-AnybodyProblemV4.json'
-// import AnybodyProblemV4Base from './contractData/8453-AnybodyProblemV4.json'
+import AnybodyProblemV4Base from './contractData/8453-AnybodyProblemV4.json'
 // import AnybodyProblemV4Local from './contractData/12345-AnybodyProblemV4.json'
 
 export const AnybodyProblemV4 = {
   abi: AnybodyProblemV4ABI,
   networks: {
-    84532: AnybodyProblemV4BaseSepolia
+    84532: AnybodyProblemV4BaseSepolia,
     // 12345: AnybodyProblemV4Local,
-    // 8453: AnybodyProblemV4Base
+    8453: AnybodyProblemV4Base
   }
 }
 

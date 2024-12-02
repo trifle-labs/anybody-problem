@@ -528,9 +528,7 @@ const deployAnybodyProblemV3_4 = async (options) => {
     initContractsNames.push(name)
   }
   // use the already deployed speedruns contract and external metadata contract
-  console.log({ initContractsNames })
   let deployedContracts = await initContracts(initContractsNames, true)
-  console.log({ deployedContracts })
   const { verifiers, verifiersTicks, verifiersBodies, returnObject } =
     await deployVerifiers({
       skipVerifiers,
