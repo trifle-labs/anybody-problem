@@ -1,7 +1,6 @@
 import * as Tone from 'tone'
 const { Player, PanVol, Panner, Volume, Loop, start, loaded } = Tone
 
-import whistle from 'data-url:/public/sound/tracks/whistle.mp3'
 //import wii_B from 'data-url:/public/sound/tracks/wii_B.mp3'
 import orbit from 'data-url:/public/sound/tracks/orbit.mp3'
 import ipod from 'data-url:/public/sound/tracks/ipod.mp3'
@@ -29,11 +28,6 @@ function random(arr) {
 }
 
 const SONGS = {
-  whistle: {
-    bpm: 70,
-    interval: '4m',
-    audio: whistle
-  },
   wii_A: {
     bpm: 70,
     interval: '2m',
