@@ -631,8 +631,6 @@ const calculateRecords = (days, chains, appChainId) => {
   const SECONDS_IN_DAY = 86400
   const earlyMonday = chains[appChainId].data.tournament.startDate
 
-  const today = currentDay()
-
   const weekNumber = (day) => {
     return Math.floor((day - earlyMonday) / SECONDS_IN_DAY / daysInContest)
   }
@@ -640,13 +638,16 @@ const calculateRecords = (days, chains, appChainId) => {
     return ((day - earlyMonday) / SECONDS_IN_DAY) % daysInContest
   }
 
-  const dow = dayOfTheWeek(earlyMonday, today, daysInContest)
-  const daysLeft = daysInContest - dow
-  let mustHavePlayedByNow
-  if (daysLeft > minimumDaysPlayed) {
-    mustHavePlayedByNow = 0
-  } else {
-    mustHavePlayedByNow = minimumDaysPlayed - daysLeft
+  const mustHavePlayedByNowFunc = (today) => {
+    const dow = dayOfTheWeek(earlyMonday, today, daysInContest)
+    const daysLeft = daysInContest - dow
+    let mustHavePlayedByNow
+    if (daysLeft > minimumDaysPlayed) {
+      mustHavePlayedByNow = 0
+    } else {
+      mustHavePlayedByNow = minimumDaysPlayed - daysLeft
+    }
+    return mustHavePlayedByNow
   }
 
   const divRound = (a, b) => {
@@ -671,6 +672,9 @@ const calculateRecords = (days, chains, appChainId) => {
 
   for (const day in days) {
     const runs = days[day].runs
+    const today = day
+    const mustHavePlayedByNow = mustHavePlayedByNowFunc(today)
+    // const todayPretty = new Date(today * 1000).toDateString()
     for (const run of runs) {
       const week = weekNumber(day, daysInContest)
       if (!recordsByWeek[week]) {
@@ -690,11 +694,15 @@ const calculateRecords = (days, chains, appChainId) => {
 
       if (!players[week][run.player]) {
         players[week][run.player] = {
+          uniqueDays: new Set(),
           fastestDays: {},
           slowestDays: {},
-          average: null
+          average: null,
+          lastPlayed: null
         }
       }
+
+      players[week][run.player].uniqueDays.add(run.day)
 
       if (!players[week][run.player].average) {
         players[week][run.player].average = {
@@ -703,6 +711,7 @@ const calculateRecords = (days, chains, appChainId) => {
           average: 0
         }
       }
+      players[week][run.player].lastPlayed = run.block_num
       players[week][run.player].average.totalTime += run.time
       players[week][run.player].average.totalRuns += 1
       players[week][run.player].average.average = divRound(
@@ -711,7 +720,7 @@ const calculateRecords = (days, chains, appChainId) => {
       )
 
       let doNotRecord = false
-      if (players[week][run.player].average.totalRuns < mustHavePlayedByNow) {
+      if (players[week][run.player].uniqueDays.size < mustHavePlayedByNow) {
         doNotRecord = true
       }
 
@@ -731,23 +740,30 @@ const calculateRecords = (days, chains, appChainId) => {
         currentAverage[week].totalRuns
       )
 
-      const weekSortedByAverage = Object.entries(players[week]).sort((a, b) => {
-        const distanceFromGlobalAverageA = Math.abs(
-          a[1].average.average - currentAverage[week].average
-        )
-        const distanceFromGlobalAverageB = Math.abs(
-          b[1].average.average - currentAverage[week].average
-        )
-        return distanceFromGlobalAverageA - distanceFromGlobalAverageB
-      })
-      if (currentAverage[week].player !== weekSortedByAverage[0][0]) {
+      const weekSortedByAverage = Object.entries(players[week]).stableSort(
+        (a, b) => {
+          const distanceFromGlobalAverageA = Math.abs(
+            a[1].average.average - currentAverage[week].average
+          )
+          const distanceFromGlobalAverageB = Math.abs(
+            b[1].average.average - currentAverage[week].average
+          )
+          if (distanceFromGlobalAverageA === distanceFromGlobalAverageB) {
+            return a[1].lastPlayed - b[1].lastPlayed
+          }
+          return distanceFromGlobalAverageA - distanceFromGlobalAverageB
+        }
+      )
+      if (
+        currentAverage[week].player !== weekSortedByAverage[0][0] &&
+        !doNotRecord
+      ) {
         currentAverage[week].player = weekSortedByAverage[0][0]
         if (!recordsBroken[week]) {
           recordsBroken[week] = []
         }
-        // TODO: make a better fix for this
         if (
-          players[week][weekSortedByAverage[0][0]].average.totalRuns >=
+          players[week][weekSortedByAverage[0][0]].uniqueDays.size >=
           mustHavePlayedByNow
         ) {
           recordsBroken[week].push({
@@ -771,7 +787,7 @@ const calculateRecords = (days, chains, appChainId) => {
       const slowestDaysSortedSliced = Object.entries(
         players[week][run.player].slowestDays
       )
-        .sort((a, b) => b[1] - a[1])
+        .stableSort((a, b) => b[1] - a[1])
         .slice(0, minimumDaysPlayed)
       const currentTimeSlow = divRound(
         slowestDaysSortedSliced.reduce((acc, [, time]) => {
@@ -816,7 +832,7 @@ const calculateRecords = (days, chains, appChainId) => {
       const fastestDaysSortedSliced = Object.entries(
         players[week][run.player].fastestDays
       )
-        .sort((a, b) => a[1] - b[1])
+        .stableSort((a, b) => a[1] - b[1])
         .slice(0, minimumDaysPlayed)
       const currentTimeFast = divRound(
         fastestDaysSortedSliced.reduce((acc, [, time]) => {
@@ -873,21 +889,26 @@ const calculateRecords = (days, chains, appChainId) => {
               fastestDays: [],
               slowestDays: [],
               allDays: [],
-              totalDays: 0,
+              uniqueDays: new Set(),
               average: null,
+              lastPlayed: null,
               minimumDaysReached: false
             }
           }
-          playerWeekly[player].totalDays += 1
+          const lastPlayed = weeklyRecord[day][player].stableSort(
+            (a, b) => b.block_num - a.block_num
+          )[0].block_num
+          playerWeekly[player].lastPlayed = lastPlayed
+          playerWeekly[player].uniqueDays.add(day)
           playerWeekly[player].allDays.push(...weeklyRecord[day][player])
           playerWeekly[player].fastestDays.push(
             weeklyRecord[day][player]
-              .sort((a, b) => parseInt(a.time) - parseInt(b.time))
+              .stableSort((a, b) => parseInt(a.time) - parseInt(b.time))
               .slice(0, 1)[0]
           )
           playerWeekly[player].slowestDays.push(
             weeklyRecord[day][player]
-              .sort((a, b) => parseInt(b.time) - parseInt(a.time))
+              .stableSort((a, b) => parseInt(b.time) - parseInt(a.time))
               .slice(0, 1)[0]
           )
         }
@@ -896,12 +917,12 @@ const calculateRecords = (days, chains, appChainId) => {
       let totalRuns = 0
       for (const player in playerWeekly) {
         playerWeekly[player].minimumDaysReached =
-          playerWeekly[player].fastestDays.length >= minimumDaysPlayed
+          playerWeekly[player].uniqueDays.size >= minimumDaysPlayed
         playerWeekly[player].fastestDays = playerWeekly[player].fastestDays
-          .sort((a, b) => parseInt(a.time) - parseInt(b.time))
+          .stableSort((a, b) => parseInt(a.time) - parseInt(b.time))
           .slice(0, minimumDaysPlayed)
         playerWeekly[player].slowestDays = playerWeekly[player].slowestDays
-          .sort((a, b) => parseInt(b.time) - parseInt(a.time))
+          .stableSort((a, b) => parseInt(b.time) - parseInt(a.time))
           .slice(0, minimumDaysPlayed)
         const userTotalTime = playerWeekly[player].allDays.reduce(
           (acc, run) => acc + parseInt(run.time),
@@ -921,21 +942,26 @@ const calculateRecords = (days, chains, appChainId) => {
           return {
             player: p[0],
             average: p[1].average,
-            totalDays: p[1].totalDays,
+            uniqueDays: p[1].uniqueDays,
+            lastPlayed: p[1].lastPlayed,
             minimumDaysMet: p[1].minimumDaysReached
           }
         })
-        .sort(
-          (a, b) =>
-            Math.abs(a.average - globalAverage) -
-            Math.abs(b.average - globalAverage)
-        )
+        .stableSort((a, b) => {
+          const aDiff = Math.abs(a.average - globalAverage)
+          const bDiff = Math.abs(b.average - globalAverage)
+          if (aDiff == bDiff) {
+            return a.lastPlayed - b.lastPlayed
+          }
+          return aDiff - bDiff
+        })
 
       const fastest = Object.entries(playerWeekly)
         .map((p) => {
           return {
             player: p[0],
             fastestDays: p[1].fastestDays,
+            lastPlayed: p[1].lastPlayed,
             fastTime: divRound(
               p[1].fastestDays.reduce(
                 (acc, run) => acc + parseInt(run.time),
@@ -946,7 +972,7 @@ const calculateRecords = (days, chains, appChainId) => {
             minimumDaysMet: p[1].minimumDaysReached
           }
         })
-        .sort((a, b) => {
+        .stableSort((a, b) => {
           // if (a.fastestDays.length !== b.fastestDays.length) {
           //   return b.fastestDays.length - a.fastestDays.length
           // }
@@ -968,7 +994,7 @@ const calculateRecords = (days, chains, appChainId) => {
             minimumDaysMet: p[1].minimumDaysReached
           }
         })
-        .sort((a, b) => {
+        .stableSort((a, b) => {
           // if (a.slowestDays.length !== b.slowestDays.length) {
           //   return b.slowestDays.length - a.slowestDays.length
           // }
@@ -979,7 +1005,7 @@ const calculateRecords = (days, chains, appChainId) => {
 
     recordsByWeek[week] = {
       currentFastest: currentFastest[week],
-      recordsBroken: recordsBroken[week].sort(
+      recordsBroken: recordsBroken[week].stableSort(
         (a, b) => a.block_num - b.block_num
       ),
       fastest,
@@ -1009,6 +1035,15 @@ const calculateRecords = (days, chains, appChainId) => {
   //   }
   // }
   return recordsByWeek
+}
+Array.prototype.stableSort = function (compare) {
+  const stabilizedThis = this.map((el, index) => [el, index])
+  stabilizedThis.sort((a, b) => {
+    const order = compare(a[0], b[0])
+    if (order !== 0) return order
+    return a[1] - b[1]
+  })
+  return stabilizedThis.map((el) => el[0])
 }
 
 const convertData_LevelsToRuns = (data) => {
