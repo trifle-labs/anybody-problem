@@ -215,8 +215,8 @@ describe('AnybodyProblem Tests', function () {
       levelData.tmpBodyData.filter((b) => parseInt(b.seed) !== 0).length
     ).to.equal(bodyCount)
     expect(levelData.time).to.equal(proofLength)
-    const startingRadius = await anybodyProblem.startingRadius()
-    const maxRadius = ethers.BigNumber.from(5 * 5).add(startingRadius)
+    // const startingRadius = await anybodyProblem.startingRadius()
+    const maxRadius = ethers.BigNumber.from(30)
     const firstBodyRadius = ethers.BigNumber.from(36)
 
     // confirm new values are stored correctly
