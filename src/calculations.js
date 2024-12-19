@@ -724,6 +724,8 @@ const calculateRecords = (days, chains, appChainId) => {
         doNotRecord = true
       }
 
+      // players[week][weekSortedByAverage[0][0]].uniqueDays.size >= mustHavePlayedByNow
+
       if (!currentAverage[week]) {
         currentAverage[week] = {
           player: null,
@@ -762,6 +764,9 @@ const calculateRecords = (days, chains, appChainId) => {
         if (!recordsBroken[week]) {
           recordsBroken[week] = []
         }
+        // the current player might not be the new record holder
+        // so we need to check if "doNotRecord" applies to the
+        // actual record holder, not the current player
         if (
           players[week][weekSortedByAverage[0][0]].uniqueDays.size >=
           mustHavePlayedByNow
