@@ -973,10 +973,14 @@ const calculateRecords = (days, chains, appChainId) => {
           }
         })
         .stableSort((a, b) => {
-          // if (a.fastestDays.length !== b.fastestDays.length) {
-          //   return b.fastestDays.length - a.fastestDays.length
-          // }
-          return a.fastTime - b.fastTime
+          if (b.fastTime == a.fastTime) {
+            const sortMostRecentDay = (a, b) => b.block_num - a.block_num
+            const mostRecentFastDayA = a.fastestDays.sort(sortMostRecentDay)[0]
+            const mostRecentFastDayB = b.fastestDays.sort(sortMostRecentDay)[0]
+            return mostRecentFastDayA.block_num - mostRecentFastDayB.block_num
+          } else {
+            return a.fastTime - b.fastTime
+          }
         })
 
       const slowest = Object.entries(playerWeekly)
@@ -995,10 +999,14 @@ const calculateRecords = (days, chains, appChainId) => {
           }
         })
         .stableSort((a, b) => {
-          // if (a.slowestDays.length !== b.slowestDays.length) {
-          //   return b.slowestDays.length - a.slowestDays.length
-          // }
-          return b.slowTime - a.slowTime
+          if (b.slowTime == a.slowTime) {
+            const sortMostRecentDay = (a, b) => b.block_num - a.block_num
+            const mostRecentSlowDayA = a.slowestDays.sort(sortMostRecentDay)[0]
+            const mostRecentSlowDayB = b.slowestDays.sort(sortMostRecentDay)[0]
+            return mostRecentSlowDayA.block_num - mostRecentSlowDayB.block_num
+          } else {
+            return b.slowTime - a.slowTime
+          }
         })
       return { fastest, slowest, mostAverage, globalAverage }
     })(weeklyRecords)
