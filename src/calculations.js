@@ -631,8 +631,14 @@ const calculateRecords = (days, chains, appChainId) => {
   const SECONDS_IN_DAY = 86400
   const earlyMonday = chains[appChainId].data.tournament.startDate
 
+  const apr_14_25 = 1744588800
+  const newMiddyStart = apr_14_25
+
   const weekNumber = (day) => {
     return Math.floor((day - earlyMonday) / SECONDS_IN_DAY / daysInContest)
+  }
+  const weekNumberToDay = (week) => {
+    return earlyMonday + week * SECONDS_IN_DAY * daysInContest
   }
   const dayOfTheWeek = (earlyMonday, day, daysInContest) => {
     return ((day - earlyMonday) / SECONDS_IN_DAY) % daysInContest
@@ -698,12 +704,15 @@ const calculateRecords = (days, chains, appChainId) => {
           fastestDays: {},
           slowestDays: {},
           average: null,
+          allRuns: [],
+          closestToGlobalAverage: null,
+          // average: null,
           lastPlayed: null
         }
       }
 
       players[week][run.player].uniqueDays.add(run.day)
-
+      players[week][run.player].allRuns.push(run)
       if (!players[week][run.player].average) {
         players[week][run.player].average = {
           totalTime: 0,
@@ -724,6 +733,7 @@ const calculateRecords = (days, chains, appChainId) => {
         doNotRecord = true
       }
 
+      // if weekly average is not yet set, create the empty object
       if (!currentAverage[week]) {
         currentAverage[week] = {
           player: null,
@@ -733,12 +743,27 @@ const calculateRecords = (days, chains, appChainId) => {
         }
       }
 
+      // add the current run time to the total time and total runs
       currentAverage[week].totalTime += run.time
       currentAverage[week].totalRuns += 1
       currentAverage[week].average = divRound(
         currentAverage[week].totalTime,
         currentAverage[week].totalRuns
       )
+
+      const globalAverage = currentAverage[week].average
+
+      players[week][run.player].closestToGlobalAverage = _stableSort(
+        players[week][run.player].allRuns,
+        (a, b) => {
+          const distanceFromGlobalAverageA = Math.abs(a.time - globalAverage)
+          const distanceFromGlobalAverageB = Math.abs(b.time - globalAverage)
+          if (distanceFromGlobalAverageA === distanceFromGlobalAverageB) {
+            return a.block_num - b.block_num
+          }
+          return distanceFromGlobalAverageA - distanceFromGlobalAverageB
+        }
+      )[0]
 
       const weekSortedByAverage = _stableSort(
         Object.entries(players[week]),
@@ -755,25 +780,51 @@ const calculateRecords = (days, chains, appChainId) => {
           return distanceFromGlobalAverageA - distanceFromGlobalAverageB
         }
       )
-      if (
-        currentAverage[week].player !== weekSortedByAverage[0][0] &&
-        !doNotRecord
-      ) {
-        currentAverage[week].player = weekSortedByAverage[0][0]
+
+      const weeklyRunsSortedByDistanceFromGlobalAverage = _stableSort(
+        Object.entries(players[week]),
+        (a, b) => {
+          const distanceFromGlobalAverageA = Math.abs(
+            a[1].closestToGlobalAverage.time - currentAverage[week].average
+          )
+          const distanceFromGlobalAverageB = Math.abs(
+            b[1].closestToGlobalAverage.time - currentAverage[week].average
+          )
+
+          if (distanceFromGlobalAverageA === distanceFromGlobalAverageB) {
+            return (
+              a[1].closestToGlobalAverage.block_num -
+              b[1].closestToGlobalAverage.block_num
+            )
+          }
+          return distanceFromGlobalAverageA - distanceFromGlobalAverageB
+        }
+      )
+
+      const useNewMiddy = parseInt(day) >= newMiddyStart
+      const chosenAvg = useNewMiddy
+        ? weekSortedByAverage
+        : weeklyRunsSortedByDistanceFromGlobalAverage
+
+      if (currentAverage[week].player !== chosenAvg[0][0] && !doNotRecord) {
+        currentAverage[week].player = chosenAvg[0][0]
         if (!recordsBroken[week]) {
           recordsBroken[week] = []
         }
         if (
-          players[week][weekSortedByAverage[0][0]].uniqueDays.size >=
-          mustHavePlayedByNow
+          players[week][chosenAvg[0][0]].uniqueDays.size >=
+            mustHavePlayedByNow ||
+          useNewMiddy
         ) {
           recordsBroken[week].push({
             week,
             day: run.day,
             block_num: run.block_num,
-            player: weekSortedByAverage[0][0],
+            player: chosenAvg[0][0],
             globalAverage: currentAverage[week].average,
-            time: weekSortedByAverage[0][1].average.average,
+            time: useNewMiddy
+              ? chosenAvg[0][1].closestToGlobalAverage.time
+              : chosenAvg[0][1].average.average,
             recordType: 'average'
           })
         }
@@ -871,23 +922,31 @@ const calculateRecords = (days, chains, appChainId) => {
       }
     }
   }
+  // now get records for each player
   for (const week in recordsByWeek) {
     if (week < 0) {
       delete recordsByWeek[week]
       continue
     }
-    const weeklyRecords = recordsByWeek[week]
+    const weeklyRecord = recordsByWeek[week]
+    const startOfWeek = weekNumberToDay(week)
+    const isNewMiddy = startOfWeek >= newMiddyStart
     const { fastest, slowest, mostAverage, globalAverage } = ((
       weeklyRecord
     ) => {
+      // track a players entire week summary
       const playerWeekly = {}
+      // for each day in the week
       for (const day in weeklyRecord) {
+        // for each player in the day
         for (const player in weeklyRecord[day]) {
+          // start tracking the player's week if not yet started
           if (!playerWeekly[player]) {
             playerWeekly[player] = {
               fastestDays: [],
               slowestDays: [],
               allDays: [],
+              closestToGlobalAverage: null,
               uniqueDays: new Set(),
               average: null,
               lastPlayed: null,
@@ -915,6 +974,9 @@ const calculateRecords = (days, chains, appChainId) => {
           )
         }
       }
+
+      // now go through each players' weekly and sort their best and worst days
+      // also check whether they've met the minimum days played requirement
       let totalTime = 0
       let totalRuns = 0
       for (const player in playerWeekly) {
@@ -941,23 +1003,47 @@ const calculateRecords = (days, chains, appChainId) => {
       }
 
       const globalAverage = divRound(totalTime, totalRuns)
+
+      // add array of runs sorted by distance to global average
       const mostAverage = _stableSort(
         Object.entries(playerWeekly).map((p) => {
+          const closestToGlobalAverage = p[1].allDays.sort((a, b) => {
+            const distanceFromGlobalAverageA = Math.abs(a.time - globalAverage)
+            const distanceFromGlobalAverageB = Math.abs(b.time - globalAverage)
+            if (distanceFromGlobalAverageA === distanceFromGlobalAverageB) {
+              return a.block_num - b.block_num
+            }
+            return distanceFromGlobalAverageA - distanceFromGlobalAverageB
+          })
           return {
             player: p[0],
-            average: p[1].average,
-            uniqueDays: p[1].uniqueDays,
-            lastPlayed: p[1].lastPlayed,
-            minimumDaysMet: p[1].minimumDaysReached
+            ...p[1],
+            closestToGlobalAverage
           }
         }),
         (a, b) => {
-          const aDiff = Math.abs(a.average - globalAverage)
-          const bDiff = Math.abs(b.average - globalAverage)
-          if (aDiff == bDiff) {
-            return a.lastPlayed - b.lastPlayed
+          if (isNewMiddy) {
+            const distanceFromGlobalAverageA = Math.abs(
+              a.closestToGlobalAverage[0].time - globalAverage
+            )
+            const distanceFromGlobalAverageB = Math.abs(
+              b.closestToGlobalAverage[0].time - globalAverage
+            )
+            if (distanceFromGlobalAverageA === distanceFromGlobalAverageB) {
+              return (
+                a.closestToGlobalAverage[0].block_num -
+                b.closestToGlobalAverage[0].block_num
+              )
+            }
+            return distanceFromGlobalAverageA - distanceFromGlobalAverageB
+          } else {
+            const aDiff = Math.abs(a.average - globalAverage)
+            const bDiff = Math.abs(b.average - globalAverage)
+            if (aDiff == bDiff) {
+              return a.lastPlayed - b.lastPlayed
+            }
+            return aDiff - bDiff
           }
-          return aDiff - bDiff
         }
       )
 
@@ -1008,7 +1094,7 @@ const calculateRecords = (days, chains, appChainId) => {
         }
       )
       return { fastest, slowest, mostAverage, globalAverage }
-    })(weeklyRecords)
+    })(weeklyRecord)
 
     recordsByWeek[week] = {
       currentFastest: currentFastest[week],
