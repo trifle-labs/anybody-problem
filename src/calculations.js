@@ -667,23 +667,120 @@ const calculateRecords = (days, chains, appChainId) => {
     }
     return parseInt(result)
   }
-  const recordsByWeek = {}
 
+  // Weekly tracking
+  const recordsByWeek = {}
   const currentFastest = {}
   const currentSlowest = {}
   const currentAverage = {}
-  const recordsBroken = {}
+  const recordsBroken = {} // Stores weekly records broken events
+  const players = {} // Stores weekly player stats
 
-  const players = {}
+  // Daily and Lifetime tracking
+  const dailyFastest = {} // { [dayTimestamp]: { time, player, block_num } }
+  const dailySlowest = {} // { [dayTimestamp]: { time, player, block_num } }
+  const playerStreaks = {} // { [playerAddr]: { currentStreak, lastDayPlayed } }
+  let longestStreakData = {
+    player: null,
+    streak: 0,
+    block_num: null,
+    day: null
+  }
+  const dailyRecordsBroken = [] // Stores daily records broken events
 
-  // this section is to calculate broken records as they occur in the week
-  for (const day in days) {
-    const runs = days[day].runs
-    const today = day
+  // Sort days chronologically for streak calculation
+  const sortedDays = Object.keys(days)
+    .map(Number)
+    .sort((a, b) => a - b)
+
+  // this section calculates weekly broken records AND daily broken records
+  // loop through days chronologically
+  for (const dayTimestamp of sortedDays) {
+    const dayData = days[dayTimestamp] // Use dayData instead of days[day]
+    const runs = dayData.runs
+    const today = dayTimestamp // Use dayTimestamp for consistency
     const mustHavePlayedByNow = mustHavePlayedByNowFunc(today)
-    // const todayPretty = new Date(today * 1000).toDateString()
+
     for (const run of runs) {
-      const week = weekNumber(day, daysInContest)
+      const week = weekNumber(run.day, daysInContest) // Use run.day here as it's the specific day of the run
+      const day = run.day // Specific day timestamp for the run
+
+      // --- Daily Record Tracking ---
+
+      // Daily Fastest
+      if (!dailyFastest[day] || run.time < dailyFastest[day].time) {
+        const oldRecord = dailyFastest[day]
+        dailyFastest[day] = {
+          time: run.time,
+          player: run.player,
+          block_num: run.block_num
+        }
+        dailyRecordsBroken.push({
+          day: day,
+          block_num: run.block_num,
+          player: run.player,
+          time: run.time,
+          recordType: 'daily_fastest',
+          previous_time: oldRecord ? oldRecord.time : null,
+          previous_player: oldRecord ? oldRecord.player : null
+        })
+      }
+
+      // Daily Slowest
+      if (!dailySlowest[day] || run.time > dailySlowest[day].time) {
+        const oldRecord = dailySlowest[day]
+        dailySlowest[day] = {
+          time: run.time,
+          player: run.player,
+          block_num: run.block_num
+        }
+        dailyRecordsBroken.push({
+          day: day,
+          block_num: run.block_num,
+          player: run.player,
+          time: run.time,
+          recordType: 'daily_slowest',
+          previous_time: oldRecord ? oldRecord.time : null,
+          previous_player: oldRecord ? oldRecord.player : null
+        })
+      }
+
+      // Longest Streak
+      const playerAddr = run.player
+      if (!playerStreaks[playerAddr]) {
+        playerStreaks[playerAddr] = { currentStreak: 0, lastDayPlayed: null }
+      }
+
+      const stats = playerStreaks[playerAddr]
+      if (stats.lastDayPlayed === day - SECONDS_IN_DAY) {
+        // Continued streak
+        stats.currentStreak++
+      } else if (stats.lastDayPlayed !== day) {
+        // Streak broken or first play day, but only count if it's a new day
+        stats.currentStreak = 1
+      }
+      // Always update last day played, even if multiple runs on the same day
+      stats.lastDayPlayed = day
+
+      // Check if this player broke the longest streak record
+      if (stats.currentStreak > longestStreakData.streak) {
+        const oldStreak = longestStreakData.streak
+        const oldPlayer = longestStreakData.player
+        longestStreakData = {
+          player: playerAddr,
+          streak: stats.currentStreak,
+          block_num: run.block_num,
+          day: day // Day the streak record was broken
+        }
+        dailyRecordsBroken.push({
+          ...longestStreakData,
+          recordType: 'longest_streak',
+          previous_streak: oldStreak,
+          previous_player: oldPlayer
+        })
+      }
+
+      // --- Weekly Record Tracking (Existing Logic) ---
       if (!recordsByWeek[week]) {
         recordsByWeek[week] = {}
       }
@@ -1116,6 +1213,7 @@ const calculateRecords = (days, chains, appChainId) => {
     })(weeklyRecord)
 
     recordsByWeek[week] = {
+      startOfWeek: weekNumberToDay(week),
       currentFastest: currentFastest[week],
       recordsBroken: _stableSort(
         recordsBroken[week],
@@ -1147,7 +1245,16 @@ const calculateRecords = (days, chains, appChainId) => {
   //     }
   //   }
   // }
-  return recordsByWeek
+  return {
+    recordsByWeek,
+    dailyFastest,
+    dailySlowest,
+    longestStreakData,
+    dailyRecordsBroken: _stableSort(
+      dailyRecordsBroken,
+      (a, b) => a.block_num - b.block_num
+    ) // Sort broken daily records chronologically
+  }
 }
 const _stableSort = function (array, compare) {
   const stabilizedThis = array.map((el, index) => [el, index])
