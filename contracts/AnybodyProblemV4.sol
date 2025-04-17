@@ -437,11 +437,11 @@ contract AnybodyProblemV4 is Ownable, ERC2981 {
         uint256 bodyCount = level + 2;
         address verifier = verifiers[bodyCount + dummyCount][v.tickCount];
         require(verifier != address(0), 'Invalid verifier, address == 0');
-        require(
-            address(uint160(v.input[5 + (bodyCount + dummyCount) * 5 + 1])) ==
-                msg.sender,
-            'Owner of this proof is not the sender'
-        );
+        // require(
+        //     address(uint160(v.input[5 + (bodyCount + dummyCount) * 5 + 1])) ==
+        //         msg.sender,
+        //     'Owner of this proof is not the sender'
+        // );
 
         // confirm current inflightMissile == previous outflightMissile
         // or confirm that curren inflightMissile (x, y) == (0, windowHeight)
