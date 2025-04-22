@@ -804,34 +804,24 @@ const calculateRecords = (days, chains, appChainId) => {
 
       const useNewMiddy = parseInt(day) >= newMiddyStart
       const chosenAvg = useNewMiddy
-        ? weekSortedByAverage
-        : weeklyRunsSortedByDistanceFromGlobalAverage
-
-      if (
-        useNewMiddy ||
-        (currentAverage[week].player !== chosenAvg[0][0] && !doNotRecord)
-      ) {
+        ? weeklyRunsSortedByDistanceFromGlobalAverage
+        : weekSortedByAverage
+      if (currentAverage[week].player !== chosenAvg[0][0] && !doNotRecord) {
         currentAverage[week].player = chosenAvg[0][0]
         if (!recordsBroken[week]) {
           recordsBroken[week] = []
         }
-        if (
-          players[week][chosenAvg[0][0]].uniqueDays.size >=
-            mustHavePlayedByNow ||
-          useNewMiddy
-        ) {
-          recordsBroken[week].push({
-            week,
-            day: run.day,
-            block_num: run.block_num,
-            player: chosenAvg[0][0],
-            globalAverage: currentAverage[week].average,
-            time: useNewMiddy
-              ? chosenAvg[0][1].closestToGlobalAverage[0].time
-              : chosenAvg[0][1].average.average,
-            recordType: 'average'
-          })
-        }
+        recordsBroken[week].push({
+          week,
+          day: run.day,
+          block_num: run.block_num,
+          player: chosenAvg[0][0],
+          globalAverage: currentAverage[week].average,
+          time: useNewMiddy
+            ? chosenAvg[0][1].closestToGlobalAverage[0].time
+            : chosenAvg[0][1].average.average,
+          recordType: 'average'
+        })
       }
 
       if (
@@ -1126,15 +1116,17 @@ const calculateRecords = (days, chains, appChainId) => {
           return b.slowTime - a.slowTime
         }
       )
-      return { fastest, slowest, mostAverage, globalAverage }
+      return {
+        fastest,
+        slowest,
+        mostAverage,
+        globalAverage
+      }
     })(weeklyRecord)
 
     recordsByWeek[week] = {
       currentFastest: currentFastest[week],
-      recordsBroken: _stableSort(
-        recordsBroken[week],
-        (a, b) => a.block_num - b.block_num
-      ),
+      recordsBroken: recordsBroken[week],
       fastest,
       slowest,
       mostAverage,
