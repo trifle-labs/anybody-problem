@@ -626,6 +626,7 @@ BigInt.prototype.toJSON = function () {
 // }
 
 const calculateRecords = (days, chains, appChainId) => {
+  console.log('!!!')
   const daysInContest = chains[appChainId].data.tournament.daysInWeek
   const minimumDaysPlayed = chains[appChainId].data.tournament.minDays
   const SECONDS_IN_DAY = 86400
@@ -737,6 +738,7 @@ const calculateRecords = (days, chains, appChainId) => {
       // if weekly average is not yet set, create the empty object
       if (!currentAverage[week]) {
         currentAverage[week] = {
+          runid: null,
           player: null,
           totalTime: 0,
           totalRuns: 0,
@@ -747,81 +749,83 @@ const calculateRecords = (days, chains, appChainId) => {
       // add the current run time to the total time and total runs
       currentAverage[week].totalTime += run.time
       currentAverage[week].totalRuns += 1
-      currentAverage[week].average = divRound(
+      const globalAverage = divRound(
         currentAverage[week].totalTime,
         currentAverage[week].totalRuns
       )
-
-      const globalAverage = currentAverage[week].average
-
-      players[week][run.player].closestToGlobalAverage = _stableSort(
-        players[week][run.player].allRuns,
-        (a, b) => {
+      currentAverage[week].average = globalAverage
+      const useNewMiddy = parseInt(day) >= newMiddyStart
+      if (useNewMiddy) {
+        const allRunsPerWeek = Object.entries(players[week]).reduce(
+          (acc, [, playerData]) => {
+            return acc.concat(playerData.allRuns)
+          },
+          []
+        )
+        const closestToGlobalAverage = _stableSort(allRunsPerWeek, (a, b) => {
           const distanceFromGlobalAverageA = Math.abs(a.time - globalAverage)
           const distanceFromGlobalAverageB = Math.abs(b.time - globalAverage)
           if (distanceFromGlobalAverageA === distanceFromGlobalAverageB) {
             return a.block_num - b.block_num
           }
           return distanceFromGlobalAverageA - distanceFromGlobalAverageB
-        }
-      )
-
-      const weekSortedByAverage = _stableSort(
-        Object.entries(players[week]),
-        (a, b) => {
-          const distanceFromGlobalAverageA = Math.abs(
-            a[1].average.average - currentAverage[week].average
-          )
-          const distanceFromGlobalAverageB = Math.abs(
-            b[1].average.average - currentAverage[week].average
-          )
-          if (distanceFromGlobalAverageA === distanceFromGlobalAverageB) {
-            return a[1].lastPlayed - b[1].lastPlayed
-          }
-          return distanceFromGlobalAverageA - distanceFromGlobalAverageB
-        }
-      )
-
-      const weeklyRunsSortedByDistanceFromGlobalAverage = _stableSort(
-        Object.entries(players[week]),
-        (a, b) => {
-          const distanceFromGlobalAverageA = Math.abs(
-            a[1].closestToGlobalAverage[0].time - currentAverage[week].average
-          )
-          const distanceFromGlobalAverageB = Math.abs(
-            b[1].closestToGlobalAverage[0].time - currentAverage[week].average
-          )
-
-          if (distanceFromGlobalAverageA === distanceFromGlobalAverageB) {
-            return (
-              a[1].closestToGlobalAverage[0].block_num -
-              b[1].closestToGlobalAverage[0].block_num
-            )
-          }
-          return distanceFromGlobalAverageA - distanceFromGlobalAverageB
-        }
-      )
-
-      const useNewMiddy = parseInt(day) >= newMiddyStart
-      const chosenAvg = useNewMiddy
-        ? weeklyRunsSortedByDistanceFromGlobalAverage
-        : weekSortedByAverage
-      if (currentAverage[week].player !== chosenAvg[0][0] && !doNotRecord) {
-        currentAverage[week].player = chosenAvg[0][0]
-        if (!recordsBroken[week]) {
-          recordsBroken[week] = []
-        }
-        recordsBroken[week].push({
-          week,
-          day: run.day,
-          block_num: run.block_num,
-          player: chosenAvg[0][0],
-          globalAverage: currentAverage[week].average,
-          time: useNewMiddy
-            ? chosenAvg[0][1].closestToGlobalAverage[0].time
-            : chosenAvg[0][1].average.average,
-          recordType: 'average'
         })
+        if (currentAverage[week].runid !== closestToGlobalAverage[0].runid) {
+          currentAverage[week].runid = closestToGlobalAverage[0].runid
+          currentAverage[week].player = closestToGlobalAverage[0].player
+          if (!recordsBroken[week]) {
+            recordsBroken[week] = []
+          }
+          recordsBroken[week].push({
+            week,
+            day: closestToGlobalAverage[0].day,
+            runid: closestToGlobalAverage[0].runid,
+            block_num: closestToGlobalAverage[0].block_num,
+            player: closestToGlobalAverage[0].player,
+            globalAverage,
+            time: closestToGlobalAverage[0].time,
+            recordType: 'average'
+          })
+        }
+      } else {
+        const weekSortedByAverage = _stableSort(
+          Object.entries(players[week]),
+          (a, b) => {
+            const distanceFromGlobalAverageA = Math.abs(
+              a[1].average.average - globalAverage
+            )
+            const distanceFromGlobalAverageB = Math.abs(
+              b[1].average.average - globalAverage
+            )
+            if (distanceFromGlobalAverageA === distanceFromGlobalAverageB) {
+              return a[1].lastPlayed - b[1].lastPlayed
+            }
+            return distanceFromGlobalAverageA - distanceFromGlobalAverageB
+          }
+        )
+        if (
+          currentAverage[week].player !== weekSortedByAverage[0][0] &&
+          !doNotRecord
+        ) {
+          currentAverage[week].player = weekSortedByAverage[0][0]
+          if (!recordsBroken[week]) {
+            recordsBroken[week] = []
+          }
+          if (
+            players[week][weekSortedByAverage[0][0]].uniqueDays.size >=
+            mustHavePlayedByNow
+          ) {
+            recordsBroken[week].push({
+              week,
+              day: run.day,
+              block_num: run.block_num,
+              player: weekSortedByAverage[0][0],
+              globalAverage: currentAverage[week].average,
+              time: weekSortedByAverage[0][1].average.average,
+              recordType: 'average'
+            })
+          }
+        }
       }
 
       if (
