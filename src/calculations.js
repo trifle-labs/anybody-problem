@@ -992,11 +992,21 @@ const calculateRecords = (days, chains, appChainId) => {
           playerWeekly[player].uniqueDays.size >= minimumDaysPlayed
         playerWeekly[player].fastestDays = _stableSort(
           playerWeekly[player].fastestDays,
-          (a, b) => parseInt(a.time) - parseInt(b.time)
+          (a, b) => {
+            if (parseInt(a.time) == parseInt(b.time)) {
+              return a.block_num - b.block_num
+            }
+            return parseInt(a.time) - parseInt(b.time)
+          }
         ).slice(0, minimumDaysPlayed)
         playerWeekly[player].slowestDays = _stableSort(
           playerWeekly[player].slowestDays,
-          (a, b) => parseInt(b.time) - parseInt(a.time)
+          (a, b) => {
+            if (parseInt(a.time) == parseInt(b.time)) {
+              return a.block_num - b.block_num
+            }
+            return parseInt(b.time) - parseInt(a.time)
+          }
         ).slice(0, minimumDaysPlayed)
         const userTotalTime = playerWeekly[player].allDays.reduce(
           (acc, run) => acc + parseInt(run.time),
@@ -1083,9 +1093,9 @@ const calculateRecords = (days, chains, appChainId) => {
           }
         }),
         (a, b) => {
-          // if (a.fastestDays.length !== b.fastestDays.length) {
-          //   return b.fastestDays.length - a.fastestDays.length
-          // }
+          if (a.fastTime == b.fastTime) {
+            return a.lastPlayed - b.lastPlayed
+          }
           return a.fastTime - b.fastTime
         }
       )
@@ -1095,6 +1105,7 @@ const calculateRecords = (days, chains, appChainId) => {
           return {
             player: p[0],
             slowestDays: p[1].slowestDays,
+            lastPlayed: p[1].lastPlayed,
             slowTime: divRound(
               p[1].slowestDays.reduce(
                 (acc, run) => acc + parseInt(run.time),
@@ -1109,6 +1120,9 @@ const calculateRecords = (days, chains, appChainId) => {
           // if (a.slowestDays.length !== b.slowestDays.length) {
           //   return b.slowestDays.length - a.slowestDays.length
           // }
+          if (a.slowTime == b.slowTime) {
+            return a.lastPlayed - b.lastPlayed
+          }
           return b.slowTime - a.slowTime
         }
       )
