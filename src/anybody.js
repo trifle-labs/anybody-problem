@@ -50,8 +50,10 @@ export class Anybody extends EventEmitter {
 
     this.introStage = -1
     this.clearValues()
-    !this.util && this.prepareP5()
-    this.sound = new Sound(this)
+    if (!this.util) {
+      this.prepareP5()
+      this.sound = new Sound(this)
+    }
     this.init()
     !this.util && this.start()
     this.checkIfDone()

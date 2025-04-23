@@ -626,7 +626,6 @@ BigInt.prototype.toJSON = function () {
 // }
 
 const calculateRecords = (days, chains, appChainId) => {
-  console.log('!!!')
   const daysInContest = chains[appChainId].data.tournament.daysInWeek
   const minimumDaysPlayed = chains[appChainId].data.tournament.minDays
   const SECONDS_IN_DAY = 86400
@@ -677,14 +676,37 @@ const calculateRecords = (days, chains, appChainId) => {
 
   const players = {}
 
+  const dailyRecordsBroken = {}
   // this section is to calculate broken records as they occur in the week
   for (const day in days) {
     const runs = days[day].runs
     const today = day
     const mustHavePlayedByNow = mustHavePlayedByNowFunc(today)
+    dailyRecordsBroken[day] = {
+      week: null,
+      fastest: {
+        runid: null,
+        player: null,
+        speed: null,
+        records: []
+      },
+      slowest: {
+        runid: null,
+        player: null,
+        speed: null,
+        records: []
+      }
+    }
+    let lastRun
     // const todayPretty = new Date(today * 1000).toDateString()
     for (const run of runs) {
+      if (lastRun && run.runid < lastRun.runid) {
+        console.error({ day, run, lastRun })
+        throw new Error('runs are not sorted')
+      }
+      lastRun = run
       const week = weekNumber(day, daysInContest)
+      dailyRecordsBroken[day].week = week
       if (!recordsByWeek[week]) {
         recordsByWeek[week] = {}
       }
@@ -729,6 +751,35 @@ const calculateRecords = (days, chains, appChainId) => {
         players[week][run.player].average.totalTime,
         players[week][run.player].average.totalRuns
       )
+
+      if (
+        !dailyRecordsBroken[day].fastest.speed ||
+        run.time < dailyRecordsBroken[day].fastest.speed
+      ) {
+        // console.log(`day ${day} fastest speeds broken,
+        //   it was ${dailyRecordsBroken[day].fastest.speed} from runid ${dailyRecordsBroken[day].fastest.runid}
+        //   and is now ${run.time} from runid ${run.runid}`)
+        dailyRecordsBroken[day].fastest.speed = run.time
+        dailyRecordsBroken[day].fastest.player = run.player
+        dailyRecordsBroken[day].fastest.runid = run.runid
+        dailyRecordsBroken[day].fastest.records.push({
+          week,
+          ...run
+        })
+      }
+
+      if (
+        !dailyRecordsBroken[day].slowest.speed ||
+        run.time > dailyRecordsBroken[day].slowest.speed
+      ) {
+        dailyRecordsBroken[day].slowest.speed = run.time
+        dailyRecordsBroken[day].slowest.player = run.player
+        dailyRecordsBroken[day].slowest.runid = run.runid
+        dailyRecordsBroken[day].slowest.records.push({
+          week,
+          ...run
+        })
+      }
 
       let doNotRecord = false
       if (players[week][run.player].uniqueDays.size < mustHavePlayedByNow) {
@@ -1128,7 +1179,11 @@ const calculateRecords = (days, chains, appChainId) => {
       }
     })(weeklyRecord)
 
+    const dailyRecords = Object.values(dailyRecordsBroken).filter(
+      (record) => record.week === parseInt(week)
+    )
     recordsByWeek[week] = {
+      dailyRecords,
       currentFastest: currentFastest[week],
       recordsBroken: recordsBroken[week],
       fastest,
