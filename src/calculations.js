@@ -551,8 +551,45 @@ function _customParse(json) {
 }
 
 function _copy(obj) {
-  return _customParse(_customStringify(obj))
+  if (typeof obj !== 'object' || obj === null) {
+    return obj // Return primitives and null directly
+  }
+
+  if (obj instanceof Date) {
+    return new Date(obj.getTime()) // Handle Date objects
+  }
+
+  if (obj instanceof Map) {
+    const newMap = new Map()
+    for (const [key, value] of obj.entries()) {
+      newMap.set(_copy(key), _copy(value)) // Recursively copy map entries
+    }
+    return newMap
+  }
+
+  if (obj instanceof Set) {
+    const newSet = new Set()
+    for (const value of obj.values()) {
+      newSet.add(_copy(value)) // Recursively copy set values
+    }
+    return newSet
+  }
+
+  if (Array.isArray(obj)) {
+    // Handle arrays
+    return obj.map(_copy) // Recursively copy array elements
+  }
+
+  // Handle plain objects
+  const newObj = {}
+  for (const key in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+      newObj[key] = _copy(obj[key]) // Recursively copy object properties
+    }
+  }
+  return newObj
 }
+
 BigInt.prototype.toJSON = function () {
   return this.toString() + 'n'
 }
@@ -625,595 +662,604 @@ BigInt.prototype.toJSON = function () {
 //   }
 // }
 
-const calculateRecords = (days, chains, appChainId) => {
-  const daysInContest = chains[appChainId].data.tournament.daysInWeek
-  const minimumDaysPlayed = chains[appChainId].data.tournament.minDays
-  const SECONDS_IN_DAY = 86400
-  const earlyMonday = chains[appChainId].data.tournament.startDate
+const SECONDS_IN_DAY = 86400
+const apr_14_25 = 1744588800 // TODO: Consider making this configurable or naming it more descriptively
+const newMiddyStart = apr_14_25
 
-  const apr_14_25 = 1744588800
-  const newMiddyStart = apr_14_25
+// Helper Functions for calculateRecords
 
-  const weekNumber = (day) => {
-    return Math.floor((day - earlyMonday) / SECONDS_IN_DAY / daysInContest)
+function _getTournamentConfig(chains, appChainId) {
+  const tournamentData = chains[appChainId]?.data?.tournament
+  if (!tournamentData) {
+    throw new Error(`Tournament data not found for appChainId: ${appChainId}`)
   }
-  const weekNumberToDay = (week) => {
-    return earlyMonday + week * SECONDS_IN_DAY * daysInContest
+  return {
+    daysInContest: tournamentData.daysInWeek,
+    minimumDaysPlayed: tournamentData.minDays,
+    earlyMonday: tournamentData.startDate
   }
-  const dayOfTheWeek = (earlyMonday, day, daysInContest) => {
-    return ((day - earlyMonday) / SECONDS_IN_DAY) % daysInContest
-  }
+}
 
-  const mustHavePlayedByNowFunc = (today) => {
-    const dow = dayOfTheWeek(earlyMonday, today, daysInContest)
-    const daysLeft = daysInContest - dow
-    let mustHavePlayedByNow
-    if (daysLeft > minimumDaysPlayed) {
-      mustHavePlayedByNow = 0
-    } else {
-      mustHavePlayedByNow = minimumDaysPlayed - daysLeft
+function _weekNumber(day, earlyMonday, daysInContest) {
+  return Math.floor((day - earlyMonday) / SECONDS_IN_DAY / daysInContest)
+}
+
+function _weekNumberToDay(week, earlyMonday, daysInContest) {
+  return earlyMonday + week * SECONDS_IN_DAY * daysInContest
+}
+
+function _dayOfTheWeek(earlyMonday, day, daysInContest) {
+  return ((day - earlyMonday) / SECONDS_IN_DAY) % daysInContest
+}
+
+function _mustHavePlayedByNowFunc(
+  today,
+  earlyMonday,
+  daysInContest,
+  minimumDaysPlayed
+) {
+  const dow = _dayOfTheWeek(earlyMonday, today, daysInContest)
+  const daysLeft = daysInContest - dow
+  return daysLeft > minimumDaysPlayed ? 0 : minimumDaysPlayed - daysLeft
+}
+
+function _divRound(a, b) {
+  if (typeof a !== 'bigint') a = BigInt(a)
+  if (typeof b !== 'bigint') b = BigInt(b)
+  if (b === 0n) return 0 // Avoid division by zero
+  let result = a / b
+  if ((a % b) * 2n >= b) result++
+  // Use BigNumber for results exceeding MAX_SAFE_INTEGER if BigNumber is available/required
+  // Assuming standard JS numbers for now as BigNumber is not imported here
+  // if (result > BigInt(Number.MAX_SAFE_INTEGER)) {
+  //   return BigNumber.from(result); // Requires BigNumber import
+  // }
+  return parseInt(result.toString()) // Convert BigInt back to Number safely if within limits
+}
+
+function _initializeWeeklyData(recordsByWeek, players, week, run) {
+  if (!recordsByWeek[week]) recordsByWeek[week] = {}
+  if (!recordsByWeek[week][run.day]) recordsByWeek[week][run.day] = {}
+  if (!recordsByWeek[week][run.day][run.player])
+    recordsByWeek[week][run.day][run.player] = []
+
+  if (!players[week]) players[week] = {}
+  if (!players[week][run.player]) {
+    players[week][run.player] = {
+      uniqueDays: new Set(),
+      fastestDays: {}, // Stores fastest run time for each day { day: time }
+      slowestDays: {}, // Stores slowest run time for each day { day: time }
+      average: { totalTime: 0, totalRuns: 0, average: 0 },
+      allRuns: [],
+      lastPlayed: null
     }
-    return mustHavePlayedByNow
+  }
+}
+
+function _updatePlayerStats(players, week, run) {
+  const playerWeekData = players[week][run.player]
+  playerWeekData.uniqueDays.add(run.day)
+  playerWeekData.allRuns.push(run)
+  playerWeekData.lastPlayed = run.block_num
+
+  // Update average
+  playerWeekData.average.totalTime += run.time
+  playerWeekData.average.totalRuns += 1
+  playerWeekData.average.average = _divRound(
+    playerWeekData.average.totalTime,
+    playerWeekData.average.totalRuns
+  )
+
+  // Update fastest time for the specific day
+  if (
+    !playerWeekData.fastestDays[run.day] ||
+    run.time < playerWeekData.fastestDays[run.day]
+  ) {
+    playerWeekData.fastestDays[run.day] = run.time
   }
 
-  const divRound = (a, b) => {
-    if (typeof a !== 'bigint') a = BigInt(a)
-    if (typeof b !== 'bigint') b = BigInt(b)
-    if (a == 0n || b == 0n) return 0
-    let result = a / b // integer division is same as Math.floor
-    if ((a % b) * 2n >= b) result++
-    if (result > BigInt(Number.MAX_SAFE_INTEGER)) {
-      return BigNumber.from(result)
-    }
-    return parseInt(result)
+  // Update slowest time for the specific day
+  if (
+    !playerWeekData.slowestDays[run.day] ||
+    run.time > playerWeekData.slowestDays[run.day]
+  ) {
+    playerWeekData.slowestDays[run.day] = run.time
   }
-  const recordsByWeek = {}
+}
 
-  const currentFastest = {}
-  const currentSlowest = {}
-  const currentAverage = {}
-  const recordsBroken = {}
-
-  const players = {}
-
-  const dailyRecordsBroken = {}
-  // this section is to calculate broken records as they occur in the week
-  for (const day in days) {
-    const runs = days[day].runs
-    const today = day
-    const mustHavePlayedByNow = mustHavePlayedByNowFunc(today)
+function _updateDailyRecords(dailyRecordsBroken, day, week, run) {
+  if (!dailyRecordsBroken[day]) {
     dailyRecordsBroken[day] = {
-      week: null,
-      fastest: {
-        runid: null,
-        player: null,
-        speed: null,
-        records: []
-      },
-      slowest: {
-        runid: null,
-        player: null,
-        speed: null,
-        records: []
+      week: week,
+      fastest: { runid: null, player: null, speed: null, records: [] },
+      slowest: { runid: null, player: null, speed: null, records: [] }
+    }
+  }
+
+  // Update daily fastest
+  if (
+    !dailyRecordsBroken[day].fastest.speed ||
+    run.time < dailyRecordsBroken[day].fastest.speed
+  ) {
+    dailyRecordsBroken[day].fastest = {
+      speed: run.time,
+      player: run.player,
+      runid: run.runid,
+      records: [
+        ...(dailyRecordsBroken[day].fastest.records || []),
+        { week, ...run }
+      ] // Append record
+    }
+  }
+
+  // Update daily slowest
+  if (
+    !dailyRecordsBroken[day].slowest.speed ||
+    run.time > dailyRecordsBroken[day].slowest.speed
+  ) {
+    dailyRecordsBroken[day].slowest = {
+      speed: run.time,
+      player: run.player,
+      runid: run.runid,
+      records: [
+        ...(dailyRecordsBroken[day].slowest.records || []),
+        { week, ...run }
+      ] // Append record
+    }
+  }
+}
+
+function _updateWeeklyRecords(
+  recordsBroken,
+  currentFastest,
+  currentSlowest,
+  currentAverage,
+  players,
+  week,
+  run,
+  mustHavePlayedByNow,
+  minimumDaysPlayed,
+  globalAverage,
+  isNewMiddy
+) {
+  const player = run.player
+  const playerWeekData = players[week][player]
+  const canRecord = playerWeekData.uniqueDays.size >= mustHavePlayedByNow
+
+  // --- Update Average Record ---
+  let averageRecordChanged = false
+  let newAverageRecord = {}
+
+  if (isNewMiddy) {
+    // New Middy Logic: Closest run to global average wins
+    const allRunsPerWeek = Object.values(players[week]).flatMap(
+      (pData) => pData.allRuns
+    )
+    const closestRun = _stableSort(allRunsPerWeek, (a, b) => {
+      const diffA = Math.abs(a.time - globalAverage)
+      const diffB = Math.abs(b.time - globalAverage)
+      if (diffA === diffB) return a.block_num - b.block_num
+      return diffA - diffB
+    })[0]
+
+    if (
+      !currentAverage[week] ||
+      currentAverage[week].runid !== closestRun.runid
+    ) {
+      averageRecordChanged = true
+      newAverageRecord = {
+        runid: closestRun.runid,
+        player: closestRun.player,
+        time: closestRun.time, // Store the actual run time
+        recordType: 'average'
+      }
+      currentAverage[week] = {
+        // Update state for next iteration
+        ...currentAverage[week], // Keep totalTime, totalRuns, average
+        runid: closestRun.runid,
+        player: closestRun.player
       }
     }
-    let lastRun
-    // const todayPretty = new Date(today * 1000).toDateString()
-    for (const run of runs) {
-      if (lastRun && run.runid < lastRun.runid) {
-        console.error({ day, run, lastRun })
-        throw new Error('runs are not sorted')
+  } else {
+    // Old Middy Logic: Player whose average is closest to global average wins
+    const weekSortedByAverage = _stableSort(
+      Object.entries(players[week]),
+      (a, b) => {
+        const diffA = Math.abs(a[1].average.average - globalAverage)
+        const diffB = Math.abs(b[1].average.average - globalAverage)
+        if (diffA === diffB) return a[1].lastPlayed - b[1].lastPlayed
+        return diffA - diffB
       }
-      lastRun = run
-      const week = weekNumber(day, daysInContest)
-      dailyRecordsBroken[day].week = week
-      if (!recordsByWeek[week]) {
-        recordsByWeek[week] = {}
-      }
-      if (!recordsByWeek[week][run.day]) {
-        recordsByWeek[week][run.day] = {}
-      }
-      if (!recordsByWeek[week][run.day][run.player]) {
-        recordsByWeek[week][run.day][run.player] = []
-      }
-      recordsByWeek[week][run.day][run.player].push(run)
+    )
 
-      if (!players[week]) {
-        players[week] = {}
+    const winningPlayer = weekSortedByAverage[0][0]
+    if (
+      !currentAverage[week] ||
+      currentAverage[week].player !== winningPlayer
+    ) {
+      // Check qualification only when setting the record
+      if (players[week][winningPlayer].uniqueDays.size >= mustHavePlayedByNow) {
+        averageRecordChanged = true
+        newAverageRecord = {
+          player: winningPlayer,
+          time: players[week][winningPlayer].average.average, // Store the player's average time
+          recordType: 'average'
+        }
+        currentAverage[week] = {
+          // Update state for next iteration
+          ...currentAverage[week], // Keep totalTime, totalRuns, average
+          player: winningPlayer,
+          runid: null // runid not applicable for old middy average
+        }
       }
+    }
+  }
 
-      if (!players[week][run.player]) {
-        players[week][run.player] = {
+  if (averageRecordChanged) {
+    if (!recordsBroken[week]) recordsBroken[week] = []
+    recordsBroken[week].push({
+      week,
+      day: run.day, // Day the record *could* have been broken (might not be exact day for old middy)
+      block_num: run.block_num, // Block num the record *could* have been broken
+      globalAverage,
+      ...newAverageRecord
+    })
+  }
+
+  // --- Update Slowest Record ---
+  const slowestDaysSorted = _stableSort(
+    Object.entries(playerWeekData.slowestDays),
+    (a, b) => b[1] - a[1]
+  )
+  const slowestDaysSliced = slowestDaysSorted.slice(0, minimumDaysPlayed)
+  const currentTimeSlow = _divRound(
+    slowestDaysSliced.reduce((acc, [, time]) => acc + time, 0),
+    slowestDaysSliced.length
+  )
+
+  if (!currentSlowest[week] || currentTimeSlow > currentSlowest[week].time) {
+    const difference = currentSlowest[week]
+      ? Math.abs(currentTimeSlow - currentSlowest[week].time)
+      : null
+    currentSlowest[week] = { player, time: currentTimeSlow }
+    if (canRecord) {
+      if (!recordsBroken[week]) recordsBroken[week] = []
+      recordsBroken[week].push({
+        week,
+        day: run.day,
+        block_num: run.block_num,
+        player,
+        time: currentTimeSlow,
+        difference,
+        recordType: 'slowest'
+      })
+    }
+  }
+
+  // --- Update Fastest Record ---
+  const fastestDaysSorted = _stableSort(
+    Object.entries(playerWeekData.fastestDays),
+    (a, b) => a[1] - b[1]
+  )
+  const fastestDaysSliced = fastestDaysSorted.slice(0, minimumDaysPlayed)
+  const currentTimeFast = parseFloat(
+    fastestDaysSliced.reduce((acc, [, time]) => acc + time, 0) /
+      fastestDaysSliced.length
+  )
+
+  if (!currentFastest[week] || currentTimeFast < currentFastest[week].time) {
+    const difference = currentFastest[week]
+      ? Math.abs(currentTimeFast - currentFastest[week].time)
+      : null
+    currentFastest[week] = { player, time: currentTimeFast }
+    if (canRecord) {
+      if (!recordsBroken[week]) recordsBroken[week] = []
+      recordsBroken[week].push({
+        week,
+        day: run.day,
+        block_num: run.block_num,
+        player,
+        time: currentTimeFast,
+        difference,
+        recordType: 'fastest'
+      })
+    }
+  }
+}
+
+function _calculateWeeklyLeaderboards(
+  weeklyData,
+  minimumDaysPlayed,
+  globalAverage,
+  isNewMiddy
+) {
+  const playerWeekly = {}
+  const allRunsOfWeek = []
+
+  // Aggregate player data for the week
+  for (const _day in weeklyData) {
+    for (const player in weeklyData[_day]) {
+      if (!playerWeekly[player]) {
+        playerWeekly[player] = {
+          fastestDaysRuns: [], // Store actual run objects for the fastest time each day
+          slowestDaysRuns: [], // Store actual run objects for the slowest time each day
+          allDaysRuns: [], // Store all run objects for the player in the week
           uniqueDays: new Set(),
-          fastestDays: {},
-          slowestDays: {},
-          average: null,
-          allRuns: [],
-          closestToGlobalAverage: null,
-          // average: null,
-          lastPlayed: null
+          average: 0,
+          lastPlayed: 0,
+          minimumDaysReached: false
         }
       }
 
-      players[week][run.player].uniqueDays.add(run.day)
-      players[week][run.player].allRuns.push(run)
-      if (!players[week][run.player].average) {
-        players[week][run.player].average = {
-          totalTime: 0,
-          totalRuns: 0,
-          average: 0
-        }
-      }
-      players[week][run.player].lastPlayed = run.block_num
-      players[week][run.player].average.totalTime += run.time
-      players[week][run.player].average.totalRuns += 1
-      players[week][run.player].average.average = divRound(
-        players[week][run.player].average.totalTime,
-        players[week][run.player].average.totalRuns
+      const playerDayData = weeklyData[_day][player]
+      const lastPlayedBlock = Math.max(...playerDayData.map((r) => r.block_num)) // Find max block_num for the day
+
+      playerWeekly[player].lastPlayed = Math.max(
+        playerWeekly[player].lastPlayed,
+        lastPlayedBlock
+      )
+      playerWeekly[player].uniqueDays.add(_day)
+      playerWeekly[player].allDaysRuns.push(...playerDayData)
+
+      // Find the single fastest run for the day
+      const fastestRunOfDay = _stableSort(
+        playerDayData,
+        (a, b) => a.time - b.time || a.block_num - b.block_num
+      )[0]
+      playerWeekly[player].fastestDaysRuns.push(fastestRunOfDay)
+
+      // Find the single slowest run for the day
+      const slowestRunOfDay = _stableSort(
+        playerDayData,
+        (a, b) => b.time - a.time || a.block_num - b.block_num
+      )[0]
+      playerWeekly[player].slowestDaysRuns.push(slowestRunOfDay)
+
+      allRunsOfWeek.push(...playerDayData)
+    }
+  }
+
+  // Calculate final weekly stats and leaderboard rankings
+  const leaderboardPlayers = Object.entries(playerWeekly).map(
+    ([player, data]) => {
+      data.minimumDaysReached = data.uniqueDays.size >= minimumDaysPlayed
+
+      // Sort and slice fastest/slowest runs for the week
+      data.fastestDaysRuns = _stableSort(
+        data.fastestDaysRuns,
+        (a, b) => a.time - b.time || a.block_num - b.block_num
+      ).slice(0, minimumDaysPlayed)
+      // if the fastestDaysRuns is less than minimumDaysPlayed, remove it from the array
+      data.slowestDaysRuns = _stableSort(
+        data.slowestDaysRuns,
+        (a, b) => b.time - a.time || a.block_num - b.block_num
+      ).slice(0, minimumDaysPlayed)
+
+      // const fastTime = _divRound(
+      //   data.fastestDaysRuns.reduce((acc, run) => acc + run.time, 0),
+      //   data.fastestDaysRuns.length
+      // )
+      const fastTime = data.fastestDaysRuns.reduce(
+        (acc, run) => acc + run.time,
+        0
+      )
+      const fastTimeAvg = parseFloat(fastTime / minimumDaysPlayed).toFixed(3)
+      const slowTime = data.slowestDaysRuns.reduce(
+        (acc, run) => acc + run.time,
+        0
       )
 
-      if (
-        !dailyRecordsBroken[day].fastest.speed ||
-        run.time < dailyRecordsBroken[day].fastest.speed
-      ) {
-        // console.log(`day ${day} fastest speeds broken,
-        //   it was ${dailyRecordsBroken[day].fastest.speed} from runid ${dailyRecordsBroken[day].fastest.runid}
-        //   and is now ${run.time} from runid ${run.runid}`)
-        dailyRecordsBroken[day].fastest.speed = run.time
-        dailyRecordsBroken[day].fastest.player = run.player
-        dailyRecordsBroken[day].fastest.runid = run.runid
-        dailyRecordsBroken[day].fastest.records.push({
-          week,
-          ...run
-        })
-      }
+      const userTotalTime = data.allDaysRuns.reduce(
+        (acc, run) => acc + run.time,
+        0
+      )
+      data.average = _divRound(userTotalTime, data.allDaysRuns.length)
 
-      if (
-        !dailyRecordsBroken[day].slowest.speed ||
-        run.time > dailyRecordsBroken[day].slowest.speed
-      ) {
-        dailyRecordsBroken[day].slowest.speed = run.time
-        dailyRecordsBroken[day].slowest.player = run.player
-        dailyRecordsBroken[day].slowest.runid = run.runid
-        dailyRecordsBroken[day].slowest.records.push({
-          week,
-          ...run
-        })
-      }
+      // Determine the block number when the score was set (latest block_num among contributing runs)
+      const fastestScoreSetBlockNum = data.fastestDaysRuns.reduce(
+        (max, run) => Math.max(max, run.block_num),
+        0
+      )
+      const slowestScoreSetBlockNum = data.slowestDaysRuns.reduce(
+        (max, run) => Math.max(max, run.block_num),
+        0
+      )
 
-      let doNotRecord = false
-      if (players[week][run.player].uniqueDays.size < mustHavePlayedByNow) {
-        doNotRecord = true
+      return {
+        player,
+        fastestDays: data.fastestDaysRuns, // Keep the run objects
+        slowestDays: data.slowestDaysRuns, // Keep the run objects
+        lastPlayed: data.lastPlayed, // Keep overall last played block_num
+        fastTime,
+        fastTimeAvg,
+        slowTime,
+        average: data.average,
+        minimumDaysMet: data.minimumDaysReached,
+        fastestScoreSetBlockNum,
+        slowestScoreSetBlockNum,
+        uniqueDays: data.uniqueDays,
+        allDaysRuns: data.allDaysRuns // Needed for average calculation tiebreaker (old middy)
       }
+    }
+  )
 
-      // if weekly average is not yet set, create the empty object
-      if (!currentAverage[week]) {
-        currentAverage[week] = {
-          runid: null,
-          player: null,
-          totalTime: 0,
-          totalRuns: 0,
-          average: 0
+  // --- Sort Leaderboards ---
+
+  const isWeekComplete = Object.keys(weeklyData).length >= minimumDaysPlayed
+
+  // Fastest Leaderboard
+  const fastest = _stableSort(
+    leaderboardPlayers.filter((p) => !isWeekComplete || p.minimumDaysMet),
+    (a, b) => {
+      if (a.fastTime === b.fastTime) {
+        // Tie-breaker: Lower block number when score was set wins
+        return a.fastestScoreSetBlockNum - b.fastestScoreSetBlockNum
+      }
+      // Primary sort: Lower average time wins
+      return a.fastTime - b.fastTime
+    }
+  )
+
+  // Slowest Leaderboard
+  const slowest = _stableSort(
+    leaderboardPlayers.filter((p) => !isWeekComplete || p.minimumDaysMet),
+    (a, b) => {
+      if (a.slowTime === b.slowTime) {
+        // Tie-breaker: Lower block number when score was set wins
+        return a.slowestScoreSetBlockNum - b.slowestScoreSetBlockNum
+      }
+      // Primary sort: Higher average time wins
+      return b.slowTime - a.slowTime
+    }
+  )
+
+  // Average Leaderboard
+  let mostAverage
+  if (isNewMiddy) {
+    // New Middy: Sort all individual runs by distance to global average
+    mostAverage = _stableSort(allRunsOfWeek, (a, b) => {
+      const diffA = Math.abs(a.time - globalAverage)
+      const diffB = Math.abs(b.time - globalAverage)
+      if (diffA === diffB) return a.block_num - b.block_num
+      return diffA - diffB
+    })
+  } else {
+    // Old Middy: Sort players by distance of their *average* to global average
+    mostAverage = _stableSort(
+      leaderboardPlayers.filter((p) => !isWeekComplete || p.minimumDaysMet),
+      (a, b) => {
+        const diffA = Math.abs(a.average - globalAverage)
+        const diffB = Math.abs(b.average - globalAverage)
+        if (diffA === diffB) {
+          // Tie-breaker: Player who last played earlier wins
+          return a.lastPlayed - b.lastPlayed
         }
+        return diffA - diffB
       }
+    )
+  }
 
-      // add the current run time to the total time and total runs
+  return { fastest, slowest, mostAverage, globalAverage }
+}
+
+// Main Function
+const calculateRecords = (days, chains, appChainId) => {
+  const { daysInContest, minimumDaysPlayed, earlyMonday } =
+    _getTournamentConfig(chains, appChainId)
+
+  const recordsByWeek = {}
+  const players = {} // { [week]: { [player]: playerData } }
+  const currentFastest = {} // { [week]: { player, time } }
+  const currentSlowest = {} // { [week]: { player, time } }
+  const currentAverage = {} // { [week]: { player?, runid?, totalTime, totalRuns, average } } - structure varies slightly by middy version
+  const recordsBroken = {} // { [week]: [recordEvent] }
+  const dailyRecordsBroken = {} // { [day]: { week, fastest: {...}, slowest: {...} } }
+
+  // --- Phase 1: Process Runs Day by Day ---
+  const sortedDays = Object.keys(days).sort((a, b) => parseInt(a) - parseInt(b))
+  let lastRun = null // For checking sort order within a day
+
+  for (const day of sortedDays) {
+    const dayInt = parseInt(day)
+    const runs = days[day].runs
+    if (!runs || runs.length === 0) continue // Skip empty days
+
+    const week = _weekNumber(dayInt, earlyMonday, daysInContest)
+    if (week < 0) continue // Skip runs before the tournament starts
+
+    const mustHavePlayedByNow = _mustHavePlayedByNowFunc(
+      dayInt,
+      earlyMonday,
+      daysInContest,
+      minimumDaysPlayed
+    )
+    const isNewMiddy = dayInt >= newMiddyStart
+
+    // Initialize weekly average state if not present
+    if (!currentAverage[week]) {
+      currentAverage[week] = { totalTime: 0, totalRuns: 0, average: 0 } // Initial state needed for global avg calc
+    }
+
+    // Process each run within the day
+    const sortedRuns = _stableSort(runs, (a, b) => a.runid - b.runid) // Ensure runs are sorted by runid
+    for (const run of sortedRuns) {
+      // Basic validation (optional, but good practice)
+      if (lastRun && run.runid < lastRun.runid && run.day === lastRun.day) {
+        console.error(
+          `Runs out of order: Day ${day}, Run ${run.runid} after ${lastRun.runid}`
+        )
+        // Decide whether to throw error or just log
+      }
+      lastRun = run // Update lastRun for the next iteration
+
+      _initializeWeeklyData(recordsByWeek, players, week, run)
+      recordsByWeek[week][run.day][run.player].push(run) // Store raw run data grouped by week/day/player
+
+      _updatePlayerStats(players, week, run)
+      _updateDailyRecords(dailyRecordsBroken, dayInt, week, run)
+
+      // Update weekly running totals for average calculation *before* updating records
       currentAverage[week].totalTime += run.time
       currentAverage[week].totalRuns += 1
-      const globalAverage = divRound(
+      const globalAverage = _divRound(
         currentAverage[week].totalTime,
         currentAverage[week].totalRuns
       )
-      currentAverage[week].average = globalAverage
-      const useNewMiddy = parseInt(day) >= newMiddyStart
-      if (useNewMiddy) {
-        const allRunsPerWeek = Object.entries(players[week]).reduce(
-          (acc, [, playerData]) => {
-            return acc.concat(playerData.allRuns)
-          },
-          []
-        )
-        const closestToGlobalAverage = _stableSort(allRunsPerWeek, (a, b) => {
-          const distanceFromGlobalAverageA = Math.abs(a.time - globalAverage)
-          const distanceFromGlobalAverageB = Math.abs(b.time - globalAverage)
-          if (distanceFromGlobalAverageA === distanceFromGlobalAverageB) {
-            return a.block_num - b.block_num
-          }
-          return distanceFromGlobalAverageA - distanceFromGlobalAverageB
-        })
-        if (currentAverage[week].runid !== closestToGlobalAverage[0].runid) {
-          currentAverage[week].runid = closestToGlobalAverage[0].runid
-          currentAverage[week].player = closestToGlobalAverage[0].player
-          if (!recordsBroken[week]) {
-            recordsBroken[week] = []
-          }
-          recordsBroken[week].push({
-            week,
-            day: closestToGlobalAverage[0].day,
-            runid: closestToGlobalAverage[0].runid,
-            block_num: closestToGlobalAverage[0].block_num,
-            player: closestToGlobalAverage[0].player,
-            globalAverage,
-            time: closestToGlobalAverage[0].time,
-            recordType: 'average'
-          })
-        }
-      } else {
-        const weekSortedByAverage = _stableSort(
-          Object.entries(players[week]),
-          (a, b) => {
-            const distanceFromGlobalAverageA = Math.abs(
-              a[1].average.average - globalAverage
-            )
-            const distanceFromGlobalAverageB = Math.abs(
-              b[1].average.average - globalAverage
-            )
-            if (distanceFromGlobalAverageA === distanceFromGlobalAverageB) {
-              return a[1].lastPlayed - b[1].lastPlayed
-            }
-            return distanceFromGlobalAverageA - distanceFromGlobalAverageB
-          }
-        )
-        if (
-          currentAverage[week].player !== weekSortedByAverage[0][0] &&
-          !doNotRecord
-        ) {
-          currentAverage[week].player = weekSortedByAverage[0][0]
-          if (!recordsBroken[week]) {
-            recordsBroken[week] = []
-          }
-          if (
-            players[week][weekSortedByAverage[0][0]].uniqueDays.size >=
-            mustHavePlayedByNow
-          ) {
-            recordsBroken[week].push({
-              week,
-              day: run.day,
-              block_num: run.block_num,
-              player: weekSortedByAverage[0][0],
-              globalAverage: currentAverage[week].average,
-              time: weekSortedByAverage[0][1].average.average,
-              recordType: 'average'
-            })
-          }
-        }
-      }
+      currentAverage[week].average = globalAverage // Update the running global average
 
-      if (
-        !players[week][run.player].slowestDays[run.day] ||
-        players[week][run.player].slowestDays[run.day] < run.time
-      ) {
-        players[week][run.player].slowestDays[run.day] = run.time
-      }
-      const slowestDaysSortedSliced = _stableSort(
-        Object.entries(players[week][run.player].slowestDays),
-        (a, b) => b[1] - a[1]
-      ).slice(0, minimumDaysPlayed)
-      const currentTimeSlow = divRound(
-        slowestDaysSortedSliced.reduce((acc, [, time]) => {
-          return acc + time
-        }, 0),
-        slowestDaysSortedSliced.length
+      _updateWeeklyRecords(
+        recordsBroken,
+        currentFastest,
+        currentSlowest,
+        currentAverage,
+        players,
+        week,
+        run,
+        mustHavePlayedByNow,
+        minimumDaysPlayed,
+        globalAverage, // Pass calculated global average
+        isNewMiddy
       )
-      let difference
-      if (currentSlowest[week]) {
-        difference = Math.abs(currentTimeSlow - currentSlowest[week].time)
-      }
-      if (
-        !currentSlowest[week] ||
-        currentTimeSlow > currentSlowest[week].time
-      ) {
-        currentSlowest[week] = {
-          player: run.player,
-          time: currentTimeSlow
-        }
-        if (!recordsBroken[week]) {
-          recordsBroken[week] = []
-        }
-        if (!doNotRecord) {
-          recordsBroken[week].push({
-            week,
-            day: run.day,
-            block_num: run.block_num,
-            player: run.player,
-            time: currentTimeSlow,
-            difference,
-            recordType: 'slowest'
-          })
-        }
-      }
-
-      if (
-        !players[week][run.player].fastestDays[run.day] ||
-        players[week][run.player].fastestDays[run.day] > run.time
-      ) {
-        players[week][run.player].fastestDays[run.day] = run.time
-      }
-      const fastestDaysSortedSliced = _stableSort(
-        Object.entries(players[week][run.player].fastestDays),
-        (a, b) => a[1] - b[1]
-      ).slice(0, minimumDaysPlayed)
-      const currentTimeFast = divRound(
-        fastestDaysSortedSliced.reduce((acc, [, time]) => {
-          return acc + time
-        }, 0),
-        fastestDaysSortedSliced.length
-      )
-
-      if (currentFastest[week]) {
-        difference = Math.abs(currentTimeFast - currentFastest[week].time)
-      } else {
-        difference = null
-      }
-
-      if (
-        !currentFastest[week] ||
-        currentTimeFast < currentFastest[week].time
-      ) {
-        currentFastest[week] = {
-          player: run.player,
-          time: currentTimeFast
-        }
-        if (!recordsBroken[week]) {
-          recordsBroken[week] = []
-        }
-        if (!doNotRecord) {
-          recordsBroken[week].push({
-            week,
-            day: run.day,
-            block_num: run.block_num,
-            player: run.player,
-            time: currentTimeFast,
-            difference,
-            recordType: 'fastest'
-          })
-        }
-      }
     }
   }
-  // now get records for leaderboard of each week
-  for (const week in recordsByWeek) {
-    if (week < 0) {
-      delete recordsByWeek[week]
-      continue
-    }
-    const weeklyRecord = recordsByWeek[week]
-    const startOfWeek = weekNumberToDay(week)
-    const isNewMiddy = startOfWeek >= newMiddyStart
-    // get each leaderboard per week
-    const { fastest, slowest, mostAverage, globalAverage } = ((
-      weeklyRecord
-    ) => {
-      // track a players entire week summary
-      const playerWeekly = {}
-      const allRunsOfWeek = []
-      // for each day in the week
-      for (const day in weeklyRecord) {
-        // for each player in the day
-        for (const player in weeklyRecord[day]) {
-          // start tracking the player's week if not yet started
-          if (!playerWeekly[player]) {
-            playerWeekly[player] = {
-              fastestDays: [],
-              slowestDays: [],
-              allDays: [],
-              closestToGlobalAverage: null,
-              uniqueDays: new Set(),
-              average: null,
-              lastPlayed: null,
-              minimumDaysReached: false
-            }
-          }
-          const lastPlayed = _stableSort(
-            weeklyRecord[day][player],
-            (a, b) => b.block_num - a.block_num
-          )[0].block_num
-          playerWeekly[player].lastPlayed = lastPlayed
-          playerWeekly[player].uniqueDays.add(day)
-          playerWeekly[player].allDays.push(...weeklyRecord[day][player])
-          allRunsOfWeek.push(...weeklyRecord[day][player])
-          playerWeekly[player].fastestDays.push(
-            _stableSort(
-              weeklyRecord[day][player],
-              (a, b) => parseInt(a.time) - parseInt(b.time)
-            ).slice(0, 1)[0]
-          )
-          playerWeekly[player].slowestDays.push(
-            _stableSort(
-              weeklyRecord[day][player],
-              (a, b) => parseInt(b.time) - parseInt(a.time)
-            ).slice(0, 1)[0]
-          )
-        }
-      }
 
-      // this is actually what's used in the leaderboard
-      // now go through each players' weekly and sort their best and worst days
-      // also check whether they've met the minimum days played requirement
-      let totalTime = 0
-      let totalRuns = 0
-      for (const player in playerWeekly) {
-        playerWeekly[player].minimumDaysReached =
-          playerWeekly[player].uniqueDays.size >= minimumDaysPlayed
-        playerWeekly[player].fastestDays = _stableSort(
-          playerWeekly[player].fastestDays,
-          (a, b) => {
-            if (parseInt(a.time) == parseInt(b.time)) {
-              return a.block_num - b.block_num
-            }
-            return parseInt(a.time) - parseInt(b.time)
-          }
-        ).slice(0, minimumDaysPlayed)
-        playerWeekly[player].slowestDays = _stableSort(
-          playerWeekly[player].slowestDays,
-          (a, b) => {
-            if (parseInt(a.time) == parseInt(b.time)) {
-              return a.block_num - b.block_num
-            }
-            return parseInt(b.time) - parseInt(a.time)
-          }
-        ).slice(0, minimumDaysPlayed)
-        const userTotalTime = playerWeekly[player].allDays.reduce(
-          (acc, run) => acc + parseInt(run.time),
-          0
-        )
-        playerWeekly[player].average = divRound(
-          userTotalTime,
-          playerWeekly[player].allDays.length
-        )
-        totalTime += userTotalTime
-        totalRuns += playerWeekly[player].allDays.length
-      }
+  // --- Phase 2: Calculate Final Weekly Leaderboards ---
+  const finalRecordsByWeek = {}
+  const sortedWeeks = Object.keys(recordsByWeek)
+    .map(Number)
+    .sort((a, b) => a - b)
 
-      const globalAverage = divRound(totalTime, totalRuns)
+  for (const week of sortedWeeks) {
+    if (week < 0) continue // Should already be filtered, but double-check
 
-      // add array of runs sorted by distance to global average
+    const weeklyData = recordsByWeek[week] // Raw run data grouped by day/player
+    const startOfWeek = _weekNumberToDay(week, earlyMonday, daysInContest)
+    const isNewMiddy = startOfWeek >= newMiddyStart // Use start of week for consistency
 
-      const mostAverageNewMiddy = _stableSort(allRunsOfWeek, (a, b) => {
-        const distanceFromGlobalAverageA = Math.abs(a.time - globalAverage)
-        const distanceFromGlobalAverageB = Math.abs(b.time - globalAverage)
-        if (distanceFromGlobalAverageA === distanceFromGlobalAverageB) {
-          return a.block_num - b.block_num
-        }
-        return distanceFromGlobalAverageA - distanceFromGlobalAverageB
-      })
+    const globalAverageForWeek = currentAverage[week]?.average ?? 0 // Get final global average for the week
 
-      const mostAverageOldMiddy = _stableSort(
-        Object.entries(playerWeekly).map((p) => {
-          // const closestToGlobalAverage = p[1].allDays.sort((a, b) => {
-          //   const distanceFromGlobalAverageA = Math.abs(a.time - globalAverage)
-          //   const distanceFromGlobalAverageB = Math.abs(b.time - globalAverage)
-          //   if (distanceFromGlobalAverageA === distanceFromGlobalAverageB) {
-          //     return a.block_num - b.block_num
-          //   }
-          //   return distanceFromGlobalAverageA - distanceFromGlobalAverageB
-          // })
-          return {
-            player: p[0],
-            ...p[1]
-            // closestToGlobalAverage
-          }
-        }),
-        (a, b) => {
-          // if (isNewMiddy) {
-          //   const distanceFromGlobalAverageA = Math.abs(
-          //     a.closestToGlobalAverage[0].time - globalAverage
-          //   )
-          //   const distanceFromGlobalAverageB = Math.abs(
-          //     b.closestToGlobalAverage[0].time - globalAverage
-          //   )
-          //   if (distanceFromGlobalAverageA === distanceFromGlobalAverageB) {
-          //     return (
-          //       a.closestToGlobalAverage[0].block_num -
-          //       b.closestToGlobalAverage[0].block_num
-          //     )
-          //   }
-          //   return distanceFromGlobalAverageA - distanceFromGlobalAverageB
-          // } else {
-          const aDiff = Math.abs(a.average - globalAverage)
-          const bDiff = Math.abs(b.average - globalAverage)
-          if (aDiff == bDiff) {
-            return a.lastPlayed - b.lastPlayed
-          }
-          return aDiff - bDiff
-          // }
-        }
-      )
-      const mostAverage = isNewMiddy ? mostAverageNewMiddy : mostAverageOldMiddy
-
-      const fastest = _stableSort(
-        Object.entries(playerWeekly).map((p) => {
-          return {
-            player: p[0],
-            fastestDays: p[1].fastestDays,
-            lastPlayed: p[1].lastPlayed,
-            fastTime: divRound(
-              p[1].fastestDays.reduce(
-                (acc, run) => acc + parseInt(run.time),
-                0
-              ),
-              p[1].fastestDays.length
-            ),
-            minimumDaysMet: p[1].minimumDaysReached
-          }
-        }),
-        (a, b) => {
-          if (a.fastTime == b.fastTime) {
-            return a.lastPlayed - b.lastPlayed
-          }
-          return a.fastTime - b.fastTime
-        }
-      )
-
-      const slowest = _stableSort(
-        Object.entries(playerWeekly).map((p) => {
-          return {
-            player: p[0],
-            slowestDays: p[1].slowestDays,
-            lastPlayed: p[1].lastPlayed,
-            slowTime: divRound(
-              p[1].slowestDays.reduce(
-                (acc, run) => acc + parseInt(run.time),
-                0
-              ),
-              p[1].slowestDays.length
-            ),
-            minimumDaysMet: p[1].minimumDaysReached
-          }
-        }),
-        (a, b) => {
-          // if (a.slowestDays.length !== b.slowestDays.length) {
-          //   return b.slowestDays.length - a.slowestDays.length
-          // }
-          if (a.slowTime == b.slowTime) {
-            return a.lastPlayed - b.lastPlayed
-          }
-          return b.slowTime - a.slowTime
-        }
-      )
-      return {
-        fastest,
-        slowest,
-        mostAverage,
-        globalAverage
-      }
-    })(weeklyRecord)
-
-    const dailyRecords = Object.values(dailyRecordsBroken).filter(
-      (record) => record.week === parseInt(week)
+    const leaderboards = _calculateWeeklyLeaderboards(
+      weeklyData,
+      minimumDaysPlayed,
+      globalAverageForWeek,
+      isNewMiddy
     )
-    recordsByWeek[week] = {
-      dailyRecords,
-      currentFastest: currentFastest[week],
-      recordsBroken: recordsBroken[week],
-      fastest,
-      slowest,
-      mostAverage,
-      globalAverage
+
+    const dailyRecordsForWeek = Object.entries(dailyRecordsBroken)
+      .filter(([, record]) => record.week === week)
+      .map(([day, record]) => ({ day: parseInt(day), ...record })) // Add day key
+
+    finalRecordsByWeek[week] = {
+      dailyRecords: dailyRecordsForWeek,
+      currentFastest: currentFastest[week], // Store the final winning record state
+      recordsBroken: recordsBroken[week] || [], // Ensure array exists
+      ...leaderboards // Includes fastest, slowest, mostAverage, globalAverage
     }
   }
-  // const userSorted = {}
-  // for (const week in recordsByWeek) {
-  //   for (const record of recordsByWeek[week].fastest) {
-  //     if (!userSorted[record.player]) {
-  //       userSorted[record.player] = {}
-  //     }
-  //     if (!userSorted[record.player][week]) {
-  //       userSorted[record.player][week] = { all: [], fastestMin: [], slowestMin: [] }
-  //     }
-  //     userSorted[record.player][week].all.push(record)
-  //   }
-  // }
-  // for (const userWeek in userSorted) {
-  //   for (const week in userSorted[userWeek]) {
-  //     userSorted[userWeek][week].all.sort((a, b) => parseInt(a.fastTime) - parseInt(b.fastTime))
-  //     if (userSorted[userWeek][week].fastestMin.length < minimumDaysPlayed) {
-  //       userSorted[userWeek][week].fastestMin.push
-  //     }
-  //   }
-  // }
-  return recordsByWeek
+
+  return finalRecordsByWeek
 }
+
 const _stableSort = function (array, compare) {
   const stabilizedThis = array.map((el, index) => [el, index])
   stabilizedThis.sort((a, b) => {
