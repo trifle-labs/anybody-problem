@@ -62,6 +62,10 @@
       "prettier"
     ],
     "globals": {},
+    "rules": {
+      "no-unreachable": "warn",
+      "no-unused-vars": "warn"
+    },
     "ignorePatterns": [
       "/docs/index.js",
       "**/*.min.js",

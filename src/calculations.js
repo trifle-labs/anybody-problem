@@ -236,6 +236,7 @@ export const Calculations = {
     for (let i = 0; i < bigBodies.length; i++) {
       const body = bigBodies[i]
       const newBody = { bodyIndex: i, position: {}, velocity: {}, radius: null }
+      newBody.playerIndex = body.playerIndex
       newBody.px = body.position.x
       newBody.position.x = this.convertScaledBigIntToFloat(body.position.x)
       newBody.py = body.position.y
@@ -345,9 +346,9 @@ export const Calculations = {
       this.missileVectorLimit
     )
     if (missile.velocity.y > 0n) {
-      throw new Error(
-        `Missile velocity.y ${missile.velocity.y} should be negative`
-      )
+      // throw new Error(
+      //   `Missile velocity.y ${missile.velocity.y} should be negative`
+      // )
     }
     if (missile.velocity.y < -scaledMissileVectorLimit) {
       throw new Error(
@@ -355,9 +356,9 @@ export const Calculations = {
       )
     }
     if (missile.velocity.x < 0n) {
-      throw new Error(
-        `Missile velocity.x ${missile.velocity.x} should be positive`
-      )
+      // throw new Error(
+      //   `Missile velocity.x ${missile.velocity.x} should be positive`
+      // )
     }
     if (missile.velocity.x > scaledMissileVectorLimit) {
       throw new Error(
@@ -370,7 +371,7 @@ export const Calculations = {
     )
     if (missileAbsSum > this.missileVectorLimitSum) {
       console.log({ missileAbsSum })
-      throw new Error('Missile is too fast')
+      // throw new Error('Missile is too fast')
     }
     missile.position.x += missile.velocity.x
     missile.position.y += missile.velocity.y
@@ -386,6 +387,7 @@ export const Calculations = {
 
     for (let j = 0; j < bodies.length; j++) {
       const body = bodies[j]
+      if (j == missile.playerIndex) continue
       const distance = _approxDist(
         missile.position.x,
         missile.position.y,
@@ -411,7 +413,7 @@ export const Calculations = {
         const y = this.convertScaledBigIntToFloat(body.position.y)
         this.explosions.push(...this.convertBigIntsToBodies([_copy(body)]))
         if (!this.util) {
-          this.makeExplosionStart(x, y)
+          this.makeExplosionStart(x, y, missile_.velocity)
           this.shakeScreen()
           this.sound?.playExplosion(x, y)
         }

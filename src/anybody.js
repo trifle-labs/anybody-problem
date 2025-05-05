@@ -1,6 +1,7 @@
 import EventEmitter from './events'
 import Sound from './sound.js'
 import { Visuals } from './visuals.js'
+import { Server } from './server.js'
 import {
   Calculations,
   _copy,
@@ -40,6 +41,7 @@ export class Anybody extends EventEmitter {
     Object.assign(this, Calculations)
     Object.assign(this, Buttons)
     Object.assign(this, Intro)
+    Object.assign(this, Server)
 
     this.setOptions(options)
 
@@ -55,12 +57,14 @@ export class Anybody extends EventEmitter {
       this.sound = new Sound(this)
     }
     this.init()
+    this.serverInit()
     !this.util && this.start()
     this.checkIfDone()
     this.saveData = {}
   }
 
   checkIfDone() {
+    return
     if (
       this.level == LEVELS &&
       this.levelSpeeds.length == LEVELS &&
@@ -382,7 +386,7 @@ export class Anybody extends EventEmitter {
       return
     }
 
-    this.missileClick(x, y)
+    this.missileClick(0, x, y)
   }
 
   handleNFTClick = () => {
@@ -399,7 +403,7 @@ export class Anybody extends EventEmitter {
       case 'Space':
         if (this.mouseX || this.mouseY) {
           e.preventDefault()
-          this.missileClick(this.mouseX, this.mouseY)
+          this.missileClick(0, this.mouseX, this.mouseY)
         }
         if (this.shownStatScreen && this.level < LEVELS) {
           this.level++
@@ -425,6 +429,7 @@ export class Anybody extends EventEmitter {
   }
 
   handleGameOver = ({ won }) => {
+    return
     if (this.handledGameOver) return
     this.handledGameOver = true
     this.gameoverTickerX = 0
@@ -847,7 +852,7 @@ export class Anybody extends EventEmitter {
 
   genRadius(index) {
     const radii = [36n, 30n, 27n, 24n, 21n, 18n] // n * 4 + 2
-    let size = radii[index % radii.length]
+    let size = 21n //radii[index % radii.length]
     return parseInt(size * BigInt(this.scalingFactor))
   }
 
@@ -871,8 +876,7 @@ export class Anybody extends EventEmitter {
   }
 
   generateBodies() {
-    const bodyData =
-      this.bodyData || this.generateLevelData(this.day, this.level)
+    const bodyData = this.bodyData || this.generateLevelData(this.day, -1)
     this.bodies = bodyData.map((b) => this.bodyDataToBodies.call(this, b))
     this.startingBodies = this.bodies.length
   }
@@ -1040,10 +1044,10 @@ export class Anybody extends EventEmitter {
     })
     this.resizeObserver.observe(this.p.canvas)
   }
-  missileClick(x, y) {
-    this.missileEvent = { x, y }
+  missileClick(playerIndex, x, y) {
+    this.missileEvent = { playerIndex, x, y }
   }
-  processMissileClick(x, y) {
+  processMissileClick(playerIndex, x, y) {
     if (this.gameOver || this.paused || this.missilesDisabled) return
     if (
       this.bodies.reduce((a, c) => a + c.radius, 0) == 0 ||
@@ -1051,7 +1055,7 @@ export class Anybody extends EventEmitter {
     ) {
       return
     }
-    console.log('processMissileClick', { x, y })
+    console.log('processMissileClick', { playerIndex, x, y })
 
     if (this.frames % this.stopEvery == 0) {
       console.log({ frames: this.frames, stopEvery: this.stopEvery })
@@ -1063,66 +1067,75 @@ export class Anybody extends EventEmitter {
     }
 
     // already a missile in flight, needs to be removed from current and previous chunk
-    if (this.missile) {
-      const missileCopy = this.processMissileInit(this.missile)
-      const abortedMissile = this.missileInits.pop()
-      if (abortedMissile.vx !== missileCopy.vx) {
-        console.error({ abortedMissile, missileCopy })
-        throw new Error('aborted missile velocity mismatch')
-      }
-      if (abortedMissile.vy !== missileCopy.vy) {
-        console.error({ abortedMissile, missileCopy })
-        throw new Error('aborted missile velocity mismatch')
-      }
-      if (this.bridgeMissile) {
-        this.removeBridgeMissile()
-        this.bridgeMissile = false
-        console.log('BRIDGEMISSILE = FALSE')
-        if (this.missileInits.length !== 0) {
-          throw new Error('missileInits should be empty')
-        }
-      }
-    } else if (this.bridgeMissile) {
-      console.error('bridgeMissile should have been modified in step() alredy')
-      this.bridgeMissile = false
-    }
+    // if (this.missile) {
+    //   const missileCopy = this.processMissileInit(this.missile)
+    //   const abortedMissile = this.missileInits.pop()
+    //   if (abortedMissile.vx !== missileCopy.vx) {
+    //     console.error({ abortedMissile, missileCopy })
+    //     throw new Error('aborted missile velocity mismatch')
+    //   }
+    //   if (abortedMissile.vy !== missileCopy.vy) {
+    //     console.error({ abortedMissile, missileCopy })
+    //     throw new Error('aborted missile velocity mismatch')
+    //   }
+    //   if (this.bridgeMissile) {
+    //     this.removeBridgeMissile()
+    //     this.bridgeMissile = false
+    //     console.log('BRIDGEMISSILE = FALSE')
+    //     if (this.missileInits.length !== 0) {
+    //       throw new Error('missileInits should be empty')
+    //     }
+    //   }
+    // } else if (this.bridgeMissile) {
+    //   console.error('bridgeMissile should have been modified in step() alredy')
+    //   this.bridgeMissile = false
+    // }
+
+    const position = this.bodies[playerIndex].position
 
     const radius = 10
     const b = {
+      playerIndex,
       step: this.frames,
-      position: this.p.createVector(0, this.windowWidth),
-      velocity: this.p.createVector(x, y - this.windowWidth),
+      // position: this.p.createVector(0, this.windowWidth),
+      position,
+      // velocity: this.p.createVector(x, y - this.windowWidth),
+      velocity: this.p.createVector(
+        x - position.x, // Target x - Origin x
+        y - position.y // Target y - Origin y
+      ),
       radius
     }
     // b.velocity.setMag(this.missileSpeed * this.speedFactor)
     b.velocity.limit(this.missileSpeed * this.speedFactor)
-    if (b.velocity.x <= 0) {
-      b.velocity.x = 1
-    }
-    if (b.velocity.y >= 0) {
-      b.velocity.y = -1
-    }
-    let sum = b.velocity.x - b.velocity.y
-    const max = this.missileVectorLimitSum / 1000
-    if (sum > max) {
-      b.velocity.limit(this.missileSpeed * this.speedFactor * 0.999)
-      sum = b.velocity.x - b.velocity.y
-      if (sum > max) {
-        console.error({
-          x: b.velocity.x,
-          y: b.velocity.y,
-          max: this.missileVectorLimitSum / 1000
-        })
-        console.error('still too fast')
-        return
-      }
-    }
+    // if (b.velocity.x <= 0) {
+    //   b.velocity.x = 1
+    // }
+    // if (b.velocity.y >= 0) {
+    //   b.velocity.y = -1
+    // }
+    // let sum = Math.abs(b.velocity.x) + Math.abs(b.velocity.y)
+    // const max = this.missileVectorLimitSum / 1000
+    // if (sum > max) {
+    //   b.velocity.limit(this.missileSpeed * this.speedFactor * 0.999)
+    //   sum = b.velocity.x - b.velocity.y
+    //   if (sum > max) {
+    //     console.error({
+    //       x: b.velocity.x,
+    //       y: b.velocity.y,
+    //       max: this.missileVectorLimitSum / 1000
+    //     })
+    //     console.error('still too fast')
+    //     return
+    //   }
+    // }
     this.missile = b
 
     const missileVectorMagnitude = x ** 2 + (y - this.windowWidth) ** 2
     this.sound?.playMissile(missileVectorMagnitude)
     this.missileInits.push(this.processMissileInit(b))
-    this.drawMissileStart()
+    const inverserVelocity = this.p.createVector(-b.velocity.x, -b.velocity.y)
+    this.drawMissileStart(inverserVelocity)
   }
 
   calculateStats = () => {

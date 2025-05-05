@@ -206,9 +206,9 @@ const replaceAttribute = (string, key, color) =>
 export const Visuals = {
   async draw() {
     if (this.missileEvent) {
-      const { x, y } = this.missileEvent
+      const { playerIndex, x, y } = this.missileEvent
       this.missileEvent = false
-      this.processMissileClick(x, y)
+      this.processMissileClick(playerIndex, x, y)
     }
 
     if (this.shaking && this.shaking > 0) {
@@ -242,7 +242,7 @@ export const Visuals = {
       const { x, y } = this.shootMissileNextFrame
       console.log('trigger missile click from draw', { x, y })
       this.shootMissileNextFrame = null
-      this.missileClick(x, y)
+      this.missileClick(0, x, y)
     }
 
     this.p.noFill()
@@ -1929,8 +1929,11 @@ export const Visuals = {
     if (this.p.mouseX <= 0 && this.p.mouseY <= 0) return
 
     // Bottom left corner coordinates
-    let startX = 0
-    let startY = this.windowHeight
+    const body = this.bodies[0]
+    if (!body) return // Exit if the body doesn't exist
+    let startX = body.position.x
+    let startY = body.position.y
+
     this.p.strokeWeight(THEME.borderWt)
 
     const crossHairSize = 25
@@ -1938,6 +1941,7 @@ export const Visuals = {
     // Calculate direction from bottom left to mouse
     let dirX = this.scaleX(this.p.mouseX) - startX
     let dirY = this.scaleY(this.p.mouseY) - startY
+
     this.p.line(
       this.scaleX(this.p.mouseX) - crossHairSize,
       this.scaleX(this.p.mouseY),
@@ -2701,7 +2705,7 @@ export const Visuals = {
     if (!showPopup) return
     this.popup = {
       header: 'Hmmm',
-      body: ['Couldn’t share or copy to clipboard.', 'Try again?'],
+      body: ["Couldn't share or copy to clipboard.", 'Try again?'],
       buttons: [
         {
           text: 'CLOSE',
@@ -2724,13 +2728,17 @@ export const Visuals = {
       this.p.translate(shakeX, shakeY)
     }
   },
-  makeParticles(x, y) {
+  makeParticles(x, y, incomingVelocity) {
     const array = []
     const maxSpeed = 10
+    const baseAngle = incomingVelocity
+      ? incomingVelocity.heading() + this.p.PI
+      : -this.p.PI / 2 // Opposite direction or default upwards
 
     const life = 25
     for (let i = 0; i < 100; i++) {
-      const angle = this.p.random(0, this.p.PI / 2) - this.p.PI / 2
+      // const angle = this.p.random(0, this.p.PI / 2) - this.p.PI / 2
+      const angle = baseAngle + this.p.random(-this.p.PI / 1.5, this.p.PI / 1.5) // Spread outwards
       const radius = this.p.random(0, maxSpeed)
       const vx = radius * this.p.cos(angle)
       const vy = radius * this.p.sin(angle)
@@ -2764,14 +2772,17 @@ export const Visuals = {
     }
     return particles
   },
-  makeExplosionStart(x, y) {
+  makeExplosionStart(x, y, velocity) {
     this.explosionSmoke ||= []
-    const particles = this.makeParticles(x, y)
+    const particles = this.makeParticles(x, y, velocity)
     this.explosionSmoke.push(...particles)
   },
-  drawMissileStart() {
+  drawMissileStart(velocity) {
     this.gunSmoke ||= []
-    const particles = this.makeParticles(0, this.windowHeight)
+    // Use the body's position (0) as the origin for the smoke
+    const originX = this.bodies[0]?.position?.x || 0
+    const originY = this.bodies[0]?.position?.y || this.windowHeight
+    const particles = this.makeParticles(originX, originY, velocity)
     this.gunSmoke.push(...particles)
   },
   drawGunSmoke() {
