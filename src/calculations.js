@@ -1085,7 +1085,7 @@ function _calculateWeeklyLeaderboards(
 
   // --- Sort Leaderboards ---
   // have reached the point of no return in being able to join the tournament
-  const isWeekComplete = Object.keys(weeklyData).length > 7 -   minimumDaysPlayed
+  const isWeekComplete = Object.keys(weeklyData).length > 7 -        minimumDaysPlayed
 
   // Fastest Leaderboard
   const fastest = _stableSort(
