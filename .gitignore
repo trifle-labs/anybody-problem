@@ -11,6 +11,8 @@ node_modules/
 cache
 artifacts/*
 
+dist
+
 test.svg
 
 # parcel
