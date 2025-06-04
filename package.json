@@ -1,6 +1,6 @@
 {
   "name": "@trifle/anybody-problem",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "license": "CC-BY-NC-4.0",
   "targets": {
     "module": {
