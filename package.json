@@ -13,6 +13,10 @@
       "optimize": true
     }
   },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
   "source": "src/index.js",
   "main": "dist/module.js",
   "module": "dist/module.js",
