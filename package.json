@@ -30,7 +30,7 @@
     "test:circom": "ls test/*.js | grep -v -e 'bodies' -e 'problems' -e 'solver' -e 'problemMetadata' -e 'bodyMetadata' | xargs npx hardhat test",
     "test:solidity": "hardhat test test/problems.test.js test/problemMetadata.test.js test/bodyMetadata.test.js test/bodies.test.js test/solver.test.js",
     "test": "hardhat test",
-    "precommit": "echo 'husky is working : )' && lint-staged && git add . && git commit -m 'precommit'",
+    "precommit": "echo 'husky is working : )' && lint-staged",
     "prepublishOnly": "yarn build",
     "patch": "npm version patch && npm publish && git push"
   },
