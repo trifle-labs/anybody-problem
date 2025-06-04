@@ -1,6 +1,6 @@
 {
   "name": "@trifle/anybody-problem",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "license": "CC-BY-NC-4.0",
   "targets": {
     "module": {
@@ -124,6 +124,5 @@
     "not dead",
     "not ie 11"
   ],
-  "readme": "ERROR: No README data found!",
-  "_id": "anybody-problem@1.0.0"
+  "readme": "ERROR: No README data found!"
 }
