@@ -971,7 +971,8 @@ function _calculateWeeklyLeaderboards(
   weeklyData,
   minimumDaysPlayed,
   globalAverage,
-  isNewMiddy
+  isNewMiddy,
+  daysLeftInWeek
 ) {
   const playerWeekly = {}
   const allRunsOfWeek = []
@@ -987,7 +988,8 @@ function _calculateWeeklyLeaderboards(
           uniqueDays: new Set(),
           average: 0,
           lastPlayed: 0,
-          minimumDaysReached: false
+          minimumDaysReached: false,
+          canStillCompleteWeek: false
         }
       }
 
@@ -1023,6 +1025,8 @@ function _calculateWeeklyLeaderboards(
   const leaderboardPlayers = Object.entries(playerWeekly).map(
     ([player, data]) => {
       data.minimumDaysReached = data.uniqueDays.size >= minimumDaysPlayed
+      data.canStillCompleteWeek =
+        data.uniqueDays.size + daysLeftInWeek >= minimumDaysPlayed
 
       // Sort and slice fastest/slowest runs for the week
       data.fastestDaysRuns = _stableSort(
@@ -1043,7 +1047,9 @@ function _calculateWeeklyLeaderboards(
         (acc, run) => acc + run.time,
         0
       )
-      const fastTimeAvg = parseFloat(fastTime / minimumDaysPlayed).toFixed(3)
+      const fastTimeAvg = parseFloat(
+        fastTime / data.fastestDaysRuns.length
+      ).toFixed(3)
       const slowTime = data.slowestDaysRuns.reduce(
         (acc, run) => acc + run.time,
         0
@@ -1075,6 +1081,7 @@ function _calculateWeeklyLeaderboards(
         slowTime,
         average: data.average,
         minimumDaysMet: data.minimumDaysReached,
+        canStillCompleteWeek: data.canStillCompleteWeek,
         fastestScoreSetBlockNum,
         slowestScoreSetBlockNum,
         uniqueDays: data.uniqueDays,
@@ -1084,25 +1091,26 @@ function _calculateWeeklyLeaderboards(
   )
 
   // --- Sort Leaderboards ---
-  // have reached the point of no return in being able to join the tournament
-  const isWeekComplete = Object.keys(weeklyData).length > 7 - minimumDaysPlayed
-
   // Fastest Leaderboard
   const fastest = _stableSort(
-    leaderboardPlayers.filter((p) => !isWeekComplete || p.minimumDaysMet),
+    leaderboardPlayers.filter(
+      (p) => p.canStillCompleteWeek || p.minimumDaysMet
+    ),
     (a, b) => {
-      if (a.fastTime === b.fastTime) {
+      if (a.fastTimeAvg === b.fastTimeAvg) {
         // Tie-breaker: Lower block number when score was set wins
         return a.fastestScoreSetBlockNum - b.fastestScoreSetBlockNum
       }
       // Primary sort: Lower average time wins
-      return a.fastTime - b.fastTime
+      return Number(a.fastTimeAvg) - Number(b.fastTimeAvg)
     }
   )
 
   // Slowest Leaderboard
   const slowest = _stableSort(
-    leaderboardPlayers.filter((p) => !isWeekComplete || p.minimumDaysMet),
+    leaderboardPlayers.filter(
+      (p) => p.canStillCompleteWeek || p.minimumDaysMet
+    ),
     (a, b) => {
       if (a.slowTime === b.slowTime) {
         // Tie-breaker: Lower block number when score was set wins
@@ -1126,7 +1134,9 @@ function _calculateWeeklyLeaderboards(
   } else {
     // Old Middy: Sort players by distance of their *average* to global average
     mostAverage = _stableSort(
-      leaderboardPlayers.filter((p) => !isWeekComplete || p.minimumDaysMet),
+      leaderboardPlayers.filter(
+        (p) => p.canStillCompleteWeek || p.minimumDaysMet
+      ),
       (a, b) => {
         const diffA = Math.abs(a.average - globalAverage)
         const diffB = Math.abs(b.average - globalAverage)
@@ -1229,7 +1239,7 @@ const calculateRecords = (days, chains, appChainId) => {
     .map(Number)
     .sort((a, b) => a - b)
 
-  for (const week of sortedWeeks) {
+  for (const [index, week] of sortedWeeks.entries()) {
     if (week < 0) continue // Should already be filtered, but double-check
 
     const weeklyData = recordsByWeek[week] // Raw run data grouped by day/player
@@ -1237,12 +1247,17 @@ const calculateRecords = (days, chains, appChainId) => {
     const isNewMiddy = startOfWeek >= newMiddyStart // Use start of week for consistency
 
     const globalAverageForWeek = currentAverage[week]?.average ?? 0 // Get final global average for the week
-
+    let daysLeftInWeek = 7 - Object.keys(weeklyData).length + 1
+    const nextWeekExists = index < sortedWeeks.length - 1
+    if (nextWeekExists) {
+      daysLeftInWeek -= 1
+    }
     const leaderboards = _calculateWeeklyLeaderboards(
       weeklyData,
       minimumDaysPlayed,
       globalAverageForWeek,
-      isNewMiddy
+      isNewMiddy,
+      daysLeftInWeek
     )
 
     const dailyRecordsForWeek = Object.entries(dailyRecordsBroken)
