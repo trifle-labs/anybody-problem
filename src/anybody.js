@@ -223,6 +223,12 @@ export class Anybody extends EventEmitter {
     delete this.savingAt
     delete this.savedAt
 
+    // Rapid fire properties
+    this.isMousePressed = false
+    this.rapidFireRate = 15 // frames between shots when holding down (1 shot per second at 75 FPS)
+    this.lastRapidFireFrame = 0
+    this.maxMissilesInFlight = 8 // limit concurrent missiles for performance
+
     // uncomment to work on the game over screen
     // setTimeout(() => {
     //   this.handleGameOver({ won: true })
@@ -317,8 +323,11 @@ export class Anybody extends EventEmitter {
     this.p.mouseMoved = this.handleMouseMove
     this.p.touchStarted = (e) => {
       this.hasTouched = true
-      this.handleGameClick(e)
+      this.handleMousePressed(e)
     }
+    this.p.touchEnded = this.handleMouseReleased
+    this.p.mousePressed = this.handleMousePressed
+    this.p.mouseReleased = this.handleMouseReleased
     this.p.mouseClicked = this.handleGameClick
     this.p.keyPressed = this.handleKeyPressed
   }
@@ -352,11 +361,20 @@ export class Anybody extends EventEmitter {
     }
   }
 
-  handleGameClick = (e) => {
+  handleMousePressed = (e) => {
     if (this.gameOver && this.won) {
       this.skipAhead = true
     }
     const { x, y } = this.getXY(e)
+
+    // Store mouse position for rapid fire
+    this.mouseDownX = x
+    this.mouseDownY = y
+    this.mouseX = x // Also update current mouse position
+    this.mouseY = y // Also update current mouse position
+    this.isMousePressed = true
+    this.lastRapidFireFrame = this.p5Frames
+
     // if mouse is inside of a button, call the button's handler
     for (const key in this.buttons) {
       const button = this.buttons[key]
@@ -370,10 +388,38 @@ export class Anybody extends EventEmitter {
       }
     }
 
-    // const debugZone = { x: this.windowWidth - 100, y: this.windowHeight - 100 }
-    // if (x > debugZone.x && y > debugZone.y) {
-    //   this.debug = !this.debug
-    // }
+    const duringIntro = this.introStage < this.totalIntroStages - 1
+    if (duringIntro && !this.paused && this.level < 1) {
+      this.introStage++
+      return
+    }
+
+    this.missileClick(x, y)
+  }
+
+  handleMouseReleased = () => {
+    this.isMousePressed = false
+  }
+
+  handleGameClick = (e) => {
+    // Keep original click logic for compatibility
+    if (this.gameOver && this.won) {
+      this.skipAhead = true
+    }
+    const { x, y } = this.getXY(e)
+
+    // if mouse is inside of a button, call the button's handler
+    for (const key in this.buttons) {
+      const button = this.buttons[key]
+      if (
+        button.visible &&
+        intersectsButton(button, x, y) &&
+        !button.disabled
+      ) {
+        button.onClick()
+        return
+      }
+    }
 
     const duringIntro = this.introStage < this.totalIntroStages - 1
     if (duringIntro && !this.paused && this.level < 1) {
@@ -429,6 +475,8 @@ export class Anybody extends EventEmitter {
     }
     this.gameOver = true
     this.won = won
+    // Stop rapid fire when game ends
+    this.isMousePressed = false
     if (this.level !== 0 && !this.won) {
       const gravityIndex = this.bodies
         .slice(1)
@@ -508,6 +556,8 @@ export class Anybody extends EventEmitter {
       this.paused = newPauseState
       this.willUnpause = false
       delete this.beganUnpauseAt
+      // Stop rapid fire when paused
+      this.isMousePressed = false
     } else {
       this.justPaused = true
       this.willUnpause = true
@@ -549,20 +599,28 @@ export class Anybody extends EventEmitter {
       this.missiles = []
     }
     bodies = this.forceAccumulator(bodies)
-    var results = this.detectCollision(bodies, this.missiles)
-    bodies = results.bodies
-    missiles = results.missiles || []
-    if (missiles.length > 0) {
-      const missileCopy = JSON.parse(JSON.stringify(missiles[0]))
-      this.stillVisibleMissiles.push(missileCopy)
+
+    // Process missiles one at a time to maintain game logic compatibility
+    const processedMissiles = []
+    for (let i = 0; i < missiles.length; i++) {
+      const singleMissileArray = [missiles[i]]
+      const results = this.detectCollision(bodies, singleMissileArray)
+      bodies = results.bodies
+
+      if (results.missiles && results.missiles.length > 0) {
+        const processedMissile = results.missiles[0]
+        console.log({ processedMissile })
+        const missileCopy = JSON.parse(JSON.stringify(processedMissile))
+        this.stillVisibleMissiles.push(missileCopy)
+
+        // Only keep missile if it still has radius (hasn't been destroyed)
+        if (processedMissile.radius > 0) {
+          processedMissiles.push(processedMissile)
+        }
+      }
     }
-    if (missiles.length > 0 && missiles[0].radius == 0) {
-      missiles.splice(0, 1)
-    } else if (missiles.length > 1 && missiles[0].radius !== 0) {
-      // NOTE: follows logic of circuit
-      const newMissile = missiles.splice(0, 1)
-      missiles.splice(0, 1, newMissile[0])
-    }
+
+    missiles = processedMissiles
     return { bodies, missiles }
   }
 
@@ -994,22 +1052,21 @@ export class Anybody extends EventEmitter {
       this.shootMissileNextFrame = null
     }
 
-    // if (this.missiles.length > 0 && !this.admin) {
-    //   // this is a hack to prevent multiple missiles from being fired
-    //   this.missiles = []
-    //   // remove latest missile from missileInits
-    //   this.missileInits.pop()
-    // }
-
-    if (this.missiles.length > 0) {
-      if (this.lastMissileCantBeUndone) {
-        this.emit('remove-last-missile')
-        this.lastMissileCantBeUndone = false
-        console.log('LASTMISSILECANTBEUNDONE = FALSE')
-      }
-      this.missileInits.pop()
-      this.missileCount--
+    // Limit the number of missiles in flight for performance
+    if (this.missiles.length >= this.maxMissilesInFlight) {
+      return
     }
+
+    // Remove the single missile restriction - allow multiple missiles
+    // if (this.missiles.length > 0) {
+    //   if (this.lastMissileCantBeUndone) {
+    //     this.emit('remove-last-missile')
+    //     this.lastMissileCantBeUndone = false
+    //     console.log('LASTMISSILECANTBEUNDONE = FALSE')
+    //   }
+    //   this.missileInits.pop()
+    //   this.missileCount--
+    // }
 
     this.missileCount++
     const radius = 10
@@ -1042,13 +1099,8 @@ export class Anybody extends EventEmitter {
         return
       }
     }
-    // const bodyCount = this.bodies.filter((b) => b.radius !== 0).length - 1
-    // this.missiles = this.missiles.slice(0, bodyCount)
-    // this.missiles = this.missiles.slice(-bodyCount)
-
-    // NOTE: this is stupid
+    // Allow multiple missiles in flight
     this.missiles.push(b)
-    this.missiles = this.missiles.slice(-1)
 
     const missileVectorMagnitude = x ** 2 + (y - this.windowWidth) ** 2
     this.sound?.playMissile(missileVectorMagnitude)

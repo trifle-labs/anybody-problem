@@ -250,6 +250,32 @@ export const Visuals = {
     this.drawBg()
 
     this.p5Frames++
+
+    // Handle rapid fire when mouse is held down
+    if (
+      this.isMousePressed &&
+      this.p5Frames - this.lastRapidFireFrame >= this.rapidFireRate &&
+      !this.paused &&
+      !this.gameOver
+    ) {
+      // Use current mouse position if available, otherwise fall back to initial press position
+      const targetX = this.p.mouseX
+      const targetY = this.p.mouseY
+      console.log({
+        p5MouseX: this.p.mouseX,
+        p5MouseY: this.p.mouseY,
+        mouseX: this.mouseX,
+        mouseY: this.mouseY,
+        mouseDownX: this.mouseDownX,
+        mouseDownY: this.mouseDownY
+      })
+      if (targetX !== undefined && targetY !== undefined) {
+        console.log('Rapid fire missile at:', targetX, targetY)
+        this.missileClick(targetX, targetY)
+        this.lastRapidFireFrame = this.p5Frames
+      }
+    }
+
     this.drawExplosions()
 
     if (pastIntro || this.level > 0) {
@@ -2177,6 +2203,31 @@ export const Visuals = {
     this.p.strokeWeight(0)
     const starRadius = 10
     const maxLife = 60
+
+    // Draw current active missiles
+    for (let i = 0; i < this.missiles.length; i++) {
+      const missile = this.missiles[i]
+      if (missile.radius > 0) {
+        const color = 'white'
+        const thisRadius = starRadius
+
+        this.p.push()
+        this.p.translate(missile.position.x, missile.position.y)
+        this.star(
+          0,
+          0,
+          thisRadius,
+          thisRadius / 2,
+          5,
+          color,
+          (this.p5Frames / this.P5_FPS_MULTIPLIER) % 360,
+          0
+        )
+        this.p.pop()
+      }
+    }
+
+    // Draw fading trail missiles
     for (let i = 0; i < this.stillVisibleMissiles.length; i++) {
       const body = this.stillVisibleMissiles[i]
       if (!body.phase) {
