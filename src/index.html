@@ -19,12 +19,31 @@
         padding: 0px;
       }
       :root {
-        --canvas-size: min(1000px, 100vmin);
+        /* Portrait orientation: use min of screen width and 800px, height is 1.5x width */
+        --canvas-width-portrait: min(800px, 100vw);
+        --canvas-height-portrait: calc(var(--canvas-width-portrait) * 1.5);
+
+        /* Landscape orientation: use min of screen height and 1200px, width is 2/3 of height */
+        --canvas-height-landscape: min(1200px, 100vh);
+        --canvas-width-landscape: calc(var(--canvas-height-landscape) * 2 / 3);
       }
-      canvas {
-        cursor: pointer;
-        width: var(--canvas-size) !important;
-        height: var(--canvas-size) !important;
+
+      /* Portrait orientation (height > width) */
+      @media (orientation: portrait) {
+        canvas {
+          cursor: pointer;
+          width: var(--canvas-width-portrait) !important;
+          height: var(--canvas-height-portrait) !important;
+        }
+      }
+
+      /* Landscape orientation (width > height) */
+      @media (orientation: landscape) {
+        canvas {
+          cursor: pointer;
+          width: var(--canvas-width-landscape) !important;
+          height: var(--canvas-height-landscape) !important;
+        }
       }
     </style>
   </head>

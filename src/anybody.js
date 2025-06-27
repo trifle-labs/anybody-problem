@@ -10,7 +10,7 @@ import { Intro } from './intro.js'
 import PAUSE_BODY_DATA from './pauseBodies'
 
 const GAME_LENGTH_BY_LEVEL_INDEX = [30, 60]
-const NORMAL_GRAVITY = 100
+const NORMAL_GRAVITY = 50
 const proverTickIndex = {
   2: 250,
   3: 250,
@@ -82,13 +82,16 @@ export class Anybody extends EventEmitter {
       todaysRecords: {},
       levelSpeeds: [],
       bodyData: null,
+      MAX_BODIES: 8,
       gameMode: 'score',
       // debug: false,
       // Add default properties and their initial values here
       startingBodies: 1,
       opensea: false,
-      windowWidth: 1000,
-      windowHeight: 1000,
+      gameWidth: 800,
+      gameHeight: 1200,
+      windowWidth: 800,
+      windowHeight: 1200,
       pixelDensity: 1,
       scalingFactor: 10n ** 3n,
       minDistanceSquared: 200 * 200,
@@ -137,17 +140,7 @@ export class Anybody extends EventEmitter {
     style && document.head.removeChild(style)
   }
   addCSS() {
-    if (typeof document === 'undefined') return
-    if (document.getElementById('canvas-cursor')) return
-    const style = document.createElement('style')
-    style.id = 'canvas-cursor' // Add an id to the style element
-
-    style.innerHTML = `
-      #canvas, canvas {
-        cursor: none;
-      }
-    `
-    document.head.appendChild(style)
+    // CSS is now handled in HTML
   }
 
   // run whenever the class should be reset
@@ -223,11 +216,50 @@ export class Anybody extends EventEmitter {
     delete this.savingAt
     delete this.savedAt
 
-    // Rapid fire properties
-    this.isMousePressed = false
-    this.rapidFireRate = 15 // frames between shots when holding down (1 shot per second at 75 FPS)
+    // Auto fire properties
+    this.rapidFireRate = 20 // frames between shots (rapid manual firing rate)
+    this.autoFireRate = this.FPS * 2 // frames between auto shots (once per 2 seconds)
     this.lastRapidFireFrame = 0
+    this.lastAutoFireFrame = 0
     this.maxMissilesInFlight = 8 // limit concurrent missiles for performance
+
+    // Mouse/touch state for hold-to-fire
+    this.isMousePressed = false
+    this.isTouchPressed = false
+
+    // Aim control
+    this.aimAngle = 0 // -1 to 1, where 0 is straight up
+    this.targetPosition = null // Store where user clicked/touched
+
+    this.pressStartTime = 0
+    this.isDragging = false
+
+    // Game area positioning (centered in full screen)
+    this.gameOffsetX = 0 //(this.windowWidth - this.gameWidth) / 2
+    this.gameOffsetY = 0 //(this.windowHeight - this.gameHeight) / 2
+
+    // Calculate effective bottom boundary based on barrel max reach
+    const barrelLength = 280
+    const maxBarrelHeight = barrelLength * Math.cos(0) // When barrel is straight up (280px)
+    this.effectiveGameHeight = this.gameHeight - maxBarrelHeight
+
+    // Point system
+    this.currentPoints = 1000 // Start with 1000 points
+    this.missilesFired = 0 // Track missiles fired for point deduction
+
+    // Body size meters system
+    this.bodyMeters = {
+      // bodyIndex: { meter: 0-100, bonusUntil: frameNumber or null, maxMeter: 100 }
+      1: { meter: 0, bonusUntil: null, maxMeter: 10 },
+      2: { meter: 0, bonusUntil: null, maxMeter: 10 },
+      3: { meter: 0, bonusUntil: null, maxMeter: 10 },
+      4: { meter: 0, bonusUntil: null, maxMeter: 10 },
+      5: { meter: 0, bonusUntil: null, maxMeter: 10 }
+    }
+    this.bonusDuration = 10 * this.FPS // 10 seconds in frames
+
+    // Animated balls for point visualization
+    this.animatedBalls = [] // balls moving to show point changes
 
     // uncomment to work on the game over screen
     // setTimeout(() => {
@@ -321,18 +353,111 @@ export class Anybody extends EventEmitter {
 
   addListeners() {
     this.p.mouseMoved = this.handleMouseMove
+    this.p.touchMoved = this.handleTouchMove
+
+    // Add window-level listeners for clicks outside canvas
+    if (typeof window !== 'undefined') {
+      window.addEventListener('mousedown', this.handleWindowMouseDown)
+      window.addEventListener('mouseup', this.handleWindowMouseUp)
+      window.addEventListener('mousemove', this.handleWindowMouseMove)
+      window.addEventListener('touchstart', this.handleWindowTouchStart, {
+        passive: false
+      })
+      window.addEventListener('touchend', this.handleWindowTouchEnd, {
+        passive: false
+      })
+      window.addEventListener('touchmove', this.handleWindowTouchMove, {
+        passive: false
+      })
+    }
+
+    // Mouse press/release for hold-to-fire
+    this.p.mousePressed = (e) => {
+      if (!this.hasTouched) {
+        this.isMousePressed = true
+        this.pressStartTime = Date.now()
+        this.isDragging = false
+
+        const { gameX, gameY } = this.getXY(e)
+
+        // Handle targeting based on click position
+        if (
+          gameX >= 0 &&
+          gameX <= this.gameWidth &&
+          gameY >= 0 &&
+          gameY <= this.gameHeight
+        ) {
+          this.handleClickTargeting(gameX, gameY)
+        }
+
+        this.handleUIClick(e) // Handle UI interactions
+
+        // Fire immediately on click if we have a target
+        if (this.targetPosition) {
+          this.missileClick(this.targetPosition.x, this.targetPosition.y)
+          this.lastRapidFireFrame = this.p5Frames
+        }
+      }
+    }
+    this.p.mouseReleased = () => {
+      if (!this.hasTouched) {
+        this.isMousePressed = false
+        this.pressStartTime = 0
+        this.isDragging = false
+      }
+    }
+
+    // Touch press/release for hold-to-fire
     this.p.touchStarted = (e) => {
       this.hasTouched = true
-      this.handleMousePressed(e)
+      this.isTouchPressed = true
+      this.pressStartTime = Date.now()
+      this.isDragging = false
+
+      const { gameX, gameY } = this.getXY(e)
+
+      // Handle targeting based on touch position
+      if (
+        gameX >= 0 &&
+        gameX <= this.gameWidth &&
+        gameY >= 0 &&
+        gameY <= this.gameHeight
+      ) {
+        this.handleClickTargeting(gameX, gameY)
+      }
+
+      this.handleUIClick(e)
+
+      // Fire immediately on touch if we have a target
+      if (this.targetPosition) {
+        this.missileClick(this.targetPosition.x, this.targetPosition.y)
+        this.lastRapidFireFrame = this.p5Frames
+      }
+
+      // Prevent default to avoid triggering mouse events
+      e.preventDefault()
+      return false
     }
-    this.p.touchEnded = this.handleMouseReleased
-    this.p.mousePressed = this.handleMousePressed
-    this.p.mouseReleased = this.handleMouseReleased
-    this.p.mouseClicked = this.handleGameClick
+    this.p.touchEnded = (e) => {
+      this.isTouchPressed = false
+      this.pressStartTime = 0
+      this.isDragging = false
+      e.preventDefault()
+      return false
+    }
+
     this.p.keyPressed = this.handleKeyPressed
   }
 
   removeListener() {
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('mousedown', this.handleWindowMouseDown)
+      window.removeEventListener('mouseup', this.handleWindowMouseUp)
+      window.removeEventListener('mousemove', this.handleWindowMouseMove)
+      window.removeEventListener('touchstart', this.handleWindowTouchStart)
+      window.removeEventListener('touchend', this.handleWindowTouchEnd)
+      window.removeEventListener('touchmove', this.handleWindowTouchMove)
+    }
     this.p.remove()
   }
 
@@ -347,44 +472,137 @@ export class Anybody extends EventEmitter {
     }
     x = (x * this.windowWidth) / this.canvasRect.width
     y = (y * this.windowHeight) / this.canvasRect.height
-    return { x, y }
+
+    // Convert to game area coordinates for UI elements that are within the game area
+    // For buttons in pause screen, we need to account for the translation
+    return { x, y, gameX: x - this.gameOffsetX, gameY: y - this.gameOffsetY }
+  }
+
+  getWindowXY(e) {
+    let x, y
+    if (e.touches) {
+      x = e.touches[0].pageX - this.canvasRect.left
+      y = e.touches[0].pageY - this.canvasRect.top
+    } else {
+      x = e.pageX - this.canvasRect.left
+      y = e.pageY - this.canvasRect.top
+    }
+    x = (x * this.windowWidth) / this.canvasRect.width
+    y = (y * this.windowHeight) / this.canvasRect.height
+
+    // Convert to game area coordinates
+    return { x, y, gameX: x - this.gameOffsetX, gameY: y - this.gameOffsetY }
   }
 
   handleMouseMove = (e) => {
-    const { x, y } = this.getXY(e)
+    const { x, y, gameX, gameY } = this.getXY(e)
     this.mouseX = x
     this.mouseY = y
+
+    // Check for drag mode switch if holding down and moving
+    if (this.isMousePressed && this.pressStartTime > 0) {
+      const holdTime = Date.now() - this.pressStartTime
+      if (holdTime > 200 && !this.isDragging) {
+        // 200ms to enter drag mode
+        this.isDragging = true
+        console.log('Dragging detected - using proportional positioning')
+      }
+    }
+
+    // Handle aiming based on current position
+    if (
+      gameX >= 0 &&
+      gameX <= this.gameWidth &&
+      gameY >= 0 &&
+      gameY <= this.gameHeight
+    ) {
+      if (this.isDragging) {
+        // When dragging, use proportional horizontal position for aiming
+        this.handleProportionalAiming(x)
+      } else if (this.isMousePressed) {
+        // When pressing and moving (but not yet dragging), update click targeting
+        this.handleClickTargeting(gameX, gameY)
+      } else if (!this.isMousePressed) {
+        // When just hovering (not pressing), update targeting for visual feedback
+        this.handleClickTargeting(gameX, gameY)
+      }
+    }
+
     // check if mouse is inside any of the buttons
     for (const key in this.buttons) {
       const button = this.buttons[key]
-      button.hover = intersectsButton(button, x, y)
+      const checkX = button.gameArea ? gameX : x
+      const checkY = button.gameArea ? gameY : y
+      button.hover = intersectsButton(button, checkX, checkY)
     }
   }
 
-  handleMousePressed = (e) => {
+  handleTouchMove = (e) => {
+    const { x, y, gameX, gameY } = this.getXY(e)
+    this.mouseX = x
+    this.mouseY = y
+
+    // Check for drag mode switch if holding down and moving
+    if (this.isTouchPressed && this.pressStartTime > 0) {
+      const holdTime = Date.now() - this.pressStartTime
+      if (holdTime > 200 && !this.isDragging) {
+        // 200ms to enter drag mode
+        this.isDragging = true
+        console.log('Touch dragging detected - using proportional positioning')
+      }
+    }
+
+    // Handle aiming based on current position
+    if (
+      gameX >= 0 &&
+      gameX <= this.gameWidth &&
+      gameY >= 0 &&
+      gameY <= this.gameHeight
+    ) {
+      if (this.isDragging) {
+        // When dragging, use proportional horizontal position for aiming
+        this.handleProportionalAiming(x)
+      } else if (this.isTouchPressed) {
+        // When pressing and moving (but not yet dragging), update click targeting
+        this.handleClickTargeting(gameX, gameY)
+      } else if (!this.isTouchPressed) {
+        // When just hovering (not pressing), update targeting for visual feedback
+        this.handleClickTargeting(gameX, gameY)
+      }
+    }
+
+    // check if touch is inside any of the buttons
+    for (const key in this.buttons) {
+      const button = this.buttons[key]
+      const checkX = button.gameArea ? gameX : x
+      const checkY = button.gameArea ? gameY : y
+      button.hover = intersectsButton(button, checkX, checkY)
+    }
+    // Prevent default to avoid triggering mouse events
+    e.preventDefault()
+    return false
+  }
+
+  handleUIClick = (e) => {
+    // Handle UI interactions only (no missile firing)
     if (this.gameOver && this.won) {
       this.skipAhead = true
     }
-    const { x, y } = this.getXY(e)
-
-    // Store mouse position for rapid fire
-    this.mouseDownX = x
-    this.mouseDownY = y
-    this.mouseX = x // Also update current mouse position
-    this.mouseY = y // Also update current mouse position
-    this.isMousePressed = true
-    this.lastRapidFireFrame = this.p5Frames
+    const { x, y, gameX, gameY } = this.getXY(e)
 
     // if mouse is inside of a button, call the button's handler
     for (const key in this.buttons) {
       const button = this.buttons[key]
-      if (
-        button.visible &&
-        intersectsButton(button, x, y) &&
-        !button.disabled
-      ) {
-        button.onClick()
-        return
+      if (button.visible && !button.disabled) {
+        // Use game coordinates for buttons within the game area (pause screen, etc.)
+        // Use full screen coordinates for buttons outside game area (like slider)
+        const checkX = button.gameArea ? gameX : x
+        const checkY = button.gameArea ? gameY : y
+
+        if (intersectsButton(button, checkX, checkY)) {
+          button.onClick()
+          return
+        }
       }
     }
 
@@ -394,40 +612,7 @@ export class Anybody extends EventEmitter {
       return
     }
 
-    this.missileClick(x, y)
-  }
-
-  handleMouseReleased = () => {
-    this.isMousePressed = false
-  }
-
-  handleGameClick = (e) => {
-    // Keep original click logic for compatibility
-    if (this.gameOver && this.won) {
-      this.skipAhead = true
-    }
-    const { x, y } = this.getXY(e)
-
-    // if mouse is inside of a button, call the button's handler
-    for (const key in this.buttons) {
-      const button = this.buttons[key]
-      if (
-        button.visible &&
-        intersectsButton(button, x, y) &&
-        !button.disabled
-      ) {
-        button.onClick()
-        return
-      }
-    }
-
-    const duringIntro = this.introStage < this.totalIntroStages - 1
-    if (duringIntro && !this.paused && this.level < 1) {
-      this.introStage++
-      return
-    }
-
-    this.missileClick(x, y)
+    // Note: No missile firing here - that's handled automatically now
   }
 
   handleNFTClick = () => {
@@ -442,10 +627,6 @@ export class Anybody extends EventEmitter {
     if (modifierKeyActive) return
     switch (e.code) {
       case 'Space':
-        if (this.mouseX || this.mouseY) {
-          e.preventDefault()
-          this.missileClick(this.mouseX, this.mouseY)
-        }
         if (this.shownStatScreen && this.level < 5) {
           // this.level++
           this.restart(null, false)
@@ -475,8 +656,6 @@ export class Anybody extends EventEmitter {
     }
     this.gameOver = true
     this.won = won
-    // Stop rapid fire when game ends
-    this.isMousePressed = false
     if (this.level !== 0 && !this.won) {
       const gravityIndex = this.bodies
         .slice(1)
@@ -556,8 +735,6 @@ export class Anybody extends EventEmitter {
       this.paused = newPauseState
       this.willUnpause = false
       delete this.beganUnpauseAt
-      // Stop rapid fire when paused
-      this.isMousePressed = false
     } else {
       this.justPaused = true
       this.willUnpause = true
@@ -609,7 +786,6 @@ export class Anybody extends EventEmitter {
 
       if (results.missiles && results.missiles.length > 0) {
         const processedMissile = results.missiles[0]
-        console.log({ processedMissile })
         const missileCopy = JSON.parse(JSON.stringify(processedMissile))
         this.stillVisibleMissiles.push(missileCopy)
 
@@ -685,7 +861,9 @@ export class Anybody extends EventEmitter {
         ? this.missileInits[0]
         : {
             x: '0',
-            y: (this.windowWidth * parseInt(this.scalingFactor)).toString(),
+            y: (
+              this.effectiveGameHeight * parseInt(this.scalingFactor)
+            ).toString(),
             vx: '0',
             vy: '0',
             radius: '0'
@@ -702,7 +880,7 @@ export class Anybody extends EventEmitter {
     // if there is no missile flying, add a dummy missile
     const outflightMissileTmp = this.missiles[0] || {
       px: '0',
-      py: (this.windowWidth * parseInt(this.scalingFactor)).toString(),
+      py: (this.effectiveGameHeight * parseInt(this.scalingFactor)).toString(),
       vx: '0',
       vy: '0',
       radius: '0'
@@ -797,8 +975,10 @@ export class Anybody extends EventEmitter {
 
     if (level == 0) {
       body.radius = parseInt(56n * this.scalingFactor)
-      body.px = parseInt((BigInt(this.windowWidth) * this.scalingFactor) / 2n)
-      body.py = parseInt((BigInt(this.windowWidth) * this.scalingFactor) / 2n)
+      body.px = parseInt((BigInt(this.gameWidth) * this.scalingFactor) / 2n)
+      body.py = parseInt(
+        (BigInt(this.effectiveGameHeight) * this.scalingFactor) / 2n
+      )
       body.vx = parseInt(maxVectorScaled)
       body.vy = parseInt(maxVectorScaled)
       return body
@@ -807,14 +987,14 @@ export class Anybody extends EventEmitter {
     let rand = utils.solidityKeccak256(['bytes32'], [dayLevelIndexSeed])
     body.px = this.randomRange(
       0,
-      BigInt(this.windowWidth) * this.scalingFactor,
+      BigInt(this.gameWidth) * this.scalingFactor,
       rand
     )
 
     rand = utils.solidityKeccak256(['bytes32'], [rand])
     body.py = this.randomRange(
       0,
-      BigInt(this.windowWidth) * this.scalingFactor,
+      BigInt(this.effectiveGameHeight) * this.scalingFactor,
       rand
     )
 
@@ -1019,7 +1199,7 @@ export class Anybody extends EventEmitter {
 
   prepareP5() {
     this.p.frameRate(this.P5_FPS)
-    this.p.createCanvas(this.windowWidth, this.windowWidth)
+    this.p.createCanvas(this.windowWidth, this.windowHeight)
     this.setPixelDensity(this.pixelDensity)
     this.p.background('white')
 
@@ -1036,10 +1216,13 @@ export class Anybody extends EventEmitter {
   processMissileClick(x, y) {
     if (this.gameOver || this.paused || this.missilesDisabled) return
 
-    if (
-      this.bodies.reduce((a, c) => a + c.radius, 0) == 0 ||
-      this.frames - this.startingFrame >= this.timer
-    ) {
+    if (this.bodies.reduce((a, c) => a + c.radius, 0) == 0) {
+      return
+    }
+
+    // Check if player has points to fire a missile (points = missiles available)
+    if (this.currentPoints <= 0) {
+      console.log('Not enough points to fire missile!')
       return
     }
 
@@ -1069,22 +1252,29 @@ export class Anybody extends EventEmitter {
     // }
 
     this.missileCount++
+
+    // Deduct 1 point for firing a missile
+    this.missilesFired++
+    this.currentPoints = Math.max(0, this.currentPoints - 1)
     const radius = 10
+
+    // Get barrel tip position as starting point
+    const barrelTip = this.getBarrelTipPosition()
     const b = {
       step: this.frames,
-      position: this.p.createVector(0, this.windowWidth),
-      velocity: this.p.createVector(x, y - this.windowWidth),
+      position: this.p.createVector(barrelTip.x, barrelTip.y),
+      velocity: this.p.createVector(x - barrelTip.x, y - barrelTip.y),
       radius
     }
-    // b.velocity.setMag(this.missileSpeed * this.speedFactor)
-    b.velocity.limit(this.missileSpeed * this.speedFactor)
-    if (b.velocity.x <= 0) {
-      b.velocity.x = 1
-    }
+    b.velocity.setMag(this.missileSpeed * this.speedFactor)
+    // b.velocity.limit(this.missileSpeed * this.speedFactor)
+    // if (b.velocity.x <= 0) {
+    //   b.velocity.x = 1
+    // }
     if (b.velocity.y >= 0) {
       b.velocity.y = -1
     }
-    let sum = b.velocity.x - b.velocity.y
+    let sum = Math.abs(b.velocity.x) + Math.abs(b.velocity.y)
     const max = this.missileVectorLimitSum / 1000
     if (sum > max) {
       b.velocity.limit(this.missileSpeed * this.speedFactor * 0.999)
@@ -1127,6 +1317,104 @@ export class Anybody extends EventEmitter {
     }
   }
 
+  // Handle body hit for meter system and points
+  handleBodyHit(bodyIndex, hitPosition = null) {
+    if (bodyIndex === 0) {
+      // Hero body hit - subtract points (reduces available missiles)
+      const pointsLost = 10
+      this.currentPoints = Math.max(0, this.currentPoints - pointsLost)
+
+      // Create animated balls leaving bottom left corner going to top left
+      if (hitPosition) {
+        this.createAnimatedBalls(
+          pointsLost,
+          { x: 20, y: this.windowHeight - 40 },
+          { x: 20, y: 40 },
+          'negative'
+        )
+      }
+      return
+    }
+
+    if (!this.bodyMeters[bodyIndex]) return
+
+    const meter = this.bodyMeters[bodyIndex]
+    meter.meter = Math.min(meter.meter + 1, meter.maxMeter)
+
+    // Calculate points for hitting this body type
+    let basePoints = 0
+    switch (bodyIndex) {
+      case 1:
+      case 2:
+        basePoints = 1
+        break
+      case 3:
+        basePoints = 2
+        break
+      case 4:
+      case 5:
+        basePoints = 10
+        break
+    }
+
+    // Apply 2x bonus if body type is in bonus mode
+    if (this.isBodyInBonusMode(bodyIndex)) {
+      basePoints *= 2
+    }
+
+    // Add points (increases available missiles)
+    this.currentPoints += basePoints
+
+    // Create animated balls moving from hit position to bottom left corner
+    if (hitPosition && basePoints > 0) {
+      this.createAnimatedBalls(
+        basePoints,
+        hitPosition,
+        { x: 20, y: this.windowHeight - 40 },
+        'positive'
+      )
+    }
+
+    // Check if meter is full and not already in bonus mode
+    if (meter.meter >= meter.maxMeter && !meter.bonusUntil) {
+      meter.bonusUntil = this.frames + this.bonusDuration
+      meter.meter = 0 // Reset meter after bonus activation
+      console.log(`Body type ${bodyIndex} entered bonus mode!`)
+    }
+  }
+
+  // Check if a body type is in bonus mode
+  isBodyInBonusMode(bodyIndex) {
+    if (!this.bodyMeters[bodyIndex]) return false
+    const meter = this.bodyMeters[bodyIndex]
+
+    if (meter.bonusUntil && this.frames >= meter.bonusUntil) {
+      meter.bonusUntil = null // Clear expired bonus
+      console.log(`Body type ${bodyIndex} bonus mode expired`)
+      return false
+    }
+
+    return meter.bonusUntil !== null
+  }
+
+  // Create animated balls for point visualization
+  createAnimatedBalls(count, startPos, endPos, type) {
+    const delay = 5 // frames between each ball release
+    for (let i = 0; i < count; i++) {
+      const ball = {
+        startPos: { ...startPos },
+        endPos: { ...endPos },
+        currentPos: { ...startPos },
+        progress: 0,
+        speed: 0.05, // 5% progress per frame
+        delay: i * delay, // stagger release
+        type: type, // 'positive' or 'negative'
+        active: false
+      }
+      this.animatedBalls.push(ball)
+    }
+  }
+
   handleSave = () => {
     // mock for testing visuals
 
@@ -1141,6 +1429,241 @@ export class Anybody extends EventEmitter {
         this.saveStatus = 'saved'
       }, 2000)
     }
+  }
+
+  handleClickTargeting(gameX, gameY) {
+    const barrelBaseX = this.gameWidth / 2
+    const barrelBaseY = this.gameHeight
+
+    // Calculate the angle from barrel base to click point (anywhere on screen)
+    const deltaX = gameX - barrelBaseX
+    const deltaY = gameY - barrelBaseY
+    const clickAngle = Math.atan2(deltaX, -deltaY)
+    const maxAngle = Math.PI / 3 // 60 degrees max angle
+
+    // Clamp angle to barrel's maximum range
+    const clampedAngle = Math.max(-maxAngle, Math.min(maxAngle, clickAngle))
+
+    // Calculate target position in the direction of the click with fixed distance
+    const barrelLength = 280
+    const targetDistance = barrelLength * 3 // Fixed distance for target
+    const targetX = barrelBaseX + Math.sin(clampedAngle) * targetDistance
+    const targetY = barrelBaseY - Math.cos(clampedAngle) * targetDistance
+
+    this.targetPosition = { x: targetX, y: targetY }
+
+    // Update aim angle for barrel display
+    this.aimAngle = Math.max(-1, Math.min(1, clampedAngle / maxAngle))
+  }
+
+  handleProportionalAiming(screenX) {
+    // Convert screen X position to aim angle for proportional aiming (drag mode)
+    const screenCenterX = this.windowWidth / 2
+    const maxAimDistance = this.windowWidth / 3 // How far from center to get max aim angle
+    const relativeX = (screenX - screenCenterX) / maxAimDistance
+    this.aimAngle = Math.max(-1, Math.min(1, relativeX))
+
+    // Update target position based on aim angle
+    const maxAngle = Math.PI / 3 // 60 degrees max angle
+    const angle = this.aimAngle * maxAngle
+    const barrelBaseX = this.gameWidth / 2
+    const barrelBaseY = this.gameHeight
+    const barrelLength = 280
+    const targetDistance = barrelLength * 3 // Fixed distance for target
+
+    this.targetPosition = {
+      x: barrelBaseX + Math.sin(angle) * targetDistance,
+      y: barrelBaseY - Math.cos(angle) * targetDistance
+    }
+  }
+
+  // Helper method to get barrel tip position
+  getBarrelTipPosition() {
+    const barrelLength = 280
+    const maxAngle = Math.PI / 3 // 60 degrees max angle
+    const angle = this.aimAngle * maxAngle
+
+    const tipX = this.gameWidth / 2 + Math.sin(angle) * barrelLength
+    const tipY = this.gameHeight - Math.cos(angle) * barrelLength
+
+    return { x: tipX, y: tipY }
+  }
+
+  // Window-level event handlers
+  handleWindowMouseDown = (e) => {
+    if (!this.hasTouched && !this.p.canvas.contains(e.target)) {
+      this.isMousePressed = true
+      this.pressStartTime = Date.now()
+      this.isDragging = false
+
+      const { gameX, gameY } = this.getWindowXY(e)
+
+      // Handle targeting for clicks outside canvas
+      if (
+        gameX >= 0 &&
+        gameX <= this.gameWidth &&
+        gameY >= 0 &&
+        gameY <= this.gameHeight
+      ) {
+        this.handleClickTargeting(gameX, gameY)
+
+        // Fire immediately on click if we have a target
+        if (this.targetPosition) {
+          this.missileClick(this.targetPosition.x, this.targetPosition.y)
+          this.lastRapidFireFrame = this.p5Frames
+        }
+      }
+    }
+  }
+
+  handleWindowMouseUp = () => {
+    if (!this.hasTouched) {
+      this.isMousePressed = false
+      this.pressStartTime = 0
+      this.isDragging = false
+    }
+  }
+
+  handleWindowMouseMove = (e) => {
+    if (!this.hasTouched) {
+      const { x, gameX, gameY } = this.getWindowXY(e)
+      this.mouseX = x
+      this.mouseY = gameY
+
+      // Check for drag mode switch if holding down and moving
+      if (this.isMousePressed && this.pressStartTime > 0) {
+        const holdTime = Date.now() - this.pressStartTime
+        if (holdTime > 200 && !this.isDragging) {
+          // 200ms to enter drag mode
+          this.isDragging = true
+          console.log(
+            'Window dragging detected - using proportional positioning'
+          )
+        }
+      }
+
+      // Handle aiming based on current position
+      if (
+        gameX >= 0 &&
+        gameX <= this.gameWidth &&
+        gameY >= 0 &&
+        gameY <= this.gameHeight
+      ) {
+        if (this.isDragging) {
+          // When dragging, use proportional horizontal position for aiming
+          this.handleProportionalAiming(x)
+        } else if (this.isMousePressed) {
+          // When pressing and moving (but not yet dragging), update click targeting
+          this.handleClickTargeting(gameX, gameY)
+        } else if (!this.isMousePressed) {
+          // When just hovering (not pressing), update targeting for visual feedback
+          this.handleClickTargeting(gameX, gameY)
+        }
+      }
+    }
+  }
+
+  handleWindowTouchStart = (e) => {
+    if (!this.p.canvas.contains(e.target)) {
+      this.hasTouched = true
+      this.isTouchPressed = true
+      this.pressStartTime = Date.now()
+      this.isDragging = false
+
+      const { gameX, gameY } = this.getWindowXY(e)
+
+      // Handle targeting for touches outside canvas
+      if (
+        gameX >= 0 &&
+        gameX <= this.gameWidth &&
+        gameY >= 0 &&
+        gameY <= this.gameHeight
+      ) {
+        this.handleClickTargeting(gameX, gameY)
+
+        // Fire immediately on touch if we have a target
+        if (this.targetPosition) {
+          this.missileClick(this.targetPosition.x, this.targetPosition.y)
+          this.lastRapidFireFrame = this.p5Frames
+        }
+      }
+
+      e.preventDefault()
+      return false
+    }
+  }
+
+  handleWindowTouchEnd = (e) => {
+    this.isTouchPressed = false
+    this.pressStartTime = 0
+    this.isDragging = false
+    e.preventDefault()
+    return false
+  }
+
+  handleWindowTouchMove = (e) => {
+    const { x, gameX, gameY } = this.getWindowXY(e)
+    this.mouseX = x
+    this.mouseY = gameY
+
+    // Check for drag mode switch if holding down and moving
+    if (this.isTouchPressed && this.pressStartTime > 0) {
+      const holdTime = Date.now() - this.pressStartTime
+      if (holdTime > 200 && !this.isDragging) {
+        // 200ms to enter drag mode
+        this.isDragging = true
+        console.log(
+          'Window touch dragging detected - using proportional positioning'
+        )
+      }
+    }
+
+    // Handle aiming based on current position
+    if (
+      gameX >= 0 &&
+      gameX <= this.gameWidth &&
+      gameY >= 0 &&
+      gameY <= this.gameHeight
+    ) {
+      if (this.isDragging) {
+        // When dragging, use proportional horizontal position for aiming
+        this.handleProportionalAiming(x)
+      } else if (this.isTouchPressed) {
+        // When pressing and moving (but not yet dragging), update click targeting
+        this.handleClickTargeting(gameX, gameY)
+      } else if (!this.isTouchPressed) {
+        // When just hovering (not pressing), update targeting for visual feedback
+        this.handleClickTargeting(gameX, gameY)
+      }
+    }
+
+    e.preventDefault()
+    return false
+  }
+
+  // Helper method to check if a point is above the barrel firing line
+  isAboveBarrelLine(x, y) {
+    const barrelLength = 280
+    const maxAngle = Math.PI / 3 // 60 degrees max angle
+    const barrelBaseX = this.gameWidth / 2
+    const barrelBaseY = this.gameHeight
+
+    // Calculate the maximum reachable height at this X position
+    const deltaX = Math.abs(x - barrelBaseX)
+    const maxReachableAngle = maxAngle
+
+    // If X is beyond barrel's horizontal reach, it's not fireable
+    const maxHorizontalReach = barrelLength * Math.sin(maxReachableAngle)
+    if (deltaX > maxHorizontalReach) {
+      return false
+    }
+
+    // Calculate the barrel tip Y position if aimed at this X
+    const angleToX = Math.asin(deltaX / barrelLength)
+    const barrelTipY = barrelBaseY - barrelLength * Math.cos(angleToX)
+
+    // Point is above barrel line if Y is less than (above) the barrel tip Y
+    return y < barrelTipY
   }
 }
 

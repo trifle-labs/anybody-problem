@@ -16,12 +16,20 @@ export const Buttons = {
     fgHover = 'rgba(160, 67, 232, 0.25)',
     p = this.p,
     disabled = false,
+    gameArea = false,
     key = `${text}-${x}-${y}-${height}-${width}`
   }) {
     // register the button if it's not registered
     let button = this.buttons[key]
     if (!button) {
-      this.buttons[key] = { x, y, height, width, onClick: onClick.bind(this) }
+      this.buttons[key] = {
+        x,
+        y,
+        height,
+        width,
+        onClick: onClick.bind(this),
+        gameArea
+      }
       button = this.buttons[key]
     }
     button.visible = true

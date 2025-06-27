@@ -61,7 +61,10 @@ export const Calculations = {
       body.position.y = body_position[1]
     }
 
-    const scaledWindowWidth = this.convertFloatToScaledBigInt(this.windowWidth)
+    const scaledWindowWidth = this.convertFloatToScaledBigInt(this.gameWidth)
+    const scaledWindowHeight = this.convertFloatToScaledBigInt(
+      this.effectiveGameHeight
+    )
     for (let i = 0; i < bodies.length; i++) {
       const body = bodies[i]
 
@@ -70,10 +73,10 @@ export const Calculations = {
       } else if (body.position.x <= 0n) {
         body.position.x = scaledWindowWidth
       }
-      if (body.position.y >= scaledWindowWidth) {
+      if (body.position.y >= scaledWindowHeight) {
         body.position.y = 0n
       } else if (body.position.y <= 0n) {
-        body.position.y = scaledWindowWidth
+        body.position.y = scaledWindowHeight
       }
     }
     return bodies
@@ -194,7 +197,7 @@ export const Calculations = {
     return {
       position: {
         x: 0,
-        y: this.windowWidth
+        y: this.gameHeight
       },
       velocity: {
         x: this.convertScaledBigIntToFloat(missile[0]),
@@ -336,11 +339,11 @@ export const Calculations = {
         `Missile velocity.y ${missile.velocity.y} should be greater than ${-scaledMissileVectorLimit}`
       )
     }
-    if (missile.velocity.x < 0n) {
-      throw new Error(
-        `Missile velocity.x ${missile.velocity.x} should be positive`
-      )
-    }
+    // if (missile.velocity.x < 0n) {
+    //   throw new Error(
+    //     `Missile velocity.x ${missile.velocity.x} should be positive`
+    //   )
+    // }
     if (missile.velocity.x > scaledMissileVectorLimit) {
       throw new Error(
         `Missile velocity.x ${missile.velocity.x} should be less than ${scaledMissileVectorLimit}`
@@ -360,7 +363,7 @@ export const Calculations = {
     // NOTE: Missile Limiter() circuit is lt and gt NOT lte or gte
     // NOTE: Body is lte and gte
     if (
-      missile.position.x > BigInt(this.windowWidth) * this.scalingFactor ||
+      missile.position.x > BigInt(this.gameWidth) * this.scalingFactor ||
       missile.position.y < 0n
     ) {
       missile.radius = 0n
@@ -401,9 +404,15 @@ export const Calculations = {
         convertedBody.frame = this.frames
         this.explosions.push(convertedBody)
         this.hits.push(convertedBody)
+
+        // Handle body hit for meter system
+        this.handleBodyHit(convertedBody.bodyIndex)
+
+        if (!this.util && convertedBody.bodyIndex == 0) {
+          this.shakeScreen()
+        }
         if (!this.util) {
           this.makeExplosionStart(x, y)
-          this.shakeScreen()
           this.sound?.playExplosion(x, y)
         }
         if (convertedBody.bodyIndex == 0) {
@@ -421,7 +430,7 @@ export const Calculations = {
           const randomX = BigInt(
             this.randomRange(
               0,
-              BigInt(this.windowWidth) * this.scalingFactor,
+              BigInt(this.gameWidth) * this.scalingFactor,
               randXseed
             )
           )
@@ -432,7 +441,7 @@ export const Calculations = {
           const randomY = BigInt(
             this.randomRange(
               0,
-              BigInt(this.windowHeight) * this.scalingFactor,
+              BigInt(this.effectiveGameHeight) * this.scalingFactor,
               randYseed
             )
           )
@@ -485,16 +494,32 @@ export const Calculations = {
         newBody.velocity.x = randomVX2
         newBody.velocity.y = randomVY2
         newBody.bodyIndex++
-        let bodyIndex = newBody.bodyIndex % 6
-        if (bodyIndex == 0) {
-          bodyIndex = 1
-          newBody.bodyIndex = bodyIndex
+
+        // Weighted random selection with progressively lower chances for higher indices
+        const bodyChances = [0, 5.0, 3.0, 2.0, 1.0, 0.5] // weights for indices 0-5
+        const totalWeight = bodyChances.reduce((sum, weight) => sum + weight, 0)
+        let random = Math.random() * totalWeight
+        let bodyIndex = 0
+
+        for (let i = 0; i < bodyChances.length; i++) {
+          random -= bodyChances[i]
+          if (random <= 0) {
+            bodyIndex = i
+            break
+          }
         }
+
+        // Ensure we never get bodyIndex 0 (hero body)
+        if (bodyIndex === 0) {
+          bodyIndex = 1
+        }
+
+        newBody.bodyIndex = bodyIndex
 
         const levelData = this.generateLevelData(this.day, bodyIndex)
         newBody.radius = BigInt(levelData[bodyIndex].radius)
         newBody.c = this.getBodyColor(this.day, bodyIndex)
-        if (this.bodies.length > 5) {
+        if (this.bodies.length > this.MAX_BODIES) {
           bodies[j] = newBody
         } else {
           addAtEnd.push(newBody)

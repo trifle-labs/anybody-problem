@@ -221,6 +221,13 @@ export const Visuals = {
       const button = this.buttons[key]
       button.visible = false
     }
+
+    // Set up full screen background
+    this.p.background(THEME.bg)
+
+    // Translate to center the game area
+    this.p.push()
+    this.p.translate(this.gameOffsetX, this.gameOffsetY)
     if (!this.showIt) return
     if (!this.firstFrame && !this.hasStarted) {
       this.hasStarted = true
@@ -251,29 +258,30 @@ export const Visuals = {
 
     this.p5Frames++
 
-    // Handle rapid fire when mouse is held down
+    // Handle rapid manual firing (only while mouse/touch is held down)
     if (
-      this.isMousePressed &&
       this.p5Frames - this.lastRapidFireFrame >= this.rapidFireRate &&
       !this.paused &&
-      !this.gameOver
+      !this.gameOver &&
+      (this.isMousePressed || this.isTouchPressed) &&
+      this.targetPosition
     ) {
-      // Use current mouse position if available, otherwise fall back to initial press position
-      const targetX = this.p.mouseX
-      const targetY = this.p.mouseY
-      console.log({
-        p5MouseX: this.p.mouseX,
-        p5MouseY: this.p.mouseY,
-        mouseX: this.mouseX,
-        mouseY: this.mouseY,
-        mouseDownX: this.mouseDownX,
-        mouseDownY: this.mouseDownY
-      })
-      if (targetX !== undefined && targetY !== undefined) {
-        console.log('Rapid fire missile at:', targetX, targetY)
-        this.missileClick(targetX, targetY)
-        this.lastRapidFireFrame = this.p5Frames
-      }
+      // Fire towards the current target position (which updates as user moves)
+      this.missileClick(this.targetPosition.x, this.targetPosition.y)
+      this.lastRapidFireFrame = this.p5Frames
+    }
+
+    // Handle autofire when dragging (fires automatically when holding and dragging)
+    if (
+      this.isDragging &&
+      this.p5Frames - this.lastAutoFireFrame >= this.autoFireRate &&
+      !this.paused &&
+      !this.gameOver &&
+      (this.isMousePressed || this.isTouchPressed) &&
+      this.targetPosition
+    ) {
+      this.missileClick(this.targetPosition.x, this.targetPosition.y)
+      this.lastAutoFireFrame = this.p5Frames
     }
 
     this.drawExplosions()
@@ -295,13 +303,22 @@ export const Visuals = {
     this.drawGunSmoke()
     this.drawExplosionSmoke()
     this.drawPoints()
+    this.drawBodyMeters() // draw meters in top right
+    this.drawMissileBarrel() // draw missile launcher barrel
 
-    if (
-      this.frames - this.startingFrame + this.FPS < this.timer &&
-      this.bodies.reduce((a, c) => a + c.radius, 0) != 0
-    ) {
+    if (this.bodies.reduce((a, c) => a + c.radius, 0) != 0) {
       this.drawMissiles()
     }
+
+    this.drawBonusModeOverlay() // draw bonus mode overlay
+    this.drawAnimatedBalls() // draw animated balls for point visualization
+
+    // End game area translation
+    this.p.pop()
+
+    // Draw UI elements outside game area (no translation)
+    this.drawAimSlider() // draw aim control slider outside game area
+    this.drawBallsCounter() // show balls counter in bottom left
 
     const notPaused = !this.paused
     const framesIsAtStopEveryInterval =
@@ -309,12 +326,10 @@ export const Visuals = {
       this.p5Frames % this.P5_FPS_MULTIPLIER == 0
     const didNotJustPause = !this.justPaused
 
-    const ranOutOfTime =
-      this.frames - this.startingFrame + this.FPS >= this.timer
     const hitHeroBody = this.bodies[0].radius == 0 && this.level !== 0
 
-    if ((ranOutOfTime || hitHeroBody) && !this.handledGameOver) {
-      this.handleGameOver({ won: true, ranOutOfTime, hitHeroBody })
+    if (hitHeroBody && !this.handledGameOver) {
+      this.handleGameOver({ won: true, hitHeroBody })
     }
     if (
       !this.won &&
@@ -332,7 +347,6 @@ export const Visuals = {
       notPaused &&
       framesIsAtStopEveryInterval &&
       didNotJustPause &&
-      !ranOutOfTime &&
       !this.handledGameOver
     ) {
       this.finish()
@@ -477,11 +491,14 @@ export const Visuals = {
       const fadeOut = this.p.map(fadeOutProgress, 0, fadeOutFrames, 1, 0)
       p.fill(rgbaOpacity(THEME.pink, fadeOut))
     } else {
-      // draw box
+      // draw box - responsive to game dimensions
+      const boxMargin = 30
+      const boxWidth = this.gameWidth - boxMargin * 2
+      const boxHeight = this.gameHeight - 120
       p.stroke(THEME.iris_60)
       p.strokeWeight(THEME.borderWt)
       p.noFill()
-      p.rect(40, 60, 920, 860, 32, 32, 32, 32)
+      p.rect(boxMargin, 60, boxWidth, boxHeight, 32, 32, 32, 32)
 
       // date
       p.textFont(fonts.body)
@@ -491,11 +508,11 @@ export const Visuals = {
       p.fill('black')
       p.stroke(THEME.iris_60)
       p.strokeWeight(THEME.borderWt)
-      p.rect(80, 30, dateBgWidth, 60, 80)
+      p.rect(60, 25, dateBgWidth, 60, 80)
       p.textAlign(p.LEFT, p.CENTER)
       p.fill(THEME.violet_25)
       p.noStroke()
-      p.text(this.date, 80 + 48 / 2, 30 + 60 / 2)
+      p.text(this.date, 60 + 48 / 2, 25 + 60 / 2)
 
       p.fill(THEME.pink)
     }
@@ -505,13 +522,19 @@ export const Visuals = {
     p.textSize(180)
     p.textAlign(p.LEFT, p.TOP)
     p.noStroke()
-    const titleY = 480 // this.windowHeight / 2 - 270
-    drawKernedText(p, 'Anybody', 92, titleY, 0.8)
-    drawKernedText(p, 'Problem', 92, titleY + 183, 2)
+    const titleY = this.gameHeight / 2 - 180 // Responsive positioning
+    const titleX = (this.gameWidth - 540) / 2 // Center horizontally
+    drawKernedText(p, 'Anybody', titleX, titleY, 0.8)
+    drawKernedText(p, 'Problem', titleX, titleY + 183, 2)
 
     this.drawPauseBodies({ fleeDuration: unpauseDuration })
 
     if (!this.willUnpause) {
+      const buttonWidth = Math.min(350, this.gameWidth - 100)
+      const buttonHeight = 108
+      const buttonY = this.gameHeight - buttonHeight - 30
+      const buttonSpacing = 20
+
       // play button
       this.drawButton({
         text: 'PLAY',
@@ -523,11 +546,14 @@ export const Visuals = {
         },
         fg: THEME.violet_50,
         bg: THEME.pink,
-        width: 410,
-        height: 108,
+        width: buttonWidth,
+        height: buttonHeight,
         textSize: 78,
-        x: !this.opensea ? 508 : this.windowWidth / 2 - 205,
-        y: 862,
+        x: !this.opensea
+          ? this.gameWidth / 2 + buttonSpacing / 2
+          : this.gameWidth / 2 - buttonWidth / 2,
+        y: buttonY,
+        gameArea: true, // Mark as game area button
         p
       })
 
@@ -540,11 +566,12 @@ export const Visuals = {
           },
           fg: THEME.violet_25,
           bg: '#241465', // THEME.iris_75,
-          width: 410,
-          height: 108,
+          width: buttonWidth,
+          height: buttonHeight,
           textSize: 78,
-          x: 82,
-          y: 862,
+          x: this.gameWidth / 2 - buttonWidth - buttonSpacing / 2,
+          y: buttonY,
+          gameArea: true, // Mark as game area button
           p
         })
       }
@@ -567,7 +594,8 @@ export const Visuals = {
   },
 
   drawBg() {
-    this.p.background(THEME.bg)
+    // Background is now handled at the start of draw() for full screen
+    // This just handles the game area background elements
 
     const drawCluster = (graphic, x, y, c) => {
       const range = 250
@@ -650,7 +678,7 @@ export const Visuals = {
     }
 
     if (!this.starBG) {
-      this.starBG = this.p.createGraphics(this.windowWidth, this.windowHeight)
+      this.starBG = this.p.createGraphics(this.gameWidth, this.gameHeight)
       this.starBG.pixelDensity(this.pixelDensity)
 
       for (let i = 0; i < 200; i++) {
@@ -660,8 +688,8 @@ export const Visuals = {
         const strings = [',', '.', '*']
         this.starBG.text(
           strings[Math.floor(Math.random() * strings.length)],
-          Math.floor(Math.random() * this.windowWidth),
-          Math.floor(Math.random() * this.windowHeight)
+          Math.floor(Math.random() * this.gameWidth),
+          Math.floor(Math.random() * this.gameHeight)
         )
       }
       // this.milkyBG ||= this.p.createGraphics(
@@ -673,13 +701,7 @@ export const Visuals = {
     const basicX = 0
     const basicY = 0
 
-    this.p.image(
-      this.starBG,
-      basicX,
-      basicY,
-      this.windowWidth,
-      this.windowHeight
-    )
+    this.p.image(this.starBG, basicX, basicY, this.gameWidth, this.gameHeight)
     // switch (this.level) {
     //   case 0:
     //   case 1:
@@ -942,48 +964,64 @@ export const Visuals = {
 
   calculatePoint(body) {
     const { position, velocity, radius, bodyIndex } = body
+    let basePoints
     switch (bodyIndex) {
       case 0:
-        return [-100, -100, -100]
+        basePoints = [-20, 0, 0]
+        break
       case 1:
-        return [100, 0, 0]
+        basePoints = [1, 0, 0]
+        break
       case 2:
-        return [200, 0, 0]
+        basePoints = [1, 0, 0]
+        break
       case 3:
-        return [300, 0, 0]
+        basePoints = [2, 0, 0]
+        break
       case 4:
-        return [400, 0, 0]
+        basePoints = [10, 0, 0]
+        break
       case 5:
-        return [500, 0, 0]
-    }
-    const bb = bodyIndex == 0
-    const maxDist = this.p.dist(0, 0, this.windowWidth, this.windowHeight)
-    const dist = this.p.dist(position.x, position.y, 0, this.windowHeight)
-    const distPoints = Math.floor(this.p.map(dist, 0, maxDist, 0, 100))
-    const velocityVector = this.p.createVector(velocity.x, velocity.y)
-    const maxVector = this.missileSpeed * this.speedFactor
-    const velPoints = Math.floor(
-      this.p.map(velocityVector.mag(), 0, maxVector, 0, 100)
-    )
-    const radiusPoints =
-      this.introStage < this.totalIntroStages
-        ? 50
-        : Math.floor(this.p.map(radius, bb ? 11 : 36, bb ? 36 : 11, 0, 100))
+        basePoints = [10, 0, 0]
+        break
+      default: {
+        const bb = bodyIndex == 0
+        const maxDist = this.p.dist(0, 0, this.windowWidth, this.windowHeight)
+        const dist = this.p.dist(position.x, position.y, 0, this.windowHeight)
+        const distPoints = Math.floor(this.p.map(dist, 0, maxDist, 0, 100))
+        const velocityVector = this.p.createVector(velocity.x, velocity.y)
+        const maxVector = this.missileSpeed * this.speedFactor
+        const velPoints = Math.floor(
+          this.p.map(velocityVector.mag(), 0, maxVector, 0, 100)
+        )
+        const radiusPoints =
+          this.introStage < this.totalIntroStages
+            ? 50
+            : Math.floor(this.p.map(radius, bb ? 11 : 36, bb ? 36 : 11, 0, 100))
 
-    return [distPoints, velPoints, radiusPoints].map((point) =>
-      bb ? point * -1 : point
-    )
+        basePoints = [distPoints, velPoints, radiusPoints].map((point) =>
+          bb ? point * -1 : point
+        )
+        break
+      }
+    }
+
+    // Apply 2x bonus if body type is in bonus mode
+    if (
+      bodyIndex !== 0 &&
+      this.isBodyInBonusMode &&
+      this.isBodyInBonusMode(bodyIndex)
+    ) {
+      basePoints = basePoints.map((point) => point * 2)
+    }
+
+    return basePoints
   },
 
   calculatePoints() {
-    return this.explosions
-      .map((explosions) => {
-        return this.calculatePoint(explosions).reduce(
-          (acc, curr) => acc + curr,
-          0
-        )
-      })
-      .reduce((acc, curr) => acc + curr, 0)
+    // Points are now calculated immediately when bodies are hit
+    // This method just returns current points for display
+    return this.currentPoints
   },
 
   drawScore() {
@@ -997,9 +1035,6 @@ export const Visuals = {
     this.drawProblemRankingsScreen()
 
     const runningFrames = this.frames - this.startingFrame
-    const seconds = (this.framesTook || runningFrames) / this.FPS
-    let secondsLeft =
-      (this.level > 5 ? 60 : GAME_LENGTH_BY_LEVEL_INDEX[this.level]) - seconds
     if (this.gameOver) {
       this.scoreSize = this.initialScoreSize
       p.pop()
@@ -1026,26 +1061,6 @@ export const Visuals = {
       } else {
         p.textAlign(p.CENTER, p.TOP)
         p.text(points, this.windowWidth / 2, 0)
-        p.textAlign(p.LEFT, p.TOP)
-        p.text(secondsLeft.toFixed(2), 20, 0)
-        p.textAlign(p.RIGHT, p.TOP)
-        if (this.hasTouched) {
-          // draw mobile reset button over the countdown
-          this.buttons['touch-timer-reset'] = {
-            x: 0,
-            y: 0,
-            width: 200,
-            height: 110,
-            disabled: false,
-            visible: true,
-            onClick: () => {
-              this.skipRedoPopupTip = true
-              this.restart(null, false)
-            }
-          }
-        }
-        // lvl
-        p.text('Lvl ' + this.level, this.windowWidth - 20, 0)
       }
     }
 
@@ -2009,56 +2024,8 @@ export const Visuals = {
   },
 
   drawGun() {
-    this.p.stroke('rgba(200,200,200,1)')
-    this.p.strokeCap(this.p.SQUARE)
-
-    if (this.p.mouseX <= 0 && this.p.mouseY <= 0) return
-
-    // Bottom left corner coordinates
-    let startX = 0
-    let startY = this.windowHeight
-    this.p.strokeWeight(THEME.borderWt)
-
-    const crossHairSize = 25
-
-    // Calculate direction from bottom left to mouse
-    let dirX = this.scaleX(this.p.mouseX) - startX
-    let dirY = this.scaleY(this.p.mouseY) - startY
-    this.p.line(
-      this.scaleX(this.p.mouseX) - crossHairSize,
-      this.scaleX(this.p.mouseY),
-      this.scaleX(this.p.mouseX) + crossHairSize,
-      this.scaleX(this.p.mouseY)
-    )
-    this.p.line(
-      this.scaleX(this.p.mouseX),
-      this.scaleX(this.p.mouseY) - crossHairSize,
-      this.scaleX(this.p.mouseX),
-      this.scaleX(this.p.mouseY) + crossHairSize
-    )
-
-    const notPreIntro = this.introStage !== this.totalIntroStages - 1
-    const duringIntro = this.introStage < this.totalIntroStages
-    const isLevel0 = this.level < 1
-    if (
-      (notPreIntro && duringIntro && isLevel0) ||
-      this.paused ||
-      this.gameOver
-    )
-      return
-
-    // Draw the line
-    const drawingContext = this.p.canvas.getContext('2d')
-    const chunk = this.windowWidth / 100
-    drawingContext.setLineDash([chunk])
-    if (this.aimHelper) {
-      drawingContext.lineDashOffset = -(this.frames * 10)
-    }
-
-    this.p.line(startX, startY, startX + dirX, startY + dirY)
-    drawingContext.setLineDash([])
-    drawingContext.lineDashOffset = 0
-    this.p.strokeWeight(0)
+    // Gun drawing is now handled by drawMissileBarrel()
+    // This method is kept for compatibility but does nothing
   },
 
   hslToGrayscale(hslArray) {
@@ -2112,7 +2079,17 @@ export const Visuals = {
 
     if (this.paused || this.gameOver) return
     for (let i = 0; i < this.explosions.length; i++) {
-      this.drawPoint(this.explosions[i])
+      const explosion = this.explosions[i]
+      this.drawPoint(explosion)
+
+      // Trigger animated balls for this explosion if not already triggered
+      if (!explosion.ballsTriggered) {
+        explosion.ballsTriggered = true
+        this.handleBodyHit(explosion.bodyIndex, {
+          x: explosion.position.x,
+          y: explosion.position.y
+        })
+      }
     }
   },
 
@@ -2201,77 +2178,19 @@ export const Visuals = {
       return
     this.p.noStroke()
     this.p.strokeWeight(0)
-    const starRadius = 10
-    const maxLife = 60
 
-    // Draw current active missiles
+    // Draw current active missiles as 3D silver balls
     for (let i = 0; i < this.missiles.length; i++) {
       const missile = this.missiles[i]
       if (missile.radius > 0) {
-        const color = 'white'
-        const thisRadius = starRadius
-
         this.p.push()
         this.p.translate(missile.position.x, missile.position.y)
-        this.star(
-          0,
-          0,
-          thisRadius,
-          thisRadius / 2,
-          5,
-          color,
-          (this.p5Frames / this.P5_FPS_MULTIPLIER) % 360,
-          0
-        )
+        this.draw3DSilverBall(missile.radius)
         this.p.pop()
       }
     }
 
-    // Draw fading trail missiles
-    for (let i = 0; i < this.stillVisibleMissiles.length; i++) {
-      const body = this.stillVisibleMissiles[i]
-      if (!body.phase) {
-        const life = 0
-
-        const color = randHSL(
-          themes.bodies.default['pastel_highlighter_marker'].cr
-        )
-        const rotateBy = (this.p5Frames / this.P5_FPS_MULTIPLIER) % 360
-        body.phase = {
-          color,
-          life,
-          rotateBy
-        }
-      } else if (!this.paused || this.introStage == this.totalIntroStages - 1) {
-        body.phase.life++
-        if (body.phase.life >= maxLife) {
-          this.stillVisibleMissiles.splice(i, 1)
-          i--
-          continue
-        }
-      }
-      this.stillVisibleMissiles[i] = body
-      const rainbowColor =
-        i == this.stillVisibleMissiles.length - 1 ? 'white' : body.phase.color //`rgba(${body.phase.color},${alpha})`
-      const thisRadius =
-        starRadius / 1.5 +
-        starRadius * (((body.phase.life / 25) * body.phase.life) / 25)
-
-      this.p.push()
-      this.p.translate(body.position.x, body.position.y)
-      this.star(
-        0,
-        0,
-        thisRadius,
-        thisRadius / 2,
-        5,
-        rainbowColor,
-        body.phase.rotateBy,
-        body.phase.life
-      )
-
-      this.p.pop()
-    }
+    // Remove trailing stars - no longer drawing fading trail missiles
   },
 
   isMissileClose(body) {
@@ -2636,7 +2555,7 @@ export const Visuals = {
       // draw hero
       const size = Math.floor(body.radius * BODY_SCALE * 2.66)
 
-      this.drawStarBackgroundSvg(size, body)
+      // this.drawStarBackgroundSvg(size, body)
       if (!body.backgroundOnly) {
         this.drawCoreSvg(body.radius * BODY_SCALE, body)
       }
@@ -2654,9 +2573,18 @@ export const Visuals = {
   async drawBodies() {
     if (this.won && (!this.celebrating || this.skipAhead)) return
     if (this.paused) return
+
+    // Draw baddies first (bodyIndex > 0)
     for (let i = 0; i < this.bodies.length; i++) {
       const body = this.bodies[i]
-      if (body.radius == 0) continue
+      if (body.radius == 0 || body.bodyIndex === 0) continue
+      this.drawBody(body)
+    }
+
+    // Draw hero body last (bodyIndex === 0) so it appears in front
+    for (let i = 0; i < this.bodies.length; i++) {
+      const body = this.bodies[i]
+      if (body.radius == 0 || body.bodyIndex !== 0) continue
       this.drawBody(body)
     }
   },
@@ -2674,6 +2602,12 @@ export const Visuals = {
         this.p.cos(this.p.frameCount / this.P5_FPS + body.bodyIndex * 3) *
         (16 + body.bodyIndex)
 
+      // Scale positions from original 1000x1000 to new game dimensions
+      const scaleX = this.gameWidth / 1000
+      const scaleY = this.gameHeight / 1000
+      const scaledX = body.position.x * scaleX
+      const scaledY = body.position.y * scaleY
+
       // if not paused, bodies flee (using vx/vy values additively)
       const xFlee =
         this.willUnpause && this.beganUnpauseAt
@@ -2682,7 +2616,7 @@ export const Visuals = {
               0,
               this.P5_FPS * fleeDuration,
               0,
-              PAUSE_BODY_DATA[i].exitX
+              PAUSE_BODY_DATA[i].exitX * scaleX
             )
           : 0
       const yFlee =
@@ -2692,7 +2626,7 @@ export const Visuals = {
               0,
               this.P5_FPS * fleeDuration,
               0,
-              PAUSE_BODY_DATA[i].exitY
+              PAUSE_BODY_DATA[i].exitY * scaleY
             )
           : 0
 
@@ -2703,8 +2637,8 @@ export const Visuals = {
         radius: body.radius,
         velocity: this.p.createVector(body.velocity.x, body.velocity.y),
         position: this.p.createVector(
-          body.position.x + xWobble + xFlee,
-          body.position.y + yWobble + yFlee
+          scaledX + xWobble + xFlee,
+          scaledY + yWobble + yFlee
         )
       }
 
@@ -2747,76 +2681,62 @@ export const Visuals = {
 
   drawBaddie(body, isGhost = false) {
     const colorHSL = body.c.baddie
-    const coreWidth = body.radius * BODY_SCALE
-    const maxWidth = (body.maxRadius || body.radius) * BODY_SCALE
-    let bgColor = this.brighten(colorHSL, -20)
-    let coreColor = `hsl(${colorHSL[0]},${colorHSL[1]}%,${colorHSL[2]}%)`
+    const ballRadius = (body.radius / 2) * BODY_SCALE // Use radius directly, not divided by 2
+
     this.p.push()
-    const rotationSpeedOffset = body.rotationSpeedOffset || 1
-    const rotate = isGhost
-      ? 0
-      : (this.p5Frames / this.P5_FPS_MULTIPLIER / (30 / rotationSpeedOffset)) %
-        360
-    this.p.rotate(rotate)
-    let strokeColor = body.c.strokeColor
-    let strokeWidth = body.c.strokeWidth
 
     if (isGhost) {
-      bgColor = this.replaceOpacity(bgColor, 0.25)
-      coreColor = this.replaceOpacity(coreColor, 0.25)
-      strokeColor = strokeColor
-        ? this.replaceOpacity(strokeColor, 0.25)
-        : strokeColor
+      this.p.tint(255, 64) // Make ghost baddies semi-transparent
     }
-    this.drawImageAsset(
-      'BADDIE_SVG',
-      'bg',
-      Math.floor(coreWidth * (310 / 111.2)),
-      {
-        fill: bgColor,
-        strokeColor,
-        strokeWidth,
-        maxWidth: Math.floor(maxWidth * (310 / 111.2))
+
+    // Draw colored 3D ball instead of baddie sprite
+    this.draw3DColoredBall(ballRadius, colorHSL, isGhost)
+
+    this.p.pop()
+  },
+
+  draw3DColoredBall(radius, colorHSL, isGhost = false, isFlashing = false) {
+    const { p } = this
+    const ballRadius = radius // This should match the hitbox exactly
+    let baseColor = `hsl(${colorHSL[0]},${colorHSL[1]}%,${colorHSL[2]}%)`
+    let highlightColor = `hsl(${colorHSL[0]},${Math.min(100, colorHSL[1] + 20)}%,${Math.min(100, colorHSL[2] + 30)}%)`
+    let shineColor = `hsl(${colorHSL[0]},${Math.max(0, colorHSL[1] - 30)}%,${Math.min(100, colorHSL[2] + 60)}%)`
+
+    // Apply flashing effect if needed
+    if (isFlashing) {
+      const flash = Math.floor(this.p5Frames / 10) % 2 === 0
+      if (flash) {
+        baseColor = 'white'
+        highlightColor = '#EEEEEE'
+        shineColor = '#FFFFFF'
       }
-    )
-    this.p.push()
-    const heading = this.level == 0 ? -this.p.PI / 2 : body.velocity.heading()
-    this.p.rotate(-rotate + heading + this.p.PI / 2)
-    if (!body.backgroundOnly) {
-      this.drawImageAsset('BADDIE_SVG', 'core', coreWidth, { fill: coreColor })
-
-      // pupils always looking at missile, if no missile, look at mouse
-      const target =
-        this.missiles.length > 0
-          ? this.missiles[0].position
-          : { x: this.scaleX(this.p.mouseX), y: this.scaleY(this.p.mouseY) }
-
-      const bx = body.position.x
-      const by = body.position.y
-
-      const leftEye = [-body.radius * 0.6, -body.radius * 0.15]
-      const rightEye = [body.radius * 0.6, -body.radius * 0.15]
-
-      this.p.fill('white')
-      this.p.strokeWeight(1)
-      this.p.stroke('black')
-      this.p.circle(leftEye[0], leftEye[1], body.radius)
-      this.p.circle(rightEye[0], rightEye[1], body.radius)
-
-      const angle =
-        Math.atan2(target.y - by, target.x - bx) - heading - this.p.PI / 2
-
-      const distance = body.radius * 0.2
-      const leftX = distance * Math.cos(angle)
-      const leftY = distance * Math.sin(angle)
-
-      this.p.fill('black')
-      this.p.circle(leftX + leftEye[0], leftY + leftEye[1], body.radius * 0.5)
-      this.p.circle(leftX + rightEye[0], leftY + rightEye[1], body.radius * 0.5)
     }
 
-    this.p.pop()
-    this.p.pop()
+    p.push()
+
+    // Main ball body - outer circle matches hitbox radius exactly
+    p.fill(baseColor)
+    p.noStroke()
+    if (isGhost) {
+      p.fill(baseColor.replace(')', ', 0.25)').replace('hsl', 'hsla'))
+    }
+    p.circle(0, 0, ballRadius * 2) // diameter = radius * 2, so outer edge is at ballRadius
+
+    // Highlight for 3D effect - smaller circle within the main ball
+    p.fill(highlightColor)
+    if (isGhost) {
+      p.fill(highlightColor.replace(')', ', 0.25)').replace('hsl', 'hsla'))
+    }
+    p.circle(-ballRadius * 0.3, -ballRadius * 0.3, ballRadius * 1.2) // Still within main ball
+
+    // Small bright highlight for shininess - smallest circle
+    p.fill(shineColor)
+    if (isGhost) {
+      p.fill(shineColor.replace(')', ', 0.25)').replace('hsl', 'hsla'))
+    }
+    p.circle(-ballRadius * 0.4, -ballRadius * 0.4, ballRadius * 0.6) // Smallest highlight
+
+    p.pop()
   },
 
   colorArrayToTxt(cc) {
@@ -2899,7 +2819,7 @@ export const Visuals = {
     if (!showPopup) return
     this.popup = {
       header: 'Hmmm',
-      body: ['Couldn’t share or copy to clipboard.', 'Try again?'],
+      body: ["Couldn't share or copy to clipboard.", 'Try again?'],
       buttons: [
         {
           text: 'CLOSE',
@@ -2969,7 +2889,7 @@ export const Visuals = {
   },
   makeMissileStart() {
     this.gunSmoke ||= []
-    const particles = this.makeParticles(0, this.windowHeight)
+    const particles = this.makeParticles(this.gameWidth / 2, this.gameHeight)
     this.gunSmoke.push(...particles)
   },
   drawGunSmoke() {
@@ -2981,5 +2901,337 @@ export const Visuals = {
     if (!this.explosionSmoke) return
     if (this.explosionSmoke.length == 0) return
     this.drawParticles(this.explosionSmoke)
+  },
+
+  draw3DSilverBall(radius) {
+    const { p } = this
+    const ballRadius = radius * 2
+
+    // Create gradient effect for 3D appearance
+    p.push()
+
+    // Main ball body (dark silver)
+    p.fill('#A0A0A0')
+    p.noStroke()
+    p.circle(0, 0, ballRadius * 2)
+
+    // Highlight (bright silver)
+    p.fill('#E8E8E8')
+    p.circle(-ballRadius * 0.3, -ballRadius * 0.3, ballRadius * 0.8)
+
+    // Small bright highlight for shininess
+    p.fill('#FFFFFF')
+    p.circle(-ballRadius * 0.4, -ballRadius * 0.4, ballRadius * 0.3)
+
+    p.pop()
+  },
+
+  drawMissileBarrel() {
+    const { p } = this
+    const barrelWidth = 40 // Same as ball diameter (2 * radius 20)
+    const barrelLength = 280 // Made longer (was 225)
+    const maxAngle = Math.PI / 3 // 60 degrees max angle
+    const angle = this.aimAngle * maxAngle
+
+    p.push()
+    // Position barrel pivot point at center bottom where missiles depart
+    p.translate(this.gameWidth / 2, this.gameHeight)
+    // Rotate around the bottom tip (pivot point)
+    p.rotate(angle)
+
+    // Barrel (drawn upward from pivot point at bottom)
+    p.fill('#666666')
+    p.stroke('#333333')
+    p.strokeWeight(2)
+    p.rect(-barrelWidth / 2, -barrelLength, barrelWidth, barrelLength, 5)
+
+    // Barrel tip (at the top of the barrel)
+    p.fill('#444444')
+    p.rect(-barrelWidth / 2 + 2, -barrelLength, barrelWidth - 4, 8, 2)
+
+    p.pop()
+  },
+
+  // Helper method to get barrel tip position
+  getBarrelTipPosition() {
+    const barrelLength = 280
+    const maxAngle = Math.PI / 3 // 60 degrees max angle
+    const angle = this.aimAngle * maxAngle
+
+    const tipX = this.gameWidth / 2 + Math.sin(angle) * barrelLength
+    const tipY = this.gameHeight - Math.cos(angle) * barrelLength
+
+    return { x: tipX, y: tipY }
+  },
+
+  drawAimSlider() {
+    if (this.paused || this.gameOver) return
+
+    const { p } = this
+    const sliderY = this.windowHeight - 50 // Bottom of full screen
+    const sliderWidth = Math.min(400, this.windowWidth * 0.6)
+    const sliderX = (this.windowWidth - sliderWidth) / 2
+    const sliderHeight = 30
+
+    p.push()
+
+    // Slider track
+    p.fill('#333333')
+    p.stroke('#555555')
+    p.strokeWeight(2)
+    p.rect(sliderX, sliderY, sliderWidth, sliderHeight, 15)
+
+    // Slider handle
+    const handleX = sliderX + ((this.aimAngle + 1) * sliderWidth) / 2
+    p.fill('#CCCCCC')
+    p.stroke('#888888')
+    p.strokeWeight(3)
+    p.circle(handleX, sliderY + sliderHeight / 2, 40)
+
+    // Center mark
+    p.stroke('#666666')
+    p.strokeWeight(2)
+    p.line(
+      this.windowWidth / 2,
+      sliderY,
+      this.windowWidth / 2,
+      sliderY + sliderHeight
+    )
+
+    // Label
+    p.fill('white')
+    p.noStroke()
+    p.textAlign(p.CENTER, p.CENTER)
+    p.textSize(16)
+    p.text('AIM', this.windowWidth / 2, sliderY - 20)
+
+    p.pop()
+
+    // Note: Mouse movement now controls aiming, so no click handler needed
+  },
+
+  drawBodyMeters() {
+    if (this.paused || this.gameOver || !this.bodyMeters) return
+
+    const { p } = this
+    const meterWidth = 30
+    const meterHeight = 150
+    const meterSpacing = 35
+    const startX = 20 // Top left instead of top right
+    const startY = 20
+
+    p.push()
+
+    // Draw meters for body types 1-5
+    for (let bodyIndex = 1; bodyIndex <= 5; bodyIndex++) {
+      const meter = this.bodyMeters[bodyIndex]
+      if (!meter) continue
+
+      const x = startX + (bodyIndex - 1) * meterSpacing
+      const y = startY
+
+      // Get body color for this body type
+      const bodyColor = this.getBodyColor(this.day, bodyIndex)
+      const fillColor = bodyColor.baddie
+        ? `hsl(${bodyColor.baddie[0]},${bodyColor.baddie[1]}%,${bodyColor.baddie[2]}%)`
+        : 'white'
+
+      // Draw meter background
+      p.noFill()
+      p.stroke('white')
+      p.strokeWeight(2)
+      p.rect(x, y, meterWidth, meterHeight)
+
+      // Draw meter fill
+      const fillHeight = (meter.meter / meter.maxMeter) * meterHeight
+      if (fillHeight > 0) {
+        p.noStroke()
+
+        // Check if in bonus mode
+        const inBonusMode =
+          this.isBodyInBonusMode && this.isBodyInBonusMode(bodyIndex)
+        if (inBonusMode) {
+          // Flash between colors when in bonus mode
+          const flash = Math.floor(this.p5Frames / 10) % 2 == 0
+          p.fill(flash ? 'gold' : fillColor)
+        } else {
+          p.fill(fillColor)
+        }
+
+        p.rect(x, y + meterHeight - fillHeight, meterWidth, fillHeight)
+      }
+
+      // Draw bonus mode indicator
+      if (this.isBodyInBonusMode && this.isBodyInBonusMode(bodyIndex)) {
+        p.noStroke()
+        p.fill('gold')
+        p.textAlign(p.CENTER, p.CENTER)
+        p.textFont(fonts.body)
+        p.textSize(12)
+        p.text('2X', x + meterWidth / 2, y - 15)
+      }
+
+      // Draw meter value text
+      p.noStroke()
+      p.fill('white')
+      p.textAlign(p.CENTER, p.CENTER)
+      p.textFont(fonts.body)
+      p.textSize(10)
+      p.text(meter.meter, x + meterWidth / 2, y + meterHeight + 10)
+    }
+
+    p.pop()
+  },
+
+  drawBonusModeOverlay() {
+    if (this.paused || this.gameOver || !this.bodyMeters) return
+
+    const { p } = this
+    const bonusTexts = []
+
+    // Check all body types for bonus mode and collect them
+    for (let bodyIndex = 1; bodyIndex <= 5; bodyIndex++) {
+      if (this.isBodyInBonusMode && this.isBodyInBonusMode(bodyIndex)) {
+        // Get the color for this body type
+        const bodyColor = this.getBodyColor(this.day, bodyIndex)
+        const fillColor = bodyColor.baddie
+
+        if (fillColor && fillColor.length >= 3) {
+          const colorName = this.getColorName(fillColor)
+          bonusTexts.push({
+            text: colorName.toUpperCase(),
+            color: `hsl(${fillColor[0]}, ${fillColor[1]}%, ${fillColor[2]}%)`
+          })
+        }
+      }
+    }
+
+    // Draw bonus text indicators in top right
+    if (bonusTexts.length > 0) {
+      p.push()
+      p.textFont(fonts.body)
+      p.textSize(64) // Much bigger text
+      p.textAlign(p.RIGHT, p.TOP)
+      p.strokeWeight(3)
+
+      const startX = this.gameWidth - 20
+      const startY = 20
+      const lineHeight = 80
+
+      bonusTexts.forEach((bonus, index) => {
+        const y = startY + index * lineHeight
+
+        // Create flashing effect
+        const flashSpeed = 10 // frames per flash
+        const isFlashing = Math.floor(this.p5Frames / flashSpeed) % 2 === 0
+
+        if (isFlashing) {
+          // Draw outline for visibility
+          p.stroke('black')
+          p.fill('white')
+          p.text(bonus.text, startX, y)
+
+          // Draw colored text on top
+          p.noStroke()
+          p.fill(bonus.color)
+          p.text(bonus.text, startX, y)
+        }
+      })
+
+      p.pop()
+    }
+  },
+
+  // Helper method to get a readable color name from HSL values
+  getColorName(hslArray) {
+    const hue = hslArray[0]
+
+    if (hue >= 0 && hue < 30) return 'red'
+    if (hue >= 30 && hue < 60) return 'orange'
+    if (hue >= 60 && hue < 90) return 'yellow'
+    if (hue >= 90 && hue < 150) return 'green'
+    if (hue >= 150 && hue < 210) return 'cyan'
+    if (hue >= 210 && hue < 270) return 'blue'
+    if (hue >= 270 && hue < 330) return 'purple'
+    if (hue >= 330 && hue <= 360) return 'red'
+
+    return 'colored' // fallback
+  },
+
+  drawAnimatedBalls() {
+    if (!this.animatedBalls || this.animatedBalls.length === 0) return
+
+    const { p } = this
+    p.push()
+
+    // Update and draw each animated ball
+    for (let i = this.animatedBalls.length - 1; i >= 0; i--) {
+      const ball = this.animatedBalls[i]
+
+      // Handle delay before ball becomes active
+      if (!ball.active) {
+        ball.delay--
+        if (ball.delay <= 0) {
+          ball.active = true
+        }
+        continue
+      }
+
+      // Update ball position
+      ball.progress += ball.speed
+      if (ball.progress >= 1) {
+        // Ball reached destination, remove it
+        this.animatedBalls.splice(i, 1)
+        continue
+      }
+
+      // Interpolate position
+      ball.currentPos.x =
+        ball.startPos.x + (ball.endPos.x - ball.startPos.x) * ball.progress
+      ball.currentPos.y =
+        ball.startPos.y + (ball.endPos.y - ball.startPos.y) * ball.progress
+
+      // Draw the ball
+      p.push()
+      p.translate(ball.currentPos.x, ball.currentPos.y)
+
+      // Color based on type
+      if (ball.type === 'positive') {
+        this.draw3DSilverBall(8) // Small silver balls for positive points
+      } else {
+        // Red balls for negative points
+        p.fill('#FF4444')
+        p.stroke('#CC0000')
+        p.strokeWeight(2)
+        p.circle(0, 0, 16)
+
+        // Add highlight for 3D effect
+        p.fill('#FF8888')
+        p.noStroke()
+        p.circle(-3, -3, 8)
+      }
+
+      p.pop()
+    }
+
+    p.pop()
+  },
+
+  drawBallsCounter() {
+    if (this.paused || this.gameOver) return
+
+    const { p } = this
+    p.push()
+
+    // Draw balls counter in bottom left
+    p.fill('white')
+    p.noStroke()
+    p.textAlign(p.LEFT, p.BOTTOM)
+    p.textSize(24)
+
+    const ballsText = `${this.currentPoints} BALLS`
+    p.text(ballsText, 20, this.windowHeight - 20)
+
+    p.pop()
   }
 }
