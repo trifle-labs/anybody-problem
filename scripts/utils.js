@@ -1099,8 +1099,8 @@ const solveLevel = async (
 
     const missile = {
       step: i * 2,
-      position: anybody.createVector(0, windowWidth),
-      velocity: anybody.createVector(ethers.BigNumber.from(10), 0),
+      position: anybody.createVector(0, windowWidth.toNumber()),
+      velocity: anybody.createVector(10, 0),
       radius: newRadius
     }
     const missileInit = anybody.processMissileInit(missile)
