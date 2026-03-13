@@ -125,9 +125,7 @@ template ForceAccumulator(totalBodies) { // max 10 = maxBits: 4
     component positionLowerLimiterX[totalBodies];
     component positionLimiterY[totalBodies];
     component positionLowerLimiterY[totalBodies];
-    component isZeroX[totalBodies];
     component muxX[totalBodies];
-    component isZeroY[totalBodies];
     component muxY[totalBodies];
 
     for (var i = 0; i < totalBodies; i++) {
@@ -238,25 +236,13 @@ template ForceAccumulator(totalBodies) { // max 10 = maxBits: 4
       positionLowerLimiterX[i].limit <== maxVectorScaled; // maxBits: 15 (maxNum: 20_000)
       positionLowerLimiterX[i].rather <== windowWidthScaled + maxVectorScaled; // maxBits: 20 (maxNum: 1_020_000)
       // out_bodies[i][0] <== positionLowerLimiterX[i].out;
-    
-      isZeroX[i]  = IsZero();
-      isZeroX[i].in <== positionLimiterX[i].in - positionLimiterX[i].out;
-      // log("bodies[i][0]", bodies[i][0]);
-      // log("out_bodies[i][2]", out_bodies[i][2]);
-      // log("bodies[i][0] + out_bodies[i][2]", bodies[i][0] + out_bodies[i][2]);
-      // log("positionLimiterX[i].in", positionLimiterX[i].in);
-      // log("positionLimiterX[i].out", positionLimiterX[i].out);
 
-
-      // log("positionLowerLimiterX[i].in", positionLowerLimiterX[i].in);
-      // log("positionLowerLimiterX[i].out", positionLowerLimiterX[i].out);
-      // log("positionLowerLimiterX[i].out - maxVectorScaled", positionLowerLimiterX[i].out - maxVectorScaled);
-
-      // log("isZeroX[i].out", isZeroX[i].out);
+      // positionLimiterX.ltOut == 1 iff in < limit (no upper-bound clamping), same as IsZero(in - out).
+      // Use ltOut directly to avoid 2 constraints from IsZero.
       muxX[i] = Mux1();
       muxX[i].c[0] <== positionLimiterX[i].out - maxVectorScaled;
       muxX[i].c[1] <== positionLowerLimiterX[i].out - maxVectorScaled;
-      muxX[i].s <== isZeroX[i].out;
+      muxX[i].s <== positionLimiterX[i].ltOut;
   
       // if positionLimiterX.out !== positionLimiterX.in, then out_bodies[i][0] <== positionLimiterX.out
       // else, out_bodies[i][0] <== positionLowerLimiterX.out
@@ -277,14 +263,11 @@ template ForceAccumulator(totalBodies) { // max 10 = maxBits: 4
       positionLowerLimiterY[i].rather <== windowWidthScaled + maxVectorScaled; // maxBits: 20 (maxNum: 1_020_000)
       // out_bodies[i][1] <== positionLowerLimiterY[i].out;
 
-          
-      isZeroY[i]  = IsZero();
-      isZeroY[i].in <== positionLimiterY[i].in - positionLimiterY[i].out;
-
+      // Same as X: use positionLimiterY.ltOut instead of IsZero(in - out) (saves 2 constraints/body).
       muxY[i] = Mux1();
       muxY[i].c[0] <== positionLimiterY[i].out - maxVectorScaled;
       muxY[i].c[1] <== positionLowerLimiterY[i].out - maxVectorScaled;
-      muxY[i].s <== isZeroY[i].out;
+      muxY[i].s <== positionLimiterY[i].ltOut;
   
       // if positionLimiterX.out !== positionLimiterX.in, then out_bodies[i][0] <== positionLimiterX.out
       // else, out_bodies[i][0] <== positionLowerLimiterX.out

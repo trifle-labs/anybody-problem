@@ -8,10 +8,12 @@ template Limiter(n) {
   signal input limit;
   signal input rather;
   signal output out;
+  signal output ltOut; // 1 if in < limit (no clamping), 0 if in >= limit (clamped to rather)
 
   component lessThan = LessThan(n);
   lessThan.in[0] <== in;
   lessThan.in[1] <== limit;
+  ltOut <== lessThan.out;
 
   component mux = Mux1();
   mux.c[0] <== rather;
