@@ -52,7 +52,12 @@ template ForceAccumulator(totalBodies) { // max 10 = maxBits: 4
     var force_x[2];
     var force_y[2];
 
-    component mux[totalIterations * 2];
+    // Product of each force magnitude × sign: fxs[ii] = force_x[1] * force_x[0] (1 constraint each).
+    // This lets us accumulate forces linearly:
+    //   new_acc_i = acc_i + time*fx - 2*time*fxs  (same as MultiMux1(2) with 2 constraints, but only 1)
+    //   new_acc_j = acc_j - time*fx + 2*time*fxs
+    signal fxs[totalIterations]; // force_x[1] * force_x[0], maxBits: 9 (maxNum: 320)
+    signal fys[totalIterations]; // force_y[1] * force_y[0], maxBits: 9 (maxNum: 320)
     var ii = 0;
     // NOTE: Below we're setting initial values for accumulate_body_forces to be the
     // maximum accumulated value possible. This is an offset to avoid going into negative
@@ -91,24 +96,19 @@ template ForceAccumulator(totalBodies) { // max 10 = maxBits: 4
         // log("force_y[1]", force_y[1]);
 
         // accumulate the x forces
-        mux[ii] = MultiMux1(2);
-        mux[ii].c[0][0] <== accumulated_body_forces[i][0] + (time * force_x[1]); // maxBits: 14 (maxNum: 8_200) = accumulated_before_last_pair (7_560) + time * max_force (640)
-        mux[ii].c[0][1] <== accumulated_body_forces[i][0] - (time * force_x[1]); // maxBits: 14 (maxNum: 8_200, minNum: 1_160)
-        mux[ii].c[1][0] <== accumulated_body_forces[j][0] - (time * force_x[1]); // maxBits: 14 (maxNum: 8_200, minNum: 1_160)
-        mux[ii].c[1][1] <== accumulated_body_forces[j][0] + (time * force_x[1]); // maxBits: 14 (maxNum: 8_200)
-        mux[ii].s <== force_x[0];
-        accumulated_body_forces[i][0] = mux[ii].out[0]; // maxBits: 14 (maxNum: 8_200)
-        accumulated_body_forces[j][0] = mux[ii].out[1]; // maxBits: 14 (maxNum: 8_200)
+        // Replace MultiMux1(2) (2 constraints) with a product signal + linear update (1 constraint).
+        // fxs[ii] = force_x[1] * force_x[0] (sign × magnitude)
+        // If force_x[0]=0 (positive): acc_i += time*fx, acc_j -= time*fx
+        // If force_x[0]=1 (negative): acc_i -= time*fx, acc_j += time*fx
+        // Unified: acc_i += time*fx*(1-2*s) = time*fx - 2*time*fxs; acc_j = -acc_i change
+        fxs[ii] <== force_x[1] * force_x[0]; // maxBits: 9 (maxNum: 320)
+        accumulated_body_forces[i][0] = accumulated_body_forces[i][0] + time * force_x[1] - 2 * time * fxs[ii]; // maxBits: 14 (maxNum: 8_200)
+        accumulated_body_forces[j][0] = accumulated_body_forces[j][0] - time * force_x[1] + 2 * time * fxs[ii]; // maxBits: 14 (maxNum: 8_200)
 
-        // accumulate the y forces
-        mux[totalIterations + ii] = MultiMux1(2);
-        mux[totalIterations + ii].c[0][0] <== accumulated_body_forces[i][1] +  (time * force_y[1]); // maxBits: 14 (maxNum: 8_200)
-        mux[totalIterations + ii].c[0][1] <== accumulated_body_forces[i][1] -  (time * force_y[1]); // maxBits: 14 (maxNum: 8_200, minNum: 1_160)
-        mux[totalIterations + ii].c[1][0] <== accumulated_body_forces[j][1] -  (time * force_y[1]); // maxBits: 14 (maxNum: 8_200, minNum: 1_160)
-        mux[totalIterations + ii].c[1][1] <== accumulated_body_forces[j][1] +  (time * force_y[1]); // maxBits: 14 (maxNum: 8_200)
-        mux[totalIterations + ii].s <== force_y[0];
-        accumulated_body_forces[i][1] = mux[totalIterations + ii].out[0]; // maxBits: 14 (maxNum: 8_200)
-        accumulated_body_forces[j][1] = mux[totalIterations + ii].out[1]; // maxBits: 14 (maxNum: 8_200)
+        // accumulate the y forces (same pattern)
+        fys[ii] <== force_y[1] * force_y[0]; // maxBits: 9 (maxNum: 320)
+        accumulated_body_forces[i][1] = accumulated_body_forces[i][1] + time * force_y[1] - 2 * time * fys[ii]; // maxBits: 14 (maxNum: 8_200)
+        accumulated_body_forces[j][1] = accumulated_body_forces[j][1] - time * force_y[1] + 2 * time * fys[ii]; // maxBits: 14 (maxNum: 8_200)
 
         ii = ii + 1;
       }
