@@ -66,29 +66,13 @@ template Div() {
 
   quotient <-- approxDiv(dividend, divisor); // maxBits: 64 (maxNum: 10_400_000_000_000_000_000)
 
-// NOTE: the following constraints the approxDiv to ensure it's within the acceptable error of margin
+// NOTE: the following constrains the approxDiv to ensure quotient * divisor <= dividend
   signal approxNumerator1 <== quotient * divisor; // maxBits: 126 (maxNum: 58_831_302_400_000_000_000_000_000_000_000_000_000)
   
-  // NOTE: approxDiv always rounds down so the approximate quotient will always be less
-  // than the actual quotient.
-  signal diff <== dividend - quotient;
-  // log("diff    ", diff);
-  // log("dividend", dividend);
-  // log("divisor", divisor);
-  // log("quotient", quotient);
-
   component lessThan = LessEqThan(64); // forceXnum; // maxBits: 64
-  lessThan.in[0] <== diff;
+  lessThan.in[0] <== approxNumerator1;
   lessThan.in[1] <== dividend;
-  // log("lessThan", lessThan.out, "\n");
-
-  component isZero = IsZero();
-  isZero.in <== dividend;
-
-  component or = OR();
-  or.a <== isZero.out;
-  or.b <== lessThan.out;
-  or.out === 1;
+  lessThan.out === 1;
 }
 
 template Sqrt(unboundDistanceSquaredMax) {
@@ -208,24 +192,14 @@ template AbsoluteValueSubtraction (n) {
     component lessThan = LessThan(n);
     lessThan.in[0] <== in[0];
     lessThan.in[1] <== in[1];
-    signal lessThanResult <== lessThan.out;
 
+    // If in[0] < in[1]: out = in[1] - in[0]
+    // If in[0] >= in[1]: out = in[0] - in[1]
     component myMux = Mux1();
-    myMux.c[0] <== in[0];
-    myMux.c[1] <== in[1];
-    myMux.s <== lessThanResult;
-    signal greaterValue <== myMux.out;
-
-    component isZero = IsZero();
-    isZero.in <== greaterValue - in[0];
-
-    component myMux2 = Mux1();
-    myMux2.c[0] <== in[0];
-    myMux2.c[1] <== in[1];
-    myMux2.s <== isZero.out;
-    signal lesserValue <== myMux2.out;
-
-    out <== greaterValue - lesserValue;
+    myMux.c[0] <== in[0] - in[1];
+    myMux.c[1] <== in[1] - in[0];
+    myMux.s <== lessThan.out;
+    out <== myMux.out;
 }
 
 // NOTE: This isn't an efficient system because LessThan has max 252 bits, which could be overridden but still not ideal

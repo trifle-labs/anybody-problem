@@ -66,7 +66,7 @@ template CalculateMissile() {
 
 
   // ensure y is negative
-  component isYNegative = LessEqThan(165);
+  component isYNegative = LessEqThan(15);
   isYNegative.in[0] <== in_missile[3];
   isYNegative.in[1] <== maxMissileVectorScaled;
   isYNegative.out === 1;
