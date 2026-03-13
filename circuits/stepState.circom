@@ -69,7 +69,6 @@ template StepState(totalBodies, steps) {
   component mux[steps];
   component isZero[steps];
 
-  component isZeroStep[steps][totalBodies];
   component isZeroDone[steps];
 
   component andMissiles[steps];
@@ -135,17 +134,17 @@ template StepState(totalBodies, steps) {
 
     var totalRadius = 0;
     // j = 1 if the first body needs to stay protected
+    // Sum enemy body radii directly (all radii are non-negative: starts positive, only goes to 0).
+    // Sum == 0 iff all enemy bodies are dead, eliminating (totalBodies-1) IsZero instances per step.
     for (var j = 1; j < totalBodies; j++) {
-      isZeroStep[i][j] = IsZero();
-      isZeroStep[i][j].in <== detectCollision[i].out_bodies[j][2]; // radius
-      totalRadius = totalRadius + isZeroStep[i][j].out;
+      totalRadius = totalRadius + detectCollision[i].out_bodies[j][2];
     }
     // log("totalRadius", totalRadius);
     // If the total Radius of all the bodies is 0, begin counting how many steps.
     // This time_tmp will be the number of seconds since the game ended and can be 
     // subgracted from total time to understand how long the game lasted.
     isZeroDone[i] = IsZero();
-    isZeroDone[i].in <== totalBodies - 1 - totalRadius;
+    isZeroDone[i].in <== totalRadius;
     time_tmp = time_tmp + isZeroDone[i].out;
     // log("time_tmp", time_tmp);
 
