@@ -125,12 +125,13 @@ template CalculateMissile() {
   positionLowerLimiterY.rather <== 0;
   // log("positionLowerLimiterY out", positionLowerLimiterY.out);
 
-  component isZeroY = IsZero();
-  isZeroY.in <== positionLowerLimiterY.out;
+  // LowerLimiter.ltOut == 1 iff limit < in (no clamping = missile still above 0).
+  // When ltOut == 0, in <= limit (missile at or below 0) = clamped to 0 = off screen.
+  // Use 1 - ltOut directly, eliminating IsZero(positionLowerLimiterY.out).
   component muxY = Mux1();
   muxY.c[0] <== muxXDecidesRadius.out;
   muxY.c[1] <== 0;
-  muxY.s <== isZeroY.out;
+  muxY.s <== 1 - positionLowerLimiterY.ltOut; // 1 when off bottom of screen
 
   out_missile[0] <== new_pos[0]; // maxBits: 20 (maxNum: 1_000_000)
   out_missile[1] <== new_pos[1]; // maxBits: 20 (maxNum: 1_000_000)

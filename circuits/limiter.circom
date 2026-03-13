@@ -27,6 +27,7 @@ template LowerLimiter(n) {
   signal input limit;
   signal input rather;
   signal output out;
+  signal output ltOut; // 1 iff limit < in (no clamping), 0 iff limit >= in (clamped to rather)
 
   component lessThan = LessThan(n);
   lessThan.in[0] <== limit;
@@ -37,4 +38,5 @@ template LowerLimiter(n) {
   mux.c[1] <== in;
   mux.s <== lessThan.out;
   out <== mux.out;
+  ltOut <== lessThan.out;
 }
