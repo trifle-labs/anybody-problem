@@ -150,23 +150,18 @@ template CalculateForce() {
  // NOTE: this could be tweaked as a variable for "liveliness" of bodies
   signal bodies_sum_tmp <== (body1_radius + body2_radius) * 4; // maxBits: 18 (maxNum: 256_000)
 
-  // bodies_sum is 0 if either body1_radius or body2_radius is 0
-  component isZero = IsZero();
-  isZero.in <== body1_radius; // maxBits: 15
+  // bodies_sum is 0 if either body1_radius or body2_radius is 0.
+  // A single product check replaces two sequential IsZero+Mux chains:
+  // radiusProd is nonzero iff both radii are nonzero, so IsZero(radiusProd) catches both cases.
+  signal radiusProd <== body1_radius * body2_radius; // maxBits: 28 (maxNum: 169_000_000)
+  component isZeroR = IsZero();
+  isZeroR.in <== radiusProd;
 
   component myMux2 = Mux1();
   myMux2.c[0] <== bodies_sum_tmp; // maxBits: 18 (maxNum: 256_000)
-  myMux2.c[1] <== 0; // maxBits: 0
-  myMux2.s <== isZero.out;
-
-  component isZero2 = IsZero();
-  isZero2.in <== body2_radius; // maxBits: 15
-
-  component myMux3 = Mux1();
-  myMux3.c[0] <== myMux2.out; // maxBits: 18 (maxNum: 256_000)
-  myMux3.c[1] <== 0; // maxBits: 0
-  myMux3.s <== isZero2.out;
-  signal bodies_sum <== myMux3.out; // maxBits: 18 (maxNum: 256_000)
+  myMux2.c[1] <== 0;
+  myMux2.s <== isZeroR.out;
+  signal bodies_sum <== myMux2.out; // maxBits: 18 (maxNum: 256_000)
 
   // log("bodies_sum", bodies_sum);
 

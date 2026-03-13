@@ -31,8 +31,9 @@ function approxSqrt(n) {
 }
 
 // Returns the floor integer square root of n (i.e. the largest r such that r*r <= n).
-// approxSqrt sometimes returns the ceiling (when its binary search ends with lo==mid),
-// so we adjust downward by 1 when mid^2 > n.
+// approxSqrt can return ceil(sqrt(n)) when its binary search terminates with lo==mid
+// (last step increased lo, leaving mid == lo > floor). In that case mid^2 > n, so we
+// decrement by 1 to obtain the floor.
 function floorSqrt(n) {
     var res[3] = approxSqrt(n);
     if (res[1] * res[1] > n) {
