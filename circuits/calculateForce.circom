@@ -183,13 +183,10 @@ template CalculateForce() {
   div1.divisor <== forceDenom;
   signal forceXunsigned <== div1.quotient;
   
-
-  // if dxAbs + dx is 0, then forceX should be negative
-  component isZero3 = IsZero();
-  // NOTE: isZero handles overflow bit values correctly
-  isZero3.in <== dxAbs + dx; // maxBits:  maxBits: 21 (maxNum: 2_000_000)
-  // log("isZero3", dxAbs + dx, isZero3.out);
-  out_forces[0][0] <== isZero3.out; // isZero is 1 when dx is negative
+  // isNegativeX: body2_x < body1_x means dx < 0, i.e. force on body1 is in negative x direction.
+  // AbsoluteValueSubtraction.sign = 1 iff body1_x < body2_x (dx > 0 = positive force).
+  // So isNegative = 1 - sign (linear, no extra constraints).
+  out_forces[0][0] <== 1 - absoluteValueSubtraction.sign; // 1 when dx < 0 (force is negative)
   out_forces[0][1] <== forceXunsigned; // maxBits 64 (maxNum: 10_400_000_000_000_000_000)
 
   signal forceYnum <== dyAbs * forceMag_numerator; // maxBits:64 (maxNum: 10_400_000_000_000_000_000)
@@ -202,12 +199,8 @@ template CalculateForce() {
   div2.divisor <== forceDenom;
   signal forceYunsigned <== div2.quotient;
 
-  // if dyAbs + dy is 0, then forceY should be negative
-  component isZero4 = IsZero();
-    // NOTE: isZero handles overflow bit values correctly
-  isZero4.in <== dyAbs + dy; // maxBits: 255 = max(37, 254) + 1
-
+  // isNegativeY: same pattern as X (sign from AbsoluteValueSubtraction2)
   // log("forceY", forceY);
-  out_forces[1][0] <== isZero4.out;
+  out_forces[1][0] <== 1 - absoluteValueSubtraction2.sign; // 1 when dy < 0 (force is negative)
   out_forces[1][1] <== forceYunsigned; // maxBits 64 (maxNum: 10_400_000_000_000_000_000)
 }

@@ -134,6 +134,7 @@ template AcceptableMarginOfError (n) {
 template AbsoluteValueSubtraction (n) {
     signal input in[2];
     signal output out;
+    signal output sign; // 1 if in[0] < in[1], 0 if in[0] >= in[1]
 
     component lessThan = LessThan(n);
     lessThan.in[0] <== in[0];
@@ -146,6 +147,7 @@ template AbsoluteValueSubtraction (n) {
     myMux.c[1] <== in[1] - in[0];
     myMux.s <== lessThan.out;
     out <== myMux.out;
+    sign <== lessThan.out;
 }
 
 // NOTE: This isn't an efficient system because LessThan has max 252 bits, which could be overridden but still not ideal
