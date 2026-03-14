@@ -76,15 +76,22 @@ template Div() {
   signal input divisor;
   signal output quotient;
 
-  quotient <-- approxDiv(dividend, divisor); // maxBits: 64 (maxNum: 10_400_000_000_000_000_000)
+  quotient <-- approxDiv(dividend, divisor);
 
-// NOTE: the following constrains the approxDiv to ensure quotient * divisor <= dividend
-  signal approxNumerator1 <== quotient * divisor; // maxBits: 126 (maxNum: 58_831_302_400_000_000_000_000_000_000_000_000_000)
-  
-  component lessThan = LessEqThan(64); // forceXnum; // maxBits: 64
-  lessThan.in[0] <== approxNumerator1;
-  lessThan.in[1] <== dividend;
-  lessThan.out === 1;
+  // Prove quotient = floor(dividend / divisor) via the remainder:
+  //   0 <= remainder < divisor  iff  quotient*divisor <= dividend < (quotient+1)*divisor
+  // NOTE: dividend can be 65-bit (forceXnum up to ~2.56e19), so LessEqThan(64) would be
+  // incorrect for large values. Using LessThan(63) on the remainder is sound because:
+  //   - for a valid quotient: remainder < divisor < 2^63, so it fits in 63 bits
+  //   - for quotient too large: remainder wraps in the field to a huge value, failing LessThan(63)
+  //   - for quotient too small: remainder >= divisor, failing LessThan(63)
+  // divisor = forceDenom <= distanceSquared*2*distance < 2^63 (maxNum: 5_656_852_000_000_000_000)
+  signal approxNumerator1 <== quotient * divisor; // valid: quotient<=320 (9-bit), divisor<2^63 → product<2^72
+  signal remainder <== dividend - approxNumerator1; // valid quotient: remainder<divisor<2^63; invalid: wraps in field to huge value → rejected by LessThan(63)
+  component remainderCheck = LessThan(63); // remainder < divisor < 2^63
+  remainderCheck.in[0] <== remainder;
+  remainderCheck.in[1] <== divisor;
+  remainderCheck.out === 1;
 }
 
 template Sqrt(unboundDistanceSquaredMax) {
