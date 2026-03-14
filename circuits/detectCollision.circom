@@ -15,7 +15,7 @@ template DetectCollision(totalBodies) {
   tmp_missiles[0][2] <== missile[2];
 
   component isZero[totalBodies];
-  component distanceMinSqMux[totalBodies];
+  component thresholdSquaredMux[totalBodies];
   component lessThan[totalBodies];
   component mux[totalBodies];
   component mux2[totalBodies];
@@ -26,10 +26,10 @@ template DetectCollision(totalBodies) {
   // This eliminates GetDistance (2×AbsoluteValueSubtraction + Sqrt), saving ~70 constraints/body.
   signal dx[totalBodies];
   signal dy[totalBodies];
-  signal dxSquared[totalBodies]; // maxBits: 40 (maxNum: 1_000_000_000_000)
-  signal dySquared[totalBodies]; // maxBits: 40 (maxNum: 1_000_000_000_000)
-  signal distanceSquared[totalBodies]; // maxBits: 41 (maxNum: 2_000_000_000_000)
-  signal bodyRadiusSquared[totalBodies]; // radius² maxBits: 28 (maxNum: 169_000_000)
+  signal dxSquared[totalBodies]; // maxBits: 40 (maxNum: ~1_000_000_000_000)
+  signal dySquared[totalBodies]; // maxBits: 40 (maxNum: ~1_000_000_000_000)
+  signal distanceSquared[totalBodies]; // maxBits: 41 (maxNum: ~2_000_000_000_000)
+  signal bodyRadiusSquared[totalBodies]; // (maxRadiusScaled)² maxBits: 28 (maxNum: 169_000_000 = (13*scalingFactor)²)
 
   // loop through all bodies and check distance between missile and body
   for (var i = 0; i < totalBodies; i++) {
@@ -46,16 +46,16 @@ template DetectCollision(totalBodies) {
 
     // if there is no missile, set the threshold to 0 so distanceSquared < 0 is always false
     // NOTE: collision threshold is distance < 2*radius, squared: distance² < (2*radius)² = 4*radius²
-    distanceMinSqMux[i] = Mux1();
-    distanceMinSqMux[i].c[0] <== bodyRadiusSquared[i] * 4; // (2*radius)² maxBits: 30 (maxNum: 676_000_000)
-    distanceMinSqMux[i].c[1] <== 0;
-    distanceMinSqMux[i].s <== isZero[i].out;
+    thresholdSquaredMux[i] = Mux1();
+    thresholdSquaredMux[i].c[0] <== bodyRadiusSquared[i] * 4; // (2*radius)² maxBits: 30 (maxNum: 676_000_000)
+    thresholdSquaredMux[i].c[1] <== 0;
+    thresholdSquaredMux[i].s <== isZero[i].out;
 
     // NOTE: this just checks whether the missile is within the radius of the body.
     // the radius of the missile doesn't matter as long as it's not 0.
     lessThan[i] = LessThan(41); // maxBits for distanceSquared: 41
     lessThan[i].in[0] <== distanceSquared[i]; // maxBits: 41 (maxNum: 2_000_000_000_000)
-    lessThan[i].in[1] <== distanceMinSqMux[i].out; // maxBits: 30 (maxNum: 676_000_000)
+    lessThan[i].in[1] <== thresholdSquaredMux[i].out; // maxBits: 30 (maxNum: 676_000_000)
     mux[i] = Mux1();
     mux[i].c[0] <== bodies[i][2]; // maxBits: 14 = numBits(13 * scalingFactor) (maxNum: 13_000)
     mux[i].c[1] <== 0;
