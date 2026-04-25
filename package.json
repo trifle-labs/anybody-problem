@@ -35,6 +35,7 @@
     "test:solidity": "hardhat test test/problems.test.js test/problemMetadata.test.js test/bodyMetadata.test.js test/bodies.test.js test/solver.test.js",
     "test:physics": "node --test physics/test/bounds.test.mjs",
     "test:circom2js": "node tools/circom2js/src/cli.js circuits/approxMath.circom -o tools/circom2js/examples/approxMath.js --runtime '../runtime/circomlib.js' && node tools/circom2js/src/cli.js circuits/helpers.circom -o tools/circom2js/examples/helpers.js --runtime '../runtime/circomlib.js' && node --test tools/circom2js/test/diff.test.mjs",
+    "bench:circom2js": "node tools/circom2js/test/bench.mjs",
     "test": "hardhat test",
     "precommit": "echo 'husky is working : )' && lint-staged",
     "prepublishOnly": "yarn build",
