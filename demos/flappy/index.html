@@ -1,0 +1,37 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>flappy / @anybody/physics demo</title>
+    <style>
+      body {
+        font-family: ui-monospace, monospace;
+        background: #222;
+        color: #eee;
+        margin: 0;
+        padding: 1rem;
+      }
+      h1 { font-size: 1rem; margin: 0 0 0.5rem; }
+      canvas { display: block; image-rendering: pixelated; background: #000; border: 1px solid #444; }
+      .row { display: flex; gap: 1rem; align-items: center; margin: 0.5rem 0; }
+      button { font-family: inherit; padding: 0.4rem 0.8rem; cursor: pointer; }
+      .status { font-size: 0.9rem; opacity: 0.85; }
+      a { color: #8cf; }
+    </style>
+  </head>
+  <body>
+    <h1>flappy → <a href="../">all demos</a></h1>
+    <div class="row">
+      <span class="status" id="status">loading…</span>
+    </div>
+    <canvas id="canvas"></canvas>
+    <div class="row">
+      <button id="reset">reset</button>
+      <button id="download">download run</button>
+      <button id="prove">generate proof</button>
+      <span class="status" id="proof-status"></span>
+    </div>
+    <script src="/snarkjs.min.js"></script>
+    <script type="module" src="./flappy.js"></script>
+  </body>
+</html>

@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>@anybody/physics — demos</title>
+    <link rel="stylesheet" href="/demos/shared/style.css" />
+  </head>
+  <body>
+    <h1>@anybody/physics — playable demos</h1>
+    <p style="opacity:0.85">Three browser-playable games built on the
+      generalized physics library. All physics is deterministic
+      fixed-point integer arithmetic — exactly what the matching circom
+      circuit will verify.</p>
+
+    <div class="demo-grid">
+      <div class="demo-card">
+        <h2>flappy bird</h2>
+        <p>Press SPACE to flap. Survive scrolling pipes.</p>
+        <p><strong>spec:</strong> 1 dynamic player, 8 kinematic pipes,
+          gravity-constant, destroy-y, wrap-x.</p>
+        <a href="./flappy/">play →</a>
+      </div>
+      <div class="demo-card">
+        <h2>chrome dino</h2>
+        <p>Press SPACE to jump cacti. Land on the ground.</p>
+        <p><strong>spec:</strong> 1 dynamic dino, 6 kinematic cacti,
+          1 static ground, jump cooldown.</p>
+        <a href="./dino/">play →</a>
+      </div>
+      <div class="demo-card">
+        <h2>platformer</h2>
+        <p>Arrows to move, SPACE to jump. Defeat the enemies.</p>
+        <p><strong>spec:</strong> 1 dynamic player + 4 dynamic enemies,
+          gravity + drag, 8 static platforms.</p>
+        <a href="./platformer/">play →</a>
+      </div>
+    </div>
+
+    <h2 style="margin-top:2rem">about the physics</h2>
+    <p>Each demo loads its preset from <code>physics/presets/&lt;game&gt;.js</code>
+      and runs a deterministic BigInt physics engine
+      (<code>demos/shared/engine.js</code>). The engine handles every
+      object kind, force, boundary, input, and collision response declared
+      in the schema. No floats, ever — every value is an integer scaled by
+      <code>precision.scalingFactor</code>.</p>
+
+    <h2>about the proofs</h2>
+    <p>The "generate proof" button on each demo expects a compiled circom
+      circuit at <code>public/&lt;game&gt;.wasm</code> +
+      <code>public/&lt;game&gt;_final.zkey</code>. Source circuits are in
+      <code>circuits/games/&lt;game&gt;.circom</code>. Compile them with:</p>
+    <pre>yarn circom flappy
+yarn circom dino
+yarn circom platformer</pre>
+    <p>(The button will tell you which file is missing if you skip a step.)</p>
+  </body>
+</html>
