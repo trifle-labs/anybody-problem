@@ -1,118 +1,94 @@
 # @anybody/physics
 
-A **circom-native 2D physics library**, factored out of the circuits that power
-the anybody-problem game. Think of it as a toolbox of provable primitives —
-vectors, fixed-point math, collision, integration, gravity — plus the helpers
-you need to wire them together into a game-sized circuit without blowing up
-constraint counts.
+A circom-native 2D (and 1D / 3D) physics library for provable browser games.
+Originally factored out of the anybody-problem n-body circuits, now generalized
+to cover platformers, runners, Flappy-Bird-likes, Asteroids-likes, and so on.
 
-This package has two halves:
+This package has three halves you'll use directly:
 
-1. **`physics/circuits/`** — parameterized circom templates (bit widths, scaling
-   factor, gravity constant, window size, etc. are all template/config-driven
-   rather than hard-coded).
-2. **`physics/bounds.js`** — a pure-JS tool that, given a game config, derives
-   exact bit widths for every intermediate signal by algebra. No Monte Carlo,
-   no guessing — every bound falls out of the config invariants.
+1. **`schema.js` (`defineGame`)** — declarative spec for a whole game's
+   physics: world, time, forces, object kinds, collisions, termination.
+2. **`bounds.js`** — given a validated spec, derive the **exact** maximum
+   value (and bit width) of every signal your circuit will hold. Pure
+   algebra, no Monte Carlo.
+3. **`budget.js`** — given those bounds, estimate the constraint count of
+   the eventual R1CS so you can stay under your file-size + proving-time
+   budget *before* you compile.
 
-## Why a library?
+Plus four presets that double as worked examples (`presets/`): the original
+n-body, Flappy Bird, the Chrome dino game, a tiny platformer. They cover
+every dimension of the schema.
 
-The existing `circuits/` folder in this repo is effectively a 2D n-body engine
-in circom. The same primitives (gravity, circle-circle collision, position
-wrap, velocity clamp, fixed-point sqrt/div) are the building blocks of most
-2D provable games. The only thing keeping them from being reusable is that
-`windowWidth = 1000`, `scalingFactor = 1000`, `G = 100`, etc. are declared
-inline in each template. Pulling those out into a config struct and deriving
-bit widths from them is the whole lift.
-
-## Design principles
-
-1. **Fixed-point integer only.** No float, no field division. Every value is
-   `actual × scalingFactor`. The scaling factor is a library-wide constant you
-   pick at config time.
-2. **Bit widths are derived, not declared.** You state the physical invariants
-   (max speed, window size, max radius, min distance) and a function returns
-   the exact `maxBits(·)` for every signal. Library users never write
-   `LessThan(21)` — they write `LessThan(bounds.distance.bits)`.
-3. **Invariants are explicit.** Each template documents which invariants it
-   assumes and which it produces. `velocityAfterForceStep` assumes
-   `velocity ∈ [-maxSpeed·SF, maxSpeed·SF]` on input and produces the same on
-   output — but only because a limiter is applied every tick. Remove the
-   limiter and the bound is gone.
-4. **Composability over completeness.** We ship `gravity`, `circleCollision`,
-   `eulerStep`, `positionWrap`, `velocityLimiter`, `missile`. We do not ship
-   rigid bodies, joints, or a scene graph. Users compose primitives into a
-   `StepState`-shaped template.
-
-## What "exact bounds" means
-
-Given this config:
+## Quick start
 
 ```js
-{
-  scalingFactor: 1000,   // 3 decimal places of fixed-point precision
-  windowWidth: 1000,     // world is 1000 × 1000 units
-  maxSpeed: 10,          // velocity clamped to ±10 units/tick
-  maxRadius: 13,
-  gravity: 100,
-  minDistance: 200,      // below this, gravity clamps (no singularity)
-  dt: 2,                 // integration time step
-  maxBodies: 6,          // N
-}
+import { flappyBird } from '@anybody/physics/presets/flappyBird.js'
+import { deriveBounds } from '@anybody/physics/bounds.js'
+import { estimateBudget } from '@anybody/physics/budget.js'
+
+const bounds = deriveBounds(flappyBird)
+const est = estimateBudget(bounds)
+console.log(est)
+// { stepConstraints: 1140,
+//   totalConstraints: 342000,
+//   budget: 1000000,
+//   withinBudget: true,
+//   ... }
 ```
 
-`deriveBounds(config)` returns, for every intermediate signal in the engine,
-the exact maximum value and the `ceil(log2(max+1))` bit width. For instance:
+To author your own game, see [`QUESTIONNAIRE.md`](./QUESTIONNAIRE.md) — it
+walks through every field of the schema as a series of questions to answer.
 
-- `position.scaled ∈ [0, W·SF] = [0, 1_000_000]` → 20 bits
-- `dxAbs ∈ [0, W·SF] = [0, 1_000_000]` → 20 bits
-- `distanceSquared ∈ [0, 2·(W·SF)²] = [0, 2·10¹²]` → 41 bits
-- `distance ∈ [0, √2·W·SF] ≈ [0, 1_414_214]` → 21 bits
-- `massSum = 2·maxR·SF·4 = 104_000` → 17 bits (`·4` from the "liveliness"
-  multiplier in `calculateForce`)
-- `forceDenom = 2·distanceSquared·distance` → 63 bits
-- `forceNumerator = G·SF² · massSum · (W·SF)` → 64 bits
-- `accumulatedForce = force · (N−1) · dt` (before offset for sign) → 69 bits
+## Where the answers go
 
-Every one of these is an exact max, derived by following the arithmetic. The
-game config is the root of a pure function that knows all of them.
+Every "question" the user must answer at project-start is one of these:
 
-## What the user still has to supply
+| Section | Question                                  | Schema field                           | Affects circuit size?           |
+| ------- | ----------------------------------------- | -------------------------------------- | ------------------------------- |
+| World   | Spatial dimensions (1/2/3)?               | `world.dimensions`                     | Yes (linear)                    |
+|         | World size per axis?                      | `world.extent.{x,y,z}`                 | Yes (log scale per axis)        |
+|         | What happens at the edge per axis?        | `world.boundary.{x,y,z}`               | Yes (clamp/wrap/bounce/destroy) |
+|         | Y up or down?                             | `world.coordinates`                    | No                              |
+| Time    | Physics tick rate?                        | `time.fps`                             | No                              |
+|         | Ticks per proof?                          | `time.stepsPerProof`                   | **Yes (linear, biggest knob)**  |
+|         | dt multiplier?                            | `time.dt`                              | No                              |
+| Numeric | Fixed-point precision?                    | `precision.scalingFactor`              | Yes (log per signal)            |
+|         | Constraint budget?                        | `precision.constraintBudget`           | Hard cap                        |
+| Forces  | Constant gravity / pairwise / drag?       | `forces[].kind`                        | **Yes (huge for pairwise)**     |
+|         | Force parameters?                         | `forces[].{vec,G,minDistance,coeff}`   | Yes                             |
+|         | Which object kinds?                       | `forces[].appliesTo`                   | Yes                             |
+| Objects | Static / kinematic / dynamic per kind?    | `objects.<kind>.kind`                  | **Yes (static is free)**        |
+|         | Max instance count?                       | `objects.<kind>.maxCount`              | **Yes (squared for pairwise)**  |
+|         | Max speed / radius / mass?                | `objects.<kind>.{maxSpeed,maxRadius}`  | Yes (log)                       |
+|         | Inputs (jump, left, right…)?              | `objects.<kind>.inputs`                | Yes (per-tick witness)          |
+| Collisions | Which pairs collide?                   | `collisions[].{a,b}`                   | Yes (count × pair-cost)         |
+|         | Detection shape & response?               | `collisions[].{shape,response}`        | Yes (aabb < circle)             |
+| Termination | What ends the level?                  | `termination[].kind`                   | Small                           |
+| Randomness | Procedural content?                    | `randomness.kind`                      | TBD                             |
 
-Beyond "max speed + screen dimensions", the minimum config set is:
+## What the bounds and budget tools tell you
 
-| Field           | Why it matters for bit widths                                             |
-| --------------- | ------------------------------------------------------------------------- |
-| `scalingFactor` | sets the fixed-point scale; bit widths grow as log₂(SF)                   |
-| `windowWidth`   | bounds positions and position deltas                                      |
-| `maxSpeed`      | bounds velocities (only if limiter is applied every tick)                 |
-| `maxRadius`     | bounds mass/collision radius and feeds into force magnitude               |
-| `gravity`       | force magnitude numerator                                                 |
-| `minDistance`   | floor on distance — without it, `1/r²` has no upper bound                 |
-| `dt`            | multiplies force→velocity and velocity→position per tick                  |
-| `maxBodies`     | (N−1) pair-forces accumulate per body per tick                           |
+`deriveBounds(spec)` returns an object whose every leaf is `{max, bits}`
+— the algebraic maximum of that signal under the spec's constants, plus
+the minimum bit width to represent it. You feed those bit widths into
+`LessThan(...)`, `Sqrt(...)`, etc. when generating the circom.
 
-Plus an **invariants declaration** — which clamps/wraps are in place each tick.
-The bounds derivation uses these to assume post-step state stays inside the
-declared envelope. Listed in `physics/config.js` as `invariants`.
+`estimateBudget(bounds)` returns an estimate of the total constraint count,
+broken down by step component, with suggestions if you're over budget.
+The estimator is **conservative** (overcounts pairwise gravity ~2× vs
+real circomlib output) so when it says you fit, you fit.
 
-## Status
+## Status & roadmap
 
-This is the initial extract. Currently shipping:
+- **Done:** schema, validation, bounds derivation, budget estimator, four
+  presets, all unit tests pass.
+- **Next:** circuit code-gen — emit a complete `stepState`-shape circom
+  from any validated spec. Today the library tells you what bit widths to
+  use; soon it'll write the circuits for you.
+- **Also next:** integrate with `tools/circom2js/` so the generated circom
+  can also produce its JS-BigInt simulator side-by-side.
 
-- `config.js` — config schema + defaults matching the current anybody-problem
-  game.
-- `bounds.js` — exact symbolic bounds derivation; tested against the hand-
-  computed bit widths already in `circuits/*.circom` comments.
-- `circuits/gravity.circom` — `Gravity(cfg)` — parameterized version of
-  `calculateForce`. Bit widths come from the config via `maxBits` functions.
-
-On the roadmap:
-
-- `circuits/integrator.circom` — parameterized `StepState`
-- `circuits/collision.circom` — `CircleCircle(n)` collision
-- `circuits/boundary.circom` — `Wrap(W)` and `Clamp(min,max)`
-- `circuits/projectile.circom` — generalized missile
-
-See also `tools/circom2js/` for the sibling effort: a circom→JS transpiler so
-you can simulate circuits at FPS rates without the WASM witness calculator.
+See `presets/anybody.js` for how the existing anybody-problem game maps
+onto the new schema. See `presets/flappyBird.js`, `chromeDino.js`,
+`platformer.js` for examples of game types in genres the library now
+supports.

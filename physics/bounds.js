@@ -1,193 +1,45 @@
-// Exact symbolic bounds derivation for the physics library.
+// Exact symbolic bounds derivation, generalized over any GameSpec.
 //
-// Given a PhysicsConfig, this module computes the maximum magnitude of every
-// intermediate value in the engine, and the corresponding minimum bit width
-// required to represent it unsigned.
+// This file replaces the original anybody-problem-only bounds derivation. It
+// takes a validated GameSpec and walks the schema to compute the maximum
+// magnitude of every value that ends up on a circuit signal — and the
+// matching minimum bit width to represent it.
 //
-// Why symbolic and not Monte Carlo? Because every value is a closed-form
-// expression over the config constants plus (sometimes) N and dt. Pair
-// distances are bounded by the window diagonal. Force magnitude is bounded by
-// G·mass/minDistance². Accumulated force is bounded by per-pair force times
-// (N−1). Etc. You don't need to sample — you just evaluate the algebra.
+// Every bound here is a closed-form expression over the spec's constants
+// (extent, maxSpeed, mass, scalingFactor, dt, force parameters, counts).
+// No Monte Carlo, no probabilistic guesswork.
 //
-// Every bound here matches the hand-computed values in the `// maxBits: ...`
-// comments throughout circuits/*.circom. The test suite verifies that match.
-
-import { validateConfig } from './config.js'
+// What's bounded depends on which features are enabled:
+//   - Pairwise gravity → distance, distanceSquared, force magnitude per pair,
+//     accumulated force per body
+//   - Constant gravity → constant per-step velocity delta
+//   - Linear drag → velocity decay coefficient
+//   - Per-axis boundary clamp/wrap → position cap each tick
+//   - Per-axis boundary unbounded → position grows over `stepsPerProof`
+//   - Per-kind dynamic objects → velocity & position bounds
+//   - Per-kind kinematic objects → fixed velocity, position bounds
+//   - Per-kind static objects → position is constant (no bound to derive)
 
 /** Bits required to represent `max` (a non-negative integer) unsigned. */
 export function maxBits(max) {
-  if (max < 0n && typeof max === 'bigint') throw new Error('negative')
-  if (typeof max === 'number' && max < 0) throw new Error('negative')
-  let n = typeof max === 'bigint' ? max : BigInt(Math.ceil(max))
+  let n = typeof max === 'bigint' ? max : BigInt(Math.ceil(Number(max)))
+  if (n < 0n) throw new Error('maxBits: negative')
   let i = 0
   while (n > 0n) {
     i++
     n >>= 1n
   }
-  return i === 0 ? 1 : i // one bit for 0 as well
+  return i === 0 ? 1 : i
 }
 
-/** Build a Bound: an object with {max, bits}. */
 function b(max) {
-  const m = typeof max === 'bigint' ? max : BigInt(Math.ceil(max))
+  const m = typeof max === 'bigint' ? max : BigInt(Math.ceil(Number(max)))
   return Object.freeze({ max: m, bits: maxBits(m) })
 }
 
-/**
- * Derive all bounds from a config. Every field is {max: bigint, bits: number}.
- *
- * Naming convention: `fooScaled` means value after fixed-point scaling (as
- * stored on circuit signals). `foo` without Scaled means the pre-scale number.
- *
- * @param {import('./config.js').PhysicsConfig} cfg
- */
-export function deriveBounds(cfg) {
-  validateConfig(cfg)
-
-  const SF = BigInt(cfg.scalingFactor)
-  const W = BigInt(cfg.windowWidth)
-  const G = BigInt(cfg.gravity)
-  const maxSpeed = BigInt(cfg.maxSpeed)
-  const maxR = BigInt(cfg.maxRadius)
-  const minDist = BigInt(cfg.minDistance)
-  const dt = BigInt(cfg.dt)
-  const N = BigInt(cfg.maxBodies)
-
-  // --- Primary scaled quantities ---
-  const WScaled = W * SF // world extent, scaled
-  const positionScaled = WScaled
-  const maxRadiusScaled = maxR * SF
-  const GScaled = G * SF
-  const minDistanceScaled = minDist * SF // linear, not squared
-  const minDistanceSquaredScaled = minDist * minDist * SF * SF
-  const maxSpeedScaled = maxSpeed * SF
-  const maxVectorScaled = maxSpeed * dt * SF // velocity includes dt multiplier
-
-  // --- Position deltas and distance ---
-  // dx, dy absolute values: bounded by the world extent
-  const dAbs = WScaled
-  // dx², dy²: square of that
-  const dSquared = dAbs * dAbs
-  // distanceSquared = dx² + dy² -> up to 2·(W·SF)²
-  const distanceSquared = 2n * dSquared
-  // distance = sqrt(distanceSquared) -> up to √2·W·SF (we take ceil via int)
-  // For bit counting purposes, ceil(sqrt(distanceSquared)) is enough.
-  const distance = isqrt(distanceSquared) + 1n
-  // scaled per-body distance after minDistance clamp: same upper bound
-  const distanceSquaredClamped = distanceSquared
-
-  // --- Mass / collision ---
-  // massSum = (r1 + r2) · 4 — the "liveliness" multiplier in calculateForce.
-  // We preserve that so the bound matches the existing circuit.
-  const massSum = 2n * maxRadiusScaled * 4n
-
-  // --- Force magnitude (per pair) ---
-  // Circuit form: forceNum = GScaled · massSum · SF
-  //               forceDenom = 2 · distSq · distance
-  //               forceX = (dxAbs · forceNum) / forceDenom
-  // Numerator upper bound: dxAbs · GScaled · massSum · SF
-  const forceMagNumerator = GScaled * massSum * SF
-  const forceDenom = 2n * distanceSquared * distance // worst case (no minDist clamp at top)
-  const forceXNumerator = dAbs * forceMagNumerator
-  // The actual quotient is bounded by forceXNumerator / minForceDenom, where
-  // minForceDenom uses the minDistance clamp. The output (force) is smaller
-  // than its numerator — but for the purposes of the R1CS Div template,
-  // the quotient bit width needs to accommodate the worst quotient.
-  //
-  // Upper bound on quotient: swap in the minDistance clamp:
-  //   forceDenomMin = 2 · minDistSqScaled · minDistScaled
-  //                 = 2 · (minDist·SF)² · (minDist·SF)
-  //                 = 2 · minDist³ · SF³
-  // forceMax = (dAbs · GScaled · massSum · SF) / forceDenomMin
-  const forceDenomMin = 2n * minDistanceSquaredScaled * (minDist * SF)
-  const forcePerPairOutput = forceDenomMin === 0n
-    ? 0n
-    : (forceXNumerator + forceDenomMin - 1n) / forceDenomMin
-  // The circuit carries forceXNumerator through multiplication before dividing,
-  // so we also expose its width separately.
-
-  // --- Accumulated force per tick ---
-  // Each body receives forces from up to (N−1) others. Each is signed,
-  // represented as (signBit, magnitude). Accumulation offsets by a constant
-  // "maximum_accumulated_possible" to keep values non-negative.
-  const accumulatedForceUnsigned = forcePerPairOutput * (N - 1n)
-
-  // --- Velocity / position updates ---
-  // velocity += forceAccumulated · dt  (then clamped)
-  // If velocityLimiter invariant holds: velocity stays in [-maxVScaled, +maxVScaled]
-  // stored offset by maxVectorScaled -> [0, 2·maxVectorScaled]
-  const velocityStored = 2n * maxVectorScaled
-
-  // If no limiter, velocity grows by accumulatedForce·dt per step. We expose
-  // both bounds and let the caller pick based on their invariants.
-  const velocityNoLimiterPerStep = accumulatedForceUnsigned * dt
-
-  // position += velocity  (then wrapped if positionWrap invariant holds)
-  // With wrap: position stays in [0, WScaled].
-  // Without wrap: grows by velocity per tick.
-  const positionNoWrapPerStep = velocityStored
-
-  // --- Projectile (optional) ---
-  let missile = null
-  if (cfg.maxMissileSpeed) {
-    const mSpd = BigInt(cfg.maxMissileSpeed)
-    const maxMissileVectorScaled = mSpd * dt * SF
-    // Missile magnitude constraint: √2 · maxMissileVectorScaled (rounded up)
-    const missileMagnitude = isqrt(2n * maxMissileVectorScaled * maxMissileVectorScaled) + 1n
-    missile = {
-      velocityScaled: b(maxMissileVectorScaled),
-      magnitudeLimit: b(missileMagnitude),
-    }
-  }
-
-  return {
-    config: cfg,
-    constants: {
-      SF: b(SF),
-      windowWidthScaled: b(WScaled),
-      maxRadiusScaled: b(maxRadiusScaled),
-      GScaled: b(GScaled),
-      minDistanceScaled: b(minDistanceScaled),
-      minDistanceSquaredScaled: b(minDistanceSquaredScaled),
-      maxSpeedScaled: b(maxSpeedScaled),
-      maxVectorScaled: b(maxVectorScaled),
-    },
-    position: {
-      scaled: b(positionScaled),
-      deltaAbs: b(dAbs),
-      deltaSquared: b(dSquared),
-      distanceSquared: b(distanceSquared),
-      distanceSquaredClamped: b(distanceSquaredClamped),
-      distance: b(distance),
-    },
-    mass: {
-      radiusScaled: b(maxRadiusScaled),
-      massSum: b(massSum),
-    },
-    force: {
-      magNumerator: b(forceMagNumerator),
-      denominator: b(forceDenom),
-      componentNumerator: b(forceXNumerator),
-      perPairOutput: b(forcePerPairOutput),
-      accumulatedPerStep: b(accumulatedForceUnsigned),
-    },
-    velocity: {
-      storedWithOffset: b(velocityStored),
-      unlimitedPerStep: b(velocityNoLimiterPerStep),
-    },
-    positionUpdate: {
-      unwrappedPerStep: b(positionNoWrapPerStep),
-    },
-    missile,
-  }
-}
-
-/** Integer sqrt (floor) for bigint. Used only for bound computation. */
 function isqrt(n) {
   if (n < 0n) throw new Error('isqrt: negative')
   if (n < 2n) return n
-  // Newton iteration
   let x = n
   let y = (x + 1n) >> 1n
   while (y < x) {
@@ -195,4 +47,181 @@ function isqrt(n) {
     y = (x + n / x) >> 1n
   }
   return x
+}
+
+/**
+ * Derive bounds from a validated GameSpec.
+ *
+ * Returns:
+ *   {
+ *     spec,                       // echoed back
+ *     constants: {...},           // scaled forms of spec constants
+ *     world: { positionScaled[axis] },
+ *     objects: {
+ *       <kindName>: {
+ *         radiusScaled, massScaled,
+ *         velocityScaled?,        // for dynamic/kinematic
+ *         velocityStored?,        // velocity offset for unsigned representation
+ *         positionPerStep?,       // bound on |delta-position| per step (no-wrap case)
+ *       }
+ *     },
+ *     forces: {
+ *       pairwise?: { distance, distanceSquared, perPairOutput, accumPerStep },
+ *       constant?: { perStepDelta },
+ *       drag?: ...
+ *     }
+ *   }
+ *
+ * @param {import('./schema.js').GameSpec} spec
+ */
+export function deriveBounds(spec) {
+  const SF = BigInt(spec.precision.scalingFactor)
+  const dt = BigInt(spec.time.dt ?? 1)
+  const dims = spec.world.dimensions
+  const axes = ['x', 'y', 'z'].slice(0, dims)
+
+  // --- world: per-axis position bounds ---
+  const world = { extentScaled: {} }
+  for (const ax of axes) {
+    const extent = BigInt(spec.world.extent[ax])
+    world.extentScaled[ax] = b(extent * SF)
+  }
+
+  // Boundary: if 'wrap' or 'clamp' or 'destroy' or 'bounce', position stays in
+  // [0, extent·SF] each tick. If 'none', position grows by velocityScaled per
+  // tick. We compute both and let downstream pick.
+  const stepsPerProof = BigInt(spec.time.stepsPerProof)
+
+  // --- objects: derive per-kind ---
+  const objects = {}
+  for (const [name, o] of Object.entries(spec.objects)) {
+    const radiusScaled = BigInt(Math.ceil(o.maxRadius)) * SF
+    const massScaled = BigInt(Math.ceil(o.mass)) * SF
+    const result = {
+      kind: o.kind,
+      maxCount: o.maxCount,
+      radiusScaled: b(radiusScaled),
+      massScaled: b(massScaled),
+    }
+    if (o.kind === 'dynamic') {
+      const maxSpeed = BigInt(Math.ceil(o.maxSpeed))
+      const maxVecScaled = maxSpeed * dt * SF
+      result.velocityScaled = b(maxVecScaled)
+      // Stored offset (so unsigned reps work in circuits): 2 · maxVec
+      result.velocityStored = b(2n * maxVecScaled)
+      result.positionPerStep = b(maxVecScaled) // |Δposition| per tick
+    } else if (o.kind === 'kinematic') {
+      let maxComp = 0n
+      for (const v of o.velocity) {
+        const mag = BigInt(Math.ceil(Math.abs(v)))
+        if (mag > maxComp) maxComp = mag
+      }
+      const maxVecScaled = maxComp * dt * SF
+      result.velocityScaled = b(maxVecScaled)
+      result.velocityStored = b(2n * maxVecScaled)
+      result.positionPerStep = b(maxVecScaled)
+    }
+    // static: no velocity/position-per-step bounds
+    objects[name] = result
+  }
+
+  // --- forces: derive per-force ---
+  const forces = {}
+
+  for (const f of spec.forces) {
+    if (f.kind === 'gravity-pairwise') {
+      // Find the largest extent (worst-case distance) over the kinds this
+      // force touches. We use the global world extent — pairs span at most
+      // the world's diagonal.
+      const maxExtent = axes
+        .map((a) => world.extentScaled[a].max)
+        .reduce((a, c) => (c > a ? c : a), 0n)
+      // |dx|, |dy| max equals world extent on that axis. Use the larger
+      // of the two for uniform width.
+      const dAbs = maxExtent
+      const dSquared = dAbs * dAbs
+      const distanceSquared = BigInt(dims) * dSquared
+      const distance = isqrt(distanceSquared) + 1n
+
+      const G = BigInt(f.G)
+      const GScaled = G * SF
+      const minDist = BigInt(f.minDistance)
+      const minDistanceSqScaled = minDist * minDist * SF * SF
+
+      // Largest possible mass-sum: 2·max(radius·SF·"liveliness factor")
+      // We follow anybody-problem's ×4 multiplier; if you parameterize
+      // the library, this should come from the gravity descriptor.
+      let maxRadiusScaled = 0n
+      for (const t of f.appliesTo) {
+        if (objects[t].radiusScaled.max > maxRadiusScaled) {
+          maxRadiusScaled = objects[t].radiusScaled.max
+        }
+      }
+      const massSum = 2n * maxRadiusScaled * 4n
+
+      // forceMag_numerator = GScaled · massSum · SF
+      const forceMagNumerator = GScaled * massSum * SF
+      // forceXNumerator = dxAbs · forceMagNumerator
+      const forceXNumerator = dAbs * forceMagNumerator
+      // forceDenom min = 2 · minDistSq · minDistance·SF
+      const forceDenomMin = 2n * minDistanceSqScaled * (minDist * SF)
+      const perPairOutput =
+        forceDenomMin === 0n
+          ? 0n
+          : (forceXNumerator + forceDenomMin - 1n) / forceDenomMin
+
+      // Sum across all pairs each affected dynamic body sees: (N-1)
+      const N = f.appliesTo.reduce(
+        (acc, t) => acc + BigInt(objects[t].maxCount),
+        0n
+      )
+      const accumPerStep = perPairOutput * (N - 1n)
+
+      forces.pairwise = {
+        distanceSquared: b(distanceSquared),
+        distance: b(distance),
+        massSum: b(massSum),
+        forceMagNumerator: b(forceMagNumerator),
+        forceXNumerator: b(forceXNumerator),
+        perPairOutput: b(perPairOutput),
+        accumPerStep: b(accumPerStep),
+        affectedKinds: [...f.appliesTo],
+        N: Number(N),
+      }
+    } else if (f.kind === 'gravity-constant') {
+      // Per-step velocity delta = |gravity| · dt (in scaled units)
+      let perStepMax = 0n
+      for (const v of f.vec) {
+        const mag = BigInt(Math.ceil(Math.abs(v)))
+        if (mag > perStepMax) perStepMax = mag
+      }
+      const perStepScaled = perStepMax * dt * SF
+      // Over stepsPerProof ticks (no clamp), velocity could grow this much:
+      const maxAccumOverProof = perStepScaled * stepsPerProof
+      forces.constant = {
+        perStepDelta: b(perStepScaled),
+        maxAccumOverProof: b(maxAccumOverProof),
+        affectedKinds: [...f.appliesTo],
+        vec: [...f.vec],
+      }
+    } else if (f.kind === 'drag-linear') {
+      forces.drag = {
+        coeff: f.coeff,
+        // Drag reduces velocity; doesn't introduce new bit width pressure.
+        affectedKinds: [...f.appliesTo],
+      }
+    }
+  }
+
+  return Object.freeze({
+    spec,
+    constants: {
+      SF: b(SF),
+      dt: b(dt),
+      stepsPerProof: b(stepsPerProof),
+    },
+    world,
+    objects,
+    forces,
+  })
 }
