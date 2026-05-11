@@ -12,6 +12,26 @@ export const Tournament = {
   }
 }
 
+import AnybodyProblemV5ABI from './contractData/ABI-84532-AnybodyProblemV5.json'
+import AnybodyProblemV5BaseSepolia from './contractData/84532-AnybodyProblemV5.json'
+
+export const AnybodyProblemV5 = {
+  abi: AnybodyProblemV5ABI,
+  networks: {
+    84532: AnybodyProblemV5BaseSepolia
+  }
+}
+
+import PaidSessionsABI from './contractData/ABI-84532-PaidSessions.json'
+import PaidSessionsBaseSepolia from './contractData/84532-PaidSessions.json'
+
+export const PaidSessions = {
+  abi: PaidSessionsABI,
+  networks: {
+    84532: PaidSessionsBaseSepolia
+  }
+}
+
 import AnybodyProblemV4ABI from './contractData/ABI-8453-AnybodyProblemV4.json'
 import AnybodyProblemV4BaseSepolia from './contractData/84532-AnybodyProblemV4.json'
 import AnybodyProblemV4Base from './contractData/8453-AnybodyProblemV4.json'
@@ -96,4 +116,4 @@ export const Speedruns = {
   }
 }
 
-export const AnybodyProblem = AnybodyProblemV4
+export const AnybodyProblem = AnybodyProblemV5

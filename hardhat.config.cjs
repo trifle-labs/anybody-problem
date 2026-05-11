@@ -105,12 +105,9 @@ const config = {
     enabled: false
   },
   etherscan: {
-    apiKey: {
-      mainnet: process.env.etherscanApiNew,
-      sepolia: process.env.etherscanApiNew,
-      base: process.env.etherscanApiBase,
-      baseSepolia: process.env.etherscanApiBase
-    },
+    // Single Etherscan.io v2 API key (works across all chains including Base).
+    // V1 per-chain endpoints were retired May 2025.
+    apiKey: process.env.etherscanApiNew || process.env.etherscanApiBase,
 
     customChains: [
       {
@@ -140,6 +137,7 @@ const config = {
     only: [
       'AnybodyProblem',
       'Tournament',
+      'PaidSessions',
       'Speedruns',
       'ExternalMetadata',
       'Assets1',
