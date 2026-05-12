@@ -335,48 +335,51 @@ describe('AnybodyProblemV5: new feature tests', function () {
     it('claimDailyPrize: only winner can claim, transfers and flags claimed', async () => {
       const env = await setup()
       const { AnybodyProblemV5, MockUSDC } = env
-      const [owner, donor, winner, attacker] = await ethers.getSigners()
+      const [, donor, winner, attacker] = await ethers.getSigners()
 
-      // Fund prefunded pool and force a "yesterday" winning run via mock.
-      const prefund = USDC(10)
+      // Fund prefundedPrizePool and trigger _seedDay(today) via winner.mint().
+      const prefund = USDC(50)
       await fundUSDC(MockUSDC, donor, prefund)
       await approve(MockUSDC, donor, AnybodyProblemV5.address, prefund)
       await AnybodyProblemV5.connect(donor).depositPrize(prefund)
 
-      const today = await AnybodyProblemV5.currentDay()
-      const yesterday = today.sub(86400)
-
-      // Plant winning run for `winner` on `yesterday`. The mock doesn't seed the
-      // dailyPool for past days — drive it manually by depositing then calling a
-      // play that points at the day. We can't mint() for a past day in V5; so
-      // instead we feed the dailyPool by calling depositPrize and using V5 owner
-      // to set playPrice etc — but dailyPool[day] is funded only via _seedDay/
-      // _payPlayPrice. The cleanest path: seed dailyPool by minting "today",
-      // then plant a winning runId+day pointing at yesterday for the winner.
-      // For the prize-claim flow under test we rely on the V5Mock direct setter
-      // and shift dailyPool via a private write — instead we simulate by
-      // depositing then calling _seedDay-equivalent logic via mint() then
-      // shifting `day` to today and asserting today's winner can claim once
-      // today is over via time travel.
-
-      // Simpler approach: do the play today, then time-travel forward a day.
       const playPrice = await AnybodyProblemV5.playPrice()
       await fundUSDC(MockUSDC, winner, playPrice)
       await approve(MockUSDC, winner, AnybodyProblemV5.address, playPrice)
       await AnybodyProblemV5.connect(winner).mint()
 
-      // Plant fastest winner using mock setter.
-      // setRunData(runId, day, accumulativeTime, owner)
+      const today = await AnybodyProblemV5.currentDay()
+      const poolBefore = await AnybodyProblemV5.dailyPool(today)
+      expect(poolBefore).to.be.gt(0)
+
+      // Plant winner: runs_[runId].owner = winner; fastestByDay_[today][0] = runId.
       const runId = 1
       await AnybodyProblemV5.setRunData(runId, today, 100, winner.address)
-      // Force fastestByDay_[today][0] = runId via re-deploy isn't possible —
-      // instead use the mock helper... but V5Mock doesn't expose fastest setter.
-      // The constructor of fastestByDay_ is internal; we treat this case as
-      // structurally untested at the V5 layer (the leaderboard insertion path
-      // is exercised by V4 tests). Skip the success-path of claimDailyPrize.
-      // Instead verify the access-control branches of claim.
-      void owner
-      void attacker
+      await AnybodyProblemV5.setFastestByDay(today, 0, runId)
+
+      // Time-travel past today's window so claim is allowed.
+      await hre.network.provider.send('evm_increaseTime', [86400])
+      await hre.network.provider.send('evm_mine')
+
+      // Attacker is rejected.
+      await expect(
+        AnybodyProblemV5.connect(attacker).claimDailyPrize(today)
+      ).to.be.revertedWith('Not the winner')
+
+      // Winner claims: USDC moves, flag flips, pool zeroes, event emits.
+      const winnerBalBefore = await MockUSDC.balanceOf(winner.address)
+      await expect(AnybodyProblemV5.connect(winner).claimDailyPrize(today))
+        .to.emit(AnybodyProblemV5, 'DailyPrizeClaimed')
+        .withArgs(today, winner.address, poolBefore)
+      const winnerBalAfter = await MockUSDC.balanceOf(winner.address)
+      expect(winnerBalAfter.sub(winnerBalBefore)).to.equal(poolBefore)
+      expect(await AnybodyProblemV5.dailyPool(today)).to.equal(0)
+      expect(await AnybodyProblemV5.dailyPoolClaimed(today)).to.equal(true)
+
+      // Second claim by winner is blocked.
+      await expect(
+        AnybodyProblemV5.connect(winner).claimDailyPrize(today)
+      ).to.be.revertedWith('Already claimed')
     })
 
     it('claimDailyPrize blocked while paused', async () => {

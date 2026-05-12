@@ -46,6 +46,11 @@ contract AnybodyProblemV5Mock is AnybodyProblemV5 {
         runs_[runId].owner = owner;
     }
 
+    function setFastestByDay(uint256 day, uint256 slot, uint256 runId) public {
+        require(slot < 3, 'slot oob');
+        fastestByDay_[day][slot] = runId;
+    }
+
     function setMockedBodyDataByLevel(
         uint256 level,
         Body[6] memory bodyData
