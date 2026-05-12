@@ -21,6 +21,11 @@
   "main": "dist/module.js",
   "module": "dist/module.js",
   "iframe": "dist/index.html",
+  "files": [
+    "dist",
+    "src",
+    "README.md"
+  ],
   "scripts": {
     "prepare": "husky",
     "build": "rm -rf .parcel-cache && rm -rf dist && yarn parcel build",
