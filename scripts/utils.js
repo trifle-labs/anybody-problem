@@ -11,6 +11,12 @@ const __dirname = path.resolve()
 const correctPrice = ethers.utils.parseEther('0.0025')
 const proceedRecipient = '0x6421b5Dd0872a23f952cA43d18e79A9690B2bD53' // Safe on Base
 
+// Canonical USDC contracts per supported network. Anything else falls through to a freshly deployed MockUSDC.
+const USDC_BY_CHAIN = {
+  8453: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // Base Mainnet
+  84532: '0x036CbD53842c5426634e7929541eC2318f3dCF7e' // Base Sepolia
+}
+
 const proverTickIndex = {
   2: 250,
   3: 250,
@@ -43,7 +49,7 @@ const getPathABI = async (name) => {
   var networkinfo = await hre.ethers.provider.getNetwork()
   var savePath = path.join(
     __dirname,
-    'server',
+    'src',
     'contractData',
     'ABI-' + String(networkinfo['chainId']) + '-' + String(name) + '.json'
   )
@@ -59,7 +65,7 @@ const getPathAddress = async (name) => {
   var networkinfo = await hre.ethers.provider.getNetwork()
   var savePath = path.join(
     __dirname,
-    'server',
+    'src',
     'contractData',
     String(networkinfo['chainId']) + '-' + String(name) + '.json'
   )
@@ -666,6 +672,210 @@ const deployAnybodyProblemV3_4 = async (options) => {
   return returnObject
 }
 
+const resolveUSDC = async ({ deployedContracts, mock }) => {
+  const networkInfo = await hre.ethers.provider.getNetwork()
+  const chainId = networkInfo.chainId
+  // Reuse a previously deployed MockUSDC if present in the deployedContracts map.
+  if (deployedContracts && deployedContracts.MockUSDC) {
+    return {
+      address: deployedContracts.MockUSDC.address,
+      contract: deployedContracts.MockUSDC,
+      isMock: true
+    }
+  }
+  if (USDC_BY_CHAIN[chainId] && !mock) {
+    return {
+      address: USDC_BY_CHAIN[chainId],
+      contract: null,
+      isMock: false
+    }
+  }
+  log(`No canonical USDC for chainId ${chainId} — deploying MockUSDC`)
+  const MockUSDC = await hre.ethers.getContractFactory('MockUSDC')
+  const mockUsdc = await MockUSDC.deploy()
+  await mockUsdc.deployed()
+  log(`MockUSDC deployed at ${mockUsdc.address}`)
+  return { address: mockUsdc.address, contract: mockUsdc, isMock: true }
+}
+
+/// V5 is a fresh sibling deploy that delegates history reads to a separately
+/// deployed `AnybodyHistory` resolver (which itself walks V4→V0 via raw mapping
+/// getters). V5 no longer carries an in-contract `previousAB`. Tournament is
+/// dropped from V5 (USDC-denominated economics replace it).
+const deployAnybodyProblemV5 = async (options) => {
+  const defaultOptions = {
+    mock: false,
+    ignoreTesting: false,
+    skipVerifiers: false,
+    verbose: false,
+    AnybodyProblems: [],
+    Speedruns: null,
+    ExternalMetadata: null,
+    MockUSDC: null,
+    proceedRecipient: proceedRecipient,
+    proceedRate: 0
+  }
+  let {
+    mock,
+    ignoreTesting,
+    skipVerifiers,
+    verbose,
+    AnybodyProblems,
+    Speedruns,
+    ExternalMetadata,
+    MockUSDC,
+    proceedRecipient: proceedRecipientArg,
+    proceedRate
+  } = Object.assign(defaultOptions, options)
+  global.ignoreTesting = ignoreTesting
+  global.networkinfo = await hre.ethers.provider.getNetwork()
+  global.verbose = verbose
+  log('Deploying v5 contracts')
+
+  // V5 chains to V4. Pick up Speedruns/ExternalMetadata and prior versions from existing on-chain deployments.
+  const initContractsNames = [
+    'Speedruns',
+    'ExternalMetadata',
+    'AnybodyProblemV0',
+    'AnybodyProblemV1',
+    'AnybodyProblemV2',
+    'AnybodyProblemV3',
+    'AnybodyProblemV4'
+  ]
+  let deployedContracts = await initContracts(initContractsNames, true)
+  if (MockUSDC) deployedContracts.MockUSDC = MockUSDC
+
+  const { verifiers, verifiersTicks, verifiersBodies, returnObject } =
+    await deployVerifiers({
+      skipVerifiers,
+      deployedContracts,
+      ignoreTesting,
+      verbose
+    })
+
+  if (!Speedruns) Speedruns = deployedContracts.Speedruns
+  returnObject['Speedruns'] = Speedruns
+
+  if (!ExternalMetadata) ExternalMetadata = deployedContracts.ExternalMetadata
+  returnObject['ExternalMetadata'] = ExternalMetadata
+
+  // Pass-through prior versions in returnObject so callers can keep the chain.
+  const historyContracts = []
+  for (let i = 4; i >= 0; i--) {
+    const targetName = `AnybodyProblemV${i}`
+    let found = AnybodyProblems.find((p) => p.name === targetName)
+    let resolved
+    if (found) {
+      resolved = found.contract
+    } else if (deployedContracts[targetName]) {
+      resolved = deployedContracts[targetName]
+    }
+    if (resolved) {
+      returnObject[targetName] = resolved
+      historyContracts.push({ name: targetName, contract: resolved })
+    }
+  }
+  if (historyContracts.length === 0) {
+    throw new Error('No historical AnybodyProblem versions found for resolver')
+  }
+
+  // Deploy AnybodyHistory resolver with [V4, V3, V2, V1, V0] (whatever exists, newest-first).
+  log('Deploying AnybodyHistory resolver')
+  const AnybodyHistoryFactory = await hre.ethers.getContractFactory(
+    'AnybodyHistory'
+  )
+  const historyAddresses = historyContracts.map((h) => h.contract.address)
+  const historyResolver = await AnybodyHistoryFactory.deploy(historyAddresses)
+  await historyResolver.deployed()
+  log(
+    `AnybodyHistory deployed at ${historyResolver.address} ` +
+      `with chain [${historyContracts.map((h) => h.name).join(', ')}]`
+  )
+  returnObject['AnybodyHistory'] = historyResolver
+
+  // V4 is history[0] for top-3 leaderboard / runCount seeding inside V5's constructor.
+  const previousVersion = historyContracts[0].contract
+
+  // USDC.
+  const usdc = await resolveUSDC({ deployedContracts, mock })
+  if (usdc.isMock && usdc.contract) {
+    returnObject['MockUSDC'] = usdc.contract
+  }
+
+  log(mock ? 'Deploying AnybodyProblemV5Mock' : 'Deploying AnybodyProblemV5')
+  const AnybodyProblem = await hre.ethers.getContractFactory(
+    mock ? 'AnybodyProblemV5Mock' : 'AnybodyProblemV5'
+  )
+
+  const constructorArguments = [
+    usdc.address,
+    Speedruns.address,
+    ExternalMetadata.address,
+    verifiers,
+    verifiersTicks,
+    verifiersBodies,
+    historyResolver.address,
+    proceedRecipientArg
+  ]
+
+  const anybodyProblem = await AnybodyProblem.deploy(...constructorArguments)
+  await anybodyProblem.deployed()
+
+  returnObject['AnybodyProblemV5'] = anybodyProblem
+
+  log(
+    `AnybodyProblemV5 deployed at ${anybodyProblem.address} ` +
+      `usdc=${usdc.address} ` +
+      `speedruns=${Speedruns.address} ` +
+      `externalMetadata=${ExternalMetadata.address} ` +
+      `historyResolver=${historyResolver.address} ` +
+      `proceedRecipient=${proceedRecipientArg}`
+  )
+
+  if (proceedRate && proceedRate > 0) {
+    await anybodyProblem.updateProceedRate(proceedRate)
+    log(`AnybodyProblemV5 proceedRate set to ${proceedRate} bps`)
+  }
+
+  // Wire NFT and metadata to point at V5.
+  await Speedruns.updateAnybodyProblemAddress(anybodyProblem.address)
+  log(`Speedruns now points at AnybodyProblemV5 (${anybodyProblem.address})`)
+
+  await ExternalMetadata.updateAnybodyProblemAddress(anybodyProblem.address)
+  log(
+    `ExternalMetadata now points at AnybodyProblemV5 (${anybodyProblem.address})`
+  )
+
+  const verificationData = [
+    {
+      name: 'AnybodyHistory',
+      address: historyResolver.address,
+      constructorArguments: [historyAddresses]
+    },
+    {
+      name: 'AnybodyProblemV5',
+      constructorArguments
+    }
+  ]
+  if (usdc.isMock && usdc.contract) {
+    verificationData.push({
+      name: 'MockUSDC',
+      constructorArguments: []
+    })
+  }
+  returnObject['verificationData'] = verificationData
+  returnObject['AnybodyProblem'] = anybodyProblem
+  AnybodyProblems.push({
+    name: 'AnybodyProblemV5',
+    contract: anybodyProblem
+  })
+  returnObject['AnybodyProblems'] = AnybodyProblems
+  for (let i = 0; i < AnybodyProblems.length; i++) {
+    returnObject[AnybodyProblems[i].name] = AnybodyProblems[i].contract
+  }
+  return returnObject
+}
+
 const deployMetadata = async (skipAssets = false) => {
   let externalMetadata,
     themeAddress,
@@ -820,6 +1030,122 @@ const deployContracts = async (options) => {
     ...deployedContracts4
   }
   return returnValue
+}
+
+const deployContractsV5 = async (options) => {
+  const deployedContracts4 = await deployContracts(options)
+  const deployedContracts5 = await deployAnybodyProblemV5({
+    ...options,
+    ...deployedContracts4
+  })
+  if (options?.saveAndVerify) {
+    await saveAndVerifyContracts(deployedContracts5)
+  }
+  return {
+    ...deployedContracts4,
+    ...deployedContracts5
+  }
+}
+
+/// Deploy PaidSessions wired to a (possibly previously-deployed) V5.
+/// Returns an object compatible with `saveAndVerifyContracts` (with
+/// `verificationData` populated). When called from a test harness, pass
+/// `AnybodyProblemV5` and `MockUSDC` directly. From a deploy script, omit
+/// them and the helper will resolve V5 from disk and USDC via `resolveUSDC`.
+const deployPaidSessions = async (options = {}) => {
+  const {
+    AnybodyProblemV5: providedV5,
+    MockUSDC: providedMock,
+    feeRecipient,
+    shortWindowSize = 10,
+    houseFeeBps = 0,
+    concentrationBps = 1000,
+    mock = false,
+    authorize = true,
+    fundPrizePool = 0, // amount in USDC (6dp). 0 = skip.
+    verbose = false,
+    ignoreTesting = false
+  } = options
+
+  global.ignoreTesting = ignoreTesting
+  global.networkinfo = await hre.ethers.provider.getNetwork()
+  global.verbose = verbose
+
+  const [deployer] = await hre.ethers.getSigners()
+  const recipient = feeRecipient || deployer.address
+
+  // Resolve V5: either the in-memory contract (tests) or via initContracts (deploy).
+  let anybody = providedV5
+  if (!anybody) {
+    const fromDisk = await initContracts(['AnybodyProblemV5'], true)
+    anybody = fromDisk.AnybodyProblemV5
+    if (!anybody) {
+      throw new Error('AnybodyProblemV5 not found on disk — deploy V5 first')
+    }
+  }
+
+  // Resolve USDC: real on supported chains, MockUSDC otherwise.
+  const deployedContracts = providedMock ? { MockUSDC: providedMock } : {}
+  const usdc = await resolveUSDC({ deployedContracts, mock })
+
+  const contractName = mock ? 'PaidSessionsMock' : 'PaidSessions'
+  log(`Deploying ${contractName}`)
+  const Factory = await hre.ethers.getContractFactory(contractName)
+  const constructorArguments = [
+    anybody.address,
+    usdc.address,
+    recipient,
+    shortWindowSize,
+    houseFeeBps,
+    concentrationBps
+  ]
+  const PaidSessions = await Factory.deploy(...constructorArguments)
+  await PaidSessions.deployed()
+  log(
+    `${contractName} deployed at ${PaidSessions.address} ` +
+      `anybody=${anybody.address} usdc=${usdc.address} recipient=${recipient} ` +
+      `shortWindow=${shortWindowSize} houseFeeBps=${houseFeeBps} concentrationBps=${concentrationBps}`
+  )
+
+  if (authorize) {
+    const tx = await anybody.setAuthorizedWriter(PaidSessions.address, true)
+    await tx.wait()
+    log(`AnybodyProblemV5.setAuthorizedWriter(${PaidSessions.address}, true)`)
+  }
+
+  if (fundPrizePool && fundPrizePool > 0) {
+    if (usdc.isMock && usdc.contract) {
+      await (await usdc.contract.mint(deployer.address, fundPrizePool)).wait()
+    }
+    const usdcContract =
+      usdc.contract ||
+      new hre.ethers.Contract(
+        usdc.address,
+        ['function approve(address,uint256) returns (bool)'],
+        deployer
+      )
+    await (await usdcContract.approve(PaidSessions.address, fundPrizePool)).wait()
+    await (await PaidSessions.fundPrizePool(fundPrizePool)).wait()
+    log(`Seeded prize pool with ${fundPrizePool.toString()} (USDC base units)`)
+  }
+
+  const returnObject = {
+    PaidSessions,
+    verificationData: [
+      {
+        name: 'PaidSessions',
+        constructorArguments
+      }
+    ]
+  }
+  if (usdc.isMock && usdc.contract && !providedMock) {
+    returnObject.MockUSDC = usdc.contract
+    returnObject.verificationData.push({
+      name: 'MockUSDC',
+      constructorArguments: []
+    })
+  }
+  return returnObject
 }
 
 const saveAndVerifyContracts = async (deployedContracts) => {
@@ -1020,18 +1346,41 @@ const verifyContracts = async (returnObject) => {
     networkinfo['chainId'] == 8453
   ) {
     const verificationData = returnObject.verificationData
+    const MAX_RETRIES = 5
     for (let i = 0; i < verificationData.length; i++) {
       await new Promise((r) => setTimeout(r, 1000))
       log(`Verifying ${verificationData[i].name} Contract`)
-      try {
-        await hre.run('verify:verify', {
-          address: returnObject[verificationData[i].name].address,
-          constructorArguments: verificationData[i].constructorArguments
-        })
-      } catch (e) {
-        await new Promise((r) => setTimeout(r, 1000))
-        log({ e, verificationData: verificationData[i] })
-        i--
+      let attempts = 0
+      while (true) {
+        try {
+          await hre.run('verify:verify', {
+            address: returnObject[verificationData[i].name].address,
+            constructorArguments: verificationData[i].constructorArguments
+          })
+          break
+        } catch (e) {
+          const msg = (e && (e.message || e.toString())) || ''
+          // Already verified is a soft success.
+          if (/already verified/i.test(msg)) {
+            log(`${verificationData[i].name}: already verified`)
+            break
+          }
+          attempts++
+          if (attempts >= MAX_RETRIES) {
+            log(
+              `Giving up on ${verificationData[i].name} after ${attempts} attempts. Verify manually with: ` +
+                `npx hardhat verify --network <net> ${returnObject[verificationData[i].name].address} ` +
+                JSON.stringify(verificationData[i].constructorArguments)
+            )
+            break
+          }
+          await new Promise((r) => setTimeout(r, 3000))
+          log({
+            attempt: attempts,
+            error: msg.split('\n')[0],
+            verificationData: verificationData[i].name
+          })
+        }
       }
     }
   } else if (networkinfo['chainId'] == 12345) {
@@ -1442,7 +1791,7 @@ async function copyABI(name, contractName) {
 
     var copy = path.join(
       __dirname,
-      'server',
+      'src',
       'contractData',
       'ABI-' + String(networkinfo['chainId']) + `-${name}.json`
     )
@@ -1462,7 +1811,7 @@ async function saveAddress(contract, name) {
   var newAddress = await contract.address
   var savePath = path.join(
     __dirname,
-    'server',
+    'src',
     'contractData',
     String(networkinfo['chainId']) + '-' + String(name) + '.json'
   )
@@ -1514,6 +1863,9 @@ export {
   deployAnybodyProblemV2,
   deployAnybodyProblemV3,
   deployAnybodyProblemV4,
+  deployAnybodyProblemV5,
+  deployContractsV5,
+  deployPaidSessions,
   saveAndVerifyContracts,
   proceedRecipient,
   deployVerifiers
