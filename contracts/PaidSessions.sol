@@ -168,7 +168,6 @@ contract PaidSessions is Ownable, ReentrancyGuard {
     event SessionProven(
         uint256 indexed sessionId,
         address indexed player,
-        uint256 finalScore,
         uint256 accumulativeTime
     );
     event SessionSettled(
@@ -382,12 +381,7 @@ contract PaidSessions is Ownable, ReentrancyGuard {
             'Score does not match proof time'
         );
 
-        emit SessionProven(
-            sessionId,
-            msg.sender,
-            claimedTime,
-            s.accumulativeTime
-        );
+        emit SessionProven(sessionId, msg.sender, s.accumulativeTime);
 
         // Settle: score = MAX_TICKS - accumulativeTime (lower time = higher score).
         // accumulativeTime is bounded ≤ MAX_TICKS by per-level time-limit checks.
