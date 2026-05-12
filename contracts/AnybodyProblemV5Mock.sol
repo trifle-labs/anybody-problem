@@ -3,6 +3,7 @@
 pragma solidity ^0.8.0;
 
 import './AnybodyProblemV5.sol';
+import './AnybodyTypes.sol';
 
 contract AnybodyProblemV5Mock is AnybodyProblemV5 {
     bool public foo = true;
@@ -14,7 +15,7 @@ contract AnybodyProblemV5Mock is AnybodyProblemV5 {
         address[] memory verifiers_,
         uint256[] memory verifiersTicks,
         uint256[] memory verifiersBodies,
-        address payable previousAB_,
+        address historyResolver_,
         address payable proceedRecipient_
     )
         AnybodyProblemV5(
@@ -24,7 +25,7 @@ contract AnybodyProblemV5Mock is AnybodyProblemV5 {
             verifiers_,
             verifiersTicks,
             verifiersBodies,
-            previousAB_,
+            historyResolver_,
             proceedRecipient_
         )
     {}
@@ -59,7 +60,7 @@ contract AnybodyProblemV5Mock is AnybodyProblemV5 {
         public
         view
         override(AnybodyProblemV5)
-        returns (AnybodyProblemV5.Body[6] memory bodyData, uint256 bodyCount)
+        returns (Body[6] memory bodyData, uint256 bodyCount)
     {
         if (mockedBodyDataByLevel[level - 1][0].seed == bytes32(0)) {
             return super.generateLevelData(day, level);

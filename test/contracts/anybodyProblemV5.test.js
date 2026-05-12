@@ -24,12 +24,15 @@ describe('AnybodyProblemV5: new feature tests', function () {
   this.timeout(50_000_000)
 
   describe('constructor wiring', () => {
-    it('sets USDC, deployDay, previousAB, proceedRecipient, default proceedRate=0', async () => {
-      const { AnybodyProblemV5, AnybodyProblemV4, MockUSDC } = await setup()
+    it('sets USDC, deployDay, historyResolver, proceedRecipient, default proceedRate=0', async () => {
+      const { AnybodyProblemV5, AnybodyProblemV4, AnybodyHistory, MockUSDC } =
+        await setup()
       expect(await AnybodyProblemV5.usdc()).to.equal(MockUSDC.address)
-      expect(await AnybodyProblemV5.previousAB()).to.equal(
-        AnybodyProblemV4.address
+      expect(await AnybodyProblemV5.historyResolver()).to.equal(
+        AnybodyHistory.address
       )
+      expect(await AnybodyHistory.historyLength()).to.equal(5)
+      expect(await AnybodyHistory.history(0)).to.equal(AnybodyProblemV4.address)
       expect(await AnybodyProblemV5.proceedRate()).to.equal(0)
       expect(await AnybodyProblemV5.proceedRecipient()).to.not.equal(
         ethers.constants.AddressZero
@@ -512,12 +515,10 @@ describe('AnybodyProblemV5: new feature tests', function () {
   })
 
   describe('history chain to V4', () => {
-    it('runs(unknown id) call does not revert (chain fallthrough is best-effort)', async () => {
+    it('runs(unknown id) returns an empty Run via the resolver', async () => {
       const { AnybodyProblemV5 } = await setup()
-      // The fallthrough decode of an empty struct from previousAB can yield ABI
-      // tuple-offset artifacts (carried over from V4), so we only assert the
-      // call survives without reverting.
-      await AnybodyProblemV5.runs(99999)
+      const r = await AnybodyProblemV5.runs(99999)
+      expect(r.owner).to.equal(ethers.constants.AddressZero)
     })
 
     it('runs(planted id) reads local V5 storage', async () => {
@@ -532,7 +533,7 @@ describe('AnybodyProblemV5: new feature tests', function () {
       expect(r.accumulativeTime).to.equal(1234)
     })
 
-    it('gamesPlayed(unknown player) falls through to previousAB returning empty', async () => {
+    it('gamesPlayed(unknown player) falls through to history resolver returning empty', async () => {
       const { AnybodyProblemV5 } = await setup()
       const [, fresh] = await ethers.getSigners()
       const rec = await AnybodyProblemV5.gamesPlayed(fresh.address)

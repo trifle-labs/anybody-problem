@@ -7,6 +7,7 @@ import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import './AnybodyProblemV5.sol';
+import './AnybodyTypes.sol';
 
 /// @notice Pay-per-play sibling controller for AnybodyProblemV5 with built-in
 /// percentile-based payout. A buy-in mints a tiered ticket, a commit locks a
@@ -80,7 +81,7 @@ contract PaidSessions is Ownable, ReentrancyGuard {
         bool solved;
         uint256 time;
         uint256[5] tmpInflightMissile;
-        AnybodyProblemV5.Body[6] tmpBodyData;
+        Body[6] tmpBodyData;
     }
 
     struct Tier {
@@ -619,7 +620,7 @@ contract PaidSessions is Ownable, ReentrancyGuard {
 
         uint256 bodiesGone = 0;
         for (uint256 i = 0; i < bodyCount; i++) {
-            AnybodyProblemV5.Body memory bd = levelData.tmpBodyData[i];
+            Body memory bd = levelData.tmpBodyData[i];
             _verifyBodyDataMatches(bd, input, bodyCount + dummyCount, i);
             bd = _extractBodyData(bd, input, i);
             if (i == 0) {
@@ -660,7 +661,7 @@ contract PaidSessions is Ownable, ReentrancyGuard {
     }
 
     function _verifyBodyDataMatches(
-        AnybodyProblemV5.Body memory bodyData,
+        Body memory bodyData,
         uint[] memory input,
         uint256 bodyCount,
         uint256 i
@@ -688,10 +689,10 @@ contract PaidSessions is Ownable, ReentrancyGuard {
     }
 
     function _extractBodyData(
-        AnybodyProblemV5.Body memory bodyData,
+        Body memory bodyData,
         uint[] memory input,
         uint256 i
-    ) internal pure returns (AnybodyProblemV5.Body memory) {
+    ) internal pure returns (Body memory) {
         bodyData.px = input[5 + i * 5 + 0];
         bodyData.py = input[5 + i * 5 + 1];
         bodyData.vx = input[5 + i * 5 + 2];

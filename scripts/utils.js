@@ -698,8 +698,10 @@ const resolveUSDC = async ({ deployedContracts, mock }) => {
   return { address: mockUsdc.address, contract: mockUsdc, isMock: true }
 }
 
-/// V5 is a fresh sibling deploy that chains back to V4 via `previousAB`. It does
-/// not include Tournament (USDC-denominated economics replace that path).
+/// V5 is a fresh sibling deploy that delegates history reads to a separately
+/// deployed `AnybodyHistory` resolver (which itself walks V4→V0 via raw mapping
+/// getters). V5 no longer carries an in-contract `previousAB`. Tournament is
+/// dropped from V5 (USDC-denominated economics replace it).
 const deployAnybodyProblemV5 = async (options) => {
   const defaultOptions = {
     mock: false,
@@ -757,29 +759,42 @@ const deployAnybodyProblemV5 = async (options) => {
   if (!ExternalMetadata) ExternalMetadata = deployedContracts.ExternalMetadata
   returnObject['ExternalMetadata'] = ExternalMetadata
 
-  // Resolve V4 (the previousAB target).
-  let previousVersion = AnybodyProblems.find(
-    (p) => p.name == 'AnybodyProblemV4'
-  )
-  if (!previousVersion) {
-    previousVersion = deployedContracts['AnybodyProblemV4']
-    if (!previousVersion) {
-      throw new Error('previous version (V4) not found')
-    }
-  } else {
-    previousVersion = previousVersion.contract
-  }
-
   // Pass-through prior versions in returnObject so callers can keep the chain.
-  for (let i = 0; i < 5; i++) {
+  const historyContracts = []
+  for (let i = 4; i >= 0; i--) {
     const targetName = `AnybodyProblemV${i}`
     let found = AnybodyProblems.find((p) => p.name === targetName)
+    let resolved
     if (found) {
-      returnObject[targetName] = found.contract
+      resolved = found.contract
     } else if (deployedContracts[targetName]) {
-      returnObject[targetName] = deployedContracts[targetName]
+      resolved = deployedContracts[targetName]
+    }
+    if (resolved) {
+      returnObject[targetName] = resolved
+      historyContracts.push({ name: targetName, contract: resolved })
     }
   }
+  if (historyContracts.length === 0) {
+    throw new Error('No historical AnybodyProblem versions found for resolver')
+  }
+
+  // Deploy AnybodyHistory resolver with [V4, V3, V2, V1, V0] (whatever exists, newest-first).
+  log('Deploying AnybodyHistory resolver')
+  const AnybodyHistoryFactory = await hre.ethers.getContractFactory(
+    'AnybodyHistory'
+  )
+  const historyAddresses = historyContracts.map((h) => h.contract.address)
+  const historyResolver = await AnybodyHistoryFactory.deploy(historyAddresses)
+  await historyResolver.deployed()
+  log(
+    `AnybodyHistory deployed at ${historyResolver.address} ` +
+      `with chain [${historyContracts.map((h) => h.name).join(', ')}]`
+  )
+  returnObject['AnybodyHistory'] = historyResolver
+
+  // V4 is history[0] for top-3 leaderboard / runCount seeding inside V5's constructor.
+  const previousVersion = historyContracts[0].contract
 
   // USDC.
   const usdc = await resolveUSDC({ deployedContracts, mock })
@@ -799,7 +814,7 @@ const deployAnybodyProblemV5 = async (options) => {
     verifiers,
     verifiersTicks,
     verifiersBodies,
-    previousVersion.address,
+    historyResolver.address,
     proceedRecipientArg
   ]
 
@@ -813,7 +828,7 @@ const deployAnybodyProblemV5 = async (options) => {
       `usdc=${usdc.address} ` +
       `speedruns=${Speedruns.address} ` +
       `externalMetadata=${ExternalMetadata.address} ` +
-      `previousAB=${previousVersion.address} ` +
+      `historyResolver=${historyResolver.address} ` +
       `proceedRecipient=${proceedRecipientArg}`
   )
 
@@ -832,6 +847,11 @@ const deployAnybodyProblemV5 = async (options) => {
   )
 
   const verificationData = [
+    {
+      name: 'AnybodyHistory',
+      address: historyResolver.address,
+      constructorArguments: [historyAddresses]
+    },
     {
       name: 'AnybodyProblemV5',
       constructorArguments

@@ -13,6 +13,8 @@ import '@openzeppelin/contracts/token/ERC1155/ERC1155.sol';
 import './Speedruns.sol';
 import './ExternalMetadata.sol';
 import './AnybodyProblemV4.sol';
+import './AnybodyHistory.sol';
+import './AnybodyTypes.sol';
 
 contract AnybodyProblemV5 is Ownable, ERC2981 {
     using SafeERC20 for IERC20;
@@ -38,7 +40,7 @@ contract AnybodyProblemV5 is Ownable, ERC2981 {
     uint256 public constant BPS_DENOMINATOR = 10_000;
 
     uint256 public deployDay;
-    address payable public previousAB;
+    AnybodyHistory public historyResolver;
     address payable public proceedRecipient;
     address public externalMetadata;
     address payable public speedruns;
@@ -57,51 +59,6 @@ contract AnybodyProblemV5 is Ownable, ERC2981 {
     uint256 public constant maxVectorScaled = maxVector * scalingFactor;
     uint256 public constant windowWidth = 1000 * scalingFactor;
     uint256 public constant startingRadius = 2;
-
-    struct Run {
-        address owner;
-        bool solved;
-        uint256 accumulativeTime;
-        bytes32 seed;
-        uint256 day;
-        Level[] levels;
-    }
-    struct RunWithoutLevels {
-        address owner;
-        bool solved;
-        uint256 accumulativeTime;
-        bytes32 seed;
-        uint256 day;
-    }
-    struct Level {
-        bool solved;
-        uint256 time;
-        bytes32 seed;
-        uint256[5] tmpInflightMissile;
-        Body[6] tmpBodyData;
-    }
-    struct Body {
-        uint256 bodyIndex;
-        uint256 px;
-        uint256 py;
-        uint256 vx;
-        uint256 vy;
-        uint256 radius;
-        bytes32 seed;
-    }
-
-    struct Record {
-        bool updated;
-        uint256 total;
-        uint256 lastPlayed;
-        uint256 streak;
-    }
-
-    struct OldRecordType {
-        uint256 total;
-        uint256 lastPlayed;
-        uint256 streak;
-    }
 
     mapping(uint256 => uint256[3]) public fastestByDay_; // day => [fastest, 2nd, 3rd runId]
     address[3] public mostGames;
@@ -153,22 +110,23 @@ contract AnybodyProblemV5 is Ownable, ERC2981 {
         address[] memory verifiers_,
         uint256[] memory verifiersTicks,
         uint256[] memory verifiersBodies,
-        address payable previousAB_,
+        address historyResolver_,
         address payable proceedRecipient_
     ) {
         require(usdc_ != address(0), 'Invalid USDC');
         usdc = IERC20(usdc_);
         deployDay = currentDay();
-        updatePreviousAB(previousAB_);
+        updateHistoryResolver(historyResolver_);
         updateProceedRecipient(proceedRecipient_);
-        if (previousAB != address(0)) {
-            totalRuns = AnybodyProblemV4(previousAB).runCount();
-            longestStreak[0] = AnybodyProblemV4(previousAB).longestStreak(0);
-            longestStreak[1] = AnybodyProblemV4(previousAB).longestStreak(1);
-            longestStreak[2] = AnybodyProblemV4(previousAB).longestStreak(2);
-            mostGames[0] = AnybodyProblemV4(previousAB).mostGames(0);
-            mostGames[1] = AnybodyProblemV4(previousAB).mostGames(1);
-            mostGames[2] = AnybodyProblemV4(previousAB).mostGames(2);
+        if (address(historyResolver) != address(0) && historyResolver.historyLength() > 0) {
+            address mostRecent = historyResolver.history(0);
+            totalRuns = AnybodyProblemV4(payable(mostRecent)).runCount();
+            longestStreak[0] = AnybodyProblemV4(payable(mostRecent)).longestStreak(0);
+            longestStreak[1] = AnybodyProblemV4(payable(mostRecent)).longestStreak(1);
+            longestStreak[2] = AnybodyProblemV4(payable(mostRecent)).longestStreak(2);
+            mostGames[0] = AnybodyProblemV4(payable(mostRecent)).mostGames(0);
+            mostGames[1] = AnybodyProblemV4(payable(mostRecent)).mostGames(1);
+            mostGames[2] = AnybodyProblemV4(payable(mostRecent)).mostGames(2);
         }
 
         updateSpeedrunsAddress(speedruns_);
@@ -188,75 +146,42 @@ contract AnybodyProblemV5 is Ownable, ERC2981 {
         revert('no fallback thank you');
     }
 
-    // ============ History reads (chains through previousAB) ============
+    // ============ History reads (via AnybodyHistory resolver) ============
 
     function runs(uint256 runId) public view returns (Run memory) {
-        if (runs_[runId].owner == address(0)) {
-            (bool success, bytes memory data) = previousAB.staticcall(
-                abi.encodeWithSignature('runs(uint256)', runId)
-            );
-            if (success && data.length > 0) {
-                Run memory r = abi.decode(data, (Run));
-                Run memory run = Run({
-                    owner: r.owner,
-                    solved: r.solved,
-                    accumulativeTime: r.accumulativeTime,
-                    seed: r.seed,
-                    day: r.day,
-                    levels: getLevelsData(runId)
-                });
-                return run;
-            } else {
-                return runs_[runId];
-            }
-        } else {
-            return runs_[runId];
-        }
+        if (runs_[runId].owner != address(0)) return runs_[runId];
+        if (address(historyResolver) == address(0)) return runs_[runId];
+        return historyResolver.runs(runId);
     }
 
     function gamesPlayed(address player) public view returns (Record memory) {
         Record memory record = gamesPlayed_[player];
-        if (!record.updated) {
-            (bool success, bytes memory data) = previousAB.staticcall(
-                abi.encodeWithSignature('gamesPlayed(address)', player)
-            );
-            OldRecordType memory previousRecord;
-            if (success && data.length > 0) {
-                previousRecord = abi.decode(data, (OldRecordType));
-            }
-            Record memory combinedRecord = Record({
+        if (record.updated) return record;
+        if (address(historyResolver) == address(0)) return record;
+        Record memory historical = historyResolver.gamesPlayed(player);
+        return
+            Record({
                 updated: false,
-                total: record.total + previousRecord.total,
-                lastPlayed: previousRecord.lastPlayed,
-                streak: previousRecord.streak
+                total: record.total + historical.total,
+                lastPlayed: historical.lastPlayed,
+                streak: historical.streak
             });
-            return combinedRecord;
-        } else {
-            return record;
-        }
     }
 
     function fastestByDay(
         uint256 day
     ) public view returns (uint256[3] memory fastest) {
         uint256[3] memory localFastest = fastestByDay_[day];
+        bool anyMissing = false;
         for (uint256 i = 0; i < 3; i++) {
-            if (localFastest[i] == 0) {
-                (bool success, bytes memory data) = previousAB.staticcall(
-                    abi.encodeWithSignature(
-                        'fastestByDay(uint256,uint256)',
-                        day,
-                        i
-                    )
-                );
-                if (success && data.length > 0) {
-                    fastest[i] = abi.decode(data, (uint256));
-                }
-            } else {
-                fastest[i] = localFastest[i];
-            }
+            fastest[i] = localFastest[i];
+            if (localFastest[i] == 0) anyMissing = true;
         }
-        return fastest;
+        if (!anyMissing || address(historyResolver) == address(0)) return fastest;
+        uint256[3] memory historical = historyResolver.fastestByDay(day);
+        for (uint256 i = 0; i < 3; i++) {
+            if (fastest[i] == 0) fastest[i] = historical[i];
+        }
     }
 
     function nextRunId() public view returns (uint256) {
@@ -270,22 +195,15 @@ contract AnybodyProblemV5 is Ownable, ERC2981 {
     function getLevelsData(
         uint256 runId
     ) public view returns (Level[] memory levels) {
-        if (!runExists(runId)) {
-            (bool success, bytes memory data) = previousAB.staticcall(
-                abi.encodeWithSignature('getLevelsData(uint256)', runId)
-            );
-            if (success && data.length > 0) {
-                return abi.decode(data, (Level[]));
-            } else {
-                return runs_[runId].levels;
-            }
-        } else {
-            return runs_[runId].levels;
-        }
+        if (runs_[runId].owner != address(0)) return runs_[runId].levels;
+        if (address(historyResolver) == address(0)) return runs_[runId].levels;
+        return historyResolver.getLevelsData(runId);
     }
 
     function runExists(uint256 runId) public view returns (bool) {
-        return runs_[runId].owner != address(0);
+        if (runs_[runId].owner != address(0)) return true;
+        if (address(historyResolver) == address(0)) return false;
+        return historyResolver.runExists(runId);
     }
 
     // ============ Game state generation ============
@@ -977,8 +895,8 @@ contract AnybodyProblemV5 is Ownable, ERC2981 {
         externalMetadata = externalMetadata_;
     }
 
-    function updatePreviousAB(address payable previousAB_) public onlyOwner {
-        previousAB = previousAB_;
+    function updateHistoryResolver(address historyResolver_) public onlyOwner {
+        historyResolver = AnybodyHistory(historyResolver_);
     }
 
     function updateProceedRecipient(
