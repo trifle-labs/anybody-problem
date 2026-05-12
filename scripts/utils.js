@@ -49,7 +49,7 @@ const getPathABI = async (name) => {
   var networkinfo = await hre.ethers.provider.getNetwork()
   var savePath = path.join(
     __dirname,
-    'server',
+    'src',
     'contractData',
     'ABI-' + String(networkinfo['chainId']) + '-' + String(name) + '.json'
   )
@@ -65,7 +65,7 @@ const getPathAddress = async (name) => {
   var networkinfo = await hre.ethers.provider.getNetwork()
   var savePath = path.join(
     __dirname,
-    'server',
+    'src',
     'contractData',
     String(networkinfo['chainId']) + '-' + String(name) + '.json'
   )
@@ -1791,7 +1791,7 @@ async function copyABI(name, contractName) {
 
     var copy = path.join(
       __dirname,
-      'server',
+      'src',
       'contractData',
       'ABI-' + String(networkinfo['chainId']) + `-${name}.json`
     )
@@ -1811,7 +1811,7 @@ async function saveAddress(contract, name) {
   var newAddress = await contract.address
   var savePath = path.join(
     __dirname,
-    'server',
+    'src',
     'contractData',
     String(networkinfo['chainId']) + '-' + String(name) + '.json'
   )
