@@ -8,7 +8,8 @@ async function main() {
   // Seed the prize pool on Base Sepolia (testnet); skip on mainnet and other
   // chains so the operator can fund manually after deploy. Faucet-rate-limited
   // testnet USDC so the seed is intentionally small.
-  const fundPrizePool = chainId === 84532 ? 20_000_000 : 0
+  // Operator can fund the prize pool manually after deploy via PaidSessions.fundPrizePool(amount).
+  const fundPrizePool = 0
 
   const deployedContracts = await deployPaidSessions({
     ignoreTesting: true,

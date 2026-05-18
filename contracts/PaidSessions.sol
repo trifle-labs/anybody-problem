@@ -121,13 +121,25 @@ contract PaidSessions is Ownable, ReentrancyGuard {
 
     Tier[] public tiers; // 1-indexed; tiers[0] unused
 
-    /// @notice Long-window circular buffer of recent settled scores.
-    uint256[W_LONG] internal longBuffer;
+    /// @notice Reference-distribution sample: settled score plus its netCost.
+    /// Weighting the percentile by netCost neutralizes a buffer-pollution
+    /// attack where a player plays many cheap (small entryFee) games with
+    /// deliberately bad scores to drag the distribution down, then settles
+    /// one high-stakes session against the polluted reference. With weights,
+    /// the cost of moving the percentile scales with the payout you're
+    /// trying to manipulate, so the attack is no longer profitable.
+    struct Sample {
+        uint128 score;
+        uint128 weight;
+    }
+
+    /// @notice Long-window circular buffer of recent settled scores (weighted).
+    Sample[W_LONG] internal longBuffer;
     uint256 public longCursor;
     bool public longFilled;
 
-    /// @notice Short-window state. Size adjustable, default 10.
-    uint256[] internal shortBuffer;
+    /// @notice Short-window state (weighted). Size adjustable, default 10.
+    Sample[] internal shortBuffer;
     uint256 public shortCursor;
     bool public shortFilled;
     uint256 public shortWindowSize;
@@ -221,12 +233,13 @@ contract PaidSessions is Ownable, ReentrancyGuard {
         houseFeeBps = houseFeeBps_;
         concentrationBps = concentrationBps_;
         shortWindowSize = shortWindowSize_;
-        shortBuffer = new uint256[](shortWindowSize_);
+        shortBuffer = new Sample[](shortWindowSize_);
 
         tiers.push(); // burn index 0
 
-        // Launch tiers (USDC has 6 decimals): $0.50, $1, $2, $5, $10.
+        // Launch tiers (USDC has 6 decimals): $0.05, $0.50, $1, $2, $5, $10.
         // Owner can re-tune via setTier post-deploy.
+        _initTier(50_000);
         _initTier(500_000);
         _initTier(1_000_000);
         _initTier(2_000_000);
@@ -322,6 +335,14 @@ contract PaidSessions is Ownable, ReentrancyGuard {
     /// @notice Commit a score hash and lock in the on-chain seed for this session.
     /// `submitProof` (the default revealer) expects
     /// `scoreCommit == keccak256(abi.encodePacked(claimedTime, salt))`.
+    /// @dev Re-callable while the commit window is open. The first call (status
+    /// == Open) locks in the on-chain seed from blockhash(startBlock + 1) and
+    /// flips status to Committed. Subsequent calls keep that seed and simply
+    /// overwrite the score commitment + reset the proof window — this lets a
+    /// player replay individual levels and commit a better score without
+    /// having to buy in again. No chunk state can exist yet because
+    /// submitProof requires Committed and would have advanced status to
+    /// Settled, ending the recommit-eligible window.
     function commit(
         uint256 sessionId,
         bytes32 scoreCommit
@@ -329,17 +350,24 @@ contract PaidSessions is Ownable, ReentrancyGuard {
         _processForfeits(maxAutoScan);
         Session storage s = sessions[sessionId];
         require(s.player == msg.sender, 'Not session owner');
-        require(s.status == Status.Open, 'Session not open');
-        require(block.number > s.startBlock, 'Wait one block to commit');
+        require(
+            s.status == Status.Open || s.status == Status.Committed,
+            'Session not open'
+        );
         require(block.timestamp <= s.commitDeadline, 'Commit window expired');
 
-        bytes32 entropy = _readBlockhash(s.startBlock + 1);
-        require(entropy != bytes32(0), 'Blockhash unavailable');
+        if (s.status == Status.Open) {
+            require(block.number > s.startBlock, 'Wait one block to commit');
+            bytes32 entropy = _readBlockhash(s.startBlock + 1);
+            require(entropy != bytes32(0), 'Blockhash unavailable');
+            s.seed = keccak256(
+                abi.encodePacked(msg.sender, sessionId, entropy)
+            );
+            s.status = Status.Committed;
+        }
 
-        s.seed = keccak256(abi.encodePacked(msg.sender, sessionId, entropy));
         s.scoreCommit = scoreCommit;
         s.proofDeadline = block.timestamp + proofWindowSeconds;
-        s.status = Status.Committed;
         emit SessionCommitted(sessionId, s.seed, scoreCommit, s.proofDeadline);
     }
 
@@ -414,12 +442,18 @@ contract PaidSessions is Ownable, ReentrancyGuard {
             finalPayout = s.reserved;
         }
 
-        // Update buffers AFTER lookup.
-        longBuffer[longCursor] = score;
+        // Update buffers AFTER lookup. Weight each sample by the session's
+        // netCost so the percentile distribution can't be cheaply skewed by
+        // grinding low-tier games (see Sample struct doc).
+        Sample memory sample = Sample({
+            score: uint128(score),
+            weight: uint128(s.netCost)
+        });
+        longBuffer[longCursor] = sample;
         if (longCursor + 1 >= W_LONG) longFilled = true;
         longCursor = (longCursor + 1) % W_LONG;
 
-        shortBuffer[shortCursor] = score;
+        shortBuffer[shortCursor] = sample;
         uint256 sLen = shortBuffer.length;
         if (shortCursor + 1 >= sLen) shortFilled = true;
         shortCursor = (shortCursor + 1) % sLen;
@@ -698,28 +732,36 @@ contract PaidSessions is Ownable, ReentrancyGuard {
     function _percentileLong(uint256 score) internal view returns (uint256) {
         uint256 n = longFilled ? W_LONG : longCursor;
         if (n == 0) return MUL_ONE / 2;
-        uint256 below = 0;
-        uint256 atOrBelow = 0;
+        uint256 wBelow = 0;
+        uint256 wAtOrBelow = 0;
+        uint256 wTotal = 0;
         for (uint256 i = 0; i < n; i++) {
-            uint256 sc = longBuffer[i];
-            if (sc < score) below++;
-            if (sc <= score) atOrBelow++;
+            Sample memory smp = longBuffer[i];
+            uint256 w = smp.weight;
+            wTotal += w;
+            if (smp.score < score) wBelow += w;
+            if (smp.score <= score) wAtOrBelow += w;
         }
-        return ((below + atOrBelow) * MUL_ONE) / (2 * n);
+        if (wTotal == 0) return MUL_ONE / 2;
+        return ((wBelow + wAtOrBelow) * MUL_ONE) / (2 * wTotal);
     }
 
     function _percentileShort(uint256 score) internal view returns (uint256) {
         uint256 capacity = shortBuffer.length;
         uint256 n = shortFilled ? capacity : shortCursor;
         if (n == 0) return MUL_ONE / 2;
-        uint256 below = 0;
-        uint256 atOrBelow = 0;
+        uint256 wBelow = 0;
+        uint256 wAtOrBelow = 0;
+        uint256 wTotal = 0;
         for (uint256 i = 0; i < n; i++) {
-            uint256 sc = shortBuffer[i];
-            if (sc < score) below++;
-            if (sc <= score) atOrBelow++;
+            Sample memory smp = shortBuffer[i];
+            uint256 w = smp.weight;
+            wTotal += w;
+            if (smp.score < score) wBelow += w;
+            if (smp.score <= score) wAtOrBelow += w;
         }
-        return ((below + atOrBelow) * MUL_ONE) / (2 * n);
+        if (wTotal == 0) return MUL_ONE / 2;
+        return ((wBelow + wAtOrBelow) * MUL_ONE) / (2 * wTotal);
     }
 
     // ============ Views ============
@@ -804,7 +846,7 @@ contract PaidSessions is Ownable, ReentrancyGuard {
     function setShortWindowSize(uint256 size_) external onlyOwner {
         require(size_ >= 2, 'short<2');
         require(totalLiabilities == 0, 'Outstanding liabilities');
-        shortBuffer = new uint256[](size_);
+        shortBuffer = new Sample[](size_);
         shortWindowSize = size_;
         shortCursor = 0;
         shortFilled = false;

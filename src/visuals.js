@@ -1042,13 +1042,17 @@ export const Visuals = {
     // upper box text - values
     p.textSize(54)
     p.fill(THEME.iris_30)
-    const formattedDate = new Date(this.date)
-      .toLocaleDateString('en-US', {
-        month: 'short',
-        day: '2-digit',
-        year: 'numeric'
-      })
-      .toUpperCase()
+    // When `dateLabel` is set (cash mode), `this.date` is a free-form string
+    // like "Session #42" — skip the Date round-trip and use it as-is.
+    const formattedDate = this.dateLabel
+      ? this.date
+      : new Date(this.date)
+          .toLocaleDateString('en-US', {
+            month: 'short',
+            day: '2-digit',
+            year: 'numeric'
+          })
+          .toUpperCase()
     p.text(this.playerName ?? 'YOU', 495, 114)
     p.text(formattedDate, 495, 174)
     // end upper box text
@@ -1059,10 +1063,25 @@ export const Visuals = {
         return result[result.length - 1]?.sampleOutput.time / this.FPS
       })
       .filter((l) => l !== undefined)
-    const bestTimes =
-      this.todaysRecords?.levels?.map((l) => l.events[0].time / this.FPS) ?? []
+    // Daily mode populates `todaysRecords` from chain data; cash mode (and
+    // any non-daily flow) gets per-instance best from `bestLevelData`, which
+    // is the PRIOR best (current run's pending best is held in
+    // `pendingBest` and only committed on restart). For a level completed in
+    // THIS run with no prior best, treat the just-completed time as the
+    // best — otherwise the row would render "-" while the sum coerces null→0
+    // and shows a misleading "+huge" diff. Build a length-LEVELS array so
+    // every row resolves even when chain/local sources are shorter.
+    const bestTimes = []
+    for (let i = 0; i < LEVELS; i++) {
+      const chainBest = this.todaysRecords?.levels?.[i]?.events?.[0]?.time
+      const localBest = this.bestLevelData?.[i]?.time
+      const justPlayed = i < levelTimes.length ? levelTimes[i] : null
+      if (chainBest != null) bestTimes.push(chainBest / this.FPS)
+      else if (localBest != null) bestTimes.push(localBest / this.FPS)
+      else bestTimes.push(justPlayed)
+    }
 
-    const showBestAndDiff = bestTimes.length
+    const showBestAndDiff = bestTimes.some((b) => b != null)
 
     p.textSize(48)
     const midHeadY = 264
@@ -1117,19 +1136,18 @@ export const Visuals = {
       )
     }
     if (showBestAndDiff) {
-      // calc diffs
-      const plusMinus = bestTimes
-        .map((best, i) => {
-          if (i >= levelTimes.length) return ''
-          const time = levelTimes[i]
-          const diff = time - best
-          const sign = Number(diff.toFixed(2)) > 0 ? '+' : '-'
-          return sign + Math.abs(diff).toFixed(2)
-        })
-        .filter(Boolean)
+      // calc diffs — keep nulls as '' so plusMinus[i] aligns with levelTimes[i]
+      const plusMinus = bestTimes.map((best, i) => {
+        if (best == null || i >= levelTimes.length) return ''
+        const time = levelTimes[i]
+        const diff = Number((time - best).toFixed(2))
+        if (diff === 0) return '' // first-time or tied — neutral render
+        return (diff > 0 ? '+' : '-') + Math.abs(diff).toFixed(2)
+      })
       // best times
       for (let i = 0; i < LEVELS; i++) {
-        const best = i < bestTimes.length ? bestTimes[i].toFixed(2) : '-'
+        const bestVal = i < bestTimes.length ? bestTimes[i] : null
+        const best = bestVal == null ? '-' : bestVal.toFixed(2)
         p.fill(THEME.iris_50)
         p.text(
           best,
@@ -1159,6 +1177,33 @@ export const Visuals = {
       }
     }
     p.textSize(64)
+    // Per-level replay buttons. drawButton uses its own push/pop so the
+    // outer text state stays intact for the sum-line render below. Sit
+    // immediately after each row's baddie pyramid so they don't overlap the
+    // time/best/diff columns. Baddies start at x=64 with 72px stride; row i
+    // has i+2 baddies, so the rightmost baddie center sits at
+    // 64 + (i+1)*72. Add ~36 to clear half the body sprite plus a gap.
+    for (let i = 0; i < Math.min(levelTimes.length, LEVELS); i++) {
+      const btnW = 76
+      const btnH = 40
+      const btnX = 64 + (i + 1) * 72 + 36
+      const btnY = middleBoxY + rowHeight * i + (rowHeight - btnH) / 2
+      this.drawButton({
+        text: 'REDO',
+        onClick: () => {
+          if (this.popup) return
+          this.level = i + 1
+          this.restart(null, false)
+        },
+        x: btnX,
+        y: btnY,
+        width: btnW,
+        height: btnH,
+        textSize: 24,
+        ...themes.buttons.teal,
+        key: `stats-redo-${i}`
+      })
+    }
 
     // middle box text - sum line
     if (showCumulativeTimeRow) {
@@ -1166,9 +1211,12 @@ export const Visuals = {
       const sumLine = [levelTimeSum.toFixed(2)]
 
       if (showBestAndDiff) {
+        // Sum the best only over levels where a prior best actually exists —
+        // null entries (first-attempt levels) would otherwise coerce to 0
+        // and pretend you saved time you never had.
         const bestTime = bestTimes
           .slice(0, levelTimes.length)
-          .reduce((a, b) => a + b, 0)
+          .reduce((a, b) => a + (b == null ? 0 : b), 0)
         let diff = Number((levelTimeSum - bestTime).toFixed(2))
         sumLine[1] = bestTime.toFixed(2)
         sumLine[2] = `${diff > 0 ? '+' : '-'}${Math.abs(diff).toFixed(2)}`

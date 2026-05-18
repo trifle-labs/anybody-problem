@@ -29,6 +29,7 @@ contract AnybodyProblemV5 is Ownable, ERC2981 {
     // USDC (6 decimals)
     IERC20 public usdc;
     uint256 public playPrice = 500_000; // $0.50
+    uint256 public mintPrice = 1_000_000; // $1.00
     uint256 public dailyPrizeRate = 1_000_000; // $1.00
     uint256 public prefundedPrizePool;
     mapping(uint256 => uint256) public dailyPool; // day => USDC accumulated
@@ -453,24 +454,24 @@ contract AnybodyProblemV5 is Ownable, ERC2981 {
                     gamesPlayed(msg.sender).streak
                 );
                 // V5: every save mints an NFT and pays the flat playPrice
-                _payAndMint(v.day);
+                _payAndMint(v.day, playPrice);
             } else {
                 addNewLevelData(v.runId);
             }
         }
     }
 
-    function _payAndMint(uint256 day) internal {
+    function _payAndMint(uint256 day, uint256 price) internal {
         require(day == currentDay(), 'Can only mint on the current day');
         _seedDay(day);
-        _payPlayPrice(msg.sender, day);
+        _payForDay(msg.sender, day, price);
         Speedruns(speedruns).__mint(msg.sender, day, 1, '');
     }
 
-    // Standalone NFT mint (no game played)
+    // Standalone NFT mint (no game played) — charges mintPrice; proceeds to pot.
     function mint() public {
         require(!paused, 'Contract is paused');
-        _payAndMint(currentDay());
+        _payAndMint(currentDay(), mintPrice);
     }
 
     function batchSolve(
@@ -656,17 +657,17 @@ contract AnybodyProblemV5 is Ownable, ERC2981 {
         }
     }
 
-    function _payPlayPrice(address payer, uint256 day) internal {
-        if (playPrice == 0) return;
-        usdc.safeTransferFrom(payer, address(this), playPrice);
+    function _payForDay(address payer, uint256 day, uint256 amount) internal {
+        if (amount == 0) return;
+        usdc.safeTransferFrom(payer, address(this), amount);
         uint256 toRecipient = 0;
         if (proceedRate > 0 && proceedRecipient != address(0)) {
-            toRecipient = (playPrice * proceedRate) / BPS_DENOMINATOR;
+            toRecipient = (amount * proceedRate) / BPS_DENOMINATOR;
             if (toRecipient > 0) {
                 usdc.safeTransfer(proceedRecipient, toRecipient);
             }
         }
-        uint256 toPool = playPrice - toRecipient;
+        uint256 toPool = amount - toRecipient;
         dailyPool[day] += toPool;
         emit DailyPoolFunded(day, payer, toPool);
     }
@@ -931,6 +932,10 @@ contract AnybodyProblemV5 is Ownable, ERC2981 {
 
     function updatePlayPrice(uint256 playPrice_) public onlyOwner {
         playPrice = playPrice_;
+    }
+
+    function updateMintPrice(uint256 mintPrice_) public onlyOwner {
+        mintPrice = mintPrice_;
     }
 
     function updateDailyPrizeRate(uint256 dailyPrizeRate_) public onlyOwner {

@@ -97,14 +97,17 @@ describe('PaidSessions', function () {
       expect(await ps.proofWindowSeconds()).to.equal(3600)
       expect(await ps.lastSessionId()).to.equal(0)
       expect(await ps.forfeitCursor()).to.equal(1)
-      // Index 0 reserved + 5 launch tiers ($0.50, $1, $2, $5, $10).
-      expect(await ps.tierCount()).to.equal(6)
+      // Index 0 reserved + 6 launch tiers ($0.05, $0.50, $1, $2, $5, $10).
+      expect(await ps.tierCount()).to.equal(7)
       const t1 = await ps.tiers(1)
-      expect(t1.entryFee).to.equal(USDC(0.5))
+      expect(t1.entryFee).to.equal(USDC(0.05))
       expect(t1.enabled).to.equal(true)
-      const t5 = await ps.tiers(5)
-      expect(t5.entryFee).to.equal(USDC(10))
-      expect(t5.enabled).to.equal(true)
+      const t2 = await ps.tiers(2)
+      expect(t2.entryFee).to.equal(USDC(0.5))
+      expect(t2.enabled).to.equal(true)
+      const t6 = await ps.tiers(6)
+      expect(t6.entryFee).to.equal(USDC(10))
+      expect(t6.enabled).to.equal(true)
     })
 
     it('rejects invalid constructor args', async () => {
@@ -232,14 +235,14 @@ describe('PaidSessions', function () {
     })
 
     it('creates and updates tiers, indexes from 1', async () => {
-      // Constructor pre-populates indices 1..5; setTier(6, ...) extends.
-      await expect(env.PaidSessions.setTier(6, USDC(25), true))
+      // Constructor pre-populates indices 1..6; setTier(7, ...) extends.
+      await expect(env.PaidSessions.setTier(7, USDC(25), true))
         .to.emit(env.PaidSessions, 'TierSet')
-        .withArgs(6, USDC(25), true)
-      expect(await env.PaidSessions.tierCount()).to.equal(7) // 0..6
-      const t6 = await env.PaidSessions.tiers(6)
-      expect(t6.entryFee).to.equal(USDC(25))
-      expect(t6.enabled).to.equal(true)
+        .withArgs(7, USDC(25), true)
+      expect(await env.PaidSessions.tierCount()).to.equal(8) // 0..7
+      const t7 = await env.PaidSessions.tiers(7)
+      expect(t7.entryFee).to.equal(USDC(25))
+      expect(t7.enabled).to.equal(true)
 
       // Reassigning an existing tier overwrites.
       await env.PaidSessions.setTier(1, USDC(2), false)
@@ -255,13 +258,13 @@ describe('PaidSessions', function () {
     })
 
     it('grows tiers array sparsely if the next assignment skips ahead', async () => {
-      // Constructor pre-populates 1..5. Skip to index 8.
-      await env.PaidSessions.setTier(8, USDC(100), true)
-      expect(await env.PaidSessions.tierCount()).to.equal(9)
-      // Indices 6..7 created blank.
-      const t6 = await env.PaidSessions.tiers(6)
-      expect(t6.entryFee).to.equal(0)
-      expect(t6.enabled).to.equal(false)
+      // Constructor pre-populates 1..6. Skip to index 9.
+      await env.PaidSessions.setTier(9, USDC(100), true)
+      expect(await env.PaidSessions.tierCount()).to.equal(10)
+      // Indices 7..8 created blank.
+      const t7 = await env.PaidSessions.tiers(7)
+      expect(t7.entryFee).to.equal(0)
+      expect(t7.enabled).to.equal(false)
     })
   })
 
@@ -651,7 +654,7 @@ describe('PaidSessions', function () {
     })
 
     it('skips disabled or unset tiers', async () => {
-      // Constructor pre-populates tiers 1..5 enabled. Disable everything
+      // Constructor pre-populates tiers 1..6 enabled. Disable everything
       // above tier 2 so we can observe the skip behavior.
       const env = await deployAll({
         poolFund: USDC(1000),
@@ -660,7 +663,8 @@ describe('PaidSessions', function () {
           [2, USDC(1), true],
           [3, USDC(2), false], // disabled — skip
           [4, USDC(5), false],
-          [5, USDC(10), false]
+          [5, USDC(10), false],
+          [6, USDC(10), false]
         ]
       })
       expect(await env.PaidSessions.maxAffordableTier()).to.equal(2)
@@ -806,13 +810,18 @@ describe('PaidSessions', function () {
       expect(s.proofDeadline).to.be.gt(0)
     })
 
-    it('rejects commit on wrong status (already committed)', async () => {
+    it('allows recommit while within commit window (refreshes proofDeadline, preserves seed)', async () => {
       await mineOne()
-      const scoreCommit = ethers.utils.keccak256('0xdeadbeef')
-      await env.PaidSessions.connect(player).commit(sessionId, scoreCommit)
-      await expect(
-        env.PaidSessions.connect(player).commit(sessionId, scoreCommit)
-      ).to.be.revertedWith('Session not open')
+      const scoreCommit1 = ethers.utils.keccak256('0xdeadbeef')
+      await env.PaidSessions.connect(player).commit(sessionId, scoreCommit1)
+      const s1 = await env.PaidSessions.sessions(sessionId)
+      const scoreCommit2 = ethers.utils.keccak256('0xfeedface')
+      await advanceTime(5)
+      await env.PaidSessions.connect(player).commit(sessionId, scoreCommit2)
+      const s2 = await env.PaidSessions.sessions(sessionId)
+      expect(s2.scoreCommit).to.equal(scoreCommit2)
+      expect(s2.seed).to.equal(s1.seed)
+      expect(s2.proofDeadline).to.be.gt(s1.proofDeadline)
     })
   })
 

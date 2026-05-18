@@ -122,13 +122,27 @@ export class Anybody extends EventEmitter {
       address: undefined,
       playerName: undefined,
       bestTimes: null,
+      // Caller-supplied label that replaces the formatted date in the stats
+      // header / win screen. Used by cash mode where `day` is a keccak seed
+      // (BigInt) rather than a unix-aligned day index, so the date display
+      // would otherwise read 1970.
+      dateLabel: null,
+      // Caller-supplied per-level best chunks `{ time, chunks }[]` for
+      // hydrating a saved-best across page refreshes (cash mode persists
+      // these per session id). Captured into `bestLevelData` on init when
+      // the lib doesn't already have one.
+      initialBestLevelData: null,
       popup: null
     }
     // Merge the default options with the provided options
     const mergedOptions = { ...defaultOptions, ...options }
     // Assign the merged options to the instance properties
     Object.assign(this, mergedOptions)
-    if (this.day % SECONDS_IN_A_DAY !== 0) {
+    // `dateLabel` is the explicit opt-out for callers using `day` as an
+    // entropy seed rather than a unix-aligned day index (e.g. cash sessions
+    // where seed is a uint256). In that mode skip the alignment check —
+    // BigInt % Number would also throw.
+    if (!this.dateLabel && this.day % SECONDS_IN_A_DAY !== 0) {
       console.error(
         `Anybody using an invalid "day" (${this.day}) which wont be possible to submit to the contract`
       )
@@ -160,6 +174,20 @@ export class Anybody extends EventEmitter {
   // run whenever the class should be reset
   clearValues() {
     if (this.level <= 1) this.levelSpeeds = []
+    // Best chunks per level for the lifetime of this Anybody instance,
+    // optionally seeded from `initialBestLevelData` so a cash session can
+    // restore its best across page refreshes. Intentionally NOT reset on
+    // `restart`, so pressing R / NEXT keeps the prior best around for
+    // comparison and emit-time substitution in `emitLevel`. The currently-
+    // playing attempt's chunks are held in `pendingBest` until restart
+    // commits them, so the "best" column on the stats screen always shows
+    // the PRIOR best while you view your latest run.
+    if (!this.bestLevelData) {
+      this.bestLevelData = this.initialBestLevelData
+        ? _copy(this.initialBestLevelData)
+        : []
+    }
+    this.pendingBest = null
     if (this.skip0 && this.level == 0) {
       this.level = 1
     }
@@ -212,11 +240,18 @@ export class Anybody extends EventEmitter {
     this.shaking = 0
     this.explosionSmoke = []
     this.gunSmoke = []
-    this.date = new Date(this.day * 1000).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    })
+    // `dateLabel` overrides any computed date — used by cash mode where
+    // `day` is a keccak seed rather than a unix-aligned day index. The
+    // `Number(this.day)` coerce keeps `new Date()` from blowing up on a
+    // BigInt seed even when the override is somehow missing.
+    if (this.dateLabel) {
+      this.date = this.dateLabel
+    } else {
+      this.date = new Date(Number(this.day) * 1000).toLocaleDateString(
+        'en-US',
+        { year: 'numeric', month: 'long', day: 'numeric' }
+      )
+    }
     this.framesTook = false
     this.showProblemRankingsScreenAt = -1
     this.saveStatus = 'unsaved' // 'unsaved' -> 'validating' -> 'validated' -> 'saving' -> 'saved' | 'error'
@@ -460,10 +495,40 @@ export class Anybody extends EventEmitter {
     this.framesTook = stats.framesTook
     if (won) {
       this.finish()
+      // Stage this attempt as a candidate best. We don't write it into
+      // `bestLevelData` yet — the stats screen wants to show the PRIOR best
+      // alongside the just-set time so the player can see a real comparison.
+      // `restart` (NEXT or REDO) commits this if it actually beats the
+      // prior, then emits a `best` event so the host app can persist it.
+      const idx = this.level - 1
+      if (idx >= 0) {
+        const time = this.framesTook
+        const prior = this.bestLevelData?.[idx]
+        if (!prior || time < prior.time) {
+          this.pendingBest = {
+            idx,
+            time,
+            chunks: _copy(this.levelSpeeds[idx] || [])
+          }
+        } else {
+          this.pendingBest = null
+        }
+      }
     }
   }
 
   restart = (options, beginPaused = true) => {
+    // Commit any staged best from the just-finished attempt before we wipe
+    // levelSpeeds. `pendingBest` was already validated (only set when it
+    // beat the prior). `emit('best')` lets the host app persist the new
+    // best per session id.
+    if (this.pendingBest) {
+      const { idx, time, chunks } = this.pendingBest
+      this.bestLevelData[idx] = { time, chunks }
+      this.pendingBest = null
+      this.emit('best', { idx, time, bestLevelData: this.bestLevelData })
+    }
+
     const lastLevel = this.level - 1
     if (this.levelSpeeds.length >= lastLevel && this.level > 1) {
       this.emitLevel(lastLevel)
@@ -498,6 +563,16 @@ export class Anybody extends EventEmitter {
 
     // check first
     const levelIndex = level - 1
+    // If a faster prior attempt was captured for this level, emit those
+    // chunks instead — the player's best run is what we want to commit on
+    // chain, not whatever they did most recently.
+    const best = this.bestLevelData?.[levelIndex]
+    const current = this.levelSpeeds[levelIndex]
+    const currentTime =
+      current?.[current.length - 1]?.sampleOutput?.time
+    if (best && (currentTime == null || best.time <= currentTime)) {
+      this.levelSpeeds[levelIndex] = _copy(best.chunks)
+    }
     let lastChunk = null
     for (let i = 0; i < this.levelSpeeds[levelIndex].length; i++) {
       const levelData = this.levelSpeeds[levelIndex][i]

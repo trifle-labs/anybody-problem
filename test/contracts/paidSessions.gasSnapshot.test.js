@@ -28,11 +28,12 @@ const PAID_SESSIONS_SIZE_MAX = 21_500
 // Gas snapshot for the lifecycle hot path. Measured on the in-memory hardhat
 // network with viaIR + optimizer (the production config). Includes ~10% headroom.
 // `exposedSettle` includes the full 1000-element long-buffer scan plus an N-element
-// short-buffer scan, so it dominates. ~2.5M is expected at W_LONG=1000.
+// short-buffer scan, so it dominates. Bumped after switching from uint256[] to
+// Sample{score,weight} buffers + weighted percentile (extra arithmetic per slot).
 const GAS_BUDGETS = {
   buyIn: 320_000,
   commit: 220_000,
-  exposedSettle: 2_800_000,
+  exposedSettle: 3_000_000,
   processForfeits: 90_000
 }
 

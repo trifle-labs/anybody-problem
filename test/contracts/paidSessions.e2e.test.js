@@ -104,16 +104,19 @@ describe('PaidSessions e2e', function () {
     })
 
     it('runs four sessions across three players, payouts honor curve, invariant holds', async () => {
-      const tier = 2 // $1 (set in constructor)
+      const tier = 3 // $1 (set in constructor: 1=$0.05, 2=$0.50, 3=$1)
       const startingBal = await env.MockUSDC.balanceOf(env.PaidSessions.address)
 
       // Pre-load both buffers so percentiles are stable.
-      // Median scores around 1500.
+      // Median scores around 1500. Use the same netCost weight ($1 = 1e6) as
+      // the in-test settles so percentile is dominated by the pre-load, not
+      // by the first settle's weight.
+      const W = USDC(1).toString()
       for (let i = 0; i < 1000; i++) {
-        await env.PaidSessions.pushLongForTest(1000 + (i % 1000))
+        await env.PaidSessions.pushLongWeightedForTest(1000 + (i % 1000), W)
       }
       for (let i = 0; i < 10; i++) {
-        await env.PaidSessions.pushShortForTest(1000 + i * 100)
+        await env.PaidSessions.pushShortWeightedForTest(1000 + i * 100, W)
       }
 
       const sessions = []
@@ -186,7 +189,7 @@ describe('PaidSessions e2e', function () {
         await env.PaidSessions.pushShortForTest(1200)
       }
 
-      const tier = 2 // $1
+      const tier = 3 // $1
       const payouts = []
       const score = 2400 // top of distribution
 
@@ -272,7 +275,7 @@ describe('PaidSessions e2e', function () {
 
       const [, , p1] = await ethers.getSigners()
       await fundAndApprove(env.MockUSDC, p1, env.PaidSessions.address, USDC(10))
-      await env.PaidSessions.connect(p1).buyIn(3) // $2 tier
+      await env.PaidSessions.connect(p1).buyIn(4) // $2 tier (1=$0.05, 2=$0.50, 3=$1, 4=$2)
 
       const recipAfter = await env.MockUSDC.balanceOf(recipient.address)
       // 5% of $2 = $0.10
@@ -295,7 +298,7 @@ describe('PaidSessions e2e', function () {
       }
 
       const score = 1800
-      const tier = 2 // $1
+      const tier = 3 // $1
       const quote = await env.PaidSessions.estimatePayout(tier, score)
 
       const sessionId = await buyAndCommit(env.PaidSessions, player, tier)

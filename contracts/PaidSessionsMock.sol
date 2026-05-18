@@ -54,15 +54,39 @@ contract PaidSessionsMock is PaidSessions {
 
     /// @dev Push a score into the long buffer without going through settle.
     /// Useful for pre-loading a synthetic distribution for percentile tests.
+    /// Defaults weight to 1 so existing tests keep equal-weight semantics.
     function pushLongForTest(uint256 score) external {
-        longBuffer[longCursor] = score;
+        _pushLong(score, 1);
+    }
+
+    function pushShortForTest(uint256 score) external {
+        _pushShort(score, 1);
+    }
+
+    /// @dev Weighted variants for exploit/regression tests of netCost weighting.
+    function pushLongWeightedForTest(uint256 score, uint256 weight) external {
+        _pushLong(score, weight);
+    }
+
+    function pushShortWeightedForTest(uint256 score, uint256 weight) external {
+        _pushShort(score, weight);
+    }
+
+    function _pushLong(uint256 score, uint256 weight) internal {
+        longBuffer[longCursor] = Sample({
+            score: uint128(score),
+            weight: uint128(weight)
+        });
         if (longCursor + 1 >= W_LONG) longFilled = true;
         longCursor = (longCursor + 1) % W_LONG;
     }
 
-    function pushShortForTest(uint256 score) external {
+    function _pushShort(uint256 score, uint256 weight) internal {
         uint256 sLen = shortBuffer.length;
-        shortBuffer[shortCursor] = score;
+        shortBuffer[shortCursor] = Sample({
+            score: uint128(score),
+            weight: uint128(weight)
+        });
         if (shortCursor + 1 >= sLen) shortFilled = true;
         shortCursor = (shortCursor + 1) % sLen;
     }
