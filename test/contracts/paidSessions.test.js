@@ -519,6 +519,90 @@ describe('PaidSessions', function () {
   })
 
   // ============================================================
+  describe('seedSamples', () => {
+    let env, owner, player
+    beforeEach(async () => {
+      env = await deployAll()
+      ;[owner, player] = await ethers.getSigners()
+    })
+
+    it('writes long + short samples and shifts percentile lookup', async () => {
+      // Empty buffers → percentile is 0.5 by convention.
+      expect(await env.PaidSessions.percentileLong(1000)).to.equal(MUL_ONE.div(2))
+
+      // Seed long buffer with 50 increasing scores (weight=1 each).
+      const long_ = []
+      for (let i = 0; i < 50; i++) long_.push({ score: i, weight: 1 })
+      // Seed short with the upper 10 (it only holds shortWindowSize=10).
+      const short_ = []
+      for (let i = 40; i < 50; i++) short_.push({ score: i, weight: 1 })
+
+      const tx = await env.PaidSessions.seedSamples(long_, short_)
+      const rcpt = await tx.wait()
+      const ev = rcpt.events.find((e) => e.event === 'BuffersSeeded')
+      expect(ev).to.not.equal(undefined)
+      expect(ev.args.longCount).to.equal(50)
+      expect(ev.args.shortCount).to.equal(10)
+
+      // Long: score=24 → below=24, atOrBelow=25 → (24+25)/(2*50) = 49/100.
+      expect(await env.PaidSessions.percentileLong(24)).to.equal(
+        MUL_ONE.mul(49).div(100)
+      )
+      // Short: score=45 → below=5, atOrBelow=6 → 11/20.
+      expect(await env.PaidSessions.percentileShort(45)).to.equal(
+        MUL_ONE.mul(11).div(20)
+      )
+
+      // Cursors advanced; no wrap yet (50 < W_LONG=1000, 10 == shortLen → filled).
+      expect(await env.PaidSessions.longCursor()).to.equal(50)
+      expect(await env.PaidSessions.longFilled()).to.equal(false)
+      expect(await env.PaidSessions.shortCursor()).to.equal(0)
+      expect(await env.PaidSessions.shortFilled()).to.equal(true)
+    })
+
+    it('allows splitting the seed across multiple txs', async () => {
+      const batch1 = []
+      for (let i = 0; i < 20; i++) batch1.push({ score: i, weight: 1 })
+      const batch2 = []
+      for (let i = 20; i < 30; i++) batch2.push({ score: i, weight: 1 })
+
+      await env.PaidSessions.seedSamples(batch1, [])
+      await env.PaidSessions.seedSamples(batch2, [])
+      expect(await env.PaidSessions.longCursor()).to.equal(30)
+    })
+
+    it('reverts once a session exists', async () => {
+      // Set a buyable tier then buy in to trip lastSessionId > 0.
+      await env.PaidSessions.setTier(1, USDC(0.5), true)
+      await fundUSDC(env.MockUSDC, owner, USDC(1000))
+      await approve(env.MockUSDC, owner, env.PaidSessions.address, USDC(1000))
+      await env.PaidSessions.fundPrizePool(USDC(100))
+      await fundUSDC(env.MockUSDC, player, USDC(1))
+      await approve(env.MockUSDC, player, env.PaidSessions.address, USDC(1))
+      await env.PaidSessions.connect(player).buyIn(1)
+
+      await expect(
+        env.PaidSessions.seedSamples([{ score: 1, weight: 1 }], [])
+      ).to.be.revertedWith('Already in use')
+    })
+
+    it('rejects zero-weight samples', async () => {
+      await expect(
+        env.PaidSessions.seedSamples([{ score: 100, weight: 0 }], [])
+      ).to.be.revertedWith('weight=0')
+    })
+
+    it('onlyOwner', async () => {
+      await expect(
+        env.PaidSessions.connect(player).seedSamples(
+          [{ score: 1, weight: 1 }],
+          []
+        )
+      ).to.be.revertedWith('Ownable: caller is not the owner')
+    })
+  })
+
+  // ============================================================
   describe('buyIn', () => {
     let env, owner, player
     beforeEach(async () => {

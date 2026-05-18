@@ -199,6 +199,7 @@ contract PaidSessions is Ownable, ReentrancyGuard {
     event ConcentrationSet(uint16 bps);
     event PrizePoolFunded(address indexed from, uint256 amount);
     event PrizePoolWithdrawn(address indexed to, uint256 amount);
+    event BuffersSeeded(uint256 longCount, uint256 shortCount);
 
     event ConfigUpdated(string indexed what, uint256 value);
     event AnybodyUpdated(address indexed previous, address indexed next);
@@ -865,6 +866,34 @@ contract PaidSessions is Ownable, ReentrancyGuard {
         require(bps_ > 0 && bps_ <= BPS, 'Invalid concentration');
         concentrationBps = bps_;
         emit ConcentrationSet(bps_);
+    }
+
+    /// @notice One-time pre-launch seeding of long/short EMA buffers with
+    /// compacted historical play data. Only callable while no session has
+    /// been bought-in (lastSessionId == 0) so the in-progress payout math
+    /// can never be retroactively shifted. Appends at current cursor — owner
+    /// may split a large seed across multiple txs to stay under block gas.
+    function seedSamples(
+        Sample[] calldata long_,
+        Sample[] calldata short_
+    ) external onlyOwner {
+        require(lastSessionId == 0, 'Already in use');
+
+        for (uint256 i = 0; i < long_.length; i++) {
+            require(long_[i].weight > 0, 'weight=0');
+            longBuffer[longCursor] = long_[i];
+            if (longCursor + 1 >= W_LONG) longFilled = true;
+            longCursor = (longCursor + 1) % W_LONG;
+        }
+        for (uint256 i = 0; i < short_.length; i++) {
+            require(short_[i].weight > 0, 'weight=0');
+            shortBuffer[shortCursor] = short_[i];
+            uint256 sLen = shortBuffer.length;
+            if (shortCursor + 1 >= sLen) shortFilled = true;
+            shortCursor = (shortCursor + 1) % sLen;
+        }
+
+        emit BuffersSeeded(long_.length, short_.length);
     }
 
     function fundPrizePool(uint256 amount) external nonReentrant {
