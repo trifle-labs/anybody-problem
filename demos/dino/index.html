@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>dino / @anybody/physics demo</title>
+    <link rel="stylesheet" href="/demos/shared/style.css" />
+  </head>
+  <body>
+    <h1>dino → <a href="../">all demos</a></h1>
+    <div class="row"><span class="status" id="status">loading…</span></div>
+    <canvas id="canvas"></canvas>
+    <div class="row">
+      <button id="reset">reset</button>
+      <button id="download">download run</button>
+      <button id="prove">generate proof</button>
+      <span class="status" id="proof-status"></span>
+    </div>
+    <script src="/snarkjs.min.js"></script>
+    <script type="module" src="./dino.js"></script>
+  </body>
+</html>
