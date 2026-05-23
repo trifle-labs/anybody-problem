@@ -66,7 +66,7 @@ template CalculateMissile() {
 
 
   // ensure y is negative
-  component isYNegative = LessEqThan(165);
+  component isYNegative = LessEqThan(15);
   isYNegative.in[0] <== in_missile[3];
   isYNegative.in[1] <== maxMissileVectorScaled;
   isYNegative.out === 1;
@@ -99,38 +99,15 @@ template CalculateMissile() {
   // log("calcMissilePositionLimiterX out", calcMissilePositionLimiterX.out);
 
   // This is for the radius of the missile
-  // If it went off screen in the x direction (x > windowWidth) the radius should go to 0.
-  // However it is also possible the actual position of x is 0 (vertical shot)
-  // so this must first be checked.
-  // If the missile is not off screen then we want to use the real radius until it's checked
-  // on the y dimension
-
-  // first confirm if the new position is 0
-  component calcMissileIsZeroX = IsZero();
-  calcMissileIsZeroX.in <== calcMissilePositionLimiterX.out;
-
-  // next confirm whether the original position was also 0
-  component originalXIsZero = IsZero();
-  originalXIsZero.in <== new_pos[0];
-
-  // save the result as a NOT
-  component originalXIsNotZero = NOT();
-  originalXIsNotZero.in <== originalXIsZero.out;
-
-  // if the new position is 0 and the original position is not 0 then the radius should go to 0
-  component makeRadiusZero = AND();
-  makeRadiusZero.a <== originalXIsNotZero.out;
-  makeRadiusZero.b <== calcMissileIsZeroX.out;
-
-  // radius should go to 0 if new x position is 0 BUT original X is NOT 0
-  // radius should go to 0 if new x position is 0 AND original X is NOT 0
-  // radius should NOT go to 0 if new x position is 0 AND original X is 0
-  // radius should go to 0 if new x posisiton is 0 AND new x position is 0
+  // If it went off screen in the x direction (x >= windowWidthScaled) the radius should go to 0.
+  // Limiter.ltOut == 1 iff new_pos[0] < windowWidthScaled (no clamping = still on screen).
+  // When ltOut == 0, new_pos[0] >= windowWidthScaled > 0, so new_pos[0] cannot be 0 (valid vertical shot).
+  // Therefore 1 - ltOut directly identifies "missile went off right edge", eliminating IsZero+AND overhead.
 
   component muxXDecidesRadius = Mux1();
   muxXDecidesRadius.c[0] <== in_missile[4];
   muxXDecidesRadius.c[1] <== 0;
-  muxXDecidesRadius.s <== makeRadiusZero.out;
+  muxXDecidesRadius.s <== 1 - calcMissilePositionLimiterX.ltOut; // 1 when off screen (ltOut==0)
 
   // Since the plane goes from 0 to windowWidthScaled on the y axis from top to bottom
   // the missile will approach 0 after starting at windowWidthScaled
@@ -148,12 +125,13 @@ template CalculateMissile() {
   positionLowerLimiterY.rather <== 0;
   // log("positionLowerLimiterY out", positionLowerLimiterY.out);
 
-  component isZeroY = IsZero();
-  isZeroY.in <== positionLowerLimiterY.out;
+  // LowerLimiter.ltOut == 1 iff limit < in (no clamping = missile still above 0).
+  // When ltOut == 0, in <= limit (missile at or below 0) = clamped to 0 = off screen.
+  // Use 1 - ltOut directly, eliminating IsZero(positionLowerLimiterY.out).
   component muxY = Mux1();
   muxY.c[0] <== muxXDecidesRadius.out;
   muxY.c[1] <== 0;
-  muxY.s <== isZeroY.out;
+  muxY.s <== 1 - positionLowerLimiterY.ltOut; // 1 when off bottom of screen
 
   out_missile[0] <== new_pos[0]; // maxBits: 20 (maxNum: 1_000_000)
   out_missile[1] <== new_pos[1]; // maxBits: 20 (maxNum: 1_000_000)
