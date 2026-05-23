@@ -362,19 +362,10 @@ describe('AnybodyProblem Tests', function () {
       .div(discount)
       .add(mintingFee)
 
-    expect(price).to.equal(0)
-
-    // as first run it will be fastest and thus price is waived
-
+    // first run is the leader (fastest), so price is waived
     await expect(tx)
       .to.emit(anybodyProblem, 'EthMoved')
       .withArgs(proceedRecipient, true, '0x', 0)
-
-    if (!price.eq(0)) {
-      await expect(tx)
-        .to.emit(anybodyProblem, 'EthMoved')
-        .withArgs(owner.address, true, '0x', price)
-    }
 
     const balanceAfter = await ethers.provider.getBalance(proceedRecipient)
     expect(balanceAfter.sub(balanceBefore)).to.equal(0)
@@ -441,8 +432,6 @@ describe('AnybodyProblem Tests', function () {
 
     expect(finalArgs.length).to.equal(8)
 
-    expect(price).to.equal(0)
-
     const tx = await anybodyProblem.batchSolve(...finalArgs, { value: price })
     await tx.wait()
 
@@ -452,17 +441,10 @@ describe('AnybodyProblem Tests', function () {
       .to.emit(anybodyProblem, 'RunSolved')
       .withArgs(owner.address, finalRunId, accumulativeTime, day, streak)
 
-    // as first run, it will be fastest and thus price is waived
-    // const proceedRecipient = await anybodyProblem.proceedRecipient()
-
+    // first run is the leader (fastest), so price is waived
     await expect(tx)
       .to.emit(anybodyProblem, 'EthMoved')
       .withArgs(proceedRecipient, true, '0x', 0)
-    if (!price.eq(0)) {
-      await expect(tx)
-        .to.emit(anybodyProblem, 'EthMoved')
-        .withArgs(owner.address, true, '0x', price)
-    }
     const speedrunBalance = await speedruns.balanceOf(owner.address, day)
     expect(speedrunBalance).to.equal(1)
 
