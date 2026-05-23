@@ -1,0 +1,7 @@
+[package]
+name = "anybody_problem"
+type = "bin"
+authors = ["trifle-labs"]
+compiler_version = ">=1.0.0"
+
+[dependencies]
